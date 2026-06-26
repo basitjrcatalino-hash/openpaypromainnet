@@ -39,7 +39,7 @@ function TopUpPage() {
   const qc = useQueryClient();
   const topup = useServerFn(topUpOUSD);
   const [amount, setAmount] = useState("100");
-  const [method, setMethod] = useState<"openpay" | "card" | "bank">("openpay");
+  const [method, setMethod] = useState<"pi" | "openpay" | "card" | "bank">("pi");
   const [busy, setBusy] = useState(false);
   const [cardForm, setCardForm] = useState({ number: "", exp: "", cvc: "" });
 

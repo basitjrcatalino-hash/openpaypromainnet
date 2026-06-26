@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Send as SendIcon, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Send as SendIcon, Loader2, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -12,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatNumber } from "@/lib/wallet-utils";
+import { QrScannerButton } from "@/components/qr-scanner";
+import { sendAsset } from "@/lib/transfer.functions";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({ meta: [{ title: "Send — OpenPay Pro Wallet" }] }),
@@ -19,46 +22,60 @@ export const Route = createFileRoute("/_authenticated/send")({
 });
 
 const schema = z.object({
-  to: z.string().trim().min(8, "Enter a wallet address").max(80),
+  to: z.string().trim().min(8, "Enter a wallet address").max(120),
   amount: z.coerce.number().positive().max(1e15),
-  asset: z.string().min(1),
+  asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional(),
 });
+
+function parseScanned(text: string): { to: string; amount?: string; asset?: "OUSD" | "PI" } {
+  // Accepts: raw address | openpay:ADDR?asset=OUSD&amount=10 | ethereum:0x..?value=..
+  try {
+    if (text.startsWith("openpay:") || text.startsWith("ethereum:") || text.includes("?")) {
+      const [scheme, rest] = text.split(":");
+      const body = rest ?? scheme;
+      const [addr, query] = body.split("?");
+      const params = new URLSearchParams(query ?? "");
+      const asset = (params.get("asset") as "OUSD" | "PI") ?? undefined;
+      const amount = params.get("amount") ?? params.get("value") ?? undefined;
+      return { to: addr, amount: amount ?? undefined, asset };
+    }
+  } catch {}
+  return { to: text.trim() };
+}
 
 function SendPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const send = useServerFn(sendAsset);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ to: "", amount: "", asset: "OUSD", memo: "" });
+  const [form, setForm] = useState<{ to: string; amount: string; asset: "OUSD" | "PI"; memo: string }>({
+    to: "", amount: "", asset: "OUSD", memo: "",
+  });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
   });
 
+  function applyScan(text: string) {
+    const p = parseScanned(text);
+    setForm((f) => ({ ...f, to: p.to, amount: p.amount ?? f.amount, asset: p.asset ?? f.asset }));
+    toast.success("Scanned");
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
     if (!wallet) return;
+    if (parsed.data.to === wallet.address) { toast.error("Cannot send to your own address"); return; }
     setBusy(true);
     try {
-      if (parsed.data.asset === "OUSD") {
-        const nb = Number(wallet.ousd_balance) - parsed.data.amount;
-        if (nb < 0) throw new Error("Insufficient OUSD balance");
-        await supabase.from("wallets").update({ ousd_balance: nb }).eq("id", wallet.id);
-      } else if (parsed.data.asset === "PI") {
-        const nb = Number(wallet.pi_balance) - parsed.data.amount;
-        if (nb < 0) throw new Error("Insufficient Pi balance");
-        await supabase.from("wallets").update({ pi_balance: nb }).eq("id", wallet.id);
-      }
-      await supabase.from("transactions").insert({
-        wallet_id: wallet.id, type: "send", token_symbol: parsed.data.asset,
-        counterparty: parsed.data.to, amount: parsed.data.amount,
-        usd_value: parsed.data.asset === "OUSD" ? parsed.data.amount : parsed.data.amount * 32.5,
-        memo: parsed.data.memo || null,
-      });
-      toast.success(`Sent ${parsed.data.amount} ${parsed.data.asset}`);
+      const res = await send({ data: parsed.data });
+      toast.success(res.credited
+        ? `Sent ${parsed.data.amount} ${parsed.data.asset} — recipient credited`
+        : `Sent ${parsed.data.amount} ${parsed.data.asset}`);
       setForm({ to: "", amount: "", asset: parsed.data.asset, memo: "" });
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
@@ -75,11 +92,18 @@ function SendPage() {
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <form onSubmit={submit} className="space-y-4">
           <Field label="Recipient address">
-            <Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} placeholder="0x… or openpay@…" required />
+            <div className="flex gap-2">
+              <Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} placeholder="0x… or openpay:…" required />
+              <QrScannerButton onResult={applyScan} trigger={
+                <Button type="button" variant="outline" size="icon" className="rounded-xl shrink-0" aria-label="Scan QR">
+                  <Camera className="h-4 w-4" />
+                </Button>
+              } />
+            </div>
           </Field>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Asset">
-              <select value={form.asset} onChange={(e) => setForm({ ...form, asset: e.target.value })} className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+              <select value={form.asset} onChange={(e) => setForm({ ...form, asset: e.target.value as "OUSD" | "PI" })} className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option>OUSD</option><option>PI</option>
               </select>
             </Field>
@@ -98,6 +122,7 @@ function SendPage() {
     </div>
   );
 }
+
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return <div className={className}><Label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</Label>{children}</div>;
 }

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -37,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
   id: '/tokens',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/topup': typeof AuthenticatedTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/topup': typeof AuthenticatedTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/swap'
     | '/tokens'
+    | '/topup'
     | '/nfts/mint'
     | '/tokens/create'
   fileRoutesByTo: FileRoutesByTo
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/swap'
     | '/tokens'
+    | '/topup'
     | '/nfts/mint'
     | '/tokens/create'
   id:
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
+    | '/_authenticated/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
   fileRoutesById: FileRoutesById
@@ -219,6 +231,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/topup': {
+      id: '/_authenticated/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof AuthenticatedTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tokens': {
       id: '/_authenticated/tokens'
@@ -332,6 +351,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
+  AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -344,6 +364,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
+  AuthenticatedTopupRoute: AuthenticatedTopupRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

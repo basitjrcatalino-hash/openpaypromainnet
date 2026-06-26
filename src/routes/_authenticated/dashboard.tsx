@@ -113,9 +113,9 @@ function Dashboard() {
   const quickActions = [
     { label: "Send", icon: Send, to: "/send" },
     { label: "Receive", icon: QrCode, to: "/receive" },
+    { label: "Top Up", icon: Plus, to: "/topup" },
     { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
     { label: "Trade", icon: ShoppingCart, to: "/tokens" },
-    { label: "Create Token", icon: Plus, to: "/tokens/create" },
     { label: "Mint NFT", icon: ImageIcon, to: "/nfts/mint" },
   ];
 

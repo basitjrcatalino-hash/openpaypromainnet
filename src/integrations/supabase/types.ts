@@ -444,6 +444,66 @@ export type Database = {
         }
         Relationships: []
       }
+      topup_settings: {
+        Row: {
+          id: number
+          instructions: string | null
+          openpay_payment_url: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          instructions?: string | null
+          openpay_payment_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          instructions?: string | null
+          openpay_payment_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      topup_vouchers: {
+        Row: {
+          amount_ousd: number
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          redeemed_at: string | null
+          redeemed_by: string | null
+          status: string
+        }
+        Insert: {
+          amount_ousd: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount_ousd?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -531,6 +591,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           address: string
@@ -569,9 +650,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_first_admin: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       tx_status: "pending" | "confirmed" | "failed"
       tx_type: "send" | "receive" | "swap" | "mint" | "buy" | "sell" | "reward"
     }
@@ -701,6 +790,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       tx_status: ["pending", "confirmed", "failed"],
       tx_type: ["send", "receive", "swap", "mint", "buy", "sell", "reward"],
     },

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, ImagePlus, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, ImagePlus, Sparkles, Upload } from "lucide-react";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
+import { uploadMedia } from "@/lib/upload";
+
 
 export const Route = createFileRoute("/_authenticated/nfts/mint")({
   head: () => ({ meta: [{ title: "Mint NFT — OpenPay Pro Wallet" }] }),
@@ -30,7 +32,23 @@ function MintNFT() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ name: "", description: "", media_url: "", price: 1, royalty_bps: 500, collection_id: "" });
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) { toast.error("Max 25MB"); return; }
+    setUploading(true);
+    try {
+      const url = await uploadMedia(file, user.id, "nfts");
+      setForm((f) => ({ ...f, media_url: url }));
+      toast.success("Uploaded");
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+  }
+
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -85,11 +103,23 @@ function MintNFT() {
 
       <Card className="glass-strong rounded-3xl border-border/60 p-6">
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-muted-foreground">
-            <ImagePlus className="h-6 w-6" />
-            <div className="text-sm">Paste a media URL (image/video/gif)</div>
+          <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center text-muted-foreground">
+            {form.media_url ? (
+              <img src={form.media_url} alt="preview" className="max-h-48 rounded-xl object-contain" />
+            ) : (
+              <ImagePlus className="h-6 w-6" />
+            )}
+            <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={onFile} />
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+                Upload file
+              </Button>
+              <span className="text-xs">or paste a URL</span>
+            </div>
             <Input className="max-w-md" value={form.media_url} onChange={(e) => setForm({ ...form, media_url: e.target.value })} placeholder="https://…/art.png" required />
           </div>
+
 
           <Field label="Name"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} required /></Field>
           <Field label="Description">

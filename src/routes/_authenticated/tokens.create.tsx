@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Upload } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { generateAddress } from "@/lib/wallet-utils";
+import { uploadMedia } from "@/lib/upload";
+
 
 export const Route = createFileRoute("/_authenticated/tokens/create")({
   head: () => ({ meta: [{ title: "Create token — OpenPay Pro Wallet" }] }),
@@ -34,14 +36,29 @@ function CreateToken() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "", symbol: "", description: "", totalSupply: 1000000, decimals: 18,
-    website: "", twitter: "", telegram: "", taxBps: 0,
+    website: "", twitter: "", telegram: "", taxBps: 0, logo_url: "",
     burnable: true, mintable: false, pausable: false, autoLiquidity: false,
   });
 
   function set<K extends keyof typeof form>(k: K, v: typeof form[K]) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5MB"); return; }
+    setUploading(true);
+    try {
+      const url = await uploadMedia(file, user.id, "tokens");
+      set("logo_url", url);
+      toast.success("Logo uploaded");
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -61,6 +78,7 @@ function CreateToken() {
         total_supply: parsed.data.totalSupply,
         decimals: parsed.data.decimals,
         contract_address: generateAddress(),
+        logo_url: form.logo_url || null,
         website: parsed.data.website || null,
         twitter: parsed.data.twitter || null,
         telegram: parsed.data.telegram || null,
@@ -74,6 +92,7 @@ function CreateToken() {
       if (error) throw error;
       toast.success(`${parsed.data.symbol} token created!`);
       navigate({ to: "/tokens" });
+
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -97,6 +116,19 @@ function CreateToken() {
       <form onSubmit={onSubmit} className="space-y-5">
         <Card className="glass-strong rounded-3xl border-border/60 p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Identity</h2>
+          <div className="mb-4 flex items-center gap-4">
+            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-gradient-primary text-xs font-bold text-primary-foreground">
+              {form.logo_url ? <img src={form.logo_url} alt="logo" className="h-full w-full object-cover" /> : (form.symbol || "?").slice(0, 3)}
+            </div>
+            <div>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={onLogo} />
+              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+                Upload logo
+              </Button>
+              <p className="mt-1 text-[11px] text-muted-foreground">PNG, JPG or SVG. Max 5MB.</p>
+            </div>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Token name"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="OpenPay Demo" maxLength={60} required /></Field>
             <Field label="Symbol"><Input value={form.symbol} onChange={(e) => set("symbol", e.target.value.toUpperCase())} placeholder="OPD" maxLength={10} required /></Field>
@@ -106,6 +138,7 @@ function CreateToken() {
               <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="What is this token about?" maxLength={500} rows={3} />
             </Field>
           </div>
+
         </Card>
 
         <Card className="glass-strong rounded-3xl border-border/60 p-6">

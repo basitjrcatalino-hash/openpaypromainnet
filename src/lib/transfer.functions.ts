@@ -39,8 +39,10 @@ export const sendAsset = createServerFn({ method: "POST" })
       const { data: rcpt } = await supabaseAdmin
         .from("wallets").select("*").eq("address", to).maybeSingle();
       if (rcpt) {
-        const rcur = Number((rcpt as any)[balKey] ?? 0);
-        await supabaseAdmin.from("wallets").update({ [balKey]: rcur + amount }).eq("id", rcpt.id);
+        const rO = Number(rcpt.ousd_balance ?? 0);
+        const rP = Number(rcpt.pi_balance ?? 0);
+        const rcptPatch = asset === "OUSD" ? { ousd_balance: rO + amount } : { pi_balance: rP + amount };
+        await supabaseAdmin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
         await supabaseAdmin.from("transactions").insert({
           wallet_id: rcpt.id, type: "receive", token_symbol: asset,
           counterparty: wallet.address, amount, usd_value: usd, memo: memo ?? null,
@@ -82,7 +84,7 @@ export const topUpOUSD = createServerFn({ method: "POST" })
     if (uErr) throw uErr;
 
     await supabase.from("transactions").insert({
-      wallet_id: wallet.id, type: "topup", token_symbol: "OUSD",
+      wallet_id: wallet.id, type: "buy", token_symbol: "OUSD",
       counterparty: `${method}:${reference ?? "openpay"}`, amount, usd_value: amount,
       memo: `Top-up via ${method}`,
     });

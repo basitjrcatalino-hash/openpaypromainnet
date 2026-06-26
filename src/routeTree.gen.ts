@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
@@ -23,12 +25,18 @@ import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/n
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
 
+const TestnetRewardRoute = TestnetRewardRouteImport.update({
+  id: '/testnet-reward',
+  path: '/testnet-reward',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -41,6 +49,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
+  id: '/admin/testnet-progress',
+  path: '/admin/testnet-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
@@ -98,6 +111,11 @@ const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
   path: '/api/public/pi-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
+  id: '/api/public/pi-a2u',
+  path: '/api/public/pi-a2u',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
     id: '/create',
@@ -131,6 +149,7 @@ const ApiPublicPiPaymentsApproveRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
@@ -141,8 +160,10 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -151,6 +172,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
@@ -161,8 +183,10 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -173,6 +197,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
@@ -183,8 +208,10 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -195,6 +222,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/testnet-reward'
     | '/activity'
     | '/dashboard'
     | '/nfts'
@@ -205,8 +233,10 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/admin/testnet-progress'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -215,6 +245,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/testnet-reward'
     | '/activity'
     | '/dashboard'
     | '/nfts'
@@ -225,8 +256,10 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/admin/testnet-progress'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -236,6 +269,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/testnet-reward'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
     | '/_authenticated/nfts'
@@ -246,8 +280,10 @@ export interface FileRouteTypes {
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
+    | '/admin/testnet-progress'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
+    | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -258,6 +294,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TestnetRewardRoute: typeof TestnetRewardRoute
+  AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
@@ -266,6 +305,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/testnet-reward': {
+      id: '/testnet-reward'
+      path: '/testnet-reward'
+      fullPath: '/testnet-reward'
+      preLoaderRoute: typeof TestnetRewardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -285,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/testnet-progress': {
+      id: '/admin/testnet-progress'
+      path: '/admin/testnet-progress'
+      fullPath: '/admin/testnet-progress'
+      preLoaderRoute: typeof AdminTestnetProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/topup': {
@@ -362,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/pi-auth'
       fullPath: '/api/public/pi-auth'
       preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-a2u': {
+      id: '/api/public/pi-a2u'
+      path: '/api/public/pi-a2u'
+      fullPath: '/api/public/pi-a2u'
+      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tokens/create': {
@@ -457,6 +517,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  TestnetRewardRoute: TestnetRewardRoute,
+  AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
@@ -465,13 +528,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -116,6 +116,19 @@ function CreateToken() {
       <form onSubmit={onSubmit} className="space-y-5">
         <Card className="glass-strong rounded-3xl border-border/60 p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Identity</h2>
+          <div className="mb-4 flex items-center gap-4">
+            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-gradient-primary text-xs font-bold text-primary-foreground">
+              {form.logo_url ? <img src={form.logo_url} alt="logo" className="h-full w-full object-cover" /> : (form.symbol || "?").slice(0, 3)}
+            </div>
+            <div>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={onLogo} />
+              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+                Upload logo
+              </Button>
+              <p className="mt-1 text-[11px] text-muted-foreground">PNG, JPG or SVG. Max 5MB.</p>
+            </div>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Token name"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="OpenPay Demo" maxLength={60} required /></Field>
             <Field label="Symbol"><Input value={form.symbol} onChange={(e) => set("symbol", e.target.value.toUpperCase())} placeholder="OPD" maxLength={10} required /></Field>
@@ -125,6 +138,7 @@ function CreateToken() {
               <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="What is this token about?" maxLength={500} rows={3} />
             </Field>
           </div>
+
         </Card>
 
         <Card className="glass-strong rounded-3xl border-border/60 p-6">

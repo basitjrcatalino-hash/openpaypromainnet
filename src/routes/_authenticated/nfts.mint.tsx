@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, ImagePlus, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, ImagePlus, Sparkles, Upload } from "lucide-react";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
+import { uploadMedia } from "@/lib/upload";
+
 
 export const Route = createFileRoute("/_authenticated/nfts/mint")({
   head: () => ({ meta: [{ title: "Mint NFT — OpenPay Pro Wallet" }] }),

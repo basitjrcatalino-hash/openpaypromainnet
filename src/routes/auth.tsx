@@ -75,11 +75,14 @@ function AuthPage() {
     } finally {
       setBusy(false);
     }
+  }
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   return (
+
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-hero-glow px-4 py-10">
 
       <div className="absolute inset-0 -z-10 opacity-60" aria-hidden="true">

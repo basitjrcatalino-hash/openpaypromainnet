@@ -174,6 +174,84 @@ export type Database = {
           },
         ]
       }
+      pi_a2u_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          error: string | null
+          id: number
+          memo: string | null
+          payment_id: string
+          status: string
+          txid: string | null
+          uid: string
+          updated_at: string
+          username: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          error?: string | null
+          id?: number
+          memo?: string | null
+          payment_id: string
+          status?: string
+          txid?: string | null
+          uid: string
+          updated_at?: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          error?: string | null
+          id?: number
+          memo?: string | null
+          payment_id?: string
+          status?: string
+          txid?: string | null
+          uid?: string
+          updated_at?: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      pi_a2u_wallets: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: number
+          payment_id: string | null
+          txid: string | null
+          uid: string
+          username: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: number
+          payment_id?: string | null
+          txid?: string | null
+          uid: string
+          username?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: number
+          payment_id?: string | null
+          txid?: string | null
+          uid?: string
+          username?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       pi_payments: {
         Row: {
           approved_at: string | null

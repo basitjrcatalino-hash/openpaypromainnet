@@ -62,7 +62,7 @@ function CreateToken() {
     field: "logo_url" | "banner_url",
     maxMb: number,
     setBusy: (v: boolean) => void,
-    ref: React.RefObject<HTMLInputElement>,
+    ref: React.RefObject<HTMLInputElement | null>,
   ) {
     const file = e.target.files?.[0];
     if (!file) return;

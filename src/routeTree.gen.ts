@@ -13,6 +13,7 @@ import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
@@ -48,6 +49,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
+  id: '/admin/testnet-progress',
+  path: '/admin/testnet-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
+  '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/admin/testnet-progress'
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-a2u'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/admin/testnet-progress'
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-a2u'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
+    | '/admin/testnet-progress'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
     | '/api/public/pi-a2u'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/testnet-progress': {
+      id: '/admin/testnet-progress'
+      path: '/admin/testnet-progress'
+      fullPath: '/admin/testnet-progress'
+      preLoaderRoute: typeof AdminTestnetProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/topup': {
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,

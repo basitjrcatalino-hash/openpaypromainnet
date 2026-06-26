@@ -20,12 +20,14 @@ export const sendAsset = createServerFn({ method: "POST" })
       .from("wallets").select("*").eq("user_id", userId).limit(1).maybeSingle();
     if (wErr || !wallet) throw new Error("Active wallet not found");
 
-    const balKey = asset === "OUSD" ? "ousd_balance" : "pi_balance";
-    const cur = Number((wallet as any)[balKey] ?? 0);
+    const curO = Number(wallet.ousd_balance ?? 0);
+    const curP = Number(wallet.pi_balance ?? 0);
+    const cur = asset === "OUSD" ? curO : curP;
     if (cur < amount) throw new Error(`Insufficient ${asset} balance`);
 
+    const senderPatch = asset === "OUSD" ? { ousd_balance: curO - amount } : { pi_balance: curP - amount };
     const { error: updErr } = await supabase
-      .from("wallets").update({ [balKey]: cur - amount }).eq("id", wallet.id);
+      .from("wallets").update(senderPatch).eq("id", wallet.id);
     if (updErr) throw updErr;
 
     const usd = asset === "OUSD" ? amount : amount * 32.5;

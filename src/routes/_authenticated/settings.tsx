@@ -180,7 +180,10 @@ function SettingsPage() {
             </select>
           </SettingRow>
           <SettingRow label="Price alerts" desc="Notify on big moves">
-            <Switch checked={prefs?.notifications?.price_alerts ?? true} onCheckedChange={(v) => updatePref({ notifications: { ...(prefs?.notifications ?? {}), price_alerts: v } })} />
+            <Switch
+              checked={((prefs?.notifications as Record<string, boolean> | null)?.price_alerts) ?? true}
+              onCheckedChange={(v) => updatePref({ notifications: { ...((prefs?.notifications as Record<string, boolean> | null) ?? {}), price_alerts: v } })}
+            />
           </SettingRow>
         </div>
       </Card>

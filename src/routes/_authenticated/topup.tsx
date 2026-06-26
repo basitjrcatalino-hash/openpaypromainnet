@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpOUSD } from "@/lib/transfer.functions";
+import { topUpWithPi } from "@/lib/pi-network";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/topup")({
 });
 
 const methods = [
+  { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
   { id: "openpay", label: "OpenPay Balance", icon: Sparkles, desc: "Instant transfer from your OpenPay account" },
   { id: "card", label: "Debit / Credit Card", icon: CreditCard, desc: "Visa, Mastercard, Amex — 3D Secure" },
   { id: "bank", label: "Bank Transfer", icon: Building2, desc: "ACH / SEPA — 1–2 business days" },
@@ -29,7 +31,7 @@ const methods = [
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
   amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
-  method: z.enum(["openpay", "card", "bank"]),
+  method: z.enum(["pi", "openpay", "card", "bank"]),
 });
 
 function TopUpPage() {
@@ -37,7 +39,7 @@ function TopUpPage() {
   const qc = useQueryClient();
   const topup = useServerFn(topUpOUSD);
   const [amount, setAmount] = useState("100");
-  const [method, setMethod] = useState<"openpay" | "card" | "bank">("openpay");
+  const [method, setMethod] = useState<"pi" | "openpay" | "card" | "bank">("pi");
   const [busy, setBusy] = useState(false);
   const [cardForm, setCardForm] = useState({ number: "", exp: "", cvc: "" });
 
@@ -58,9 +60,14 @@ function TopUpPage() {
     }
     setBusy(true);
     try {
-      const ref = method === "card" ? `card_${cardForm.number.slice(-4)}` : method;
-      const res = await topup({ data: { amount: parsed.data.amount, method, reference: ref } });
-      toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
+      if (method === "pi") {
+        const { paymentId } = await topUpWithPi(parsed.data.amount);
+        toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
+      } else {
+        const ref = method === "card" ? `card_${cardForm.number.slice(-4)}` : method;
+        await topup({ data: { amount: parsed.data.amount, method, reference: ref } });
+        toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
+      }
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       setAmount("");

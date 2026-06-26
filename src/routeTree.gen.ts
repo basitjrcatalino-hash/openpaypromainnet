@@ -25,6 +25,9 @@ import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticat
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
+import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
+import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -106,6 +109,24 @@ const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   path: '/mint',
   getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
+const ApiPublicPiPaymentsIncompleteRoute =
+  ApiPublicPiPaymentsIncompleteRouteImport.update({
+    id: '/api/public/pi-payments/incomplete',
+    path: '/api/public/pi-payments/incomplete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsCompleteRoute =
+  ApiPublicPiPaymentsCompleteRouteImport.update({
+    id: '/api/public/pi-payments/complete',
+    path: '/api/public/pi-payments/complete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsApproveRoute =
+  ApiPublicPiPaymentsApproveRouteImport.update({
+    id: '/api/public/pi-payments/approve',
+    path: '/api/public/pi-payments/approve',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,6 +144,9 @@ export interface FileRoutesByFullPath {
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
+  '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
+  '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,6 +164,9 @@ export interface FileRoutesByTo {
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
+  '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
+  '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,6 +186,9 @@ export interface FileRoutesById {
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
+  '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
+  '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,6 +208,9 @@ export interface FileRouteTypes {
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-auth'
+    | '/api/public/pi-payments/approve'
+    | '/api/public/pi-payments/complete'
+    | '/api/public/pi-payments/incomplete'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -195,6 +228,9 @@ export interface FileRouteTypes {
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-auth'
+    | '/api/public/pi-payments/approve'
+    | '/api/public/pi-payments/complete'
+    | '/api/public/pi-payments/incomplete'
   id:
     | '__root__'
     | '/'
@@ -213,6 +249,9 @@ export interface FileRouteTypes {
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
     | '/api/public/pi-auth'
+    | '/api/public/pi-payments/approve'
+    | '/api/public/pi-payments/complete'
+    | '/api/public/pi-payments/incomplete'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,6 +259,9 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
+  ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
+  ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -336,6 +378,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
       parentRoute: typeof AuthenticatedNftsRoute
     }
+    '/api/public/pi-payments/incomplete': {
+      id: '/api/public/pi-payments/incomplete'
+      path: '/api/public/pi-payments/incomplete'
+      fullPath: '/api/public/pi-payments/incomplete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/complete': {
+      id: '/api/public/pi-payments/complete'
+      path: '/api/public/pi-payments/complete'
+      fullPath: '/api/public/pi-payments/complete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/approve': {
+      id: '/api/public/pi-payments/approve'
+      path: '/api/public/pi-payments/approve'
+      fullPath: '/api/public/pi-payments/approve'
+      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -395,17 +458,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
+  ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
+  ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

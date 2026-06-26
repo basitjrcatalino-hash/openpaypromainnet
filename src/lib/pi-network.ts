@@ -1,8 +1,10 @@
 // Pi Network SDK helper (browser-only).
-// Loads the Pi SDK script, awaits Pi.init(), runs authenticate with "username" scope,
-// validates the access token against our backend, then signs the user into Supabase.
+// Handles auth + U2A payments. Pi.init() is awaited before authenticate/createPayment,
+// and incomplete payments are always completed via the backend.
 
 import { supabase } from "@/integrations/supabase/client";
+
+type PiPayment = { identifier: string; [k: string]: unknown };
 
 declare global {
   interface Window {
@@ -10,13 +12,27 @@ declare global {
       init: (opts: { version: string; sandbox?: boolean }) => unknown;
       authenticate: (
         scopes: string[],
-        onIncompletePaymentFound: (payment: unknown) => void,
+        onIncompletePaymentFound: (payment: PiPayment) => void,
       ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
+      createPayment: (
+        payment: {
+          amount: number;
+          memo: string;
+          metadata: Record<string, unknown>;
+        },
+        callbacks: {
+          onReadyForServerApproval: (paymentId: string) => void;
+          onReadyForServerCompletion: (paymentId: string, txid: string) => void;
+          onCancel: (paymentId: string) => void;
+          onError: (error: Error, payment?: PiPayment) => void;
+        },
+      ) => void;
     };
   }
 }
 
 const SDK_URL = "https://sdk.minepi.com/pi-sdk.js";
+const SCOPES = ["username", "payments"];
 let sdkPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;
 
@@ -46,18 +62,38 @@ async function ensureInit(): Promise<void> {
   initPromise = (async () => {
     await loadSdk();
     if (!window.Pi) throw new Error("Pi SDK unavailable");
-    // Pi.init may return a Promise — await it fully before authenticate().
+    // Pi.init may return a Promise — await fully before authenticate/createPayment.
     await Promise.resolve(window.Pi.init({ version: "2.0", sandbox: true }));
   })();
   return initPromise;
+}
+
+async function getAuthHeader(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
+async function completeIncomplete(payment: PiPayment) {
+  try {
+    const txid = (payment as { transaction?: { txid?: string } }).transaction?.txid;
+    const res = await fetch("/api/public/pi-payments/incomplete", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(await getAuthHeader()) },
+      body: JSON.stringify({ paymentId: payment.identifier, txid }),
+    });
+    if (!res.ok) console.warn("[Pi] incomplete completion failed", await res.text());
+  } catch (err) {
+    console.warn("[Pi] incomplete completion error", err);
+  }
 }
 
 export async function signInWithPi(): Promise<{ username: string }> {
   await ensureInit();
   if (!window.Pi) throw new Error("Pi SDK unavailable");
 
-  const auth = await window.Pi.authenticate(["username"], (payment) => {
-    console.warn("[Pi] Incomplete payment found", payment);
+  const auth = await window.Pi.authenticate(SCOPES, (payment) => {
+    void completeIncomplete(payment);
   });
 
   const res = await fetch("/api/public/pi-auth", {
@@ -70,12 +106,78 @@ export async function signInWithPi(): Promise<{ username: string }> {
     throw new Error((body as { error?: string }).error || "Pi backend validation failed");
   }
   const { email, password, username } = (await res.json()) as {
-    email: string;
-    password: string;
-    username: string;
+    email: string; password: string; username: string;
   };
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return { username };
+}
+
+/**
+ * Create a Pi U2A payment that tops up the user's OUSD balance.
+ * 1 π = 1 OUSD.
+ */
+export async function topUpWithPi(amountPi: number): Promise<{ paymentId: string; txid: string }> {
+  await ensureInit();
+  if (!window.Pi) throw new Error("Pi SDK unavailable");
+
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session) throw new Error("Sign in first to top up with Pi");
+
+  // Ensure auth scope includes "payments" (re-auth is cheap and idempotent for already-signed-in Pi users).
+  await window.Pi.authenticate(SCOPES, (payment) => {
+    void completeIncomplete(payment);
+  });
+
+  return await new Promise<{ paymentId: string; txid: string }>((resolve, reject) => {
+    const metadata = {
+      product: "ousd_topup",
+      ousdAmount: amountPi, // 1π = 1 OUSD
+      supabaseUserId: sess.session!.user.id,
+    };
+    let lastPaymentId = "";
+
+    window.Pi!.createPayment(
+      {
+        amount: amountPi,
+        memo: `OpenPay Pro: top up ${amountPi} OUSD`,
+        metadata,
+      },
+      {
+        onReadyForServerApproval: async (paymentId) => {
+          lastPaymentId = paymentId;
+          const res = await fetch("/api/public/pi-payments/approve", {
+            method: "POST",
+            headers: { "content-type": "application/json", ...(await getAuthHeader()) },
+            body: JSON.stringify({ paymentId }),
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            reject(new Error(`Approval failed: ${t}`));
+          }
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          const res = await fetch("/api/public/pi-payments/complete", {
+            method: "POST",
+            headers: { "content-type": "application/json", ...(await getAuthHeader()) },
+            body: JSON.stringify({ paymentId, txid }),
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            reject(new Error(`Completion failed: ${t}`));
+            return;
+          }
+          resolve({ paymentId, txid });
+        },
+        onCancel: (paymentId) => {
+          reject(new Error(`Payment cancelled (${paymentId || lastPaymentId})`));
+        },
+        onError: (error, payment) => {
+          if (payment) void completeIncomplete(payment);
+          reject(error);
+        },
+      },
+    );
+  });
 }

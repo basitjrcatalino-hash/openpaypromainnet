@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
-import { topUpOUSD } from "@/lib/transfer.functions";
 import { topUpWithPi } from "@/lib/pi-network";
+import { OpenPayCheckout } from "@/components/openpay-checkout";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -23,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/topup")({
 
 const methods = [
   { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
-  { id: "openpay", label: "OpenPay Balance", icon: Sparkles, desc: "Instant transfer from your OpenPay account" },
+  { id: "openpay", label: "OpenPay QR Pay", icon: Sparkles, desc: "Pay securely via OpenPay checkout" },
 ] as const;
 
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -35,10 +34,11 @@ const schema = z.object({
 function TopUpPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
-  const topup = useServerFn(topUpOUSD);
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<"pi" | "openpay">("pi");
   const [busy, setBusy] = useState(false);
+  const [openpayToken, setOpenpayToken] = useState("");
+  const [showOpenpay, setShowOpenpay] = useState(false);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -47,17 +47,17 @@ function TopUpPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (method === "openpay") {
+      if (!openpayToken.trim()) { toast.error("Enter an OpenPay QR token"); return; }
+      setShowOpenpay(true);
+      return;
+    }
     const parsed = schema.safeParse({ amount, method });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
     setBusy(true);
     try {
-      if (method === "pi") {
-        const { paymentId } = await topUpWithPi(parsed.data.amount);
-        toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
-      } else {
-        await topup({ data: { amount: parsed.data.amount, method, reference: method } });
-        toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
-      }
+      const { paymentId } = await topUpWithPi(parsed.data.amount);
+      toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       setAmount("");
@@ -95,7 +95,7 @@ function TopUpPage() {
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Payment method</Label>
             <div className="space-y-2">
               {methods.map((m) => (
-                <button key={m.id} type="button" onClick={() => setMethod(m.id)} className={cn(
+                <button key={m.id} type="button" onClick={() => { setMethod(m.id); setShowOpenpay(false); }} className={cn(
                   "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all",
                   method === m.id ? "border-primary bg-primary/5 shadow-glow" : "border-border hover:bg-muted/50",
                 )}>
@@ -111,12 +111,27 @@ function TopUpPage() {
             </div>
           </div>
 
-          <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-            Top up {amount ? formatUSD(Number(amount)) : ""}
-          </Button>
+          {method === "openpay" && (
+            <div>
+              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">OpenPay QR token</Label>
+              <Input value={openpayToken} onChange={(e) => { setOpenpayToken(e.target.value); setShowOpenpay(false); }} placeholder="qr_..." />
+            </div>
+          )}
+
+          {method === "openpay" && showOpenpay && openpayToken ? (
+            <OpenPayCheckout
+              token={openpayToken.trim()}
+              customerEmail={user.email ?? ""}
+              customerName={(user.user_metadata?.full_name as string | undefined) ?? user.email ?? ""}
+            />
+          ) : (
+            <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+              {method === "openpay" ? "Continue to OpenPay" : `Top up ${amount ? formatUSD(Number(amount)) : ""}`}
+            </Button>
+          )}
           <p className="text-center text-[11px] text-muted-foreground">
-            Test mode — funds are credited instantly. Connect OpenPay API for real processing.
+            New accounts start with a zero balance. Top up to begin.
           </p>
         </form>
       </Card>

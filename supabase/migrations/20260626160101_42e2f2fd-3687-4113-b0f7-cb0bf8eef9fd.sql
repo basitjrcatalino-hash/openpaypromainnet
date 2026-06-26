@@ -1,0 +1,1 @@
+UPDATE public.wallets SET ousd_balance = 0, pi_balance = 0;

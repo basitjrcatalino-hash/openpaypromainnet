@@ -82,7 +82,7 @@ function Dashboard() {
     (async () => {
       const { data, error } = await supabase
         .from("wallets")
-        .insert({ user_id: user.id, name: "Main Wallet", address: generateAddress(), is_active: true, ousd_balance: 250, pi_balance: 12.5 })
+        .insert({ user_id: user.id, name: "Main Wallet", address: generateAddress(), is_active: true, ousd_balance: 0, pi_balance: 0 })
         .select()
         .single();
       if (!error && data) {
@@ -123,7 +123,9 @@ function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Hello 👋</h1>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            Hello {(user.user_metadata?.full_name as string | undefined) ?? (user.user_metadata?.name as string | undefined) ?? (user.email?.split("@")[0]) ?? "there"} 👋
+          </h1>
           <p className="text-sm text-muted-foreground">Here's your OpenPay portfolio snapshot</p>
         </div>
       </div>

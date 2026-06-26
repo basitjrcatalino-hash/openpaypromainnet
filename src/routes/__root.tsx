@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { SplashScreen } from "@/components/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -117,6 +118,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <SplashScreen />
         <Outlet />
         <Toaster richColors position="top-right" />
       </ThemeProvider>

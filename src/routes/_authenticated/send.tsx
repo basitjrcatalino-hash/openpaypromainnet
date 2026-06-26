@@ -1,0 +1,103 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Send as SendIcon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { formatNumber } from "@/lib/wallet-utils";
+
+export const Route = createFileRoute("/_authenticated/send")({
+  head: () => ({ meta: [{ title: "Send — OpenPay Pro Wallet" }] }),
+  component: SendPage,
+});
+
+const schema = z.object({
+  to: z.string().trim().min(8, "Enter a wallet address").max(80),
+  amount: z.coerce.number().positive().max(1e15),
+  asset: z.string().min(1),
+  memo: z.string().max(140).optional(),
+});
+
+function SendPage() {
+  const { user } = Route.useRouteContext();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ to: "", amount: "", asset: "OUSD", memo: "" });
+
+  const { data: wallet } = useQuery({
+    queryKey: ["active-wallet", user.id],
+    queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
+  });
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
+    if (!wallet) return;
+    setBusy(true);
+    try {
+      if (parsed.data.asset === "OUSD") {
+        const nb = Number(wallet.ousd_balance) - parsed.data.amount;
+        if (nb < 0) throw new Error("Insufficient OUSD balance");
+        await supabase.from("wallets").update({ ousd_balance: nb }).eq("id", wallet.id);
+      } else if (parsed.data.asset === "PI") {
+        const nb = Number(wallet.pi_balance) - parsed.data.amount;
+        if (nb < 0) throw new Error("Insufficient Pi balance");
+        await supabase.from("wallets").update({ pi_balance: nb }).eq("id", wallet.id);
+      }
+      await supabase.from("transactions").insert({
+        wallet_id: wallet.id, type: "send", token_symbol: parsed.data.asset,
+        counterparty: parsed.data.to, amount: parsed.data.amount,
+        usd_value: parsed.data.asset === "OUSD" ? parsed.data.amount : parsed.data.amount * 32.5,
+        memo: parsed.data.memo || null,
+      });
+      toast.success(`Sent ${parsed.data.amount} ${parsed.data.asset}`);
+      setForm({ to: "", amount: "", asset: parsed.data.asset, memo: "" });
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
+    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="mx-auto max-w-md space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Send</h1>
+        <p className="text-sm text-muted-foreground">Transfer assets to any wallet</p>
+      </div>
+
+      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+        <form onSubmit={submit} className="space-y-4">
+          <Field label="Recipient address">
+            <Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} placeholder="0x… or openpay@…" required />
+          </Field>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Asset">
+              <select value={form.asset} onChange={(e) => setForm({ ...form, asset: e.target.value })} className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option>OUSD</option><option>PI</option>
+              </select>
+            </Field>
+            <Field className="col-span-2" label={`Amount (Balance: ${formatNumber(form.asset === "OUSD" ? wallet?.ousd_balance : wallet?.pi_balance, 4)})`}>
+              <Input value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" type="number" min="0" step="any" required />
+            </Field>
+          </div>
+          <Field label="Memo (optional)">
+            <Textarea value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })} maxLength={140} rows={2} />
+          </Field>
+          <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
+            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SendIcon className="mr-2 h-4 w-4" />} Send
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
+function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+  return <div className={className}><Label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</Label>{children}</div>;
+}

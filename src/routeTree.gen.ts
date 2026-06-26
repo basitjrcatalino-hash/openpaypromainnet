@@ -9,38 +9,210 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
+import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
+import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
+import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
+  id: '/ousd',
+  path: '/ousd',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
+  id: '/nfts',
+  path: '/nfts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTokensCreateRoute =
+  AuthenticatedTokensCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedTokensRoute,
+  } as any)
+const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
+  id: '/mint',
+  path: '/mint',
+  getParentRoute: () => AuthenticatedNftsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/nfts': typeof AuthenticatedNftsRouteWithChildren
+  '/ousd': typeof AuthenticatedOusdRoute
+  '/receive': typeof AuthenticatedReceiveRoute
+  '/send': typeof AuthenticatedSendRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/swap': typeof AuthenticatedSwapRoute
+  '/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/nfts/mint': typeof AuthenticatedNftsMintRoute
+  '/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/nfts': typeof AuthenticatedNftsRouteWithChildren
+  '/ousd': typeof AuthenticatedOusdRoute
+  '/receive': typeof AuthenticatedReceiveRoute
+  '/send': typeof AuthenticatedSendRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/swap': typeof AuthenticatedSwapRoute
+  '/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/nfts/mint': typeof AuthenticatedNftsMintRoute
+  '/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
+  '/_authenticated/ousd': typeof AuthenticatedOusdRoute
+  '/_authenticated/receive': typeof AuthenticatedReceiveRoute
+  '/_authenticated/send': typeof AuthenticatedSendRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/swap': typeof AuthenticatedSwapRoute
+  '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
+  '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
+  '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/activity'
+    | '/dashboard'
+    | '/nfts'
+    | '/ousd'
+    | '/receive'
+    | '/send'
+    | '/settings'
+    | '/swap'
+    | '/tokens'
+    | '/nfts/mint'
+    | '/tokens/create'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/activity'
+    | '/dashboard'
+    | '/nfts'
+    | '/ousd'
+    | '/receive'
+    | '/send'
+    | '/settings'
+    | '/swap'
+    | '/tokens'
+    | '/nfts/mint'
+    | '/tokens/create'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/activity'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/nfts'
+    | '/_authenticated/ousd'
+    | '/_authenticated/receive'
+    | '/_authenticated/send'
+    | '/_authenticated/settings'
+    | '/_authenticated/swap'
+    | '/_authenticated/tokens'
+    | '/_authenticated/nfts/mint'
+    | '/_authenticated/tokens/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +220,140 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/tokens': {
+      id: '/_authenticated/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof AuthenticatedTokensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/swap': {
+      id: '/_authenticated/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof AuthenticatedSwapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/send': {
+      id: '/_authenticated/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthenticatedSendRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/receive': {
+      id: '/_authenticated/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ousd': {
+      id: '/_authenticated/ousd'
+      path: '/ousd'
+      fullPath: '/ousd'
+      preLoaderRoute: typeof AuthenticatedOusdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts': {
+      id: '/_authenticated/nfts'
+      path: '/nfts'
+      fullPath: '/nfts'
+      preLoaderRoute: typeof AuthenticatedNftsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tokens/create': {
+      id: '/_authenticated/tokens/create'
+      path: '/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
+      parentRoute: typeof AuthenticatedTokensRoute
+    }
+    '/_authenticated/nfts/mint': {
+      id: '/_authenticated/nfts/mint'
+      path: '/mint'
+      fullPath: '/nfts/mint'
+      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
+      parentRoute: typeof AuthenticatedNftsRoute
+    }
   }
 }
 
+interface AuthenticatedNftsRouteChildren {
+  AuthenticatedNftsMintRoute: typeof AuthenticatedNftsMintRoute
+}
+
+const AuthenticatedNftsRouteChildren: AuthenticatedNftsRouteChildren = {
+  AuthenticatedNftsMintRoute: AuthenticatedNftsMintRoute,
+}
+
+const AuthenticatedNftsRouteWithChildren =
+  AuthenticatedNftsRoute._addFileChildren(AuthenticatedNftsRouteChildren)
+
+interface AuthenticatedTokensRouteChildren {
+  AuthenticatedTokensCreateRoute: typeof AuthenticatedTokensCreateRoute
+}
+
+const AuthenticatedTokensRouteChildren: AuthenticatedTokensRouteChildren = {
+  AuthenticatedTokensCreateRoute: AuthenticatedTokensCreateRoute,
+}
+
+const AuthenticatedTokensRouteWithChildren =
+  AuthenticatedTokensRoute._addFileChildren(AuthenticatedTokensRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
+  AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
+  AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
+  AuthenticatedSendRoute: typeof AuthenticatedSendRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
+  AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
+  AuthenticatedOusdRoute: AuthenticatedOusdRoute,
+  AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
+  AuthenticatedSendRoute: AuthenticatedSendRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSwapRoute: AuthenticatedSwapRoute,
+  AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

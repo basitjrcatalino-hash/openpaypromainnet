@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, CreditCard, Building2, Sparkles } from "lucide-react";
+import { Loader2, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -24,14 +24,12 @@ export const Route = createFileRoute("/_authenticated/topup")({
 const methods = [
   { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
   { id: "openpay", label: "OpenPay Balance", icon: Sparkles, desc: "Instant transfer from your OpenPay account" },
-  { id: "card", label: "Debit / Credit Card", icon: CreditCard, desc: "Visa, Mastercard, Amex — 3D Secure" },
-  { id: "bank", label: "Bank Transfer", icon: Building2, desc: "ACH / SEPA — 1–2 business days" },
 ] as const;
 
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
   amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
-  method: z.enum(["pi", "openpay", "card", "bank"]),
+  method: z.enum(["pi", "openpay"]),
 });
 
 function TopUpPage() {
@@ -39,9 +37,8 @@ function TopUpPage() {
   const qc = useQueryClient();
   const topup = useServerFn(topUpOUSD);
   const [amount, setAmount] = useState("100");
-  const [method, setMethod] = useState<"pi" | "openpay" | "card" | "bank">("pi");
+  const [method, setMethod] = useState<"pi" | "openpay">("pi");
   const [busy, setBusy] = useState(false);
-  const [cardForm, setCardForm] = useState({ number: "", exp: "", cvc: "" });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -52,20 +49,13 @@ function TopUpPage() {
     e.preventDefault();
     const parsed = schema.safeParse({ amount, method });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
-    if (method === "card") {
-      const digits = cardForm.number.replace(/\s/g, "");
-      if (digits.length < 12) { toast.error("Enter a valid card number"); return; }
-      if (!/^\d{2}\/\d{2}$/.test(cardForm.exp)) { toast.error("Expiry must be MM/YY"); return; }
-      if (cardForm.cvc.length < 3) { toast.error("Invalid CVC"); return; }
-    }
     setBusy(true);
     try {
       if (method === "pi") {
         const { paymentId } = await topUpWithPi(parsed.data.amount);
         toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
       } else {
-        const ref = method === "card" ? `card_${cardForm.number.slice(-4)}` : method;
-        await topup({ data: { amount: parsed.data.amount, method, reference: ref } });
+        await topup({ data: { amount: parsed.data.amount, method, reference: method } });
         toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
       }
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
@@ -120,25 +110,6 @@ function TopUpPage() {
               ))}
             </div>
           </div>
-
-          {method === "card" && (
-            <div className="space-y-3 rounded-2xl border border-border bg-card/50 p-3">
-              <div>
-                <Label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Card number</Label>
-                <Input value={cardForm.number} onChange={(e) => setCardForm({ ...cardForm, number: e.target.value })} placeholder="4242 4242 4242 4242" inputMode="numeric" maxLength={23} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Expiry</Label>
-                  <Input value={cardForm.exp} onChange={(e) => setCardForm({ ...cardForm, exp: e.target.value })} placeholder="MM/YY" maxLength={5} />
-                </div>
-                <div>
-                  <Label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CVC</Label>
-                  <Input value={cardForm.cvc} onChange={(e) => setCardForm({ ...cardForm, cvc: e.target.value })} placeholder="123" maxLength={4} />
-                </div>
-              </div>
-            </div>
-          )}
 
           <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}

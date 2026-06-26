@@ -40,6 +40,21 @@ function TopUpPage() {
   const [openpayToken, setOpenpayToken] = useState("");
   const [showOpenpay, setShowOpenpay] = useState(false);
 
+  function extractToken(input: string): string {
+    const trimmed = input.trim();
+    if (!trimmed) return "";
+    // Accept either a raw token (e.g. "qrp_...") or a full URL like
+    // "https://openpy.space/qr-pay/qrp_..." — use the last path segment.
+    try {
+      const url = new URL(trimmed);
+      const segs = url.pathname.split("/").filter(Boolean);
+      return segs[segs.length - 1] ?? trimmed;
+    } catch {
+      const segs = trimmed.split("/").filter(Boolean);
+      return segs[segs.length - 1] ?? trimmed;
+    }
+  }
+
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
@@ -48,7 +63,9 @@ function TopUpPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (method === "openpay") {
-      if (!openpayToken.trim()) { toast.error("Enter an OpenPay QR token"); return; }
+      const tok = extractToken(openpayToken);
+      if (!tok) { toast.error("Enter an OpenPay QR token or link"); return; }
+      setOpenpayToken(tok);
       setShowOpenpay(true);
       return;
     }
@@ -114,13 +131,14 @@ function TopUpPage() {
           {method === "openpay" && (
             <div>
               <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">OpenPay QR token</Label>
-              <Input value={openpayToken} onChange={(e) => { setOpenpayToken(e.target.value); setShowOpenpay(false); }} placeholder="qr_..." />
+              <Input value={openpayToken} onChange={(e) => { setOpenpayToken(e.target.value); setShowOpenpay(false); }} placeholder="qrp_... or https://openpy.space/qr-pay/qrp_..." />
+              <p className="mt-1 text-[11px] text-muted-foreground">Paste the QR token or the full QR Pay link.</p>
             </div>
           )}
 
           {method === "openpay" && showOpenpay && openpayToken ? (
             <OpenPayCheckout
-              token={openpayToken.trim()}
+              token={extractToken(openpayToken)}
               customerEmail={user.email ?? ""}
               customerName={(user.user_metadata?.full_name as string | undefined) ?? user.email ?? ""}
             />

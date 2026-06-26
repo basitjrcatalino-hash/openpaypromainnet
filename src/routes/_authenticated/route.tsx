@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } fr
 import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Coins, Image as ImageIcon, ArrowLeftRight, Send, QrCode,
-  Activity, Settings as SettingsIcon, Wallet, Plus, Moon, Sun, LogOut, Sparkles, Menu, X, CreditCard,
+  Activity, Settings as SettingsIcon, Wallet, Plus, Moon, Sun, LogOut, Sparkles, Menu, X, CreditCard, Gift,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { to: "/receive", label: "Receive", icon: QrCode },
   { to: "/topup", label: "Top Up", icon: CreditCard },
   { to: "/ousd", label: "OUSD", icon: Sparkles },
+  { to: "/testnet-reward", label: "A2U Reward", icon: Gift },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];

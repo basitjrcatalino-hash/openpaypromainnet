@@ -36,14 +36,29 @@ function CreateToken() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "", symbol: "", description: "", totalSupply: 1000000, decimals: 18,
-    website: "", twitter: "", telegram: "", taxBps: 0,
+    website: "", twitter: "", telegram: "", taxBps: 0, logo_url: "",
     burnable: true, mintable: false, pausable: false, autoLiquidity: false,
   });
 
   function set<K extends keyof typeof form>(k: K, v: typeof form[K]) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5MB"); return; }
+    setUploading(true);
+    try {
+      const url = await uploadMedia(file, user.id, "tokens");
+      set("logo_url", url);
+      toast.success("Logo uploaded");
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -63,6 +78,7 @@ function CreateToken() {
         total_supply: parsed.data.totalSupply,
         decimals: parsed.data.decimals,
         contract_address: generateAddress(),
+        logo_url: form.logo_url || null,
         website: parsed.data.website || null,
         twitter: parsed.data.twitter || null,
         telegram: parsed.data.telegram || null,
@@ -76,6 +92,7 @@ function CreateToken() {
       if (error) throw error;
       toast.success(`${parsed.data.symbol} token created!`);
       navigate({ to: "/tokens" });
+
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

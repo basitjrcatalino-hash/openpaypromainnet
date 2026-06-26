@@ -5,20 +5,7 @@ const SDK_URL = "https://sdk.minepi.com/pi-sdk.js";
 
 export type PiAuthSession = { uid: string; username: string; accessToken: string };
 
-type PiIncompletePayment = { identifier: string; [k: string]: unknown };
-
-declare global {
-  interface Window {
-    Pi?: {
-      init: (opts: { version: string; sandbox?: boolean }) => unknown;
-      authenticate: (
-        scopes: string[],
-        onIncompletePaymentFound?: (payment: PiIncompletePayment) => void,
-      ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
-      createPayment: (...args: unknown[]) => unknown;
-    };
-  }
-}
+// Window.Pi is already typed in src/lib/pi-network.ts
 
 export function isPiSandbox(): boolean {
   const env = String(import.meta.env.VITE_PI_SANDBOX ?? "").trim().toLowerCase();

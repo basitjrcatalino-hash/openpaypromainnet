@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Wallet, Sparkles, Loader2 } from "lucide-react";
+import { signInWithPi } from "@/lib/pi-network";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,35 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [piBusy, setPiBusy] = useState(false);
+
+  const handlePiSignIn = async (silent = false) => {
+    setPiBusy(true);
+    try {
+      const { username } = await signInWithPi();
+      toast.success(`Signed in as @${username} via Pi Network`);
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      if (!silent) toast.error((err as Error).message || "Pi sign-in failed");
+      else console.warn("[Pi] auto sign-in skipped:", (err as Error).message);
+    } finally {
+      setPiBusy(false);
+    }
+  };
+
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (cancelled) return;
+      if (data.session) {
+        navigate({ to: "/dashboard" });
+        return;
+      }
+      // Auto-trigger Pi authentication on load (silent — failures don't toast)
+      void handlePiSignIn(true);
     });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -137,6 +163,21 @@ function AuthPage() {
               </Button>
             </form>
           </Tabs>
+
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handlePiSignIn(false)}
+            disabled={piBusy}
+            className="h-11 w-full rounded-xl border-2 border-[#7B3FF2] bg-[#7B3FF2]/10 text-base font-semibold text-[#7B3FF2] hover:bg-[#7B3FF2]/20"
+          >
+            {piBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>π&nbsp;&nbsp;Continue with Pi Network</>}
+          </Button>
+
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
             By continuing you agree to OpenPay's Terms & Privacy Policy.

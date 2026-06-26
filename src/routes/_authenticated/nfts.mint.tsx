@@ -32,7 +32,23 @@ function MintNFT() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ name: "", description: "", media_url: "", price: 1, royalty_bps: 500, collection_id: "" });
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) { toast.error("Max 25MB"); return; }
+    setUploading(true);
+    try {
+      const url = await uploadMedia(file, user.id, "nfts");
+      setForm((f) => ({ ...f, media_url: url }));
+      toast.success("Uploaded");
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+  }
+
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],

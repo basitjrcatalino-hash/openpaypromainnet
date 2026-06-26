@@ -174,6 +174,54 @@ export type Database = {
           },
         ]
       }
+      pi_payments: {
+        Row: {
+          approved_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          memo: string | null
+          metadata: Json
+          ousd_credited: number
+          payment_id: string
+          pi_amount: number
+          status: string
+          txid: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          memo?: string | null
+          metadata?: Json
+          ousd_credited?: number
+          payment_id: string
+          pi_amount: number
+          status?: string
+          txid?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          memo?: string | null
+          metadata?: Json
+          ousd_credited?: number
+          payment_id?: string
+          pi_amount?: number
+          status?: string
+          txid?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -28,6 +28,7 @@ import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
@@ -127,6 +128,11 @@ const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   path: '/mint',
   getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
+const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
+  id: '/admin/topup',
+  path: '/admin/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicPiPaymentsIncompleteRoute =
   ApiPublicPiPaymentsIncompleteRouteImport.update({
     id: '/api/public/pi-payments/incomplete',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
@@ -234,6 +243,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-a2u'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
     | '/api/public/pi-a2u'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
     | '/admin/testnet-progress'
+    | '/_authenticated/admin/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
     | '/api/public/pi-a2u'
@@ -438,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
       parentRoute: typeof AuthenticatedNftsRoute
     }
+    '/_authenticated/admin/topup': {
+      id: '/_authenticated/admin/topup'
+      path: '/admin/topup'
+      fullPath: '/admin/topup'
+      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/pi-payments/incomplete': {
       id: '/api/public/pi-payments/incomplete'
       path: '/api/public/pi-payments/incomplete'
@@ -495,6 +514,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
+  AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -508,6 +528,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
+  AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

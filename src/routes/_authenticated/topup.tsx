@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Plus, Sparkles, Ticket, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -13,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
-import { OpenPayCheckout } from "@/components/openpay-checkout";
+import { getPublicTopupInfo, redeemVoucher } from "@/lib/topup-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/topup")({
 
 const methods = [
   { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
-  { id: "openpay", label: "OpenPay QR Pay", icon: Sparkles, desc: "Pay securely via OpenPay checkout" },
+  { id: "openpay", label: "OpenPay Voucher", icon: Ticket, desc: "Pay on OpenPay, then redeem your voucher code" },
 ] as const;
 
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -37,23 +38,11 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<"pi" | "openpay">("pi");
   const [busy, setBusy] = useState(false);
-  const [openpayToken, setOpenpayToken] = useState("");
-  const [showOpenpay, setShowOpenpay] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
 
-  function extractToken(input: string): string {
-    const trimmed = input.trim();
-    if (!trimmed) return "";
-    // Accept either a raw token (e.g. "qrp_...") or a full URL like
-    // "https://openpy.space/qr-pay/qrp_..." — use the last path segment.
-    try {
-      const url = new URL(trimmed);
-      const segs = url.pathname.split("/").filter(Boolean);
-      return segs[segs.length - 1] ?? trimmed;
-    } catch {
-      const segs = trimmed.split("/").filter(Boolean);
-      return segs[segs.length - 1] ?? trimmed;
-    }
-  }
+  const getInfo = useServerFn(getPublicTopupInfo);
+  const redeem = useServerFn(redeemVoucher);
+  const infoQ = useQuery({ queryKey: ["public-topup"], queryFn: () => getInfo() });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -63,10 +52,17 @@ function TopUpPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (method === "openpay") {
-      const tok = extractToken(openpayToken);
-      if (!tok) { toast.error("Enter an OpenPay QR token or link"); return; }
-      setOpenpayToken(tok);
-      setShowOpenpay(true);
+      const code = voucherCode.trim();
+      if (!code) { toast.error("Enter your voucher code"); return; }
+      setBusy(true);
+      try {
+        const r = await redeem({ data: { code } });
+        toast.success(`Voucher redeemed · ${r.amount} OUSD credited`);
+        setVoucherCode("");
+        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+        qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+      } catch (err) { toast.error((err as Error).message); }
+      finally { setBusy(false); }
       return;
     }
     const parsed = schema.safeParse({ amount, method });
@@ -112,7 +108,7 @@ function TopUpPage() {
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Payment method</Label>
             <div className="space-y-2">
               {methods.map((m) => (
-                <button key={m.id} type="button" onClick={() => { setMethod(m.id); setShowOpenpay(false); }} className={cn(
+                <button key={m.id} type="button" onClick={() => setMethod(m.id)} className={cn(
                   "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all",
                   method === m.id ? "border-primary bg-primary/5 shadow-glow" : "border-border hover:bg-muted/50",
                 )}>
@@ -129,25 +125,41 @@ function TopUpPage() {
           </div>
 
           {method === "openpay" && (
-            <div>
-              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">OpenPay QR token</Label>
-              <Input value={openpayToken} onChange={(e) => { setOpenpayToken(e.target.value); setShowOpenpay(false); }} placeholder="qrp_... or https://openpy.space/qr-pay/qrp_..." />
-              <p className="mt-1 text-[11px] text-muted-foreground">Paste the QR token or the full QR Pay link.</p>
+            <div className="space-y-3 rounded-2xl border border-border bg-muted/30 p-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 1 · Pay on OpenPay</div>
+                {infoQ.data?.openpay_payment_url ? (
+                  <a
+                    href={infoQ.data.openpay_payment_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#0070BA] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                  >
+                    Open payment page <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <p className="mt-1 text-xs text-muted-foreground">Payment link not configured yet. Ask the admin.</p>
+                )}
+                {infoQ.data?.instructions && (
+                  <p className="mt-2 whitespace-pre-line text-xs text-muted-foreground">{infoQ.data.instructions}</p>
+                )}
+              </div>
+              <div>
+                <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 2 · Redeem voucher</Label>
+                <Input
+                  value={voucherCode}
+                  onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                  placeholder="XXXX-XXXX-XXXX"
+                  className="font-mono tracking-wider"
+                />
+              </div>
             </div>
           )}
 
-          {method === "openpay" && showOpenpay && openpayToken ? (
-            <OpenPayCheckout
-              token={extractToken(openpayToken)}
-              customerEmail={user.email ?? ""}
-              customerName={(user.user_metadata?.full_name as string | undefined) ?? user.email ?? ""}
-            />
-          ) : (
-            <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
-              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-              {method === "openpay" ? "Continue to OpenPay" : `Top up ${amount ? formatUSD(Number(amount)) : ""}`}
-            </Button>
-          )}
+          <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
+            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+            {method === "openpay" ? "Redeem voucher" : `Top up ${amount ? formatUSD(Number(amount)) : ""}`}
+          </Button>
           <p className="text-center text-[11px] text-muted-foreground">
             New accounts start with a zero balance. Top up to begin.
           </p>

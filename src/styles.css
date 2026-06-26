@@ -221,7 +221,6 @@
 }
 @utility animate-page-in {
   animation: page-in .28s cubic-bezier(.4,0,.2,1) both;
-  }
 }
 
 @utility glass {

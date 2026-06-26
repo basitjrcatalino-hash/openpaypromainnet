@@ -22,6 +22,7 @@ import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/o
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 
@@ -89,6 +90,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
+  id: '/api/public/pi-auth',
+  path: '/api/public/pi-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
     id: '/create',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/topup': typeof AuthenticatedTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/topup': typeof AuthenticatedTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/pi-auth'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/pi-auth'
   id:
     | '__root__'
     | '/'
@@ -201,12 +212,14 @@ export interface FileRouteTypes {
     | '/_authenticated/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
+    | '/api/public/pi-auth'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -302,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/pi-auth': {
+      id: '/api/public/pi-auth'
+      path: '/api/public/pi-auth'
+      fullPath: '/api/public/pi-auth'
+      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/tokens/create': {
       id: '/_authenticated/tokens/create'
       path: '/create'
@@ -374,6 +394,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

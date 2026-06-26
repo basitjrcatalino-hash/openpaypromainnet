@@ -60,9 +60,14 @@ function TopUpPage() {
     }
     setBusy(true);
     try {
-      const ref = method === "card" ? `card_${cardForm.number.slice(-4)}` : method;
-      const res = await topup({ data: { amount: parsed.data.amount, method, reference: ref } });
-      toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
+      if (method === "pi") {
+        const { paymentId } = await topUpWithPi(parsed.data.amount);
+        toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
+      } else {
+        const ref = method === "card" ? `card_${cardForm.number.slice(-4)}` : method;
+        await topup({ data: { amount: parsed.data.amount, method, reference: ref } });
+        toast.success(`Topped up ${formatUSD(parsed.data.amount)} OUSD`);
+      }
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       setAmount("");

@@ -307,7 +307,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          pi_uid: string | null
+          pi_username: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -315,7 +318,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          pi_uid?: string | null
+          pi_username?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -323,7 +329,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          pi_uid?: string | null
+          pi_username?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -566,25 +575,34 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          biometric_enabled: boolean
           currency: string
           language: string
           notifications: Json
+          pin_hash: string | null
+          recovery_backed_up: boolean
           theme: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          biometric_enabled?: boolean
           currency?: string
           language?: string
           notifications?: Json
+          pin_hash?: string | null
+          recovery_backed_up?: boolean
           theme?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          biometric_enabled?: boolean
           currency?: string
           language?: string
           notifications?: Json
+          pin_hash?: string | null
+          recovery_backed_up?: boolean
           theme?: string
           updated_at?: string
           user_id?: string

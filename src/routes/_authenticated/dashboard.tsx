@@ -26,6 +26,11 @@ function Dashboard() {
   const [hideBalance, setHideBalance] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user.id],
+    queryFn: async () => (await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle()).data,
+  });
+
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: async () => {
@@ -124,7 +129,7 @@ function Dashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Hello {(user.user_metadata?.full_name as string | undefined) ?? (user.user_metadata?.name as string | undefined) ?? (user.email?.split("@")[0]) ?? "there"} 👋
+            Hello {(profile?.display_name as string | undefined) ?? (user.user_metadata?.full_name as string | undefined) ?? (user.user_metadata?.name as string | undefined) ?? (user.email?.split("@")[0]) ?? "there"} 👋
           </h1>
           <p className="text-sm text-muted-foreground">Here's your OpenPay portfolio snapshot</p>
         </div>

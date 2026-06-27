@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { Plus, Trash2, Check, Wallet as WalletIcon, KeyRound, ShieldCheck, Link2, Loader2, Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,12 +47,11 @@ function SettingsPage() {
   });
   const [username, setUsername] = useState<string>("");
   const [savingName, setSavingName] = useState(false);
-  useState(() => { /* noop */ });
-  // sync username from profile when loaded
-  if (profile && username === "" && profile.display_name) {
-    // initialize once
-    setTimeout(() => setUsername(profile.display_name as string), 0);
-  }
+  useEffect(() => {
+    if (profile?.display_name && !username) setUsername(profile.display_name as string);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.display_name]);
+
 
   async function saveUsername() {
     const v = username.trim();

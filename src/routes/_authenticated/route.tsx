@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { shortAddress } from "@/lib/wallet-utils";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -64,6 +64,11 @@ function AuthenticatedLayout() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user.id],
+    queryFn: async () => (await supabase.from("profiles").select("display_name,username,avatar_url,pi_username").eq("id", user.id).maybeSingle()).data,
+  });
+
   return (
     <div className="relative min-h-screen bg-background bg-hero-glow text-foreground">
       {/* mobile top bar */}
@@ -82,7 +87,7 @@ function AuthenticatedLayout() {
       <div className="mx-auto flex w-full max-w-[1400px]">
         {/* sidebar (desktop) */}
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-border/60 bg-sidebar/60 backdrop-blur-xl md:flex md:flex-col">
-          <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} />
+          <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} profile={profile as any} />
         </aside>
 
         {/* mobile sidebar overlay */}
@@ -90,7 +95,7 @@ function AuthenticatedLayout() {
           <div className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
             <aside className="relative ml-0 flex h-full w-72 flex-col border-r border-border bg-sidebar shadow-2xl">
-              <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} />
+              <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} profile={profile as any} />
             </aside>
           </div>
         )}
@@ -105,7 +110,8 @@ function AuthenticatedLayout() {
   );
 }
 
-function SidebarInner({ activeWallet, userEmail }: { activeWallet: { name: string; address: string } | null | undefined; userEmail: string }) {
+type SidebarProfile = { display_name?: string | null; username?: string | null; avatar_url?: string | null; pi_username?: string | null } | null | undefined;
+function SidebarInner({ activeWallet, userEmail, profile }: { activeWallet: { name: string; address: string } | null | undefined; userEmail: string; profile?: SidebarProfile }) {
   const { theme, toggle } = useTheme();
   const router = useRouter();
 
@@ -148,13 +154,14 @@ function SidebarInner({ activeWallet, userEmail }: { activeWallet: { name: strin
       <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
         <div className="flex items-center gap-2 px-2">
           <Avatar className="h-8 w-8">
+            {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
             <AvatarFallback className="bg-gradient-primary text-xs text-primary-foreground">
-              {(userEmail[0] ?? "U").toUpperCase()}
+              {((profile?.display_name || profile?.username || userEmail)[0] ?? "U").toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1 text-xs">
-            <div className="truncate font-medium">{userEmail}</div>
-            <div className="text-muted-foreground">Signed in</div>
+            <div className="truncate font-medium">{profile?.display_name || profile?.username || userEmail}</div>
+            <div className="truncate text-muted-foreground">{profile?.username ? `@${profile.username}` : "Signed in"}</div>
           </div>
         </div>
         <div className="flex gap-2">

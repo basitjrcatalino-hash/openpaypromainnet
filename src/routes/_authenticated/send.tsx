@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/send")({
 });
 
 const schema = z.object({
-  to: z.string().trim().min(8, "Enter a wallet address").max(120),
+  to: z.string().trim().min(2, "Enter a wallet address or @username").max(120),
   amount: z.coerce.number().positive().max(1e15),
   asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional(),
@@ -91,9 +91,9 @@ function SendPage() {
 
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Recipient address">
+          <Field label="Recipient address or @username">
             <div className="flex gap-2">
-              <Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} placeholder="0x… or openpay:…" required />
+              <Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} placeholder="0x… or @username" required />
               <QrScannerButton onResult={applyScan} trigger={
                 <Button type="button" variant="outline" size="icon" className="rounded-xl shrink-0" aria-label="Scan QR">
                   <Camera className="h-4 w-4" />

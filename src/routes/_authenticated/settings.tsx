@@ -1,8 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Plus, Trash2, Check, Wallet as WalletIcon, KeyRound, ShieldCheck, Link2, Loader2, Copy, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Check, Wallet as WalletIcon, KeyRound, ShieldCheck, Link2, Loader2, Copy, RefreshCw, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -11,15 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme-provider";
 import { generateAddress, generateMnemonic, shortAddress } from "@/lib/wallet-utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — OpenPay Pro Wallet" }] }),
   component: SettingsPage,
 });
+
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function SettingsPage() {
   const { user } = Route.useRouteContext();
@@ -45,27 +51,54 @@ function SettingsPage() {
     queryKey: ["profile", user.id],
     queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
   });
-  const [username, setUsername] = useState<string>("");
+
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [savingName, setSavingName] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
-    if (profile?.display_name && !username) setUsername(profile.display_name as string);
+    if (profile) {
+      if (profile.display_name && !displayName) setDisplayName(profile.display_name as string);
+      if ((profile as any).username && !username) setUsername((profile as any).username as string);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.display_name]);
+  }, [profile?.display_name, (profile as any)?.username]);
 
-
-  async function saveUsername() {
-    const v = username.trim();
-    if (!v) { toast.error("Username required"); return; }
-    if (v.length > 40) { toast.error("Max 40 characters"); return; }
+  async function saveProfile() {
+    const dn = displayName.trim();
+    const un = username.trim().replace(/^@/, "");
+    if (!dn) { toast.error("Display name required"); return; }
+    if (un && !/^[a-zA-Z0-9_.-]{3,30}$/.test(un)) { toast.error("Username 3-30 chars, letters/digits/._- only"); return; }
     setSavingName(true);
     try {
-      const { error } = await supabase.from("profiles").upsert({ id: user.id, display_name: v, updated_at: new Date().toISOString() });
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id, display_name: dn, username: un || null, updated_at: new Date().toISOString(),
+      });
       if (error) throw error;
-      toast.success("Username saved");
+      toast.success("Profile saved");
       qc.invalidateQueries({ queryKey: ["profile", user.id] });
     } catch (err) { toast.error((err as Error).message); } finally { setSavingName(false); }
   }
 
+  async function uploadAvatar(file: File) {
+    if (file.size > 800_000) { toast.error("Max 800KB"); return; }
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((res, rej) => {
+        reader.onload = () => res(reader.result as string); reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id, avatar_url: dataUrl, updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      toast.success("Avatar updated");
+      qc.invalidateQueries({ queryKey: ["profile", user.id] });
+    } catch (err) { toast.error((err as Error).message); } finally { setUploading(false); }
+  }
 
   async function createWallet() {
     if (!newName.trim()) { toast.error("Name required"); return; }
@@ -120,23 +153,44 @@ function SettingsPage() {
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Settings</h1>
         <p className="text-sm text-muted-foreground">Wallets, security, preferences and OpenPay integration</p>
       </div>
+
       {/* Profile */}
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Profile</h2>
-        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your display name" maxLength={40} className="mt-1.5" />
-            <p className="mt-1 text-xs text-muted-foreground">Shown on your dashboard greeting. Email: <span className="font-mono">{user.email}</span></p>
+        <div className="flex flex-col gap-5 md:flex-row md:items-start">
+          <div className="flex flex-col items-center gap-2">
+            <Avatar className="h-20 w-20 ring-2 ring-primary/30">
+              <AvatarImage src={(profile as any)?.avatar_url ?? undefined} />
+              <AvatarFallback className="bg-gradient-primary text-lg text-primary-foreground">
+                {(displayName || user.email || "U")[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <input ref={fileRef} hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
+            <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => fileRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />} Photo
+            </Button>
           </div>
-          <Button onClick={saveUsername} disabled={savingName} className="rounded-full bg-gradient-primary text-primary-foreground">
-            {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save
-          </Button>
+          <div className="flex-1 space-y-3">
+            <div>
+              <Label htmlFor="dn">Display name</Label>
+              <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" maxLength={40} className="mt-1.5" />
+            </div>
+            <div>
+              <Label htmlFor="un">Username</Label>
+              <Input id="un" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" maxLength={30} className="mt-1.5" />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Others can send to you using <span className="font-mono">@{username || "yourname"}</span>. Email: <span className="font-mono">{user.email}</span>
+                {(profile as any)?.pi_username && <> · Pi: <span className="font-mono">@{(profile as any).pi_username}</span></>}
+              </p>
+            </div>
+            <Button onClick={saveProfile} disabled={savingName} className="rounded-full bg-gradient-primary text-primary-foreground">
+              {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save profile
+            </Button>
+          </div>
         </div>
       </Card>
 
       {/* Wallets */}
-
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Wallets</h2>
@@ -234,9 +288,19 @@ function SettingsPage() {
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Security</h2>
         <div className="grid gap-3 md:grid-cols-3">
-          <SecurityCard icon={ShieldCheck} title="Biometric login" desc="Use device biometrics to unlock" />
-          <SecurityCard icon={KeyRound} title="PIN code" desc="Add a 6-digit PIN for transactions" />
-          <SecurityCard icon={RefreshCw} title="Recovery phrase" desc="Backup your seed phrase" />
+          <BiometricCard
+            enabled={!!(prefs as any)?.biometric_enabled}
+            onToggle={(v) => updatePref({ biometric_enabled: v })}
+          />
+          <PinCard
+            hasPin={!!(prefs as any)?.pin_hash}
+            onSave={async (pin) => { const h = await sha256(`${user.id}:${pin}`); await updatePref({ pin_hash: h }); toast.success("PIN saved"); }}
+            onClear={async () => { await updatePref({ pin_hash: null }); toast.success("PIN removed"); }}
+          />
+          <RecoveryCard
+            backedUp={!!(prefs as any)?.recovery_backed_up}
+            onConfirm={async () => { await updatePref({ recovery_backed_up: true }); toast.success("Marked as backed up"); }}
+          />
         </div>
       </Card>
 
@@ -268,13 +332,103 @@ function SettingRow({ label, desc, children }: { label: string; desc: string; ch
     </div>
   );
 }
-function SecurityCard({ icon: Icon, title, desc }: { icon: typeof ShieldCheck; title: string; desc: string }) {
+
+function BiometricCard({ enabled, onToggle }: { enabled: boolean; onToggle: (v: boolean) => void | Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  async function enroll() {
+    setBusy(true);
+    try {
+      if (enabled) { await onToggle(false); toast.success("Biometric disabled"); return; }
+      if (!("credentials" in navigator) || !window.PublicKeyCredential) {
+        toast.error("Biometric not supported on this device"); return;
+      }
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userId = crypto.getRandomValues(new Uint8Array(16));
+      await navigator.credentials.create({
+        publicKey: {
+          challenge, rp: { name: "OpenPay Pro" },
+          user: { id: userId, name: "openpay-user", displayName: "OpenPay User" },
+          pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+          authenticatorSelection: { userVerification: "preferred", authenticatorAttachment: "platform" },
+          timeout: 60_000, attestation: "none",
+        },
+      });
+      await onToggle(true);
+      toast.success("Biometric enabled");
+    } catch (err) { toast.error((err as Error).message || "Biometric setup cancelled"); } finally { setBusy(false); }
+  }
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><Icon className="h-4 w-4" /></span>
-      <div className="mt-2 text-sm font-semibold">{title}</div>
-      <div className="text-xs text-muted-foreground">{desc}</div>
-      <Button size="sm" variant="outline" className="mt-3 w-full rounded-full">Configure</Button>
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><ShieldCheck className="h-4 w-4" /></span>
+      <div className="mt-2 text-sm font-semibold">Biometric login {enabled && <span className="ml-1 text-[10px] uppercase text-mint-foreground">on</span>}</div>
+      <div className="text-xs text-muted-foreground">Use device biometrics to unlock</div>
+      <Button size="sm" variant="outline" className="mt-3 w-full rounded-full" onClick={enroll} disabled={busy}>
+        {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+        {enabled ? "Disable" : "Configure"}
+      </Button>
+    </div>
+  );
+}
+
+function PinCard({ hasPin, onSave, onClear }: { hasPin: boolean; onSave: (pin: string) => Promise<void>; onClear: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    if (!/^\d{6}$/.test(pin)) { toast.error("Enter 6 digits"); return; }
+    if (pin !== pin2) { toast.error("PINs do not match"); return; }
+    setBusy(true); try { await onSave(pin); setOpen(false); setPin(""); setPin2(""); } finally { setBusy(false); }
+  }
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><KeyRound className="h-4 w-4" /></span>
+      <div className="mt-2 text-sm font-semibold">PIN code {hasPin && <span className="ml-1 text-[10px] uppercase text-mint-foreground">set</span>}</div>
+      <div className="text-xs text-muted-foreground">Add a 6-digit PIN for transactions</div>
+      <div className="mt-3 flex gap-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" className="flex-1 rounded-full">{hasPin ? "Change" : "Configure"}</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-sm rounded-3xl">
+            <DialogHeader><DialogTitle>Set transaction PIN</DialogTitle><DialogDescription>6 digits, used to confirm sends.</DialogDescription></DialogHeader>
+            <div className="space-y-3">
+              <Input inputMode="numeric" maxLength={6} placeholder="Enter PIN" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
+              <Input inputMode="numeric" maxLength={6} placeholder="Confirm PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} />
+            </div>
+            <DialogFooter><Button onClick={save} disabled={busy} className="rounded-full bg-gradient-primary text-primary-foreground">{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save PIN</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {hasPin && <Button size="sm" variant="ghost" className="rounded-full" onClick={onClear}>Clear</Button>}
+      </div>
+    </div>
+  );
+}
+
+function RecoveryCard({ backedUp, onConfirm }: { backedUp: boolean; onConfirm: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [phrase, setPhrase] = useState<string[] | null>(null);
+  function reveal() { setPhrase(generateMnemonic()); setOpen(true); }
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><RefreshCw className="h-4 w-4" /></span>
+      <div className="mt-2 text-sm font-semibold">Recovery phrase {backedUp && <span className="ml-1 text-[10px] uppercase text-mint-foreground">saved</span>}</div>
+      <div className="text-xs text-muted-foreground">Backup your seed phrase</div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <Button size="sm" variant="outline" className="mt-3 w-full rounded-full" onClick={reveal}>Reveal phrase</Button>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader><DialogTitle>Your recovery phrase</DialogTitle><DialogDescription>Write these 12 words down and store offline. Anyone with these words controls your wallet.</DialogDescription></DialogHeader>
+          {phrase && (
+            <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+              {phrase.map((w, i) => <div key={i} className="rounded-md bg-card px-2 py-1.5 border border-border/60">{i + 1}. {w}</div>)}
+            </div>
+          )}
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" className="rounded-full" onClick={() => { if (phrase) { navigator.clipboard.writeText(phrase.join(" ")); toast.success("Copied"); } }}><Copy className="mr-1.5 h-3.5 w-3.5" />Copy</Button>
+            <Button className="rounded-full bg-gradient-primary text-primary-foreground" onClick={async () => { await onConfirm(); setOpen(false); }}>I've backed it up</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -64,6 +64,11 @@ function AuthenticatedLayout() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user.id],
+    queryFn: async () => (await supabase.from("profiles").select("display_name,username,avatar_url,pi_username").eq("id", user.id).maybeSingle()).data,
+  });
+
   return (
     <div className="relative min-h-screen bg-background bg-hero-glow text-foreground">
       {/* mobile top bar */}

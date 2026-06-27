@@ -120,8 +120,23 @@ function SettingsPage() {
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Settings</h1>
         <p className="text-sm text-muted-foreground">Wallets, security, preferences and OpenPay integration</p>
       </div>
+      {/* Profile */}
+      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Profile</h2>
+        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <Label htmlFor="username">Username</Label>
+            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your display name" maxLength={40} className="mt-1.5" />
+            <p className="mt-1 text-xs text-muted-foreground">Shown on your dashboard greeting. Email: <span className="font-mono">{user.email}</span></p>
+          </div>
+          <Button onClick={saveUsername} disabled={savingName} className="rounded-full bg-gradient-primary text-primary-foreground">
+            {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save
+          </Button>
+        </div>
+      </Card>
 
       {/* Wallets */}
+
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Wallets</h2>

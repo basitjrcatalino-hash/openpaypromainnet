@@ -110,7 +110,8 @@ function AuthenticatedLayout() {
   );
 }
 
-function SidebarInner({ activeWallet, userEmail }: { activeWallet: { name: string; address: string } | null | undefined; userEmail: string }) {
+type SidebarProfile = { display_name?: string | null; username?: string | null; avatar_url?: string | null; pi_username?: string | null } | null | undefined;
+function SidebarInner({ activeWallet, userEmail, profile }: { activeWallet: { name: string; address: string } | null | undefined; userEmail: string; profile?: SidebarProfile }) {
   const { theme, toggle } = useTheme();
   const router = useRouter();
 

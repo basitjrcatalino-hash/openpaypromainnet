@@ -87,7 +87,7 @@ function AuthenticatedLayout() {
       <div className="mx-auto flex w-full max-w-[1400px]">
         {/* sidebar (desktop) */}
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-border/60 bg-sidebar/60 backdrop-blur-xl md:flex md:flex-col">
-          <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} />
+          <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} profile={profile as any} />
         </aside>
 
         {/* mobile sidebar overlay */}
@@ -95,7 +95,7 @@ function AuthenticatedLayout() {
           <div className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
             <aside className="relative ml-0 flex h-full w-72 flex-col border-r border-border bg-sidebar shadow-2xl">
-              <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} />
+              <SidebarInner activeWallet={activeWallet} userEmail={user.email ?? ""} profile={profile as any} />
             </aside>
           </div>
         )}

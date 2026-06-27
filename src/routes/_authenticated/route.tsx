@@ -35,11 +35,12 @@ const NAV: NavItem[] = [
   { to: "/receive", label: "Receive", icon: QrCode },
   { to: "/topup", label: "Top Up", icon: CreditCard },
   { to: "/ousd", label: "OUSD", icon: Sparkles },
-  { to: "/testnet-reward", label: "A2U Reward", icon: Gift },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
-  { to: "/admin/topup", label: "Admin · Top Up", icon: ShieldCheck },
 ];
+// Keep imports referenced to avoid unused warnings
+void Gift; void ShieldCheck;
+
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();

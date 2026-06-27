@@ -1,29 +1,34 @@
 import { useEffect, useState } from "react";
 import { Wallet } from "lucide-react";
 
+const SESSION_KEY = "openpay_splash_shown";
+
 export function SplashScreen() {
-  const [hidden, setHidden] = useState(false);
+  const [shown, setShown] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !sessionStorage.getItem(SESSION_KEY);
+  });
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFading(true), 1100);
-    const t2 = setTimeout(() => setHidden(true), 1700);
+    if (!shown) return;
+    sessionStorage.setItem(SESSION_KEY, "1");
+    const t1 = setTimeout(() => setFading(true), 900);
+    const t2 = setTimeout(() => setShown(false), 1500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [shown]);
 
-  if (hidden) return null;
+  if (!shown) return null;
 
   return (
     <div
       aria-hidden
-      className={`fixed inset-0 z-[100] grid place-items-center bg-background bg-hero-glow transition-opacity duration-500 ${fading ? "pointer-events-none opacity-0" : "opacity-100"}`}
+      style={{ transition: "opacity 600ms ease" }}
+      className={`fixed inset-0 z-[100] grid place-items-center bg-background bg-hero-glow ${fading ? "pointer-events-none opacity-0" : "opacity-100"}`}
     >
-      <div className="flex flex-col items-center gap-5 animate-fade-in">
-        <div className="relative">
-          <div className="absolute inset-0 animate-ping rounded-3xl bg-gradient-primary opacity-40" />
-          <div className="relative grid h-20 w-20 place-items-center rounded-3xl bg-gradient-primary text-primary-foreground shadow-glow animate-scale-in">
-            <Wallet className="h-9 w-9" strokeWidth={2.4} />
-          </div>
+      <div className="flex flex-col items-center gap-5">
+        <div className="relative grid h-20 w-20 place-items-center rounded-3xl bg-gradient-primary text-primary-foreground shadow-glow">
+          <Wallet className="h-9 w-9" strokeWidth={2.4} />
         </div>
         <div className="text-center">
           <div className="text-xl font-bold tracking-tight">

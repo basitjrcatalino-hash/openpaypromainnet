@@ -40,6 +40,33 @@ function SettingsPage() {
     queryFn: async () => (await supabase.from("user_preferences").select("*").eq("user_id", user.id).maybeSingle()).data,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user.id],
+    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
+  });
+  const [username, setUsername] = useState<string>("");
+  const [savingName, setSavingName] = useState(false);
+  useState(() => { /* noop */ });
+  // sync username from profile when loaded
+  if (profile && username === "" && profile.display_name) {
+    // initialize once
+    setTimeout(() => setUsername(profile.display_name as string), 0);
+  }
+
+  async function saveUsername() {
+    const v = username.trim();
+    if (!v) { toast.error("Username required"); return; }
+    if (v.length > 40) { toast.error("Max 40 characters"); return; }
+    setSavingName(true);
+    try {
+      const { error } = await supabase.from("profiles").upsert({ id: user.id, display_name: v, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      toast.success("Username saved");
+      qc.invalidateQueries({ queryKey: ["profile", user.id] });
+    } catch (err) { toast.error((err as Error).message); } finally { setSavingName(false); }
+  }
+
+
   async function createWallet() {
     if (!newName.trim()) { toast.error("Name required"); return; }
     setCreating(true);

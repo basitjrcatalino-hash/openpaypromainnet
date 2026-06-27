@@ -3,22 +3,54 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SendSchema = z.object({
-  to: z.string().trim().min(4).max(120),
+  to: z.string().trim().min(2).max(120),
   amount: z.number().positive().max(1e15),
   asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional().nullable(),
 });
+
+async function resolveRecipientAddress(toRaw: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const to = toRaw.trim().replace(/^@/, "");
+
+  // 1) Treat as wallet address first
+  const { data: byAddr } = await supabaseAdmin
+    .from("wallets").select("address").eq("address", to).maybeSingle();
+  if (byAddr?.address) return byAddr.address;
+
+  // 2) Look up profile by username or pi_username (case-insensitive)
+  const { data: prof } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .or(`username.ilike.${to},pi_username.ilike.${to},display_name.ilike.${to}`)
+    .limit(1)
+    .maybeSingle();
+  if (!prof?.id) return null;
+
+  const { data: w } = await supabaseAdmin
+    .from("wallets")
+    .select("address")
+    .eq("user_id", prof.id)
+    .order("is_active", { ascending: false })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return w?.address ?? null;
+}
 
 export const sendAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SendSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { to, amount, asset, memo } = data;
+    const { to: toInput, amount, asset, memo } = data;
+
+    const toAddress = (await resolveRecipientAddress(toInput)) ?? toInput;
 
     const { data: wallet, error: wErr } = await supabase
       .from("wallets").select("*").eq("user_id", userId).limit(1).maybeSingle();
     if (wErr || !wallet) throw new Error("Active wallet not found");
+    if (toAddress === wallet.address) throw new Error("Cannot send to your own address");
 
     const curO = Number(wallet.ousd_balance ?? 0);
     const curP = Number(wallet.pi_balance ?? 0);
@@ -32,12 +64,11 @@ export const sendAsset = createServerFn({ method: "POST" })
 
     const usd = asset === "OUSD" ? amount : amount * 32.5;
 
-    // Try to credit recipient if address belongs to another wallet (uses admin client)
     let credited = false;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: rcpt } = await supabaseAdmin
-        .from("wallets").select("*").eq("address", to).maybeSingle();
+        .from("wallets").select("*").eq("address", toAddress).maybeSingle();
       if (rcpt) {
         const rO = Number(rcpt.ousd_balance ?? 0);
         const rP = Number(rcpt.pi_balance ?? 0);
@@ -55,10 +86,10 @@ export const sendAsset = createServerFn({ method: "POST" })
 
     await supabase.from("transactions").insert({
       wallet_id: wallet.id, type: "send", token_symbol: asset,
-      counterparty: to, amount, usd_value: usd, memo: memo ?? null,
+      counterparty: toAddress, amount, usd_value: usd, memo: memo ?? null,
     });
 
-    return { ok: true, credited };
+    return { ok: true, credited, resolvedTo: toAddress };
   });
 
 const TopUpSchema = z.object({

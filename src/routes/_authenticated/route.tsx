@@ -154,13 +154,14 @@ function SidebarInner({ activeWallet, userEmail, profile }: { activeWallet: { na
       <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
         <div className="flex items-center gap-2 px-2">
           <Avatar className="h-8 w-8">
+            {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
             <AvatarFallback className="bg-gradient-primary text-xs text-primary-foreground">
-              {(userEmail[0] ?? "U").toUpperCase()}
+              {((profile?.display_name || profile?.username || userEmail)[0] ?? "U").toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1 text-xs">
-            <div className="truncate font-medium">{userEmail}</div>
-            <div className="text-muted-foreground">Signed in</div>
+            <div className="truncate font-medium">{profile?.display_name || profile?.username || userEmail}</div>
+            <div className="truncate text-muted-foreground">{profile?.username ? `@${profile.username}` : "Signed in"}</div>
           </div>
         </div>
         <div className="flex gap-2">

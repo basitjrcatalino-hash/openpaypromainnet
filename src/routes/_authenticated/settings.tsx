@@ -303,7 +303,7 @@ function SettingsPage() {
             onToggle={(v) => updatePref({ biometric_enabled: v })}
           />
           <PinCard
-            hasPin={!!(prefs as any)?.pin_hash}
+            hasPin={!!(prefs as any)?.pin_set}
             onSave={async (pin) => { const h = await sha256(`${user.id}:${pin}`); await updatePref({ pin_hash: h }); toast.success("PIN saved"); }}
             onClear={async () => { await updatePref({ pin_hash: null }); toast.success("PIN removed"); }}
           />

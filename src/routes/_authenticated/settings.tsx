@@ -44,16 +44,16 @@ function SettingsPage() {
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Record<string, any>> => {
       const [{ data: row }, { data: hasPin }] = await Promise.all([
         supabase
           .from("user_preferences")
-          .select("user_id,currency,language,biometric_enabled,recovery_backed_up,notify_price_alerts,created_at,updated_at")
+          .select("user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,created_at,updated_at")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase.rpc("has_user_pin"),
       ]);
-      return { ...(row ?? {}), pin_set: !!hasPin } as Record<string, unknown>;
+      return { ...((row as Record<string, any>) ?? {}), pin_set: !!hasPin };
     },
   });
 

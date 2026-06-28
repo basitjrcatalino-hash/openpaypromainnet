@@ -55,8 +55,13 @@ function AuthPage() {
         navigate({ to: "/dashboard" });
         return;
       }
-      // Auto-trigger Pi authentication on load (silent — failures don't toast)
-      void handlePiSignIn(true);
+      // Auto-trigger Pi authentication ONLY inside the Pi Browser.
+      // Regular browsers don't have the Pi SDK and would surface noisy errors.
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+      const isPiBrowser = /PiBrowser/i.test(ua);
+      if (isPiBrowser) {
+        handlePiSignIn(true).catch((err) => console.warn("[Pi] auto sign-in skipped:", err));
+      }
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

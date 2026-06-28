@@ -23,7 +23,13 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             return Response.json({ error: "Malformed Pi /me response" }, { status: 502 });
           }
 
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          if (!serviceKey) {
+            return Response.json(
+              { error: "Pi sign-in is temporarily unavailable. Please try again later." },
+              { status: 503 },
+            );
+          }
           const email = `pi-${me.uid}@pi.openpay.local`;
           // Deterministic password derived from server secret + uid (never leaves server in plain form except returned over same-origin TLS)
           const password = createHash("sha256")

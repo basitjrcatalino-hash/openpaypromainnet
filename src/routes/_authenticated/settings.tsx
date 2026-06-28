@@ -44,7 +44,17 @@ function SettingsPage() {
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
-    queryFn: async () => (await supabase.from("user_preferences").select("*").eq("user_id", user.id).maybeSingle()).data,
+    queryFn: async (): Promise<Record<string, any>> => {
+      const [{ data: row }, { data: hasPin }] = await Promise.all([
+        supabase
+          .from("user_preferences")
+          .select("user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,created_at,updated_at")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase.rpc("has_user_pin"),
+      ]);
+      return { ...((row as Record<string, any>) ?? {}), pin_set: !!hasPin };
+    },
   });
 
   const { data: profile } = useQuery({
@@ -293,7 +303,7 @@ function SettingsPage() {
             onToggle={(v) => updatePref({ biometric_enabled: v })}
           />
           <PinCard
-            hasPin={!!(prefs as any)?.pin_hash}
+            hasPin={!!(prefs as any)?.pin_set}
             onSave={async (pin) => { const h = await sha256(`${user.id}:${pin}`); await updatePref({ pin_hash: h }); toast.success("PIN saved"); }}
             onClear={async () => { await updatePref({ pin_hash: null }); toast.success("PIN removed"); }}
           />

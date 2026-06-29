@@ -33,8 +33,10 @@ export const createKycVerification = createServerFn({ method: "POST" })
         kyc_status: "pending",
         kyc_verification_id: result.verification_id,
         kyc_updated_at: new Date().toISOString(),
-      })
+      } as never)
       .eq("id", userId);
+
+
 
     return { verification_url: result.verification_url, verification_id: result.verification_id };
   });
@@ -61,7 +63,7 @@ export const getKycStatus = createServerFn({ method: "GET" })
             kyc_updated_at: new Date().toISOString(),
           };
           if (live.status === "verified") patch.kyc_verified_at = new Date().toISOString();
-          await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
+          await supabaseAdmin.from("profiles").update(patch as never).eq("id", userId);
           return { ...profile, ...patch };
         }
       } catch { /* ignore polling failure */ }

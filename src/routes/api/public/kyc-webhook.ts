@@ -48,10 +48,11 @@ export const Route = createFileRoute("/api/public/kyc-webhook")({
         const patch: Record<string, unknown> = { kyc_status: status, kyc_updated_at: now };
         if (status === "verified") patch.kyc_verified_at = now;
 
-        const query = supabaseAdmin.from("profiles").update(patch);
+        const query = supabaseAdmin.from("profiles").update(patch as never);
         const { error } = externalUserId
           ? await query.eq("id", externalUserId)
           : await query.eq("kyc_verification_id", verificationId);
+
 
         if (error) {
           log("error", "db update failed", error.message);

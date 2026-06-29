@@ -22,10 +22,12 @@ import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
+import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
@@ -97,6 +99,11 @@ const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
   path: '/nfts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -115,6 +122,11 @@ const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
 const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
   id: '/api/public/pi-a2u',
   path: '/api/public/pi-a2u',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
+  id: '/api/public/kyc-webhook',
+  path: '/api/public/kyc-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTokensCreateRoute =
@@ -158,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
@@ -170,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -182,6 +196,7 @@ export interface FileRoutesByTo {
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
@@ -194,6 +209,7 @@ export interface FileRoutesByTo {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -208,6 +224,7 @@ export interface FileRoutesById {
   '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
@@ -220,6 +237,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -234,6 +252,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/activity'
     | '/dashboard'
+    | '/kyc'
     | '/nfts'
     | '/ousd'
     | '/receive'
@@ -246,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
@@ -258,6 +278,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/activity'
     | '/dashboard'
+    | '/kyc'
     | '/nfts'
     | '/ousd'
     | '/receive'
@@ -270,6 +291,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
@@ -283,6 +305,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kyc'
     | '/_authenticated/nfts'
     | '/_authenticated/ousd'
     | '/_authenticated/receive'
@@ -295,6 +318,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
+    | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/pi-payments/approve'
@@ -308,6 +332,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
@@ -408,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -434,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/pi-a2u'
       fullPath: '/api/public/pi-a2u'
       preLoaderRoute: typeof ApiPublicPiA2uRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/kyc-webhook': {
+      id: '/api/public/kyc-webhook'
+      path: '/api/public/kyc-webhook'
+      fullPath: '/api/public/kyc-webhook'
+      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tokens/create': {
@@ -506,6 +545,7 @@ const AuthenticatedTokensRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
@@ -520,6 +560,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
@@ -540,6 +581,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,

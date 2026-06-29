@@ -307,6 +307,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
+          kyc_updated_at: string | null
+          kyc_verification_id: string | null
+          kyc_verified_at: string | null
           pi_uid: string | null
           pi_username: string | null
           updated_at: string
@@ -318,6 +322,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_updated_at?: string | null
+          kyc_verification_id?: string | null
+          kyc_verified_at?: string | null
           pi_uid?: string | null
           pi_username?: string | null
           updated_at?: string
@@ -329,6 +337,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_updated_at?: string | null
+          kyc_verification_id?: string | null
+          kyc_verified_at?: string | null
           pi_uid?: string | null
           pi_username?: string | null
           updated_at?: string
@@ -681,6 +693,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      kyc_status:
+        | "not_started"
+        | "pending"
+        | "in_review"
+        | "verified"
+        | "rejected"
       tx_status: "pending" | "confirmed" | "failed"
       tx_type: "send" | "receive" | "swap" | "mint" | "buy" | "sell" | "reward"
     }
@@ -811,6 +829,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      kyc_status: [
+        "not_started",
+        "pending",
+        "in_review",
+        "verified",
+        "rejected",
+      ],
       tx_status: ["pending", "confirmed", "failed"],
       tx_type: ["send", "receive", "swap", "mint", "buy", "sell", "reward"],
     },

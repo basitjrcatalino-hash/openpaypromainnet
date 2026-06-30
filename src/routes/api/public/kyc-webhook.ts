@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/public/kyc-webhook")({
       POST: async ({ request }) => {
         const raw = await request.text();
         const sig = request.headers.get("x-piverify-signature") ?? request.headers.get("x-signature");
-        const { verifyWebhook, normalizeStatus } = await import("@/lib/piVerify.server");
+        const { verifyWebhook, normalizeStatus, statusFromEventType } = await import("@/lib/piVerify.server");
 
         if (!verifyWebhook(raw, sig)) {
           log("warn", "invalid signature");
@@ -34,11 +34,14 @@ export const Route = createFileRoute("/api/public/kyc-webhook")({
           });
         }
 
-        const verificationId = payload?.verification_id ?? payload?.id;
-        const externalUserId = payload?.external_user_id ?? payload?.user_id;
-        const status = normalizeStatus(payload?.status);
+        // Pi Verify v1 envelope: { id, type, created_at, data: { session_id, external_user_id, status, rejection_reason } }
+        const eventData = payload?.data ?? payload;
+        const verificationId = eventData?.session_id ?? eventData?.verification_id ?? eventData?.id ?? payload?.id;
+        const externalUserId = eventData?.external_user_id ?? eventData?.user_id;
+        const status =
+          statusFromEventType(payload?.type) ?? normalizeStatus(eventData?.status);
         if (!verificationId && !externalUserId) {
-          return new Response(JSON.stringify({ error: "Missing verification_id" }), {
+          return new Response(JSON.stringify({ error: "Missing session_id" }), {
             status: 400, headers: { "content-type": "application/json", ...CORS },
           });
         }
@@ -49,9 +52,9 @@ export const Route = createFileRoute("/api/public/kyc-webhook")({
         if (status === "verified") patch.kyc_verified_at = now;
 
         const query = supabaseAdmin.from("profiles").update(patch as never);
-        const { error } = externalUserId
-          ? await query.eq("id", externalUserId)
-          : await query.eq("kyc_verification_id", verificationId);
+        const { error } = verificationId
+          ? await query.eq("kyc_verification_id", verificationId)
+          : await query.eq("id", externalUserId);
 
 
         if (error) {

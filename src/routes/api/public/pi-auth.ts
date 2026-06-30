@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             return Response.json({ error: "Missing accessToken" }, { status: 400 });
           }
 
-          // Validate token by calling Pi's /v2/me endpoint
+          // Validate token against Pi's /v2/me endpoint
           const meRes = await fetch("https://api.minepi.com/v2/me", {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
@@ -23,22 +23,27 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             return Response.json({ error: "Malformed Pi /me response" }, { status: 502 });
           }
 
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          if (!serviceKey) {
+          // Deterministic password derived from a server-only secret + uid.
+          // Prefer the dedicated PI_AUTH_PASSWORD_SECRET so we don't depend on
+          // SUPABASE_SERVICE_ROLE_KEY being readable as plain env on Lovable Cloud.
+          const passSecret =
+            process.env.PI_AUTH_PASSWORD_SECRET ||
+            process.env.SUPABASE_SERVICE_ROLE_KEY ||
+            process.env.SUPABASE_PUBLISHABLE_KEY;
+          if (!passSecret) {
             return Response.json(
-              { error: "Pi sign-in is temporarily unavailable. Please try again later." },
+              { error: "Pi sign-in is not configured (missing server secret)." },
               { status: 503 },
             );
           }
+
           const email = `pi-${me.uid}@pi.openpay.local`;
-          // Deterministic password derived from server secret + uid (never leaves server in plain form except returned over same-origin TLS)
           const password = createHash("sha256")
-            .update(`${serviceKey}:pi:${me.uid}`)
+            .update(`${passSecret}:pi:${me.uid}`)
             .digest("hex");
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // Try create; if already exists, fetch and update password to keep deterministic login working.
           const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -51,12 +56,12 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             },
           });
 
-          if (createErr && !/registered|exists/i.test(createErr.message)) {
+          if (createErr && !/registered|exists|duplicate/i.test(createErr.message)) {
             return Response.json({ error: createErr.message }, { status: 500 });
           }
 
           if (!created?.user) {
-            // Find existing user by email and reset password to deterministic value
+            // Existing user: reset password to deterministic value so sign-in works.
             const { data: list } = await supabaseAdmin.auth.admin.listUsers();
             const existing = list?.users.find((u) => u.email === email);
             if (!existing) {
@@ -77,7 +82,10 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           return Response.json({ email, password, username: me.username, uid: me.uid });
         } catch (err) {
           console.error("[pi-auth]", err);
-          return Response.json({ error: (err as Error).message || "Server error" }, { status: 500 });
+          return Response.json(
+            { error: (err as Error).message || "Server error" },
+            { status: 500 },
+          );
         }
       },
     },

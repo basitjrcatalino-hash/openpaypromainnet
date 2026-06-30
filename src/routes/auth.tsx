@@ -33,7 +33,40 @@ function AuthPage() {
 
   const [piBusy, setPiBusy] = useState(false);
 
+  const PI_CLIENT_ID = import.meta.env.VITE_PI_CLIENT_ID as string | undefined;
+
+  function startPiOAuthRedirect() {
+    if (!PI_CLIENT_ID) {
+      toast.error("Pi sign-in is not configured (missing client ID).");
+      return;
+    }
+    const state = (crypto as Crypto & { randomUUID?: () => string }).randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem("pi_oauth_state", state);
+    sessionStorage.setItem("pi_oauth_redirect", "/dashboard");
+    const redirectUri = `${window.location.origin}/auth/pi/callback`;
+    const url =
+      `https://accounts.pinet.com/oauth/authorize` +
+      `?response_type=token` +
+      `&client_id=${encodeURIComponent(PI_CLIENT_ID)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&scope=${encodeURIComponent("username wallet_address")}` +
+      `&state=${encodeURIComponent(state)}`;
+    window.location.href = url;
+  }
+
   const handlePiSignIn = async (silent = false) => {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+    const isPiBrowser = /PiBrowser/i.test(ua) || (typeof window !== "undefined" && Boolean((window as unknown as { Pi?: unknown }).Pi));
+
+    // Outside Pi Browser, use the standard Pi Sign-In OAuth implicit flow.
+    if (!isPiBrowser) {
+      try { startPiOAuthRedirect(); }
+      catch (err) { if (!silent) toast.error((err as Error).message || "Pi sign-in failed"); }
+      return;
+    }
+
     setPiBusy(true);
     try {
       const { username } = await signInWithPi();

@@ -25,6 +25,7 @@ import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/n
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
@@ -114,6 +115,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
+  id: '/pi/callback',
+  path: '/pi/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
   id: '/api/public/pi-auth',
   path: '/api/public/pi-auth',
@@ -166,7 +172,7 @@ const ApiPublicPiPaymentsApproveRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -186,13 +192,14 @@ export interface FileRoutesByFullPath {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -220,7 +228,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/auth/pi/callback'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/auth/pi/callback'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/auth/pi/callback'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -329,7 +341,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -454,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/pi/callback': {
+      id: '/auth/pi/callback'
+      path: '/pi/callback'
+      fullPath: '/auth/pi/callback'
+      preLoaderRoute: typeof AuthPiCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/api/public/pi-auth': {
       id: '/api/public/pi-auth'
       path: '/api/public/pi-auth'
@@ -575,10 +594,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthPiCallbackRoute: typeof AuthPiCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthPiCallbackRoute: AuthPiCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
@@ -591,13 +620,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -35,6 +35,9 @@ import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authentic
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
+import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
+import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
 
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
   id: '/testnet-reward',
@@ -169,6 +172,22 @@ const ApiPublicPiPaymentsApproveRoute =
     path: '/api/public/pi-payments/approve',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
+  id: '/api/public/ledger/stats',
+  path: '/api/public/ledger/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
+  id: '/api/public/ledger/entries',
+  path: '/api/public/ledger/entries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerEntriesIdRoute =
+  ApiPublicLedgerEntriesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ApiPublicLedgerEntriesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -193,9 +212,12 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
+  '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -220,9 +242,12 @@ export interface FileRoutesByTo {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
+  '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -249,9 +274,12 @@ export interface FileRoutesById {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
+  '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -278,9 +306,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/api/public/ledger/entries'
+    | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/ledger/entries/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -305,9 +336,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/api/public/ledger/entries'
+    | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/ledger/entries/$id'
   id:
     | '__root__'
     | '/'
@@ -333,9 +367,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/api/public/ledger/entries'
+    | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/ledger/entries/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -347,6 +384,8 @@ export interface RootRouteChildren {
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
+  ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
@@ -536,6 +575,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ledger/stats': {
+      id: '/api/public/ledger/stats'
+      path: '/api/public/ledger/stats'
+      fullPath: '/api/public/ledger/stats'
+      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/entries': {
+      id: '/api/public/ledger/entries'
+      path: '/api/public/ledger/entries'
+      fullPath: '/api/public/ledger/entries'
+      preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/entries/$id': {
+      id: '/api/public/ledger/entries/$id'
+      path: '/$id'
+      fullPath: '/api/public/ledger/entries/$id'
+      preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
+      parentRoute: typeof ApiPublicLedgerEntriesRoute
+    }
   }
 }
 
@@ -604,6 +664,20 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface ApiPublicLedgerEntriesRouteChildren {
+  ApiPublicLedgerEntriesIdRoute: typeof ApiPublicLedgerEntriesIdRoute
+}
+
+const ApiPublicLedgerEntriesRouteChildren: ApiPublicLedgerEntriesRouteChildren =
+  {
+    ApiPublicLedgerEntriesIdRoute: ApiPublicLedgerEntriesIdRoute,
+  }
+
+const ApiPublicLedgerEntriesRouteWithChildren =
+  ApiPublicLedgerEntriesRoute._addFileChildren(
+    ApiPublicLedgerEntriesRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -613,6 +687,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
+  ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,

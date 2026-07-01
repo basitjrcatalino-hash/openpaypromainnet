@@ -5,6 +5,7 @@ import {
   Activity, Settings as SettingsIcon, Wallet, Moon, Sun, LogOut, Sparkles, Menu, X, CreditCard,
   Gift, ShieldCheck, ChevronLeft, ChevronDown, Globe, Gauge, PieChart, Users, ClipboardCheck,
   LayoutGrid, Grid3x3, MessageSquare, Facebook, Instagram, Youtube, Twitter, Rocket, BadgeCheck,
+  ScrollText,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,7 @@ const WALLET_SECTION: Tile[] = [
   { to: "/receive", label: "Receive", icon: QrCode },
   { to: "/topup", label: "Top Up", icon: CreditCard },
   { to: "/activity", label: "Activity", icon: Activity },
+  { to: "/ledger", label: "Ledger", icon: ScrollText },
 ];
 
 const MINING_SECTION: Tile[] = [

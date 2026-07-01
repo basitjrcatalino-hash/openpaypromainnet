@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      ledger_api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          label: string
+          last_used_at: string | null
+          prefix: string
+          scopes: string[]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          label: string
+          last_used_at?: string | null
+          prefix: string
+          scopes?: string[]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          label?: string
+          last_used_at?: string | null
+          prefix?: string
+          scopes?: string[]
+        }
+        Relationships: []
+      }
+      ledger_entries: {
+        Row: {
+          amount: number
+          asset: string | null
+          created_at: string
+          from_address: string | null
+          id: string
+          memo: string | null
+          occurred_at: string
+          sequence: number
+          status: string
+          to_address: string | null
+          tx_hash: string | null
+          tx_id: string | null
+          type: string
+          usd_value: number
+          wallet_id: string | null
+        }
+        Insert: {
+          amount?: number
+          asset?: string | null
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          memo?: string | null
+          occurred_at?: string
+          sequence?: number
+          status?: string
+          to_address?: string | null
+          tx_hash?: string | null
+          tx_id?: string | null
+          type: string
+          usd_value?: number
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number
+          asset?: string | null
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          memo?: string | null
+          occurred_at?: string
+          sequence?: number
+          status?: string
+          to_address?: string | null
+          tx_hash?: string | null
+          tx_id?: string | null
+          type?: string
+          usd_value?: number
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_tx_id_fkey"
+            columns: ["tx_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nft_collections: {
         Row: {
           banner_url: string | null

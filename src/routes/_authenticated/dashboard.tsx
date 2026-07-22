@@ -1,14 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Send, Plus, ArrowLeftRight, TrendingUp, DollarSign, Wallet as WalletIcon,
-  ChevronsUpDown, Sparkles,
+  Send, Plus, ArrowLeftRight, TrendingUp, DollarSign,
+  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatUSD, formatNumber, formatPct, generateAddress } from "@/lib/wallet-utils";
+import { formatUSD, formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const ACTIONS = [
-  { label: "Buy", icon: WalletIcon, to: "/topup" },
   { label: "Fund", icon: Plus, to: "/topup" },
   { label: "Send", icon: Send, to: "/send" },
-  { label: "Trade", icon: ArrowLeftRight, to: "/swap" },
+  { label: "Receive", icon: QrCode, to: "/receive" },
+  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
 ] as const;
@@ -82,34 +82,78 @@ function Dashboard() {
     })();
   }, [wallet, walletLoading, user.id, qc]);
 
+  const [hideBalance, setHideBalance] = useState(false);
+  const [tab, setTab] = useState<"assets" | "collectibles">("assets");
+
+  const totalUsd = (holdings as any[]).reduce(
+    (sum, h: any) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
+    0,
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Wallet name pill */}
-      <div className="flex items-center gap-2">
-        <button className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-4 py-1.5 text-sm font-semibold hover:bg-card/80">
-          {wallet?.name ?? "My Wallet"}
-          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between md:hidden">
+        <button className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent" aria-label="Scan">
+          <ScanLine className="h-5 w-5" />
         </button>
+        <button className="inline-flex items-center gap-1 text-base font-semibold">
+          {wallet?.name ?? "Main Wallet"} <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+        <div className="flex items-center gap-1">
+          <button className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent" aria-label="Lock">
+            <Lock className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setHideBalance((v) => !v)}
+            className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent"
+            aria-label="Toggle balance"
+          >
+            {hideBalance ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Big gradient balance card (mobile primary, also visible on desktop as hero) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-glow md:hidden">
+        <div className="absolute inset-0 opacity-40" aria-hidden>
+          <div className="absolute -left-16 -top-10 h-56 w-56 rounded-full bg-mint blur-3xl" />
+          <div className="absolute -bottom-20 -right-10 h-56 w-56 rounded-full bg-primary-glow blur-3xl" />
+        </div>
+        <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-3">
+          <button
+            onClick={() => setHideBalance((v) => !v)}
+            className="flex items-center gap-2 text-5xl font-bold tracking-tight tabular-nums"
+          >
+            {hideBalance ? "••••" : formatUSD(totalUsd)}
+            <ChevronsUpDown className="h-5 w-5 opacity-70" />
+          </button>
+          <div className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px]">
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-white/20">◆</span>
+            <span className="opacity-90">{shortAddress(wallet?.address ?? null, 6, 6)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Actions bar */}
-      <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-4 gap-2 md:grid-cols-6 md:gap-3">
         {ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
             <button
               key={a.label}
               onClick={() => navigate({ to: a.to })}
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-3 py-4 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow"
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow md:px-3 md:py-4"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-sidebar-accent text-foreground transition-colors group-hover:bg-gradient-primary group-hover:text-primary-foreground">
-                <Icon className="h-4.5 w-4.5" />
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-sidebar-accent text-primary transition-colors group-hover:bg-gradient-primary group-hover:text-primary-foreground">
+                <Icon className="h-5 w-5" />
               </span>
               <span>{a.label}</span>
             </button>
           );
         })}
       </div>
+
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Assets */}

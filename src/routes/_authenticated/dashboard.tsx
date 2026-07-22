@@ -1,14 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Send, Plus, ArrowLeftRight, TrendingUp, DollarSign, Wallet as WalletIcon,
-  ChevronsUpDown, Sparkles,
+  Send, Plus, ArrowLeftRight, TrendingUp, DollarSign,
+  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatUSD, formatNumber, formatPct, generateAddress } from "@/lib/wallet-utils";
+import { formatUSD, formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const ACTIONS = [
-  { label: "Buy", icon: WalletIcon, to: "/topup" },
   { label: "Fund", icon: Plus, to: "/topup" },
   { label: "Send", icon: Send, to: "/send" },
-  { label: "Trade", icon: ArrowLeftRight, to: "/swap" },
+  { label: "Receive", icon: QrCode, to: "/receive" },
+  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
 ] as const;

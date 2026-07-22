@@ -93,6 +93,29 @@ function AuthenticatedLayout() {
           </div>
         </main>
       </div>
+
+      {/* Mobile bottom tab nav */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4">
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.to || (item.to === "/dashboard" && pathname === "/");
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_hsl(var(--primary))]")} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -2,14 +2,15 @@ import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } fr
 import { useEffect, useState } from "react";
 import {
   Wallet, Compass, Settings as SettingsIcon, Sparkles, LogOut, Menu, X, Plus,
-  EyeOff, Eye, ChevronsUpDown, Moon, Sun, ScrollText,
+  EyeOff, Eye, ChevronsUpDown, Moon, Sun, ScrollText, Copy, Check,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatUSD, shortAddress } from "@/lib/wallet-utils";
+import { shortAddress } from "@/lib/wallet-utils";
+import { formatCurrency, useCurrency } from "@/lib/currency";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";

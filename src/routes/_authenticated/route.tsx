@@ -134,11 +134,42 @@ function SidebarInner({
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const [hideBalance, setHideBalance] = useState(false);
+  const { code: currency, cycle: cycleCurrency } = useCurrency();
+  const [copied, setCopied] = useState(false);
+
+  const { data: activeHoldings = [] } = useQuery({
+    queryKey: ["holdings", activeWallet?.id],
+    enabled: !!activeWallet?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("token_holdings")
+        .select("balance, tokens:token_id(price_usd)")
+        .eq("wallet_id", activeWallet!.id);
+      return data ?? [];
+    },
+  });
+
+  const totalUsd = (activeHoldings as any[]).reduce(
+    (sum, h: any) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
+    0,
+  );
 
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
     router.navigate({ to: "/auth", replace: true });
+  }
+
+  async function copyAddress() {
+    if (!activeWallet?.address) return;
+    try {
+      await navigator.clipboard.writeText(activeWallet.address);
+      setCopied(true);
+      toast.success("Address copied");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
   }
 
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
@@ -168,14 +199,22 @@ function SidebarInner({
           <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-primary-glow blur-3xl" />
         </div>
         <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-3">
-          <div className="text-5xl font-bold tracking-tight tabular-nums">
-            {hideBalance ? "••••" : formatUSD(0)}
-          </div>
-          <div className="mt-6 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px]">
+          <button
+            onClick={cycleCurrency}
+            className="flex items-center gap-2 text-4xl font-bold tracking-tight tabular-nums"
+            aria-label="Change currency"
+          >
+            {hideBalance ? "••••" : formatCurrency(totalUsd, currency)}
+            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold">{currency}</span>
+          </button>
+          <button
+            onClick={copyAddress}
+            className="mt-6 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] hover:bg-white/20 transition-colors"
+            aria-label="Copy wallet address"
+          >
             <span className="opacity-80">◆ {shortAddress(activeWallet?.address ?? null)}</span>
-            <span className="opacity-40">·</span>
-            <span className="opacity-80">≡ {shortAddress(activeWallet?.address ?? null, 4, 4)}</span>
-          </div>
+            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3 opacity-80" />}
+          </button>
         </div>
       </div>
 

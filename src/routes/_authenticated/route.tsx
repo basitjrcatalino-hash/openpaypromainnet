@@ -263,7 +263,7 @@ function SidebarInner({
                 </span>
               </span>
             </span>
-            <span className="text-sm font-semibold tabular-nums">{formatUSD(0)}</span>
+            <span className="text-sm font-semibold tabular-nums">{formatCurrency(w.id === activeWallet?.id ? totalUsd : 0, currency)}</span>
           </button>
         ))}
         <Link

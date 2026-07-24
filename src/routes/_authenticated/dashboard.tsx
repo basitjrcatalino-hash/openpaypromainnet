@@ -210,7 +210,7 @@ function Dashboard() {
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground tabular-nums">
-                            {formatUSD(h.tokens?.price_usd)} · <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>↑ {formatPct(pct)}</span>
+                            {formatCurrency(h.tokens?.price_usd, currency)} · <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>↑ {formatPct(pct)}</span>
                           </div>
                         </div>
                       </div>

@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } fr
 import { useEffect, useState } from "react";
 import {
   Wallet, Compass, Settings as SettingsIcon, Sparkles, LogOut, Menu, X, Plus,
-  EyeOff, Eye, ChevronsUpDown, Moon, Sun,
+  EyeOff, Eye, ChevronsUpDown, Moon, Sun, ScrollText,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
   { to: "/tokens/create", label: "Agent", icon: Sparkles },
   { to: "/tokens", label: "Explore", icon: Compass },
+  { to: "/ledger", label: "Ledger", icon: ScrollText },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
@@ -96,7 +97,7 @@ function AuthenticatedLayout() {
 
       {/* Mobile bottom tab nav */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4">
+        <div className="mx-auto grid max-w-md grid-cols-5">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || (item.to === "/dashboard" && pathname === "/");

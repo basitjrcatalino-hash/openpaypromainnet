@@ -28,6 +28,7 @@ const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
   { to: "/tokens/create", label: "Agent", icon: Sparkles },
   { to: "/tokens", label: "Explore", icon: Compass },
+  { to: "/ledger", label: "Ledger", icon: ScrollText },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 

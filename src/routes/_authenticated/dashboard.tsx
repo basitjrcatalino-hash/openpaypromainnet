@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Send, Plus, ArrowLeftRight, TrendingUp, DollarSign,
-  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock,
+  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock, Copy, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatUSD, formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
+import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import { CURRENCIES, formatCurrency, useCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),

@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } fr
 import { useEffect, useState } from "react";
 import {
   Wallet, Compass, Settings as SettingsIcon, Sparkles, LogOut, Menu, X, Plus,
-  EyeOff, Eye, ChevronsUpDown, Moon, Sun,
+  EyeOff, Eye, ChevronsUpDown, Moon, Sun, ScrollText,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";

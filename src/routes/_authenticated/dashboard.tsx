@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Send, Plus, ArrowLeftRight, TrendingUp, DollarSign,
-  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock,
+  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock, Copy, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatUSD, formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
+import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import { CURRENCIES, formatCurrency, useCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -84,11 +85,25 @@ function Dashboard() {
 
   const [hideBalance, setHideBalance] = useState(false);
   const [tab, setTab] = useState<"assets" | "collectibles">("assets");
+  const { code: currency, cycle: cycleCurrency } = useCurrency();
+  const [copied, setCopied] = useState(false);
 
   const totalUsd = (holdings as any[]).reduce(
     (sum, h: any) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
     0,
   );
+
+  async function copyAddress() {
+    if (!wallet?.address) return;
+    try {
+      await navigator.clipboard.writeText(wallet.address);
+      setCopied(true);
+      toast.success("Address copied");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -101,8 +116,12 @@ function Dashboard() {
           {wallet?.name ?? "Main Wallet"} <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-1">
-          <button className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent" aria-label="Lock">
-            <Lock className="h-5 w-5" />
+          <button
+            onClick={cycleCurrency}
+            className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-sidebar-accent"
+            aria-label="Change currency"
+          >
+            {currency}
           </button>
           <button
             onClick={() => setHideBalance((v) => !v)}
@@ -122,16 +141,21 @@ function Dashboard() {
         </div>
         <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-3">
           <button
-            onClick={() => setHideBalance((v) => !v)}
+            onClick={cycleCurrency}
             className="flex items-center gap-2 text-5xl font-bold tracking-tight tabular-nums"
           >
-            {hideBalance ? "••••" : formatUSD(totalUsd)}
+            {hideBalance ? "••••" : formatCurrency(totalUsd, currency)}
             <ChevronsUpDown className="h-5 w-5 opacity-70" />
           </button>
-          <div className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px]">
+          <button
+            onClick={copyAddress}
+            className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] hover:bg-white/20 transition-colors"
+            aria-label="Copy address"
+          >
             <span className="grid h-4 w-4 place-items-center rounded-full bg-white/20">◆</span>
             <span className="opacity-90">{shortAddress(wallet?.address ?? null, 6, 6)}</span>
-          </div>
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-80" />}
+          </button>
         </div>
       </div>
 
@@ -186,13 +210,13 @@ function Dashboard() {
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground tabular-nums">
-                            {formatUSD(h.tokens?.price_usd)} · <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>↑ {formatPct(pct)}</span>
+                            {formatCurrency(h.tokens?.price_usd, currency)} · <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>↑ {formatPct(pct)}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold tabular-nums">{formatNumber(h.balance, 4)} {h.tokens?.symbol}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums">{formatUSD(usd)}</div>
+                        <div className="text-xs text-muted-foreground tabular-nums">{formatCurrency(usd, currency)}</div>
                       </div>
                     </li>
                   );

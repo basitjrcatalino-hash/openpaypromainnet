@@ -216,7 +216,7 @@ function Dashboard() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold tabular-nums">{formatNumber(h.balance, 4)} {h.tokens?.symbol}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums">{formatUSD(usd)}</div>
+                        <div className="text-xs text-muted-foreground tabular-nums">{formatCurrency(usd, currency)}</div>
                       </div>
                     </li>
                   );

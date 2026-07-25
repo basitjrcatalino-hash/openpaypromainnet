@@ -902,9 +902,23 @@ export const createOpenPayReceiveLink = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
-    const handle =
-      (profile?.username || profile?.display_name || `uid_${userId}`).replace(/^@+/, "");
-    const note = buildInboundNote(handle.startsWith("uid_") ? handle : handle);
+    const { data: wallet } = await supabase
+      .from("wallets")
+      .select("address")
+      .eq("user_id", userId)
+      .order("is_active", { ascending: false })
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    // Prefer Pro wallet address for OpenPay Send / inbound routing
+    const handle = (
+      wallet?.address ||
+      profile?.username ||
+      profile?.display_name ||
+      `uid_${userId}`
+    ).replace(/^@+/, "");
+    const note = buildInboundNote(handle);
     const me = await openpayPro.me();
     const partnerUsername = me.username;
     if (!partnerUsername) {
@@ -953,6 +967,8 @@ export const createOpenPayReceiveLink = createServerFn({ method: "POST" })
       pay_url,
       note,
       handle,
+      address: wallet?.address ?? null,
+      username: profile?.username ?? null,
       partner_username: partnerUsername,
       amount: data.amount ?? null,
       inbound_api: `${origin}/api/public/openpay/inbound`,

@@ -64,6 +64,7 @@ function ReceivePage() {
     pay_url: string;
     note: string;
     partner_username?: string;
+    address?: string | null;
   } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const opCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -254,6 +255,11 @@ function ReceivePage() {
               <canvas ref={opCanvasRef} className="block" />
             </div>
             <p className="break-all font-mono text-[10px] text-muted-foreground">{opLink.note}</p>
+            {opLink.address ? (
+              <p className="break-all font-mono text-[10px] text-muted-foreground">
+                Pro address · {opLink.address}
+              </p>
+            ) : null}
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"

@@ -257,18 +257,20 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
               Pro → OpenPay send).
             </p>
             <p>
-              Note: <code className="rounded bg-muted px-1">pro_xfer:@alice:r_ref</code>
+              Note: <code className="rounded bg-muted px-1">pro_xfer:@alice:r_ref</code> or{" "}
+              <code className="rounded bg-muted px-1">pro_xfer:0x…:r_ref</code> (Pro wallet address)
             </p>
-            <Code>{`curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \\
+            <Code>{`# By @username
+curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \\
   -H "Authorization: Bearer opk_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{
-    "to": "@alice",
-    "amount": 25.00,
-    "openpay_tx_id": "UNIQUE_TX",
-    "note": "pro_xfer:@alice:r_1",
-    "from_username": "bob"
-  }'`}</Code>
+  -d '{"to":"@alice","amount":25,"openpay_tx_id":"TX1","note":"pro_xfer:@alice:r_1"}'
+
+# By Pro wallet address (0x…)
+curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \\
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"to":"0x7bf2…851a","amount":25,"openpay_tx_id":"TX2","note":"pro_xfer:0x7bf2…851a:r_2"}'`}</Code>
             <p>
               Pro users: <strong>Receive → Create OpenPay receive link</strong>. OpenPay product
               prompt: <code>docs/OPENPAY_SEND_TO_PRO_PROMPT.md</code>.

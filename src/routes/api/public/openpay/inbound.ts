@@ -54,10 +54,10 @@ async function authorizePartner(request: Request): Promise<{ ok: true } | Respon
  * POST /api/public/openpay/inbound
  * Authorization: Bearer opk_live_…
  * Body: {
- *   to: "@alice" | "uid_<uuid>" | "<uuid>",
+ *   to: "@alice" | "0x…" | "uid_<uuid>" | "<uuid>",
  *   amount: 25.00,
  *   openpay_tx_id: "required-unique",
- *   note?: "pro_xfer:@alice:ref_…",
+ *   note?: "pro_xfer:0x…:ref" | "pro_xfer:@alice:ref",
  *   from_username?: string,
  *   from_account?: string
  * }

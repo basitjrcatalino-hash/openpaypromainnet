@@ -20,14 +20,17 @@ Money settles on the partner OpenPay account first; Pro ledger credits the desti
 
 ```
 pro_xfer:@alice:r_abc123
+pro_xfer:0x7bf2…851a:r_abc123
 pro_xfer:uid_<supabase-user-uuid>:r_abc123
 ```
 
 | Part | Meaning |
 |------|---------|
 | `pro_xfer:` | Inbound to OpenPay Pro |
-| `@alice` / `uid_…` | Pro profile username or user id |
+| `@alice` / `0x…` / `uid_…` | Pro username, **wallet address**, or user id |
 | `r_…` | Unique ref for idempotency / matching |
+
+Inbound API `to` accepts the same: `@user`, `0x` address, or uuid.
 
 ---
 

@@ -1,19 +1,27 @@
 // OpenPay → OpenPay Pro inbound transfers (server helpers).
-// Note format: pro_xfer:@username:<ref>  or  pro_xfer:uid_<uuid>:<ref>
+// Note: pro_xfer:@username:ref | pro_xfer:0x…:ref | pro_xfer:uid_<uuid>:ref
 
 import { createHash } from "crypto";
 
 export const PRO_XFER_PREFIX = "pro_xfer:";
 
 export type InboundNoteParts = {
-  handle: string; // @user stripped, or uid_xxx
+  handle: string; // username, 0x address, or uid_xxx
   ref: string;
   raw: string;
 };
 
+export function isProWalletAddress(v: string): boolean {
+  return /^0x[a-f0-9]{40}$/i.test(v.trim());
+}
+
 export function buildInboundNote(handle: string, ref?: string): string {
   const h = handle.trim().replace(/^@+/, "");
   const r = ref || `r${Date.now().toString(36)}`;
+  // Prefer raw 0x / uid_ — do not prefix @
+  if (isProWalletAddress(h) || /^uid_/i.test(h)) {
+    return `${PRO_XFER_PREFIX}${h}:${r}`;
+  }
   return `${PRO_XFER_PREFIX}@${h}:${r}`;
 }
 
@@ -21,7 +29,14 @@ export function parseInboundNote(note: string): InboundNoteParts | null {
   const raw = (note || "").trim();
   if (!raw.toLowerCase().startsWith(PRO_XFER_PREFIX)) return null;
   const rest = raw.slice(PRO_XFER_PREFIX.length);
-  // @alice:ref_abc  OR  uid_uuid:ref_abc  OR  alice:ref
+
+  // 0x address contains no ':' — split on last ':' if address-shaped prefix
+  const addrMatch = rest.match(/^(0x[a-fA-F0-9]{40}):(.+)$/);
+  if (addrMatch) {
+    return { handle: addrMatch[1], ref: addrMatch[2].trim(), raw };
+  }
+
+  // @alice:ref  OR  uid_uuid:ref  OR  alice:ref
   const m = rest.match(/^@?([^:]+):(.+)$/);
   if (!m) return null;
   return { handle: m[1].trim(), ref: m[2].trim(), raw };
@@ -102,12 +117,15 @@ export async function creditProUserFromOpenPay(opts: {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(handle)
   ) {
     userId = handle;
-  } else if (/^0x[a-f0-9]{40}$/i.test(handle)) {
-    const { data: byAddr } = await opts.admin
+  } else if (isProWalletAddress(handle)) {
+    const addr = handle;
+    // Case-insensitive match (Pro addresses may be mixed case)
+    const { data: rows } = await opts.admin
       .from("wallets")
       .select("*")
-      .eq("address", handle)
-      .maybeSingle();
+      .ilike("address", addr)
+      .limit(1);
+    const byAddr = Array.isArray(rows) ? rows[0] : rows;
     if (!byAddr) throw new Error("OpenPay Pro wallet address not found");
     const newBal = Number(byAddr.ousd_balance ?? 0) + amount;
     const { error: uErr } = await opts.admin
@@ -125,7 +143,7 @@ export async function creditProUserFromOpenPay(opts: {
       usd_value: amount,
       memo:
         opts.note ||
-        `OpenPay transfer${opts.fromLabel ? ` from ${opts.fromLabel}` : ""}`,
+        `OpenPay transfer${opts.fromLabel ? ` from ${opts.fromLabel}` : ""} → ${addr.slice(0, 10)}…`,
     });
     if (tErr) throw new Error(tErr.message);
     return {

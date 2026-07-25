@@ -27,10 +27,18 @@ export type OpenPayCharge = {
 export type OpenPayTransfer = {
   id?: string;
   amount: number;
-  to: string;
+  to?: string;
   status?: string;
   created_at?: string;
+  direction?: "debit" | "credit" | string;
+  counterparty_identifier?: string;
+  counterparty_user_id?: string;
+  note?: string;
+  currency?: string;
+  transaction_id?: string;
 };
+
+export type OpenPayTransferRow = OpenPayTransfer;
 
 function cfg() {
   const key = (
@@ -148,18 +156,24 @@ export const openpayPro = {
   balance: () => call<{ balance: number; currency?: string }>(`/balance`),
   resolveAccount: (identifier: string) => resolvePartnerAccount(identifier),
 
-  createCharge: (body: {
+  createCharge: async (body: {
     amount: number;
     currency?: string;
     description?: string;
     reference?: string;
     success_url: string;
     cancel_url: string;
-  }) =>
-    call<OpenPayCharge>(`/charges`, {
+  }) => {
+    const charge = await call<OpenPayCharge>(`/charges`, {
       method: "POST",
       body: JSON.stringify({ currency: "OUSD", ...body }),
-    }),
+    });
+    // Canonical PayButton host (openpay.lovable.app/paybutton 404s)
+    if (charge?.id) {
+      charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
+    }
+    return charge;
+  },
 
   getCharge: (id: string) => call<OpenPayCharge>(`/charges/${encodeURIComponent(id)}`),
 
@@ -174,4 +188,15 @@ export const openpayPro = {
       { method: "POST", body: JSON.stringify(body) },
       idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {},
     ),
+
+  listTransfers: async (opts?: { limit?: number; direction?: "credit" | "debit" }) => {
+    const q = new URLSearchParams();
+    if (opts?.limit) q.set("limit", String(opts.limit));
+    if (opts?.direction) q.set("direction", opts.direction);
+    const qs = q.toString();
+    const body = await call<{ data?: OpenPayTransferRow[] } | OpenPayTransferRow[]>(
+      `/transfers${qs ? `?${qs}` : ""}`,
+    );
+    return Array.isArray(body) ? body : (body.data ?? []);
+  },
 };

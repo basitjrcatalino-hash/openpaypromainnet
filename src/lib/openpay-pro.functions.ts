@@ -61,10 +61,10 @@ export const getOpenPayPartnerInfo = createServerFn({ method: "GET" })
     }
   });
 
-// Create a hosted checkout charge so the user can pay from their own OpenPay
-// balance and top up this wallet. If PayButton /charges is not deployed on the
-// partner API yet, fall back to a partner-authorized direct credit (same as
-// voucher / Pi: credit Pro OUSD after verifying the partner key).
+// Create a PayButton charge so the user pays from THEIR OpenPay balance.
+// If /charges is broken on OpenPay (expires_at SQL bug), fall back to the
+// hosted /pay/@partnerUsername link — same result: user sends OUSD on OpenPay,
+// then Pro settles after the partner wallet receives the credit.
 export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -79,10 +79,20 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
     const { openpayPro } = await import("./openpay-pro.server");
     const { resolvePartnerRedirectOrigin } = await import("./openpay-connect.server");
     const { supabase, userId } = context;
-    const reference = `topup_${userId}_${Date.now()}`;
     const origin = resolvePartnerRedirectOrigin(data.origin);
+    const reference = `pro_topup_${userId.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
 
-    // Prefer PayButton checkout when the partner API supports /charges
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const link = readOpenPayLink(prefs?.notifications);
+    if (!link.linked) {
+      throw new Error("Connect your OpenPay account in Settings before topping up with OpenPay Balance");
+    }
+
+    // 1) Prefer official PayButton checkout
     try {
       const charge = await openpayPro.createCharge({
         amount: data.amount,
@@ -92,23 +102,164 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         success_url: `${origin}/topup?openpay_return=1`,
         cancel_url: `${origin}/topup?openpay_cancel=1`,
       });
-      if (!charge?.checkout_url || !charge?.id) {
-        throw new Error("OpenPay checkout unavailable");
-      }
-      return { mode: "checkout" as const, charge };
+      if (!charge?.id) throw new Error("OpenPay checkout unavailable");
+      charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
+      return { mode: "checkout" as const, charge, reference };
     } catch (e) {
-      // Partner /charges is broken or missing (e.g. "expires_at is ambiguous", 404).
-      // Fall through to partner-treasury direct credit.
       const msg = (e as Error).message || "";
-      console.warn("[openpay topup] checkout unavailable, using direct credit:", msg);
+      console.warn("[openpay topup] PayButton /charges failed, using /pay link:", msg);
     }
 
-    // Fallback: verify partner key + treasury, then credit Pro wallet directly
+    // 2) Fallback: user pays partner tag from their OpenPay balance via /pay/@username
     const me = await openpayPro.me();
-    const bal = await openpayPro.balance();
-    const treasury = Number(bal.balance ?? 0);
-    if (treasury < data.amount) {
-      throw new Error("OpenPay partner treasury has insufficient balance for this top-up");
+    const partnerUsername = me.username;
+    const partnerAccount = me.account_number;
+    if (!partnerUsername) {
+      throw new Error("Partner OpenPay username unavailable — cannot start payment");
+    }
+
+    // Paying yourself is blocked on OpenPay /pay/:username
+    const payer = (link.account_number || link.username || link.identifier || "").replace(/^@+/, "");
+    if (
+      payer &&
+      (payer.toLowerCase() === partnerUsername.toLowerCase() ||
+        (partnerAccount && payer.toUpperCase() === partnerAccount.toUpperCase()))
+    ) {
+      throw new Error(
+        "This OpenPay account owns the partner app, so it cannot pay itself. Connect a different OpenPay user, or use Pi Network.",
+      );
+    }
+
+    // Optionally warn if OAuth balance is too low (non-blocking if token missing)
+    if (link.access_token) {
+      try {
+        const { fetchOAuthUserBalance } = await import("./openpay-connect.server");
+        const bal = await fetchOAuthUserBalance(link.access_token);
+        if (Number(bal.balance) < data.amount) {
+          throw new Error(
+            `Insufficient OpenPay balance (${Number(bal.balance).toFixed(2)} OUSD). Top up OpenPay first, then retry.`,
+          );
+        }
+      } catch (e) {
+        if (/Insufficient OpenPay balance/i.test((e as Error).message)) throw e;
+        /* ignore balance check failures */
+      }
+    }
+
+    const pay_url =
+      `https://openpy.space/pay/${encodeURIComponent(partnerUsername)}` +
+      `?amount=${encodeURIComponent(data.amount.toFixed(2))}` +
+      `&currency=OUSD` +
+      `&note=${encodeURIComponent(reference)}`;
+
+    // Persist pending so settle can match the incoming partner credit
+    const notifications: Record<string, unknown> = {
+      ...((prefs?.notifications as Record<string, unknown>) ?? {}),
+      openpay_pending_topup: {
+        reference,
+        amount: data.amount,
+        created_at: new Date().toISOString(),
+        payer_account: link.account_number || link.identifier,
+        payer_username: link.username,
+        partner_username: partnerUsername,
+        partner_account: partnerAccount,
+      },
+    };
+    await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      notifications: notifications as never,
+      updated_at: new Date().toISOString(),
+    });
+
+    return {
+      mode: "pay_link" as const,
+      pay_url,
+      reference,
+      amount: data.amount,
+      partner_username: partnerUsername,
+    };
+  });
+
+/** After user returns from /pay/@partner — match incoming OpenPay credit and credit Pro OUSD. */
+export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        reference: z.string().min(8).max(120).optional(),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { openpayPro } = await import("./openpay-pro.server");
+    const { supabase, userId } = context;
+
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const n = (prefs?.notifications ?? {}) as Record<string, unknown>;
+    const pending = n.openpay_pending_topup as
+      | {
+          reference?: string;
+          amount?: number;
+          payer_account?: string;
+          payer_username?: string;
+          created_at?: string;
+        }
+      | undefined;
+
+    const reference = data.reference || pending?.reference;
+    if (!reference || !pending?.amount) {
+      throw new Error("No pending OpenPay top-up to settle — start Top Up again");
+    }
+    const amount = Number(pending.amount);
+
+    const transfers = await openpayPro.listTransfers({ limit: 50 });
+    const payerKeys = [pending.payer_account, pending.payer_username]
+      .filter(Boolean)
+      .map((s) => String(s).replace(/^@+/, "").toLowerCase());
+
+    const match = transfers.find((t) => {
+      const dir = String(t.direction || "").toLowerCase();
+      // Incoming to partner treasury
+      if (dir && dir !== "credit") return false;
+      if (Math.abs(Number(t.amount) - amount) > 0.009) return false;
+      const note = String(t.note || "");
+      if (!note.includes(reference)) return false;
+      if (payerKeys.length) {
+        const cp = String(t.counterparty_identifier || "").replace(/^@+/, "").toLowerCase();
+        if (cp && !payerKeys.some((k) => k === cp)) return false;
+      }
+      return String(t.status || "completed").toLowerCase() !== "failed";
+    });
+
+    // Also accept recent credits with matching note if direction omitted
+    const match2 =
+      match ||
+      transfers.find((t) => {
+        if (Math.abs(Number(t.amount) - amount) > 0.009) return false;
+        return String(t.note || "").includes(reference);
+      });
+
+    if (!match2) {
+      return {
+        credited: false as const,
+        status: "pending" as const,
+        message: "Payment not seen yet — finish paying on OpenPay, then tap Confirm payment",
+      };
+    }
+
+    const counterparty = `openpay-paylink:${match2.id || reference}`;
+    const { data: existing } = await supabase
+      .from("transactions")
+      .select("id")
+      .eq("counterparty", counterparty)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      return { credited: true as const, status: "paid" as const, already: true };
     }
 
     const { data: wallet, error: wErr } = await supabase
@@ -119,43 +270,34 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       .maybeSingle();
     if (wErr || !wallet) throw new Error("Active wallet not found");
 
-    const newBal = Number(wallet.ousd_balance ?? 0) + data.amount;
+    const newBal = Number(wallet.ousd_balance ?? 0) + amount;
     const { error: uErr } = await supabase
       .from("wallets")
       .update({ ousd_balance: newBal })
       .eq("id", wallet.id);
     if (uErr) throw new Error(uErr.message);
 
-    const meAny = me as {
-      account?: { account_number?: string; username?: string };
-      account_number?: string;
-      username?: string;
-    };
-    const partnerId =
-      meAny.account?.account_number ||
-      meAny.account?.username ||
-      meAny.account_number ||
-      meAny.username ||
-      "treasury";
-
-    const { error: tErr } = await supabase.from("transactions").insert({
+    await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "buy",
       status: "confirmed",
       token_symbol: "OUSD",
-      counterparty: `openpay-partner:${partnerId}`,
-      amount: data.amount,
-      usd_value: data.amount,
-      memo: `OpenPay top-up · ${reference}`,
+      counterparty,
+      amount,
+      usd_value: amount,
+      memo: `OpenPay balance top-up · ${reference}`,
     });
-    if (tErr) throw new Error(tErr.message);
 
-    return {
-      mode: "direct" as const,
-      balance: newBal,
-      amount: data.amount,
-      partner: me,
-    };
+    // Clear pending
+    const next = { ...n };
+    delete next.openpay_pending_topup;
+    await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      notifications: next as never,
+      updated_at: new Date().toISOString(),
+    });
+
+    return { credited: true as const, status: "paid" as const, balance: newBal };
   });
 
 // Poll after the buyer returns from OpenPay hosted checkout. If paid and not

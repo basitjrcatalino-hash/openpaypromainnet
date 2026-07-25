@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { ArrowLeft, Image, Flashlight, FlashlightOff, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ImageIcon, Flashlight, FlashlightOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
-import { scanQrFromFile, stopQrInstance, useQrCamera } from "@/components/qr-scanner";
+import { scanQrFromFile, stopQrInstance, useQrCamera } from "@/lib/qr-camera";
 
 export const Route = createFileRoute("/_authenticated/scan")({
   ssr: false,
@@ -21,16 +21,20 @@ function ScanPage() {
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
   const handled = useRef(false);
+  const alive = useRef(true);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const finishRef = useRef<(text: string) => Promise<void>>(async () => undefined);
 
   const scannerRef = useQrCamera({
     elementId: SCAN_EL_ID,
     active: true,
     onError: (message) => {
+      if (!alive.current) return;
       setError(message);
       setStarting(false);
     },
     onReady: (instance) => {
+      if (!alive.current) return;
       setStarting(false);
       try {
         const caps = instance.getRunningTrackCameraCapabilities?.();
@@ -42,22 +46,22 @@ function ScanPage() {
     onResult: (text) => {
       if (handled.current) return;
       handled.current = true;
-      void finishScan(text);
+      void finishRef.current(text);
     },
   });
 
-  async function finishScan(text: string) {
+  finishRef.current = async (text: string) => {
     await stopQrInstance(scannerRef.current);
     scannerRef.current = null;
 
     const parsed = parsePaymentQr(text);
     if (!parsed.to) {
       handled.current = false;
-      toast.error("Invalid QR code");
+      if (alive.current) toast.error("Invalid QR code");
       return;
     }
 
-    toast.success("QR scanned");
+    if (alive.current) toast.success("QR scanned");
     void navigate({
       to: "/send",
       search: {
@@ -66,7 +70,14 @@ function ScanPage() {
         ...(parsed.asset ? { asset: parsed.asset } : {}),
       },
     });
-  }
+  };
+
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   async function toggleTorch() {
     const inst = scannerRef.current;
@@ -74,10 +85,9 @@ function ScanPage() {
     try {
       const next = !torchOn;
       await inst.applyVideoConstraints({
-        // @ts-expect-error torch is non-standard but supported on many mobile browsers
-        advanced: [{ torch: next }],
-      });
-      setTorchOn(next);
+        advanced: [{ torch: next } as MediaTrackConstraintSet],
+      } as MediaTrackConstraints);
+      if (alive.current) setTorchOn(next);
     } catch {
       toast.error("Flashlight not available");
     }
@@ -88,7 +98,7 @@ function ScanPage() {
       const decoded = await scanQrFromFile(file);
       if (handled.current) return;
       handled.current = true;
-      await finishScan(decoded);
+      await finishRef.current(decoded);
     } catch {
       toast.error("No QR code found in image");
     }
@@ -96,11 +106,10 @@ function ScanPage() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      {/* Camera region — same sizing approach as Send scanner (no object-cover) */}
       <div className="absolute inset-0 flex items-center justify-center bg-black">
         <div
           id={SCAN_EL_ID}
-          className="w-[min(100vw,360px)] overflow-hidden bg-black [&_img]:mx-auto [&_video]:mx-auto [&_video]:max-h-[70vh] [&_video]:w-full"
+          className="h-[min(70vh,360px)] w-[min(100vw,360px)] overflow-hidden bg-black"
         />
         {starting && (
           <div className="absolute inset-0 grid place-items-center bg-black">
@@ -109,11 +118,10 @@ function ScanPage() {
         )}
       </div>
 
-      {/* Viewfinder chrome */}
       <div className="pointer-events-none absolute inset-0 flex flex-col">
         <div className="flex-1 bg-black/50" />
         <div className="flex justify-center">
-          <div className="relative h-[240px] w-[240px]">
+          <div className="relative h-60 w-60">
             <span className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px] border-white" />
             <span className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px] border-white" />
             <span className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px] border-white" />
@@ -147,7 +155,7 @@ function ScanPage() {
             className="flex flex-col items-center gap-2 text-xs font-medium text-white/90"
           >
             <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 backdrop-blur-md">
-              <Image className="h-5 w-5" />
+              <ImageIcon className="h-5 w-5" />
             </span>
             Photos
           </button>

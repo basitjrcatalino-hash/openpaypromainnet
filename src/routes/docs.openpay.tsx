@@ -137,8 +137,9 @@ function OpenPayDocsPage() {
             ["#setup", "1. Partner app setup"],
             ["#connect", "2. Connect (OAuth)"],
             ["#pay", "3. Accept payments"],
-            ["#api", "4. API cheat sheet"],
-            ["#errors", "5. Errors & checklist"],
+            ["#openpay-to-pro", "4. OpenPay → Pro"],
+            ["#api", "5. API cheat sheet"],
+            ["#errors", "6. Errors & checklist"],
           ].map(([href, label]) => (
             <a key={href} href={href} className="rounded-xl px-3 py-2 hover:bg-muted/60">
               {label}
@@ -249,7 +250,33 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
           </Card>
         </Section>
 
-        <Section id="api" eyebrow="Step 4" title="API cheat sheet">
+        <Section id="openpay-to-pro" eyebrow="Step 4" title="OpenPay → OpenPay Pro transfers">
+          <Card className="space-y-3 rounded-3xl border-border/60 p-5 text-sm text-muted-foreground">
+            <p className="text-foreground">
+              Send OUSD from OpenPay into a Pro wallet using note routing + inbound API (mirror of
+              Pro → OpenPay send).
+            </p>
+            <p>
+              Note: <code className="rounded bg-muted px-1">pro_xfer:@alice:r_ref</code>
+            </p>
+            <Code>{`curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \\
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "@alice",
+    "amount": 25.00,
+    "openpay_tx_id": "UNIQUE_TX",
+    "note": "pro_xfer:@alice:r_1",
+    "from_username": "bob"
+  }'`}</Code>
+            <p>
+              Pro users: <strong>Receive → Create OpenPay receive link</strong>. OpenPay product
+              prompt: <code>docs/OPENPAY_SEND_TO_PRO_PROMPT.md</code>.
+            </p>
+          </Card>
+        </Section>
+
+        <Section id="api" eyebrow="Step 5" title="API cheat sheet">
           <div className="overflow-x-auto rounded-3xl border border-border/60">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
@@ -285,7 +312,7 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
           </p>
         </Section>
 
-        <Section id="errors" eyebrow="Step 5" title="Errors & launch checklist">
+        <Section id="errors" eyebrow="Step 6" title="Errors & launch checklist">
           <Card className="space-y-2 rounded-3xl border-border/60 p-5 text-sm">
             <p>
               <strong>401 / invalid_client</strong> — bad or quoted <code>opk_live_…</code> / wrong

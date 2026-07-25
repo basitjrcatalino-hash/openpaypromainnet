@@ -874,3 +874,161 @@ export const syncOpenPayOUSD = createServerFn({ method: "POST" })
 
     return { balance: partnerBalance, synced: true, delta };
   });
+
+/**
+ * Build an OpenPay → Pro receive link.
+ * OpenPay user pays partner tag; note routes credit to this Pro user.
+ */
+export const createOpenPayReceiveLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        amount: z.number().positive().max(50_000).optional(),
+        origin: z.string().url(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { openpayPro } = await import("./openpay-pro.server");
+    const { resolvePartnerRedirectOrigin } = await import("./openpay-connect.server");
+    const { buildInboundNote } = await import("./openpay-inbound.server");
+    const { supabase, userId } = context;
+    const origin = resolvePartnerRedirectOrigin(data.origin);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const handle =
+      (profile?.username || profile?.display_name || `uid_${userId}`).replace(/^@+/, "");
+    const note = buildInboundNote(handle.startsWith("uid_") ? handle : handle);
+    const me = await openpayPro.me();
+    const partnerUsername = me.username;
+    if (!partnerUsername) {
+      throw new Error("Partner OpenPay username unavailable");
+    }
+
+    const successParams = new URLSearchParams({ openpay_in: "1" });
+    if (typeof data.amount === "number") {
+      successParams.set("amount", data.amount.toFixed(2));
+    }
+    const params = new URLSearchParams({
+      currency: "OUSD",
+      note,
+      success_url: `${origin}/receive?${successParams.toString()}`,
+      cancel_url: `${origin}/receive?openpay_cancel=1`,
+    });
+    if (typeof data.amount === "number") {
+      params.set("amount", data.amount.toFixed(2));
+    }
+
+    const pay_url = `https://openpy.space/pay/${encodeURIComponent(partnerUsername)}?${params.toString()}`;
+
+    // Store pending inbound for settle-on-return
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const notifications: Record<string, unknown> = {
+      ...((prefs?.notifications as Record<string, unknown>) ?? {}),
+      openpay_pending_inbound: {
+        note,
+        handle,
+        amount: data.amount ?? null,
+        created_at: new Date().toISOString(),
+        partner_username: partnerUsername,
+      },
+    };
+    await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      notifications: notifications as never,
+      updated_at: new Date().toISOString(),
+    });
+
+    return {
+      pay_url,
+      note,
+      handle,
+      partner_username: partnerUsername,
+      amount: data.amount ?? null,
+      inbound_api: `${origin}/api/public/openpay/inbound`,
+    };
+  });
+
+/** After OpenPay thank-you return on /receive — credit this Pro user from pending note. */
+export const settleOpenPayInboundReceive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        openpay_tx: z.string().min(4).max(200).optional(),
+        note: z.string().min(8).max(200).optional(),
+        amount: z.number().positive().optional(),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const n = (prefs?.notifications ?? {}) as Record<string, unknown>;
+    const pending = n.openpay_pending_inbound as
+      | { note?: string; handle?: string; amount?: number | null; created_at?: string }
+      | undefined;
+
+    const note = data.note || pending?.note;
+    if (!note) throw new Error("No pending OpenPay inbound — create a receive link first");
+
+    const { parseInboundNote, creditProUserFromOpenPay } = await import(
+      "./openpay-inbound.server"
+    );
+    const parsed = parseInboundNote(note);
+    if (!parsed) throw new Error("Invalid inbound note");
+
+    const amount = Number(data.amount ?? pending?.amount ?? 0);
+    if (!(amount > 0)) {
+      throw new Error("Amount required to settle inbound transfer");
+    }
+
+    const txId =
+      data.openpay_tx ||
+      `ret_${userId.slice(0, 8)}_${parsed.ref}_${Math.round(amount * 100)}`;
+
+    let admin;
+    try {
+      const mod = await import("@/integrations/supabase/client.server");
+      admin = mod.supabaseAdmin;
+    } catch {
+      throw new Error("Server admin not configured (SUPABASE_SERVICE_ROLE_KEY)");
+    }
+
+    const result = await creditProUserFromOpenPay({
+      admin,
+      toHandle: parsed.handle.startsWith("uid_") ? parsed.handle : parsed.handle,
+      amount,
+      openpayTxId: txId,
+      note,
+    });
+
+    // Ensure only the logged-in user is credited for return-settle
+    if (result.userId && result.userId !== userId) {
+      throw new Error("Inbound note does not belong to this account");
+    }
+
+    const next = { ...n };
+    delete next.openpay_pending_inbound;
+    await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      notifications: next as never,
+      updated_at: new Date().toISOString(),
+    });
+
+    return result;
+  });

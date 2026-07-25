@@ -320,6 +320,28 @@ export async function createCharge({ amount, reference, success_url, cancel_url 
 
 ## Related
 
+- OpenPay → OpenPay Pro transfers: [`OPENPAY_TO_PRO.md`](./OPENPAY_TO_PRO.md)
+- OpenPay Send feature prompt: [`OPENPAY_SEND_TO_PRO_PROMPT.md`](./OPENPAY_SEND_TO_PRO_PROMPT.md)
 - Partner Transfer API detail: [`PARTNER_TRANSFER_API.md`](./PARTNER_TRANSFER_API.md)
 - OpenPay Pro public ledger: [`LEDGER_API.md`](./LEDGER_API.md)
 - OpenPay Pro demo: [https://openpaypromainnet.lovable.app](https://openpaypromainnet.lovable.app)
+
+---
+
+## 8. OpenPay → OpenPay Pro (inbound)
+
+To send from OpenPay into a Pro user’s wallet:
+
+1. Pay link / Send with note `pro_xfer:@proUsername:ref_…` to the partner tag.
+2. Credit Pro via:
+
+```bash
+curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"to":"@alice","amount":25,"openpay_tx_id":"TX_ID","note":"pro_xfer:@alice:r_1"}'
+```
+
+Pro users can also **Receive → Create OpenPay receive link** in the Pro app.
+
+Full detail: [`OPENPAY_TO_PRO.md`](./OPENPAY_TO_PRO.md).

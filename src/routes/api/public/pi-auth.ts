@@ -26,10 +26,16 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           // Deterministic password derived from a server-only secret + uid.
           // Prefer the dedicated PI_AUTH_PASSWORD_SECRET so we don't depend on
           // SUPABASE_SERVICE_ROLE_KEY being readable as plain env on Lovable Cloud.
+          const { getSupabaseServiceRoleKey } = await import(
+            "@/integrations/supabase/env.server"
+          );
+          const { getSupabasePublishableKey } = await import(
+            "@/integrations/supabase/env"
+          );
           const passSecret =
             process.env.PI_AUTH_PASSWORD_SECRET ||
-            process.env.SUPABASE_SERVICE_ROLE_KEY ||
-            process.env.SUPABASE_PUBLISHABLE_KEY;
+            getSupabaseServiceRoleKey() ||
+            getSupabasePublishableKey();
           if (!passSecret) {
             return Response.json(
               { error: "Pi sign-in is not configured (missing server secret)." },

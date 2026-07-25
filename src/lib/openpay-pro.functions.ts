@@ -420,7 +420,8 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let supabaseAdmin: any = null;
 
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_URL) {
+    const { hasSupabaseAdminEnv } = await import("@/integrations/supabase/env.server");
+    if (hasSupabaseAdminEnv()) {
       try {
         const mod = await import("@/integrations/supabase/client.server");
         supabaseAdmin = mod.supabaseAdmin;
@@ -624,15 +625,15 @@ export const linkOpenPayAccount = createServerFn({ method: "POST" })
           local = await findLocalProfileByHandle(supabaseAdmin, identifier);
         } catch (adminErr) {
           const adminMsg = (adminErr as Error).message || "";
-          if (/SUPABASE_SERVICE_ROLE_KEY/i.test(adminMsg) && !local) {
+          if (/SUPABASE_(SERVICE_ROLE|SECRET)_KEY/i.test(adminMsg) && !local) {
             // Partner failed + no service role — surface a useful connect hint
             throw new Error(
               msg.includes("OP…") || msg.includes("account number")
                 ? msg
-                : `Could not connect @${identifier}. Try the OP account number, or add SUPABASE_SERVICE_ROLE_KEY in Lovable Cloud Secrets.`,
+                : `Could not connect @${identifier}. Try the OP account number, or add SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY in Vercel env vars.`,
             );
           }
-          if (!/SUPABASE_SERVICE_ROLE_KEY/i.test(adminMsg)) {
+          if (!/SUPABASE_(SERVICE_ROLE|SECRET)_KEY/i.test(adminMsg)) {
             // keep going with partner error below
           }
         }
@@ -1022,7 +1023,7 @@ export const settleOpenPayInboundReceive = createServerFn({ method: "POST" })
       const mod = await import("@/integrations/supabase/client.server");
       admin = mod.supabaseAdmin;
     } catch {
-      throw new Error("Server admin not configured (SUPABASE_SERVICE_ROLE_KEY)");
+      throw new Error("Server admin not configured (SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY)");
     }
 
     const result = await creditProUserFromOpenPay({

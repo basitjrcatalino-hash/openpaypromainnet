@@ -55,7 +55,13 @@ export async function getCallerUserId(request: Request): Promise<string | null> 
   if (!auth?.startsWith("Bearer ")) return null;
   const jwt = auth.slice(7);
   const { createClient } = await import("@supabase/supabase-js");
-  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
+  const { getSupabasePublishableKey, getSupabaseUrl } = await import(
+    "@/integrations/supabase/env"
+  );
+  const url = getSupabaseUrl();
+  const key = getSupabasePublishableKey();
+  if (!url || !key) return null;
+  const sb = createClient(url, key);
   const { data, error } = await sb.auth.getUser(jwt);
   if (error || !data.user) return null;
   return data.user.id;

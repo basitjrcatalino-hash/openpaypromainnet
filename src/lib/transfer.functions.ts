@@ -14,7 +14,8 @@ function isWalletAddress(to: string): boolean {
 }
 
 async function trySupabaseAdmin() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_URL) return null;
+  const { hasSupabaseAdminEnv } = await import("@/integrations/supabase/env.server");
+  if (!hasSupabaseAdminEnv()) return null;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     return supabaseAdmin;

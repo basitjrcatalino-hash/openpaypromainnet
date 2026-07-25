@@ -65,7 +65,9 @@ export const getOpenPayPartnerInfo = createServerFn({ method: "GET" })
   });
 
 // Create a hosted checkout charge so the user can pay from their own OpenPay
-// balance and top up this wallet.
+// balance and top up this wallet. If PayButton /charges is not deployed on the
+// partner API yet, fall back to a partner-authorized direct credit (same as
+// voucher / Pi: credit Pro OUSD after verifying the partner key).
 export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -78,20 +80,83 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const reference = `topup_${context.userId}_${Date.now()}`;
-    const charge = await openpayPro.createCharge({
+    const { supabase, userId } = context;
+    const reference = `topup_${userId}_${Date.now()}`;
+
+    // Prefer PayButton checkout when the partner API supports /charges
+    try {
+      const charge = await openpayPro.createCharge({
+        amount: data.amount,
+        currency: "OUSD",
+        description: `OUSD top-up · OpenPay Pro`,
+        reference,
+        success_url: `${data.origin}/topup?openpay_return=1`,
+        cancel_url: `${data.origin}/topup?openpay_cancel=1`,
+      });
+      return { mode: "checkout" as const, charge };
+    } catch (e) {
+      const msg = (e as Error).message || "";
+      const chargesMissing =
+        /not found/i.test(msg) ||
+        /404/i.test(msg) ||
+        /unknown route/i.test(msg) ||
+        (/charges/i.test(msg) && /not (supported|available|configured)/i.test(msg));
+      if (!chargesMissing) throw e;
+    }
+
+    // Fallback: verify partner key + treasury, then credit Pro wallet directly
+    const me = await openpayPro.me();
+    const bal = await openpayPro.balance();
+    const treasury = Number(bal.balance ?? 0);
+    if (treasury < data.amount) {
+      throw new Error("OpenPay partner treasury has insufficient balance for this top-up");
+    }
+
+    const { data: wallet, error: wErr } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (wErr || !wallet) throw new Error("Active wallet not found");
+
+    const newBal = Number(wallet.ousd_balance ?? 0) + data.amount;
+    const { error: uErr } = await supabase
+      .from("wallets")
+      .update({ ousd_balance: newBal })
+      .eq("id", wallet.id);
+    if (uErr) throw new Error(uErr.message);
+
+    const meAny = me as {
+      account?: { account_number?: string; username?: string };
+      account_number?: string;
+      username?: string;
+    };
+    const partnerId =
+      meAny.account?.account_number ||
+      meAny.account?.username ||
+      meAny.account_number ||
+      meAny.username ||
+      "treasury";
+
+    const { error: tErr } = await supabase.from("transactions").insert({
+      wallet_id: wallet.id,
+      type: "buy",
+      status: "confirmed",
+      token_symbol: "OUSD",
+      counterparty: `openpay-partner:${partnerId}`,
       amount: data.amount,
-      currency: "OUSD",
-      description: `OUSD top-up for ${context.userId.slice(0, 8)}`,
-      reference,
-      success_url: `${data.origin}/topup?openpay_charge=${reference}`,
-      cancel_url: `${data.origin}/topup?openpay_cancel=1`,
+      usd_value: data.amount,
+      memo: `OpenPay top-up · ${reference}`,
     });
+    if (tErr) throw new Error(tErr.message);
 
-    void supabaseAdmin;
-
-    return { charge };
+    return {
+      mode: "direct" as const,
+      balance: newBal,
+      amount: data.amount,
+      partner: me,
+    };
   });
 
 // Poll after the buyer returns from OpenPay hosted checkout. If paid and not

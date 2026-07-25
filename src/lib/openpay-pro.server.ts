@@ -65,7 +65,7 @@ async function call<T>(
   }
   if (!res.ok) {
     const msg = body?.error || body?.message || `OpenPay ${res.status}`;
-    throw new Error(msg);
+    throw new Error(typeof msg === "string" ? msg : `OpenPay ${res.status}`);
   }
   return body as T;
 }

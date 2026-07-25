@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
+    openpay_return: s.openpay_return ? "1" : undefined,
     openpay_cancel: s.openpay_cancel ? "1" : undefined,
   }),
   component: TopUpPage,
@@ -36,6 +37,7 @@ const schema = z.object({
   amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
 });
 
+const PENDING_CHARGE_KEY = "openpay_pending_charge";
 
 function TopUpPage() {
   const { user } = Route.useRouteContext();
@@ -53,29 +55,45 @@ function TopUpPage() {
     queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
   });
 
-  // Settle OpenPay hosted-checkout returns.
+  // Settle OpenPay hosted-checkout returns (charge id from URL or sessionStorage).
   useEffect(() => {
-    const chargeId = search.openpay_charge;
-    if (!chargeId) {
-      if (search.openpay_cancel) toast.error("OpenPay payment canceled");
+    if (search.openpay_cancel) {
+      toast.error("OpenPay payment canceled");
+      try { sessionStorage.removeItem(PENDING_CHARGE_KEY); } catch { /* ignore */ }
+      const u = new URL(window.location.href);
+      u.searchParams.delete("openpay_cancel");
+      window.history.replaceState({}, "", u.toString());
       return;
     }
+
+    let chargeId = search.openpay_charge;
+    if (!chargeId && search.openpay_return) {
+      try { chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined; } catch { /* ignore */ }
+    }
+    if (!chargeId) return;
+
     (async () => {
       try {
         const r = await settleCharge({ data: { chargeId } });
         if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
         else toast.message(`OpenPay charge status: ${r.status}`);
         qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-      } catch (e) { toast.error((e as Error).message); }
-      finally {
+        qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+        qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+        qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+      } catch (e) {
+        toast.error((e as Error).message);
+      } finally {
+        try { sessionStorage.removeItem(PENDING_CHARGE_KEY); } catch { /* ignore */ }
         const u = new URL(window.location.href);
         u.searchParams.delete("openpay_charge");
+        u.searchParams.delete("openpay_return");
         u.searchParams.delete("openpay_cancel");
         window.history.replaceState({}, "", u.toString());
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.openpay_charge]);
+  }, [search.openpay_charge, search.openpay_return, search.openpay_cancel]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,9 +103,23 @@ function TopUpPage() {
     setBusy(true);
     try {
       if (method === "openpay_balance") {
-        const { charge } = await createCharge({
+        const res = await createCharge({
           data: { amount: parsed.data.amount, origin: window.location.origin },
         });
+        if (res.mode === "direct") {
+          toast.success(`Topped up ${formatUSD(res.amount)} · OUSD credited`);
+          setAmount("");
+          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+          qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+          qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+          qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+          return;
+        }
+        const charge = res.charge;
+        if (!charge?.checkout_url || !charge?.id) {
+          throw new Error("OpenPay did not return a checkout URL");
+        }
+        try { sessionStorage.setItem(PENDING_CHARGE_KEY, charge.id); } catch { /* ignore */ }
         window.location.href = charge.checkout_url;
         return;
       }
@@ -156,7 +188,8 @@ function TopUpPage() {
 
           {method === "openpay_balance" && (
             <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              You'll be redirected to a secure OpenPay checkout to pay from your OpenPay balance. On success we credit your OUSD balance instantly.
+              Pays via OpenPay PayButton checkout when available. If checkout is not enabled on the
+              partner API, your wallet is credited instantly from the OpenPay Pro partner treasury.
             </div>
           )}
 

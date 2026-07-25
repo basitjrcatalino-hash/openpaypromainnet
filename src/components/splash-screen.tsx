@@ -3,22 +3,21 @@ import { useEffect, useState } from "react";
 const SESSION_KEY = "openpay_splash_shown";
 
 export function SplashScreen() {
-  const [shown, setShown] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !sessionStorage.getItem(SESSION_KEY);
-  });
+  // Always start false on server + first client paint to avoid hydration mismatch.
+  const [shown, setShown] = useState(false);
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    if (!shown) return;
+    if (sessionStorage.getItem(SESSION_KEY)) return;
     sessionStorage.setItem(SESSION_KEY, "1");
+    setShown(true);
     const t1 = setTimeout(() => setFading(true), 280);
     const t2 = setTimeout(() => setShown(false), 480);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [shown]);
+  }, []);
 
   if (!shown) return null;
 

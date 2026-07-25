@@ -65,13 +65,12 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
+  const detail = error?.message?.trim() || "";
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
-
-  const detail = error?.message?.trim() || "";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -81,18 +80,25 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           We couldn't load that part of the wallet.
         </p>
         {detail ? (
-          <p className="mt-3 break-words rounded-xl border border-border/60 bg-card/50 px-3 py-2 text-left text-xs text-muted-foreground">
+          <p className="mt-3 wrap-break-word rounded-xl border border-border/60 bg-card/50 px-3 py-2 text-left text-xs text-muted-foreground">
             {detail}
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            type="button"
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
           >
             Try again
           </button>
-          <a href="/" className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium">
+          <a
+            href="/"
+            className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium"
+          >
             Go home
           </a>
         </div>
@@ -112,17 +118,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#1a1330" },
       { title: "OpenPay Pro Wallet" },
-      { name: "description", content: "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable" },
+      {
+        name: "description",
+        content:
+          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+      },
       { property: "og:title", content: "OpenPay Pro Wallet" },
       { name: "twitter:title", content: "OpenPay Pro Wallet" },
-      { property: "og:description", content: "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable" },
-      { name: "twitter:description", content: "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png" },
+      {
+        property: "og:description",
+        content:
+          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }, { rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -133,7 +162,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />

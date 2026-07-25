@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Upload,
   ScrollText,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -622,6 +623,28 @@ function SettingsPage() {
           </div>
           <Button asChild className="rounded-full">
             <Link to="/ledger">Open Ledger API</Link>
+          </Button>
+        </div>
+      </Card>
+
+      {/* Third-party Connect + Payments docs */}
+      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+              <BookOpen className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold">OpenPay Connect &amp; Payments</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Docs for third-party apps: OAuth Connect, PayButton, and /pay/@username.
+              </p>
+            </div>
+          </div>
+          <Button asChild className="rounded-full" variant="outline">
+            <a href="/docs/openpay" target="_blank" rel="noreferrer">
+              Open docs
+            </a>
           </Button>
         </div>
       </Card>

@@ -2,6 +2,10 @@
 
 Integration reference for OpenPay Pro (and other partner apps).
 
+For the full **Connect + Payments** guide for third-party apps, see
+[`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
+[`/docs/openpay`](https://openpaypromainnet.lovable.app/docs/openpay).
+
 **Base URL:** `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
 
 ## Authentication

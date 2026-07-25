@@ -26,6 +26,7 @@ import {
   History,
   CheckCircle2,
   ScrollText,
+  BookOpen,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -440,6 +441,20 @@ function SidebarInner({
           OpenLedger
         </span>
       </Link>
+
+      <a
+        href="/docs/openpay"
+        target="_blank"
+        rel="noreferrer"
+        onClick={onClose}
+        className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors duration-100 hover:bg-sidebar-accent/60 hover:text-foreground"
+      >
+        <BookOpen className="h-5 w-5 text-primary" />
+        OpenPay Docs
+        <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Connect
+        </span>
+      </a>
 
       {/* Wallet switcher list */}
       <div className="rounded-2xl border border-border/60 bg-card/40 p-2">

@@ -18,7 +18,13 @@ import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
 import { cn } from "@/lib/utils";
 
+export const Route = createFileRoute("/_authenticated/send")({
+  head: () => ({ meta: [{ title: "Send — OpenPay Pro Wallet" }] }),
+  component: SendPage,
+});
+
 type Rail = "wallet" | "openpay";
+
 
 const schema = z.object({
   to: z.string().trim().min(2, "Enter a wallet address or @username").max(120),

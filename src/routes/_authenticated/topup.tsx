@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
+    openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
+    openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,
     openpay_return: s.openpay_return ? "1" : undefined,
     openpay_cancel: s.openpay_cancel ? "1" : undefined,
   }),
@@ -88,18 +90,65 @@ function TopUpPage() {
     }
   }, []);
 
-  // Settle OpenPay hosted-checkout returns (charge id from URL or sessionStorage).
+  // Settle OpenPay hosted-checkout / pay-link returns
   useEffect(() => {
     if (search.openpay_cancel) {
-      toast.error("OpenPay payment canceled");
+      toast.error("OpenPay payment canceled — order not completed");
       try {
         sessionStorage.removeItem(PENDING_CHARGE_KEY);
+        sessionStorage.removeItem(PENDING_PAYLINK_KEY);
       } catch {
         /* ignore */
       }
+      setPendingPayLink(null);
       const u = new URL(window.location.href);
       u.searchParams.delete("openpay_cancel");
+      u.searchParams.delete("openpay_ref");
       window.history.replaceState({}, "", u.toString());
+      return;
+    }
+
+    // Pay-link return: auto-confirm credit
+    if (search.openpay_return && (search.openpay_ref || pendingPayLink?.reference)) {
+      const reference = search.openpay_ref || pendingPayLink?.reference;
+      (async () => {
+        try {
+          const r = await settlePayLink({
+            data: {
+              reference,
+              txId: search.openpay_tx,
+              fromReturn: true,
+            },
+          });
+          if (r.credited) {
+            toast.success("OpenPay payment complete · OUSD credited");
+            setPendingPayLink(null);
+            try {
+              sessionStorage.removeItem(PENDING_PAYLINK_KEY);
+            } catch {
+              /* ignore */
+            }
+            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+            qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+            qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+          } else {
+            toast.message(r.message || "Confirming payment…");
+            // Keep pending card visible for manual confirm
+            if (reference && !pendingPayLink) {
+              setPendingPayLink({ reference, amount: Number(amount) || 0 });
+            }
+          }
+        } catch (e) {
+          toast.error((e as Error).message);
+        } finally {
+          const u = new URL(window.location.href);
+          u.searchParams.delete("openpay_return");
+          u.searchParams.delete("openpay_ref");
+          u.searchParams.delete("openpay_tx");
+          window.history.replaceState({}, "", u.toString());
+        }
+      })();
       return;
     }
 
@@ -138,7 +187,7 @@ function TopUpPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.openpay_charge, search.openpay_return, search.openpay_cancel]);
+  }, [search.openpay_charge, search.openpay_return, search.openpay_cancel, search.openpay_ref]);
 
   async function confirmPayLink() {
     if (!pendingPayLink?.reference) {
@@ -147,7 +196,12 @@ function TopUpPage() {
     }
     setBusy(true);
     try {
-      const r = await settlePayLink({ data: { reference: pendingPayLink.reference } });
+      const r = await settlePayLink({
+        data: {
+          reference: pendingPayLink.reference,
+          fromReturn: false,
+        },
+      });
       if (r.credited) {
         toast.success(`Topped up ${formatUSD(pendingPayLink.amount)} from OpenPay`);
         setPendingPayLink(null);

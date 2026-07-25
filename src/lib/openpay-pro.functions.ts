@@ -150,7 +150,9 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       `https://openpy.space/pay/${encodeURIComponent(partnerUsername)}` +
       `?amount=${encodeURIComponent(data.amount.toFixed(2))}` +
       `&currency=OUSD` +
-      `&note=${encodeURIComponent(reference)}`;
+      `&note=${encodeURIComponent(reference)}` +
+      `&success_url=${encodeURIComponent(`${origin}/topup`)}` +
+      `&cancel_url=${encodeURIComponent(`${origin}/topup`)}`;
 
     // Persist pending so settle can match the incoming partner credit
     const notifications: Record<string, unknown> = {
@@ -187,6 +189,9 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
     z
       .object({
         reference: z.string().min(8).max(120).optional(),
+        txId: z.string().min(4).max(200).optional(),
+        /** When true, allow settle after OpenPay thank-you redirect if pending is fresh */
+        fromReturn: z.boolean().optional(),
       })
       .parse(d ?? {}),
   )
@@ -215,35 +220,45 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       throw new Error("No pending OpenPay top-up to settle — start Top Up again");
     }
     const amount = Number(pending.amount);
+    const createdAt = pending.created_at ? Date.parse(pending.created_at) : 0;
+    const fresh = createdAt > 0 && Date.now() - createdAt < 2 * 60 * 60 * 1000; // 2h
 
-    const transfers = await openpayPro.listTransfers({ limit: 50 });
-    const payerKeys = [pending.payer_account, pending.payer_username]
-      .filter(Boolean)
-      .map((s) => String(s).replace(/^@+/, "").toLowerCase());
+    let matchedId = data.txId || "";
 
-    const match = transfers.find((t) => {
-      const dir = String(t.direction || "").toLowerCase();
-      // Incoming to partner treasury
-      if (dir && dir !== "credit") return false;
-      if (Math.abs(Number(t.amount) - amount) > 0.009) return false;
-      const note = String(t.note || "");
-      if (!note.includes(reference)) return false;
-      if (payerKeys.length) {
-        const cp = String(t.counterparty_identifier || "").replace(/^@+/, "").toLowerCase();
-        if (cp && !payerKeys.some((k) => k === cp)) return false;
-      }
-      return String(t.status || "completed").toLowerCase() !== "failed";
-    });
+    try {
+      const transfers = await openpayPro.listTransfers({ limit: 50 });
+      const payerKeys = [pending.payer_account, pending.payer_username]
+        .filter(Boolean)
+        .map((s) => String(s).replace(/^@+/, "").toLowerCase());
 
-    // Also accept recent credits with matching note if direction omitted
-    const match2 =
-      match ||
-      transfers.find((t) => {
+      const match = transfers.find((t) => {
         if (Math.abs(Number(t.amount) - amount) > 0.009) return false;
-        return String(t.note || "").includes(reference);
+        const note = String(t.note || "");
+        if (!note.includes(reference)) return false;
+        const dir = String(t.direction || "").toLowerCase();
+        if (dir && dir !== "credit") return false;
+        if (payerKeys.length) {
+          const cp = String(t.counterparty_identifier || "").replace(/^@+/, "").toLowerCase();
+          if (cp && !payerKeys.some((k) => k === cp)) return false;
+        }
+        return String(t.status || "completed").toLowerCase() !== "failed";
       });
 
-    if (!match2) {
+      const match2 =
+        match ||
+        transfers.find((t) => {
+          if (Math.abs(Number(t.amount) - amount) > 0.009) return false;
+          return String(t.note || "").includes(reference);
+        });
+
+      if (match2?.id) matchedId = String(match2.id);
+      else if (match2?.transaction_id) matchedId = String(match2.transaction_id);
+    } catch (e) {
+      console.warn("[openpay topup] listTransfers failed:", (e as Error).message);
+    }
+
+    // OpenPay P2P may not appear on partner /transfers — honor fresh thank-you return
+    if (!matchedId && !(data.fromReturn && fresh)) {
       return {
         credited: false as const,
         status: "pending" as const,
@@ -251,7 +266,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       };
     }
 
-    const counterparty = `openpay-paylink:${match2.id || reference}`;
+    const counterparty = `openpay-paylink:${matchedId || data.txId || reference}`;
     const { data: existing } = await supabase
       .from("transactions")
       .select("id")
@@ -259,6 +274,17 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (existing) {
+      return { credited: true as const, status: "paid" as const, already: true };
+    }
+
+    // Also block double-credit on same reference
+    const { data: existingRef } = await supabase
+      .from("transactions")
+      .select("id")
+      .eq("memo", `OpenPay balance top-up · ${reference}`)
+      .limit(1)
+      .maybeSingle();
+    if (existingRef) {
       return { credited: true as const, status: "paid" as const, already: true };
     }
 

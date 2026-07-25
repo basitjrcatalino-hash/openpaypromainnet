@@ -188,8 +188,8 @@ function TopUpPage() {
 
           {method === "openpay_balance" && (
             <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              Pays via OpenPay PayButton checkout when available. If checkout is not enabled on the
-              partner API, your wallet is credited instantly from the OpenPay Pro partner treasury.
+              Pays via OpenPay PayButton checkout. You are redirected to OpenPay to confirm from
+              your OpenPay balance; if checkout fails, your wallet is credited from the partner treasury.
             </div>
           )}
 

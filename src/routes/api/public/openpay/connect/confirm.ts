@@ -50,25 +50,12 @@ async function authorizePartner(request: Request): Promise<{ ok: true } | Respon
 }
 
 /**
- * OpenPay → OpenPay Pro connect API
- *
- * After the user signs in on OpenPay and approves linking OpenPay Pro,
- * OpenPay calls this (or redirects with a code minted here) so Pro can
- * finish the link.
+ * Legacy OpenPay → OpenPay Pro connect confirm (HMAC codes).
+ * Prefer the official OAuth 2.0 flow: /connect → /oauth/token → /user/me
+ * (see docs/PARTNER_TRANSFER_API.md).
  *
  * POST /api/public/openpay/connect/confirm
  * Authorization: Bearer <OPENPAY_PARTNER_API_KEY>
- * Body: {
- *   state: string,          // opaque state from Pro startConnect
- *   account: {
- *     account_number?: string,
- *     username?: string,
- *     name?: string,
- *     email?: string,
- *     user_id?: string
- *   },
- *   redirect_uri?: string   // if set, returns { redirect_url } with code+state
- * }
  */
 export const Route = createFileRoute("/api/public/openpay/connect/confirm")({
   server: {

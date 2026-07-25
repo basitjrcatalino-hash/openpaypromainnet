@@ -361,6 +361,9 @@ export type OpenPayLinkRecord = {
   identifier?: string;
   source?: "partner" | "local";
   linkedAt?: string;
+  /** OAuth user access token (opa_live_…) — server-stored in prefs, never expose to browser UI */
+  access_token?: string;
+  token_expires_at?: string;
 };
 
 function readOpenPayLink(notifications: unknown): OpenPayLinkRecord {
@@ -404,7 +407,9 @@ export const getOpenPayLinkStatus = createServerFn({ method: "GET" })
       .select("notifications")
       .eq("user_id", userId)
       .maybeSingle();
-    return readOpenPayLink(prefs?.notifications);
+    const link = readOpenPayLink(prefs?.notifications);
+    const { access_token: _t, ...safe } = link;
+    return safe as OpenPayLinkRecord;
   });
 
 export const linkOpenPayAccount = createServerFn({ method: "POST" })
@@ -498,7 +503,7 @@ export const unlinkOpenPayAccount = createServerFn({ method: "POST" })
     return { linked: false as const };
   });
 
-/** Start OAuth-style connect: redirect user to OpenPay to confirm their account. */
+/** Start OAuth 2.0 Connect with OpenPay — redirects to openpay.lovable.app/connect */
 export const startOpenPayConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -508,46 +513,72 @@ export const startOpenPayConnect = createServerFn({ method: "POST" })
     const { createConnectState, buildOpenPayAuthorizeUrl } = await import(
       "./openpay-connect.server"
     );
-    const state = createConnectState(context.userId);
-    const authorize_url = buildOpenPayAuthorizeUrl({
+    const redirect_uri = `${data.origin}/openpay/connect/callback`;
+    const state = createConnectState(context.userId, redirect_uri);
+    const { authorize_url } = buildOpenPayAuthorizeUrl({
       origin: data.origin,
       state,
     });
-    return { authorize_url, state, expires_in: 600 };
+    return { authorize_url, state, redirect_uri, expires_in: 600 };
   });
 
-/** Finish connect after OpenPay redirects back with ?code=&state=. */
+/** Finish OAuth: exchange opc_… code → opa_live_… token → GET /user/me */
 export const completeOpenPayConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
-        code: z.string().min(10).max(4000),
+        code: z.string().min(8).max(4000),
         state: z.string().min(10).max(2000),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { verifyConnectState, verifyConnectCode } = await import("./openpay-connect.server");
+    const {
+      verifyConnectState,
+      exchangeOAuthCode,
+      fetchOAuthUserMe,
+    } = await import("./openpay-connect.server");
+
     const st = verifyConnectState(data.state);
     if (st.uid !== context.userId) {
       throw new Error("Connect session does not belong to this user");
     }
-    const acct = verifyConnectCode(data.code);
+
+    const token = await exchangeOAuthCode({
+      code: data.code,
+      redirect_uri: st.redirect_uri,
+    });
+
+    const profile = await fetchOAuthUserMe(token.access_token);
+    const expiresAt =
+      typeof token.expires_in === "number"
+        ? new Date(Date.now() + token.expires_in * 1000).toISOString()
+        : undefined;
+
     const link: OpenPayLinkRecord = {
       linked: true,
       openpayUserId:
-        acct.account_number || acct.username || acct.email || acct.user_id || `op_${st.uid}`,
-      username: acct.username,
-      account_number: acct.account_number,
-      name: acct.name,
-      email: acct.email,
-      identifier: acct.account_number || acct.username || acct.email || acct.user_id,
+        profile.account_number ||
+        profile.username ||
+        profile.user_id ||
+        token.user_id ||
+        `op_${st.uid}`,
+      username: profile.username,
+      account_number: profile.account_number,
+      name: profile.full_name,
+      email: profile.email,
+      identifier: profile.account_number || profile.username || profile.user_id,
       source: "partner",
       linkedAt: new Date().toISOString(),
+      access_token: token.access_token,
+      token_expires_at: expiresAt,
     };
     await writeOpenPayLink(context.supabase, context.userId, link);
-    return link;
+
+    // Don't return access_token to the client
+    const { access_token: _t, ...safe } = link;
+    return safe as OpenPayLinkRecord;
   });
 
 /**
@@ -612,14 +643,29 @@ export const syncOpenPayOUSD = createServerFn({ method: "POST" })
     let partnerBalance = Number(wallet.ousd_balance ?? 0);
 
     if (link.source === "partner") {
-      const { openpayPro } = await import("./openpay-pro.server");
       try {
-        const acct = await openpayPro.resolveAccount(link.identifier);
-        if (typeof acct.balance === "number") {
-          partnerBalance = Number(acct.balance);
+        // Prefer OAuth user token (/user/balance) when Connect completed via OAuth 2.0
+        if (link.access_token) {
+          const { fetchOAuthUserBalance, fetchOAuthUserMe } = await import(
+            "./openpay-connect.server"
+          );
+          try {
+            const bal = await fetchOAuthUserBalance(link.access_token);
+            partnerBalance = Number(bal.balance);
+          } catch {
+            const me = await fetchOAuthUserMe(link.access_token);
+            if (typeof me.balance === "number") partnerBalance = Number(me.balance);
+            else throw new Error("Could not read OpenPay balance");
+          }
         } else {
-          const bal = await openpayPro.balance();
-          partnerBalance = Number(bal.balance ?? partnerBalance);
+          const { openpayPro } = await import("./openpay-pro.server");
+          const acct = await openpayPro.resolveAccount(link.identifier!);
+          if (typeof acct.balance === "number") {
+            partnerBalance = Number(acct.balance);
+          } else {
+            const bal = await openpayPro.balance();
+            partnerBalance = Number(bal.balance ?? partnerBalance);
+          }
         }
       } catch (e) {
         throw new Error((e as Error).message || "Failed to sync OpenPay balance");

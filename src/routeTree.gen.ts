@@ -32,6 +32,7 @@ import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
@@ -162,6 +163,11 @@ const AuthenticatedTokensCreateRoute =
     path: '/create',
     getParentRoute: () => AuthenticatedTokensRoute,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
   id: '/api/public/kyc-webhook',
   path: '/api/public/kyc-webhook',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
+    | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
+    | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tokens/create'
       preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
       parentRoute: typeof AuthenticatedTokensRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/kyc-webhook': {
       id: '/api/public/kyc-webhook'
@@ -852,6 +872,7 @@ const rootRouteChildren: RootRouteChildren = {
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,

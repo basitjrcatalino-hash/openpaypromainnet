@@ -15,24 +15,24 @@ import {
   ScanLine,
   Copy,
   Check,
-  ArrowUpRight,
-  ArrowDownLeft,
-  RefreshCw,
-  ShoppingCart,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import {
-  formatNumber,
-  formatPct,
-  generateAddress,
-  shortAddress,
-  formatUSD,
-} from "@/lib/wallet-utils";
+import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -52,7 +52,7 @@ type HoldingRow = {
 };
 
 type NftRow = Pick<Tables<"nfts">, "id" | "name">;
-type TxRow = Tables<"transactions">;
+type WalletRow = Tables<"wallets">;
 
 const ACTIONS = [
   { label: "Fund", icon: Plus, to: "/topup" },
@@ -67,6 +67,21 @@ function Dashboard() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  const { data: wallets = [] } = useQuery({
+    queryKey: ["wallets", user.id],
+    queryFn: async (): Promise<WalletRow[]> => {
+      const { data } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_active", { ascending: false })
+        .order("created_at", { ascending: true });
+      return data ?? [];
+    },
+  });
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -146,6 +161,7 @@ function Dashboard() {
   }, [wallet, walletLoading, user.id, qc]);
 
   const [hideBalance, setHideBalance] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<TxRow | null>(null);
   const { code: currency, cycle: cycleCurrency } = useCurrency();
   const [copied, setCopied] = useState(false);
 
@@ -169,19 +185,54 @@ function Dashboard() {
     }
   }
 
+  async function switchWallet(id: string) {
+    if (id === wallet?.id) {
+      setSwitchOpen(false);
+      return;
+    }
+    setSwitching(true);
+    try {
+      await supabase.from("wallets").update({ is_active: false }).eq("user_id", user.id);
+      await supabase.from("wallets").update({ is_active: true }).eq("id", id);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["wallets", user.id] }),
+        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
+        qc.invalidateQueries({ queryKey: ["holdings"] }),
+        qc.invalidateQueries({ queryKey: ["recent-txs"] }),
+        qc.invalidateQueries({ queryKey: ["my-nfts"] }),
+      ]);
+      toast.success("Wallet switched");
+      setSwitchOpen(false);
+    } catch (err) {
+      toast.error((err as Error).message || "Could not switch wallet");
+    } finally {
+      setSwitching(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between md:hidden">
-        <button className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent" aria-label="Scan">
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/scan" })}
+          className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent"
+          aria-label="Scan QR code"
+        >
           <ScanLine className="h-5 w-5" />
         </button>
-        <button className="inline-flex items-center gap-1 text-base font-semibold">
+        <button
+          type="button"
+          onClick={() => setSwitchOpen(true)}
+          className="inline-flex items-center gap-1 text-base font-semibold"
+        >
           {wallet?.name ?? "Main Wallet"}{" "}
           <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={cycleCurrency}
             className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-sidebar-accent"
             aria-label="Change currency"
@@ -189,6 +240,7 @@ function Dashboard() {
             {currency}
           </button>
           <button
+            type="button"
             onClick={() => setHideBalance((v) => !v)}
             className="rounded-lg p-1.5 text-primary hover:bg-sidebar-accent"
             aria-label="Toggle balance"
@@ -198,7 +250,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Big gradient balance card (mobile primary, also visible on desktop as hero) */}
+      {/* Big gradient balance card */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-glow md:hidden">
         <div className="absolute inset-0 opacity-40" aria-hidden>
           <div className="absolute -left-16 -top-10 h-56 w-56 rounded-full bg-mint blur-3xl" />
@@ -206,6 +258,7 @@ function Dashboard() {
         </div>
         <div className="relative flex min-h-45 flex-col items-center justify-center gap-3">
           <button
+            type="button"
             onClick={cycleCurrency}
             className="flex items-center gap-2 text-5xl font-bold tracking-tight tabular-nums"
           >
@@ -213,8 +266,9 @@ function Dashboard() {
             <ChevronsUpDown className="h-5 w-5 opacity-70" />
           </button>
           <button
+            type="button"
             onClick={copyAddress}
-            className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] hover:bg-white/20 transition-colors"
+            className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] transition-colors hover:bg-white/20"
             aria-label="Copy address"
           >
             <span className="grid h-4 w-4 place-items-center rounded-full bg-white/20">◆</span>
@@ -235,6 +289,7 @@ function Dashboard() {
           return (
             <button
               key={a.label}
+              type="button"
               onClick={() => navigate({ to: a.to })}
               className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow md:px-3 md:py-4"
             >
@@ -248,10 +303,9 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Assets */}
         <section className="lg:col-span-2">
           <header className="mb-3 flex items-center justify-between">
-            <button className="inline-flex items-center gap-1 text-sm font-semibold">
+            <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold">
               Assets <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </header>
@@ -345,10 +399,9 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Collectibles */}
         <section>
           <header className="mb-3 flex items-center justify-between">
-            <button className="inline-flex items-center gap-1 text-sm font-semibold">
+            <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold">
               Collectibles <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </header>
@@ -386,7 +439,6 @@ function Dashboard() {
         </section>
       </div>
 
-      {/* Recent activity / history */}
       <section>
         <header className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Recent activity</h2>
@@ -400,44 +452,25 @@ function Dashboard() {
               No activity yet — fund, send, or receive to see history here.
             </p>
           ) : (
-            <ul className="divide-y divide-border/60">
-              {recentTxs.map((t) => {
-                const Icon =
-                  t.type === "receive" || t.type === "buy"
-                    ? ArrowDownLeft
-                    : t.type === "swap"
-                      ? RefreshCw
-                      : t.type === "mint"
-                        ? Sparkles
-                        : t.type === "sell"
-                          ? ShoppingCart
-                          : ArrowUpRight;
-                return (
-                  <li key={t.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold capitalize">
-                        {t.type} {t.token_symbol ?? ""}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(t.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="text-right tabular-nums">
-                      <div className="font-semibold">{formatNumber(t.amount, 4)}</div>
-                      <div className="text-xs text-muted-foreground">{formatUSD(t.usd_value)}</div>
-                    </div>
-                  </li>
-                );
-              })}
+            <ul className="divide-y divide-border/60 px-4">
+              {recentTxs.map((t) => (
+                <li key={t.id}>
+                  <TxRowButton tx={t} onOpen={setSelectedTx} />
+                </li>
+              ))}
             </ul>
           )}
         </div>
       </section>
 
-      {/* New wallet empty state */}
+      <TransactionDetailSheet
+        tx={selectedTx}
+        open={!!selectedTx}
+        onOpenChange={(o) => {
+          if (!o) setSelectedTx(null);
+        }}
+      />
+
       {!hasAssets && recentTxs.length === 0 && (
         <section className="rounded-3xl border border-border/60 bg-card px-6 py-16">
           <div className="mx-auto flex max-w-sm flex-col items-center gap-4 text-center">
@@ -451,6 +484,57 @@ function Dashboard() {
           </div>
         </section>
       )}
+
+      {/* Wallet switcher */}
+      <Dialog open={switchOpen} onOpenChange={setSwitchOpen}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Switch wallet</DialogTitle>
+            <DialogDescription>Choose which wallet to use</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-1">
+            {wallets.map((w) => {
+              const active = w.id === wallet?.id;
+              return (
+                <li key={w.id}>
+                  <button
+                    type="button"
+                    disabled={switching}
+                    onClick={() => switchWallet(w.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors",
+                      active ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60",
+                    )}
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-gradient-primary text-sm font-bold text-primary-foreground">
+                        {(w.name?.[0] ?? "W").toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{w.name}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                        {shortAddress(w.address, 6, 4)}
+                      </span>
+                    </span>
+                    <span className="text-right text-sm font-semibold tabular-nums">
+                      {formatCurrency(Number(w.ousd_balance ?? 0), currency)}
+                    </span>
+                    {active && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <Link
+            to="/settings"
+            onClick={() => setSwitchOpen(false)}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-border py-3 text-sm font-semibold text-primary hover:bg-sidebar-accent/40"
+          >
+            <Plus className="h-4 w-4" /> Add wallet
+          </Link>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

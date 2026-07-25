@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Send as SendIcon, Loader2, Camera } from "lucide-react";
@@ -18,8 +18,15 @@ import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
 import { cn } from "@/lib/utils";
 
+const sendSearchSchema = z.object({
+  to: z.string().optional(),
+  amount: z.string().optional(),
+  asset: z.enum(["OUSD", "PI"]).optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({ meta: [{ title: "Send — OpenPay Pro Wallet" }] }),
+  validateSearch: (search) => sendSearchSchema.parse(search),
   component: SendPage,
 });
 
@@ -52,6 +59,7 @@ function parseScanned(text: string): { to: string; amount?: string; asset?: "OUS
 
 function SendPage() {
   const { user } = Route.useRouteContext();
+  const search = Route.useSearch();
   const qc = useQueryClient();
   const send = useServerFn(sendAsset);
   const sendOpenPay = useServerFn(sendViaOpenPay);
@@ -70,11 +78,21 @@ function SendPage() {
     asset: "OUSD" | "PI";
     memo: string;
   }>({
-    to: "",
-    amount: "",
-    asset: "OUSD",
+    to: search.to ?? "",
+    amount: search.amount ?? "",
+    asset: search.asset ?? "OUSD",
     memo: "",
   });
+
+  useEffect(() => {
+    if (!search.to && !search.amount && !search.asset) return;
+    setForm((f) => ({
+      ...f,
+      to: search.to ?? f.to,
+      amount: search.amount ?? f.amount,
+      asset: search.asset ?? f.asset,
+    }));
+  }, [search.to, search.amount, search.asset]);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],

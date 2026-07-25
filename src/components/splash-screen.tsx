@@ -12,9 +12,12 @@ export function SplashScreen() {
   useEffect(() => {
     if (!shown) return;
     sessionStorage.setItem(SESSION_KEY, "1");
-    const t1 = setTimeout(() => setFading(true), 900);
-    const t2 = setTimeout(() => setShown(false), 1500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t1 = setTimeout(() => setFading(true), 280);
+    const t2 = setTimeout(() => setShown(false), 480);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [shown]);
 
   if (!shown) return null;
@@ -22,15 +25,17 @@ export function SplashScreen() {
   return (
     <div
       aria-hidden
-      style={{ transition: "opacity 600ms ease" }}
+      style={{ transition: "opacity 200ms ease" }}
       className={`fixed inset-0 z-100 grid place-items-center bg-background bg-hero-glow ${fading ? "pointer-events-none opacity-0" : "opacity-100"}`}
     >
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-4">
         <div className="text-center">
           <div className="text-xl font-bold tracking-tight">OpenPay Pro</div>
-          <div className="mt-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">Wallet</div>
+          <div className="mt-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">
+            Wallet
+          </div>
         </div>
-        <div className="mt-3 h-1 w-40 overflow-hidden rounded-full bg-muted">
+        <div className="h-1 w-32 overflow-hidden rounded-full bg-muted">
           <div className="h-full w-1/3 rounded-full bg-gradient-primary animate-splash-bar" />
         </div>
       </div>

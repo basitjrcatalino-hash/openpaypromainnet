@@ -533,6 +533,42 @@ function SettingsPage() {
               }
             />
           </SettingRow>
+          <SettingRow label="Transaction alerts" desc="Notify on send, receive & top-ups">
+            <Switch
+              checked={(prefs?.notifications as Record<string, boolean> | null)?.tx_alerts ?? true}
+              onCheckedChange={(v) =>
+                updatePref({
+                  notifications: {
+                    ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                    tx_alerts: v,
+                  },
+                })
+              }
+            />
+          </SettingRow>
+          <SettingRow label="Browser push" desc="System notifications when tab is in background">
+            <Switch
+              checked={
+                (prefs?.notifications as Record<string, boolean> | null)?.browser_push ?? false
+              }
+              onCheckedChange={async (v) => {
+                if (v) {
+                  const { ensureBrowserPermission } = await import("@/lib/tx-notifications");
+                  const perm = await ensureBrowserPermission();
+                  if (perm !== "granted") {
+                    toast.error("Browser notification permission denied");
+                    return;
+                  }
+                }
+                updatePref({
+                  notifications: {
+                    ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                    browser_push: v,
+                  },
+                });
+              }}
+            />
+          </SettingRow>
         </div>
       </Card>
 

@@ -57,14 +57,8 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       cancel_url: `${data.origin}/topup?openpay_cancel=1`,
     });
 
-    // Record the pending charge so we can settle after the user returns.
-    await supabaseAdmin.from("topup_vouchers").insert({
-      code: `OP-${charge.id.slice(0, 8).toUpperCase()}`,
-      amount_ousd: data.amount,
-      note: `OpenPay charge ${charge.id}`,
-      created_by: context.userId,
-      status: "active",
-    }).select().maybeSingle().catch(() => null);
+    void supabaseAdmin;
+
 
     return { charge };
   });

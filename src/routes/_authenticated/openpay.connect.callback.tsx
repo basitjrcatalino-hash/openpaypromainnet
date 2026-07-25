@@ -29,7 +29,12 @@ function OpenPayConnectCallback() {
     let cancelled = false;
     (async () => {
       if (search.error) {
-        toast.error(search.error);
+        const err = search.error;
+        toast.error(
+          /invalid_client/i.test(err)
+            ? "OpenPay rejected the app credentials (invalid_client). Check OPENPAY_PARTNER_API_KEY in Lovable Secrets."
+            : err,
+        );
         navigate({ to: "/settings" });
         return;
       }

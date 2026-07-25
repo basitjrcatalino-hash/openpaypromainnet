@@ -33,10 +33,14 @@ export type OpenPayTransfer = {
 };
 
 function cfg() {
-  const key =
+  const key = (
     process.env.OPENPAY_PARTNER_API_KEY ||
     process.env.OPENPAY_API_KEY ||
-    process.env.OPENPAY_TRANSFER_API_KEY;
+    process.env.OPENPAY_TRANSFER_API_KEY ||
+    ""
+  )
+    .trim()
+    .replace(/^["']+|["']+$/g, "");
   const base = process.env.OPENPAY_PARTNER_API_BASE || process.env.OPENPAY_API_BASE || DEFAULT_BASE;
   if (!key) throw new Error("OPENPAY_PARTNER_API_KEY not configured");
   return { key, base };

@@ -7,12 +7,21 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 const AUD = "openpay-pro-connect";
 
 function partnerKey(): string {
-  const key =
+  const key = (
     process.env.OPENPAY_PARTNER_API_KEY ||
     process.env.OPENPAY_API_KEY ||
     process.env.OPENPAY_TRANSFER_API_KEY ||
-    "";
+    ""
+  )
+    .trim()
+    // Lovable / dotenv sometimes keep surrounding quotes → invalid_client
+    .replace(/^["']+|["']+$/g, "");
   if (!key) throw new Error("OPENPAY_PARTNER_API_KEY not configured");
+  if (!/^opk_(live|test)_/i.test(key)) {
+    throw new Error(
+      "OPENPAY_PARTNER_API_KEY must be the opk_live_… key from your OpenPay partner app",
+    );
+  }
   return key;
 }
 
@@ -276,7 +285,13 @@ export async function exchangeOAuthCode(opts: {
     body = { raw: text };
   }
   if (!res.ok) {
-    throw new Error(body?.error || body?.message || `OAuth token exchange failed (${res.status})`);
+    const err = String(body?.error || body?.message || `OAuth token exchange failed (${res.status})`);
+    if (/invalid_client/i.test(err)) {
+      throw new Error(
+        "invalid_client — OpenPay rejected the partner API key. In Lovable Secrets set OPENPAY_PARTNER_API_KEY to the exact opk_live_… key for client_id e9248f5d-3971-4cbc-9032-9b678c9b71ae (no quotes).",
+      );
+    }
+    throw new Error(err);
   }
   if (!body?.access_token) throw new Error("OAuth token response missing access_token");
   return body as OAuthTokenResponse;

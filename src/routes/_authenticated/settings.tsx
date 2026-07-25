@@ -621,9 +621,20 @@ function SettingsPage() {
               </p>
             </div>
           </div>
-          <Button asChild className="rounded-full">
-            <Link to="/ledger">Open Ledger API</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="rounded-full">
+              <a
+                href="https://openledger.lovable.app/pro"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on OpenLedger
+              </a>
+            </Button>
+            <Button asChild className="rounded-full">
+              <Link to="/ledger">Open Ledger API</Link>
+            </Button>
+          </div>
         </div>
       </Card>
 

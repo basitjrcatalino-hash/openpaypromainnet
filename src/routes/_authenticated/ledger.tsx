@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
+import { openLedgerProEntryUrl } from "@/components/openledger-link";
 import { checkIsAdmin, claimFirstAdmin } from "@/lib/topup-admin.functions";
 import {
   activateLedgerApiKey,
@@ -508,6 +509,7 @@ do {
                   <th className="py-2 text-right">Amount</th>
                   <th className="py-2 text-right">USD</th>
                   <th className="py-2 text-right">Time</th>
+                  <th className="py-2 text-right">OpenLedger</th>
                 </tr>
               </thead>
               <tbody>
@@ -523,6 +525,16 @@ do {
                     <td className="py-2 text-right tabular-nums">{formatUSD(e.usd_value)}</td>
                     <td className="py-2 text-right text-muted-foreground">
                       {new Date(e.occurred_at).toLocaleString()}
+                    </td>
+                    <td className="py-2 text-right">
+                      <a
+                        href={openLedgerProEntryUrl(e.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary hover:underline"
+                      >
+                        View <ExternalLink className="h-3 w-3" />
+                      </a>
                     </td>
                   </tr>
                 ))}

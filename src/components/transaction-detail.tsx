@@ -9,9 +9,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +24,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { OpenLedgerLink, OPENLEDGER_BASE } from "@/components/openledger-link";
 
 export type TxRow = Tables<"transactions">;
 
@@ -76,10 +79,26 @@ export function TransactionDetailSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const [copied, setCopied] = useState<string | null>(null);
+
+  const { data: ledgerEntry, isFetched: ledgerFetched } = useQuery({
+    queryKey: ["ledger-entry-by-tx", tx?.id],
+    enabled: open && !!tx?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ledger_entries")
+        .select("id, sequence, tx_hash, tx_id")
+        .eq("tx_id", tx!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   if (!tx) return null;
 
   const Icon = txIcon(tx.type);
   const isIn = tx.type === "receive" || tx.type === "buy";
+  const openLedgerHash = ledgerEntry?.tx_hash || tx.tx_hash;
 
   async function copy(label: string, value: string) {
     try {
@@ -172,6 +191,9 @@ export function TransactionDetailSheet({
               }
             />
           )}
+          {ledgerEntry?.sequence != null && (
+            <DetailRow label="Ledger #" value={`#${ledgerEntry.sequence}`} />
+          )}
           {tx.memo && <DetailRow label="Note" value={tx.memo} />}
           <DetailRow
             label="ID"
@@ -193,17 +215,20 @@ export function TransactionDetailSheet({
           />
         </dl>
 
-        {tx.tx_hash && (
-          <Button variant="outline" className="mt-4 w-full rounded-xl" asChild>
-            <a
-              href={`https://explorer.openpay.network/tx/${tx.tx_hash}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <ExternalLink className="mr-1.5 h-4 w-4" /> View on explorer
-            </a>
-          </Button>
-        )}
+        <div className="mt-4 space-y-2">
+          <OpenLedgerLink
+            hash={openLedgerHash}
+            proEntryId={ledgerEntry?.id}
+            proSequence={ledgerEntry?.sequence}
+          />
+          {ledgerFetched && !ledgerEntry && (
+            <Button variant="outline" className="w-full rounded-xl" asChild>
+              <a href={`${OPENLEDGER_BASE}/pro`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-4 w-4" /> Browse OpenLedger Pro
+              </a>
+            </Button>
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );

@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Sparkles, Ticket, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Sparkles, Ticket, Wallet as WalletIcon, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -15,22 +15,29 @@ import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
 import { getPublicTopupInfo, redeemVoucher } from "@/lib/topup-admin.functions";
+import { createOpenPayTopupCharge, settleOpenPayCharge } from "@/lib/openpay-pro.functions";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
+    openpay_cancel: s.openpay_cancel ? "1" : undefined,
+  }),
   component: TopUpPage,
 });
 
-const methods = [
+type Method = "openpay_balance" | "pi" | "voucher";
+const methods: { id: Method; label: string; icon: any; desc: string }[] = [
+  { id: "openpay_balance", label: "OpenPay Balance", icon: WalletIcon, desc: "Pay from your OpenPay balance · instant credit" },
   { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
-  { id: "openpay", label: "OpenPay Voucher", icon: Ticket, desc: "Pay on OpenPay, then redeem your voucher code" },
-] as const;
+  { id: "voucher", label: "Voucher code", icon: Ticket, desc: "Redeem a voucher code from an admin" },
+];
 
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
   amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
-  method: z.enum(["pi", "openpay"]),
 });
+
 
 function TopUpPage() {
   const { user } = Route.useRouteContext();

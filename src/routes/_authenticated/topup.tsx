@@ -42,13 +42,16 @@ const schema = z.object({
 function TopUpPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/topup" });
   const [amount, setAmount] = useState("100");
-  const [method, setMethod] = useState<"pi" | "openpay">("pi");
+  const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
 
   const getInfo = useServerFn(getPublicTopupInfo);
   const redeem = useServerFn(redeemVoucher);
+  const createCharge = useServerFn(createOpenPayTopupCharge);
+  const settleCharge = useServerFn(settleOpenPayCharge);
   const infoQ = useQuery({ queryKey: ["public-topup"], queryFn: () => getInfo() });
 
   const { data: wallet } = useQuery({
@@ -56,9 +59,33 @@ function TopUpPage() {
     queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
   });
 
+  // Settle OpenPay hosted-checkout returns.
+  useEffect(() => {
+    const chargeId = search.openpay_charge;
+    if (!chargeId) {
+      if (search.openpay_cancel) toast.error("OpenPay payment canceled");
+      return;
+    }
+    (async () => {
+      try {
+        const r = await settleCharge({ data: { chargeId } });
+        if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+        else toast.message(`OpenPay charge status: ${r.status}`);
+        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      } catch (e) { toast.error((e as Error).message); }
+      finally {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("openpay_charge");
+        u.searchParams.delete("openpay_cancel");
+        window.history.replaceState({}, "", u.toString());
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.openpay_charge]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (method === "openpay") {
+    if (method === "voucher") {
       const code = voucherCode.trim();
       if (!code) { toast.error("Enter your voucher code"); return; }
       setBusy(true);
@@ -72,10 +99,20 @@ function TopUpPage() {
       finally { setBusy(false); }
       return;
     }
-    const parsed = schema.safeParse({ amount, method });
+
+    const parsed = schema.safeParse({ amount });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
+
     setBusy(true);
     try {
+      if (method === "openpay_balance") {
+        const { charge } = await createCharge({
+          data: { amount: parsed.data.amount, origin: window.location.origin },
+        });
+        window.location.href = charge.checkout_url;
+        return;
+      }
+      // pi
       const { paymentId } = await topUpWithPi(parsed.data.amount);
       toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
@@ -83,6 +120,11 @@ function TopUpPage() {
       setAmount("");
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   }
+
+  const cta =
+    method === "voucher" ? "Redeem voucher"
+    : method === "openpay_balance" ? `Pay ${amount ? formatUSD(Number(amount)) : ""} with OpenPay`
+    : `Top up ${amount ? formatUSD(Number(amount)) : ""}`;
 
   return (
     <div className="mx-auto max-w-lg space-y-5">
@@ -98,18 +140,20 @@ function TopUpPage() {
 
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <form onSubmit={submit} className="space-y-5">
-          <div>
-            <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (USD)</Label>
-            <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="1" step="any" required className="h-14 text-2xl font-bold tabular-nums" />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {presets.map((p) => (
-                <button key={p} type="button" onClick={() => setAmount(String(p))} className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  amount === String(p) ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted",
-                )}>${p}</button>
-              ))}
+          {method !== "voucher" && (
+            <div>
+              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (USD)</Label>
+              <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="1" step="any" required className="h-14 text-2xl font-bold tabular-nums" />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {presets.map((p) => (
+                  <button key={p} type="button" onClick={() => setAmount(String(p))} className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                    amount === String(p) ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted",
+                  )}>${p}</button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Payment method</Label>
@@ -131,28 +175,29 @@ function TopUpPage() {
             </div>
           </div>
 
-          {method === "openpay" && (
+          {method === "openpay_balance" && (
+            <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              You'll be redirected to a secure OpenPay checkout to pay from your OpenPay balance. On success we credit your OUSD balance instantly.
+            </div>
+          )}
+
+          {method === "voucher" && (
             <div className="space-y-3 rounded-2xl border border-border bg-muted/30 p-4">
+              {infoQ.data?.openpay_payment_url && (
+                <a
+                  href={infoQ.data.openpay_payment_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0070BA] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                >
+                  Open admin payment link <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+              {infoQ.data?.instructions && (
+                <p className="whitespace-pre-line text-xs text-muted-foreground">{infoQ.data.instructions}</p>
+              )}
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 1 · Pay on OpenPay</div>
-                {infoQ.data?.openpay_payment_url ? (
-                  <a
-                    href={infoQ.data.openpay_payment_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#0070BA] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                  >
-                    Open payment page <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">Payment link not configured yet. Ask the admin.</p>
-                )}
-                {infoQ.data?.instructions && (
-                  <p className="mt-2 whitespace-pre-line text-xs text-muted-foreground">{infoQ.data.instructions}</p>
-                )}
-              </div>
-              <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 2 · Redeem voucher</Label>
+                <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Voucher code</Label>
                 <Input
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
@@ -165,7 +210,7 @@ function TopUpPage() {
 
           <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-            {method === "openpay" ? "Redeem voucher" : `Top up ${amount ? formatUSD(Number(amount)) : ""}`}
+            {cta}
           </Button>
           <p className="text-center text-[11px] text-muted-foreground">
             New accounts start with a zero balance. Top up to begin.
@@ -175,3 +220,4 @@ function TopUpPage() {
     </div>
   );
 }
+

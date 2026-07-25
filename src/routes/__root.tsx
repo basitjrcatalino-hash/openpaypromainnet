@@ -14,6 +14,35 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SplashScreen } from "@/components/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+  missingSupabaseEnvMessage,
+} from "@/integrations/supabase/env";
+
+async function ensureBrowserSupabaseConfig() {
+  if (typeof window === "undefined") return;
+  if (getSupabaseUrl() && getSupabasePublishableKey()) return;
+
+  const res = await fetch("/api/public/supabase-config");
+  if (!res.ok) {
+    throw new Error(`Could not load Supabase config (HTTP ${res.status}).`);
+  }
+  const cfg = (await res.json()) as { url?: string | null; publishableKey?: string | null };
+  if (!cfg.url || !cfg.publishableKey) {
+    throw new Error(
+      missingSupabaseEnvMessage([
+        ...(!cfg.url ? ["SUPABASE_URL"] : []),
+        ...(!cfg.publishableKey ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
+      ]),
+    );
+  }
+  (window as unknown as { __OPENPAY_PUBLIC__?: { url: string; publishableKey: string } })
+    .__OPENPAY_PUBLIC__ = {
+    url: cfg.url,
+    publishableKey: cfg.publishableKey,
+  };
+}
 
 function NotFoundComponent() {
   return (
@@ -42,6 +71,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
+  const detail = error?.message?.trim() || "";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="glass max-w-md rounded-3xl p-8 text-center">
@@ -49,6 +80,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           We couldn't load that part of the wallet.
         </p>
+        {detail ? (
+          <p className="mt-3 break-words rounded-xl border border-border/60 bg-card/50 px-3 py-2 text-left text-xs text-muted-foreground">
+            {detail}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}
@@ -66,6 +102,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: async () => {
+    // Runs before child routes that touch supabase (auth gate, index redirect).
+    await ensureBrowserSupabaseConfig();
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

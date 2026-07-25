@@ -36,6 +36,7 @@ import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
@@ -183,6 +184,11 @@ const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
   path: '/api/public/pi-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
+  id: '/api/public/supabase-config',
+  path: '/api/public/supabase-config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
   id: '/pi/callback',
   path: '/pi/callback',
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/supabase-config'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/supabase-config'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/supabase-config'
     | '/auth/pi/callback'
     | '/_authenticated/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -497,6 +509,7 @@ export interface RootRouteChildren {
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
@@ -698,6 +711,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/supabase-config': {
+      id: '/api/public/supabase-config'
+      path: '/api/public/supabase-config'
+      fullPath: '/api/public/supabase-config'
+      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/pi/callback': {
       id: '/auth/pi/callback'
       path: '/pi/callback'
@@ -876,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,

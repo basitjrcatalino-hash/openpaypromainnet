@@ -15,11 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatNumber } from "@/lib/wallet-utils";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { sendAsset } from "@/lib/transfer.functions";
+import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
+import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/send")({
-  head: () => ({ meta: [{ title: "Send — OpenPay Pro Wallet" }] }),
-  component: SendPage,
-});
+type Rail = "wallet" | "openpay";
 
 const schema = z.object({
   to: z.string().trim().min(2, "Enter a wallet address or @username").max(120),
@@ -27,6 +26,7 @@ const schema = z.object({
   asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional(),
 });
+
 
 function parseScanned(text: string): { to: string; amount?: string; asset?: "OUSD" | "PI" } {
   // Accepts: raw address | openpay:ADDR?asset=OUSD&amount=10 | ethereum:0x..?value=..

@@ -14,20 +14,26 @@ export function openLedgerTxUrl(hash: string): string {
   return `${OPENLEDGER_BASE}/tx/${h}`;
 }
 
+/** Exact Pro ledger entry page — prefer numeric sequence (e.g. /pro/entry/28). */
 export function openLedgerProEntryUrl(idOrSequence: string | number): string {
   return `${OPENLEDGER_BASE}/pro/entry/${idOrSequence}`;
 }
 
+/**
+ * Resolve the best OpenLedger deep-link for a Pro wallet tx.
+ * Prefer sequence → exact `/pro/entry/{n}` detail page on OpenLedger.
+ * Fall back to SHA-256 `/tx/{hash}`, then UUID id.
+ */
 export function resolveOpenLedgerHref(opts: {
   hash?: string | null;
   proEntryId?: string | null;
   proSequence?: number | null;
 }): string | null {
+  if (opts.proSequence != null && Number.isFinite(Number(opts.proSequence))) {
+    return openLedgerProEntryUrl(Number(opts.proSequence));
+  }
   if (opts.hash && isOpenLedgerHash(opts.hash)) return openLedgerTxUrl(opts.hash);
   if (opts.proEntryId) return openLedgerProEntryUrl(opts.proEntryId);
-  if (opts.proSequence != null && Number.isFinite(opts.proSequence)) {
-    return openLedgerProEntryUrl(opts.proSequence);
-  }
   return null;
 }
 
@@ -45,6 +51,13 @@ export function OpenLedgerLink({
   const href = resolveOpenLedgerHref({ hash, proEntryId, proSequence });
   if (!href) return null;
 
+  const seq =
+    proSequence != null && Number.isFinite(Number(proSequence))
+      ? Number(proSequence)
+      : null;
+  const label =
+    seq != null ? `View on OpenLedger #${seq}` : "View on OpenLedger";
+
   return (
     <a
       href={href}
@@ -56,7 +69,7 @@ export function OpenLedgerLink({
       }
     >
       <ExternalLink className="h-4 w-4" />
-      View on OpenLedger
+      {label}
     </a>
   );
 }

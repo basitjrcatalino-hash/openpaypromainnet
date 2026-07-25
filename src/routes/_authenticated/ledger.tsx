@@ -528,12 +528,13 @@ do {
                     </td>
                     <td className="py-2 text-right">
                       <a
-                        href={openLedgerProEntryUrl(e.id)}
+                        href={openLedgerProEntryUrl(e.sequence)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
+                        title={`OpenLedger Pro entry #${e.sequence}`}
                       >
-                        View <ExternalLink className="h-3 w-3" />
+                        #{e.sequence} <ExternalLink className="h-3 w-3" />
                       </a>
                     </td>
                   </tr>

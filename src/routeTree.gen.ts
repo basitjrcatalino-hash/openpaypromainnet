@@ -28,6 +28,7 @@ import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
+import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
@@ -36,6 +37,7 @@ import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
+import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
@@ -138,6 +140,11 @@ const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
   path: '/admin/testnet-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
+  id: '/docs/openpay',
+  path: '/docs/openpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   id: '/admin/topup',
   path: '/admin/topup',
@@ -180,6 +187,11 @@ const AuthenticatedOpenpayConnectCallbackRoute =
     path: '/openpay/connect/callback',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
+  id: '/api/public/docs/openpay',
+  path: '/api/public/docs/openpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
   id: '/api/public/ledger/entries',
   path: '/api/public/ledger/entries',
@@ -240,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -248,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -275,6 +289,7 @@ export interface FileRoutesByTo {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -283,6 +298,7 @@ export interface FileRoutesByTo {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -312,6 +328,7 @@ export interface FileRoutesById {
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/docs/openpay': typeof DocsOpenpayRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -320,6 +337,7 @@ export interface FileRoutesById {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
@@ -349,6 +367,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/docs/openpay'
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
@@ -357,6 +376,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
+    | '/api/public/docs/openpay'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
@@ -384,6 +404,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/docs/openpay'
     | '/admin/topup'
     | '/nfts/mint'
     | '/tokens/create'
@@ -392,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
+    | '/api/public/docs/openpay'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
@@ -420,6 +442,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
     | '/admin/testnet-progress'
+    | '/docs/openpay'
     | '/_authenticated/admin/topup'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/tokens/create'
@@ -428,6 +451,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
     | '/_authenticated/openpay/connect/callback'
+    | '/api/public/docs/openpay'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
@@ -444,9 +468,11 @@ export interface RootRouteChildren {
   AuthpiRoute: typeof AuthpiRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  DocsOpenpayRoute: typeof DocsOpenpayRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
@@ -590,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTestnetProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/openpay': {
+      id: '/docs/openpay'
+      path: '/docs/openpay'
+      fullPath: '/docs/openpay'
+      preLoaderRoute: typeof DocsOpenpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/topup': {
       id: '/_authenticated/admin/topup'
       path: '/admin/topup'
@@ -645,6 +678,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/openpay/connect/callback'
       preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/docs/openpay': {
+      id: '/api/public/docs/openpay'
+      path: '/api/public/docs/openpay'
+      fullPath: '/api/public/docs/openpay'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries': {
       id: '/api/public/ledger/entries'
@@ -791,9 +831,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthpiRoute: AuthpiRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  DocsOpenpayRoute: DocsOpenpayRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,

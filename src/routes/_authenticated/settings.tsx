@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,6 +15,7 @@ import {
   Copy,
   RefreshCw,
   Upload,
+  ScrollText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -601,6 +602,27 @@ function SettingsPage() {
               toast.success("Marked as backed up");
             }}
           />
+        </div>
+      </Card>
+
+      {/* OpenLedger / Ledger API */}
+      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+              <ScrollText className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold">Ledger API · OpenLedger</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Sync every OpenPay Pro transaction into OpenLedger or any external ledger via API
+                key.
+              </p>
+            </div>
+          </div>
+          <Button asChild className="rounded-full">
+            <Link to="/ledger">Open Ledger API</Link>
+          </Button>
         </div>
       </Card>
 

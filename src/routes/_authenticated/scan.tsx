@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeft, Image, Flashlight, FlashlightOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+import { parsePaymentQr } from "@/lib/parse-payment-qr";
+import { scanQrFromFile, stopQrInstance, useQrCamera } from "@/components/qr-scanner";
 
 export const Route = createFileRoute("/_authenticated/scan")({
   ssr: false,
@@ -9,22 +12,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
   component: ScanPage,
 });
 
-function parseScanned(text: string): { to: string; amount?: string; asset?: "OUSD" | "PI" } {
-  try {
-    if (text.startsWith("openpay:") || text.startsWith("ethereum:") || text.includes("?")) {
-      const [scheme, rest] = text.split(":");
-      const body = rest ?? scheme;
-      const [addr, query] = body.split("?");
-      const params = new URLSearchParams(query ?? "");
-      const asset = (params.get("asset") as "OUSD" | "PI") ?? undefined;
-      const amount = params.get("amount") ?? params.get("value") ?? undefined;
-      return { to: addr.replace(/^\/\//, ""), amount: amount ?? undefined, asset };
-    }
-  } catch {
-    // fall through
-  }
-  return { to: text.trim() };
-}
+const SCAN_EL_ID = "openpay-qr-reader";
 
 function ScanPage() {
   const navigate = useNavigate();
@@ -32,99 +20,60 @@ function ScanPage() {
   const [starting, setStarting] = useState(true);
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
-  const scannerRef = useRef<{
-    isScanning?: boolean;
-    stop: () => Promise<void>;
-    clear?: () => Promise<void>;
-    getRunningTrackCameraCapabilities?: () => { torch?: { value?: boolean } };
-    applyVideoConstraints?: (c: MediaTrackConstraints) => Promise<void>;
-  } | null>(null);
   const handled = useRef(false);
-  const elId = "phantom-qr-reader";
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
+  const scannerRef = useQrCamera({
+    elementId: SCAN_EL_ID,
+    active: true,
+    onError: (message) => {
+      setError(message);
+      setStarting(false);
+    },
+    onReady: (instance) => {
+      setStarting(false);
       try {
-        const { Html5Qrcode } = await import("html5-qrcode");
-        if (cancelled) return;
-        const instance = new Html5Qrcode(elId, { verbose: false });
-        scannerRef.current = instance as unknown as typeof scannerRef.current;
-
-        await instance.start(
-          { facingMode: "environment" },
-          {
-            fps: 12,
-            qrbox: (viewW, viewH) => {
-              const edge = Math.floor(Math.min(viewW, viewH) * 0.72);
-              return { width: edge, height: edge };
-            },
-            aspectRatio: 1,
-            disableFlip: false,
-          },
-          (decoded: string) => {
-            if (handled.current || cancelled) return;
-            handled.current = true;
-            void handleResult(decoded);
-          },
-          () => {},
-        );
-
-        try {
-          const caps = instance.getRunningTrackCameraCapabilities?.();
-          setTorchSupported(Boolean(caps && "torch" in (caps as object)));
-        } catch {
-          setTorchSupported(false);
-        }
-      } catch (e) {
-        setError((e as Error).message || "Camera permission denied");
-      } finally {
-        if (!cancelled) setStarting(false);
-      }
-    })();
-
-    async function stop() {
-      try {
-        if (scannerRef.current?.isScanning) await scannerRef.current.stop();
-        await scannerRef.current?.clear?.();
+        const caps = instance.getRunningTrackCameraCapabilities?.();
+        setTorchSupported(Boolean(caps && "torch" in (caps as object)));
       } catch {
-        // ignore stop errors
+        setTorchSupported(false);
       }
-      scannerRef.current = null;
+    },
+    onResult: (text) => {
+      if (handled.current) return;
+      handled.current = true;
+      void finishScan(text);
+    },
+  });
+
+  async function finishScan(text: string) {
+    await stopQrInstance(scannerRef.current);
+    scannerRef.current = null;
+
+    const parsed = parsePaymentQr(text);
+    if (!parsed.to) {
+      handled.current = false;
+      toast.error("Invalid QR code");
+      return;
     }
 
-    return () => {
-      cancelled = true;
-      void stop();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function handleResult(text: string) {
-    try {
-      if (scannerRef.current?.isScanning) await scannerRef.current.stop();
-    } catch {
-      // ignore
-    }
-    const parsed = parseScanned(text);
     toast.success("QR scanned");
     void navigate({
       to: "/send",
       search: {
         to: parsed.to,
-        amount: parsed.amount,
-        asset: parsed.asset,
+        ...(parsed.amount ? { amount: parsed.amount } : {}),
+        ...(parsed.asset ? { asset: parsed.asset } : {}),
       },
     });
   }
 
   async function toggleTorch() {
-    if (!scannerRef.current?.applyVideoConstraints) return;
+    const inst = scannerRef.current;
+    if (!inst?.applyVideoConstraints) return;
     try {
       const next = !torchOn;
-      await scannerRef.current.applyVideoConstraints({
+      await inst.applyVideoConstraints({
         // @ts-expect-error torch is non-standard but supported on many mobile browsers
         advanced: [{ torch: next }],
       });
@@ -136,21 +85,10 @@ function ScanPage() {
 
   async function onPickImage(file: File) {
     try {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      const tmpId = "phantom-qr-file";
-      let holder = document.getElementById(tmpId);
-      if (!holder) {
-        holder = document.createElement("div");
-        holder.id = tmpId;
-        holder.className = "hidden";
-        document.body.appendChild(holder);
-      }
-      const reader = new Html5Qrcode(tmpId, { verbose: false });
-      const decoded = await reader.scanFile(file, true);
-      await reader.clear();
+      const decoded = await scanQrFromFile(file);
       if (handled.current) return;
       handled.current = true;
-      await handleResult(decoded);
+      await finishScan(decoded);
     } catch {
       toast.error("No QR code found in image");
     }
@@ -158,11 +96,11 @@ function ScanPage() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      {/* Camera feed */}
-      <div className="absolute inset-0">
+      {/* Camera region — same sizing approach as Send scanner (no object-cover) */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black">
         <div
-          id={elId}
-          className="h-full w-full [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+          id={SCAN_EL_ID}
+          className="w-[min(100vw,360px)] overflow-hidden bg-black [&_img]:mx-auto [&_video]:mx-auto [&_video]:max-h-[70vh] [&_video]:w-full"
         />
         {starting && (
           <div className="absolute inset-0 grid place-items-center bg-black">
@@ -171,23 +109,20 @@ function ScanPage() {
         )}
       </div>
 
-      {/* Dim overlay with clear viewfinder hole via box-shadow trick */}
+      {/* Viewfinder chrome */}
       <div className="pointer-events-none absolute inset-0 flex flex-col">
-        <div className="flex-1 bg-black/55" />
+        <div className="flex-1 bg-black/50" />
         <div className="flex justify-center">
-          <div className="relative h-[min(72vw,320px)] w-[min(72vw,320px)]">
-            <div className="absolute inset-0 rounded-[28px] shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]" />
-            {/* Phantom-style corner brackets */}
+          <div className="relative h-[240px] w-[240px]">
             <span className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px] border-white" />
             <span className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px] border-white" />
             <span className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px] border-white" />
             <span className="absolute bottom-0 right-0 h-10 w-10 rounded-br-2xl border-b-[3px] border-r-[3px] border-white" />
           </div>
         </div>
-        <div className="flex-1 bg-black/55" />
+        <div className="flex-1 bg-black/50" />
       </div>
 
-      {/* Top chrome */}
       <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           type="button"
@@ -201,7 +136,6 @@ function ScanPage() {
         <div className="w-10" />
       </div>
 
-      {/* Bottom actions */}
       <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4">
         <p className="mb-6 text-center text-sm text-white/70">
           Scan a wallet address or payment QR to send

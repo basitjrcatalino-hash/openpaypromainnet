@@ -25,6 +25,7 @@ import {
   Check,
   History,
   CheckCircle2,
+  ScrollText,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -421,6 +422,24 @@ function SidebarInner({
           );
         })}
       </nav>
+
+      <Link
+        to="/ledger"
+        onClick={onClose}
+        preload="intent"
+        className={cn(
+          "flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 px-3 py-2.5 text-sm font-semibold transition-colors duration-100",
+          pathname === "/ledger"
+            ? "bg-sidebar-accent text-foreground"
+            : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+        )}
+      >
+        <ScrollText className="h-5 w-5 text-primary" />
+        Ledger API
+        <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          OpenLedger
+        </span>
+      </Link>
 
       {/* Wallet switcher list */}
       <div className="rounded-2xl border border-border/60 bg-card/40 p-2">

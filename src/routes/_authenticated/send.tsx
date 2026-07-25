@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatNumber } from "@/lib/wallet-utils";
 import { QrScannerButton } from "@/components/qr-scanner";
+import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
 import { cn } from "@/lib/utils";
@@ -38,24 +39,6 @@ const schema = z.object({
   asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional(),
 });
-
-function parseScanned(text: string): { to: string; amount?: string; asset?: "OUSD" | "PI" } {
-  // Accepts: raw address | openpay:ADDR?asset=OUSD&amount=10 | ethereum:0x..?value=..
-  try {
-    if (text.startsWith("openpay:") || text.startsWith("ethereum:") || text.includes("?")) {
-      const [scheme, rest] = text.split(":");
-      const body = rest ?? scheme;
-      const [addr, query] = body.split("?");
-      const params = new URLSearchParams(query ?? "");
-      const asset = (params.get("asset") as "OUSD" | "PI") ?? undefined;
-      const amount = params.get("amount") ?? params.get("value") ?? undefined;
-      return { to: addr, amount: amount ?? undefined, asset };
-    }
-  } catch {
-    // fall through to raw text
-  }
-  return { to: text.trim() };
-}
 
 function SendPage() {
   const { user } = Route.useRouteContext();
@@ -102,7 +85,7 @@ function SendPage() {
   });
 
   function applyScan(text: string) {
-    const p = parseScanned(text);
+    const p = parsePaymentQr(text);
     setForm((f) => ({ ...f, to: p.to, amount: p.amount ?? f.amount, asset: p.asset ?? f.asset }));
     toast.success("Scanned");
   }

@@ -1,5 +1,5 @@
 // OpenPay OAuth 2.0 connect helpers (server-only).
-// Docs: GET https://openpay.lovable.app/connect → POST /oauth/token → GET /user/me
+// Docs: GET https://openpy.space/connect → POST /oauth/token → GET /user/me
 
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 
@@ -209,7 +209,7 @@ export function buildOpenPayAuthorizeUrl(opts: {
   const base =
     process.env.OPENPAY_OAUTH_AUTHORIZE_URL ||
     process.env.OPENPAY_CONNECT_AUTHORIZE_URL ||
-    "https://openpay.lovable.app/connect";
+    "https://openpy.space/connect";
   const clientId = resolveClientId(opts.clientId);
   const redirect_uri = `${resolvePartnerRedirectOrigin(opts.origin)}/openpay/connect/callback`;
   const url = new URL(base);

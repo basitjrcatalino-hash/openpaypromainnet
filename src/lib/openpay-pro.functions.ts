@@ -505,7 +505,7 @@ export const unlinkOpenPayAccount = createServerFn({ method: "POST" })
     return { linked: false as const };
   });
 
-/** Start OAuth 2.0 Connect with OpenPay — redirects to openpay.lovable.app/connect */
+/** Start OAuth 2.0 Connect with OpenPay — redirects to openpy.space/connect */
 export const startOpenPayConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

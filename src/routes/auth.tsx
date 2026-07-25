@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Wallet, Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { signInWithPi } from "@/lib/pi-network";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -149,24 +149,15 @@ function AuthPage() {
 
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-hero-glow px-4 py-10">
 
-      <div className="absolute inset-0 -z-10 opacity-60" aria-hidden="true">
-        <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-primary blur-3xl opacity-30" />
-        <div className="absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-mint blur-3xl opacity-20" />
+      <div className="absolute inset-0 -z-10 opacity-50" aria-hidden="true">
+        <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-primary blur-3xl opacity-20" />
+        <div className="absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-primary-glow blur-3xl opacity-15" />
       </div>
 
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary shadow-glow">
-            <Wallet className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight">
-            OpenPay <span className="text-gradient">Pro</span>
-          </span>
-        </Link>
-
         <div className="glass rounded-3xl p-7">
           <div className="mb-6 text-center">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1 text-xs font-medium">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1 text-xs font-medium text-accent-foreground">
               <Sparkles className="h-3 w-3" /> Premium Web3 wallet
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
@@ -211,7 +202,7 @@ function AuthPage() {
             variant="outline"
             onClick={() => handlePiSignIn(false)}
             disabled={piBusy}
-            className="h-11 w-full rounded-xl border-2 border-[#7B3FF2] bg-[#7B3FF2]/10 text-base font-semibold text-[#7B3FF2] hover:bg-[#7B3FF2]/20"
+            className="h-11 w-full rounded-xl border-2 border-primary bg-primary/10 text-base font-semibold text-primary hover:bg-primary/20"
           >
             {piBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>π&nbsp;&nbsp;Continue with Pi Network</>}
           </Button>

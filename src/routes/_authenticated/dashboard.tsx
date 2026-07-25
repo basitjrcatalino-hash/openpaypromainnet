@@ -2,20 +2,57 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Send, Plus, ArrowLeftRight, TrendingUp, DollarSign,
-  ChevronsUpDown, Sparkles, QrCode, Eye, EyeOff, ScanLine, Lock, Copy, Check,
+  Send,
+  Plus,
+  ArrowLeftRight,
+  TrendingUp,
+  DollarSign,
+  ChevronsUpDown,
+  Sparkles,
+  QrCode,
+  Eye,
+  EyeOff,
+  ScanLine,
+  Copy,
+  Check,
+  ArrowUpRight,
+  ArrowDownLeft,
+  RefreshCw,
+  ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
+import type { Tables } from "@/integrations/supabase/types";
+import {
+  formatNumber,
+  formatPct,
+  generateAddress,
+  shortAddress,
+  formatUSD,
+} from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import { CURRENCIES, formatCurrency, useCurrency } from "@/lib/currency";
+import { formatCurrency, useCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
   component: Dashboard,
 });
+
+type HoldingRow = {
+  balance: number;
+  tokens: {
+    id: string;
+    name: string;
+    symbol: string;
+    price_usd: number | null;
+    change_24h: number | null;
+    logo_url: string | null;
+  } | null;
+};
+
+type NftRow = Pick<Tables<"nfts">, "id" | "name">;
+type TxRow = Tables<"transactions">;
 
 const ACTIONS = [
   { label: "Fund", icon: Plus, to: "/topup" },
@@ -49,22 +86,40 @@ function Dashboard() {
   const { data: holdings = [] } = useQuery({
     queryKey: ["holdings", wallet?.id],
     enabled: !!wallet?.id,
-    queryFn: async () => {
+    queryFn: async (): Promise<HoldingRow[]> => {
       const { data } = await supabase
         .from("token_holdings")
         .select("balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url)")
         .eq("wallet_id", wallet!.id);
-      return data ?? [];
+      return (data ?? []) as HoldingRow[];
     },
   });
 
   const { data: nfts = [] } = useQuery({
     queryKey: ["my-nfts", wallet?.id],
     enabled: !!wallet?.id,
-    queryFn: async () => {
-      const { data } = await supabase.from("nfts").select("*").eq("owner_wallet_id", wallet!.id).limit(6);
+    queryFn: async (): Promise<NftRow[]> => {
+      const { data } = await supabase
+        .from("nfts")
+        .select("id, name")
+        .eq("owner_wallet_id", wallet!.id)
+        .limit(6);
       return data ?? [];
     },
+  });
+
+  const { data: recentTxs = [] } = useQuery({
+    queryKey: ["recent-txs", wallet?.id],
+    enabled: !!wallet?.id,
+    queryFn: async (): Promise<TxRow[]> =>
+      (
+        await supabase
+          .from("transactions")
+          .select("*")
+          .eq("wallet_id", wallet!.id)
+          .order("created_at", { ascending: false })
+          .limit(8)
+      ).data ?? [],
   });
 
   useEffect(() => {
@@ -72,7 +127,14 @@ function Dashboard() {
     (async () => {
       const { data, error } = await supabase
         .from("wallets")
-        .insert({ user_id: user.id, name: "Main Wallet", address: generateAddress(), is_active: true, ousd_balance: 0, pi_balance: 0 })
+        .insert({
+          user_id: user.id,
+          name: "Main Wallet",
+          address: generateAddress(),
+          is_active: true,
+          ousd_balance: 0,
+          pi_balance: 0,
+        })
         .select()
         .single();
       if (!error && data) {
@@ -84,14 +146,16 @@ function Dashboard() {
   }, [wallet, walletLoading, user.id, qc]);
 
   const [hideBalance, setHideBalance] = useState(false);
-  const [tab, setTab] = useState<"assets" | "collectibles">("assets");
   const { code: currency, cycle: cycleCurrency } = useCurrency();
   const [copied, setCopied] = useState(false);
 
-  const totalUsd = (holdings as any[]).reduce(
-    (sum, h: any) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
+  const ousdBalance = Number(wallet?.ousd_balance ?? 0);
+  const holdingsUsd = holdings.reduce(
+    (sum, h) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
     0,
   );
+  const totalUsd = holdingsUsd + ousdBalance;
+  const hasAssets = holdings.length > 0 || ousdBalance > 0;
 
   async function copyAddress() {
     if (!wallet?.address) return;
@@ -113,7 +177,8 @@ function Dashboard() {
           <ScanLine className="h-5 w-5" />
         </button>
         <button className="inline-flex items-center gap-1 text-base font-semibold">
-          {wallet?.name ?? "Main Wallet"} <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          {wallet?.name ?? "Main Wallet"}{" "}
+          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-1">
           <button
@@ -139,7 +204,7 @@ function Dashboard() {
           <div className="absolute -left-16 -top-10 h-56 w-56 rounded-full bg-mint blur-3xl" />
           <div className="absolute -bottom-20 -right-10 h-56 w-56 rounded-full bg-primary-glow blur-3xl" />
         </div>
-        <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-3">
+        <div className="relative flex min-h-45 flex-col items-center justify-center gap-3">
           <button
             onClick={cycleCurrency}
             className="flex items-center gap-2 text-5xl font-bold tracking-tight tabular-nums"
@@ -154,7 +219,11 @@ function Dashboard() {
           >
             <span className="grid h-4 w-4 place-items-center rounded-full bg-white/20">◆</span>
             <span className="opacity-90">{shortAddress(wallet?.address ?? null, 6, 6)}</span>
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-80" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 opacity-80" />
+            )}
           </button>
         </div>
       </div>
@@ -178,7 +247,6 @@ function Dashboard() {
         })}
       </div>
 
-
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Assets */}
         <section className="lg:col-span-2">
@@ -189,11 +257,43 @@ function Dashboard() {
           </header>
 
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            {holdings.length === 0 ? (
+            {!hasAssets ? (
               <EmptyRow />
             ) : (
               <ul className="divide-y divide-border/60">
-                {holdings.map((h: any) => {
+                {ousdBalance > 0 && (
+                  <li className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-mint text-[10px] font-bold text-mint-foreground">
+                        OUSD
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          OpenPay USD
+                          <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
+                            Earn
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          {formatCurrency(1, currency)} · Stablecoin
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/ousd" })}
+                      className="text-right"
+                    >
+                      <div className="text-sm font-semibold tabular-nums">
+                        {formatNumber(ousdBalance, 2)} OUSD
+                      </div>
+                      <div className="text-xs text-muted-foreground tabular-nums">
+                        {formatCurrency(ousdBalance, currency)}
+                      </div>
+                    </button>
+                  </li>
+                )}
+                {holdings.map((h) => {
                   const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                   const pct = Number(h.tokens?.change_24h ?? 0);
                   return (
@@ -210,13 +310,20 @@ function Dashboard() {
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground tabular-nums">
-                            {formatCurrency(h.tokens?.price_usd, currency)} · <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>↑ {formatPct(pct)}</span>
+                            {formatCurrency(Number(h.tokens?.price_usd ?? 0), currency)} ·{" "}
+                            <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>
+                              ↑ {formatPct(pct)}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-semibold tabular-nums">{formatNumber(h.balance, 4)} {h.tokens?.symbol}</div>
-                        <div className="text-xs text-muted-foreground tabular-nums">{formatCurrency(usd, currency)}</div>
+                        <div className="text-sm font-semibold tabular-nums">
+                          {formatNumber(h.balance, 4)} {h.tokens?.symbol}
+                        </div>
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          {formatCurrency(usd, currency)}
+                        </div>
                       </div>
                     </li>
                   );
@@ -227,8 +334,13 @@ function Dashboard() {
               to="/tokens"
               className="flex items-center justify-center gap-2 border-t border-border/60 py-3 text-sm font-semibold text-primary hover:bg-sidebar-accent/40"
             >
-              <span className="grid h-4 w-4 place-items-center rounded-sm border border-current">▦</span>
-              Show All Assets <span className="text-muted-foreground">{holdings.length}</span>
+              <span className="grid h-4 w-4 place-items-center rounded-sm border border-current">
+                ▦
+              </span>
+              Show All Assets{" "}
+              <span className="text-muted-foreground">
+                {holdings.length + (ousdBalance > 0 ? 1 : 0)}
+              </span>
             </Link>
           </div>
         </section>
@@ -245,7 +357,7 @@ function Dashboard() {
             {nfts.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-6 text-center">
                 <div className="text-base font-semibold">No collectibles yet</div>
-                <p className="max-w-[220px] text-sm text-muted-foreground">
+                <p className="max-w-55 text-sm text-muted-foreground">
                   Explore a marketplace to discover existing NFT collections.
                 </p>
                 <Link
@@ -257,8 +369,11 @@ function Dashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                {nfts.map((n: any) => (
-                  <div key={n.id} className="overflow-hidden rounded-xl border border-border/60 bg-card">
+                {nfts.map((n) => (
+                  <div
+                    key={n.id}
+                    className="overflow-hidden rounded-xl border border-border/60 bg-card"
+                  >
                     <div className="aspect-square w-full bg-gradient-mint" />
                     <div className="p-2 text-xs">
                       <div className="truncate font-semibold">{n.name}</div>
@@ -271,8 +386,59 @@ function Dashboard() {
         </section>
       </div>
 
+      {/* Recent activity / history */}
+      <section>
+        <header className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Recent activity</h2>
+          <Link to="/activity" className="text-xs font-semibold text-primary hover:underline">
+            See all
+          </Link>
+        </header>
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          {recentTxs.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+              No activity yet — fund, send, or receive to see history here.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {recentTxs.map((t) => {
+                const Icon =
+                  t.type === "receive" || t.type === "buy"
+                    ? ArrowDownLeft
+                    : t.type === "swap"
+                      ? RefreshCw
+                      : t.type === "mint"
+                        ? Sparkles
+                        : t.type === "sell"
+                          ? ShoppingCart
+                          : ArrowUpRight;
+                return (
+                  <li key={t.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold capitalize">
+                        {t.type} {t.token_symbol ?? ""}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(t.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      <div className="font-semibold">{formatNumber(t.amount, 4)}</div>
+                      <div className="text-xs text-muted-foreground">{formatUSD(t.usd_value)}</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
+
       {/* New wallet empty state */}
-      {holdings.length === 0 && (
+      {!hasAssets && recentTxs.length === 0 && (
         <section className="rounded-3xl border border-border/60 bg-card px-6 py-16">
           <div className="mx-auto flex max-w-sm flex-col items-center gap-4 text-center">
             <div className="grid h-24 w-24 place-items-center rounded-3xl bg-gradient-primary text-primary-foreground shadow-glow">

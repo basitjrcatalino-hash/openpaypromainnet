@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } fr
 import { useEffect, useState } from "react";
 import {
   Wallet, Compass, Settings as SettingsIcon, Sparkles, LogOut, Menu, X, Plus,
-  EyeOff, Eye, ChevronsUpDown, Moon, Sun, ScrollText, Copy, Check,
+  EyeOff, Eye, ChevronsUpDown, Moon, Sun, Copy, Check, History,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) throw redirect({ to: "/authpi" });
     return { user: data.user };
   },
   component: AuthenticatedLayout,
@@ -29,7 +29,7 @@ const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
   { to: "/tokens/create", label: "Agent", icon: Sparkles },
   { to: "/tokens", label: "Explore", icon: Compass },
-  { to: "/ledger", label: "Ledger", icon: ScrollText },
+  { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
@@ -64,19 +64,16 @@ function AuthenticatedLayout() {
     <div className="relative min-h-screen bg-background text-foreground">
       {/* Mobile top bar */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-xl md:hidden">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-            <Wallet className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-sm font-semibold">OpenPay Pro</span>
+        <Link to="/dashboard" className="text-sm font-semibold tracking-tight">
+          OpenPay Pro
         </Link>
         <button onClick={() => setMobileOpen((v) => !v)} className="rounded-xl border border-border bg-card p-2" aria-label="Toggle menu">
           {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </button>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1400px]">
-        <aside className="sticky top-0 hidden h-screen w-[340px] shrink-0 overflow-y-auto border-r border-border/60 p-4 md:flex md:flex-col">
+      <div className="mx-auto flex w-full max-w-350">
+        <aside className="sticky top-0 hidden h-screen w-85 shrink-0 overflow-y-auto border-r border-border/60 p-4 md:flex md:flex-col">
           <SidebarInner wallets={wallets as any[]} activeWallet={activeWallet as any} profile={profile as any} pathname={pathname} />
         </aside>
 
@@ -111,7 +108,7 @@ function AuthenticatedLayout() {
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_hsl(var(--primary))]")} />
+                <Icon className="h-5 w-5" />
                 {item.label}
               </Link>
             );
@@ -125,8 +122,8 @@ function AuthenticatedLayout() {
 function SidebarInner({
   wallets, activeWallet, profile, pathname, onClose,
 }: {
-  wallets: Array<{ id: string; name: string; address: string }>;
-  activeWallet?: { id: string; name: string; address: string };
+  wallets: Array<{ id: string; name: string; address: string; ousd_balance?: number | null; pi_balance?: number | null }>;
+  activeWallet?: { id: string; name: string; address: string; ousd_balance?: number | null; pi_balance?: number | null };
   profile?: { display_name?: string | null; username?: string | null; avatar_url?: string | null; pi_username?: string | null } | null;
   pathname: string;
   onClose?: () => void;
@@ -149,15 +146,17 @@ function SidebarInner({
     },
   });
 
-  const totalUsd = (activeHoldings as any[]).reduce(
+  const holdingsUsd = (activeHoldings as any[]).reduce(
     (sum, h: any) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
     0,
   );
+  const ousdUsd = Number(activeWallet?.ousd_balance ?? 0);
+  const totalUsd = holdingsUsd + ousdUsd;
 
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
-    router.navigate({ to: "/auth", replace: true });
+    router.navigate({ to: "/authpi", replace: true });
   }
 
   async function copyAddress() {
@@ -198,7 +197,7 @@ function SidebarInner({
           <div className="absolute -left-16 -top-10 h-48 w-48 rounded-full bg-mint blur-3xl" />
           <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-primary-glow blur-3xl" />
         </div>
-        <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-3">
+        <div className="relative flex min-h-45 flex-col items-center justify-center gap-3">
           <button
             onClick={cycleCurrency}
             className="flex items-center gap-2 text-4xl font-bold tracking-tight tabular-nums"
@@ -263,7 +262,9 @@ function SidebarInner({
                 </span>
               </span>
             </span>
-            <span className="text-sm font-semibold tabular-nums">{formatCurrency(w.id === activeWallet?.id ? totalUsd : 0, currency)}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {formatCurrency(w.id === activeWallet?.id ? totalUsd : Number(w.ousd_balance ?? 0), currency)}
+            </span>
           </button>
         ))}
         <Link

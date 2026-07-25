@@ -93,7 +93,7 @@ function PiCallbackPage() {
             <h1 className="text-xl font-semibold text-destructive">Pi sign-in error</h1>
             <p className="mt-3 text-sm text-muted-foreground">{error}</p>
             <button
-              onClick={() => navigate({ to: "/auth" })}
+              onClick={() => navigate({ to: "/authpi" })}
               className="mt-6 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
             >
               Back to sign-in

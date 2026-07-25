@@ -18,6 +18,7 @@ import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
@@ -81,6 +82,11 @@ const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
+  id: '/send',
+  path: '/send',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
+  '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
+  '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
+  '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/ousd'
     | '/receive'
+    | '/send'
     | '/settings'
     | '/swap'
     | '/tokens'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/ousd'
     | '/receive'
+    | '/send'
     | '/settings'
     | '/swap'
     | '/tokens'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nfts'
     | '/_authenticated/ousd'
     | '/_authenticated/receive'
+    | '/_authenticated/send'
     | '/_authenticated/settings'
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
@@ -454,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/send': {
+      id: '/_authenticated/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthenticatedSendRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/receive': {
@@ -629,6 +648,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
+  AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
@@ -644,6 +664,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
+  AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,

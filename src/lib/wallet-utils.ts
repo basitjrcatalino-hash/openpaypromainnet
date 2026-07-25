@@ -32,18 +32,31 @@ export function shortAddress(addr?: string | null, head = 6, tail = 4): string {
 export function formatUSD(n: number | string | null | undefined, opts: { compact?: boolean } = {}): string {
   const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
   if (!isFinite(v)) return "$0.00";
+  const abs = Math.abs(v);
+  const useCompact = opts.compact === true || (opts.compact !== false && abs >= 1_000_000);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    notation: opts.compact && Math.abs(v) >= 10000 ? "compact" : "standard",
-    maximumFractionDigits: v < 1 ? 4 : 2,
+    notation: useCompact ? "compact" : "standard",
+    minimumFractionDigits: useCompact ? 0 : 2,
+    maximumFractionDigits: v < 1 && !useCompact ? 4 : 2,
   }).format(v);
 }
 
-export function formatNumber(n: number | string | null | undefined, decimals = 4): string {
+export function formatNumber(
+  n: number | string | null | undefined,
+  decimals = 4,
+  opts: { compact?: boolean } = {},
+): string {
   const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
   if (!isFinite(v)) return "0";
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals }).format(v);
+  const abs = Math.abs(v);
+  const useCompact = opts.compact === true || (opts.compact !== false && abs >= 1_000_000);
+  return new Intl.NumberFormat("en-US", {
+    notation: useCompact ? "compact" : "standard",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: useCompact ? 2 : decimals,
+  }).format(v);
 }
 
 export function formatPct(n: number | string | null | undefined): string {

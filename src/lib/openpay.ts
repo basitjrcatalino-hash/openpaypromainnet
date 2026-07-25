@@ -55,6 +55,16 @@ export const openpay = {
     return syncOpenPayOUSD({ data: { walletId } });
   },
 
+  async startConnect(origin: string): Promise<{ authorize_url: string; state: string }> {
+    const { startOpenPayConnect } = await import("@/lib/openpay-pro.functions");
+    return startOpenPayConnect({ data: { origin } });
+  },
+
+  async completeConnect(code: string, state: string): Promise<OpenPayWalletLink> {
+    const { completeOpenPayConnect } = await import("@/lib/openpay-pro.functions");
+    return toLink(await completeOpenPayConnect({ data: { code, state } }));
+  },
+
   async requestPayment(amount: number, memo?: string): Promise<{ qr: string; reference: string }> {
     const reference = `pay_${Date.now()}`;
     return {

@@ -10,6 +10,7 @@ export type OpenPayAccount = {
   balance?: number;
   currency?: string;
   email?: string;
+  user_id?: string;
 };
 
 export type OpenPayCharge = {
@@ -70,11 +71,78 @@ async function call<T>(
   return body as T;
 }
 
+function normalizeAccount(raw: any): OpenPayAccount {
+  const a = raw?.account && typeof raw.account === "object" ? raw.account : raw;
+  if (!a || typeof a !== "object") return {};
+  return {
+    name: a.name ?? a.full_name ?? undefined,
+    username: a.username ?? undefined,
+    account_number: a.account_number ?? undefined,
+    balance: typeof a.balance === "number" ? a.balance : undefined,
+    currency: a.currency ?? undefined,
+    email: a.email ?? undefined,
+    user_id: a.user_id ?? undefined,
+  };
+}
+
+function idsMatch(a: string | undefined, b: string): boolean {
+  if (!a) return false;
+  return a.replace(/^@+/, "").toLowerCase() === b.replace(/^@+/, "").toLowerCase();
+}
+
+export function isAmbiguousUsernameError(message: string): boolean {
+  return /column reference ["']?username["']? is ambiguous/i.test(message);
+}
+
+/** Resolve by OP account number (reliable), else /me match, else /accounts. */
+export async function resolvePartnerAccount(identifierRaw: string): Promise<OpenPayAccount> {
+  const identifier = identifierRaw.trim().replace(/^@+/, "");
+  if (!identifier) throw new Error("Missing OpenPay identifier");
+
+  // OP account numbers work on the current partner API; @username/email hit a SQL bug.
+  if (/^OP[A-Z0-9]+$/i.test(identifier)) {
+    return normalizeAccount(await call(`/accounts/${encodeURIComponent(identifier)}`));
+  }
+
+  // Partner-key owner: /me always works — match username / email / account number.
+  try {
+    const me = normalizeAccount(await call(`/me`));
+    if (
+      idsMatch(me.username, identifier) ||
+      idsMatch(me.email, identifier) ||
+      idsMatch(me.account_number, identifier) ||
+      idsMatch(me.user_id, identifier)
+    ) {
+      try {
+        const bal = await call<{ balance: number; currency?: string }>(`/balance`);
+        if (typeof bal.balance === "number") me.balance = bal.balance;
+        if (bal.currency) me.currency = bal.currency;
+      } catch {
+        /* ignore */
+      }
+      return me;
+    }
+  } catch {
+    /* continue to /accounts */
+  }
+
+  try {
+    return normalizeAccount(await call(`/accounts/${encodeURIComponent(identifier)}`));
+  } catch (e) {
+    const msg = (e as Error).message || "";
+    if (isAmbiguousUsernameError(msg)) {
+      throw new Error(
+        `OpenPay username lookup is temporarily unavailable. To send, use an OpenPay account number that starts with OP.`,
+      );
+    }
+    throw e;
+  }
+}
+
 export const openpayPro = {
-  me: () => call<OpenPayAccount>(`/me`),
+  me: async () => normalizeAccount(await call(`/me`)),
   balance: () => call<{ balance: number; currency?: string }>(`/balance`),
-  resolveAccount: (identifier: string) =>
-    call<OpenPayAccount>(`/accounts/${encodeURIComponent(identifier)}`),
+  resolveAccount: (identifier: string) => resolvePartnerAccount(identifier),
 
   createCharge: (body: {
     amount: number;

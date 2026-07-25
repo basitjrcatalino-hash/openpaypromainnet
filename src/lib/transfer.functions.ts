@@ -9,10 +9,45 @@ const SendSchema = z.object({
   memo: z.string().max(140).optional().nullable(),
 });
 
-async function resolveRecipientAddress(toRaw: string): Promise<string | null> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+function isWalletAddress(to: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(to.trim());
+}
+
+async function trySupabaseAdmin() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_URL) return null;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return supabaseAdmin;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveRecipientAddress(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  toRaw: string,
+): Promise<string> {
+  const trimmed = toRaw.trim();
+  if (isWalletAddress(trimmed)) return trimmed;
+
   const { findLocalWalletAddressByHandle } = await import("./recipient-resolve");
-  return findLocalWalletAddressByHandle(supabaseAdmin, toRaw);
+
+  try {
+    const local = await findLocalWalletAddressByHandle(supabase, toRaw);
+    if (local) return local;
+  } catch {
+    /* RLS may block cross-user profile reads */
+  }
+
+  const admin = await trySupabaseAdmin();
+  if (admin) {
+    const resolved = await findLocalWalletAddressByHandle(admin, toRaw);
+    if (resolved) return resolved;
+  }
+
+  // Fall through: treat as raw counterparty (external / OP username string)
+  return trimmed.replace(/^@+/, "");
 }
 
 export const sendAsset = createServerFn({ method: "POST" })
@@ -22,7 +57,7 @@ export const sendAsset = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { to: toInput, amount, asset, memo } = data;
 
-    const toAddress = (await resolveRecipientAddress(toInput)) ?? toInput;
+    const toAddress = await resolveRecipientAddress(supabase, toInput);
 
     const { data: wallet, error: wErr } = await supabase
       .from("wallets")
@@ -31,7 +66,9 @@ export const sendAsset = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (wErr || !wallet) throw new Error("Active wallet not found");
-    if (toAddress === wallet.address) throw new Error("Cannot send to your own address");
+    if (toAddress.toLowerCase() === wallet.address.toLowerCase()) {
+      throw new Error("Cannot send to your own address");
+    }
 
     const curO = Number(wallet.ousd_balance ?? 0);
     const curP = Number(wallet.pi_balance ?? 0);
@@ -49,36 +86,38 @@ export const sendAsset = createServerFn({ method: "POST" })
     const usd = asset === "OUSD" ? amount : amount * 32.5;
 
     let credited = false;
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: rcpt } = await supabaseAdmin
-        .from("wallets")
-        .select("*")
-        .eq("address", toAddress)
-        .maybeSingle();
-      if (rcpt) {
-        const rO = Number(rcpt.ousd_balance ?? 0);
-        const rP = Number(rcpt.pi_balance ?? 0);
-        const rcptPatch =
-          asset === "OUSD" ? { ousd_balance: rO + amount } : { pi_balance: rP + amount };
-        await supabaseAdmin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
-        await supabaseAdmin.from("transactions").insert({
-          wallet_id: rcpt.id,
-          type: "receive",
-          status: "confirmed",
-          token_symbol: asset,
-          counterparty: wallet.address,
-          amount,
-          usd_value: usd,
-          memo: memo ?? null,
-        });
-        credited = true;
+    const admin = await trySupabaseAdmin();
+    if (admin && isWalletAddress(toAddress)) {
+      try {
+        const { data: rcpt } = await admin
+          .from("wallets")
+          .select("*")
+          .eq("address", toAddress)
+          .maybeSingle();
+        if (rcpt) {
+          const rO = Number(rcpt.ousd_balance ?? 0);
+          const rP = Number(rcpt.pi_balance ?? 0);
+          const rcptPatch =
+            asset === "OUSD" ? { ousd_balance: rO + amount } : { pi_balance: rP + amount };
+          await admin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
+          await admin.from("transactions").insert({
+            wallet_id: rcpt.id,
+            type: "receive",
+            status: "confirmed",
+            token_symbol: asset,
+            counterparty: wallet.address,
+            amount,
+            usd_value: usd,
+            memo: memo ?? null,
+          });
+          credited = true;
+        }
+      } catch (e) {
+        console.error("recipient credit failed", e);
       }
-    } catch (e) {
-      console.error("recipient credit failed", e);
     }
 
-    await supabase.from("transactions").insert({
+    const { error: txErr } = await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "send",
       status: "confirmed",
@@ -88,6 +127,7 @@ export const sendAsset = createServerFn({ method: "POST" })
       usd_value: usd,
       memo: memo ?? null,
     });
+    if (txErr) throw txErr;
 
     return { ok: true, credited, resolvedTo: toAddress };
   });

@@ -192,7 +192,7 @@ function SendPage() {
           <Field
             label={
               rail === "openpay"
-                ? "OpenPay @username, OP account, or email"
+                ? "OpenPay account number (starts with OP)"
                 : "Recipient address or @username"
             }
           >
@@ -205,7 +205,7 @@ function SendPage() {
                   setOpError(null);
                 }}
                 onBlur={rail === "openpay" ? verifyOpenPay : undefined}
-                placeholder={rail === "openpay" ? "@satoshi, OP…, or email" : "0x… or @username"}
+                placeholder={rail === "openpay" ? "OP…" : "0x… or @username"}
                 required
               />
               {rail === "wallet" && (
@@ -225,6 +225,12 @@ function SendPage() {
                 />
               )}
             </div>
+            {rail === "openpay" && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                To send via OpenPay, enter the recipient’s OpenPay account number. It starts with{" "}
+                <span className="font-semibold text-foreground">OP</span>.
+              </p>
+            )}
             {rail === "openpay" && opPreview && (
               <div className="mt-2 rounded-xl border border-border bg-muted/40 p-2 text-xs">
                 <div className="font-semibold">{opPreview.name ?? opPreview.username}</div>

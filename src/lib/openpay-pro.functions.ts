@@ -13,15 +13,12 @@ export const resolveOpenPayAccount = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ identifier: z.string().trim().min(2).max(120) }).parse(d),
   )
-  .handler(async ({ data }) => {
-    const { openpayPro } = await import("./openpay-pro.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  .handler(async ({ data, context }) => {
     const identifier = normalizeRecipientId(data.identifier);
 
-    // Prefer local profile first for @handles so we never hit the partner
-    // SQL bug ("column reference username is ambiguous") for in-app users.
+    // Prefer local profile first for @handles (no service-role required).
     try {
-      const local = await findLocalProfileByHandle(supabaseAdmin, identifier);
+      const local = await findLocalProfileByHandle(context.supabase as any, identifier);
       if (local) {
         return {
           ok: true as const,
@@ -33,15 +30,15 @@ export const resolveOpenPayAccount = createServerFn({ method: "POST" })
         };
       }
     } catch {
-      // continue to partner API
+      // continue — may lack permission under RLS
     }
 
     try {
+      const { openpayPro } = await import("./openpay-pro.server");
       const acct = await openpayPro.resolveAccount(identifier);
       return { ok: true as const, account: acct, source: "partner" as const };
     } catch (e) {
       const message = (e as Error).message || "Account not found";
-      // Soften partner SQL ambiguity into a clear user-facing error
       if (isAmbiguousUsernameError(message)) {
         return {
           ok: false as const,
@@ -93,15 +90,15 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         success_url: `${data.origin}/topup?openpay_return=1`,
         cancel_url: `${data.origin}/topup?openpay_cancel=1`,
       });
+      if (!charge?.checkout_url || !charge?.id) {
+        throw new Error("OpenPay checkout unavailable");
+      }
       return { mode: "checkout" as const, charge };
     } catch (e) {
+      // Partner /charges is broken or missing (e.g. "expires_at is ambiguous", 404).
+      // Fall through to partner-treasury direct credit.
       const msg = (e as Error).message || "";
-      const chargesMissing =
-        /not found/i.test(msg) ||
-        /404/i.test(msg) ||
-        /unknown route/i.test(msg) ||
-        (/charges/i.test(msg) && /not (supported|available|configured)/i.test(msg));
-      if (!chargesMissing) throw e;
+      console.warn("[openpay topup] checkout unavailable, using direct credit:", msg);
     }
 
     // Fallback: verify partner key + treasury, then credit Pro wallet directly
@@ -232,7 +229,6 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { findLocalProfileByHandle, findLocalWalletAddressByHandle, normalizeRecipientId } =
       await import("./recipient-resolve");
     const { supabase, userId } = context;
@@ -248,13 +244,28 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
     const cur = Number(wallet.ousd_balance ?? 0);
     if (cur < data.amount) throw new Error("Insufficient OUSD balance");
 
-    // Local OpenPay Pro user → settle in-app (avoids partner username SQL bug)
-    const localProfile = await findLocalProfileByHandle(supabaseAdmin, to);
-    const localAddress = localProfile
-      ? await findLocalWalletAddressByHandle(supabaseAdmin, to)
-      : null;
+    // Local OpenPay Pro user → settle in-app when service role is available
+    let localProfile: Awaited<ReturnType<typeof findLocalProfileByHandle>> = null;
+    let localAddress: string | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let supabaseAdmin: any = null;
 
-    if (localProfile && localAddress) {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_URL) {
+      try {
+        const mod = await import("@/integrations/supabase/client.server");
+        supabaseAdmin = mod.supabaseAdmin;
+        localProfile = await findLocalProfileByHandle(supabaseAdmin, to);
+        localAddress = localProfile
+          ? await findLocalWalletAddressByHandle(supabaseAdmin, to)
+          : null;
+      } catch {
+        localProfile = null;
+        localAddress = null;
+        supabaseAdmin = null;
+      }
+    }
+
+    if (localProfile && localAddress && supabaseAdmin) {
       if (localAddress === wallet.address) {
         throw new Error("Cannot send to your own address");
       }
@@ -403,12 +414,11 @@ export const linkOpenPayAccount = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const identifier = normalizeRecipientId(data.identifier);
 
     let link: OpenPayLinkRecord | null = null;
 
-    // 1) Partner OpenPay resolve (email / OP account / username)
+    // 1) Partner OpenPay resolve — no service-role key required
     try {
       const { openpayPro } = await import("./openpay-pro.server");
       const acct = await openpayPro.resolveAccount(identifier);
@@ -419,14 +429,40 @@ export const linkOpenPayAccount = createServerFn({ method: "POST" })
         account_number: acct.account_number,
         name: acct.name,
         email: acct.email,
-        identifier,
+        identifier: acct.account_number || identifier,
         source: "partner",
         linkedAt: new Date().toISOString(),
       };
     } catch (e) {
       const msg = (e as Error).message || "";
-      // 2) Local OpenPay Pro profile fallback
-      const local = await findLocalProfileByHandle(supabaseAdmin, identifier);
+
+      // 2) Local OpenPay Pro profile fallback (user-scoped first, then admin if available)
+      let local: Awaited<ReturnType<typeof findLocalProfileByHandle>> = null;
+      try {
+        local = await findLocalProfileByHandle(supabase as any, identifier);
+      } catch {
+        /* ignore RLS miss */
+      }
+      if (!local) {
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          local = await findLocalProfileByHandle(supabaseAdmin, identifier);
+        } catch (adminErr) {
+          const adminMsg = (adminErr as Error).message || "";
+          if (/SUPABASE_SERVICE_ROLE_KEY/i.test(adminMsg) && !local) {
+            // Partner failed + no service role — surface a useful connect hint
+            throw new Error(
+              msg.includes("OP…") || msg.includes("account number")
+                ? msg
+                : `Could not connect @${identifier}. Try the OP account number, or add SUPABASE_SERVICE_ROLE_KEY in Lovable Cloud Secrets.`,
+            );
+          }
+          if (!/SUPABASE_SERVICE_ROLE_KEY/i.test(adminMsg)) {
+            // keep going with partner error below
+          }
+        }
+      }
+
       if (local) {
         link = {
           linked: true,
@@ -441,7 +477,7 @@ export const linkOpenPayAccount = createServerFn({ method: "POST" })
         throw new Error(
           "OpenPay partner API key is not configured. Add OPENPAY_PARTNER_API_KEY, or link a local @username.",
         );
-      } else if (isAmbiguousUsernameError(msg)) {
+      } else if (isAmbiguousUsernameError(msg) || /username lookup is temporarily unavailable/i.test(msg)) {
         throw new Error(
           `Could not resolve @${identifier} on OpenPay. Try email or OP account number.`,
         );
@@ -460,6 +496,94 @@ export const unlinkOpenPayAccount = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await writeOpenPayLink(supabase, userId, null);
     return { linked: false as const };
+  });
+
+/** Start OAuth-style connect: redirect user to OpenPay to confirm their account. */
+export const startOpenPayConnect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ origin: z.string().url() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { createConnectState, buildOpenPayAuthorizeUrl } = await import(
+      "./openpay-connect.server"
+    );
+    const state = createConnectState(context.userId);
+    const authorize_url = buildOpenPayAuthorizeUrl({
+      origin: data.origin,
+      state,
+    });
+    return { authorize_url, state, expires_in: 600 };
+  });
+
+/** Finish connect after OpenPay redirects back with ?code=&state=. */
+export const completeOpenPayConnect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        code: z.string().min(10).max(4000),
+        state: z.string().min(10).max(2000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { verifyConnectState, verifyConnectCode } = await import("./openpay-connect.server");
+    const st = verifyConnectState(data.state);
+    if (st.uid !== context.userId) {
+      throw new Error("Connect session does not belong to this user");
+    }
+    const acct = verifyConnectCode(data.code);
+    const link: OpenPayLinkRecord = {
+      linked: true,
+      openpayUserId:
+        acct.account_number || acct.username || acct.email || acct.user_id || `op_${st.uid}`,
+      username: acct.username,
+      account_number: acct.account_number,
+      name: acct.name,
+      email: acct.email,
+      identifier: acct.account_number || acct.username || acct.email || acct.user_id,
+      source: "partner",
+      linkedAt: new Date().toISOString(),
+    };
+    await writeOpenPayLink(context.supabase, context.userId, link);
+    return link;
+  });
+
+/**
+ * Dev/partner helper: connect the OpenPay account that owns the partner API key
+ * after the user confirms in-app (no OpenPay redirect). Useful when OAuth page
+ * is not deployed yet.
+ */
+export const connectPartnerOwnerAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { openpayPro } = await import("./openpay-pro.server");
+    const me = await openpayPro.me();
+    let balance: number | undefined;
+    try {
+      const bal = await openpayPro.balance();
+      balance = bal.balance;
+    } catch {
+      /* ignore */
+    }
+    void balance;
+    if (!me.account_number && !me.username) {
+      throw new Error("Partner OpenPay account could not be loaded");
+    }
+    const link: OpenPayLinkRecord = {
+      linked: true,
+      openpayUserId: me.account_number || me.username,
+      username: me.username,
+      account_number: me.account_number,
+      name: me.name,
+      email: me.email,
+      identifier: me.account_number || me.username,
+      source: "partner",
+      linkedAt: new Date().toISOString(),
+    };
+    await writeOpenPayLink(context.supabase, context.userId, link);
+    return link;
   });
 
 export const syncOpenPayOUSD = createServerFn({ method: "POST" })

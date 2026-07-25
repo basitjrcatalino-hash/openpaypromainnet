@@ -11,12 +11,39 @@ export const CURRENCIES: { code: CurrencyCode; symbol: string; rate: number; lab
 
 const STORAGE_KEY = "op:currency";
 
-export function formatCurrency(usd: number, code: CurrencyCode = "USD"): string {
+export function formatCurrency(
+  usd: number,
+  code: CurrencyCode = "USD",
+  opts: { compact?: boolean } = {},
+): string {
   const c = CURRENCIES.find((x) => x.code === code) ?? CURRENCIES[0];
   const value = Number(usd || 0) * c.rate;
-  if (code === "PI") return `${c.symbol}${value.toFixed(2)}`;
+  if (!Number.isFinite(value)) return code === "PI" ? `${c.symbol}0.00` : "$0.00";
+
+  const abs = Math.abs(value);
+  const useCompact = opts.compact !== false && abs >= 1_000_000;
+
+  if (code === "PI") {
+    if (useCompact) {
+      return `${c.symbol}${new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 2,
+      }).format(value)}`;
+    }
+    return `${c.symbol}${new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)}`;
+  }
+
   try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: code, maximumFractionDigits: 2 }).format(value);
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      notation: useCompact ? "compact" : "standard",
+      minimumFractionDigits: useCompact ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   } catch {
     return `${c.symbol}${value.toFixed(2)}`;
   }

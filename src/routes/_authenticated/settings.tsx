@@ -39,9 +39,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  linkOpenPayAccount,
   unlinkOpenPayAccount,
   syncOpenPayOUSD,
+  startOpenPayConnect,
 } from "@/lib/openpay-pro.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -651,9 +651,9 @@ function OpenPayIntegrationCard({
   onPrefsChanged: () => void;
   onWalletChanged: () => void;
 }) {
-  const linkOpenPay = useServerFn(linkOpenPayAccount);
   const unlinkOpenPay = useServerFn(unlinkOpenPayAccount);
   const syncOpenPay = useServerFn(syncOpenPayOUSD);
+  const startConnect = useServerFn(startOpenPayConnect);
 
   const stored =
     (notifications?.openpay as {
@@ -666,30 +666,17 @@ function OpenPayIntegrationCard({
     } | null) ?? null;
   const linked = !!stored?.linked;
 
-  const [open, setOpen] = useState(false);
-  const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function connect() {
-    const id = identifier.trim().replace(/^@+/, "");
-    if (id.length < 2) {
-      toast.error("Enter OpenPay @username, email, or OP account");
-      return;
-    }
+  async function connectViaOpenPay() {
     setBusy(true);
     try {
-      const link = await linkOpenPay({ data: { identifier: id } });
-      toast.success(
-        link.source === "local"
-          ? `Linked local OpenPay Pro @${link.username ?? id}`
-          : `Connected OpenPay ${link.username ? `@${link.username}` : (link.name ?? id)}`,
-      );
-      setOpen(false);
-      setIdentifier("");
-      onPrefsChanged();
+      const { authorize_url } = await startConnect({
+        data: { origin: window.location.origin },
+      });
+      window.location.href = authorize_url;
     } catch (err) {
-      toast.error((err as Error).message || "Connect failed");
-    } finally {
+      toast.error((err as Error).message || "Could not start OpenPay connect");
       setBusy(false);
     }
   }
@@ -737,7 +724,7 @@ function OpenPayIntegrationCard({
           <p className="mt-1 text-sm">
             {linked
               ? `Linked${stored?.username ? ` as @${stored.username}` : stored?.identifier ? ` · ${stored.identifier}` : ""}${stored?.source === "local" ? " (OpenPay Pro)" : ""}. Sync OUSD and merchant payments.`
-              : "Link your OpenPay account to auto-sync OUSD, transactions and merchant payments."}
+              : "Connect your OpenPay account. You’ll confirm on OpenPay, then return here linked."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -756,37 +743,18 @@ function OpenPayIntegrationCard({
               </Button>
             </>
           ) : (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="rounded-full">
-                  Connect OpenPay
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-sm rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle>Connect OpenPay</DialogTitle>
-                  <DialogDescription>
-                    Enter your OpenPay @username, email, or OP account number.
-                  </DialogDescription>
-                </DialogHeader>
-                <Input
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="@satoshi, you@email.com, or OP…"
-                  autoFocus
-                />
-                <DialogFooter>
-                  <Button
-                    onClick={connect}
-                    disabled={busy}
-                    className="rounded-full bg-gradient-primary text-primary-foreground"
-                  >
-                    {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Connect
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              className="rounded-full bg-gradient-primary text-primary-foreground"
+              disabled={busy}
+              onClick={connectViaOpenPay}
+            >
+              {busy ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Link2 className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Connect with OpenPay
+            </Button>
           )}
         </div>
       </div>

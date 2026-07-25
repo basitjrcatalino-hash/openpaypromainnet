@@ -35,12 +35,14 @@ import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
+import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
+import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -172,6 +174,12 @@ const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
   path: '/pi/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedOpenpayConnectCallbackRoute =
+  AuthenticatedOpenpayConnectCallbackRouteImport.update({
+    id: '/openpay/connect/callback',
+    path: '/openpay/connect/callback',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
   id: '/api/public/ledger/entries',
   path: '/api/public/ledger/entries',
@@ -206,6 +214,12 @@ const ApiPublicLedgerEntriesIdRoute =
     path: '/$id',
     getParentRoute: () => ApiPublicLedgerEntriesRoute,
   } as any)
+const ApiPublicOpenpayConnectConfirmRoute =
+  ApiPublicOpenpayConnectConfirmRouteImport.update({
+    id: '/api/public/openpay/connect/confirm',
+    path: '/api/public/openpay/connect/confirm',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -233,12 +247,14 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
+  '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -266,12 +282,14 @@ export interface FileRoutesByTo {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
+  '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -301,12 +319,14 @@ export interface FileRoutesById {
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
+  '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -336,12 +356,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/openpay/connect/callback'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
     | '/api/public/ledger/entries/$id'
+    | '/api/public/openpay/connect/confirm'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -369,12 +391,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/openpay/connect/callback'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
     | '/api/public/ledger/entries/$id'
+    | '/api/public/openpay/connect/confirm'
   id:
     | '__root__'
     | '/'
@@ -403,12 +427,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/auth/pi/callback'
+    | '/_authenticated/openpay/connect/callback'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
     | '/api/public/ledger/entries/$id'
+    | '/api/public/openpay/connect/confirm'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -426,6 +452,7 @@ export interface RootRouteChildren {
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
+  ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -612,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPiCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/openpay/connect/callback': {
+      id: '/_authenticated/openpay/connect/callback'
+      path: '/openpay/connect/callback'
+      fullPath: '/openpay/connect/callback'
+      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/ledger/entries': {
       id: '/api/public/ledger/entries'
       path: '/api/public/ledger/entries'
@@ -654,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
       parentRoute: typeof ApiPublicLedgerEntriesRoute
     }
+    '/api/public/openpay/connect/confirm': {
+      id: '/api/public/openpay/connect/confirm'
+      path: '/api/public/openpay/connect/confirm'
+      fullPath: '/api/public/openpay/connect/confirm'
+      preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -694,6 +735,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
+  AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -711,6 +753,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
+  AuthenticatedOpenpayConnectCallbackRoute:
+    AuthenticatedOpenpayConnectCallbackRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -755,6 +799,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
+  ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

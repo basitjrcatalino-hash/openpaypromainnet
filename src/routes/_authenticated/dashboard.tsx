@@ -329,31 +329,33 @@ function Dashboard() {
             ) : (
               <ul className="divide-y divide-border/60">
                 {ousdBalance > 0 && (
-                  <li className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <OusdIcon />
-                      <div>
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                          OpenPay OUSD
-                          <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
-                            Earn
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {formatCurrency(1, currency)} · Stablecoin
-                        </div>
-                      </div>
-                    </div>
+                  <li>
                     <button
                       type="button"
                       onClick={() => navigate({ to: "/ousd" })}
-                      className="text-right"
+                      className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <div className="text-sm font-semibold tabular-nums">
-                        {formatNumber(ousdBalance, 2)} OUSD
+                      <div className="flex items-center gap-3">
+                        <OusdIcon />
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-semibold">
+                            OpenPay OUSD
+                            <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
+                              Earn
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground tabular-nums">
+                            {formatCurrency(1, currency)} · Stablecoin
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground tabular-nums">
-                        {formatCurrency(ousdBalance, currency)}
+                      <div className="text-right">
+                        <div className="text-sm font-semibold tabular-nums">
+                          {formatNumber(ousdBalance, 2)} OUSD
+                        </div>
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          {formatCurrency(ousdBalance, currency)}
+                        </div>
                       </div>
                     </button>
                   </li>
@@ -362,34 +364,40 @@ function Dashboard() {
                   const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                   const pct = Number(h.tokens?.change_24h ?? 0);
                   return (
-                    <li key={h.tokens?.id} className="flex items-center justify-between px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-[10px] font-bold text-primary-foreground">
-                          {(h.tokens?.symbol ?? "?").slice(0, 3)}
+                    <li key={h.tokens?.id}>
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/tokens" })}
+                        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-[10px] font-bold text-primary-foreground">
+                            {(h.tokens?.symbol ?? "?").slice(0, 3)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                              {h.tokens?.name}
+                              <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
+                                APY 3.9%
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground tabular-nums">
+                              {formatCurrency(Number(h.tokens?.price_usd ?? 0), currency)} ·{" "}
+                              <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>
+                                ↑ {formatPct(pct)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 text-sm font-semibold">
-                            {h.tokens?.name}
-                            <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
-                              APY 3.9%
-                            </span>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold tabular-nums">
+                            {formatNumber(h.balance, 4)} {h.tokens?.symbol}
                           </div>
                           <div className="text-xs text-muted-foreground tabular-nums">
-                            {formatCurrency(Number(h.tokens?.price_usd ?? 0), currency)} ·{" "}
-                            <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>
-                              ↑ {formatPct(pct)}
-                            </span>
+                            {formatCurrency(usd, currency)}
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold tabular-nums">
-                          {formatNumber(h.balance, 4)} {h.tokens?.symbol}
-                        </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {formatCurrency(usd, currency)}
-                        </div>
-                      </div>
+                      </button>
                     </li>
                   );
                 })}

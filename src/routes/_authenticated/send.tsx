@@ -25,14 +25,12 @@ export const Route = createFileRoute("/_authenticated/send")({
 
 type Rail = "wallet" | "openpay";
 
-
 const schema = z.object({
   to: z.string().trim().min(2, "Enter a wallet address or @username").max(120),
   amount: z.coerce.number().positive().max(1e15),
   asset: z.enum(["OUSD", "PI"]),
   memo: z.string().max(140).optional(),
 });
-
 
 function parseScanned(text: string): { to: string; amount?: string; asset?: "OUSD" | "PI" } {
   // Accepts: raw address | openpay:ADDR?asset=OUSD&amount=10 | ethereum:0x..?value=..
@@ -46,7 +44,9 @@ function parseScanned(text: string): { to: string; amount?: string; asset?: "OUS
       const amount = params.get("amount") ?? params.get("value") ?? undefined;
       return { to: addr, amount: amount ?? undefined, asset };
     }
-  } catch {}
+  } catch {
+    // fall through to raw text
+  }
   return { to: text.trim() };
 }
 
@@ -58,15 +58,29 @@ function SendPage() {
   const resolveOP = useServerFn(resolveOpenPayAccount);
   const [busy, setBusy] = useState(false);
   const [rail, setRail] = useState<Rail>("wallet");
-  const [opPreview, setOpPreview] = useState<{ name?: string; username?: string; account_number?: string } | null>(null);
+  const [opPreview, setOpPreview] = useState<{
+    name?: string;
+    username?: string;
+    account_number?: string;
+  } | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
-  const [form, setForm] = useState<{ to: string; amount: string; asset: "OUSD" | "PI"; memo: string }>({
-    to: "", amount: "", asset: "OUSD", memo: "",
+  const [form, setForm] = useState<{
+    to: string;
+    amount: string;
+    asset: "OUSD" | "PI";
+    memo: string;
+  }>({
+    to: "",
+    amount: "",
+    asset: "OUSD",
+    memo: "",
   });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
-    queryFn: async () => (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
+    queryFn: async () =>
+      (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle())
+        .data,
   });
 
   function applyScan(text: string) {
@@ -80,16 +94,26 @@ function SendPage() {
     setOpError(null);
     setOpPreview(null);
     try {
-      const r = await resolveOP({ data: { identifier: form.to.trim() } });
-      if (r.ok) setOpPreview(r.account);
-      else setOpError(r.error);
-    } catch (e) { setOpError((e as Error).message); }
+      const identifier = form.to.trim().replace(/^@+/, "");
+      const r = await resolveOP({ data: { identifier } });
+      if (r.ok) {
+        setOpPreview(r.account);
+        if (identifier !== form.to.trim()) {
+          setForm((f) => ({ ...f, to: identifier }));
+        }
+      } else setOpError(r.error);
+    } catch (e) {
+      setOpError((e as Error).message);
+    }
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = schema.safeParse(form);
-    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid");
+      return;
+    }
     if (!wallet) return;
 
     setBusy(true);
@@ -102,60 +126,109 @@ function SendPage() {
         toast.success(`Sent ${parsed.data.amount} OUSD via OpenPay to ${parsed.data.to}`);
         void res;
       } else {
-        if (parsed.data.to === wallet.address) { toast.error("Cannot send to your own address"); return; }
+        if (parsed.data.to === wallet.address) {
+          toast.error("Cannot send to your own address");
+          return;
+        }
         const res = await send({ data: parsed.data });
-        toast.success(res.credited
-          ? `Sent ${parsed.data.amount} ${parsed.data.asset} — recipient credited`
-          : `Sent ${parsed.data.amount} ${parsed.data.asset}`);
+        toast.success(
+          res.credited
+            ? `Sent ${parsed.data.amount} ${parsed.data.asset} — recipient credited`
+            : `Sent ${parsed.data.amount} ${parsed.data.asset}`,
+        );
       }
       setForm({ to: "", amount: "", asset: parsed.data.asset, memo: "" });
       setOpPreview(null);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
-    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <div className="mx-auto max-w-md space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Send</h1>
-        <p className="text-sm text-muted-foreground">Transfer within OpenPay Pro or push OpenPay balance</p>
+        <p className="text-sm text-muted-foreground">
+          Transfer within OpenPay Pro or push OpenPay balance
+        </p>
       </div>
 
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border p-1">
-            <button type="button" onClick={() => setRail("wallet")} className={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
-              rail === "wallet" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
-            )}>OpenPay Pro wallet</button>
-            <button type="button" onClick={() => setRail("openpay")} className={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
-              rail === "openpay" ? "bg-[#0070BA] text-white" : "text-muted-foreground hover:bg-muted",
-            )}>OpenPay balance</button>
+            <button
+              type="button"
+              onClick={() => setRail("wallet")}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                rail === "wallet"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              OpenPay Pro wallet
+            </button>
+            <button
+              type="button"
+              onClick={() => setRail("openpay")}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                rail === "openpay"
+                  ? "bg-[#0070BA] text-white"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              OpenPay balance
+            </button>
           </div>
 
-          <Field label={rail === "openpay" ? "OpenPay @username, OP account, or email" : "Recipient address or @username"}>
+          <Field
+            label={
+              rail === "openpay"
+                ? "OpenPay @username, OP account, or email"
+                : "Recipient address or @username"
+            }
+          >
             <div className="flex gap-2">
               <Input
                 value={form.to}
-                onChange={(e) => { setForm({ ...form, to: e.target.value }); setOpPreview(null); setOpError(null); }}
+                onChange={(e) => {
+                  setForm({ ...form, to: e.target.value });
+                  setOpPreview(null);
+                  setOpError(null);
+                }}
                 onBlur={rail === "openpay" ? verifyOpenPay : undefined}
                 placeholder={rail === "openpay" ? "@satoshi, OP…, or email" : "0x… or @username"}
                 required
               />
               {rail === "wallet" && (
-                <QrScannerButton onResult={applyScan} trigger={
-                  <Button type="button" variant="outline" size="icon" className="rounded-xl shrink-0" aria-label="Scan QR">
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                } />
+                <QrScannerButton
+                  onResult={applyScan}
+                  trigger={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="rounded-xl shrink-0"
+                      aria-label="Scan QR"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  }
+                />
               )}
             </div>
             {rail === "openpay" && opPreview && (
               <div className="mt-2 rounded-xl border border-border bg-muted/40 p-2 text-xs">
                 <div className="font-semibold">{opPreview.name ?? opPreview.username}</div>
-                <div className="text-muted-foreground">{opPreview.username ? `@${opPreview.username.replace(/^@/, "")}` : ""} {opPreview.account_number ? `· ${opPreview.account_number}` : ""}</div>
+                <div className="text-muted-foreground">
+                  {opPreview.username ? `@${opPreview.username.replace(/^@/, "")}` : ""}{" "}
+                  {opPreview.account_number ? `· ${opPreview.account_number}` : ""}
+                </div>
               </div>
             )}
             {rail === "openpay" && opError && (
@@ -171,21 +244,46 @@ function SendPage() {
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 disabled={rail === "openpay"}
               >
-                <option>OUSD</option>{rail === "wallet" && <option>PI</option>}
+                <option>OUSD</option>
+                {rail === "wallet" && <option>PI</option>}
               </select>
             </Field>
-            <Field className="col-span-2" label={`Amount (Balance: ${formatNumber(form.asset === "OUSD" ? wallet?.ousd_balance : wallet?.pi_balance, 4)})`}>
-              <Input value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" type="number" min="0" step="any" required />
+            <Field
+              className="col-span-2"
+              label={`Amount (Balance: ${formatNumber(form.asset === "OUSD" ? wallet?.ousd_balance : wallet?.pi_balance, 4)})`}
+            >
+              <Input
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                placeholder="0.00"
+                type="number"
+                min="0"
+                step="any"
+                required
+              />
             </Field>
           </div>
           <Field label="Note (optional)">
-            <Textarea value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })} maxLength={140} rows={2} />
+            <Textarea
+              value={form.memo}
+              onChange={(e) => setForm({ ...form, memo: e.target.value })}
+              maxLength={140}
+              rows={2}
+            />
           </Field>
-          <Button type="submit" disabled={busy} className={cn(
-            "h-12 w-full rounded-2xl text-base font-semibold text-primary-foreground shadow-glow",
-            rail === "openpay" ? "bg-[#0070BA] hover:opacity-90" : "bg-gradient-primary",
-          )}>
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SendIcon className="mr-2 h-4 w-4" />}
+          <Button
+            type="submit"
+            disabled={busy}
+            className={cn(
+              "h-12 w-full rounded-2xl text-base font-semibold text-primary-foreground shadow-glow",
+              rail === "openpay" ? "bg-[#0070BA] hover:opacity-90" : "bg-gradient-primary",
+            )}
+          >
+            {busy ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <SendIcon className="mr-2 h-4 w-4" />
+            )}
             {rail === "openpay" ? "Send via OpenPay" : "Send"}
           </Button>
         </form>
@@ -194,7 +292,21 @@ function SendPage() {
   );
 }
 
-
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-  return <div className={className}><Label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</Label>{children}</div>;
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <Label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
 }

@@ -1,8 +1,7 @@
 // OpenPay Pro Partner Transfer API — server-only client.
 // Do NOT import this file from route/component modules directly.
 
-const DEFAULT_BASE =
-  "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
+const DEFAULT_BASE = "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
 
 export type OpenPayAccount = {
   name?: string;
@@ -33,8 +32,11 @@ export type OpenPayTransfer = {
 };
 
 function cfg() {
-  const key = process.env.OPENPAY_PARTNER_API_KEY;
-  const base = process.env.OPENPAY_PARTNER_API_BASE || DEFAULT_BASE;
+  const key =
+    process.env.OPENPAY_PARTNER_API_KEY ||
+    process.env.OPENPAY_API_KEY ||
+    process.env.OPENPAY_TRANSFER_API_KEY;
+  const base = process.env.OPENPAY_PARTNER_API_BASE || process.env.OPENPAY_API_BASE || DEFAULT_BASE;
   if (!key) throw new Error("OPENPAY_PARTNER_API_KEY not configured");
   return { key, base };
 }
@@ -56,7 +58,11 @@ async function call<T>(
   });
   const text = await res.text();
   let body: any = null;
-  try { body = text ? JSON.parse(text) : null; } catch { body = { raw: text }; }
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = { raw: text };
+  }
   if (!res.ok) {
     const msg = body?.error || body?.message || `OpenPay ${res.status}`;
     throw new Error(msg);
@@ -83,18 +89,14 @@ export const openpayPro = {
       body: JSON.stringify({ currency: "OUSD", ...body }),
     }),
 
-  getCharge: (id: string) =>
-    call<OpenPayCharge>(`/charges/${encodeURIComponent(id)}`),
+  getCharge: (id: string) => call<OpenPayCharge>(`/charges/${encodeURIComponent(id)}`),
 
   cancelCharge: (id: string) =>
     call<OpenPayCharge>(`/charges/${encodeURIComponent(id)}/cancel`, {
       method: "POST",
     }),
 
-  sendTransfer: (
-    body: { to: string; amount: number; note?: string },
-    idempotencyKey?: string,
-  ) =>
+  sendTransfer: (body: { to: string; amount: number; note?: string }, idempotencyKey?: string) =>
     call<OpenPayTransfer>(
       `/transfers`,
       { method: "POST", body: JSON.stringify(body) },

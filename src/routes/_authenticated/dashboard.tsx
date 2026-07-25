@@ -16,6 +16,7 @@ import {
   Copy,
   Check,
   CheckCircle2,
+  Blocks,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
+import { OusdIcon } from "@/components/ousd-icon";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -61,6 +63,11 @@ const ACTIONS = [
   { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
+  {
+    label: "Blockchain",
+    icon: Blocks,
+    href: "https://www.openpyledger.space/pro",
+  },
 ] as const;
 
 function Dashboard() {
@@ -251,7 +258,7 @@ function Dashboard() {
       </div>
 
       {/* Big gradient balance card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-glow md:hidden">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-white shadow-glow md:hidden">
         <div className="absolute inset-0 opacity-40" aria-hidden>
           <div className="absolute -left-16 -top-10 h-56 w-56 rounded-full bg-mint blur-3xl" />
           <div className="absolute -bottom-20 -right-10 h-56 w-56 rounded-full bg-primary-glow blur-3xl" />
@@ -260,10 +267,10 @@ function Dashboard() {
           <button
             type="button"
             onClick={cycleCurrency}
-            className="flex items-center gap-2 text-5xl font-bold tracking-tight tabular-nums"
+            className="flex items-center gap-2 text-5xl font-bold tracking-tight text-white tabular-nums"
           >
             {hideBalance ? "••••" : formatCurrency(totalUsd, currency)}
-            <ChevronsUpDown className="h-5 w-5 opacity-70" />
+            <ChevronsUpDown className="h-5 w-5 text-white/70" />
           </button>
           <button
             type="button"
@@ -283,14 +290,20 @@ function Dashboard() {
       </div>
 
       {/* Actions bar */}
-      <div className="grid grid-cols-4 gap-2 md:grid-cols-6 md:gap-3">
+      <div className="grid grid-cols-4 gap-2 md:grid-cols-7 md:gap-3">
         {ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
             <button
               key={a.label}
               type="button"
-              onClick={() => navigate({ to: a.to })}
+              onClick={() => {
+                if ("href" in a && a.href) {
+                  window.open(a.href, "_blank", "noopener,noreferrer");
+                  return;
+                }
+                if ("to" in a && a.to) navigate({ to: a.to });
+              }}
               className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow md:px-3 md:py-4"
             >
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-sidebar-accent text-primary transition-colors group-hover:bg-gradient-primary group-hover:text-primary-foreground">
@@ -318,12 +331,10 @@ function Dashboard() {
                 {ousdBalance > 0 && (
                   <li className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-mint text-[10px] font-bold text-mint-foreground">
-                        OUSD
-                      </div>
+                      <OusdIcon />
                       <div>
                         <div className="flex items-center gap-2 text-sm font-semibold">
-                          OpenPay USD
+                          OpenPay OUSD
                           <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
                             Earn
                           </span>

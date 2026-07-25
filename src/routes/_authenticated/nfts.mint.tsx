@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { uploadMedia } from "@/lib/upload";
 
 
@@ -31,6 +31,7 @@ const schema = z.object({
 function MintNFT() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -86,6 +87,24 @@ function MintNFT() {
         listed: true,
       });
       if (error) throw error;
+
+      // Record mint on the public ledger (mirrored via trigger)
+      const { error: txErr } = await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        type: "mint",
+        status: "confirmed",
+        token_symbol: "NFT",
+        counterparty: parsed.data.name,
+        amount: Number(parsed.data.price) || 0,
+        usd_value: Number(parsed.data.price) || 0,
+        memo: `Minted NFT · ${parsed.data.name}`,
+      });
+      if (txErr) throw txErr;
+
+      void qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
+      void qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      void qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+
       toast.success("NFT minted!");
       navigate({ to: "/nfts" });
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }

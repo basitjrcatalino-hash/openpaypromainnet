@@ -14,6 +14,7 @@ import {
   BookOpen,
   Plug,
   CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +34,7 @@ import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { checkIsAdmin, claimFirstAdmin } from "@/lib/topup-admin.functions";
 import {
   activateLedgerApiKey,
+  backfillLedgerEntries,
   createLedgerApiKey,
   getLedgerOverview,
   listLedgerApiKeys,
@@ -45,6 +47,8 @@ export const Route = createFileRoute("/_authenticated/ledger")({
   head: () => ({ meta: [{ title: "Ledger API — OpenPay Pro" }] }),
   component: LedgerPage,
 });
+
+const TX_TYPES = ["all", "send", "receive", "buy", "sell", "swap", "mint", "reward"] as const;
 
 function useApiBase() {
   return useMemo(
@@ -72,6 +76,7 @@ function LedgerPage() {
 
   const [label, setLabel] = useState("openledger prod");
   const [plaintextKey, setPlaintextKey] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<(typeof TX_TYPES)[number]>("all");
 
   const overviewQ = useQuery({
     queryKey: ["ledger-overview"],
@@ -80,8 +85,14 @@ function LedgerPage() {
   });
 
   const entriesQ = useQuery({
-    queryKey: ["ledger-entries"],
-    queryFn: () => listEntries(),
+    queryKey: ["ledger-entries", typeFilter],
+    queryFn: () =>
+      listEntries({
+        data: {
+          type: typeFilter === "all" ? null : typeFilter,
+          limit: 200,
+        },
+      }),
     refetchInterval: 15_000,
   });
 
@@ -92,6 +103,21 @@ function LedgerPage() {
     queryKey: ["ledger-api-keys"],
     queryFn: () => listKeys(),
     enabled: isAdmin,
+  });
+
+  const backfill = useServerFn(backfillLedgerEntries);
+  const syncM = useMutation({
+    mutationFn: () => backfill(),
+    onSuccess: (res) => {
+      void qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+      void qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      toast.success(
+        res.inserted > 0
+          ? `Synced ${res.inserted} missing transaction${res.inserted === 1 ? "" : "s"} to ledger`
+          : "Ledger already complete — all transactions mirrored",
+      );
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   const createM = useMutation({
@@ -143,14 +169,15 @@ do {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Total entries", value: String(overview?.total_entries ?? "—") },
-          { label: "Latest sequence", value: String(overview?.latest_sequence ?? "—") },
+          { label: "Ledger entries", value: String(overview?.total_entries ?? "—") },
+          { label: "Wallet transactions", value: String(overview?.total_transactions ?? "—") },
           {
-            label: "Latest activity",
-            value: overview?.latest_at ? new Date(overview.latest_at).toLocaleString() : "—",
+            label: "Missing from ledger",
+            value: String(overview?.missing ?? "—"),
           },
+          { label: "Latest sequence", value: String(overview?.latest_sequence ?? "—") },
         ].map((s) => (
           <Card key={s.label} className="glass-strong rounded-2xl border-border/60 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -160,6 +187,44 @@ do {
           </Card>
         ))}
       </div>
+
+      {/* Coverage by type + sync */}
+      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Full transaction coverage
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Mirrors send, receive, top-up (buy), sell, swap, mint & reward into the public ledger
+              for OpenLedger.
+            </p>
+          </div>
+          {isAdmin && (
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={syncM.isPending}
+              onClick={() => syncM.mutate()}
+            >
+              {syncM.isPending ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1.5 h-4 w-4" />
+              )}
+              Sync all transactions
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(["send", "receive", "buy", "sell", "swap", "mint", "reward"] as const).map((t) => (
+            <Badge key={t} variant="outline" className="rounded-full capitalize">
+              {t}
+              {t === "buy" ? " · top-up" : ""} · {overview?.by_type?.[t] ?? 0}
+            </Badge>
+          ))}
+        </div>
+      </Card>
 
       {/* OpenLedger integration */}
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
@@ -396,7 +461,7 @@ do {
 
       {/* Recent entries */}
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Recent ledger entries
           </h2>
@@ -405,6 +470,23 @@ do {
               Wallet history <ExternalLink className="ml-1 h-3 w-3" />
             </Link>
           </Button>
+        </div>
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {TX_TYPES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTypeFilter(t)}
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-semibold capitalize transition-colors",
+                typeFilter === t
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {t === "buy" ? "buy · top-up" : t}
+            </button>
+          ))}
         </div>
         {entriesQ.isLoading ? (
           <div className="grid place-items-center py-10">

@@ -369,7 +369,7 @@ function SidebarInner({
       </button>
 
       {/* Big balance card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-glow">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-white shadow-glow">
         <div className="absolute inset-0 opacity-40" aria-hidden>
           <div className="absolute -left-16 -top-10 h-48 w-48 rounded-full bg-mint blur-3xl" />
           <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-primary-glow blur-3xl" />
@@ -378,11 +378,11 @@ function SidebarInner({
           <button
             type="button"
             onClick={cycleCurrency}
-            className="flex items-center gap-2 text-4xl font-bold tracking-tight tabular-nums"
+            className="flex items-center gap-2 text-4xl font-bold tracking-tight text-white tabular-nums"
             aria-label="Change currency"
           >
             {hideBalance ? "••••" : formatCurrency(totalUsd, currency)}
-            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold">
+            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white">
               {currency}
             </span>
           </button>

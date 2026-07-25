@@ -47,14 +47,14 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
 
           await admin.from("transactions").insert({
             wallet_id: wallet.id,
-            user_id: userId,
             type: "buy",
-            asset_symbol: "OUSD",
+            status: "confirmed",
+            token_symbol: "OUSD",
+            counterparty: `pi:${paymentId}`,
             amount: ousdAmount,
             usd_value: ousdAmount,
-            status: "completed",
-            reference: `pi:${paymentId}`,
-            metadata: { provider: "pi-network", txid, paymentId },
+            tx_hash: txid,
+            memo: `Pi Network top-up · ${payment.memo ?? paymentId}`,
           });
 
           await admin.from("pi_payments").upsert(

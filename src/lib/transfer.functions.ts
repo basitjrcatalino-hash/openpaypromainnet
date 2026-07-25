@@ -65,6 +65,7 @@ export const sendAsset = createServerFn({ method: "POST" })
         await supabaseAdmin.from("transactions").insert({
           wallet_id: rcpt.id,
           type: "receive",
+          status: "confirmed",
           token_symbol: asset,
           counterparty: wallet.address,
           amount,
@@ -80,6 +81,7 @@ export const sendAsset = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "send",
+      status: "confirmed",
       token_symbol: asset,
       counterparty: toAddress,
       amount,
@@ -121,6 +123,7 @@ export const topUpOUSD = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "buy",
+      status: "confirmed",
       token_symbol: "OUSD",
       counterparty: `${method}:${reference ?? "openpay"}`,
       amount,

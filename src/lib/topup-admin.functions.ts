@@ -180,6 +180,7 @@ export const redeemVoucher = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "buy",
+      status: "confirmed",
       token_symbol: "OUSD",
       counterparty: `voucher:${claimed.code}`,
       amount,

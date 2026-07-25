@@ -2,7 +2,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Sparkles, Ticket, Wallet as WalletIcon, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Sparkles, Wallet as WalletIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
-import { getPublicTopupInfo, redeemVoucher } from "@/lib/topup-admin.functions";
 import { createOpenPayTopupCharge, settleOpenPayCharge } from "@/lib/openpay-pro.functions";
 
 export const Route = createFileRoute("/_authenticated/topup")({
@@ -26,11 +25,10 @@ export const Route = createFileRoute("/_authenticated/topup")({
   component: TopUpPage,
 });
 
-type Method = "openpay_balance" | "pi" | "voucher";
+type Method = "openpay_balance" | "pi";
 const methods: { id: Method; label: string; icon: any; desc: string }[] = [
   { id: "openpay_balance", label: "OpenPay Balance", icon: WalletIcon, desc: "Pay from your OpenPay balance · instant credit" },
   { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
-  { id: "voucher", label: "Voucher code", icon: Ticket, desc: "Redeem a voucher code from an admin" },
 ];
 
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -46,13 +44,9 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
-  const [voucherCode, setVoucherCode] = useState("");
 
-  const getInfo = useServerFn(getPublicTopupInfo);
-  const redeem = useServerFn(redeemVoucher);
   const createCharge = useServerFn(createOpenPayTopupCharge);
   const settleCharge = useServerFn(settleOpenPayCharge);
-  const infoQ = useQuery({ queryKey: ["public-topup"], queryFn: () => getInfo() });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -85,21 +79,6 @@ function TopUpPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (method === "voucher") {
-      const code = voucherCode.trim();
-      if (!code) { toast.error("Enter your voucher code"); return; }
-      setBusy(true);
-      try {
-        const r = await redeem({ data: { code } });
-        toast.success(`Voucher redeemed · ${r.amount} OUSD credited`);
-        setVoucherCode("");
-        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-        qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
-      } catch (err) { toast.error((err as Error).message); }
-      finally { setBusy(false); }
-      return;
-    }
-
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
 
@@ -117,14 +96,16 @@ function TopUpPage() {
       toast.success(`Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      qc.invalidateQueries({ queryKey: ["ledger-overview"] });
       setAmount("");
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   }
 
   const cta =
-    method === "voucher" ? "Redeem voucher"
-    : method === "openpay_balance" ? `Pay ${amount ? formatUSD(Number(amount)) : ""} with OpenPay`
-    : `Top up ${amount ? formatUSD(Number(amount)) : ""}`;
+    method === "openpay_balance"
+      ? `Pay ${amount ? formatUSD(Number(amount)) : ""} with OpenPay`
+      : `Top up ${amount ? formatUSD(Number(amount)) : ""}`;
 
   return (
     <div className="mx-auto max-w-lg space-y-5">
@@ -133,27 +114,25 @@ function TopUpPage() {
         <p className="text-sm text-muted-foreground">Add OUSD to your wallet instantly</p>
       </div>
 
-      <Card className="border-0 bg-gradient-primary p-5 text-primary-foreground shadow-glow">
+      <Card className="border-0 bg-gradient-primary p-5 text-white shadow-glow">
         <div className="text-xs uppercase tracking-widest opacity-80">Current OUSD balance</div>
         <div className="text-3xl font-bold tabular-nums">{formatUSD(Number(wallet?.ousd_balance ?? 0))}</div>
       </Card>
 
       <Card className="glass-strong rounded-3xl border-border/60 p-5">
         <form onSubmit={submit} className="space-y-5">
-          {method !== "voucher" && (
-            <div>
-              <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (USD)</Label>
-              <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="1" step="any" required className="h-14 text-2xl font-bold tabular-nums" />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {presets.map((p) => (
-                  <button key={p} type="button" onClick={() => setAmount(String(p))} className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    amount === String(p) ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted",
-                  )}>${p}</button>
-                ))}
-              </div>
+          <div>
+            <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (USD)</Label>
+            <Input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="1" step="any" required className="h-14 text-2xl font-bold tabular-nums" />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {presets.map((p) => (
+                <button key={p} type="button" onClick={() => setAmount(String(p))} className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  amount === String(p) ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted",
+                )}>${p}</button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div>
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Payment method</Label>
@@ -178,33 +157,6 @@ function TopUpPage() {
           {method === "openpay_balance" && (
             <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               You'll be redirected to a secure OpenPay checkout to pay from your OpenPay balance. On success we credit your OUSD balance instantly.
-            </div>
-          )}
-
-          {method === "voucher" && (
-            <div className="space-y-3 rounded-2xl border border-border bg-muted/30 p-4">
-              {infoQ.data?.openpay_payment_url && (
-                <a
-                  href={infoQ.data.openpay_payment_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#0070BA] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                >
-                  Open admin payment link <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              )}
-              {infoQ.data?.instructions && (
-                <p className="whitespace-pre-line text-xs text-muted-foreground">{infoQ.data.instructions}</p>
-              )}
-              <div>
-                <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Voucher code</Label>
-                <Input
-                  value={voucherCode}
-                  onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                  placeholder="XXXX-XXXX-XXXX"
-                  className="font-mono tracking-wider"
-                />
-              </div>
             </div>
           )}
 

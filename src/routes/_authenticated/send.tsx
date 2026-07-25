@@ -142,6 +142,8 @@ function SendPage() {
       setOpPreview(null);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      qc.invalidateQueries({ queryKey: ["ledger-overview"] });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

@@ -56,17 +56,33 @@ function SwapPage() {
     if (!wallet || !fromToken || !toToken || !amount) return;
     setBusy(true);
     try {
-      await supabase.from("transactions").insert({
-        wallet_id: wallet.id, type: "swap",
+      const amt = Number(amount);
+      if (!Number.isFinite(amt) || amt <= 0) throw new Error("Enter a valid amount");
+      const { error } = await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        type: "swap",
+        status: "confirmed",
         token_symbol: `${fromToken.symbol}→${toToken.symbol}`,
-        amount: Number(amount),
-        usd_value: Number(amount) * Number(fromToken.price_usd),
-        memo: `Swapped to ${formatNumber(output, 4)} ${toToken.symbol}`,
+        counterparty: toToken.symbol,
+        amount: amt,
+        usd_value: amt * Number(fromToken.price_usd ?? 0),
+        memo: `Swapped ${amt} ${fromToken.symbol} → ${formatNumber(output, 4)} ${toToken.symbol}`,
       });
-      toast.success(`Swapped ${amount} ${fromToken.symbol} for ${formatNumber(output, 4)} ${toToken.symbol}`);
+      if (error) throw error;
+      toast.success(
+        `Swapped ${amount} ${fromToken.symbol} for ${formatNumber(output, 4)} ${toToken.symbol}`,
+      );
       setAmount("");
-      qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
-    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+      void qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
+      void qc.invalidateQueries({ queryKey: ["recent-txs"] });
+      void qc.invalidateQueries({ queryKey: ["all-txs"] });
+      void qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      void qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

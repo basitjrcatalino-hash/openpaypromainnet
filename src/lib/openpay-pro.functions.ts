@@ -138,6 +138,7 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "buy",
+      status: "confirmed",
       token_symbol: "OUSD",
       counterparty,
       amount,
@@ -213,6 +214,7 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
         await supabaseAdmin.from("transactions").insert({
           wallet_id: rcpt.id,
           type: "receive",
+          status: "confirmed",
           token_symbol: "OUSD",
           counterparty: wallet.address,
           amount: data.amount,
@@ -224,6 +226,7 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
       await supabase.from("transactions").insert({
         wallet_id: wallet.id,
         type: "send",
+        status: "confirmed",
         token_symbol: "OUSD",
         counterparty: localAddress,
         amount: data.amount,
@@ -261,6 +264,7 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: "send",
+      status: "confirmed",
       token_symbol: "OUSD",
       counterparty: `openpay:${to}`,
       amount: data.amount,
@@ -455,6 +459,7 @@ export const syncOpenPayOUSD = createServerFn({ method: "POST" })
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
       type: delta > 0 ? "buy" : "send",
+      status: "confirmed",
       token_symbol: "OUSD",
       counterparty: `openpay-sync:${link.openpayUserId ?? link.identifier}`,
       amount: Math.abs(delta),

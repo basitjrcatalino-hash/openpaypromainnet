@@ -7,6 +7,20 @@ Every row in `transactions` is mirrored automatically into `ledger_entries` via
 a database trigger. Entries are immutable and monotonically ordered by
 `sequence`.
 
+### Covered transaction types
+
+| Type | Source in OpenPay Pro |
+|------|------------------------|
+| `send` | Wallet transfer, OpenPay send |
+| `receive` | Incoming transfer credit |
+| `buy` | Top-up (card/bank/OpenPay checkout), Pi Network top-up, voucher redeem, OpenPay sync credit |
+| `sell` | Sell / cash-out flows |
+| `swap` | Token swap |
+| `mint` | NFT mint |
+| `reward` | Rewards / promotions |
+
+Admins can run **Sync all transactions** on `/ledger` (or RPC `backfill_ledger_entries`) to mirror any historical rows that predate the trigger.
+
 ---
 
 ## Base URL
@@ -49,7 +63,7 @@ List ledger entries, newest first.
 | `limit`  | int    | 1–500 (default `100`)                                |
 | `cursor` | int    | `sequence` from the previous page's `next_cursor`    |
 | `asset`  | string | filter by token symbol (e.g. `OUSD`, `PI`)           |
-| `type`   | string | `send` \| `receive` \| `buy` \| `sell` \| `swap` \| `mint` |
+| `type`   | string | `send` \| `receive` \| `buy` (top-up) \| `sell` \| `swap` \| `mint` \| `reward` |
 | `address`| string | matches either `from_address` or `to_address`        |
 | `since`  | ISO ts | only entries at/after this timestamp                 |
 
@@ -127,7 +141,7 @@ curl -H "x-api-key: $KEY" \
 | `asset`       | text           | token symbol                       |
 | `amount`      | numeric(38,8)  |                                    |
 | `usd_value`   | numeric(38,2)  |                                    |
-| `type`        | text           | send / receive / buy / sell / swap / mint |
+| `type`        | text           | send / receive / buy (top-up) / sell / swap / mint / reward |
 | `status`      | text           | pending / confirmed / failed       |
 | `tx_hash`     | text           | on-chain hash if any               |
 | `memo`        | text           |                                    |

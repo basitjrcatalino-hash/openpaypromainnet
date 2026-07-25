@@ -155,6 +155,8 @@ export function verifyConnectCode(code: string): ConnectAccountPayload {
 const DEFAULT_CLIENT_ID = "e9248f5d-3971-4cbc-9032-9b678c9b71ae";
 /** Partner app redirect URIs are registered for production only — never send localhost. */
 const PRODUCTION_ORIGIN = "https://openpaypromainnet.lovable.app";
+/** Canonical Connect page — openpay.lovable.app/connect 404s; openpy.space/connect works. */
+const DEFAULT_AUTHORIZE_URL = "https://openpy.space/connect";
 
 function isUuid(v: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -174,6 +176,38 @@ function resolveClientId(explicit?: string): string {
     if (v && isUuid(v)) return v;
   }
   return DEFAULT_CLIENT_ID;
+}
+
+/**
+ * Always land on the live OpenPay Connect page.
+ * Rewrites stale Lovable secrets (openpay.lovable.app/connect → 404).
+ */
+function resolveAuthorizeUrl(): string {
+  const raw = (
+    process.env.OPENPAY_OAUTH_AUTHORIZE_URL ||
+    process.env.OPENPAY_CONNECT_AUTHORIZE_URL ||
+    DEFAULT_AUTHORIZE_URL
+  ).trim();
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.toLowerCase();
+    // Preview host has no /connect route in production
+    if (host === "openpay.lovable.app" || host.endsWith(".lovableproject.com")) {
+      return DEFAULT_AUTHORIZE_URL;
+    }
+    if (host === "openpy.space") {
+      u.protocol = "https:";
+      u.pathname = "/connect";
+      u.search = "";
+      u.hash = "";
+      return `${u.origin}/connect`;
+    }
+    // Unknown host with /connect path — allow; otherwise fall back
+    if (u.pathname.replace(/\/$/, "") === "/connect") return `${u.origin}/connect`;
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_AUTHORIZE_URL;
 }
 
 /**
@@ -206,13 +240,9 @@ export function buildOpenPayAuthorizeUrl(opts: {
   state: string;
   clientId?: string;
 }): { authorize_url: string; redirect_uri: string } {
-  const base =
-    process.env.OPENPAY_OAUTH_AUTHORIZE_URL ||
-    process.env.OPENPAY_CONNECT_AUTHORIZE_URL ||
-    "https://openpy.space/connect";
   const clientId = resolveClientId(opts.clientId);
   const redirect_uri = `${resolvePartnerRedirectOrigin(opts.origin)}/openpay/connect/callback`;
-  const url = new URL(base);
+  const url = new URL(resolveAuthorizeUrl());
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", redirect_uri);
   url.searchParams.set("scope", "profile balance");

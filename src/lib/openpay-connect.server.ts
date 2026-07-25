@@ -153,6 +153,8 @@ export function verifyConnectCode(code: string): ConnectAccountPayload {
 }
 
 const DEFAULT_CLIENT_ID = "e9248f5d-3971-4cbc-9032-9b678c9b71ae";
+/** Partner app redirect URIs are registered for production only — never send localhost. */
+const PRODUCTION_ORIGIN = "https://openpaypromainnet.lovable.app";
 
 function isUuid(v: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -174,6 +176,31 @@ function resolveClientId(explicit?: string): string {
   return DEFAULT_CLIENT_ID;
 }
 
+/**
+ * Origin used in partner redirect_uri / success_url.
+ * Localhost is never sent — OpenPay only accepts registered production URIs.
+ */
+export function resolvePartnerRedirectOrigin(requested?: string): string {
+  const configured = (
+    process.env.OPENPAY_OAUTH_PUBLIC_ORIGIN ||
+    process.env.OPENPAY_PRO_PUBLIC_ORIGIN ||
+    ""
+  )
+    .trim()
+    .replace(/\/$/, "");
+  if (configured) return configured;
+
+  const req = (requested || "").trim().replace(/\/$/, "");
+  if (!req || /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?$/i.test(req)) {
+    return PRODUCTION_ORIGIN;
+  }
+  // Lovable preview hosts also need exact URI registration — prefer production
+  if (/lovable\.app$/i.test(new URL(req).hostname) && !req.includes("openpaypromainnet")) {
+    return PRODUCTION_ORIGIN;
+  }
+  return req;
+}
+
 export function buildOpenPayAuthorizeUrl(opts: {
   origin: string;
   state: string;
@@ -184,7 +211,7 @@ export function buildOpenPayAuthorizeUrl(opts: {
     process.env.OPENPAY_CONNECT_AUTHORIZE_URL ||
     "https://openpay.lovable.app/connect";
   const clientId = resolveClientId(opts.clientId);
-  const redirect_uri = `${opts.origin}/openpay/connect/callback`;
+  const redirect_uri = `${resolvePartnerRedirectOrigin(opts.origin)}/openpay/connect/callback`;
   const url = new URL(base);
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", redirect_uri);

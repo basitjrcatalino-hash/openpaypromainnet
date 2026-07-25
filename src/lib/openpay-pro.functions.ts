@@ -77,8 +77,10 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
+    const { resolvePartnerRedirectOrigin } = await import("./openpay-connect.server");
     const { supabase, userId } = context;
     const reference = `topup_${userId}_${Date.now()}`;
+    const origin = resolvePartnerRedirectOrigin(data.origin);
 
     // Prefer PayButton checkout when the partner API supports /charges
     try {
@@ -87,8 +89,8 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         currency: "OUSD",
         description: `OUSD top-up · OpenPay Pro`,
         reference,
-        success_url: `${data.origin}/topup?openpay_return=1`,
-        cancel_url: `${data.origin}/topup?openpay_cancel=1`,
+        success_url: `${origin}/topup?openpay_return=1`,
+        cancel_url: `${origin}/topup?openpay_cancel=1`,
       });
       if (!charge?.checkout_url || !charge?.id) {
         throw new Error("OpenPay checkout unavailable");
@@ -510,13 +512,13 @@ export const startOpenPayConnect = createServerFn({ method: "POST" })
     z.object({ origin: z.string().url() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { createConnectState, buildOpenPayAuthorizeUrl } = await import(
-      "./openpay-connect.server"
-    );
-    const redirect_uri = `${data.origin}/openpay/connect/callback`;
+    const { createConnectState, buildOpenPayAuthorizeUrl, resolvePartnerRedirectOrigin } =
+      await import("./openpay-connect.server");
+    const origin = resolvePartnerRedirectOrigin(data.origin);
+    const redirect_uri = `${origin}/openpay/connect/callback`;
     const state = createConnectState(context.userId, redirect_uri);
     const { authorize_url } = buildOpenPayAuthorizeUrl({
-      origin: data.origin,
+      origin,
       state,
     });
     return { authorize_url, state, redirect_uri, expires_in: 600 };

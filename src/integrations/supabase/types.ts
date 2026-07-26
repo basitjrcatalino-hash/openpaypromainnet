@@ -778,6 +778,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      backfill_ledger_entries: { Args: never; Returns: Json }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

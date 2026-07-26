@@ -764,19 +764,12 @@ function OpenPayIntegrationCard({
         <div className="flex flex-wrap gap-2">
           {linked ? (
             <>
-              <Button variant="outline" className="rounded-full" disabled={busy} onClick={sync}>
-                {busy ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                Sync OUSD
-              </Button>
               <Button variant="ghost" className="rounded-full" disabled={busy} onClick={disconnect}>
                 Disconnect
               </Button>
             </>
           ) : (
+
             <Button
               className="rounded-full bg-gradient-primary text-primary-foreground"
               disabled={busy}

@@ -528,7 +528,7 @@ do {
                     </td>
                     <td className="py-2 text-right">
                       <a
-                        href={openLedgerProEntryUrl(e.sequence)}
+                        href={openLedgerProEntryUrl(e.id ?? e.sequence)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"

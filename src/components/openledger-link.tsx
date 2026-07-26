@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
-export const OPENLEDGER_BASE = "https://openledger.lovable.app";
+export const OPENLEDGER_BASE = "https://www.openpyledger.space";
 
 /** OpenLedger SHA-256 ledger hash (64 hex), with or without 0x. */
 export function isOpenLedgerHash(value: string | null | undefined): boolean {
@@ -14,26 +14,26 @@ export function openLedgerTxUrl(hash: string): string {
   return `${OPENLEDGER_BASE}/tx/${h}`;
 }
 
-/** Exact Pro ledger entry page — prefer numeric sequence (e.g. /pro/entry/28). */
+/** Exact Pro ledger entry page, e.g. /pro/entry/{uuid}. */
 export function openLedgerProEntryUrl(idOrSequence: string | number): string {
   return `${OPENLEDGER_BASE}/pro/entry/${idOrSequence}`;
 }
 
 /**
  * Resolve the best OpenLedger deep-link for a Pro wallet tx.
- * Prefer sequence → exact `/pro/entry/{n}` detail page on OpenLedger.
- * Fall back to SHA-256 `/tx/{hash}`, then UUID id.
+ * Prefer the entry UUID → exact `/pro/entry/{uuid}` detail page.
+ * Fall back to sequence, then SHA-256 `/tx/{hash}`.
  */
 export function resolveOpenLedgerHref(opts: {
   hash?: string | null;
   proEntryId?: string | null;
   proSequence?: number | null;
 }): string | null {
+  if (opts.proEntryId) return openLedgerProEntryUrl(opts.proEntryId);
   if (opts.proSequence != null && Number.isFinite(Number(opts.proSequence))) {
     return openLedgerProEntryUrl(Number(opts.proSequence));
   }
   if (opts.hash && isOpenLedgerHash(opts.hash)) return openLedgerTxUrl(opts.hash);
-  if (opts.proEntryId) return openLedgerProEntryUrl(opts.proEntryId);
   return null;
 }
 

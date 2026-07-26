@@ -161,13 +161,12 @@ export const redeemVoucher = createServerFn({ method: "POST" })
     if (cErr) throw new Error(cErr.message);
     if (!claimed) throw new Error("Voucher already redeemed");
 
-    const { data: wallet, error: wErr } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (wErr || !wallet) throw new Error("Active wallet not found");
+    const { fetchActiveWallet } = await import("./wallet-utils");
+    const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
+      supabase,
+      userId,
+    );
+    if (!wallet) throw new Error("Active wallet not found");
 
     const amount = Number(claimed.amount_ousd);
     const newBal = Number(wallet.ousd_balance ?? 0) + amount;

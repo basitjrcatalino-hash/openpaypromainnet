@@ -72,8 +72,17 @@ function TopUpPage() {
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
-    queryFn: async () =>
-      (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle()).data,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_active", { ascending: false })
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
   });
 
   const { data: openpayLink } = useQuery({
@@ -129,6 +138,7 @@ function TopUpPage() {
               /* ignore */
             }
             qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            qc.invalidateQueries({ queryKey: ["wallets", user.id] });
             qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
             qc.invalidateQueries({ queryKey: ["ledger-entries"] });
             qc.invalidateQueries({ queryKey: ["ledger-overview"] });
@@ -168,6 +178,7 @@ function TopUpPage() {
         if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
         else toast.message(`OpenPay charge status: ${r.status}`);
         qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+        qc.invalidateQueries({ queryKey: ["wallets", user.id] });
         qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
         qc.invalidateQueries({ queryKey: ["ledger-entries"] });
         qc.invalidateQueries({ queryKey: ["ledger-overview"] });
@@ -211,6 +222,7 @@ function TopUpPage() {
           /* ignore */
         }
         qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+        qc.invalidateQueries({ queryKey: ["wallets", user.id] });
         qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
         qc.invalidateQueries({ queryKey: ["ledger-entries"] });
         qc.invalidateQueries({ queryKey: ["ledger-overview"] });
@@ -239,8 +251,16 @@ function TopUpPage() {
           toast.error("Connect OpenPay in Settings first");
           return;
         }
+        if (!wallet?.id) {
+          toast.error("Select an active wallet first");
+          return;
+        }
         const res = await createCharge({
-          data: { amount: parsed.data.amount, origin: window.location.origin },
+          data: {
+            amount: parsed.data.amount,
+            origin: window.location.origin,
+            walletId: wallet.id,
+          },
         });
         if (res.mode === "checkout") {
           const charge = res.charge;
@@ -276,6 +296,7 @@ function TopUpPage() {
         `Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`,
       );
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["wallets", user.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       qc.invalidateQueries({ queryKey: ["ledger-entries"] });
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
@@ -303,7 +324,9 @@ function TopUpPage() {
       </div>
 
       <Card className="border-0 bg-gradient-primary p-5 text-white shadow-glow">
-        <div className="text-xs uppercase tracking-widest opacity-80">Current OUSD balance</div>
+        <div className="text-xs uppercase tracking-widest opacity-80">
+          Current OUSD balance · {wallet?.name ?? "Active wallet"}
+        </div>
         <div className="text-3xl font-bold tabular-nums">{formatUSD(Number(wallet?.ousd_balance ?? 0))}</div>
       </Card>
 
@@ -424,8 +447,11 @@ function TopUpPage() {
                     : openpayLink?.account_number
                       ? ` · ${openpayLink.account_number}`
                       : ""}
-                  . You’ll confirm on OpenPay — your OpenPay balance is debited, then this wallet is
-                  credited.
+                  . You’ll confirm on OpenPay — your OpenPay balance is debited, then{" "}
+                  <span className="font-semibold text-foreground">
+                    {wallet?.name ?? "your active wallet"}
+                  </span>{" "}
+                  is credited.
                 </>
               ) : (
                 <span className="flex flex-wrap items-center gap-2">

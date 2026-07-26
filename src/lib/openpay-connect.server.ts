@@ -8,6 +8,7 @@ const AUD = "openpay-pro-connect";
 
 function partnerKey(): string {
   const key = (
+    process.env.OPENPAY_CLIENT_SECRET ||
     process.env.OPENPAY_PARTNER_API_KEY ||
     process.env.OPENPAY_API_KEY ||
     process.env.OPENPAY_TRANSFER_API_KEY ||
@@ -16,10 +17,10 @@ function partnerKey(): string {
     .trim()
     // Lovable / dotenv sometimes keep surrounding quotes → invalid_client
     .replace(/^["']+|["']+$/g, "");
-  if (!key) throw new Error("OPENPAY_PARTNER_API_KEY not configured");
+  if (!key) throw new Error("OPENPAY_PARTNER_API_KEY / OPENPAY_CLIENT_SECRET not configured");
   if (!/^opk_(live|test)_/i.test(key)) {
     throw new Error(
-      "OPENPAY_PARTNER_API_KEY must be the opk_live_… key from your OpenPay partner app",
+      "OPENPAY_CLIENT_SECRET / OPENPAY_PARTNER_API_KEY must be the opk_live_… key from your OpenPay partner app",
     );
   }
   return key;
@@ -27,6 +28,7 @@ function partnerKey(): string {
 
 function partnerBase(): string {
   return (
+    process.env.OPENPAY_AUTH_API ||
     process.env.OPENPAY_PARTNER_API_BASE ||
     process.env.OPENPAY_API_BASE ||
     "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api"
@@ -59,7 +61,9 @@ function safeEq(a: string, b: string) {
 }
 
 export type ConnectStatePayload = {
+  /** Local Supabase user id for Connect; `"signin"` for Sign in with OpenPay */
   uid: string;
+  purpose?: "connect" | "signin";
   n: string;
   exp: number;
   redirect_uri: string;
@@ -103,6 +107,20 @@ export function createConnectState(
 ): string {
   const payload: ConnectStatePayload = {
     uid: userId,
+    purpose: "connect",
+    n: randomBytes(12).toString("hex"),
+    exp: Math.floor(Date.now() / 1000) + ttlSec,
+    redirect_uri: redirectUri,
+  };
+  const body = b64url(JSON.stringify(payload));
+  return `${body}.${hmacHex(body)}`;
+}
+
+/** CSRF state for unauthenticated Sign in with OpenPay (no local user yet). */
+export function createSignInState(redirectUri: string, ttlSec = 600): string {
+  const payload: ConnectStatePayload = {
+    uid: "signin",
+    purpose: "signin",
     n: randomBytes(12).toString("hex"),
     exp: Math.floor(Date.now() / 1000) + ttlSec,
     redirect_uri: redirectUri,
@@ -177,6 +195,7 @@ function isUuid(v: string) {
 function resolveClientId(explicit?: string): string {
   const candidates = [
     explicit,
+    process.env.OPENPAY_CLIENT_ID,
     process.env.OPENPAY_OAUTH_CLIENT_ID,
     process.env.OPENPAY_CONNECT_CLIENT_ID,
   ];
@@ -244,19 +263,48 @@ export function resolvePartnerRedirectOrigin(requested?: string): string {
   return req;
 }
 
+/** Sign-in callback path (must match partner app redirect URI exactly). */
+export const OPENPAY_SIGNIN_CALLBACK_PATH = "/auth/openpay/callback";
+/** Link-account callback (Settings → Connect OpenPay). */
+export const OPENPAY_CONNECT_CALLBACK_PATH = "/openpay/connect/callback";
+
 export function buildOpenPayAuthorizeUrl(opts: {
   origin: string;
   state: string;
   clientId?: string;
+  /** Default: connect callback. Use OPENPAY_SIGNIN_CALLBACK_PATH for auth. */
+  callbackPath?: string;
+  /** Space-separated scopes. Sign-in: `profile`. Connect: `profile balance`. */
+  scope?: string;
 }): { authorize_url: string; redirect_uri: string } {
   const clientId = resolveClientId(opts.clientId);
-  const redirect_uri = `${resolvePartnerRedirectOrigin(opts.origin)}/openpay/connect/callback`;
+  const path = (opts.callbackPath || OPENPAY_CONNECT_CALLBACK_PATH).replace(/\/$/, "") ||
+    OPENPAY_CONNECT_CALLBACK_PATH;
+  const configuredRedirect = (process.env.OPENPAY_REDIRECT_URI || "").trim();
+  const redirect_uri =
+    opts.callbackPath === OPENPAY_SIGNIN_CALLBACK_PATH && configuredRedirect
+      ? configuredRedirect.replace(/\/$/, "")
+      : `${resolvePartnerRedirectOrigin(opts.origin)}${path.startsWith("/") ? path : `/${path}`}`;
   const url = new URL(resolveAuthorizeUrl());
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", redirect_uri);
-  url.searchParams.set("scope", "profile balance");
+  url.searchParams.set("scope", opts.scope || "profile balance");
   url.searchParams.set("state", opts.state);
+  url.searchParams.set("response_type", "code");
   return { authorize_url: url.toString(), redirect_uri };
+}
+
+/** Build authorize URL for Sign in with OpenPay (scope=profile). */
+export function buildOpenPaySignInAuthorizeUrl(opts: {
+  origin: string;
+  state: string;
+  clientId?: string;
+}): { authorize_url: string; redirect_uri: string } {
+  return buildOpenPayAuthorizeUrl({
+    ...opts,
+    callbackPath: OPENPAY_SIGNIN_CALLBACK_PATH,
+    scope: "profile",
+  });
 }
 
 /** Exchange opc_… authorization code for opa_live_… access token. */

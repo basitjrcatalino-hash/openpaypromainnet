@@ -72,15 +72,25 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       .object({
         amount: z.number().positive().max(50_000),
         origin: z.string().url(),
+        /** Wallet that should receive the credit — must be the activated one */
+        walletId: z.string().uuid().optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
     const { resolvePartnerRedirectOrigin } = await import("./openpay-connect.server");
+    const { resolveCreditWallet } = await import("./wallet-utils");
     const { supabase, userId } = context;
     const origin = resolvePartnerRedirectOrigin(data.origin);
     const reference = `pro_topup_${userId.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
+
+    const creditWallet = await resolveCreditWallet<{ id: string; name?: string; address?: string }>(
+      supabase,
+      userId,
+      data.walletId,
+    );
+    if (!creditWallet) throw new Error("Active wallet not found — switch to a wallet and retry");
 
     const { data: prefs } = await supabase
       .from("user_preferences")
@@ -91,6 +101,15 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
     if (!link.linked) {
       throw new Error("Connect your OpenPay account in Settings before topping up with OpenPay Balance");
     }
+
+    const pendingBase = {
+      reference,
+      amount: data.amount,
+      wallet_id: creditWallet.id,
+      created_at: new Date().toISOString(),
+      payer_account: link.account_number || link.identifier,
+      payer_username: link.username,
+    };
 
     // 1) Prefer official PayButton checkout
     try {
@@ -104,7 +123,22 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       });
       if (!charge?.id) throw new Error("OpenPay checkout unavailable");
       charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
-      return { mode: "checkout" as const, charge, reference };
+
+      const notifications: Record<string, unknown> = {
+        ...((prefs?.notifications as Record<string, unknown>) ?? {}),
+        openpay_pending_topup: {
+          ...pendingBase,
+          charge_id: charge.id,
+          mode: "checkout",
+        },
+      };
+      await supabase.from("user_preferences").upsert({
+        user_id: userId,
+        notifications: notifications as never,
+        updated_at: new Date().toISOString(),
+      });
+
+      return { mode: "checkout" as const, charge, reference, wallet_id: creditWallet.id };
     } catch (e) {
       const msg = (e as Error).message || "";
       console.warn("[openpay topup] PayButton /charges failed, using /pay link:", msg);
@@ -154,17 +188,14 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       `&success_url=${encodeURIComponent(`${origin}/topup`)}` +
       `&cancel_url=${encodeURIComponent(`${origin}/topup`)}`;
 
-    // Persist pending so settle can match the incoming partner credit
+    // Persist pending so settle can credit the same activated wallet
     const notifications: Record<string, unknown> = {
       ...((prefs?.notifications as Record<string, unknown>) ?? {}),
       openpay_pending_topup: {
-        reference,
-        amount: data.amount,
-        created_at: new Date().toISOString(),
-        payer_account: link.account_number || link.identifier,
-        payer_username: link.username,
+        ...pendingBase,
         partner_username: partnerUsername,
         partner_account: partnerAccount,
+        mode: "pay_link",
       },
     };
     await supabase.from("user_preferences").upsert({
@@ -179,6 +210,7 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       reference,
       amount: data.amount,
       partner_username: partnerUsername,
+      wallet_id: creditWallet.id,
     };
   });
 
@@ -209,6 +241,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       | {
           reference?: string;
           amount?: number;
+          wallet_id?: string;
           payer_account?: string;
           payer_username?: string;
           created_at?: string;
@@ -288,13 +321,13 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       return { credited: true as const, status: "paid" as const, already: true };
     }
 
-    const { data: wallet, error: wErr } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (wErr || !wallet) throw new Error("Active wallet not found");
+    const { resolveCreditWallet } = await import("./wallet-utils");
+    const wallet = await resolveCreditWallet<{ id: string; ousd_balance?: number | null }>(
+      supabase,
+      userId,
+      pending.wallet_id,
+    );
+    if (!wallet) throw new Error("Active wallet not found");
 
     const newBal = Number(wallet.ousd_balance ?? 0) + amount;
     const { error: uErr } = await supabase
@@ -323,7 +356,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     });
 
-    return { credited: true as const, status: "paid" as const, balance: newBal };
+    return { credited: true as const, status: "paid" as const, balance: newBal, wallet_id: wallet.id };
   });
 
 // Poll after the buyer returns from OpenPay hosted checkout. If paid and not
@@ -351,13 +384,22 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) return { status: "paid", credited: true, already: true };
 
-    const { data: wallet, error: wErr } = await supabase
-      .from("wallets")
-      .select("*")
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
       .eq("user_id", userId)
-      .limit(1)
       .maybeSingle();
-    if (wErr || !wallet) throw new Error("Active wallet not found");
+    const pending = (prefs?.notifications as Record<string, unknown> | null)?.openpay_pending_topup as
+      | { wallet_id?: string; charge_id?: string }
+      | undefined;
+
+    const { resolveCreditWallet } = await import("./wallet-utils");
+    const wallet = await resolveCreditWallet<{ id: string; ousd_balance?: number | null }>(
+      supabase,
+      userId,
+      pending?.wallet_id,
+    );
+    if (!wallet) throw new Error("Active wallet not found");
 
     const amount = Number(charge.amount);
     const newBal = Number(wallet.ousd_balance ?? 0) + amount;
@@ -378,7 +420,17 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
       memo: `OpenPay checkout ${charge.id}`,
     });
 
-    return { status: "paid", credited: true, balance: newBal };
+    if (prefs?.notifications) {
+      const next = { ...((prefs.notifications as Record<string, unknown>) ?? {}) };
+      delete next.openpay_pending_topup;
+      await supabase.from("user_preferences").upsert({
+        user_id: userId,
+        notifications: next as never,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    return { status: "paid", credited: true, balance: newBal, wallet_id: wallet.id };
   });
 
 // Push OpenPay balance from the partner wallet to any OpenPay user
@@ -399,18 +451,18 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
+    const { resolveCreditWallet } = await import("./wallet-utils");
     const { findLocalProfileByHandle, findLocalWalletAddressByHandle, normalizeRecipientId } =
       await import("./recipient-resolve");
     const { supabase, userId } = context;
     const to = normalizeRecipientId(data.to);
 
-    const { data: wallet, error: wErr } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (wErr || !wallet) throw new Error("Active wallet not found");
+    const wallet = await resolveCreditWallet<{
+      id: string;
+      address?: string;
+      ousd_balance?: number | null;
+    }>(supabase, userId);
+    if (!wallet) throw new Error("Active wallet not found");
     const cur = Number(wallet.ousd_balance ?? 0);
     if (cur < data.amount) throw new Error("Insufficient OUSD balance");
 
@@ -579,6 +631,7 @@ export const getOpenPayLinkStatus = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .maybeSingle();
     const link = readOpenPayLink(prefs?.notifications);
+    // Persist linked status across sessions; expired tokens do not auto-unlink
     const { access_token: _t, ...safe } = link;
     return safe as OpenPayLinkRecord;
   });
@@ -670,6 +723,7 @@ export const unlinkOpenPayAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    // Only path that clears the OpenPay session — connect status otherwise persists
     await writeOpenPayLink(supabase, userId, null);
     return { linked: false as const };
   });
@@ -681,14 +735,18 @@ export const startOpenPayConnect = createServerFn({ method: "POST" })
     z.object({ origin: z.string().url() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { createConnectState, buildOpenPayAuthorizeUrl, resolvePartnerRedirectOrigin } =
+    // If already linked, still allow authorize so the user can refresh tokens —
+    // but never clear the existing link here. Unlink is disconnect-only.
+    const { createConnectState, buildOpenPayAuthorizeUrl, resolvePartnerRedirectOrigin, OPENPAY_CONNECT_CALLBACK_PATH } =
       await import("./openpay-connect.server");
     const origin = resolvePartnerRedirectOrigin(data.origin);
-    const redirect_uri = `${origin}/openpay/connect/callback`;
+    const redirect_uri = `${origin}${OPENPAY_CONNECT_CALLBACK_PATH}`;
     const state = createConnectState(context.userId, redirect_uri);
     const { authorize_url } = buildOpenPayAuthorizeUrl({
       origin,
       state,
+      callbackPath: OPENPAY_CONNECT_CALLBACK_PATH,
+      scope: "profile balance",
     });
     return { authorize_url, state, redirect_uri, expires_in: 600 };
   });

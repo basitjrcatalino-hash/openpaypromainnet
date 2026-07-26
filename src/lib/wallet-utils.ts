@@ -64,3 +64,51 @@ export function formatPct(n: number | string | null | undefined): string {
   const sign = v > 0 ? "+" : "";
   return `${sign}${v.toFixed(2)}%`;
 }
+
+/** Supabase-compatible client shape for wallet lookups. */
+type WalletQueryClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: (table: string) => any;
+};
+
+/**
+ * Load the user's activated wallet (is_active first). Never use bare limit(1)
+ * without this order — Postgres can return a different wallet and top-ups
+ * would credit the wrong account.
+ */
+export async function fetchActiveWallet<T = Record<string, unknown>>(
+  supabase: WalletQueryClient,
+  userId: string,
+  columns = "*",
+): Promise<T | null> {
+  const { data, error } = await supabase
+    .from("wallets")
+    .select(columns)
+    .eq("user_id", userId)
+    .order("is_active", { ascending: false })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as T | null) ?? null;
+}
+
+/** Resolve a wallet the user owns, preferring an explicit id then the active one. */
+export async function resolveCreditWallet<T extends { id: string } = { id: string } & Record<string, unknown>>(
+  supabase: WalletQueryClient,
+  userId: string,
+  walletId?: string | null,
+): Promise<T | null> {
+  if (walletId) {
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("id", walletId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data) return data as T;
+  }
+  return fetchActiveWallet<T>(supabase, userId);
+}
+

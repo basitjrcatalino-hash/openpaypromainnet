@@ -4,6 +4,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
 import { signInWithPi } from "@/lib/pi-network";
+import {
+  OPENPAY_BRAND_BLUE,
+  OPENPAY_LOGO_WHITE,
+  startOpenPaySignIn,
+} from "@/lib/openpay-auth";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -32,6 +37,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   const [piBusy, setPiBusy] = useState(false);
+  const [openPayBusy, setOpenPayBusy] = useState(false);
 
   const PI_CLIENT_ID = import.meta.env.VITE_PI_CLIENT_ID as string | undefined;
 
@@ -201,12 +207,36 @@ function AuthPage() {
             type="button"
             variant="outline"
             onClick={() => handlePiSignIn(false)}
-            disabled={piBusy}
+            disabled={piBusy || openPayBusy}
             className="h-11 w-full rounded-xl border-2 border-primary bg-primary/10 text-base font-semibold text-primary hover:bg-primary/20"
           >
             {piBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>π&nbsp;&nbsp;Continue with Pi Network</>}
           </Button>
 
+          <Button
+            type="button"
+            onClick={async () => {
+              setOpenPayBusy(true);
+              try {
+                await startOpenPaySignIn({ redirectTo: "/dashboard" });
+              } catch (err) {
+                toast.error((err as Error).message || "OpenPay sign-in failed");
+                setOpenPayBusy(false);
+              }
+            }}
+            disabled={piBusy || openPayBusy || busy}
+            className="mt-3 h-11 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
+            style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
+          >
+            {openPayBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <span className="inline-flex items-center gap-2.5">
+                <img src={OPENPAY_LOGO_WHITE} width={20} height={20} alt="" />
+                Sign in with OpenPay
+              </span>
+            )}
+          </Button>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
             By continuing you agree to OpenPay's Terms & Privacy Policy.

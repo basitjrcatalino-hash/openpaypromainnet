@@ -9,54 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
-import { Route as AuthpiRouteImport } from './routes/authpi'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
-import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
-import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
-import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
-import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
-import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
-import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
-import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
-import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
-import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
-import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthpiRouteImport } from './routes/authpi'
+import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
-import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
-import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
-import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
-import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
-import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
-import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
+import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
+import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
+import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
+import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
+import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
-import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
-import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
-import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
-import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
-import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
-import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
-import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
+import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
+import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
+import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
+import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
+import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
+import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
-import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
+import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
+import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
+import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
+import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
+import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
+import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
+import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 
-const TestnetRewardRoute = TestnetRewardRouteImport.update({
-  id: '/testnet-reward',
-  path: '/testnet-reward',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthpiRoute = AuthpiRouteImport.update({
-  id: '/authpi',
-  path: '/authpi',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -64,78 +65,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthpiRoute = AuthpiRouteImport.update({
+  id: '/authpi',
+  path: '/authpi',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const TestnetRewardRoute = TestnetRewardRouteImport.update({
+  id: '/testnet-reward',
+  path: '/testnet-reward',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
-  id: '/docs/openpay',
-  path: '/docs/openpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
-  id: '/admin/testnet-progress',
-  path: '/admin/testnet-progress',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
-  id: '/topup',
-  path: '/topup',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
-  id: '/tokens',
-  path: '/tokens',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
-  id: '/swap',
-  path: '/swap',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
-  id: '/send',
-  path: '/send',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
-  id: '/scan',
-  path: '/scan',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
-  id: '/receive',
-  path: '/receive',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
-  id: '/ousd',
-  path: '/ousd',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
-  id: '/nfts',
-  path: '/nfts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
-  id: '/kyc',
-  path: '/kyc',
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -143,40 +85,80 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
-  id: '/pi/callback',
-  path: '/pi/callback',
-  getParentRoute: () => AuthRoute,
+const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
-  id: '/api/public/supabase-config',
-  path: '/api/public/supabase-config',
+const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
+  id: '/nfts',
+  path: '/nfts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
+  id: '/ousd',
+  path: '/ousd',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
+  id: '/admin/testnet-progress',
+  path: '/admin/testnet-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
-  id: '/api/public/pi-auth',
-  path: '/api/public/pi-auth',
+const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
+  id: '/docs/openpay',
+  path: '/docs/openpay',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
-  id: '/api/public/pi-a2u',
-  path: '/api/public/pi-a2u',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
+  id: '/admin/topup',
+  path: '/admin/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
-  id: '/api/public/kyc-webhook',
-  path: '/api/public/kyc-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
+  id: '/mint',
+  path: '/mint',
+  getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
@@ -184,20 +166,76 @@ const AuthenticatedTokensCreateRoute =
     path: '/create',
     getParentRoute: () => AuthenticatedTokensRoute,
   } as any)
-const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
-  id: '/mint',
-  path: '/mint',
-  getParentRoute: () => AuthenticatedNftsRoute,
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
-  id: '/admin/topup',
-  path: '/admin/topup',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
+  id: '/api/public/kyc-webhook',
+  path: '/api/public/kyc-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPiPaymentsIncompleteRoute =
-  ApiPublicPiPaymentsIncompleteRouteImport.update({
-    id: '/api/public/pi-payments/incomplete',
-    path: '/api/public/pi-payments/incomplete',
+const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
+  id: '/api/public/openpay-auth',
+  path: '/api/public/openpay-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
+  id: '/api/public/pi-a2u',
+  path: '/api/public/pi-a2u',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
+  id: '/api/public/pi-auth',
+  path: '/api/public/pi-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
+  id: '/api/public/supabase-config',
+  path: '/api/public/supabase-config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
+  id: '/openpay/callback',
+  path: '/openpay/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
+  id: '/pi/callback',
+  path: '/pi/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthenticatedOpenpayConnectCallbackRoute =
+  AuthenticatedOpenpayConnectCallbackRouteImport.update({
+    id: '/openpay/connect/callback',
+    path: '/openpay/connect/callback',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
+  id: '/api/public/docs/openpay',
+  path: '/api/public/docs/openpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
+  id: '/api/public/ledger/entries',
+  path: '/api/public/ledger/entries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
+  id: '/api/public/ledger/stats',
+  path: '/api/public/ledger/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
+  id: '/api/public/openpay/inbound',
+  path: '/api/public/openpay/inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiPaymentsApproveRoute =
+  ApiPublicPiPaymentsApproveRouteImport.update({
+    id: '/api/public/pi-payments/approve',
+    path: '/api/public/pi-payments/approve',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicPiPaymentsCompleteRoute =
@@ -206,42 +244,10 @@ const ApiPublicPiPaymentsCompleteRoute =
     path: '/api/public/pi-payments/complete',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPiPaymentsApproveRoute =
-  ApiPublicPiPaymentsApproveRouteImport.update({
-    id: '/api/public/pi-payments/approve',
-    path: '/api/public/pi-payments/approve',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
-  id: '/api/public/openpay/inbound',
-  path: '/api/public/openpay/inbound',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
-  id: '/api/public/ledger/stats',
-  path: '/api/public/ledger/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
-  id: '/api/public/ledger/entries',
-  path: '/api/public/ledger/entries',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
-  id: '/api/public/docs/openpay',
-  path: '/api/public/docs/openpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedOpenpayConnectCallbackRoute =
-  AuthenticatedOpenpayConnectCallbackRouteImport.update({
-    id: '/openpay/connect/callback',
-    path: '/openpay/connect/callback',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const ApiPublicOpenpayConnectConfirmRoute =
-  ApiPublicOpenpayConnectConfirmRouteImport.update({
-    id: '/api/public/openpay/connect/confirm',
-    path: '/api/public/openpay/connect/confirm',
+const ApiPublicPiPaymentsIncompleteRoute =
+  ApiPublicPiPaymentsIncompleteRouteImport.update({
+    id: '/api/public/pi-payments/incomplete',
+    path: '/api/public/pi-payments/incomplete',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicLedgerEntriesIdRoute =
@@ -249,6 +255,12 @@ const ApiPublicLedgerEntriesIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => ApiPublicLedgerEntriesRoute,
+  } as any)
+const ApiPublicOpenpayConnectConfirmRoute =
+  ApiPublicOpenpayConnectConfirmRouteImport.update({
+    id: '/api/public/openpay/connect/confirm',
+    path: '/api/public/openpay/connect/confirm',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -276,9 +288,11 @@ export interface FileRoutesByFullPath {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
+  '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -316,9 +330,11 @@ export interface FileRoutesByTo {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
+  '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -358,9 +374,11 @@ export interface FileRoutesById {
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
+  '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -400,9 +418,11 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
+    | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/supabase-config'
+    | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -440,9 +460,11 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
+    | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/supabase-config'
+    | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -481,9 +503,11 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
+    | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
     | '/api/public/supabase-config'
+    | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/_authenticated/openpay/connect/callback'
     | '/api/public/docs/openpay'
@@ -507,6 +531,7 @@ export interface RootRouteChildren {
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
+  ApiPublicOpenpayAuthRoute: typeof ApiPublicOpenpayAuthRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
@@ -522,25 +547,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/testnet-reward': {
-      id: '/testnet-reward'
-      path: '/testnet-reward'
-      fullPath: '/testnet-reward'
-      preLoaderRoute: typeof TestnetRewardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/authpi': {
-      id: '/authpi'
-      path: '/authpi'
-      fullPath: '/authpi'
-      preLoaderRoute: typeof AuthpiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -550,102 +561,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/docs/openpay': {
-      id: '/docs/openpay'
-      path: '/docs/openpay'
-      fullPath: '/docs/openpay'
-      preLoaderRoute: typeof DocsOpenpayRouteImport
+    '/authpi': {
+      id: '/authpi'
+      path: '/authpi'
+      fullPath: '/authpi'
+      preLoaderRoute: typeof AuthpiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/testnet-progress': {
-      id: '/admin/testnet-progress'
-      path: '/admin/testnet-progress'
-      fullPath: '/admin/testnet-progress'
-      preLoaderRoute: typeof AdminTestnetProgressRouteImport
+    '/testnet-reward': {
+      id: '/testnet-reward'
+      path: '/testnet-reward'
+      fullPath: '/testnet-reward'
+      preLoaderRoute: typeof TestnetRewardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/topup': {
-      id: '/_authenticated/topup'
-      path: '/topup'
-      fullPath: '/topup'
-      preLoaderRoute: typeof AuthenticatedTopupRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tokens': {
-      id: '/_authenticated/tokens'
-      path: '/tokens'
-      fullPath: '/tokens'
-      preLoaderRoute: typeof AuthenticatedTokensRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/swap': {
-      id: '/_authenticated/swap'
-      path: '/swap'
-      fullPath: '/swap'
-      preLoaderRoute: typeof AuthenticatedSwapRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/send': {
-      id: '/_authenticated/send'
-      path: '/send'
-      fullPath: '/send'
-      preLoaderRoute: typeof AuthenticatedSendRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/scan': {
-      id: '/_authenticated/scan'
-      path: '/scan'
-      fullPath: '/scan'
-      preLoaderRoute: typeof AuthenticatedScanRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/receive': {
-      id: '/_authenticated/receive'
-      path: '/receive'
-      fullPath: '/receive'
-      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ousd': {
-      id: '/_authenticated/ousd'
-      path: '/ousd'
-      fullPath: '/ousd'
-      preLoaderRoute: typeof AuthenticatedOusdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nfts': {
-      id: '/_authenticated/nfts'
-      path: '/nfts'
-      fullPath: '/nfts'
-      preLoaderRoute: typeof AuthenticatedNftsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ledger': {
-      id: '/_authenticated/ledger'
-      path: '/ledger'
-      fullPath: '/ledger'
-      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/kyc': {
-      id: '/_authenticated/kyc'
-      path: '/kyc'
-      fullPath: '/kyc'
-      preLoaderRoute: typeof AuthenticatedKycRouteImport
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -655,39 +596,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/activity': {
-      id: '/_authenticated/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/auth/pi/callback': {
-      id: '/auth/pi/callback'
-      path: '/pi/callback'
-      fullPath: '/auth/pi/callback'
-      preLoaderRoute: typeof AuthPiCallbackRouteImport
-      parentRoute: typeof AuthRoute
+    '/_authenticated/ledger': {
+      id: '/_authenticated/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/supabase-config': {
-      id: '/api/public/supabase-config'
-      path: '/api/public/supabase-config'
-      fullPath: '/api/public/supabase-config'
-      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
+    '/_authenticated/nfts': {
+      id: '/_authenticated/nfts'
+      path: '/nfts'
+      fullPath: '/nfts'
+      preLoaderRoute: typeof AuthenticatedNftsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ousd': {
+      id: '/_authenticated/ousd'
+      path: '/ousd'
+      fullPath: '/ousd'
+      preLoaderRoute: typeof AuthenticatedOusdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/receive': {
+      id: '/_authenticated/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/send': {
+      id: '/_authenticated/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthenticatedSendRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/swap': {
+      id: '/_authenticated/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof AuthenticatedSwapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tokens': {
+      id: '/_authenticated/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof AuthenticatedTokensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/topup': {
+      id: '/_authenticated/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof AuthenticatedTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/testnet-progress': {
+      id: '/admin/testnet-progress'
+      path: '/admin/testnet-progress'
+      fullPath: '/admin/testnet-progress'
+      preLoaderRoute: typeof AdminTestnetProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/pi-auth': {
-      id: '/api/public/pi-auth'
-      path: '/api/public/pi-auth'
-      fullPath: '/api/public/pi-auth'
-      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+    '/docs/openpay': {
+      id: '/docs/openpay'
+      path: '/docs/openpay'
+      fullPath: '/docs/openpay'
+      preLoaderRoute: typeof DocsOpenpayRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/pi-a2u': {
-      id: '/api/public/pi-a2u'
-      path: '/api/public/pi-a2u'
-      fullPath: '/api/public/pi-a2u'
-      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
+    '/_authenticated/admin/topup': {
+      id: '/_authenticated/admin/topup'
+      path: '/admin/topup'
+      fullPath: '/admin/topup'
+      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts/mint': {
+      id: '/_authenticated/nfts/mint'
+      path: '/mint'
+      fullPath: '/nfts/mint'
+      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
+      parentRoute: typeof AuthenticatedNftsRoute
+    }
+    '/_authenticated/tokens/create': {
+      id: '/_authenticated/tokens/create'
+      path: '/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
+      parentRoute: typeof AuthenticatedTokensRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/kyc-webhook': {
@@ -697,67 +722,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
+    '/api/public/openpay-auth': {
+      id: '/api/public/openpay-auth'
+      path: '/api/public/openpay-auth'
+      fullPath: '/api/public/openpay-auth'
+      preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tokens/create': {
-      id: '/_authenticated/tokens/create'
-      path: '/create'
-      fullPath: '/tokens/create'
-      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
-      parentRoute: typeof AuthenticatedTokensRoute
+    '/api/public/pi-a2u': {
+      id: '/api/public/pi-a2u'
+      path: '/api/public/pi-a2u'
+      fullPath: '/api/public/pi-a2u'
+      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/nfts/mint': {
-      id: '/_authenticated/nfts/mint'
-      path: '/mint'
-      fullPath: '/nfts/mint'
-      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
-      parentRoute: typeof AuthenticatedNftsRoute
+    '/api/public/pi-auth': {
+      id: '/api/public/pi-auth'
+      path: '/api/public/pi-auth'
+      fullPath: '/api/public/pi-auth'
+      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/topup': {
-      id: '/_authenticated/admin/topup'
-      path: '/admin/topup'
-      fullPath: '/admin/topup'
-      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+    '/api/public/supabase-config': {
+      id: '/api/public/supabase-config'
+      path: '/api/public/supabase-config'
+      fullPath: '/api/public/supabase-config'
+      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/openpay/callback': {
+      id: '/auth/openpay/callback'
+      path: '/openpay/callback'
+      fullPath: '/auth/openpay/callback'
+      preLoaderRoute: typeof AuthOpenpayCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/pi/callback': {
+      id: '/auth/pi/callback'
+      path: '/pi/callback'
+      fullPath: '/auth/pi/callback'
+      preLoaderRoute: typeof AuthPiCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_authenticated/openpay/connect/callback': {
+      id: '/_authenticated/openpay/connect/callback'
+      path: '/openpay/connect/callback'
+      fullPath: '/openpay/connect/callback'
+      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/pi-payments/incomplete': {
-      id: '/api/public/pi-payments/incomplete'
-      path: '/api/public/pi-payments/incomplete'
-      fullPath: '/api/public/pi-payments/incomplete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/complete': {
-      id: '/api/public/pi-payments/complete'
-      path: '/api/public/pi-payments/complete'
-      fullPath: '/api/public/pi-payments/complete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/approve': {
-      id: '/api/public/pi-payments/approve'
-      path: '/api/public/pi-payments/approve'
-      fullPath: '/api/public/pi-payments/approve'
-      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay/inbound': {
-      id: '/api/public/openpay/inbound'
-      path: '/api/public/openpay/inbound'
-      fullPath: '/api/public/openpay/inbound'
-      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ledger/stats': {
-      id: '/api/public/ledger/stats'
-      path: '/api/public/ledger/stats'
-      fullPath: '/api/public/ledger/stats'
-      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
+    '/api/public/docs/openpay': {
+      id: '/api/public/docs/openpay'
+      path: '/api/public/docs/openpay'
+      fullPath: '/api/public/docs/openpay'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries': {
@@ -767,25 +785,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/docs/openpay': {
-      id: '/api/public/docs/openpay'
-      path: '/api/public/docs/openpay'
-      fullPath: '/api/public/docs/openpay'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
+    '/api/public/ledger/stats': {
+      id: '/api/public/ledger/stats'
+      path: '/api/public/ledger/stats'
+      fullPath: '/api/public/ledger/stats'
+      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/openpay/connect/callback': {
-      id: '/_authenticated/openpay/connect/callback'
-      path: '/openpay/connect/callback'
-      fullPath: '/openpay/connect/callback'
-      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/api/public/openpay/inbound': {
+      id: '/api/public/openpay/inbound'
+      path: '/api/public/openpay/inbound'
+      fullPath: '/api/public/openpay/inbound'
+      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/api/public/openpay/connect/confirm': {
-      id: '/api/public/openpay/connect/confirm'
-      path: '/api/public/openpay/connect/confirm'
-      fullPath: '/api/public/openpay/connect/confirm'
-      preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
+    '/api/public/pi-payments/approve': {
+      id: '/api/public/pi-payments/approve'
+      path: '/api/public/pi-payments/approve'
+      fullPath: '/api/public/pi-payments/approve'
+      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/complete': {
+      id: '/api/public/pi-payments/complete'
+      path: '/api/public/pi-payments/complete'
+      fullPath: '/api/public/pi-payments/complete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/incomplete': {
+      id: '/api/public/pi-payments/incomplete'
+      path: '/api/public/pi-payments/incomplete'
+      fullPath: '/api/public/pi-payments/incomplete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries/$id': {
@@ -794,6 +826,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/ledger/entries/$id'
       preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
       parentRoute: typeof ApiPublicLedgerEntriesRoute
+    }
+    '/api/public/openpay/connect/confirm': {
+      id: '/api/public/openpay/connect/confirm'
+      path: '/api/public/openpay/connect/confirm'
+      fullPath: '/api/public/openpay/connect/confirm'
+      preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -861,10 +900,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AuthRouteChildren {
+  AuthOpenpayCallbackRoute: typeof AuthOpenpayCallbackRoute
   AuthPiCallbackRoute: typeof AuthPiCallbackRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthOpenpayCallbackRoute: AuthOpenpayCallbackRoute,
   AuthPiCallbackRoute: AuthPiCallbackRoute,
 }
 
@@ -894,6 +935,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsOpenpayRoute: DocsOpenpayRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
+  ApiPublicOpenpayAuthRoute: ApiPublicOpenpayAuthRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
@@ -909,3 +951,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

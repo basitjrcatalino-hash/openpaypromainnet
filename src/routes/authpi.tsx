@@ -3,19 +3,25 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
 import { signInWithPi } from "@/lib/pi-network";
+import {
+  OPENPAY_BRAND_BLUE,
+  OPENPAY_LOGO_WHITE,
+  startOpenPaySignIn,
+} from "@/lib/openpay-auth";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/authpi")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Sign in with Pi — OpenPay Pro Wallet" }] }),
+  head: () => ({ meta: [{ title: "Sign in — OpenPay Pro Wallet" }] }),
   component: AuthPiPage,
 });
 
 function AuthPiPage() {
   const navigate = useNavigate();
   const [piBusy, setPiBusy] = useState(false);
+  const [openPayBusy, setOpenPayBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const PI_CLIENT_ID = import.meta.env.VITE_PI_CLIENT_ID as string | undefined;
@@ -106,20 +112,49 @@ function AuthPiPage() {
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in with Pi Network to access OUSD, tokens & NFTs
+              Sign in with Pi Network or OpenPay to access OUSD, tokens & NFTs
             </p>
           </div>
 
           <Button
             type="button"
             onClick={() => handlePiSignIn(false)}
-            disabled={piBusy}
+            disabled={piBusy || openPayBusy}
             className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow hover:opacity-95"
           >
             {piBusy ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>π&nbsp;&nbsp;Continue with Pi Network</>
+            )}
+          </Button>
+
+          <div className="my-4 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            type="button"
+            onClick={async () => {
+              setOpenPayBusy(true);
+              try {
+                await startOpenPaySignIn({ redirectTo: "/dashboard" });
+              } catch (err) {
+                toast.error((err as Error).message || "OpenPay sign-in failed");
+                setOpenPayBusy(false);
+              }
+            }}
+            disabled={piBusy || openPayBusy}
+            className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
+            style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
+          >
+            {openPayBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <span className="inline-flex items-center gap-2.5">
+                <img src={OPENPAY_LOGO_WHITE} width={20} height={20} alt="" />
+                Sign in with OpenPay
+              </span>
             )}
           </Button>
 

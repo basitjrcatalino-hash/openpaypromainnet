@@ -21,8 +21,16 @@ function OUSDPage() {
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: async () =>
-      (await supabase.from("wallets").select("*").eq("user_id", user.id).limit(1).maybeSingle())
-        .data,
+      (
+        await supabase
+          .from("wallets")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("is_active", { ascending: false })
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
+      ).data,
   });
 
   const { data: txs = [] } = useQuery({

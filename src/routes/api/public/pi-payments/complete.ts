@@ -36,11 +36,14 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
           // Call Pi complete first; Pi verifies the on-chain txid.
           await completePiPayment(paymentId, txid);
 
-          // Credit OUSD 1:1 with Pi to the user's primary wallet.
+          // Credit OUSD 1:1 with Pi to the user's activated wallet.
+          const { fetchActiveWallet } = await import("@/lib/wallet-utils");
           const ousdAmount = Number(payment.amount);
-          const { data: wallet } = await admin
-            .from("wallets").select("*").eq("user_id", userId).limit(1).maybeSingle();
-          if (!wallet) throw new Error("No wallet for user");
+          const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
+            admin,
+            userId,
+          );
+          if (!wallet) throw new Error("No active wallet for user");
 
           const newBalance = Number(wallet.ousd_balance ?? 0) + ousdAmount;
           await admin.from("wallets").update({ ousd_balance: newBalance }).eq("id", wallet.id);

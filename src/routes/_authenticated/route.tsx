@@ -319,12 +319,12 @@ function SidebarInner({
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex min-h-full flex-col gap-4">
       {/* Wallet selector */}
       <button
         type="button"
         onClick={() => setSwitchOpen(true)}
-        className="flex items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card px-4 py-2.5 text-sm font-semibold hover:bg-card/80"
+        className="flex shrink-0 items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card px-4 py-2.5 text-sm font-semibold hover:bg-card/80"
       >
         <span className="flex items-center gap-2">
           <span
@@ -370,7 +370,7 @@ function SidebarInner({
       </button>
 
       {/* Big balance card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-6 text-white shadow-glow">
+      <div className="relative shrink-0 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-white shadow-glow">
         <div className="absolute inset-0 opacity-40" aria-hidden>
           <div className="absolute -left-16 -top-10 h-48 w-48 rounded-full bg-mint blur-3xl" />
           <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-primary-glow blur-3xl" />

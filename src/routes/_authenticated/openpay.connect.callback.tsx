@@ -54,6 +54,7 @@ function OpenPayConnectCallback() {
         );
         void qc.invalidateQueries({ queryKey: ["prefs"] });
         void qc.invalidateQueries({ queryKey: ["user-prefs"] });
+        void qc.invalidateQueries({ queryKey: ["openpay-link"] });
         navigate({ to: "/settings" });
       } catch (e) {
         if (cancelled) return;

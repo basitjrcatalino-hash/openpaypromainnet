@@ -60,13 +60,14 @@ export const sendAsset = createServerFn({ method: "POST" })
 
     const toAddress = await resolveRecipientAddress(supabase, toInput);
 
-    const { data: wallet, error: wErr } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (wErr || !wallet) throw new Error("Active wallet not found");
+    const { fetchActiveWallet } = await import("./wallet-utils");
+    const wallet = await fetchActiveWallet<{
+      id: string;
+      address: string;
+      ousd_balance?: number | null;
+      pi_balance?: number | null;
+    }>(supabase, userId);
+    if (!wallet) throw new Error("Active wallet not found");
     if (toAddress.toLowerCase() === wallet.address.toLowerCase()) {
       throw new Error("Cannot send to your own address");
     }
@@ -146,13 +147,12 @@ export const topUpOUSD = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { amount, method, reference } = data;
 
-    const { data: wallet, error } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (error || !wallet) throw new Error("Active wallet not found");
+    const { fetchActiveWallet } = await import("./wallet-utils");
+    const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
+      supabase,
+      userId,
+    );
+    if (!wallet) throw new Error("Active wallet not found");
 
     const nb = Number(wallet.ousd_balance ?? 0) + amount;
     const { error: uErr } = await supabase

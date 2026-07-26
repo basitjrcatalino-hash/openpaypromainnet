@@ -43,6 +43,7 @@ import {
   unlinkOpenPayAccount,
   syncOpenPayOUSD,
   startOpenPayConnect,
+  getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -75,9 +76,11 @@ function SettingsPage() {
           .from("wallets")
           .select("*")
           .eq("user_id", user.id)
+          .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
       ).data ?? [],
   });
+  const activeWalletId = wallets.find((w: { is_active?: boolean }) => w.is_active)?.id ?? wallets[0]?.id;
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
@@ -237,10 +240,33 @@ function SettingsPage() {
   }
 
   async function updatePref(patch: Record<string, any>) {
+    // Always merge notifications against the latest DB row so a stale React
+    // Query cache cannot wipe the persisted OpenPay connect session.
+    if (patch.notifications && typeof patch.notifications === "object") {
+      const { data: row } = await supabase
+        .from("user_preferences")
+        .select("notifications")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const latest = (row?.notifications as Record<string, unknown> | null) ?? {};
+      const next = {
+        ...latest,
+        ...(patch.notifications as Record<string, unknown>),
+      };
+      // Preserve OpenPay link unless this patch explicitly clears it
+      if (
+        latest.openpay &&
+        !Object.prototype.hasOwnProperty.call(patch.notifications, "openpay")
+      ) {
+        next.openpay = latest.openpay;
+      }
+      patch = { ...patch, notifications: next };
+    }
     await supabase
       .from("user_preferences")
       .upsert({ user_id: user.id, ...patch, updated_at: new Date().toISOString() });
     qc.invalidateQueries({ queryKey: ["prefs", user.id] });
+    qc.invalidateQueries({ queryKey: ["openpay-link", user.id] });
   }
 
   return (
@@ -662,9 +688,8 @@ function SettingsPage() {
 
       {/* OpenPay integration */}
       <OpenPayIntegrationCard
-        walletId={wallets[0]?.id}
-        notifications={(prefs?.notifications as Record<string, unknown> | null) ?? null}
-        onPrefsChanged={() => qc.invalidateQueries({ queryKey: ["prefs", user.id] })}
+        userId={user.id}
+        walletId={activeWalletId}
         onWalletChanged={() => {
           qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
           qc.invalidateQueries({ queryKey: ["wallets", user.id] });
@@ -675,34 +700,34 @@ function SettingsPage() {
 }
 
 function OpenPayIntegrationCard({
+  userId,
   walletId,
-  notifications,
-  onPrefsChanged,
   onWalletChanged,
 }: {
+  userId: string;
   walletId?: string;
-  notifications: Record<string, unknown> | null;
-  onPrefsChanged: () => void;
   onWalletChanged: () => void;
 }) {
+  const qc = useQueryClient();
   const unlinkOpenPay = useServerFn(unlinkOpenPayAccount);
   const syncOpenPay = useServerFn(syncOpenPayOUSD);
   const startConnect = useServerFn(startOpenPayConnect);
+  const getLink = useServerFn(getOpenPayLinkStatus);
 
-  const stored =
-    (notifications?.openpay as {
-      linked?: boolean;
-      username?: string;
-      name?: string;
-      account_number?: string;
-      identifier?: string;
-      source?: string;
-    } | null) ?? null;
+  // Authoritative persisted session — survives reloads until Disconnect
+  const { data: stored, isLoading: linkLoading } = useQuery({
+    queryKey: ["openpay-link", userId],
+    queryFn: () => getLink(),
+  });
   const linked = !!stored?.linked;
 
   const [busy, setBusy] = useState(false);
 
   async function connectViaOpenPay() {
+    if (linked) {
+      toast.message("OpenPay is already connected");
+      return;
+    }
     setBusy(true);
     try {
       const { authorize_url } = await startConnect({
@@ -720,7 +745,10 @@ function OpenPayIntegrationCard({
     try {
       await unlinkOpenPay();
       toast.success("OpenPay disconnected");
-      onPrefsChanged();
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["openpay-link", userId] }),
+        qc.invalidateQueries({ queryKey: ["prefs", userId] }),
+      ]);
     } catch (err) {
       toast.error((err as Error).message || "Disconnect failed");
     } finally {
@@ -745,6 +773,10 @@ function OpenPayIntegrationCard({
     }
   }
 
+  const linkedLabel = stored?.username
+    ? `@${stored.username}`
+    : stored?.account_number || stored?.identifier || stored?.name || "OpenPay";
+
   return (
     <Card className="glass-strong rounded-3xl border-border/60 p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -756,20 +788,39 @@ function OpenPayIntegrationCard({
             OpenPay Integration
           </h2>
           <p className="mt-1 text-sm">
-            {linked
-              ? `Linked${stored?.username ? ` as @${stored.username}` : stored?.identifier ? ` · ${stored.identifier}` : ""}${stored?.source === "local" ? " (OpenPay Pro)" : ""}. Sync OUSD and merchant payments.`
-              : "Connect your OpenPay account. You’ll confirm on OpenPay, then return here linked."}
+            {linkLoading
+              ? "Checking OpenPay connection…"
+              : linked
+                ? `Connected as ${linkedLabel}${stored?.source === "local" ? " (OpenPay Pro)" : ""}. Session stays linked until you disconnect.`
+                : "Connect your OpenPay account. You’ll confirm on OpenPay, then return here linked."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {linked ? (
+          {linkLoading ? (
+            <Button variant="ghost" className="rounded-full" disabled>
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              Checking…
+            </Button>
+          ) : linked ? (
             <>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                disabled={busy || !walletId}
+                onClick={sync}
+              >
+                {busy ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Sync
+              </Button>
               <Button variant="ghost" className="rounded-full" disabled={busy} onClick={disconnect}>
                 Disconnect
               </Button>
             </>
           ) : (
-
             <Button
               className="rounded-full bg-gradient-primary text-primary-foreground"
               disabled={busy}

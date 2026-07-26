@@ -36,8 +36,11 @@ export const Route = createFileRoute("/api/public/pi-payments/incomplete")({
               .from("pi_payments").select("status").eq("payment_id", paymentId).maybeSingle();
 
             if (existing?.status !== "completed") {
-              const { data: wallet } = await admin
-                .from("wallets").select("*").eq("user_id", userId).limit(1).maybeSingle();
+              const { fetchActiveWallet } = await import("@/lib/wallet-utils");
+              const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
+                admin,
+                userId,
+              );
               if (wallet) {
                 await admin.from("wallets")
                   .update({ ousd_balance: Number(wallet.ousd_balance ?? 0) + ousdAmount })

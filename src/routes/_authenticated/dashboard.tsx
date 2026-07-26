@@ -35,6 +35,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 import { OusdIcon } from "@/components/ousd-icon";
+import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -53,7 +54,6 @@ type HoldingRow = {
   } | null;
 };
 
-type NftRow = Pick<Tables<"nfts">, "id" | "name">;
 type WalletRow = Tables<"wallets">;
 
 const ACTIONS = [
@@ -114,19 +114,6 @@ function Dashboard() {
         .select("balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url)")
         .eq("wallet_id", wallet!.id);
       return (data ?? []) as HoldingRow[];
-    },
-  });
-
-  const { data: nfts = [] } = useQuery({
-    queryKey: ["my-nfts", wallet?.id],
-    enabled: !!wallet?.id,
-    queryFn: async (): Promise<NftRow[]> => {
-      const { data } = await supabase
-        .from("nfts")
-        .select("id, name")
-        .eq("owner_wallet_id", wallet!.id)
-        .limit(6);
-      return data ?? [];
     },
   });
 
@@ -207,6 +194,7 @@ function Dashboard() {
         qc.invalidateQueries({ queryKey: ["holdings"] }),
         qc.invalidateQueries({ queryKey: ["recent-txs"] }),
         qc.invalidateQueries({ queryKey: ["my-nfts"] }),
+        qc.invalidateQueries({ queryKey: ["openpay-collectibles"] }),
       ]);
       toast.success("Wallet switched");
       setSwitchOpen(false);
@@ -423,37 +411,13 @@ function Dashboard() {
             <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold">
               Collectibles <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
+            <Link to="/nfts" className="text-xs font-semibold text-primary hover:underline">
+              See all
+            </Link>
           </header>
 
           <div className="rounded-2xl border border-border/60 bg-card p-5">
-            {nfts.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-6 text-center">
-                <div className="text-base font-semibold">No collectibles yet</div>
-                <p className="max-w-55 text-sm text-muted-foreground">
-                  Explore a marketplace to discover existing NFT collections.
-                </p>
-                <Link
-                  to="/nfts"
-                  className="mt-2 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
-                >
-                  Open Marketplace
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {nfts.map((n) => (
-                  <div
-                    key={n.id}
-                    className="overflow-hidden rounded-xl border border-border/60 bg-card"
-                  >
-                    <div className="aspect-square w-full bg-gradient-mint" />
-                    <div className="p-2 text-xs">
-                      <div className="truncate font-semibold">{n.name}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <OpenNftCollectiblesPanel userId={user.id} limit={6} compact />
           </div>
         </section>
       </div>

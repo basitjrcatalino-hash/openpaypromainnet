@@ -341,11 +341,22 @@ function ReceivePage() {
                   <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                 </a>
               </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-full"
+                disabled={busy}
+                onClick={() => checkForPayment()}
+              >
+                {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                Check for payment
+              </Button>
             </div>
             <p className="text-[11px] text-muted-foreground">
               Payer opens the link on OpenPay, pays
               {opLink.partner_username ? ` @${opLink.partner_username}` : ""}, then you are credited
-              on Pro.
+              on Pro. If the payer is someone else, tap “Check for payment” to credit your wallet.
             </p>
           </div>
         )}

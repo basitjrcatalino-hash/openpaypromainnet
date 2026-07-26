@@ -72,6 +72,7 @@ function ReceivePage() {
 
   const createReceive = useServerFn(createOpenPayReceiveLink);
   const settleInbound = useServerFn(settleOpenPayInboundReceive);
+  const claimInbound = useServerFn(claimOpenPayInbound);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],

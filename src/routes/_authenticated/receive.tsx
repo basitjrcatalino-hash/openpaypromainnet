@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  claimOpenPayInbound,
   createOpenPayReceiveLink,
   settleOpenPayInboundReceive,
 } from "@/lib/openpay-pro.functions";
@@ -71,6 +72,7 @@ function ReceivePage() {
 
   const createReceive = useServerFn(createOpenPayReceiveLink);
   const settleInbound = useServerFn(settleOpenPayInboundReceive);
+  const claimInbound = useServerFn(claimOpenPayInbound);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -103,6 +105,34 @@ function ReceivePage() {
     }).catch(() => {});
   }, [opLink?.pay_url]);
 
+  async function refreshBalances() {
+    qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+    qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+    qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+  }
+
+  /** Reconcile real OpenPay credits (works even when the payer is someone else). */
+  async function checkForPayment(opts: { silent?: boolean } = {}) {
+    setBusy(true);
+    try {
+      const r = await claimInbound({ data: { note: opLink?.note } });
+      if (r.credited > 0) {
+        toast.success(`Received ${formatUSD(r.amount)} from OpenPay`);
+        await refreshBalances();
+      } else if (r.already > 0) {
+        if (!opts.silent) toast.info("Payment already credited");
+      } else if (!opts.silent) {
+        toast.info("No new OpenPay payment found yet — try again in a moment");
+      }
+      return r;
+    } catch (e) {
+      if (!opts.silent) toast.error((e as Error).message);
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // Settle OpenPay → Pro inbound return
   useEffect(() => {
     if (search.openpay_cancel) {
@@ -117,23 +147,38 @@ function ReceivePage() {
     (async () => {
       setBusy(true);
       try {
-        const amt = search.amount ? Number(search.amount) : undefined;
-        const r = await settleInbound({
-          data: {
-            openpay_tx: search.openpay_tx,
-            note: search.openpay_ref,
-            amount: amt && amt > 0 ? amt : undefined,
-          },
-        });
-        if (r.credited) {
-          toast.success(
-            r.already
-              ? "Already credited"
-              : `Received ${formatUSD(Number(amt || 0) || 0)} from OpenPay`,
-          );
-          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-          qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+        // 1) Reconcile against the real OpenPay ledger first (authoritative).
+        let done = false;
+        try {
+          const c = await claimInbound({ data: { note: search.openpay_ref } });
+          if (c.credited > 0) {
+            toast.success(`Received ${formatUSD(c.amount)} from OpenPay`);
+            done = true;
+          } else if (c.already > 0) {
+            toast.info("Already credited");
+            done = true;
+          }
+        } catch {
+          /* fall through to redirect settle */
         }
+
+        // 2) Fallback: settle from the redirect params.
+        if (!done) {
+          const amt = search.amount ? Number(search.amount) : undefined;
+          const r = await settleInbound({
+            data: {
+              openpay_tx: search.openpay_tx,
+              note: search.openpay_ref,
+              amount: amt && amt > 0 ? amt : undefined,
+            },
+          });
+          if (r.credited) {
+            toast.success(
+              r.already ? "Already credited" : `Received ${formatUSD(Number(amt || 0))} from OpenPay`,
+            );
+          }
+        }
+        await refreshBalances();
       } catch (e) {
         toast.error((e as Error).message);
       } finally {
@@ -148,6 +193,22 @@ function ReceivePage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.openpay_in, search.openpay_cancel]);
+
+  // Auto-poll for the payment while a receive link is open.
+  useEffect(() => {
+    if (!opLink) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      n += 1;
+      if (n > 20) {
+        window.clearInterval(id);
+        return;
+      }
+      void checkForPayment({ silent: true });
+    }, 15000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opLink?.note]);
 
   async function copyAddr() {
     if (!wallet?.address) return;
@@ -280,11 +341,22 @@ function ReceivePage() {
                   <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                 </a>
               </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-full"
+                disabled={busy}
+                onClick={() => checkForPayment()}
+              >
+                {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                Check for payment
+              </Button>
             </div>
             <p className="text-[11px] text-muted-foreground">
               Payer opens the link on OpenPay, pays
               {opLink.partner_username ? ` @${opLink.partner_username}` : ""}, then you are credited
-              on Pro.
+              on Pro. If the payer is someone else, tap “Check for payment” to credit your wallet.
             </p>
           </div>
         )}

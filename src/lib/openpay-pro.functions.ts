@@ -1049,3 +1049,122 @@ export const settleOpenPayInboundReceive = createServerFn({ method: "POST" })
 
     return result;
   });
+
+/**
+ * Reconcile real OpenPay inbound payments for the signed-in Pro user.
+ * Reads the partner account's credit transfers, matches `pro_xfer:` notes that
+ * belong to this user, and credits the Pro wallet idempotently (by transfer id).
+ * This is the reliable path when the payer is a different person than the
+ * receiver (redirect-based settle never runs for them).
+ */
+export const claimOpenPayInbound = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ note: z.string().min(8).max(200).optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { openpayPro } = await import("./openpay-pro.server");
+    const { parseInboundNote, creditProUserFromOpenPay } = await import(
+      "./openpay-inbound.server"
+    );
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, display_name, pi_username")
+      .eq("id", userId)
+      .maybeSingle();
+    const { data: wallets } = await supabase
+      .from("wallets")
+      .select("address")
+      .eq("user_id", userId);
+
+    const mine = new Set<string>();
+    for (const w of wallets ?? []) if (w?.address) mine.add(String(w.address).toLowerCase());
+    for (const v of [profile?.username, profile?.display_name, (profile as any)?.pi_username]) {
+      if (v) mine.add(String(v).replace(/^@+/, "").toLowerCase());
+    }
+    mine.add(`uid_${userId}`.toLowerCase());
+    mine.add(userId.toLowerCase());
+
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const n = (prefs?.notifications ?? {}) as Record<string, unknown>;
+    const pending = n.openpay_pending_inbound as { note?: string } | undefined;
+    const wantedNote = (data.note || pending?.note || "").trim().toLowerCase();
+
+    let rows: Awaited<ReturnType<typeof openpayPro.listTransfers>> = [];
+    try {
+      rows = await openpayPro.listTransfers({ limit: 100, direction: "credit" });
+    } catch {
+      rows = await openpayPro.listTransfers({ limit: 100 });
+    }
+
+    let admin;
+    try {
+      admin = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    } catch {
+      throw new Error("Server admin not configured");
+    }
+
+    let creditedTotal = 0;
+    let creditedCount = 0;
+    let alreadyCount = 0;
+    let matched = 0;
+    const errors: string[] = [];
+
+    for (const t of rows) {
+      const note = (t.note || "").trim();
+      if (!note) continue;
+      if (t.direction && String(t.direction).toLowerCase() === "debit") continue;
+      const parsed = parseInboundNote(note);
+      if (!parsed) continue;
+      const handle = parsed.handle.replace(/^@+/, "").toLowerCase();
+      const isMine = mine.has(handle) || (wantedNote && note.toLowerCase() === wantedNote);
+      if (!isMine) continue;
+      const amount = Number(t.amount);
+      if (!(amount > 0)) continue;
+      matched += 1;
+      const txId = String(t.transaction_id || t.id || `${parsed.ref}_${Math.round(amount * 100)}`);
+      try {
+        const r = await creditProUserFromOpenPay({
+          admin,
+          toHandle: parsed.handle,
+          amount,
+          openpayTxId: txId,
+          note,
+          fromLabel: t.counterparty_identifier,
+        });
+        if (r.userId && r.userId !== userId) continue;
+        if (r.already) alreadyCount += 1;
+        else {
+          creditedCount += 1;
+          creditedTotal += amount;
+        }
+      } catch (e) {
+        errors.push((e as Error).message);
+      }
+    }
+
+    if (creditedCount > 0) {
+      const next = { ...n };
+      delete next.openpay_pending_inbound;
+      await supabase.from("user_preferences").upsert({
+        user_id: userId,
+        notifications: next as never,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    return {
+      scanned: rows.length,
+      matched,
+      credited: creditedCount,
+      already: alreadyCount,
+      amount: creditedTotal,
+      errors: errors.slice(0, 3),
+    };
+  });

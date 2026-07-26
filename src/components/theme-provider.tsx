@@ -6,11 +6,11 @@ type ThemeCtx = { theme: Theme; setTheme: (t: Theme) => void; toggle: () => void
 const Ctx = createContext<ThemeCtx | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    const saved = (typeof window !== "undefined" && (localStorage.getItem("openpay-theme") as Theme | null)) || "dark";
-    setThemeState(saved);
+    const saved = typeof window !== "undefined" ? localStorage.getItem("openpay-theme") : null;
+    setThemeState(saved === "dark" || saved === "light" ? saved : "light");
   }, []);
 
   useEffect(() => {

@@ -47,7 +47,7 @@ function AuthPiPage() {
     window.location.href = url;
   }
 
-  const handlePiSignIn = async (silent = false) => {
+  const handlePiSignIn = async () => {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
     const isPiBrowser =
       /PiBrowser/i.test(ua) ||
@@ -57,7 +57,7 @@ function AuthPiPage() {
       try {
         startPiOAuthRedirect();
       } catch (err) {
-        if (!silent) toast.error((err as Error).message || "Pi sign-in failed");
+        toast.error((err as Error).message || "Pi sign-in failed");
       }
       return;
     }
@@ -68,30 +68,22 @@ function AuthPiPage() {
       toast.success(`Signed in as @${username} via Pi Network`);
       navigate({ to: "/dashboard" });
     } catch (err) {
-      if (!silent) toast.error((err as Error).message || "Pi sign-in failed");
-      else console.warn("[Pi] auto sign-in skipped:", (err as Error).message);
+      toast.error((err as Error).message || "Pi sign-in failed");
     } finally {
       setPiBusy(false);
     }
   };
 
+  // Only redirect if already signed in — never auto-start Pi/OpenPay auth
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
-      if (data.session) {
-        navigate({ to: "/dashboard" });
-        return;
-      }
-      const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
-      if (/PiBrowser/i.test(ua)) {
-        handlePiSignIn(true).catch((err) => console.warn("[Pi] auto sign-in skipped:", err));
-      }
+      if (data.session) navigate({ to: "/dashboard" });
     });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   useEffect(() => setMounted(true), []);
@@ -118,14 +110,23 @@ function AuthPiPage() {
 
           <Button
             type="button"
-            onClick={() => handlePiSignIn(false)}
+            onClick={() => handlePiSignIn()}
             disabled={piBusy || openPayBusy}
-            className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow hover:opacity-95"
+            className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-white shadow-glow hover:opacity-95"
           >
             {piBusy ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>π&nbsp;&nbsp;Continue with Pi Network</>
+              <span className="inline-flex items-center gap-2.5">
+                <img
+                  src="https://images.seeklogo.com/logo-png/44/2/pi-network-lvquy-logo-png_seeklogo-440686.png"
+                  width={22}
+                  height={22}
+                  alt=""
+                  className="rounded-full"
+                />
+                Continue with Pi Network
+              </span>
             )}
           </Button>
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BadgeCheck, UserPlus, UserMinus } from "lucide-react";
@@ -10,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatUSD } from "@/lib/wallet-utils";
 import { TokenCard } from "@/components/opentoken";
 
-export const Route = createFileRoute("/_authenticated/opentoken/creator/$userId")({
+export const Route = createFileRoute("/_authenticated/opentoken_/creator/$userId")({
   head: () => ({ meta: [{ title: "Creator — OpenToken" }] }),
   component: CreatorProfilePage,
 });
@@ -87,7 +88,11 @@ function CreatorProfilePage() {
   async function toggleFollow() {
     try {
       if (following) {
-        await supabase.from("ot_follows").delete().eq("creator_id", userId).eq("follower_id", user.id);
+        await supabase
+          .from("ot_follows")
+          .delete()
+          .eq("creator_id", userId)
+          .eq("follower_id", user.id);
         toast.success("Unfollowed");
       } else {
         await supabase.from("ot_follows").insert({ creator_id: userId, follower_id: user.id });
@@ -133,7 +138,9 @@ function CreatorProfilePage() {
               </div>
               {handle && <div className="text-sm text-muted-foreground">{handle}</div>}
               {profile?.pi_username && (
-                <p className="mt-2 max-w-lg text-sm text-muted-foreground">Pi · @{profile.pi_username}</p>
+                <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+                  Pi · @{profile.pi_username}
+                </p>
               )}
               <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
                 <span>

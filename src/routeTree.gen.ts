@@ -32,11 +32,10 @@ import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
-import { Route as AuthenticatedOpentokenIndexRouteImport } from './routes/_authenticated/opentoken.index'
-import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken.$tokenId'
-import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken.admin'
-import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken.create'
-import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken.portfolio'
+import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
+import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
+import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
+import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
@@ -47,7 +46,7 @@ import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
-import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken.creator.$userId'
+import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
@@ -172,35 +171,29 @@ const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   path: '/mint',
   getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
-const AuthenticatedOpentokenIndexRoute =
-  AuthenticatedOpentokenIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
-  } as any)
 const AuthenticatedOpentokenTokenIdRoute =
   AuthenticatedOpentokenTokenIdRouteImport.update({
-    id: '/$tokenId',
-    path: '/$tokenId',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
+    id: '/opentoken_/$tokenId',
+    path: '/opentoken/$tokenId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpentokenAdminRoute =
   AuthenticatedOpentokenAdminRouteImport.update({
-    id: '/admin',
-    path: '/admin',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
+    id: '/opentoken_/admin',
+    path: '/opentoken/admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpentokenCreateRoute =
   AuthenticatedOpentokenCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
+    id: '/opentoken_/create',
+    path: '/opentoken/create',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpentokenPortfolioRoute =
   AuthenticatedOpentokenPortfolioRouteImport.update({
-    id: '/portfolio',
-    path: '/portfolio',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
+    id: '/opentoken_/portfolio',
+    path: '/opentoken/portfolio',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
@@ -256,9 +249,9 @@ const AuthenticatedOpenpayConnectCallbackRoute =
   } as any)
 const AuthenticatedOpentokenCreatorUserIdRoute =
   AuthenticatedOpentokenCreatorUserIdRouteImport.update({
-    id: '/creator/$userId',
-    path: '/creator/$userId',
-    getParentRoute: () => AuthenticatedOpentokenRoute,
+    id: '/opentoken_/creator/$userId',
+    path: '/opentoken/creator/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
   id: '/api/public/docs/openpay',
@@ -321,7 +314,7 @@ export interface FileRoutesByFullPath {
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
-  '/opentoken': typeof AuthenticatedOpentokenRouteWithChildren
+  '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -347,7 +340,6 @@ export interface FileRoutesByFullPath {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
-  '/opentoken/': typeof AuthenticatedOpentokenIndexRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -370,6 +362,7 @@ export interface FileRoutesByTo {
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
+  '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -395,7 +388,6 @@ export interface FileRoutesByTo {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
-  '/opentoken': typeof AuthenticatedOpentokenIndexRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -420,7 +412,7 @@ export interface FileRoutesById {
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
-  '/_authenticated/opentoken': typeof AuthenticatedOpentokenRouteWithChildren
+  '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -433,10 +425,10 @@ export interface FileRoutesById {
   '/docs/openpay': typeof DocsOpenpayRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/_authenticated/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
-  '/_authenticated/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
-  '/_authenticated/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
-  '/_authenticated/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
+  '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
+  '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
+  '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
+  '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -446,9 +438,8 @@ export interface FileRoutesById {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
-  '/_authenticated/opentoken/': typeof AuthenticatedOpentokenIndexRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
-  '/_authenticated/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
+  '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
@@ -497,7 +488,6 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
-    | '/opentoken/'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -520,6 +510,7 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/ledger'
     | '/nfts'
+    | '/opentoken'
     | '/ousd'
     | '/receive'
     | '/scan'
@@ -545,7 +536,6 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
-    | '/opentoken'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -582,10 +572,10 @@ export interface FileRouteTypes {
     | '/docs/openpay'
     | '/_authenticated/admin/topup'
     | '/_authenticated/nfts/mint'
-    | '/_authenticated/opentoken/$tokenId'
-    | '/_authenticated/opentoken/admin'
-    | '/_authenticated/opentoken/create'
-    | '/_authenticated/opentoken/portfolio'
+    | '/_authenticated/opentoken_/$tokenId'
+    | '/_authenticated/opentoken_/admin'
+    | '/_authenticated/opentoken_/create'
+    | '/_authenticated/opentoken_/portfolio'
     | '/_authenticated/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
@@ -595,9 +585,8 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
-    | '/_authenticated/opentoken/'
     | '/_authenticated/openpay/connect/callback'
-    | '/_authenticated/opentoken/creator/$userId'
+    | '/_authenticated/opentoken_/creator/$userId'
     | '/api/public/docs/openpay'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
@@ -796,40 +785,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
       parentRoute: typeof AuthenticatedNftsRoute
     }
-    '/_authenticated/opentoken/': {
-      id: '/_authenticated/opentoken/'
-      path: '/'
-      fullPath: '/opentoken/'
-      preLoaderRoute: typeof AuthenticatedOpentokenIndexRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
-    }
-    '/_authenticated/opentoken/$tokenId': {
-      id: '/_authenticated/opentoken/$tokenId'
-      path: '/$tokenId'
+    '/_authenticated/opentoken_/$tokenId': {
+      id: '/_authenticated/opentoken_/$tokenId'
+      path: '/opentoken/$tokenId'
       fullPath: '/opentoken/$tokenId'
       preLoaderRoute: typeof AuthenticatedOpentokenTokenIdRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken/admin': {
-      id: '/_authenticated/opentoken/admin'
-      path: '/admin'
+    '/_authenticated/opentoken_/admin': {
+      id: '/_authenticated/opentoken_/admin'
+      path: '/opentoken/admin'
       fullPath: '/opentoken/admin'
       preLoaderRoute: typeof AuthenticatedOpentokenAdminRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken/create': {
-      id: '/_authenticated/opentoken/create'
-      path: '/create'
+    '/_authenticated/opentoken_/create': {
+      id: '/_authenticated/opentoken_/create'
+      path: '/opentoken/create'
       fullPath: '/opentoken/create'
       preLoaderRoute: typeof AuthenticatedOpentokenCreateRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken/portfolio': {
-      id: '/_authenticated/opentoken/portfolio'
-      path: '/portfolio'
+    '/_authenticated/opentoken_/portfolio': {
+      id: '/_authenticated/opentoken_/portfolio'
+      path: '/opentoken/portfolio'
       fullPath: '/opentoken/portfolio'
       preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tokens/create': {
       id: '/_authenticated/tokens/create'
@@ -901,12 +883,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken/creator/$userId': {
-      id: '/_authenticated/opentoken/creator/$userId'
-      path: '/creator/$userId'
+    '/_authenticated/opentoken_/creator/$userId': {
+      id: '/_authenticated/opentoken_/creator/$userId'
+      path: '/opentoken/creator/$userId'
       fullPath: '/opentoken/creator/$userId'
       preLoaderRoute: typeof AuthenticatedOpentokenCreatorUserIdRouteImport
-      parentRoute: typeof AuthenticatedOpentokenRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/docs/openpay': {
       id: '/api/public/docs/openpay'
@@ -985,31 +967,6 @@ const AuthenticatedNftsRouteChildren: AuthenticatedNftsRouteChildren = {
 const AuthenticatedNftsRouteWithChildren =
   AuthenticatedNftsRoute._addFileChildren(AuthenticatedNftsRouteChildren)
 
-interface AuthenticatedOpentokenRouteChildren {
-  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
-  AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
-  AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
-  AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
-  AuthenticatedOpentokenIndexRoute: typeof AuthenticatedOpentokenIndexRoute
-  AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
-}
-
-const AuthenticatedOpentokenRouteChildren: AuthenticatedOpentokenRouteChildren =
-  {
-    AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
-    AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
-    AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
-    AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
-    AuthenticatedOpentokenIndexRoute: AuthenticatedOpentokenIndexRoute,
-    AuthenticatedOpentokenCreatorUserIdRoute:
-      AuthenticatedOpentokenCreatorUserIdRoute,
-  }
-
-const AuthenticatedOpentokenRouteWithChildren =
-  AuthenticatedOpentokenRoute._addFileChildren(
-    AuthenticatedOpentokenRouteChildren,
-  )
-
 interface AuthenticatedTokensRouteChildren {
   AuthenticatedTokensCreateRoute: typeof AuthenticatedTokensCreateRoute
 }
@@ -1027,7 +984,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
-  AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRouteWithChildren
+  AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
@@ -1037,7 +994,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
+  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
+  AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
+  AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
+  AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
+  AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1046,7 +1008,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
-  AuthenticatedOpentokenRoute: AuthenticatedOpentokenRouteWithChildren,
+  AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
@@ -1056,8 +1018,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
+  AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
+  AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
+  AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
+  AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
   AuthenticatedOpenpayConnectCallbackRoute:
     AuthenticatedOpenpayConnectCallbackRoute,
+  AuthenticatedOpentokenCreatorUserIdRoute:
+    AuthenticatedOpentokenCreatorUserIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

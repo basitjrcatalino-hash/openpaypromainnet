@@ -1,16 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  ArrowLeft,
-  BadgeCheck,
-  Copy,
-  Flag,
-  Share2,
-  Star,
-  ExternalLink,
-} from "lucide-react";
+import { ArrowLeft, BadgeCheck, Copy, Flag, Share2, Star, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatNumber, formatPct, formatUSD, fetchActiveWallet, shortAddress, timeAgo } from "@/lib/wallet-utils";
+import {
+  formatNumber,
+  formatPct,
+  formatUSD,
+  fetchActiveWallet,
+  shortAddress,
+  timeAgo,
+} from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { reportOpenToken } from "@/lib/opentoken.functions";
 import {
@@ -38,7 +38,7 @@ import {
   TradesTable,
 } from "@/components/opentoken";
 
-export const Route = createFileRoute("/_authenticated/opentoken/$tokenId")({
+export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId")({
   head: () => ({ meta: [{ title: "Token — OpenToken" }] }),
   component: OpenTokenDetail,
 });
@@ -55,7 +55,11 @@ function OpenTokenDetail() {
   const { data: token, isLoading } = useQuery({
     queryKey: ["ot-token", tokenId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("tokens").select("*").eq("id", tokenId).maybeSingle();
+      const { data, error } = await supabase
+        .from("tokens")
+        .select("*")
+        .eq("id", tokenId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -227,12 +231,19 @@ function OpenTokenDetail() {
             )}
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
               {token.website && (
-                <a href={token.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                <a
+                  href={token.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
                   Website
                 </a>
               )}
               {token.twitter && <span className="text-muted-foreground">X · {token.twitter}</span>}
-              {token.telegram && <span className="text-muted-foreground">TG · {token.telegram}</span>}
+              {token.telegram && (
+                <span className="text-muted-foreground">TG · {token.telegram}</span>
+              )}
               {creator && (
                 <Link
                   to="/opentoken/creator/$userId"
@@ -260,7 +271,12 @@ function OpenTokenDetail() {
           >
             <Share2 className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full" onClick={() => setReportOpen(true)}>
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full"
+            onClick={() => setReportOpen(true)}
+          >
             <Flag className="h-4 w-4" />
           </Button>
         </div>
@@ -271,7 +287,9 @@ function OpenTokenDetail() {
           label="Market cap"
           value={formatUSD(token.market_cap, { compact: true })}
           sub={
-            <span className={change >= 0 ? "text-success" : "text-destructive"}>{formatPct(change)}</span>
+            <span className={change >= 0 ? "text-success" : "text-destructive"}>
+              {formatPct(change)}
+            </span>
           }
         />
         <StatCard label="Price" value={`${formatNumber(token.price_usd, 8)} π`} />
@@ -285,14 +303,20 @@ function OpenTokenDetail() {
             <div className="flex gap-1 rounded-full border border-border/60 p-0.5 text-xs">
               <button
                 type="button"
-                className={cn("rounded-full px-2.5 py-1", chartMode === "price" && "bg-primary text-primary-foreground")}
+                className={cn(
+                  "rounded-full px-2.5 py-1",
+                  chartMode === "price" && "bg-primary text-primary-foreground",
+                )}
                 onClick={() => setChartMode("price")}
               >
                 Price
               </button>
               <button
                 type="button"
-                className={cn("rounded-full px-2.5 py-1", chartMode === "mcap" && "bg-primary text-primary-foreground")}
+                className={cn(
+                  "rounded-full px-2.5 py-1",
+                  chartMode === "mcap" && "bg-primary text-primary-foreground",
+                )}
                 onClick={() => setChartMode("mcap")}
               >
                 MCap
@@ -306,9 +330,15 @@ function OpenTokenDetail() {
           <Card className="rounded-3xl border-border/60 p-4">
             <Tabs defaultValue="trades">
               <TabsList className="rounded-full">
-                <TabsTrigger value="trades" className="rounded-full">Trades</TabsTrigger>
-                <TabsTrigger value="comments" className="rounded-full">Comments</TabsTrigger>
-                <TabsTrigger value="info" className="rounded-full">Info</TabsTrigger>
+                <TabsTrigger value="trades" className="rounded-full">
+                  Trades
+                </TabsTrigger>
+                <TabsTrigger value="comments" className="rounded-full">
+                  Comments
+                </TabsTrigger>
+                <TabsTrigger value="info" className="rounded-full">
+                  Info
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="trades" className="mt-3">
                 <TradesTable trades={trades as any} symbol={token.symbol} />
@@ -319,8 +349,8 @@ function OpenTokenDetail() {
               <TabsContent value="info" className="mt-3 space-y-2 text-sm text-muted-foreground">
                 <p>Fair launch on OpenToken bonding curve. No team or VC allocation.</p>
                 <p>
-                  Burnable: {token.burnable ? "yes" : "no"} · Mintable: {token.mintable ? "yes" : "no"} ·
-                  Decimals: {token.decimals}
+                  Burnable: {token.burnable ? "yes" : "no"} · Mintable:{" "}
+                  {token.mintable ? "yes" : "no"} · Decimals: {token.decimals}
                 </p>
                 {token.contract_address && (
                   <a
@@ -362,7 +392,11 @@ function OpenTokenDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => setReportOpen(false)}>
               Cancel
             </Button>
-            <Button className="rounded-full" disabled={reason.trim().length < 3} onClick={submitReport}>
+            <Button
+              className="rounded-full"
+              disabled={reason.trim().length < 3}
+              onClick={submitReport}
+            >
               Submit report
             </Button>
           </DialogFooter>
@@ -372,15 +406,7 @@ function OpenTokenDetail() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: React.ReactNode;
-}) {
+function StatCard({ label, value, sub }: { label: string; value: string; sub?: React.ReactNode }) {
   return (
     <Card className="rounded-2xl border-border/60 p-4">
       <div className="text-xs text-muted-foreground">{label}</div>

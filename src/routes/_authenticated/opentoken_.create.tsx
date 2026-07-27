@@ -26,7 +26,7 @@ import { FairLaunchConfirm, LivePreview } from "@/components/opentoken";
 import { fetchActiveWallet } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/opentoken/create")({
+export const Route = createFileRoute("/_authenticated/opentoken_/create")({
   head: () => ({ meta: [{ title: "Create coin — OpenToken" }] }),
   component: CreateOpenTokenPage,
 });

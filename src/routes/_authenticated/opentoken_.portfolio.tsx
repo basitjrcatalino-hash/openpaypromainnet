@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +11,7 @@ import { formatNumber, formatUSD, fetchActiveWallet, timeAgo } from "@/lib/walle
 import { cn } from "@/lib/utils";
 import { TokenCard } from "@/components/opentoken";
 
-export const Route = createFileRoute("/_authenticated/opentoken/portfolio")({
+export const Route = createFileRoute("/_authenticated/opentoken_/portfolio")({
   head: () => ({ meta: [{ title: "Portfolio — OpenToken" }] }),
   component: OpenTokenPortfolio,
 });
@@ -188,7 +189,10 @@ function OpenTokenPortfolio() {
           ) : (
             <ul className="divide-y divide-border/50">
               {(activity as any[]).map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                >
                   <div>
                     <span className={t.side === "buy" ? "text-success" : "text-destructive"}>
                       {t.side === "buy" ? "Bought" : "Sold"}

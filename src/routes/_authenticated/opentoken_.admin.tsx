@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,7 +15,7 @@ import {
 } from "@/lib/opentoken.functions";
 import { formatNumber } from "@/lib/wallet-utils";
 
-export const Route = createFileRoute("/_authenticated/opentoken/admin")({
+export const Route = createFileRoute("/_authenticated/opentoken_/admin")({
   head: () => ({ meta: [{ title: "Admin — OpenToken" }] }),
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -44,7 +45,9 @@ function OpenTokenAdmin() {
     queryFn: async () => {
       const { data } = await supabase
         .from("tokens")
-        .select("id, name, symbol, is_featured, is_hidden, is_verified, status, report_count, volume_24h")
+        .select(
+          "id, name, symbol, is_featured, is_hidden, is_verified, status, report_count, volume_24h",
+        )
         .order("created_at", { ascending: false })
         .limit(100);
       return data ?? [];
@@ -53,7 +56,12 @@ function OpenTokenAdmin() {
 
   async function patchToken(
     tokenId: string,
-    patch: { is_featured?: boolean; is_hidden?: boolean; is_verified?: boolean; status?: "curve" | "graduated" | "halted" },
+    patch: {
+      is_featured?: boolean;
+      is_hidden?: boolean;
+      is_verified?: boolean;
+      status?: "curve" | "graduated" | "halted";
+    },
   ) {
     try {
       await updateFn({ data: { token_id: tokenId, ...patch } });
@@ -96,22 +104,30 @@ function OpenTokenAdmin() {
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <Shield className="h-6 w-6 text-primary" /> OpenToken Admin
           </h1>
-          <p className="text-sm text-muted-foreground">Moderate launches, feature projects, review reports</p>
+          <p className="text-sm text-muted-foreground">
+            Moderate launches, feature projects, review reports
+          </p>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="rounded-2xl border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Tokens</div>
-          <div className="text-2xl font-semibold tabular-nums">{formatNumber(overview.tokens, 0)}</div>
+          <div className="text-2xl font-semibold tabular-nums">
+            {formatNumber(overview.tokens, 0)}
+          </div>
         </Card>
         <Card className="rounded-2xl border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Trades</div>
-          <div className="text-2xl font-semibold tabular-nums">{formatNumber(overview.trades, 0)}</div>
+          <div className="text-2xl font-semibold tabular-nums">
+            {formatNumber(overview.trades, 0)}
+          </div>
         </Card>
         <Card className="rounded-2xl border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Open reports</div>
-          <div className="text-2xl font-semibold tabular-nums">{formatNumber(overview.open_reports, 0)}</div>
+          <div className="text-2xl font-semibold tabular-nums">
+            {formatNumber(overview.open_reports, 0)}
+          </div>
         </Card>
       </div>
 
@@ -131,7 +147,12 @@ function OpenTokenAdmin() {
                   <div className="text-xs text-muted-foreground">{r.reason}</div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => review(r.id, "dismissed")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => review(r.id, "dismissed")}
+                  >
                     Dismiss
                   </Button>
                   <Button
@@ -150,11 +171,17 @@ function OpenTokenAdmin() {
       </Card>
 
       <Card className="overflow-hidden rounded-3xl border-border/60">
-        <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold">Manage tokens</div>
+        <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold">
+          Manage tokens
+        </div>
         <ul className="divide-y divide-border/50">
           {tokens.map((t: any) => (
             <li key={t.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-              <Link to="/opentoken/$tokenId" params={{ tokenId: t.id }} className="min-w-0 hover:text-primary">
+              <Link
+                to="/opentoken/$tokenId"
+                params={{ tokenId: t.id }}
+                className="min-w-0 hover:text-primary"
+              >
                 <div className="text-sm font-semibold">
                   {t.name} <span className="text-muted-foreground">${t.symbol}</span>
                 </div>

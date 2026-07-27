@@ -60,8 +60,8 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
-  { to: "/tokens/create", label: "Agent", icon: Sparkles },
-  { to: "/tokens", label: "Explore", icon: Compass },
+  { to: "/opentoken/create", label: "Create", icon: Sparkles },
+  { to: "/opentoken", label: "OpenToken", icon: Compass },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -193,7 +193,13 @@ function AuthenticatedLayout() {
           <div className="mx-auto grid max-w-md grid-cols-5">
             {NAV.map((item) => {
               const Icon = item.icon;
-              const active = pathname === item.to || (item.to === "/dashboard" && pathname === "/");
+              const active =
+                pathname === item.to ||
+                (item.to === "/dashboard" && pathname === "/") ||
+                (item.to === "/opentoken" &&
+                  pathname.startsWith("/opentoken") &&
+                  !pathname.startsWith("/opentoken/create")) ||
+                (item.to === "/opentoken/create" && pathname.startsWith("/opentoken/create"));
               return (
                 <Link
                   key={item.to}
@@ -403,7 +409,13 @@ function SidebarInner({
       <nav className="rounded-2xl border border-border/60 bg-card/40 p-2">
         {NAV.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.to || (item.to === "/dashboard" && pathname === "/");
+          const active =
+            pathname === item.to ||
+            (item.to === "/dashboard" && pathname === "/") ||
+            (item.to === "/opentoken" &&
+              pathname.startsWith("/opentoken") &&
+              !pathname.startsWith("/opentoken/create")) ||
+            (item.to === "/opentoken/create" && pathname.startsWith("/opentoken/create"));
           return (
             <Link
               key={item.to}

@@ -61,6 +61,7 @@ const ACTIONS = [
   { label: "Send", icon: Send, to: "/send" },
   { label: "Receive", icon: QrCode, to: "/receive" },
   { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
+  { label: "OpenToken", icon: Sparkles, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   {
@@ -278,28 +279,34 @@ function Dashboard() {
       </div>
 
       {/* Actions bar */}
-      <div className="grid grid-cols-4 gap-2 md:grid-cols-7 md:gap-3">
+      <div className="grid grid-cols-4 gap-2 md:grid-cols-4 lg:grid-cols-8 md:gap-3">
         {ACTIONS.map((a) => {
           const Icon = a.icon;
-          return (
-            <button
-              key={a.label}
-              type="button"
-              onClick={() => {
-                if ("href" in a && a.href) {
-                  window.open(a.href, "_blank", "noopener,noreferrer");
-                  return;
-                }
-                if ("to" in a && a.to) navigate({ to: a.to });
-              }}
-              className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow md:px-3 md:py-4"
-            >
+          const className =
+            "group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card px-2 py-3 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow md:px-3 md:py-4";
+          const inner = (
+            <>
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-sidebar-accent text-primary transition-colors group-hover:bg-gradient-primary group-hover:text-primary-foreground">
                 <Icon className="h-5 w-5" />
               </span>
               <span>{a.label}</span>
-            </button>
+            </>
           );
+          if ("href" in a && a.href) {
+            return (
+              <a key={a.label} href={a.href} target="_blank" rel="noreferrer" className={className}>
+                {inner}
+              </a>
+            );
+          }
+          if ("to" in a && a.to) {
+            return (
+              <Link key={a.label} to={a.to} className={className}>
+                {inner}
+              </Link>
+            );
+          }
+          return null;
         })}
       </div>
 
@@ -351,11 +358,18 @@ function Dashboard() {
                 {holdings.map((h) => {
                   const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                   const pct = Number(h.tokens?.change_24h ?? 0);
+                  const tokenId = h.tokens?.id;
                   return (
                     <li key={h.tokens?.id}>
                       <button
                         type="button"
-                        onClick={() => navigate({ to: "/tokens" })}
+                        onClick={() =>
+                          navigate(
+                            tokenId
+                              ? { to: "/opentoken/$tokenId", params: { tokenId } }
+                              : { to: "/opentoken" },
+                          )
+                        }
                         className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="flex items-center gap-3">
@@ -392,7 +406,7 @@ function Dashboard() {
               </ul>
             )}
             <Link
-              to="/tokens"
+              to="/opentoken"
               className="flex items-center justify-center gap-2 border-t border-border/60 py-3 text-sm font-semibold text-primary hover:bg-sidebar-accent/40"
             >
               <span className="grid h-4 w-4 place-items-center rounded-sm border border-current">
@@ -419,6 +433,22 @@ function Dashboard() {
           <div className="rounded-2xl border border-border/60 bg-card p-5">
             <OpenNftCollectiblesPanel userId={user.id} limit={6} compact />
           </div>
+
+          <Link
+            to="/opentoken"
+            className="mt-4 flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/40 hover:shadow-glow"
+          >
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold">OpenToken</div>
+              <div className="text-xs text-muted-foreground">
+                Launch & trade fair community coins
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-primary">Open</span>
+          </Link>
         </section>
       </div>
 

@@ -39,7 +39,7 @@ export function QrScannerButton({ onResult, trigger }: Props) {
         </DialogHeader>
         <div
           id={elId}
-          className="min-h-60 overflow-hidden rounded-2xl border border-border bg-black"
+          className="relative min-h-60 overflow-hidden rounded-2xl border border-border bg-black [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover"
         />
         <p className="text-center text-xs text-muted-foreground">
           Point your camera at a wallet QR code

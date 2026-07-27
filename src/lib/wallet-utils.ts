@@ -65,6 +65,21 @@ export function formatPct(n: number | string | null | undefined): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
+export function timeAgo(date: string | Date | null | undefined): string {
+  if (!date) return "";
+  const t = typeof date === "string" ? new Date(date).getTime() : date.getTime();
+  if (!isFinite(t)) return "";
+  const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d`;
+  return `${Math.floor(d / 30)}mo`;
+}
+
 /** Supabase-compatible client shape for wallet lookups. */
 type WalletQueryClient = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

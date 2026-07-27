@@ -488,21 +488,36 @@ export type Database = {
       tokens: {
         Row: {
           auto_liquidity: boolean
+          banner_url: string | null
           burnable: boolean
+          category: Database["public"]["Enums"]["ot_token_category"] | null
           change_24h: number
           contract_address: string | null
           created_at: string
           creator_id: string | null
+          curve_reserve_pi: number
+          curve_supply_sold: number
+          curve_virtual_pi: number
+          curve_virtual_tokens: number
           decimals: number
           description: string | null
+          discord: string | null
+          graduated_at: string | null
+          graduation_target_pi: number
+          holder_count: number
           id: string
           is_featured: boolean
+          is_hidden: boolean
+          is_verified: boolean
+          launch_fee_pi: number
           logo_url: string | null
           market_cap: number
           mintable: boolean
           name: string
           pausable: boolean
           price_usd: number
+          report_count: number
+          status: Database["public"]["Enums"]["ot_token_status"]
           symbol: string
           tax_bps: number
           telegram: string | null
@@ -513,21 +528,36 @@ export type Database = {
         }
         Insert: {
           auto_liquidity?: boolean
+          banner_url?: string | null
           burnable?: boolean
+          category?: Database["public"]["Enums"]["ot_token_category"] | null
           change_24h?: number
           contract_address?: string | null
           created_at?: string
           creator_id?: string | null
+          curve_reserve_pi?: number
+          curve_supply_sold?: number
+          curve_virtual_pi?: number
+          curve_virtual_tokens?: number
           decimals?: number
           description?: string | null
+          discord?: string | null
+          graduated_at?: string | null
+          graduation_target_pi?: number
+          holder_count?: number
           id?: string
           is_featured?: boolean
+          is_hidden?: boolean
+          is_verified?: boolean
+          launch_fee_pi?: number
           logo_url?: string | null
           market_cap?: number
           mintable?: boolean
           name: string
           pausable?: boolean
           price_usd?: number
+          report_count?: number
+          status?: Database["public"]["Enums"]["ot_token_status"]
           symbol: string
           tax_bps?: number
           telegram?: string | null
@@ -538,21 +568,36 @@ export type Database = {
         }
         Update: {
           auto_liquidity?: boolean
+          banner_url?: string | null
           burnable?: boolean
+          category?: Database["public"]["Enums"]["ot_token_category"] | null
           change_24h?: number
           contract_address?: string | null
           created_at?: string
           creator_id?: string | null
+          curve_reserve_pi?: number
+          curve_supply_sold?: number
+          curve_virtual_pi?: number
+          curve_virtual_tokens?: number
           decimals?: number
           description?: string | null
+          discord?: string | null
+          graduated_at?: string | null
+          graduation_target_pi?: number
+          holder_count?: number
           id?: string
           is_featured?: boolean
+          is_hidden?: boolean
+          is_verified?: boolean
+          launch_fee_pi?: number
           logo_url?: string | null
           market_cap?: number
           mintable?: boolean
           name?: string
           pausable?: boolean
           price_usd?: number
+          report_count?: number
+          status?: Database["public"]["Enums"]["ot_token_status"]
           symbol?: string
           tax_bps?: number
           telegram?: string | null
@@ -560,6 +605,192 @@ export type Database = {
           twitter?: string | null
           volume_24h?: number
           website?: string | null
+        }
+        Relationships: []
+      }
+      ot_trades: {
+        Row: {
+          created_at: string
+          id: string
+          pi_amount: number
+          price: number
+          side: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount: number
+          token_id: string
+          tx_ref: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pi_amount: number
+          price: number
+          side: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount: number
+          token_id: string
+          tx_ref?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pi_amount?: number
+          price?: number
+          side?: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount?: number
+          token_id?: string
+          tx_ref?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: []
+      }
+      ot_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ot_favorites: {
+        Row: {
+          created_at: string
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ot_follows: {
+        Row: {
+          created_at: string
+          creator_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          follower_id?: string
+        }
+        Relationships: []
+      }
+      ot_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["ot_report_status"]
+          token_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ot_report_status"]
+          token_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ot_report_status"]
+          token_id?: string
+        }
+        Relationships: []
+      }
+      ot_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          href: string | null
+          id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ot_price_ticks: {
+        Row: {
+          created_at: string
+          id: string
+          market_cap: number
+          price: number
+          token_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market_cap?: number
+          price: number
+          token_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market_cap?: number
+          price?: number
+          token_id?: string
         }
         Relationships: []
       }
@@ -788,6 +1019,16 @@ export type Database = {
         Returns: boolean
       }
       has_user_pin: { Args: never; Returns: boolean }
+      ot_execute_trade: {
+        Args: {
+          p_token_id: string
+          p_wallet_id: string
+          p_side: Database["public"]["Enums"]["ot_trade_side"]
+          p_pi_amount?: number | null
+          p_token_amount?: number | null
+        }
+        Returns: Json
+      }
       verify_user_pin: { Args: { _pin_hash: string }; Returns: boolean }
     }
     Enums: {
@@ -798,6 +1039,17 @@ export type Database = {
         | "in_review"
         | "verified"
         | "rejected"
+      ot_report_status: "open" | "reviewed" | "dismissed" | "actioned"
+      ot_token_category:
+        | "meme"
+        | "ai"
+        | "gaming"
+        | "utility"
+        | "defi"
+        | "nft"
+        | "community"
+      ot_token_status: "curve" | "graduated" | "halted"
+      ot_trade_side: "buy" | "sell"
       tx_status: "pending" | "confirmed" | "failed"
       tx_type: "send" | "receive" | "swap" | "mint" | "buy" | "sell" | "reward"
     }

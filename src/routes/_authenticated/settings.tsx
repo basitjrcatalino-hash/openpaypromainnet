@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   unlinkOpenPayAccount,
-  syncOpenPayOUSD,
   startOpenPayConnect,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
@@ -80,7 +79,6 @@ function SettingsPage() {
           .order("created_at", { ascending: true })
       ).data ?? [],
   });
-  const activeWalletId = wallets.find((w: { is_active?: boolean }) => w.is_active)?.id ?? wallets[0]?.id;
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
@@ -687,30 +685,14 @@ function SettingsPage() {
       </Card>
 
       {/* OpenPay integration */}
-      <OpenPayIntegrationCard
-        userId={user.id}
-        walletId={activeWalletId}
-        onWalletChanged={() => {
-          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-        }}
-      />
+      <OpenPayIntegrationCard userId={user.id} />
     </div>
   );
 }
 
-function OpenPayIntegrationCard({
-  userId,
-  walletId,
-  onWalletChanged,
-}: {
-  userId: string;
-  walletId?: string;
-  onWalletChanged: () => void;
-}) {
+function OpenPayIntegrationCard({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const unlinkOpenPay = useServerFn(unlinkOpenPayAccount);
-  const syncOpenPay = useServerFn(syncOpenPayOUSD);
   const startConnect = useServerFn(startOpenPayConnect);
   const getLink = useServerFn(getOpenPayLinkStatus);
 
@@ -756,23 +738,6 @@ function OpenPayIntegrationCard({
     }
   }
 
-  async function sync() {
-    if (!walletId) {
-      toast.error("Create a wallet first");
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await syncOpenPay({ data: { walletId } });
-      toast.success(res.message ?? `Synced · ${res.balance} OUSD`);
-      onWalletChanged();
-    } catch (err) {
-      toast.error((err as Error).message || "Sync failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const linkedLabel = stored?.username
     ? `@${stored.username}`
     : stored?.account_number || stored?.identifier || stored?.name || "OpenPay";
@@ -802,24 +767,9 @@ function OpenPayIntegrationCard({
               Checking…
             </Button>
           ) : linked ? (
-            <>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                disabled={busy || !walletId}
-                onClick={sync}
-              >
-                {busy ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                Sync
-              </Button>
-              <Button variant="ghost" className="rounded-full" disabled={busy} onClick={disconnect}>
-                Disconnect
-              </Button>
-            </>
+            <Button variant="ghost" className="rounded-full" disabled={busy} onClick={disconnect}>
+              Disconnect
+            </Button>
           ) : (
             <Button
               className="rounded-full bg-gradient-primary text-primary-foreground"

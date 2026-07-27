@@ -20,13 +20,15 @@ function ScanPage() {
   const [starting, setStarting] = useState(true);
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
+  const [camKey, setCamKey] = useState(0);
+  const scanElId = `${SCAN_EL_ID}-${camKey}`;
   const handled = useRef(false);
   const alive = useRef(true);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const finishRef = useRef<(text: string) => Promise<void>>(async () => undefined);
 
   const scannerRef = useQrCamera({
-    elementId: SCAN_EL_ID,
+    elementId: scanElId,
     active: true,
     onError: (message) => {
       if (!alive.current) return;
@@ -35,6 +37,7 @@ function ScanPage() {
     },
     onReady: (instance) => {
       if (!alive.current) return;
+      setError(null);
       setStarting(false);
       try {
         const caps = instance.getRunningTrackCameraCapabilities?.();
@@ -49,6 +52,15 @@ function ScanPage() {
       void finishRef.current(text);
     },
   });
+
+  // Reset UI when retry remounts the camera element.
+  useEffect(() => {
+    setStarting(true);
+    setError(null);
+    setTorchOn(false);
+    setTorchSupported(false);
+    handled.current = false;
+  }, [camKey]);
 
   finishRef.current = async (text: string) => {
     await stopQrInstance(scannerRef.current);
@@ -106,29 +118,30 @@ function ScanPage() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      <div className="absolute inset-0 flex items-center justify-center bg-black">
-        <div
-          id={SCAN_EL_ID}
-          className="h-[min(70vh,360px)] w-[min(100vw,360px)] overflow-hidden bg-black"
-        />
-        {starting && (
-          <div className="absolute inset-0 grid place-items-center bg-black">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-      </div>
+      {/* Full-bleed camera — must fill the viewport so the viewfinder isn't black */}
+      <div
+        id={scanElId}
+        className="absolute inset-0 h-full w-full overflow-hidden bg-black [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover"
+      />
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col">
-        <div className="flex-1 bg-black/50" />
+      {starting && (
+        <div className="absolute inset-0 z-5 grid place-items-center bg-black/80">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Dimmed mask + viewfinder corners */}
+      <div className="pointer-events-none absolute inset-0 z-6 flex flex-col">
+        <div className="flex-1 bg-black/55" />
         <div className="flex justify-center">
-          <div className="relative h-60 w-60">
+          <div className="relative h-60 w-60 shrink-0">
             <span className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px] border-white" />
             <span className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px] border-white" />
             <span className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px] border-white" />
             <span className="absolute bottom-0 right-0 h-10 w-10 rounded-br-2xl border-b-[3px] border-r-[3px] border-white" />
           </div>
         </div>
-        <div className="flex-1 bg-black/50" />
+        <div className="flex-1 bg-black/55" />
       </div>
 
       <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -176,13 +189,25 @@ function ScanPage() {
             </button>
           )}
         </div>
-        {error && <p className="mt-4 text-center text-sm text-red-300">{error}</p>}
+        {error && (
+          <div className="mt-4 space-y-3 text-center">
+            <p className="text-sm text-red-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => setCamKey((k) => k + 1)}
+              className="rounded-full bg-white/15 px-4 py-2 text-xs font-medium text-white"
+            >
+              Try again
+            </button>
+          </div>
+        )}
       </div>
 
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

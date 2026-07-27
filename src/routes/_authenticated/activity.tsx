@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
+import { fetchWalletActivity, type ActivityItem } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({ meta: [{ title: "Activity — OpenPay Pro Wallet" }] }),
@@ -33,23 +34,18 @@ function ActivityPage() {
   const { data: txs = [] } = useQuery({
     queryKey: ["all-txs", wallet?.id],
     enabled: !!wallet?.id,
-    staleTime: 15_000,
-    queryFn: async (): Promise<TxRow[]> =>
-      (
-        await supabase
-          .from("transactions")
-          .select("*")
-          .eq("wallet_id", wallet!.id)
-          .order("created_at", { ascending: false })
-          .limit(50)
-      ).data ?? [],
+    staleTime: 10_000,
+    refetchOnMount: "always",
+    queryFn: (): Promise<ActivityItem[]> => fetchWalletActivity(supabase, wallet!.id, 80),
   });
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Activity</h1>
-        <p className="text-sm text-muted-foreground">All transactions on your active wallet</p>
+        <p className="text-sm text-muted-foreground">
+          Wallet transfers, OpenDEX swaps, and OpenToken buys & sells
+        </p>
       </div>
 
       <Card className="glass-strong rounded-3xl border-border/60 p-2 sm:p-5">
@@ -60,7 +56,7 @@ function ActivityPage() {
         ) : (
           <ul className="divide-y divide-border/60 px-2 sm:px-0">
             {txs.map((t) => (
-              <li key={t.id}>
+              <li key={`${t.source ?? "wallet"}-${t.id}`}>
                 <TxRowButton tx={t} onOpen={setSelected} />
               </li>
             ))}

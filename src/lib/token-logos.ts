@@ -1,5 +1,5 @@
-/** Official OpenPay / OUSD brand mark (local asset — reliable across deploys) */
-export const OUSD_LOGO_URL = "/ousd-logo.svg";
+/** Official OpenPay / OUSD brand mark */
+export const OUSD_LOGO_URL = "https://i.ibb.co/DPYPzVdN/app-icon-ios.png";
 
-/** Legacy remote mark kept for reference / fallbacks */
-export const OUSD_LOGO_REMOTE_URL = "https://i.ibb.co/MygZ8C8C/app-icon-ios.png";
+/** Local SVG fallback if the remote mark is unavailable */
+export const OUSD_LOGO_FALLBACK_URL = "/ousd-logo.svg";

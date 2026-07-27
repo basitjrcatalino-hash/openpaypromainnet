@@ -121,6 +121,8 @@ export function TradePanel({
         qc.invalidateQueries({ queryKey: ["active-wallet", userId] }),
         qc.invalidateQueries({ queryKey: ["ot-holding"] }),
         qc.invalidateQueries({ queryKey: ["ot-portfolio"] }),
+        qc.invalidateQueries({ queryKey: ["all-txs"] }),
+        qc.invalidateQueries({ queryKey: ["recent-txs"] }),
       ]);
       onClose?.();
     } catch (err) {
@@ -155,6 +157,8 @@ export function TradePanel({
         qc.invalidateQueries({ queryKey: ["active-wallet", userId] }),
         qc.invalidateQueries({ queryKey: ["ot-holding"] }),
         qc.invalidateQueries({ queryKey: ["ot-portfolio"] }),
+        qc.invalidateQueries({ queryKey: ["all-txs"] }),
+        qc.invalidateQueries({ queryKey: ["recent-txs"] }),
       ]);
       onClose?.();
     } catch (err) {

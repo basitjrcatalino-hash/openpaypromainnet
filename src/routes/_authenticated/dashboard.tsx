@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
+import { fetchWalletActivity } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -118,18 +119,12 @@ function Dashboard() {
     },
   });
 
-  const { data: recentTxs = [] } = useQuery({
+  const { data: recentTxs = [], isLoading: recentLoading } = useQuery({
     queryKey: ["recent-txs", wallet?.id],
     enabled: !!wallet?.id,
-    queryFn: async (): Promise<TxRow[]> =>
-      (
-        await supabase
-          .from("transactions")
-          .select("*")
-          .eq("wallet_id", wallet!.id)
-          .order("created_at", { ascending: false })
-          .limit(8)
-      ).data ?? [],
+    staleTime: 10_000,
+    refetchOnMount: "always",
+    queryFn: () => fetchWalletActivity(supabase, wallet!.id, 12),
   });
 
   useEffect(() => {
@@ -465,14 +460,16 @@ function Dashboard() {
           </Link>
         </header>
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-          {recentTxs.length === 0 ? (
+          {recentLoading ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">Loading activity…</p>
+          ) : recentTxs.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              No activity yet — fund, send, or receive to see history here.
+              No activity yet — fund, trade OpenToken, or swap to see history here.
             </p>
           ) : (
             <ul className="divide-y divide-border/60 px-4">
               {recentTxs.map((t) => (
-                <li key={t.id}>
+                <li key={`${t.source ?? "wallet"}-${t.id}`}>
                   <TxRowButton tx={t} onOpen={setSelectedTx} />
                 </li>
               ))}

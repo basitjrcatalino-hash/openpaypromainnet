@@ -29,6 +29,7 @@ DECLARE
   fee NUMERIC := 0;
   graduated BOOLEAN := false;
   cd TIMESTAMPTZ;
+  v_tx_ref TEXT;
 BEGIN
   IF uid IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
@@ -52,7 +53,7 @@ BEGIN
     RAISE EXCEPTION 'Trading halted';
   END IF;
   IF tok.status = 'graduated' THEN
-    RAISE EXCEPTION 'Token graduated — use OpenDEX (coming soon)';
+    RAISE EXCEPTION 'Token graduated — use OpenDEX';
   END IF;
 
   v_pi := tok.curve_virtual_pi + tok.curve_reserve_pi;
@@ -96,8 +97,25 @@ BEGIN
       )
     WHERE id = tok.id;
 
+    v_tx_ref := 'ot_' || replace(gen_random_uuid()::text, '-', '');
     INSERT INTO public.ot_trades (token_id, user_id, wallet_id, side, pi_amount, token_amount, price, tx_ref)
-    VALUES (tok.id, uid, wal.id, 'buy', pi_in, tok_out, price, 'ot_' || replace(gen_random_uuid()::text, '-', ''));
+    VALUES (tok.id, uid, wal.id, 'buy', pi_in, tok_out, price, v_tx_ref);
+
+    INSERT INTO public.transactions (
+      wallet_id, type, status, token_id, token_symbol, amount, usd_value, counterparty, memo, tx_hash
+    )
+    VALUES (
+      wal.id,
+      'buy',
+      'confirmed',
+      tok.id,
+      '$' || tok.symbol,
+      tok_out,
+      pi_in,
+      'OpenToken',
+      'OpenToken buy ' || tok_out::text || ' $' || tok.symbol || ' for ' || pi_in::text || ' OUSD',
+      v_tx_ref
+    );
 
     INSERT INTO public.ot_price_ticks (token_id, price, market_cap)
     VALUES (tok.id, price, price * tok.total_supply);
@@ -155,8 +173,25 @@ BEGIN
       )
     WHERE id = tok.id;
 
+    v_tx_ref := 'ot_' || replace(gen_random_uuid()::text, '-', '');
     INSERT INTO public.ot_trades (token_id, user_id, wallet_id, side, pi_amount, token_amount, price, tx_ref)
-    VALUES (tok.id, uid, wal.id, 'sell', pi_out, tok_in, price, 'ot_' || replace(gen_random_uuid()::text, '-', ''));
+    VALUES (tok.id, uid, wal.id, 'sell', pi_out, tok_in, price, v_tx_ref);
+
+    INSERT INTO public.transactions (
+      wallet_id, type, status, token_id, token_symbol, amount, usd_value, counterparty, memo, tx_hash
+    )
+    VALUES (
+      wal.id,
+      'sell',
+      'confirmed',
+      tok.id,
+      '$' || tok.symbol,
+      tok_in,
+      pi_out,
+      'OpenToken',
+      'OpenToken sell ' || tok_in::text || ' $' || tok.symbol || ' for ' || pi_out::text || ' OUSD',
+      v_tx_ref
+    );
 
     INSERT INTO public.ot_price_ticks (token_id, price, market_cap)
     VALUES (tok.id, price, price * tok.total_supply);

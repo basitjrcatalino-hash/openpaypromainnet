@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { Tables } from "@/integrations/supabase/types";
+import type { ActivityItem } from "@/lib/activity";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
@@ -25,8 +26,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { OpenLedgerLink, OPENLEDGER_BASE } from "@/components/openledger-link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export type TxRow = Tables<"transactions">;
+export type TxRow = Tables<"transactions"> | ActivityItem;
 
 export function txIcon(type: string) {
   if (type === "receive" || type === "buy") return ArrowDownLeft;
@@ -36,34 +38,67 @@ export function txIcon(type: string) {
   return ArrowUpRight;
 }
 
+function activityTitle(tx: TxRow) {
+  const item = tx as ActivityItem;
+  if (item.source === "opentoken") {
+    return `${tx.type === "sell" ? "Sell" : "Buy"} ${tx.token_symbol ?? ""}`;
+  }
+  return `${tx.type} ${tx.token_symbol ?? ""}`;
+}
+
 export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => void }) {
   const Icon = txIcon(tx.type);
+  const item = tx as ActivityItem;
+  const logo = item.logo_url;
+  const isOpenToken = item.source === "opentoken";
+
   return (
     <button
       type="button"
       onClick={() => onOpen(tx)}
       className="flex w-full items-center gap-3 py-3 text-left text-sm transition-colors hover:bg-sidebar-accent/40 active:bg-sidebar-accent/60"
     >
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-        <Icon className="h-4 w-4" />
-      </span>
+      {logo ? (
+        <Avatar className="h-10 w-10 shrink-0">
+          <AvatarImage src={logo} alt={tx.token_symbol ?? ""} />
+          <AvatarFallback className="bg-primary/15 text-primary">
+            <Icon className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold capitalize">
-            {tx.type} {tx.token_symbol ?? ""}
-          </span>
+          <span className="font-semibold capitalize">{activityTitle(tx)}</span>
+          {isOpenToken && (
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+              OpenToken
+            </span>
+          )}
           <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
             {tx.status}
           </span>
         </div>
         <div className="text-xs text-muted-foreground">
-          {tx.counterparty ? `${shortAddress(tx.counterparty)} • ` : ""}
+          {isOpenToken
+            ? `${item.token_name ?? "Bonding curve"} · `
+            : tx.counterparty
+              ? `${shortAddress(tx.counterparty)} · `
+              : ""}
           {new Date(tx.created_at).toLocaleString()}
         </div>
       </div>
       <div className="shrink-0 text-right tabular-nums">
-        <div className="font-semibold">{formatNumber(tx.amount, 6)}</div>
-        <div className="text-xs text-muted-foreground">{formatUSD(tx.usd_value)}</div>
+        <div className="font-semibold">
+          {isOpenToken && tx.type === "buy" ? "+" : isOpenToken && tx.type === "sell" ? "−" : ""}
+          {formatNumber(tx.amount, 6)}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {isOpenToken ? `${formatNumber(tx.usd_value, 4)} OUSD` : formatUSD(tx.usd_value)}
+        </div>
       </div>
     </button>
   );

@@ -43,6 +43,9 @@ function activityTitle(tx: TxRow) {
   if (item.source === "opentoken") {
     return `${tx.type === "sell" ? "Sell" : "Buy"} ${tx.token_symbol ?? ""}`;
   }
+  if (tx.type === "swap") {
+    return `Swap ${tx.token_symbol ?? ""}`;
+  }
   return `${tx.type} ${tx.token_symbol ?? ""}`;
 }
 
@@ -51,6 +54,9 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
   const item = tx as ActivityItem;
   const logo = item.logo_url;
   const isOpenToken = item.source === "opentoken";
+  const isOpenDex =
+    (tx.counterparty ?? "").toLowerCase() === "opendex" ||
+    (tx.memo ?? "").toLowerCase().includes("opendex");
 
   return (
     <button
@@ -78,6 +84,11 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
               OpenToken
             </span>
           )}
+          {isOpenDex && (
+            <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-300">
+              OpenDEX
+            </span>
+          )}
           <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
             {tx.status}
           </span>
@@ -85,9 +96,11 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
         <div className="text-xs text-muted-foreground">
           {isOpenToken
             ? `${item.token_name ?? "Bonding curve"} · `
-            : tx.counterparty
-              ? `${shortAddress(tx.counterparty)} · `
-              : ""}
+            : isOpenDex
+              ? `${tx.memo?.replace(/^OpenDEX swap\s+/i, "") ?? "Spot swap"} · `
+              : tx.counterparty
+                ? `${shortAddress(tx.counterparty)} · `
+                : ""}
           {new Date(tx.created_at).toLocaleString()}
         </div>
       </div>
@@ -97,7 +110,9 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
           {formatNumber(tx.amount, 6)}
         </div>
         <div className="text-xs text-muted-foreground">
-          {isOpenToken ? `${formatNumber(tx.usd_value, 4)} OUSD` : formatUSD(tx.usd_value)}
+          {isOpenToken || isOpenDex
+            ? `${formatNumber(tx.usd_value, 4)} OUSD`
+            : formatUSD(tx.usd_value)}
         </div>
       </div>
     </button>

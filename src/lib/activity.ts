@@ -36,24 +36,24 @@ type OtTradeRow = {
 
 function mapWalletTx(tx: Tables<"transactions">): ActivityItem {
   const symbol = (tx.token_symbol ?? "").toUpperCase();
+  const counterparty = (tx.counterparty ?? "").toLowerCase();
+  const memo = (tx.memo ?? "").toLowerCase();
   const looksOusd =
     symbol === "OUSD" ||
     symbol.includes("OUSD") ||
     symbol.includes("→OUSD") ||
-    symbol.includes("OUSD→") ||
-    symbol.startsWith("$");
-  const looksOpenToken =
-    (tx.counterparty ?? "").toLowerCase() === "opentoken" ||
-    (tx.memo ?? "").toLowerCase().includes("opentoken");
+    symbol.includes("OUSD→");
+  const looksOpenToken = counterparty === "opentoken" || memo.includes("opentoken");
+  const looksOpenDex = counterparty === "opendex" || memo.includes("opendex") || tx.type === "swap";
 
   let logo: string | null = null;
   if (looksOusd && !looksOpenToken) logo = OUSD_LOGO_URL;
 
   return {
     ...tx,
-    source: looksOpenToken ? "opentoken" : "wallet",
+    source: looksOpenToken ? "opentoken" : looksOpenDex ? "wallet" : "wallet",
     logo_url: logo,
-    token_name: looksOpenToken ? "OpenToken" : null,
+    token_name: looksOpenDex ? "OpenDEX" : looksOpenToken ? "OpenToken" : null,
   };
 }
 

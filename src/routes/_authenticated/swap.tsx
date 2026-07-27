@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowDown,
   ArrowLeft,
@@ -26,11 +27,11 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
+import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
+import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 
-const OUSD_ID = "__ousd__";
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
 
 const searchSchema = z.object({
@@ -48,7 +49,7 @@ type SwapToken = {
 };
 
 const OUSD_TOKEN: SwapToken = {
-  id: OUSD_ID,
+  id: OUSD_SWAP_ID,
   name: "OpenPay USD",
   symbol: "OUSD",
   price_usd: 1,
@@ -67,8 +68,9 @@ function OpenDexPage() {
   const { user } = Route.useRouteContext();
   const { token: tokenParam } = Route.useSearch();
   const qc = useQueryClient();
+  const swapFn = useServerFn(executeOpenDexSwap);
 
-  const [from, setFrom] = useState(OUSD_ID);
+  const [from, setFrom] = useState(OUSD_SWAP_ID);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState(0.5);
@@ -90,8 +92,6 @@ function OpenDexPage() {
     },
   });
 
-  const tokens = useMemo(() => [OUSD_TOKEN, ...dbTokens], [dbTokens]);
-
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: async () =>
@@ -108,37 +108,75 @@ function OpenDexPage() {
   });
 
   const { data: holdings = [] } = useQuery({
-    queryKey: ["ot-holdings-swap", wallet?.id],
+    queryKey: ["holdings", wallet?.id],
     enabled: !!wallet?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("token_holdings")
         .select("token_id, balance")
-        .eq("wallet_id", wallet!.id);
+        .eq("wallet_id", wallet!.id)
+        .gt("balance", 0);
       return data ?? [];
     },
   });
+
+  const balanceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set(OUSD_SWAP_ID, Number(wallet?.ousd_balance ?? 0));
+    for (const h of holdings) map.set(h.token_id, Number(h.balance ?? 0));
+    return map;
+  }, [wallet, holdings]);
+
+  /** From list = OUSD + tokens the user actually holds (matches dashboard assets). */
+  const fromTokens = useMemo(() => {
+    const held = dbTokens.filter((t) => (balanceMap.get(t.id) ?? 0) > 0);
+    return [OUSD_TOKEN, ...held];
+  }, [dbTokens, balanceMap]);
+
+  /** To list = OUSD + all listed tokens (prefer held / graduated first). */
+  const toTokens = useMemo(() => {
+    const sorted = [...dbTokens].sort((a, b) => {
+      const ah = (balanceMap.get(a.id) ?? 0) > 0 ? 1 : 0;
+      const bh = (balanceMap.get(b.id) ?? 0) > 0 ? 1 : 0;
+      if (ah !== bh) return bh - ah;
+      const ag = a.status === "graduated" ? 1 : 0;
+      const bg = b.status === "graduated" ? 1 : 0;
+      return bg - ag;
+    });
+    return [OUSD_TOKEN, ...sorted];
+  }, [dbTokens, balanceMap]);
+
+  const allTokens = useMemo(() => {
+    const map = new Map<string, SwapToken>();
+    map.set(OUSD_SWAP_ID, OUSD_TOKEN);
+    for (const t of dbTokens) map.set(t.id, t);
+    return map;
+  }, [dbTokens]);
 
   useEffect(() => {
     if (!dbTokens.length || initialized) return;
     const pref =
       (tokenParam && dbTokens.find((t) => t.id === tokenParam)) ||
+      fromTokens.find((t) => t.id !== OUSD_SWAP_ID) ||
       dbTokens.find((t) => t.status === "graduated") ||
       dbTokens[0];
-    setFrom(OUSD_ID);
-    setTo(pref?.id ?? "");
+
+    const ousdBal = Number(wallet?.ousd_balance ?? 0);
+    if (ousdBal > 0) {
+      setFrom(OUSD_SWAP_ID);
+      setTo(pref?.id && pref.id !== OUSD_SWAP_ID ? pref.id : "");
+    } else if (pref && (balanceMap.get(pref.id) ?? 0) > 0) {
+      setFrom(pref.id);
+      setTo(OUSD_SWAP_ID);
+    } else {
+      setFrom(OUSD_SWAP_ID);
+      setTo(pref?.id ?? "");
+    }
     setInitialized(true);
-  }, [dbTokens, tokenParam, initialized]);
+  }, [dbTokens, tokenParam, initialized, wallet, fromTokens, balanceMap]);
 
-  const fromToken = tokens.find((t) => t.id === from);
-  const toToken = tokens.find((t) => t.id === to);
-
-  const balanceMap = useMemo(() => {
-    const map = new Map<string, number>();
-    map.set(OUSD_ID, Number(wallet?.ousd_balance ?? 0));
-    for (const h of holdings) map.set(h.token_id, Number(h.balance ?? 0));
-    return map;
-  }, [wallet, holdings]);
+  const fromToken = allTokens.get(from);
+  const toToken = allTokens.get(to);
 
   const fromBal = balanceMap.get(from) ?? 0;
   const toBal = balanceMap.get(to) ?? 0;
@@ -152,31 +190,40 @@ function OpenDexPage() {
   }, [fromToken, toToken]);
 
   const amt = Number(amount) || 0;
-  const rawOutput = amt * rate;
+  const rawOutput = amt > 0 && rate > 0 ? amt * rate : 0;
   const minOut = rawOutput * (1 - slippage / 100);
-  const networkFee = 0.0025;
   const samePair = !!from && !!to && from === to;
+  const needsOusd = from !== OUSD_SWAP_ID && to !== OUSD_SWAP_ID;
 
   function pickFrom(id: string) {
     setFrom(id);
+    setAmount("");
     if (id === to) {
-      const other = tokens.find((t) => t.id !== id);
-      if (other) setTo(other.id);
+      setTo(id === OUSD_SWAP_ID ? toTokens.find((t) => t.id !== id)?.id ?? "" : OUSD_SWAP_ID);
+    } else if (id !== OUSD_SWAP_ID && to !== OUSD_SWAP_ID) {
+      setTo(OUSD_SWAP_ID);
     }
   }
 
   function pickTo(id: string) {
     setTo(id);
     if (id === from) {
-      const other = tokens.find((t) => t.id !== id);
-      if (other) setFrom(other.id);
+      setFrom(id === OUSD_SWAP_ID ? fromTokens.find((t) => t.id !== id)?.id ?? OUSD_SWAP_ID : OUSD_SWAP_ID);
+    } else if (id !== OUSD_SWAP_ID && from !== OUSD_SWAP_ID) {
+      setFrom(OUSD_SWAP_ID);
     }
   }
 
   function flip() {
-    const prevFrom = from;
-    setFrom(to);
-    setTo(prevFrom);
+    const nextFrom = to;
+    const nextTo = from;
+    // Only flip into From if user holds that asset (or OUSD)
+    if (nextFrom !== OUSD_SWAP_ID && (balanceMap.get(nextFrom) ?? 0) <= 0) {
+      toast.error("You don't hold that token to swap from");
+      return;
+    }
+    setFrom(nextFrom);
+    setTo(nextTo);
     setAmount("");
   }
 
@@ -191,49 +238,58 @@ function OpenDexPage() {
     if (Number.isFinite(n) && n >= 0 && n <= 50) setSlippage(n);
   }
 
+  async function refreshBalances() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
+      qc.invalidateQueries({ queryKey: ["holdings"] }),
+      qc.invalidateQueries({ queryKey: ["ot-holdings-swap"] }),
+      qc.invalidateQueries({ queryKey: ["ot-holding"] }),
+      qc.invalidateQueries({ queryKey: ["ot-portfolio"] }),
+      qc.invalidateQueries({ queryKey: ["wallets"] }),
+      qc.invalidateQueries({ queryKey: ["recent-txs"] }),
+      qc.invalidateQueries({ queryKey: ["all-txs"] }),
+      qc.invalidateQueries({ queryKey: ["txs"] }),
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] }),
+      qc.invalidateQueries({ queryKey: ["ledger-overview"] }),
+    ]);
+  }
+
   async function doSwap() {
     if (!wallet || !fromToken || !toToken || !amount) return;
     if (samePair) {
       toast.error("Select two different tokens");
       return;
     }
+    if (needsOusd) {
+      toast.error("OpenDEX pairs must include OUSD");
+      return;
+    }
     if (amt <= 0) {
       toast.error("Enter a valid amount");
       return;
     }
-    if (amt > fromBal) {
+    if (amt > fromBal + 1e-12) {
       toast.error(`Insufficient ${fromToken.symbol} balance`);
-      return;
-    }
-    if (slippage < 0 || slippage > 50) {
-      toast.error("Slippage must be between 0% and 50%");
       return;
     }
 
     setBusy(true);
     try {
-      const { error } = await supabase.from("transactions").insert({
-        wallet_id: wallet.id,
-        type: "swap",
-        status: "confirmed",
-        token_symbol: `${fromToken.symbol}→${toToken.symbol}`,
-        counterparty: toToken.symbol,
-        amount: amt,
-        usd_value: amt * Number(fromToken.price_usd ?? 0),
-        memo: `OpenDEX ${amt} ${fromToken.symbol} → min ${formatNumber(minOut, 6)} ${toToken.symbol} @ ${slippage}% slip`,
+      const res = await swapFn({
+        data: {
+          wallet_id: wallet.id,
+          from_id: from,
+          to_id: to,
+          amount: amt,
+          slippage,
+          expected_out: rawOutput,
+        },
       });
-      if (error) throw error;
       toast.success(
-        `Swapped ${formatNumber(amt, 4)} ${fromToken.symbol} → ${formatNumber(rawOutput, 6)} ${toToken.symbol}`,
+        `Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`,
       );
       setAmount("");
-      void qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
-      void qc.invalidateQueries({ queryKey: ["recent-txs"] });
-      void qc.invalidateQueries({ queryKey: ["all-txs"] });
-      void qc.invalidateQueries({ queryKey: ["ledger-entries"] });
-      void qc.invalidateQueries({ queryKey: ["ledger-overview"] });
-      void qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-      void qc.invalidateQueries({ queryKey: ["ot-holdings-swap", wallet.id] });
+      await refreshBalances();
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -241,7 +297,15 @@ function OpenDexPage() {
     }
   }
 
-  const canSwap = !busy && amt > 0 && !!fromToken && !!toToken && !samePair && amt <= fromBal;
+  const canSwap =
+    !busy &&
+    amt > 0 &&
+    !!fromToken &&
+    !!toToken &&
+    !samePair &&
+    !needsOusd &&
+    amt <= fromBal + 1e-12 &&
+    !!wallet?.id;
 
   return (
     <div className="mx-auto max-w-md animate-page-in space-y-5 px-1 pb-8">
@@ -253,7 +317,9 @@ function OpenDexPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">OpenDEX</h1>
-          <p className="text-sm text-muted-foreground">Swap tokens with OUSD quote pairs</p>
+          <p className="text-sm text-muted-foreground">
+            Swap your wallet assets against OUSD — balances match your dashboard
+          </p>
         </div>
       </div>
 
@@ -272,7 +338,7 @@ function OpenDexPage() {
 
         <SwapSide
           label="From"
-          tokens={tokens}
+          tokens={fromTokens}
           value={from}
           onChange={pickFrom}
           amount={amount}
@@ -280,6 +346,7 @@ function OpenDexPage() {
           balance={fromBal}
           editable
           onMax={() => setAmount(String(fromBal))}
+          emptyHint="No tokens in your wallet yet"
         />
 
         <div className="my-2 flex justify-center">
@@ -295,10 +362,10 @@ function OpenDexPage() {
 
         <SwapSide
           label="To"
-          tokens={tokens}
+          tokens={toTokens}
           value={to}
           onChange={pickTo}
-          amount={rawOutput > 0 ? formatNumber(rawOutput, 6) : ""}
+          amount={rawOutput > 0 ? formatNumber(rawOutput, 8) : ""}
           onAmount={() => {}}
           balance={toBal}
         />
@@ -306,21 +373,26 @@ function OpenDexPage() {
         <div className="mt-4 space-y-1.5 rounded-2xl bg-muted/40 p-3 text-xs">
           <Row label="Rate">
             {fromToken && toToken && rate > 0
-              ? `1 ${fromToken.symbol} = ${formatNumber(rate, 6)} ${toToken.symbol}`
+              ? `1 ${fromToken.symbol} = ${formatNumber(rate, 8)} ${toToken.symbol}`
               : "—"}
           </Row>
-          <Row label="Estimated output">
-            {rawOutput > 0 ? `${formatNumber(rawOutput, 6)} ${toToken?.symbol ?? ""}` : "0"}
+          <Row label="You pay">
+            {amt > 0 ? `${formatNumber(amt, 8)} ${fromToken?.symbol ?? ""}` : "0"}
+          </Row>
+          <Row label="You receive">
+            {rawOutput > 0 ? `${formatNumber(rawOutput, 8)} ${toToken?.symbol ?? ""}` : "0"}
           </Row>
           <Row label="Min received">
-            {rawOutput > 0 ? `${formatNumber(minOut, 6)} ${toToken?.symbol ?? ""}` : "0"}
+            {rawOutput > 0 ? `${formatNumber(minOut, 8)} ${toToken?.symbol ?? ""}` : "0"}
           </Row>
-          <Row label="Network fee">{formatUSD(networkFee)}</Row>
           <Row label="Slippage">{slippage}%</Row>
+          <Row label="Wallet OUSD">{formatNumber(balanceMap.get(OUSD_SWAP_ID) ?? 0, 4)}</Row>
         </div>
 
-        {samePair && (
-          <p className="mt-2 text-center text-xs text-destructive">Choose different tokens</p>
+        {(samePair || needsOusd) && (
+          <p className="mt-2 text-center text-xs text-destructive">
+            {samePair ? "Choose different tokens" : "One side must be OUSD"}
+          </p>
         )}
 
         <Button
@@ -329,15 +401,17 @@ function OpenDexPage() {
           className="mt-4 h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow"
         >
           {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-          {!fromToken || !toToken
-            ? "Select tokens"
-            : samePair
-              ? "Invalid pair"
-              : amt > fromBal
-                ? `Insufficient ${fromToken.symbol}`
-                : amt > 0
-                  ? `Swap ${fromToken.symbol} → ${toToken.symbol}`
-                  : "Enter an amount"}
+          {!wallet
+            ? "Create a wallet first"
+            : !fromToken || !toToken
+              ? "Select tokens"
+              : samePair || needsOusd
+                ? "Invalid pair"
+                : amt > fromBal
+                  ? `Insufficient ${fromToken.symbol}`
+                  : amt > 0
+                    ? `Swap ${formatNumber(amt, 4)} ${fromToken.symbol}`
+                    : "Enter an amount"}
         </Button>
       </Card>
 
@@ -376,10 +450,6 @@ function OpenDexPage() {
                 />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Your swap reverts if price moves more than this. Current:{" "}
-                <span className="font-medium text-foreground">{slippage}%</span>
-              </p>
             </div>
             <Button className="w-full rounded-full" onClick={() => setSettingsOpen(false)}>
               Done
@@ -401,6 +471,7 @@ function SwapSide({
   balance,
   editable,
   onMax,
+  emptyHint,
 }: {
   label: string;
   tokens: SwapToken[];
@@ -411,10 +482,11 @@ function SwapSide({
   balance: number;
   editable?: boolean;
   onMax?: () => void;
+  emptyHint?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const selected = tokens.find((t) => t.id === value);
+  const selected = tokens.find((t) => t.id === value) ?? (value ? undefined : undefined);
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -435,8 +507,8 @@ function SwapSide({
           className={cn("tabular-nums", editable && onMax && "hover:text-primary")}
           onClick={editable && onMax ? onMax : undefined}
         >
-          Bal: {formatNumber(balance, balance < 1 ? 4 : 2)}
-          {editable && onMax ? " · Max" : ""}
+          Bal: {formatNumber(balance, balance > 0 && balance < 1 ? 6 : 4)}
+          {editable && onMax && balance > 0 ? " · Max" : ""}
         </button>
       </div>
 
@@ -493,22 +565,19 @@ function SwapSide({
                           Quote
                         </span>
                       )}
-                      {t.status === "graduated" && (
-                        <span className="rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-medium text-orange-600 dark:text-orange-300">
-                          DEX
-                        </span>
-                      )}
                     </div>
                     <div className="truncate text-[11px] text-muted-foreground">{t.name}</div>
                   </div>
-                  <div className="text-right text-[11px] text-muted-foreground">
+                  <div className="text-right text-[11px] text-muted-foreground tabular-nums">
                     {formatOUSD(t.price_usd, { price: true, suffix: false })}
                   </div>
                   {t.id === value && <Check className="h-4 w-4 text-primary" />}
                 </button>
               ))}
               {filtered.length === 0 && (
-                <div className="py-6 text-center text-xs text-muted-foreground">No tokens found</div>
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  {emptyHint ?? "No tokens found"}
+                </div>
               )}
             </div>
           </PopoverContent>
@@ -529,20 +598,10 @@ function SwapSide({
 
 function TokenLogo({ token, size = "md" }: { token?: SwapToken | null; size?: "sm" | "md" }) {
   const dim = size === "sm" ? "h-6 w-6 text-[9px]" : "h-8 w-8 text-[10px]";
-  if (!token) {
-    return <div className={cn("shrink-0 rounded-full bg-muted", dim)} />;
-  }
-  if (token.isOusd) {
-    return <OusdIcon className={cn("shrink-0 rounded-full object-cover", dim)} />;
-  }
+  if (!token) return <div className={cn("shrink-0 rounded-full bg-muted", dim)} />;
+  if (token.isOusd) return <OusdIcon className={cn("shrink-0 rounded-full object-cover", dim)} />;
   if (token.logo_url) {
-    return (
-      <img
-        src={token.logo_url}
-        alt=""
-        className={cn("shrink-0 rounded-full object-cover", dim)}
-      />
-    );
+    return <img src={token.logo_url} alt="" className={cn("shrink-0 rounded-full object-cover", dim)} />;
   }
   return (
     <div

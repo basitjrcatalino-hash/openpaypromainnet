@@ -295,24 +295,27 @@
   &:active { transform: scale(0.97); }
 }
 
-/* ── OpenToken surface: dark = full black, light = theme tokens ─── */
-.dark .ot-phantom {
-  --background: #000000;
-  --foreground: #f5f5f5;
-  --card: #0a0a0a;
-  --card-foreground: #f5f5f5;
-  --popover: #0a0a0a;
-  --popover-foreground: #f5f5f5;
-  --border: #1a1a1a;
-  --muted: #141414;
-  --muted-foreground: #71717a;
-  --accent: #141414;
-  --accent-foreground: #f5f5f5;
-  color: var(--foreground);
-  background: var(--background);
-}
+/* ── OpenToken / asset surfaces: inherit OpenPay Pro theme (desktop + mobile) ─── */
 .ot-phantom {
-  background: var(--background);
   color: var(--foreground);
+  background: transparent;
   min-height: 100%;
+}
+.dark .ot-phantom {
+  /* Soft violet near-black — matches app shell, not pure #000 */
+  --background: oklch(0.12 0.015 290);
+  --foreground: oklch(0.97 0.005 290);
+  --card: oklch(0.16 0.018 290);
+  --card-foreground: oklch(0.97 0.005 290);
+  --popover: oklch(0.14 0.018 290);
+  --popover-foreground: oklch(0.97 0.005 290);
+  --border: oklch(0.28 0.025 290);
+  --muted: oklch(0.2 0.02 290);
+  --muted-foreground: oklch(0.68 0.02 290);
+  --accent: oklch(0.22 0.04 295);
+  --accent-foreground: oklch(0.92 0.03 295);
+  --primary: oklch(0.78 0.09 295);
+  --primary-foreground: oklch(0.16 0.04 295);
+  --input: oklch(0.24 0.025 290);
+  --ring: oklch(0.78 0.09 295);
 }

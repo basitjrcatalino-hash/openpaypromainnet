@@ -121,10 +121,10 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background bg-hero-glow text-foreground">
       {/* Mobile top bar */}
       {!hideChrome && (
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-xl md:hidden">
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur-xl md:hidden">
           <Link to="/dashboard" className="text-sm font-semibold tracking-tight">
             OpenPay Pro
           </Link>
@@ -143,7 +143,7 @@ function AuthenticatedLayout() {
 
       <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
         {!hideChrome && (
-          <aside className="sticky top-0 hidden h-screen w-85 shrink-0 overflow-y-auto border-r border-border/60 p-4 md:flex md:flex-col">
+          <aside className="sticky top-0 hidden h-screen w-85 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar/80 p-4 md:flex md:flex-col">
             <SidebarInner
               wallets={wallets as any[]}
               activeWallet={activeWallet as any}
@@ -162,7 +162,7 @@ function AuthenticatedLayout() {
               className="absolute inset-0 bg-background/80 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="relative flex h-full w-[320px] flex-col overflow-y-auto border-r border-border bg-background p-4 shadow-2xl">
+            <aside className="relative flex h-full w-[320px] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
               <SidebarInner
                 wallets={wallets as any[]}
                 activeWallet={activeWallet as any}

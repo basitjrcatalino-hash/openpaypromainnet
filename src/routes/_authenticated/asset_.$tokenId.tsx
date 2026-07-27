@@ -183,9 +183,9 @@ function PhantomAssetDetail() {
       : meta.description;
 
   return (
-    <div className="ot-phantom mx-auto min-h-screen max-w-lg animate-page-in pb-28">
+    <div className="ot-phantom mx-auto max-w-lg animate-page-in pb-28">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center gap-2 bg-background/95 px-3 py-3 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 flex items-center gap-2 bg-background/90 px-3 py-3 backdrop-blur-xl md:top-0">
         <Button
           variant="ghost"
           size="icon"
@@ -224,14 +224,21 @@ function PhantomAssetDetail() {
             {!isOusd && <span className="ml-1 text-lg font-medium text-muted-foreground">OUSD</span>}
           </div>
           <div className="mt-2 flex items-center justify-center gap-2 text-sm">
-            <span className={cn("font-medium tabular-nums", up ? "text-emerald-400" : "text-red-400")}>
+            <span
+              className={cn(
+                "font-medium tabular-nums",
+                up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+              )}
+            >
               {up ? "+" : ""}
               {formatUSD(Math.abs(meta.price * (meta.change / 100)))}
             </span>
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                up ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400",
+                up
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/15 text-red-600 dark:text-red-400",
               )}
             >
               {formatPct(meta.change)}
@@ -242,7 +249,7 @@ function PhantomAssetDetail() {
         {/* Chart */}
         <div className="overflow-hidden rounded-2xl">
           {isOusd ? (
-            <div className="grid h-48 place-items-center rounded-2xl bg-zinc-900/60 text-sm text-muted-foreground">
+            <div className="grid h-48 place-items-center rounded-2xl border border-border bg-muted/40 text-sm text-muted-foreground">
               Pegged at $1.00 · stablecoin
             </div>
           ) : (
@@ -257,8 +264,8 @@ function PhantomAssetDetail() {
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-medium transition",
                   period === p
-                    ? "bg-zinc-800 text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-primary text-primary-foreground shadow-glow"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {p}
@@ -282,15 +289,12 @@ function PhantomAssetDetail() {
           <ActionTile
             icon={Send}
             label="Send"
-            onClick={() => {
-              if (isOusd) navigate({ to: "/send", search: { asset: "OUSD" } });
-              else {
-                toast.message("Send OpenToken from wallet address", {
-                  description: "Copy your address from Receive, or use OpenDEX to swap to OUSD first.",
-                });
-                setReceiveOpen(true);
-              }
-            }}
+            onClick={() =>
+              navigate({
+                to: "/send",
+                search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+              })
+            }
           />
           <ActionTile icon={QrCode} label="Receive" onClick={() => setReceiveOpen(true)} />
           <ActionTile icon={MoreHorizontal} label="More" onClick={() => setMoreOpen(true)} />
@@ -300,22 +304,22 @@ function PhantomAssetDetail() {
         <section>
           <h2 className="mb-2 text-sm text-muted-foreground">Position</h2>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl bg-zinc-900/80 px-4 py-3">
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
               <div className="text-xs text-muted-foreground">Value</div>
               <div className="mt-1 text-xl font-bold tabular-nums text-foreground">
                 {formatUSD(valueUsd)}
               </div>
             </div>
-            <div className="rounded-2xl bg-zinc-900/80 px-4 py-3">
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
               <div className="text-xs text-muted-foreground">Balance</div>
               <div className="mt-1 truncate text-xl font-bold tabular-nums text-foreground">
                 {formatNumber(balance, balance < 1 ? 6 : 4)} {meta.symbol}
               </div>
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between rounded-2xl bg-zinc-900/80 px-4 py-3">
+          <div className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
             <span className="text-sm text-muted-foreground">24h Change</span>
-            <span className={cn("text-sm font-semibold tabular-nums", up ? "text-emerald-400" : "text-red-400")}>
+            <span className={cn("text-sm font-semibold tabular-nums", up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
               {up ? "+" : ""}
               {formatUSD(Math.abs(changeAbs))}
             </span>
@@ -328,7 +332,7 @@ function PhantomAssetDetail() {
           <button
             type="button"
             onClick={() => meta.contract && copy(meta.contract, "Address copied")}
-            className="flex w-full items-center justify-between gap-3 rounded-2xl bg-zinc-900/80 px-4 py-3 text-left"
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition hover:bg-muted/50"
           >
             <div className="min-w-0">
               <div className="text-xs text-muted-foreground">
@@ -345,7 +349,7 @@ function PhantomAssetDetail() {
         {/* Info */}
         <section>
           <h2 className="mb-2 text-sm text-muted-foreground">Info</h2>
-          <div className="overflow-hidden rounded-2xl bg-zinc-900/80">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <InfoRow label="Name" value={meta.name} />
             <InfoRow label="Symbol" value={meta.symbol} />
             <InfoRow label="Network" value={meta.network} />
@@ -377,7 +381,7 @@ function PhantomAssetDetail() {
           {meta.description.length > 140 && (
             <button
               type="button"
-              className="mt-1 text-sm font-medium text-violet-400"
+              className="mt-1 text-sm font-medium text-primary"
               onClick={() => setAboutOpen((v) => !v)}
             >
               {aboutOpen ? "Show Less" : "Show More"}
@@ -388,7 +392,7 @@ function PhantomAssetDetail() {
               href={meta.website}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-foreground hover:bg-zinc-800"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent"
             >
               <Globe className="h-4 w-4" /> Website
             </a>
@@ -398,21 +402,21 @@ function PhantomAssetDetail() {
         {!isOusd && (
           <section>
             <h2 className="mb-2 text-sm text-muted-foreground">24h Performance</h2>
-            <div className="overflow-hidden rounded-2xl bg-zinc-900/80">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <div className="flex items-center justify-between px-4 py-3">
                 <span className="text-sm text-muted-foreground">Volume</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold tabular-nums">
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
                     {formatOUSD(Number(token?.volume_24h ?? 0), { compact: true })}
                   </span>
-                  <span className={cn("text-sm font-medium", up ? "text-emerald-400" : "text-red-400")}>
+                  <span className={cn("text-sm font-medium", up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
                     {formatPct(meta.change)}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between border-t border-border/40 px-4 py-3">
+              <div className="flex items-center justify-between border-t border-border px-4 py-3">
                 <span className="text-sm text-muted-foreground">Holders</span>
-                <span className="text-sm font-semibold tabular-nums">
+                <span className="text-sm font-semibold tabular-nums text-foreground">
                   {formatNumber(token?.holder_count ?? 0, 0)}
                 </span>
               </div>
@@ -541,7 +545,7 @@ function ActionTile({
 }) {
   return (
     <button type="button" onClick={onClick} className="flex flex-col items-center gap-2">
-      <span className="grid h-14 w-full place-items-center rounded-2xl bg-zinc-900 text-violet-400 transition hover:bg-zinc-800">
+      <span className="grid h-14 w-full place-items-center rounded-2xl border border-border/80 bg-muted/80 text-primary transition hover:bg-accent hover:text-accent-foreground">
         <Icon className="h-5 w-5" />
       </span>
       <span className="text-xs font-medium text-foreground">{label}</span>
@@ -554,7 +558,7 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
     <div
       className={cn(
         "flex items-center justify-between gap-3 px-4 py-3 text-sm",
-        !last && "border-b border-border/40",
+        !last && "border-b border-border",
       )}
     >
       <span className="text-muted-foreground">{label}</span>

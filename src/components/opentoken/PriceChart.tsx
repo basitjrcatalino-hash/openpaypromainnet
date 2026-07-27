@@ -51,17 +51,17 @@ export function PriceChart({
           />
           <Tooltip
             contentStyle={{
-              background: "#18181b",
-              border: "1px solid #27272a",
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 12,
               fontSize: 12,
-              color: "#f5f5f5",
+              color: "var(--foreground)",
             }}
             formatter={(v: number) => [
               `${formatNumber(v, 8)} OUSD`,
               mode === "mcap" ? "MCap" : "Price",
             ]}
-            labelStyle={{ color: "#a1a1aa" }}
+            labelStyle={{ color: "var(--muted-foreground)" }}
           />
           <Area
             type="monotone"
@@ -73,7 +73,7 @@ export function PriceChart({
             activeDot={{
               r: 5,
               fill: strokeColor,
-              stroke: "#000",
+              stroke: "var(--background)",
               strokeWidth: 2,
             }}
           />

@@ -101,8 +101,8 @@ function OpenTokenHome() {
   }, [tokens, q, sort, catFilter]);
 
   return (
-    <div className="ot-phantom mx-auto min-h-screen w-full max-w-3xl animate-page-in pb-24 md:max-w-4xl md:pb-8">
-      <div className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+    <div className="ot-phantom mx-auto w-full max-w-3xl animate-page-in pb-24 md:max-w-4xl md:pb-8">
+      <div className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur-xl">
         <div className="flex items-center justify-between px-4 pb-2 pt-4 md:px-6">
           <h1 className="text-lg font-bold text-foreground">Trade</h1>
           <div className="flex items-center gap-2">

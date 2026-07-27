@@ -169,7 +169,7 @@ function OpenTokenDetail() {
 
   if (isLoading) {
     return (
-      <div className="ot-phantom grid min-h-screen place-items-center">
+      <div className="ot-phantom grid min-h-[50vh] place-items-center">
         <p className="text-sm text-muted-foreground">Loading token…</p>
       </div>
     );
@@ -177,7 +177,7 @@ function OpenTokenDetail() {
 
   if (!token) {
     return (
-      <div className="ot-phantom grid min-h-screen place-items-center text-center">
+      <div className="ot-phantom grid min-h-[50vh] place-items-center text-center">
         <div>
           <p className="text-sm text-muted-foreground">Token not found</p>
           <Button asChild className="mt-4 rounded-full">
@@ -196,7 +196,7 @@ function OpenTokenDetail() {
   const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
 
   return (
-    <div className="ot-phantom mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-4 md:px-6">
+    <div className="ot-phantom mx-auto max-w-7xl px-4 pb-24 pt-4 md:px-6">
       <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground">
         <span>OpenToken launchpad · bonding curve trading</span>
         <Link
@@ -493,7 +493,7 @@ function OpenTokenDetail() {
                 <DetailRow label="Contract address">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 font-mono text-xs text-purple-400 hover:text-purple-300"
+                    className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
                     onClick={() => {
                       void navigator.clipboard.writeText(token.contract_address!);
                       toast.success("Address copied");
@@ -510,7 +510,7 @@ function OpenTokenDetail() {
                     href={token.website}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-purple-400 hover:bg-muted"
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-primary hover:bg-accent"
                   >
                     Website <ExternalLink className="h-3 w-3" />
                   </a>

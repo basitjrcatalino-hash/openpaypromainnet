@@ -31,6 +31,7 @@ import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
 import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
 import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
@@ -166,6 +167,12 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAssetTokenIdRoute =
+  AuthenticatedAssetTokenIdRouteImport.update({
+    id: '/asset_/$tokenId',
+    path: '/asset/$tokenId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   id: '/mint',
   path: '/mint',
@@ -326,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -374,6 +382,7 @@ export interface FileRoutesByTo {
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -424,6 +433,7 @@ export interface FileRoutesById {
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -474,6 +484,7 @@ export interface FileRouteTypes {
     | '/admin/testnet-progress'
     | '/docs/openpay'
     | '/admin/topup'
+    | '/asset/$tokenId'
     | '/nfts/mint'
     | '/opentoken/$tokenId'
     | '/opentoken/admin'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/testnet-progress'
     | '/docs/openpay'
     | '/admin/topup'
+    | '/asset/$tokenId'
     | '/nfts/mint'
     | '/opentoken/$tokenId'
     | '/opentoken/admin'
@@ -571,6 +583,7 @@ export interface FileRouteTypes {
     | '/admin/testnet-progress'
     | '/docs/openpay'
     | '/_authenticated/admin/topup'
+    | '/_authenticated/asset_/$tokenId'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/opentoken_/$tokenId'
     | '/_authenticated/opentoken_/admin'
@@ -776,6 +789,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/topup'
       fullPath: '/admin/topup'
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/asset_/$tokenId': {
+      id: '/_authenticated/asset_/$tokenId'
+      path: '/asset/$tokenId'
+      fullPath: '/asset/$tokenId'
+      preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/nfts/mint': {
@@ -994,6 +1014,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
+  AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
   AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
@@ -1018,6 +1039,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
+  AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
   AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
   AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,

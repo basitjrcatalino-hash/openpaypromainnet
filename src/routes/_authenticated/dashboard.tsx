@@ -322,7 +322,7 @@ function Dashboard() {
                   <li>
                     <button
                       type="button"
-                      onClick={() => navigate({ to: "/ousd" })}
+                      onClick={() => navigate({ to: "/asset/$tokenId", params: { tokenId: "ousd" } })}
                       className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ function Dashboard() {
                         onClick={() =>
                           navigate(
                             tokenId
-                              ? { to: "/opentoken/$tokenId", params: { tokenId } }
+                              ? { to: "/asset/$tokenId", params: { tokenId } }
                               : { to: "/opentoken" },
                           )
                         }

@@ -197,8 +197,15 @@ function OpenTokenDetail() {
 
   return (
     <div className="ot-phantom mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-4 md:px-6">
-      <div className="mb-4 rounded-2xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground">
-        Trade faster. Pump is better on mobile.
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground">
+        <span>OpenToken launchpad · bonding curve trading</span>
+        <Link
+          to="/asset/$tokenId"
+          params={{ tokenId }}
+          className="font-medium text-primary hover:underline"
+        >
+          Wallet view
+        </Link>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">

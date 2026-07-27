@@ -294,3 +294,18 @@
   transition: transform .1s ease;
   &:active { transform: scale(0.97); }
 }
+
+/* ── OpenToken Phantom-black scoping ────────────────────────────── */
+.dark .ot-phantom {
+  --background: #000000;
+  --card: #0a0a0a;
+  --card-foreground: #f5f5f5;
+  --border: #1a1a1a;
+  --muted: #141414;
+  --muted-foreground: #71717a;
+  color: #f5f5f5;
+  background: #000000;
+}
+.ot-phantom {
+  background: #000000;
+}

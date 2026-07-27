@@ -1,18 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronDown, Image as ImageIcon, Loader2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Image as ImageIcon,
+  Loader2,
+  Upload,
+  Info,
+  Gift,
+  Zap,
+  CircleDollarSign,
+  Wallet,
+  X,
+  Plus,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { uploadMedia } from "@/lib/upload";
 import { createOpenToken } from "@/lib/opentoken.functions";
 import {
@@ -22,7 +37,7 @@ import {
   OT_CATEGORY_LABELS,
   type OtCategory,
 } from "@/lib/opentoken/bonding-curve";
-import { FairLaunchConfirm, LivePreview } from "@/components/opentoken";
+import { FairLaunchConfirm } from "@/components/opentoken";
 import { fetchActiveWallet } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -46,15 +61,20 @@ const schema = z.object({
   discord: z.string().max(120).optional().or(z.literal("")),
 });
 
+type Recipient = { address: string; pct: number; label?: string };
+
 function CreateOpenTokenPage() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const createFn = useServerFn(createOpenToken);
   const logoRef = useRef<HTMLInputElement>(null);
+  const bannerRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
   const [form, setForm] = useState({
     name: "",
     symbol: "",
@@ -64,12 +84,25 @@ function CreateOpenTokenPage() {
     telegram: "",
     discord: "",
     logo_url: "",
+    banner_url: "",
     category: "meme" as OtCategory,
     total_supply: DEFAULT_TOTAL_SUPPLY,
     decimals: 9,
     burnable: false,
     mintable: false,
   });
+
+  // Pump.fun-style creator rewards
+  const [shareRewards, setShareRewards] = useState(false);
+  const [rewardsDialogOpen, setRewardsDialogOpen] = useState(false);
+  const [recipients, setRecipients] = useState<Recipient[]>([
+    { address: user.id, pct: 100, label: "You (Creator)" },
+  ]);
+
+  // Feature toggles
+  const [mayhemMode, setMayhemMode] = useState(false);
+  const [cashBack, setCashBack] = useState(false);
+  const [pairWithOUSD, setPairWithOUSD] = useState(false);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -80,23 +113,25 @@ function CreateOpenTokenPage() {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>, type: "logo" | "banner") {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("Max 15MB");
+    const maxSize = type === "banner" ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`Max ${type === "banner" ? "5" : "15"}MB`);
       return;
     }
-    setUploading(true);
+    type === "banner" ? setUploadingBanner(true) : setUploading(true);
     try {
       const url = await uploadMedia(file, user.id, "opentoken");
-      set("logo_url", url);
-      toast.success("Logo uploaded");
+      set(type === "banner" ? "banner_url" : "logo_url", url);
+      toast.success(`${type === "banner" ? "Banner" : "Logo"} uploaded`);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
-      setUploading(false);
-      if (logoRef.current) logoRef.current.value = "";
+      type === "banner" ? setUploadingBanner(false) : setUploading(false);
+      const ref = type === "banner" ? bannerRef : logoRef;
+      if (ref.current) ref.current.value = "";
     }
   }
 
@@ -158,13 +193,14 @@ function CreateOpenTokenPage() {
     }
   }
 
+  /* ── confirm step ─────────────────────────────────────────────── */
   if (step === "confirm") {
     return (
-      <div className="mx-auto max-w-lg animate-page-in space-y-4">
+      <div className="ot-phantom mx-auto max-w-lg animate-page-in space-y-4 px-4 py-6">
         <Button
           type="button"
           variant="ghost"
-          className="rounded-full"
+          className="rounded-full text-zinc-400 hover:text-white"
           onClick={() => setStep("form")}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
@@ -181,63 +217,67 @@ function CreateOpenTokenPage() {
     );
   }
 
+  /* ── main form ────────────────────────────────────────────────── */
   return (
-    <div className="animate-page-in space-y-5">
-      <div className="flex items-center gap-3">
-        <Button asChild variant="ghost" size="icon" className="rounded-full">
+    <div className="ot-phantom mx-auto min-h-screen max-w-4xl animate-page-in px-4 pb-12 pt-4">
+      {/* top bar */}
+      <div className="flex items-center gap-3 pb-5">
+        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
           <Link to="/opentoken">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create new coin</h1>
-          <p className="text-sm text-muted-foreground">
-            100% fair launch · fee {DEFAULT_LAUNCH_FEE_OUSD} OUSD
-            {wallet ? ` · available ${Number(wallet.ousd_balance ?? 0).toFixed(2)} OUSD` : ""}
+          <h1 className="text-xl font-bold text-white">Create new coin</h1>
+          <p className="text-xs text-zinc-500">
+            Choose carefully, these can't be changed once the coin is created.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
-        <form onSubmit={goConfirm} className="space-y-4">
-          <Card className="glass-strong space-y-4 rounded-3xl border-border/60 p-5">
-            <div className="text-sm font-semibold">Coin details</div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        <form onSubmit={goConfirm} className="space-y-5">
+          {/* ── coin details card ────────────────────────────────── */}
+          <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="text-sm font-semibold text-white">Coin details</div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label>Coin name</Label>
+                <Label className="text-zinc-400">Coin name</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
-                  placeholder="Open Moon"
-                  className="mt-1 rounded-xl"
+                  placeholder="Droplink"
+                  className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
                   maxLength={60}
                 />
               </div>
               <div>
-                <Label>Ticker</Label>
+                <Label className="text-zinc-400">Ticker</Label>
                 <Input
                   value={form.symbol}
                   onChange={(e) =>
                     set("symbol", e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
                   }
-                  placeholder="OMOON"
-                  className="mt-1 rounded-xl"
+                  placeholder="ETE"
+                  className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
                   maxLength={10}
                 />
               </div>
             </div>
+
             <div>
-              <Label>Description (optional)</Label>
+              <Label className="text-zinc-400">Description (Optional)</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => set("description", e.target.value.slice(0, 1000))}
-                className="mt-1 min-h-25 rounded-xl"
+                className="mt-1 min-h-20 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
                 placeholder="What is this coin about?"
               />
             </div>
 
             <div>
-              <Label>Category</Label>
+              <Label className="text-zinc-400">Category</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {OT_CATEGORIES.map((c) => (
                   <button
@@ -245,10 +285,10 @@ function CreateOpenTokenPage() {
                     type="button"
                     onClick={() => set("category", c)}
                     className={cn(
-                      "rounded-full px-3 py-1 text-xs font-medium",
+                      "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                       form.category === c
-                        ? "bg-gradient-primary text-primary-foreground"
-                        : "border border-border/60 text-muted-foreground",
+                        ? "bg-green-500 text-black"
+                        : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800",
                     )}
                   >
                     {OT_CATEGORY_LABELS[c]}
@@ -256,117 +296,34 @@ function CreateOpenTokenPage() {
                 ))}
               </div>
             </div>
+          </div>
 
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-sm font-medium"
-              onClick={() => setShowSocial((v) => !v)}
-            >
-              Add social links (optional)
-              <ChevronDown className={cn("h-4 w-4 transition", showSocial && "rotate-180")} />
-            </button>
-            {showSocial && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <Label>Website</Label>
-                  <Input
-                    value={form.website}
-                    onChange={(e) => set("website", e.target.value)}
-                    className="mt-1 rounded-xl"
-                    placeholder="https://"
-                  />
-                </div>
-                <div>
-                  <Label>X</Label>
-                  <Input
-                    value={form.twitter}
-                    onChange={(e) => set("twitter", e.target.value)}
-                    className="mt-1 rounded-xl"
-                    placeholder="@handle"
-                  />
-                </div>
-                <div>
-                  <Label>Telegram</Label>
-                  <Input
-                    value={form.telegram}
-                    onChange={(e) => set("telegram", e.target.value)}
-                    className="mt-1 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label>Discord</Label>
-                  <Input
-                    value={form.discord}
-                    onChange={(e) => set("discord", e.target.value)}
-                    className="mt-1 rounded-xl"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Total supply</Label>
-                <Input
-                  type="number"
-                  value={form.total_supply}
-                  onChange={(e) =>
-                    set("total_supply", Number(e.target.value) || DEFAULT_TOTAL_SUPPLY)
-                  }
-                  className="mt-1 rounded-xl"
-                />
-              </div>
-              <div>
-                <Label>Decimals</Label>
-                <Input
-                  type="number"
-                  value={form.decimals}
-                  onChange={(e) =>
-                    set("decimals", Math.min(18, Math.max(0, Number(e.target.value) || 0)))
-                  }
-                  className="mt-1 rounded-xl"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3 rounded-2xl border border-border/50 p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium">Burnable</div>
-                  <div className="text-xs text-muted-foreground">Allow token burns</div>
-                </div>
-                <Switch checked={form.burnable} onCheckedChange={(v) => set("burnable", v)} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium">Mintable</div>
-                  <div className="text-xs text-muted-foreground">
-                    Allow future mints (not recommended)
-                  </div>
-                </div>
-                <Switch checked={form.mintable} onCheckedChange={(v) => set("mintable", v)} />
-              </div>
-            </div>
-
+          {/* ── logo upload ──────────────────────────────────────── */}
+          <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
             <div
-              className="cursor-pointer rounded-2xl border border-dashed border-border/70 bg-muted/20 p-6 text-center"
+              className="cursor-pointer rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/50 p-8 text-center transition hover:border-zinc-600"
               onClick={() => logoRef.current?.click()}
             >
               {form.logo_url ? (
                 <img
                   src={form.logo_url}
                   alt=""
-                  className="mx-auto h-24 w-24 rounded-2xl object-cover"
+                  className="mx-auto h-28 w-28 rounded-2xl object-cover"
                 />
               ) : (
                 <>
-                  <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <div className="mt-2 text-sm font-medium">
-                    {uploading ? "Uploading…" : "Select logo"}
+                  <ImageIcon className="mx-auto h-10 w-10 text-zinc-600" />
+                  <div className="mt-3 text-sm font-medium text-zinc-300">
+                    {uploading ? "Uploading…" : "Select video or image to upload"}
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    Images max 15MB · 1:1 recommended
-                  </div>
+                  <div className="mt-1 text-xs text-zinc-500">or drag and drop it here</div>
+                  <Button
+                    type="button"
+                    className="mt-3 rounded-full bg-green-500 px-4 py-1 text-sm font-medium text-black hover:bg-green-400"
+                    onClick={(e) => { e.stopPropagation(); logoRef.current?.click(); }}
+                  >
+                    Select file
+                  </Button>
                 </>
               )}
               <input
@@ -374,40 +331,437 @@ function CreateOpenTokenPage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={onUpload}
+                onChange={(e) => onUpload(e, "logo")}
               />
             </div>
 
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-3 text-xs text-muted-foreground">
-              Coin data (social links, logo, etc.) is set at launch. OpenToken is a 100% fair launch
-              — no presale, whitelist, or team allocation.
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-start gap-2 text-xs text-zinc-500">
+                <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <div className="font-medium text-zinc-400">File size and type</div>
+                  Image · max 15mb · .jpg, .gif or .png recommended
+                </div>
+              </div>
+              <div className="flex items-start gap-2 text-xs text-zinc-500">
+                <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <div className="font-medium text-zinc-400">Resolution and aspect ratio</div>
+                  Image · min 1000x1000px, 1:1 square recommended
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── social links (collapsible) ───────────────────────── */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 text-sm font-medium text-zinc-300"
+              onClick={() => setShowSocial((v) => !v)}
+            >
+              <span className="text-zinc-500">⚙</span>
+              Add social links (Optional)
+              <ChevronDown className={cn("ml-auto h-4 w-4 text-zinc-500 transition", showSocial && "rotate-180")} />
+            </button>
+            {showSocial && (
+              <div className="mt-4 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label className="text-zinc-400">Website</Label>
+                    <Input
+                      value={form.website}
+                      onChange={(e) => set("website", e.target.value)}
+                      className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
+                      placeholder="Add URL"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-zinc-400">X</Label>
+                    <Input
+                      value={form.twitter}
+                      onChange={(e) => set("twitter", e.target.value)}
+                      className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
+                      placeholder="Add URL"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-zinc-400">Telegram</Label>
+                  <Input
+                    value={form.telegram}
+                    onChange={(e) => set("telegram", e.target.value)}
+                    className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
+                    placeholder="Add URL"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── banner upload (collapsible) ──────────────────────── */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 text-sm font-medium text-zinc-300"
+              onClick={() => setShowBanner((v) => !v)}
+            >
+              <ImageIcon className="h-4 w-4 text-zinc-500" />
+              Add banner (Optional)
+              <ChevronDown className={cn("ml-auto h-4 w-4 text-zinc-500 transition", showBanner && "rotate-180")} />
+            </button>
+            {showBanner && (
+              <div className="mt-4 space-y-3">
+                <div className="text-xs font-medium text-zinc-300">Upload banner</div>
+                <div className="text-xs text-zinc-500">
+                  This will be shown on the coin page in addition to the coin image. Images or animated gifs
+                  up to 5mb, 3:1 / 1500x500px original. You can only do this when creating the coin, and it
+                  cannot be changed later.
+                </div>
+                <div
+                  className="cursor-pointer rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/50 p-6 text-center transition hover:border-zinc-600"
+                  onClick={() => bannerRef.current?.click()}
+                >
+                  {form.banner_url ? (
+                    <img
+                      src={form.banner_url}
+                      alt=""
+                      className="mx-auto h-24 w-full max-w-md rounded-xl object-cover"
+                    />
+                  ) : (
+                    <>
+                      <ImageIcon className="mx-auto h-8 w-8 text-zinc-600" />
+                      <div className="mt-2 text-sm text-zinc-400">Upload file...</div>
+                      <Button
+                        type="button"
+                        className="mt-2 rounded-full bg-green-500 px-4 py-1 text-sm font-medium text-black hover:bg-green-400"
+                        onClick={(e) => { e.stopPropagation(); bannerRef.current?.click(); }}
+                      >
+                        Select file
+                      </Button>
+                    </>
+                  )}
+                  <input
+                    ref={bannerRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => onUpload(e, "banner")}
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-start gap-2 text-xs text-zinc-500">
+                    <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      <div className="font-medium text-zinc-400">File size and type</div>
+                      Image · max 4.3mb · .jpg, .gif or .png recommended
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-zinc-500">
+                    <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      <div className="font-medium text-zinc-400">Resolution and aspect ratio</div>
+                      3:1 aspect ratio, 1500x500px recommended
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── share creator rewards ────────────────────────────── */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-zinc-800">
+                  <Gift className="h-4 w-4 text-green-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-white">
+                    Share creator rewards
+                    <Info className="h-3.5 w-3.5 text-zinc-500" />
+                  </div>
+                  <div className="text-xs text-zinc-500">
+                    Share creator rewards with wallets or charities.
+                  </div>
+                </div>
+              </div>
+              <Switch
+                checked={shareRewards}
+                onCheckedChange={setShareRewards}
+                className="data-[state=checked]:bg-green-500"
+              />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full rounded-full bg-gradient-primary text-primary-foreground"
-              disabled={uploading}
-            >
-              {uploading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              Continue
-            </Button>
-          </Card>
+            {shareRewards && (
+              <button
+                type="button"
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-zinc-900 px-4 py-3 text-sm transition hover:bg-zinc-800"
+                onClick={() => setRewardsDialogOpen(true)}
+              >
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-zinc-400" />
+                  <span className="text-zinc-300">{recipients.length} fee recipient{recipients.length !== 1 ? "s" : ""} selected</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-500" />
+              </button>
+            )}
+          </div>
+
+          {/* ── mayhem mode + cash back ──────────────────────────── */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-zinc-800">
+                  <Zap className="h-4 w-4 text-yellow-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">Mayhem mode</div>
+                  <div className="text-[11px] text-zinc-500">Increased price volume.</div>
+                </div>
+              </div>
+              <Switch
+                checked={mayhemMode}
+                onCheckedChange={setMayhemMode}
+                className="data-[state=checked]:bg-green-500"
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-zinc-800">
+                  <CircleDollarSign className="h-4 w-4 text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">Cash back</div>
+                  <div className="text-[11px] text-zinc-500">Creator rewards go to traders.</div>
+                </div>
+              </div>
+              <Switch
+                checked={cashBack}
+                onCheckedChange={setCashBack}
+                className="data-[state=checked]:bg-green-500"
+              />
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-zinc-500">
+            <Info className="mr-1 inline h-3 w-3" />
+            Active for 24h, only set at creation. May increase coin supply.{" "}
+            <span className="text-green-400 hover:underline cursor-pointer">learn more</span>
+          </div>
+
+          {/* ── pair with OUSD ───────────────────────────────────── */}
+          <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-full bg-green-500/20">
+                <CircleDollarSign className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white">Pair with OUSD</div>
+                <div className="text-[11px] text-zinc-500">Create your coin with OUSD liquidity.</div>
+              </div>
+            </div>
+            <Switch
+              checked={pairWithOUSD}
+              onCheckedChange={setPairWithOUSD}
+              className="data-[state=checked]:bg-green-500"
+            />
+          </div>
+
+          {/* ── advanced options ─────────────────────────────────── */}
+          <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="text-sm font-semibold text-white">Advanced</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="text-zinc-400">Total supply</Label>
+                <Input
+                  type="number"
+                  value={form.total_supply}
+                  onChange={(e) =>
+                    set("total_supply", Number(e.target.value) || DEFAULT_TOTAL_SUPPLY)
+                  }
+                  className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-zinc-400">Decimals</Label>
+                <Input
+                  type="number"
+                  value={form.decimals}
+                  onChange={(e) =>
+                    set("decimals", Math.min(18, Math.max(0, Number(e.target.value) || 0)))
+                  }
+                  className="mt-1 rounded-xl border-zinc-800 bg-zinc-900 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl bg-zinc-900 p-3">
+              <div>
+                <div className="text-sm font-medium text-zinc-300">Burnable</div>
+                <div className="text-[11px] text-zinc-500">Allow token burns</div>
+              </div>
+              <Switch checked={form.burnable} onCheckedChange={(v) => set("burnable", v)} className="data-[state=checked]:bg-green-500" />
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-zinc-900 p-3">
+              <div>
+                <div className="text-sm font-medium text-zinc-300">Mintable</div>
+                <div className="text-[11px] text-zinc-500">Allow future mints (not recommended)</div>
+              </div>
+              <Switch checked={form.mintable} onCheckedChange={(v) => set("mintable", v)} className="data-[state=checked]:bg-green-500" />
+            </div>
+          </div>
+
+          {/* ── submit ──────────────────────────────────────────── */}
+          <Button
+            type="submit"
+            className="w-full rounded-full bg-green-500 py-5 text-base font-semibold text-black shadow-lg shadow-green-900/20 hover:bg-green-400"
+            disabled={uploading || uploadingBanner}
+          >
+            {uploading || uploadingBanner ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            Create
+          </Button>
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-500">
+            Coin data (social links, logo, etc.) is set at launch. OpenToken is a 100% fair launch
+            — no presale, whitelist, or team allocation. Fee: {DEFAULT_LAUNCH_FEE_OUSD} OUSD
+            {wallet ? ` · available ${Number(wallet.ousd_balance ?? 0).toFixed(2)} OUSD` : ""}
+          </div>
         </form>
 
-        <div className="lg:sticky lg:top-4 lg:self-start">
-          <LivePreview
-            name={form.name}
-            symbol={form.symbol}
-            description={form.description}
-            logo_url={form.logo_url}
-            category={form.category}
-          />
+        {/* ── live preview sidebar ──────────────────────────────── */}
+        <div className="hidden lg:block lg:sticky lg:top-4 lg:self-start">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Preview</div>
+            <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+              <div className="aspect-square bg-zinc-800">
+                {form.logo_url ? (
+                  <img src={form.logo_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full place-items-center text-sm text-zinc-500">
+                    A preview of how the coin<br />will look like
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <div className="text-sm font-semibold text-white">
+                  {form.name || "Token name"}
+                </div>
+                <div className="text-xs text-zinc-500">${form.symbol || "TICKER"}</div>
+                {form.description && (
+                  <p className="mt-1.5 line-clamp-3 text-[11px] text-zinc-400">
+                    {form.description}
+                  </p>
+                )}
+                <div className="mt-2 text-[10px] text-zinc-500">
+                  {OT_CATEGORY_LABELS[form.category]}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ── share creator rewards dialog ────────────────────────── */}
+      <Dialog open={rewardsDialogOpen} onOpenChange={setRewardsDialogOpen}>
+        <DialogContent className="rounded-3xl border-zinc-800 bg-zinc-950 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-white">Share creator rewards</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 px-2">
+            <p className="text-center text-xs text-zinc-400">
+              Creators earn percentage rewards on all transaction fees. You may invite wallets or
+              charities to receive a portion of it. Rewards sharing{" "}
+              <span className="underline">cannot</span> be changed again.
+            </p>
+
+            {/* allocation bar */}
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>Allocated</span>
+              <span className="font-semibold text-white">
+                {recipients.reduce((s, r) => s + r.pct, 0)}%
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-green-500 transition-all"
+                style={{ width: `${Math.min(100, recipients.reduce((s, r) => s + r.pct, 0))}%` }}
+              />
+            </div>
+
+            {/* recipient list */}
+            <ul className="space-y-2">
+              {recipients.map((r, i) => (
+                <li key={i} className="flex items-center justify-between rounded-xl bg-zinc-900 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-700 text-xs text-white">
+                      {r.label?.[0] ?? "?"}
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">{r.label || r.address.slice(0, 12)}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+                        {i === 0 && <span className="rounded bg-green-500/20 px-1 py-0.5 text-green-400">Admin</span>}
+                        🔒 {r.pct}%
+                      </div>
+                    </div>
+                  </div>
+                  <Input
+                    type="number"
+                    value={r.pct}
+                    onChange={(e) => {
+                      const updated = [...recipients];
+                      updated[i] = { ...updated[i], pct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) };
+                      setRecipients(updated);
+                    }}
+                    className="w-16 rounded-lg border-zinc-700 bg-zinc-800 text-center text-sm text-white"
+                  />
+                </li>
+              ))}
+            </ul>
+
+            <div className="text-center text-xs text-zinc-500">Add more recipients</div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                onClick={() => {
+                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Wallet" }]);
+                }}
+              >
+                <Wallet className="mr-1.5 h-3.5 w-3.5" /> Add wallet
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                onClick={() => {
+                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Charity" }]);
+                }}
+              >
+                <Gift className="mr-1.5 h-3.5 w-3.5" /> Add charity
+              </Button>
+            </div>
+
+            <p className="text-center text-[11px] text-zinc-500">
+              Your split is saved with this session and will be applied when you create the coin.
+            </p>
+
+            <Button
+              type="button"
+              className="w-full rounded-full bg-green-500 py-3 font-semibold text-black hover:bg-green-400"
+              onClick={() => setRewardsDialogOpen(false)}
+            >
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

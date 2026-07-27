@@ -2,34 +2,41 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Wallet, Shield } from "lucide-react";
+import { Plus, Search, Wallet, Shield, BadgeCheck, ChevronDown } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { formatUSD, formatNumber, formatPct, timeAgo } from "@/lib/wallet-utils";
+import { formatUSD, formatNumber, formatPct } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import {
-  CategoryPills,
-  type OtFilter,
-  OtSkeletonGrid,
-  TokenCard,
-  TrendingRail,
-  ViewToggle,
-} from "@/components/opentoken";
-import { OT_CATEGORIES } from "@/lib/opentoken/bonding-curve";
+import { OT_CATEGORIES, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
 
+/* ── route ────────────────────────────────────────────────────────── */
 export const Route = createFileRoute("/_authenticated/opentoken")({
   head: () => ({ meta: [{ title: "OpenToken — OpenPay Pro" }] }),
   component: OpenTokenHome,
 });
 
+/* ── filter types ─────────────────────────────────────────────────── */
+const SORT_OPTIONS = [
+  { id: "rank", label: "Rank" },
+  { id: "trending", label: "Trending" },
+  { id: "new", label: "New" },
+  { id: "gainers", label: "Top Gainers" },
+] as const;
+type SortOption = (typeof SORT_OPTIONS)[number]["id"];
+
+const TIME_OPTIONS = ["1h", "24h", "7d"] as const;
+type TimeOption = (typeof TIME_OPTIONS)[number];
+
+/* ── main component ───────────────────────────────────────────────── */
 function OpenTokenHome() {
   const { user } = Route.useRouteContext();
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<OtFilter>("all");
-  const [view, setView] = useState<"grid" | "table">("grid");
+  const [sort, setSort] = useState<SortOption>("rank");
+  const [_time, setTime] = useState<TimeOption>("24h");
+  const [catFilter, setCatFilter] = useState<string>("all");
+  const [showSearch, setShowSearch] = useState(false);
 
   const { data: isStaff } = useQuery({
     queryKey: ["ot-is-staff", user.id],
@@ -63,229 +70,244 @@ function OpenTokenHome() {
     },
   });
 
-  const trending = useMemo(
-    () =>
-      [...tokens].sort((a: any, b: any) => Number(b.volume_24h) - Number(a.volume_24h)).slice(0, 8),
-    [tokens],
-  );
-  const featured = useMemo(() => tokens.filter((t: any) => t.is_featured).slice(0, 8), [tokens]);
-  const graduated = useMemo(
-    () => tokens.filter((t: any) => t.status === "graduated").slice(0, 8),
-    [tokens],
-  );
-  const topMcap = useMemo(
-    () =>
-      [...tokens].sort((a: any, b: any) => Number(b.market_cap) - Number(a.market_cap)).slice(0, 6),
-    [tokens],
-  );
-
+  /* ── derived list ─────────────────────────────────────────────── */
   const list = useMemo(() => {
     let l = tokens as any[];
+
+    // category filter
+    if (catFilter !== "all") {
+      if (catFilter === "verified") l = l.filter((t) => t.is_verified);
+      else if (catFilter === "graduated") l = l.filter((t) => t.status === "graduated");
+      else if ((OT_CATEGORIES as readonly string[]).includes(catFilter))
+        l = l.filter((t) => t.category === catFilter);
+    }
+
+    // search
     if (q) {
       const qq = q.toLowerCase();
       l = l.filter(
         (t) =>
           t.name?.toLowerCase().includes(qq) ||
-          t.symbol?.toLowerCase().includes(qq) ||
-          t.description?.toLowerCase().includes(qq),
+          t.symbol?.toLowerCase().includes(qq),
       );
     }
-    if (filter === "trending")
-      l = [...l].sort((a, b) => Number(b.volume_24h) - Number(a.volume_24h));
-    else if (filter === "new")
-      l = [...l].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    else if (filter === "verified") l = l.filter((t) => t.is_verified);
-    else if (filter === "graduated") l = l.filter((t) => t.status === "graduated");
-    else if ((OT_CATEGORIES as readonly string[]).includes(filter)) {
-      l = l.filter((t) => t.category === filter);
-    }
-    return l;
-  }, [tokens, q, filter]);
 
+    // sort
+    if (sort === "rank" || sort === "trending")
+      l = [...l].sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0));
+    else if (sort === "new")
+      l = [...l].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    else if (sort === "gainers")
+      l = [...l].sort((a, b) => Number(b.change_24h ?? 0) - Number(a.change_24h ?? 0));
+
+    return l;
+  }, [tokens, q, sort, catFilter]);
+
+  /* ── render ───────────────────────────────────────────────────── */
   return (
-    <div className="animate-page-in space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">OpenToken</h1>
-          <p className="text-sm text-muted-foreground">
-            Fair-launch community tokens on OpenPay · powered by Pi
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/opentoken/portfolio">
-              <Wallet className="mr-1.5 h-4 w-4" /> Portfolio
-            </Link>
-          </Button>
-          {isStaff && (
-            <Button asChild variant="outline" className="rounded-full">
-              <Link to="/opentoken/admin">
-                <Shield className="mr-1.5 h-4 w-4" /> Admin
+    <div className="ot-phantom mx-auto min-h-screen max-w-2xl animate-page-in">
+      {/* ── top bar ──────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-30 bg-black/95 backdrop-blur-xl">
+        {/* top nav row */}
+        <div className="flex items-center justify-between px-4 pb-2 pt-4">
+          <h1 className="text-lg font-bold text-white">Trade</h1>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-zinc-400 hover:text-white"
+              onClick={() => setShowSearch((v) => !v)}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
+              <Link to="/opentoken/portfolio">
+                <Wallet className="h-4 w-4" />
               </Link>
             </Button>
-          )}
-          <Button
-            asChild
-            className="rounded-full bg-gradient-primary text-primary-foreground shadow-glow"
-          >
-            <Link to="/opentoken/create">
-              <Plus className="mr-1.5 h-4 w-4" /> Create
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {featured.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Featured
-          </h2>
-          <TrendingRail tokens={featured} />
-        </section>
-      )}
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Trending now
-        </h2>
-        <TrendingRail tokens={trending} />
-      </section>
-
-      {graduated.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Recently graduated
-          </h2>
-          <TrendingRail tokens={graduated} />
-        </section>
-      )}
-
-      {topMcap.length > 0 && (
-        <Card className="glass-strong rounded-3xl border-border/60 p-4">
-          <h2 className="text-sm font-semibold">Highest market cap</h2>
-          <ul className="mt-3 divide-y divide-border/50">
-            {topMcap.map((t: any, i: number) => (
-              <li key={t.id}>
-                <Link
-                  to="/opentoken/$tokenId"
-                  params={{ tokenId: t.id }}
-                  className="flex items-center gap-3 py-2.5 hover:opacity-90"
-                >
-                  <span className="w-5 text-xs text-muted-foreground">{i + 1}</span>
-                  <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-gradient-primary text-[10px] font-bold text-primary-foreground">
-                    {t.logo_url ? (
-                      <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      t.symbol.slice(0, 2)
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">${t.symbol}</div>
-                  </div>
-                  <div className="text-right text-sm tabular-nums">
-                    {formatUSD(t.market_cap, { compact: true })}
-                  </div>
+            {isStaff && (
+              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
+                <Link to="/opentoken/admin">
+                  <Shield className="h-4 w-4" />
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+              </Button>
+            )}
+          </div>
+        </div>
 
-      <section className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Explore coins
-          </h2>
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-45 flex-1 sm:w-56">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        {/* category pills — horizontal scroll */}
+        <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {[
+            { id: "all", label: "Featured" },
+            { id: "trending", label: "Top Volume" },
+            ...OT_CATEGORIES.map((c) => ({
+              id: c,
+              label: OT_CATEGORY_LABELS[c as OtCategory] ?? c,
+            })),
+          ].map((pill) => (
+            <button
+              key={pill.id}
+              type="button"
+              onClick={() => setCatFilter(pill.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
+                catFilter === pill.id
+                  ? "bg-white text-black"
+                  : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200",
+              )}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+
+        {/* search bar (collapsible) */}
+        {showSearch && (
+          <div className="px-4 pb-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search coins…"
-                className="rounded-full pl-9"
+                placeholder="Search OpenToken…"
+                autoFocus
+                className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-700"
               />
             </div>
-            <ViewToggle value={view} onChange={setView} />
           </div>
-        </div>
-        <CategoryPills value={filter} onChange={setFilter} />
+        )}
 
-        {isLoading ? (
-          <OtSkeletonGrid />
-        ) : list.length === 0 ? (
-          <Card className="rounded-3xl border-border/60 p-10 text-center text-sm text-muted-foreground">
-            No tokens yet. Be the first to launch on OpenToken.
-            <div className="mt-4">
-              <Button asChild className="rounded-full bg-gradient-primary text-primary-foreground">
-                <Link to="/opentoken/create">Create coin</Link>
-              </Button>
-            </div>
-          </Card>
-        ) : view === "grid" ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-            {list.map((t: any) => (
-              <TokenCard key={t.id} token={t} />
+        {/* sort / time pills */}
+        <div className="flex items-center gap-2 px-4 pb-3">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setSort(opt.id)}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors",
+                sort === opt.id
+                  ? "border-zinc-600 bg-zinc-800 text-white"
+                  : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300",
+              )}
+            >
+              {opt.label}
+              {sort === opt.id && <ChevronDown className="h-3 w-3" />}
+            </button>
+          ))}
+
+          <div className="ml-auto flex gap-1 rounded-full border border-zinc-800 p-0.5">
+            {TIME_OPTIONS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTime(t)}
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
+                  _time === t
+                    ? "bg-zinc-700 text-white"
+                    : "text-zinc-500 hover:text-zinc-300",
+                )}
+              >
+                {t}
+              </button>
             ))}
           </div>
-        ) : (
-          <Card className="glass-strong overflow-hidden rounded-3xl border-border/60">
-            <div className="hidden grid-cols-12 gap-2 border-b border-border/60 px-4 py-2 text-[10px] uppercase tracking-wide text-muted-foreground md:grid">
-              <div className="col-span-4">Token</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-2 text-right">24h</div>
-              <div className="col-span-2 text-right">Volume</div>
-              <div className="col-span-2 text-right">MCap</div>
+        </div>
+      </div>
+
+      {/* ── token list ───────────────────────────────────────────── */}
+      <div className="divide-y divide-zinc-900">
+        {isLoading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+              <div className="h-4 w-4 rounded bg-zinc-800" />
+              <div className="h-10 w-10 rounded-full bg-zinc-800" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 w-24 rounded bg-zinc-800" />
+                <div className="h-3 w-16 rounded bg-zinc-800" />
+              </div>
+              <div className="space-y-1.5 text-right">
+                <div className="ml-auto h-3.5 w-16 rounded bg-zinc-800" />
+                <div className="ml-auto h-3 w-12 rounded bg-zinc-800" />
+              </div>
             </div>
-            <ul className="divide-y divide-border/50">
-              {list.map((t: any) => (
-                <li key={t.id}>
-                  <Link
-                    to="/opentoken/$tokenId"
-                    params={{ tokenId: t.id }}
-                    className="grid grid-cols-12 items-center gap-2 px-4 py-3 hover:bg-accent/40"
+          ))
+        ) : list.length === 0 ? (
+          <div className="px-4 py-16 text-center">
+            <p className="text-sm text-zinc-500">No tokens found</p>
+            <Button asChild className="mt-4 rounded-full bg-purple-600 text-white hover:bg-purple-500">
+              <Link to="/opentoken/create">Create coin</Link>
+            </Button>
+          </div>
+        ) : (
+          list.map((t: any, idx: number) => {
+            const change = Number(t.change_24h ?? 0);
+            const mcap = Number(t.market_cap ?? 0);
+            return (
+              <Link
+                key={t.id}
+                to="/opentoken/$tokenId"
+                params={{ tokenId: t.id }}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-zinc-900/60 active:bg-zinc-900"
+              >
+                {/* rank */}
+                <span className="w-5 text-center text-xs font-semibold text-zinc-500">
+                  {idx + 1}
+                </span>
+
+                {/* avatar */}
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-zinc-800">
+                  {t.logo_url ? (
+                    <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-xs font-bold text-white">
+                      {t.symbol?.slice(0, 2)}
+                    </div>
+                  )}
+                  {t.is_verified && (
+                    <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-black text-purple-400" />
+                  )}
+                </div>
+
+                {/* name + mcap */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold text-white">{t.name}</span>
+                  </div>
+                  <div className="text-xs text-zinc-500">
+                    {mcap > 0 ? `₱${formatNumber(mcap, mcap >= 1e6 ? 0 : 2)}${mcap >= 1e9 ? "B" : mcap >= 1e6 ? "M" : mcap >= 1e3 ? "K" : ""} MC` : `$${t.symbol}`}
+                  </div>
+                </div>
+
+                {/* price + change */}
+                <div className="text-right">
+                  <div className="text-sm font-medium tabular-nums text-white">
+                    ₱{formatNumber(t.price_usd, t.price_usd < 0.01 ? 8 : t.price_usd < 1 ? 4 : 2)}
+                  </div>
+                  <div
+                    className={cn(
+                      "text-xs font-medium tabular-nums",
+                      change >= 0 ? "text-green-400" : "text-red-400",
+                    )}
                   >
-                    <div className="col-span-12 flex items-center gap-3 md:col-span-4">
-                      <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-gradient-primary text-[10px] font-bold text-primary-foreground">
-                        {t.logo_url ? (
-                          <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          t.symbol.slice(0, 2)
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{t.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          ${t.symbol} · {timeAgo(t.created_at)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-span-4 text-sm tabular-nums md:col-span-2 md:text-right">
-                      {formatNumber(t.price_usd, 6)}
-                    </div>
-                    <div
-                      className={cn(
-                        "col-span-4 text-sm tabular-nums md:col-span-2 md:text-right",
-                        Number(t.change_24h) >= 0 ? "text-success" : "text-destructive",
-                      )}
-                    >
-                      {formatPct(t.change_24h)}
-                    </div>
-                    <div className="col-span-4 text-sm tabular-nums md:col-span-2 md:text-right">
-                      {formatUSD(t.volume_24h, { compact: true })}
-                    </div>
-                    <div className="col-span-4 text-sm tabular-nums md:col-span-2 md:text-right">
-                      {formatUSD(t.market_cap, { compact: true })}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Card>
+                    {change >= 0 ? "+" : ""}
+                    {formatPct(change)}
+                  </div>
+                </div>
+              </Link>
+            );
+          })
         )}
-      </section>
+      </div>
+
+      {/* ── FAB: create token ────────────────────────────────────── */}
+      <Link
+        to="/opentoken/create"
+        className="fixed bottom-20 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-purple-600 text-white shadow-lg shadow-purple-900/40 transition hover:bg-purple-500 md:bottom-6 md:right-8"
+      >
+        <Plus className="h-5 w-5" />
+      </Link>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { formatNumber } from "@/lib/wallet-utils";
 
 type Tick = { created_at: string; price: number; market_cap?: number };
@@ -22,41 +22,58 @@ export function PriceChart({
     [ticks, mode],
   );
 
+  // Determine trend color (green if last >= first, red otherwise)
+  const isUp = data.length >= 2 ? data[data.length - 1].v >= data[0].v : true;
+  const strokeColor = isUp ? "#4ade80" : "#f87171";
+  const gradientId = `otPhantomGrad-${mode}`;
+
   if (!data.length) {
     return (
-      <div className="grid h-56 place-items-center rounded-2xl border border-border/60 bg-card/40 text-sm text-muted-foreground">
+      <div className="grid h-56 place-items-center rounded-2xl bg-zinc-900/40 text-sm text-zinc-500">
         No chart data yet — be the first to trade
       </div>
     );
   }
 
   return (
-    <div className="h-56 w-full rounded-2xl border border-border/60 bg-card/40 p-2">
+    <div className="h-56 w-full rounded-2xl bg-transparent">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <defs>
-            <linearGradient id="otPrice" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.45} />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={strokeColor} stopOpacity={0.25} />
+              <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="t" hide />
           <YAxis
             domain={["auto", "auto"]}
-            width={56}
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-            tickFormatter={(v) => formatNumber(v, v < 0.01 ? 6 : 2)}
+            hide
           />
           <Tooltip
             contentStyle={{
-              background: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              background: "#18181b",
+              border: "1px solid #27272a",
               borderRadius: 12,
               fontSize: 12,
+              color: "#f5f5f5",
             }}
             formatter={(v: number) => [formatNumber(v, 8), mode === "mcap" ? "MCap" : "Price"]}
+            labelStyle={{ color: "#a1a1aa" }}
           />
-          <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" fill="url(#otPrice)" strokeWidth={2} />
+          <Area
+            type="monotone"
+            dataKey="v"
+            stroke={strokeColor}
+            fill={`url(#${gradientId})`}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{
+              r: 5,
+              fill: strokeColor,
+              stroke: "#000",
+              strokeWidth: 2,
+            }}
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>

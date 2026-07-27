@@ -27,6 +27,8 @@ function OpenPayAuthCallbackPage() {
     if (ran.current) return;
     ran.current = true;
 
+    const redirect = sessionStorage.getItem("openpay_oauth_redirect") || "/dashboard";
+
     (async () => {
       if (search.error) {
         const denied = /access_denied/i.test(search.error);
@@ -76,9 +78,10 @@ function OpenPayAuthCallbackPage() {
             ? `Signed in as @${body.username.replace(/^@/, "")} via OpenPay`
             : "Signed in with OpenPay",
         );
-        const redirect = sessionStorage.getItem("openpay_oauth_redirect") || "/dashboard";
         sessionStorage.removeItem("openpay_oauth_redirect");
-        navigate({ to: redirect });
+        // Use window.location for a hard redirect so the authenticated layout
+        // re-checks the fresh session instead of rendering the callback route.
+        window.location.replace(redirect);
       } catch (e) {
         setError((e as Error).message || "OpenPay sign-in failed");
       }
@@ -103,7 +106,7 @@ function OpenPayAuthCallbackPage() {
         ) : (
           <>
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">Finishing OpenPay sign-in…</p>
+            <p className="mt-4 text-sm text-muted-foreground">Signing you in via OpenPay…</p>
           </>
         )}
       </div>

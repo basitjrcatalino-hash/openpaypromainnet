@@ -78,7 +78,8 @@ function PiCallbackPage() {
         toast.success(`Signed in as @${body.username}`);
         const redirect = sessionStorage.getItem("pi_oauth_redirect") || "/dashboard";
         sessionStorage.removeItem("pi_oauth_redirect");
-        navigate({ to: redirect });
+        // Hard redirect so the authenticated layout re-checks the fresh session
+        window.location.replace(redirect);
       } catch (e) {
         setError((e as Error).message || "Pi sign-in failed");
       }

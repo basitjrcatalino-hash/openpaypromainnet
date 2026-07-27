@@ -26,7 +26,7 @@ export function TradesTable({ trades, symbol }: { trades: OtTradeRow[]; symbol: 
           <tr className="border-b border-border/60">
             <th className="px-3 py-2 font-medium">Account</th>
             <th className="px-3 py-2 font-medium">Type</th>
-            <th className="px-3 py-2 font-medium text-right">π</th>
+            <th className="px-3 py-2 font-medium text-right">OUSD</th>
             <th className="px-3 py-2 font-medium text-right">${symbol}</th>
             <th className="px-3 py-2 font-medium text-right">Time</th>
             <th className="px-3 py-2 font-medium text-right">Txn</th>

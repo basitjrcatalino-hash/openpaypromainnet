@@ -7,7 +7,7 @@ import { Plus, Search, Wallet, Shield, BadgeCheck, ChevronDown } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatUSD, formatNumber, formatPct } from "@/lib/wallet-utils";
+import { formatOUSD, formatPct } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { OT_CATEGORIES, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
 
@@ -74,7 +74,6 @@ function OpenTokenHome() {
   const list = useMemo(() => {
     let l = tokens as any[];
 
-    // category filter
     if (catFilter !== "all") {
       if (catFilter === "verified") l = l.filter((t) => t.is_verified);
       else if (catFilter === "graduated") l = l.filter((t) => t.status === "graduated");
@@ -82,7 +81,6 @@ function OpenTokenHome() {
         l = l.filter((t) => t.category === catFilter);
     }
 
-    // search
     if (q) {
       const qq = q.toLowerCase();
       l = l.filter(
@@ -92,7 +90,6 @@ function OpenTokenHome() {
       );
     }
 
-    // sort
     if (sort === "rank" || sort === "trending")
       l = [...l].sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0));
     else if (sort === "new")
@@ -103,30 +100,27 @@ function OpenTokenHome() {
     return l;
   }, [tokens, q, sort, catFilter]);
 
-  /* ── render ───────────────────────────────────────────────────── */
   return (
-    <div className="ot-phantom mx-auto min-h-screen max-w-2xl animate-page-in">
-      {/* ── top bar ──────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-black/95 backdrop-blur-xl">
-        {/* top nav row */}
-        <div className="flex items-center justify-between px-4 pb-2 pt-4">
-          <h1 className="text-lg font-bold text-white">Trade</h1>
+    <div className="ot-phantom mx-auto min-h-screen w-full max-w-3xl animate-page-in pb-24 md:max-w-4xl md:pb-8">
+      <div className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+        <div className="flex items-center justify-between px-4 pb-2 pt-4 md:px-6">
+          <h1 className="text-lg font-bold text-foreground">Trade</h1>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-zinc-400 hover:text-white"
+              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
               onClick={() => setShowSearch((v) => !v)}
             >
               <Search className="h-4 w-4" />
             </Button>
-            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
               <Link to="/opentoken/portfolio">
                 <Wallet className="h-4 w-4" />
               </Link>
             </Button>
             {isStaff && (
-              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
+              <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                 <Link to="/opentoken/admin">
                   <Shield className="h-4 w-4" />
                 </Link>
@@ -135,8 +129,7 @@ function OpenTokenHome() {
           </div>
         </div>
 
-        {/* category pills — horizontal scroll */}
-        <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-none [-ms-overflow-style:none] md:px-6 [&::-webkit-scrollbar]:hidden">
           {[
             { id: "all", label: "Featured" },
             { id: "trending", label: "Top Volume" },
@@ -152,8 +145,8 @@ function OpenTokenHome() {
               className={cn(
                 "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
                 catFilter === pill.id
-                  ? "bg-white text-black"
-                  : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200",
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
             >
               {pill.label}
@@ -161,24 +154,22 @@ function OpenTokenHome() {
           ))}
         </div>
 
-        {/* search bar (collapsible) */}
         {showSearch && (
-          <div className="px-4 pb-3">
+          <div className="px-4 pb-3 md:px-6">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search OpenToken…"
                 autoFocus
-                className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-700"
+                className="rounded-full border-border bg-card pl-9 text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
         )}
 
-        {/* sort / time pills */}
-        <div className="flex items-center gap-2 px-4 pb-3">
+        <div className="flex items-center gap-2 px-4 pb-3 md:px-6">
           {SORT_OPTIONS.map((opt) => (
             <button
               key={opt.id}
@@ -187,8 +178,8 @@ function OpenTokenHome() {
               className={cn(
                 "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors",
                 sort === opt.id
-                  ? "border-zinc-600 bg-zinc-800 text-white"
-                  : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300",
+                  ? "border-border bg-muted text-foreground"
+                  : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground",
               )}
             >
               {opt.label}
@@ -196,7 +187,7 @@ function OpenTokenHome() {
             </button>
           ))}
 
-          <div className="ml-auto flex gap-1 rounded-full border border-zinc-800 p-0.5">
+          <div className="ml-auto flex gap-1 rounded-full border border-border p-0.5">
             {TIME_OPTIONS.map((t) => (
               <button
                 key={t}
@@ -205,8 +196,8 @@ function OpenTokenHome() {
                 className={cn(
                   "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
                   _time === t
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-500 hover:text-zinc-300",
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {t}
@@ -216,27 +207,26 @@ function OpenTokenHome() {
         </div>
       </div>
 
-      {/* ── token list ───────────────────────────────────────────── */}
-      <div className="divide-y divide-zinc-900">
+      <div className="divide-y divide-border/60">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
-              <div className="h-4 w-4 rounded bg-zinc-800" />
-              <div className="h-10 w-10 rounded-full bg-zinc-800" />
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5 md:px-6">
+              <div className="h-4 w-4 rounded bg-muted" />
+              <div className="h-10 w-10 rounded-full bg-muted" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 w-24 rounded bg-zinc-800" />
-                <div className="h-3 w-16 rounded bg-zinc-800" />
+                <div className="h-3.5 w-24 rounded bg-muted" />
+                <div className="h-3 w-16 rounded bg-muted" />
               </div>
               <div className="space-y-1.5 text-right">
-                <div className="ml-auto h-3.5 w-16 rounded bg-zinc-800" />
-                <div className="ml-auto h-3 w-12 rounded bg-zinc-800" />
+                <div className="ml-auto h-3.5 w-16 rounded bg-muted" />
+                <div className="ml-auto h-3 w-12 rounded bg-muted" />
               </div>
             </div>
           ))
         ) : list.length === 0 ? (
-          <div className="px-4 py-16 text-center">
-            <p className="text-sm text-zinc-500">No tokens found</p>
-            <Button asChild className="mt-4 rounded-full bg-purple-600 text-white hover:bg-purple-500">
+          <div className="px-4 py-16 text-center md:px-6">
+            <p className="text-sm text-muted-foreground">No tokens found</p>
+            <Button asChild className="mt-4 rounded-full">
               <Link to="/opentoken/create">Create coin</Link>
             </Button>
           </div>
@@ -249,46 +239,44 @@ function OpenTokenHome() {
                 key={t.id}
                 to="/opentoken/$tokenId"
                 params={{ tokenId: t.id }}
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-zinc-900/60 active:bg-zinc-900"
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 active:bg-muted md:px-6"
               >
-                {/* rank */}
-                <span className="w-5 text-center text-xs font-semibold text-zinc-500">
+                <span className="w-5 text-center text-xs font-semibold text-muted-foreground">
                   {idx + 1}
                 </span>
 
-                {/* avatar */}
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-zinc-800">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted">
                   {t.logo_url ? (
                     <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-xs font-bold text-white">
+                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-primary to-primary/70 text-xs font-bold text-primary-foreground">
                       {t.symbol?.slice(0, 2)}
                     </div>
                   )}
                   {t.is_verified && (
-                    <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-black text-purple-400" />
+                    <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
                   )}
                 </div>
 
-                {/* name + mcap */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-semibold text-white">{t.name}</span>
+                    <span className="truncate text-sm font-semibold text-foreground">{t.name}</span>
                   </div>
-                  <div className="text-xs text-zinc-500">
-                    {mcap > 0 ? `₱${formatNumber(mcap, mcap >= 1e6 ? 0 : 2)}${mcap >= 1e9 ? "B" : mcap >= 1e6 ? "M" : mcap >= 1e3 ? "K" : ""} MC` : `$${t.symbol}`}
+                  <div className="text-xs text-muted-foreground">
+                    {mcap > 0
+                      ? `${formatOUSD(mcap, { compact: true, suffix: false })} MC`
+                      : `$${t.symbol}`}
                   </div>
                 </div>
 
-                {/* price + change */}
                 <div className="text-right">
-                  <div className="text-sm font-medium tabular-nums text-white">
-                    ₱{formatNumber(t.price_usd, t.price_usd < 0.01 ? 8 : t.price_usd < 1 ? 4 : 2)}
+                  <div className="text-sm font-medium tabular-nums text-foreground">
+                    {formatOUSD(t.price_usd, { price: true, suffix: false })}
                   </div>
                   <div
                     className={cn(
                       "text-xs font-medium tabular-nums",
-                      change >= 0 ? "text-green-400" : "text-red-400",
+                      change >= 0 ? "text-emerald-500" : "text-red-500",
                     )}
                   >
                     {change >= 0 ? "+" : ""}
@@ -301,10 +289,10 @@ function OpenTokenHome() {
         )}
       </div>
 
-      {/* ── FAB: create token ────────────────────────────────────── */}
       <Link
         to="/opentoken/create"
-        className="fixed bottom-20 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-purple-600 text-white shadow-lg shadow-purple-900/40 transition hover:bg-purple-500 md:bottom-6 md:right-8"
+        className="fixed bottom-20 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:opacity-90 md:bottom-6 md:right-8"
+        aria-label="Create coin"
       >
         <Plus className="h-5 w-5" />
       </Link>

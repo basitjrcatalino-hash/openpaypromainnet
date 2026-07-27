@@ -43,6 +43,22 @@ export function formatUSD(n: number | string | null | undefined, opts: { compact
   }).format(v);
 }
 
+/** Format amounts denominated in OUSD (1 OUSD ≈ $1). Tiny prices use plain decimals. */
+export function formatOUSD(
+  n: number | string | null | undefined,
+  opts: { compact?: boolean; price?: boolean; suffix?: boolean } = {},
+): string {
+  const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
+  const withSuffix = opts.suffix !== false;
+  if (!isFinite(v)) return withSuffix ? "0 OUSD" : "0";
+  const abs = Math.abs(v);
+  const asPrice = opts.price === true || (abs > 0 && abs < 0.01 && opts.compact !== true);
+  const body = asPrice
+    ? formatNumber(v, abs < 0.01 ? 8 : 4)
+    : formatUSD(v, { compact: opts.compact });
+  return withSuffix ? `${body} OUSD` : body;
+}
+
 export function formatNumber(
   n: number | string | null | undefined,
   decimals = 4,

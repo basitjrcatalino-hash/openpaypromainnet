@@ -29,7 +29,7 @@ export function PriceChart({
 
   if (!data.length) {
     return (
-      <div className="grid h-56 place-items-center rounded-2xl bg-zinc-900/40 text-sm text-zinc-500">
+      <div className="grid h-56 place-items-center rounded-2xl bg-muted/40 text-sm text-muted-foreground">
         No chart data yet — be the first to trade
       </div>
     );
@@ -57,7 +57,10 @@ export function PriceChart({
               fontSize: 12,
               color: "#f5f5f5",
             }}
-            formatter={(v: number) => [formatNumber(v, 8), mode === "mcap" ? "MCap" : "Price"]}
+            formatter={(v: number) => [
+              `${formatNumber(v, 8)} OUSD`,
+              mode === "mcap" ? "MCap" : "Price",
+            ]}
             labelStyle={{ color: "#a1a1aa" }}
           />
           <Area

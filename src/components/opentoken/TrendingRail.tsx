@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { formatUSD } from "@/lib/wallet-utils";
+import { formatOUSD } from "@/lib/wallet-utils";
 import type { OtTokenCardData } from "./TokenCard";
 
 export function TrendingRail({ tokens }: { tokens: OtTokenCardData[] }) {
@@ -22,7 +22,9 @@ export function TrendingRail({ tokens }: { tokens: OtTokenCardData[] }) {
               </div>
             )}
             <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2 pt-6">
-              <div className="text-sm font-semibold text-white">{formatUSD(t.market_cap, { compact: true })}</div>
+              <div className="text-sm font-semibold text-white">
+                {formatOUSD(t.market_cap, { compact: true })}
+              </div>
             </div>
           </div>
           <div className="p-3">

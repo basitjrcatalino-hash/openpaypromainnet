@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Star, BadgeCheck, Radio } from "lucide-react";
-import { formatNumber, formatUSD, timeAgo } from "@/lib/wallet-utils";
+import { formatOUSD, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { curveFromTokenRow, curveProgress, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
 import { GraduationBadge } from "./GraduationBadge";
@@ -67,7 +67,9 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
             </span>
           )}
           <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent px-3 pb-2 pt-8">
-            <div className="text-xs font-semibold text-white/90">{formatUSD(token.market_cap, { compact: true })} MC</div>
+            <div className="text-xs font-semibold text-white/90">
+              {formatOUSD(token.market_cap, { compact: true })} MC
+            </div>
           </div>
         </div>
       )}
@@ -92,7 +94,7 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
         )}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
           <span className="rounded-full border border-border/60 px-1.5 py-0.5">{OT_CATEGORY_LABELS[cat] ?? cat}</span>
-          <span>{formatUSD(token.volume_24h, { compact: true })} vol</span>
+          <span>{formatOUSD(token.volume_24h, { compact: true })} vol</span>
           {token.created_at && <span>{timeAgo(token.created_at)}</span>}
           {token.status === "curve" && (
             <span className="inline-flex items-center gap-0.5 text-primary">
@@ -102,7 +104,8 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
         </div>
         {compact && (
           <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-            {formatUSD(token.market_cap, { compact: true })} · {formatNumber(token.price_usd, 6)}
+            {formatOUSD(token.market_cap, { compact: true })} ·{" "}
+            {formatOUSD(token.price_usd, { price: true, suffix: false })}
           </div>
         )}
       </div>

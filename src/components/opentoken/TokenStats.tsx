@@ -1,4 +1,4 @@
-import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
+import { formatNumber, formatOUSD, shortAddress } from "@/lib/wallet-utils";
 import { ExternalLink } from "lucide-react";
 
 export function TokenStats({ token }: { token: Record<string, any> }) {
@@ -7,11 +7,11 @@ export function TokenStats({ token }: { token: Record<string, any> }) {
     : null;
 
   const items = [
-    { label: "Market cap", value: formatUSD(token.market_cap, { compact: true }) },
-    { label: "Volume 24h", value: formatUSD(token.volume_24h, { compact: true }) },
-    { label: "Liquidity (π)", value: formatNumber(token.curve_reserve_pi, 2) },
+    { label: "Market cap", value: formatOUSD(token.market_cap, { compact: true }) },
+    { label: "Volume 24h", value: formatOUSD(token.volume_24h, { compact: true }) },
+    { label: "Liquidity (OUSD)", value: formatNumber(token.curve_reserve_pi, 2) },
     { label: "Holders", value: formatNumber(token.holder_count ?? 0, 0) },
-    { label: "Price", value: `${formatNumber(token.price_usd, 8)} π` },
+    { label: "Price", value: formatOUSD(token.price_usd, { price: true }) },
     { label: "Supply", value: formatNumber(token.total_supply, 0) },
   ];
 

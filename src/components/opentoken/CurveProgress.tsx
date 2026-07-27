@@ -1,4 +1,4 @@
-import { formatNumber } from "@/lib/wallet-utils";
+import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import {
   curveFromTokenRow,
   curveProgress,
@@ -31,9 +31,9 @@ export function CurveProgress({ token }: { token: Record<string, any> }) {
         />
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-        <Stat label="Price" value={`${formatNumber(price, 8)} π`} />
-        <Stat label="Next (1π)" value={`${formatNumber(next, 8)} π`} />
-        <Stat label="Reserve" value={`${formatNumber(curve.reservePi, 2)} / ${formatNumber(curve.graduationTargetPi, 0)} π`} />
+        <Stat label="Price" value={formatOUSD(price, { price: true })} />
+        <Stat label="Next (1 OUSD)" value={formatOUSD(next, { price: true })} />
+        <Stat label="Reserve" value={`${formatNumber(curve.reservePi, 2)} / ${formatNumber(curve.graduationTargetPi, 0)} OUSD`} />
         <Stat label="Remaining" value={formatNumber(remaining, 0)} />
       </div>
     </div>

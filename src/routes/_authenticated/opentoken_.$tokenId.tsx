@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   formatNumber,
+  formatOUSD,
   formatPct,
-  formatUSD,
   fetchActiveWallet,
   shortAddress,
   timeAgo,
@@ -73,7 +73,7 @@ function OpenTokenDetail() {
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: () =>
-      fetchActiveWallet<{ id: string; pi_balance: number }>(supabase, user.id, "id, pi_balance"),
+      fetchActiveWallet<{ id: string; ousd_balance: number }>(supabase, user.id, "id, ousd_balance"),
   });
 
   const { data: holding } = useQuery({
@@ -170,7 +170,7 @@ function OpenTokenDetail() {
   if (isLoading) {
     return (
       <div className="ot-phantom grid min-h-screen place-items-center">
-        <p className="text-sm text-zinc-500">Loading token…</p>
+        <p className="text-sm text-muted-foreground">Loading token…</p>
       </div>
     );
   }
@@ -179,8 +179,8 @@ function OpenTokenDetail() {
     return (
       <div className="ot-phantom grid min-h-screen place-items-center text-center">
         <div>
-          <p className="text-sm text-zinc-500">Token not found</p>
-          <Button asChild className="mt-4 rounded-full bg-purple-600 text-white">
+          <p className="text-sm text-muted-foreground">Token not found</p>
+          <Button asChild className="mt-4 rounded-full">
             <Link to="/opentoken">Back to OpenToken</Link>
           </Button>
         </div>
@@ -197,42 +197,42 @@ function OpenTokenDetail() {
 
   return (
     <div className="ot-phantom mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-4 md:px-6">
-      <div className="mb-4 rounded-2xl border border-zinc-900 bg-zinc-950/95 px-4 py-2.5 text-center text-xs text-zinc-400">
+      <div className="mb-4 rounded-2xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground">
         Trade faster. Pump is better on mobile.
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex items-start gap-3">
-                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-white">
+                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                   <Link to="/opentoken">
                     <ArrowLeft className="h-5 w-5" />
                   </Link>
                 </Button>
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
                   {token.logo_url ? (
                     <img src={token.logo_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-sm font-bold text-white">
+                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-sm font-bold text-foreground">
                       {token.symbol?.slice(0, 2)}
                     </div>
                   )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="truncate text-2xl font-bold text-white">{token.name}</h1>
+                    <h1 className="truncate text-2xl font-bold text-foreground">{token.name}</h1>
                     {token.is_verified && <BadgeCheck className="h-4 w-4 text-green-400" />}
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>${token.symbol}</span>
                     {token.category && <span>{token.category}</span>}
                     <span>{timeAgo(token.created_at)}</span>
                     {token.contract_address && (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 hover:text-white"
+                        className="inline-flex items-center gap-1 hover:text-foreground"
                         onClick={() => {
                           void navigator.clipboard.writeText(token.contract_address!);
                           toast.success("Address copied");
@@ -243,7 +243,7 @@ function OpenTokenDetail() {
                     )}
                   </div>
                   {token.description && (
-                    <p className="mt-2 max-w-3xl text-sm text-zinc-300">{token.description}</p>
+                    <p className="mt-2 max-w-3xl text-sm text-foreground/80">{token.description}</p>
                   )}
                 </div>
               </div>
@@ -251,7 +251,7 @@ function OpenTokenDetail() {
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
-                  className="rounded-xl border-zinc-800 bg-zinc-900 text-zinc-100 hover:bg-zinc-800"
+                  className="rounded-xl border-border bg-muted text-foreground hover:bg-muted"
                   onClick={() => {
                     void navigator.clipboard.writeText(window.location.href);
                     toast.success("Link copied");
@@ -261,7 +261,7 @@ function OpenTokenDetail() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="rounded-xl border-zinc-800 bg-zinc-900 text-zinc-100 hover:bg-zinc-800"
+                  className="rounded-xl border-border bg-muted text-foreground hover:bg-muted"
                   onClick={toggleFav}
                 >
                   <Star className={cn("mr-1.5 h-4 w-4", favorited && "fill-warning text-warning")} />
@@ -270,7 +270,7 @@ function OpenTokenDetail() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full text-zinc-400 hover:text-white"
+                  className="rounded-full text-muted-foreground hover:text-foreground"
                   onClick={() => setReportOpen(true)}
                 >
                   <Flag className="h-4 w-4" />
@@ -282,50 +282,50 @@ function OpenTokenDetail() {
           <div className="grid gap-3 md:grid-cols-3">
             <StatCard
               label="Market cap"
-              value={formatUSD(mcap)}
+              value={formatOUSD(mcap)}
               sub={`${formatPct(change)} 24hr`}
               positive={change >= 0}
             />
             <StatCard
               label="Price"
-              value={`${formatNumber(token.price_usd, token.price_usd < 0.01 ? 8 : 4)} π`}
+              value={formatOUSD(token.price_usd, { price: true })}
             />
-            <StatCard label="Vol 24h" value={formatUSD(vol24)} />
+            <StatCard label="Vol 24h" value={formatOUSD(vol24, { compact: true })} />
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-xs text-zinc-500">Market cap.</div>
-                <div className="text-4xl font-bold text-white">{formatUSD(mcap, { compact: true })}</div>
-                <div className={cn("mt-1 text-sm font-medium", change >= 0 ? "text-green-400" : "text-red-400")}>
-                  {formatUSD(Math.abs((token.price_usd ?? 0) * change / 100), { compact: true })} ({formatPct(change)}) 24hr
+                <div className="text-xs text-muted-foreground">Market cap.</div>
+                <div className="text-4xl font-bold text-foreground">{formatOUSD(mcap, { compact: true })}</div>
+                <div className={cn("mt-1 text-sm font-medium", change >= 0 ? "text-emerald-500" : "text-red-500")}>
+                  {formatOUSD(Math.abs((token.price_usd ?? 0) * change / 100), { compact: true })} ({formatPct(change)}) 24hr
                 </div>
               </div>
               <div className="w-full max-w-xs">
-                <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
+                <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                   <span />
-                  <span>ATH {formatUSD(mcap * 2.15, { compact: true })}</span>
+                  <span>ATH {formatOUSD(mcap * 2.15, { compact: true })}</span>
                 </div>
-                <div className="h-2 rounded-full bg-zinc-800">
+                <div className="h-2 rounded-full bg-muted">
                   <div className="h-full rounded-full bg-linear-to-r from-emerald-400 to-lime-300" style={{ width: `${progress}%` }} />
                 </div>
               </div>
             </div>
 
-            <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-zinc-400">
-              <button className="hover:text-white">5m</button>
-              <button className="hover:text-white">1h</button>
-              <button className="hover:text-white">Trade Display</button>
-              <button className="hover:text-white">Show All Bubbles</button>
-              <button className="text-white">Price/MCap</button>
+            <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <button className="hover:text-foreground">5m</button>
+              <button className="hover:text-foreground">1h</button>
+              <button className="hover:text-foreground">Trade Display</button>
+              <button className="hover:text-foreground">Show All Bubbles</button>
+              <button className="text-foreground">Price/MCap</button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/40">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <PriceChart ticks={ticks} mode="price" />
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {CHART_PERIODS.map((p) => (
                 <button
                   key={p}
@@ -333,7 +333,7 @@ function OpenTokenDetail() {
                   onClick={() => setChartPeriod(p)}
                   className={cn(
                     "rounded-full px-3 py-1.5 transition-colors",
-                    chartPeriod === p ? "bg-zinc-800 text-white" : "hover:text-white",
+                    chartPeriod === p ? "bg-muted text-foreground" : "hover:text-foreground",
                   )}
                 >
                   {p}
@@ -342,21 +342,21 @@ function OpenTokenDetail() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-white">About {token.name}</h3>
-              <span className="text-xs text-zinc-500">{timeAgo(token.created_at)}</span>
+              <h3 className="text-base font-semibold text-foreground">About {token.name}</h3>
+              <span className="text-xs text-muted-foreground">{timeAgo(token.created_at)}</span>
             </div>
             {token.description ? (
-              <p className="border-l-2 border-emerald-400 pl-3 text-sm leading-6 text-zinc-300">{token.description}</p>
+              <p className="border-l-2 border-emerald-400 pl-3 text-sm leading-6 text-foreground/80">{token.description}</p>
             ) : (
-              <p className="text-sm text-zinc-500">No description yet.</p>
+              <p className="text-sm text-muted-foreground">No description yet.</p>
             )}
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-5">
-            <MiniMetric label="Vol 24h" value={formatUSD(vol24, { compact: true })} />
-            <MiniMetric label="Price" value={formatNumber(token.price_usd, 8)} />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <MiniMetric label="Vol 24h" value={formatOUSD(vol24, { compact: true })} />
+            <MiniMetric label="Price" value={formatOUSD(token.price_usd, { price: true })} />
             <MiniMetric label="5m" value={formatPct(change / 12)} negative={change < 0} />
             <MiniMetric label="1h" value={formatPct(change / 6)} negative={change < 0} />
             <MiniMetric
@@ -367,59 +367,60 @@ function OpenTokenDetail() {
             />
           </div>
 
-          <div id="ot-comments-section" className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div id="ot-comments-section" className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-zinc-400" />
-                <h3 className="text-base font-semibold text-white">Comments</h3>
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-base font-semibold text-foreground">Comments</h3>
               </div>
-              <span className="text-xs text-zinc-500">{commentCount ?? 0} messages</span>
+              <span className="text-xs text-muted-foreground">{commentCount ?? 0} messages</span>
             </div>
             <CommentThread tokenId={tokenId} userId={user.id} />
           </div>
         </div>
 
         <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-3">
+          <div className="hidden rounded-2xl border border-border bg-card p-3 xl:block">
             <TradePanel
               token={token}
               walletId={wallet?.id}
-              piBalance={Number(wallet?.pi_balance ?? 0)}
+              userId={user.id}
+              ousdBalance={Number(wallet?.ousd_balance ?? 0)}
               tokenBalance={holding ?? 0}
             />
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-2 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-zinc-200">
+              <div className="flex items-center gap-2 text-foreground">
                 <TrendingUp className="h-4 w-4 text-orange-400" />
                 <span>Graduated to PumpSwap</span>
               </div>
               <span className="text-orange-300">100%</span>
             </div>
-            <div className="mb-2 h-2 rounded-full bg-zinc-800">
+            <div className="mb-2 h-2 rounded-full bg-muted">
               <div className="h-full w-full rounded-full bg-orange-400" />
             </div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-muted-foreground">
               {formatNumber(reserve, 2)} / {formatNumber(gradTarget, 2)} burned. How it works
             </div>
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
-            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
               <Volume2 className="h-4 w-4 text-emerald-400" />
               Voice chat
             </div>
-            <div className="text-xs text-zinc-500">Talk live with other {token.name} holders</div>
-            <Button className="mt-4 w-full rounded-xl bg-zinc-900 text-white hover:bg-zinc-800">
+            <div className="text-xs text-muted-foreground">Talk live with other {token.name} holders</div>
+            <Button className="mt-4 w-full rounded-xl bg-muted text-foreground hover:bg-muted">
               Join voice chat
             </Button>
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <div className="text-sm font-semibold text-white">Similar coins</div>
-              <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] text-zinc-400">
+              <div className="text-sm font-semibold text-foreground">Similar coins</div>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                 {similarTokens.length}+
               </span>
             </div>
@@ -429,32 +430,32 @@ function OpenTokenDetail() {
                   key={item.id}
                   to="/opentoken/$tokenId"
                   params={{ tokenId: item.id }}
-                  className="flex items-center gap-3 rounded-xl px-1 py-1.5 transition hover:bg-zinc-900"
+                  className="flex items-center gap-3 rounded-xl px-1 py-1.5 transition hover:bg-muted"
                 >
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
                     {item.logo_url ? (
                       <img src={item.logo_url} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-[10px] font-bold text-white">
+                      <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-[10px] font-bold text-foreground">
                         {item.symbol?.slice(0, 2)}
                       </div>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-white">{item.name}</div>
-                    <div className="text-xs text-zinc-500">${item.symbol}</div>
+                    <div className="truncate text-sm font-medium text-foreground">{item.name}</div>
+                    <div className="text-xs text-muted-foreground">${item.symbol}</div>
                   </div>
                   <div className="text-right text-xs">
-                    <div className="text-white">{formatUSD(item.market_cap, { compact: true })}</div>
-                    <div className="text-zinc-500">{timeAgo(item.created_at)}</div>
+                    <div className="text-foreground">{formatOUSD(item.market_cap, { compact: true })}</div>
+                    <div className="text-muted-foreground">{timeAgo(item.created_at)}</div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
-            <div className="mb-3 text-sm font-semibold text-white">Token details</div>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3 text-sm font-semibold text-foreground">Token details</div>
             <div className="space-y-3 text-sm">
               <DetailRow label="Security">
                 <div className="flex items-center gap-1.5">
@@ -464,10 +465,10 @@ function OpenTokenDetail() {
                   {!token.is_verified && <ShieldAlert className="h-3.5 w-3.5 text-yellow-400" />}
                 </div>
               </DetailRow>
-              <DetailRow label="24h Volume">{formatUSD(vol24, { compact: true })}</DetailRow>
-              <DetailRow label="Market cap">{formatUSD(mcap, { compact: true })}</DetailRow>
+              <DetailRow label="24h Volume">{formatOUSD(vol24, { compact: true })}</DetailRow>
+              <DetailRow label="Market cap">{formatOUSD(mcap, { compact: true })}</DetailRow>
               <DetailRow label="Holders">{formatNumber(token.holder_count ?? 0, 0)}</DetailRow>
-              <DetailRow label="Network">Pi Network</DetailRow>
+              <DetailRow label="Quote">OUSD</DetailRow>
               {token.contract_address && (
                 <DetailRow label="Contract address">
                   <button
@@ -489,18 +490,18 @@ function OpenTokenDetail() {
                     href={token.website}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-3 py-1.5 text-xs text-purple-400 hover:bg-zinc-800"
+                    className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs text-purple-400 hover:bg-muted"
                   >
                     Website <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
                 {token.twitter && (
-                  <span className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs text-zinc-400">
+                  <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
                     X · {token.twitter}
                   </span>
                 )}
                 {token.telegram && (
-                  <span className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs text-zinc-400">
+                  <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
                     TG · {token.telegram}
                   </span>
                 )}
@@ -510,11 +511,11 @@ function OpenTokenDetail() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-14 z-50 border-t border-zinc-900 bg-black/95 px-4 py-3 backdrop-blur-xl xl:hidden">
+      <div className="fixed inset-x-0 bottom-14 z-50 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-xl xl:hidden">
         <div className="flex items-center justify-between gap-4">
-          <div className="text-xs text-zinc-500">{formatUSD(mcap, { compact: true })} market cap</div>
+          <div className="text-xs text-muted-foreground">{formatOUSD(mcap, { compact: true })} market cap</div>
           <Button
-            className="rounded-full bg-purple-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-900/30 hover:bg-purple-500"
+            className="rounded-full bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90"
             onClick={() => setShowBuyPanel((v) => !v)}
           >
             Buy
@@ -524,13 +525,14 @@ function OpenTokenDetail() {
 
       {showBuyPanel && (
         <div className="fixed inset-0 z-60 flex flex-col justify-end xl:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowBuyPanel(false)} />
-          <div className="relative z-10 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-zinc-950 px-4 pb-8 pt-4 md:mx-auto md:max-w-2xl">
-            <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-zinc-700" />
+          <div className="absolute inset-0 bg-background/60" onClick={() => setShowBuyPanel(false)} />
+          <div className="relative z-10 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-8 pt-4 md:mx-auto md:max-w-2xl">
+            <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-muted-foreground/40" />
             <TradePanel
               token={token}
               walletId={wallet?.id}
-              piBalance={Number(wallet?.pi_balance ?? 0)}
+              userId={user.id}
+              ousdBalance={Number(wallet?.ousd_balance ?? 0)}
               tokenBalance={holding ?? 0}
               onClose={() => setShowBuyPanel(false)}
             />
@@ -539,26 +541,26 @@ function OpenTokenDetail() {
       )}
 
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="rounded-3xl border-zinc-800 bg-zinc-950">
+        <DialogContent className="rounded-3xl border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Report token</DialogTitle>
+            <DialogTitle className="text-foreground">Report token</DialogTitle>
           </DialogHeader>
           <Input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Why are you reporting this?"
-            className="rounded-xl border-zinc-800 bg-zinc-900 text-white"
+            className="rounded-xl border-border bg-muted text-foreground"
           />
           <DialogFooter>
             <Button
               variant="outline"
-              className="rounded-full border-zinc-700 text-zinc-300"
+              className="rounded-full border-border text-foreground/80"
               onClick={() => setReportOpen(false)}
             >
               Cancel
             </Button>
             <Button
-              className="rounded-full bg-purple-600 text-white"
+              className="rounded-full"
               disabled={reason.trim().length < 3}
               onClick={submitReport}
             >
@@ -583,11 +585,11 @@ function StatCard({
   positive?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
-      <div className="text-xs text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-foreground">{value}</div>
       {sub ? (
-        <div className={cn("mt-1 text-xs", positive ? "text-green-400" : "text-zinc-500")}>{sub}</div>
+        <div className={cn("mt-1 text-xs", positive ? "text-green-400" : "text-muted-foreground")}>{sub}</div>
       ) : null}
     </div>
   );
@@ -605,12 +607,12 @@ function MiniMetric({
   negative?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-3 text-center">
-      <div className="text-[11px] text-zinc-500">{label}</div>
+    <div className="rounded-2xl border border-border bg-card p-3 text-center">
+      <div className="text-[11px] text-muted-foreground">{label}</div>
       <div
         className={cn(
           "mt-1 text-sm font-semibold",
-          positive ? "text-green-400" : negative ? "text-red-400" : "text-white",
+          positive ? "text-green-400" : negative ? "text-red-400" : "text-foreground",
         )}
       >
         {value}
@@ -628,8 +630,8 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-zinc-400">{label}</span>
-      <div className="text-right text-white">{children}</div>
+      <span className="text-muted-foreground">{label}</span>
+      <div className="text-right text-foreground">{children}</div>
     </div>
   );
 }

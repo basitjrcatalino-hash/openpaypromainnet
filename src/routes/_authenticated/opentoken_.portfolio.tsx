@@ -7,7 +7,7 @@ import { ArrowLeft, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { formatNumber, formatUSD, fetchActiveWallet, timeAgo } from "@/lib/wallet-utils";
+import { formatNumber, formatOUSD, fetchActiveWallet, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { TokenCard } from "@/components/opentoken";
 
@@ -96,15 +96,15 @@ function OpenTokenPortfolio() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="rounded-2xl border-border/60 p-4">
-          <div className="text-xs text-muted-foreground">Wallet Pi</div>
+          <div className="text-xs text-muted-foreground">Wallet OUSD</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">
-            {formatNumber(wallet?.pi_balance, 4)} π
+            {formatNumber(wallet?.ousd_balance, 4)} OUSD
           </div>
         </Card>
         <Card className="rounded-2xl border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Token value</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">
-            {formatUSD(totalValue, { compact: true })}
+            {formatOUSD(totalValue, { compact: true })}
           </div>
         </Card>
         <Card className="rounded-2xl border-border/60 p-4">
@@ -116,7 +116,7 @@ function OpenTokenPortfolio() {
             )}
           >
             {pnlApprox >= 0 ? "+" : ""}
-            {formatUSD(pnlApprox, { compact: true })}
+            {formatOUSD(pnlApprox, { compact: true })}
           </div>
         </Card>
       </div>
@@ -158,7 +158,7 @@ function OpenTokenPortfolio() {
                           {formatNumber(h.balance, 4)} ${t.symbol}
                         </div>
                       </div>
-                      <div className="text-right text-sm tabular-nums">{formatUSD(val)}</div>
+                      <div className="text-right text-sm tabular-nums">{formatOUSD(val)}</div>
                     </Link>
                   </li>
                 );
@@ -200,7 +200,7 @@ function OpenTokenPortfolio() {
                     {formatNumber(t.token_amount, 2)} ${(t.tokens as any)?.symbol}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {formatNumber(t.pi_amount, 4)} π · {timeAgo(t.created_at)}
+                    {formatNumber(t.pi_amount, 4)} OUSD · {timeAgo(t.created_at)}
                   </div>
                 </li>
               ))}

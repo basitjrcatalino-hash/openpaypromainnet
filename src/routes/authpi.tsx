@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
-import { signInWithPi } from "@/lib/pi-network";
 import {
   OPENPAY_BRAND_BLUE,
   OPENPAY_LOGO_WHITE,
@@ -20,61 +19,10 @@ export const Route = createFileRoute("/authpi")({
 
 function AuthPiPage() {
   const navigate = useNavigate();
-  const [piBusy, setPiBusy] = useState(false);
   const [openPayBusy, setOpenPayBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const PI_CLIENT_ID = import.meta.env.VITE_PI_CLIENT_ID as string | undefined;
-
-  function startPiOAuthRedirect() {
-    if (!PI_CLIENT_ID) {
-      toast.error("Pi sign-in is not configured (missing client ID).");
-      return;
-    }
-    const state = (crypto as Crypto & { randomUUID?: () => string }).randomUUID
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2) + Date.now().toString(36);
-    sessionStorage.setItem("pi_oauth_state", state);
-    sessionStorage.setItem("pi_oauth_redirect", "/dashboard");
-    const redirectUri = `${window.location.origin}/auth/pi/callback`;
-    const url =
-      `https://accounts.pinet.com/oauth/authorize` +
-      `?response_type=token` +
-      `&client_id=${encodeURIComponent(PI_CLIENT_ID)}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=${encodeURIComponent("username wallet_address")}` +
-      `&state=${encodeURIComponent(state)}`;
-    window.location.href = url;
-  }
-
-  const handlePiSignIn = async () => {
-    const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
-    const isPiBrowser =
-      /PiBrowser/i.test(ua) ||
-      (typeof window !== "undefined" && Boolean((window as unknown as { Pi?: unknown }).Pi));
-
-    if (!isPiBrowser) {
-      try {
-        startPiOAuthRedirect();
-      } catch (err) {
-        toast.error((err as Error).message || "Pi sign-in failed");
-      }
-      return;
-    }
-
-    setPiBusy(true);
-    try {
-      const { username } = await signInWithPi();
-      toast.success(`Signed in as @${username} via Pi Network`);
-      navigate({ to: "/dashboard" });
-    } catch (err) {
-      toast.error((err as Error).message || "Pi sign-in failed");
-    } finally {
-      setPiBusy(false);
-    }
-  };
-
-  // Only redirect if already signed in — never auto-start Pi/OpenPay auth
+  // Only redirect if already signed in — never auto-start OpenPay auth
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -104,34 +52,8 @@ function AuthPiPage() {
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in with Pi Network or OpenPay to access OUSD, tokens & NFTs
+              Sign in with OpenPay to access OUSD, tokens & NFTs
             </p>
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => handlePiSignIn()}
-            disabled={piBusy || openPayBusy}
-            className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-white shadow-glow hover:opacity-95"
-          >
-            {piBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <span className="inline-flex items-center gap-2.5">
-                <img
-                  src="https://images.seeklogo.com/logo-png/44/2/pi-network-lvquy-logo-png_seeklogo-440686.png"
-                  width={22}
-                  height={22}
-                  alt=""
-                  className="rounded-full"
-                />
-                Continue with Pi Network
-              </span>
-            )}
-          </Button>
-
-          <div className="my-4 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-            <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
           </div>
 
           <Button
@@ -145,7 +67,7 @@ function AuthPiPage() {
                 setOpenPayBusy(false);
               }
             }}
-            disabled={piBusy || openPayBusy}
+            disabled={openPayBusy}
             className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
             style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
           >

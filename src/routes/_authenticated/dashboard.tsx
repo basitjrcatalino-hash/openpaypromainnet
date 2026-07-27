@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
@@ -331,7 +331,7 @@ function Dashboard() {
                       className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="flex items-center gap-3">
-                        <OusdIcon />
+                        <OusdIcon className="h-10 w-10" />
                         <div>
                           <div className="flex items-center gap-2 text-sm font-semibold">
                             OpenPay OUSD
@@ -373,9 +373,14 @@ function Dashboard() {
                         className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-[10px] font-bold text-primary-foreground">
-                            {(h.tokens?.symbol ?? "?").slice(0, 3)}
-                          </div>
+                          <Avatar className="h-10 w-10">
+                            {h.tokens?.logo_url ? (
+                              <AvatarImage src={h.tokens.logo_url} alt={h.tokens.name} />
+                            ) : null}
+                            <AvatarFallback className="bg-gradient-primary text-[10px] font-bold text-primary-foreground">
+                              {(h.tokens?.symbol ?? "?").slice(0, 3)}
+                            </AvatarFallback>
+                          </Avatar>
                           <div>
                             <div className="flex items-center gap-2 text-sm font-semibold">
                               {h.tokens?.name}

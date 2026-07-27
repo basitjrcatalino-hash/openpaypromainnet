@@ -27,6 +27,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OusdIcon } from "@/components/ousd-icon";
 
 const OUSD_ID = "__ousd__";
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
@@ -50,7 +52,7 @@ const OUSD_TOKEN: SwapToken = {
   name: "OpenPay USD",
   symbol: "OUSD",
   price_usd: 1,
-  logo_url: null,
+  logo_url: OUSD_LOGO_URL,
   status: "quote",
   isOusd: true,
 };
@@ -531,16 +533,7 @@ function TokenLogo({ token, size = "md" }: { token?: SwapToken | null; size?: "s
     return <div className={cn("shrink-0 rounded-full bg-muted", dim)} />;
   }
   if (token.isOusd) {
-    return (
-      <div
-        className={cn(
-          "grid shrink-0 place-items-center rounded-full bg-linear-to-br from-emerald-400 to-teal-600 font-bold text-white",
-          dim,
-        )}
-      >
-        $
-      </div>
-    );
+    return <OusdIcon className={cn("shrink-0 rounded-full object-cover", dim)} />;
   }
   if (token.logo_url) {
     return (

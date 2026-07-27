@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="OpenPay OUSD">
+  <defs>
+    <linearGradient id="ousd-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="55%" stop-color="#5B8CFF"/>
+      <stop offset="100%" stop-color="#3DDC97"/>
+    </linearGradient>
+    <linearGradient id="ousd-ring" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#E8F0FF" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="64" fill="url(#ousd-bg)"/>
+  <circle cx="64" cy="64" r="34" fill="none" stroke="url(#ousd-ring)" stroke-width="10"/>
+  <text x="64" y="74" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">$</text>
+</svg>

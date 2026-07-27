@@ -172,12 +172,14 @@ export function TradePanel({
   if (graduated) {
     return (
       <div className="space-y-4 text-center">
-        <div className="text-sm font-semibold text-foreground">Advanced trading</div>
+        <div className="text-sm font-semibold text-foreground">OpenDEX</div>
         <p className="text-sm text-muted-foreground">
-          This token graduated from the bonding curve. OpenPay Swap / OpenDEX integration coming soon.
+          This token graduated from the bonding curve. Trade it on OpenDEX with OUSD pairs.
         </p>
-        <Button className="w-full rounded-full bg-muted text-muted-foreground" disabled>
-          OpenDEX soon
+        <Button asChild className="w-full rounded-full">
+          <Link to="/swap" search={{ token: token.id }}>
+            Trade on OpenDEX
+          </Link>
         </Button>
       </div>
     );

@@ -6,9 +6,9 @@
 // Mobile deep links
 
 export const OPENTOKEN_FUTURE = {
-  swap: false,
-  opendex: false,
-  ousdPair: false,
+  swap: true,
+  opendex: true,
+  ousdPair: true,
   staking: false,
   dao: false,
   airdrops: false,

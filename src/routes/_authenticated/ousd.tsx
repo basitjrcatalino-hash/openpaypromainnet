@@ -108,7 +108,7 @@ function OUSDPage() {
             <Link to="/receive">Receive</Link>
           </Button>
           <Button asChild variant="secondary" className="rounded-full">
-            <Link to="/swap">Swap</Link>
+            <Link to="/swap">OpenDEX</Link>
           </Button>
         </div>
       </Card>

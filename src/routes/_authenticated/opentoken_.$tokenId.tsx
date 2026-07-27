@@ -394,15 +394,28 @@ function OpenTokenDetail() {
             <div className="mb-2 flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-foreground">
                 <TrendingUp className="h-4 w-4 text-orange-400" />
-                <span>Graduated to PumpSwap</span>
+                <span>
+                  {token.status === "graduated" ? "Graduated to OpenDEX" : "Bonding curve → OpenDEX"}
+                </span>
               </div>
-              <span className="text-orange-300">100%</span>
+              <span className="text-orange-300">{progress}%</span>
             </div>
             <div className="mb-2 h-2 rounded-full bg-muted">
-              <div className="h-full w-full rounded-full bg-orange-400" />
+              <div
+                className="h-full rounded-full bg-orange-400 transition-all"
+                style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+              />
             </div>
             <div className="text-xs text-muted-foreground">
-              {formatNumber(reserve, 2)} / {formatNumber(gradTarget, 2)} burned. How it works
+              {formatNumber(reserve, 2)} / {formatNumber(gradTarget, 2)} OUSD to OpenDEX
+              {token.status === "graduated" ? (
+                <>
+                  {" · "}
+                  <Link to="/swap" search={{ token: token.id }} className="text-primary hover:underline">
+                    Trade on OpenDEX
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
 

@@ -60,7 +60,7 @@ const ACTIONS = [
   { label: "Fund", icon: Plus, to: "/topup" },
   { label: "Send", icon: Send, to: "/send" },
   { label: "Receive", icon: QrCode, to: "/receive" },
-  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
+  { label: "OpenDEX", icon: ArrowLeftRight, to: "/swap" },
   { label: "OpenToken", icon: Sparkles, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },

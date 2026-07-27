@@ -4,7 +4,10 @@ export const DEFAULT_VIRTUAL_PI = 30;
 export const DEFAULT_VIRTUAL_TOKENS = 1_073_000_191;
 export const DEFAULT_GRADUATION_TARGET_PI = 400;
 export const DEFAULT_TOTAL_SUPPLY = 1_000_000_000;
-export const DEFAULT_LAUNCH_FEE_PI = 0.1;
+/** Launch fee charged in OUSD (1:1 with USD display balance). */
+export const DEFAULT_LAUNCH_FEE_OUSD = 0.1;
+/** @deprecated Use DEFAULT_LAUNCH_FEE_OUSD */
+export const DEFAULT_LAUNCH_FEE_PI = DEFAULT_LAUNCH_FEE_OUSD;
 
 export type CurveState = {
   virtualPi: number;

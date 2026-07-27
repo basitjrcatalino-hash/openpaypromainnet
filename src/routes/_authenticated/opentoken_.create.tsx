@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { uploadMedia } from "@/lib/upload";
 import { createOpenToken } from "@/lib/opentoken.functions";
 import {
-  DEFAULT_LAUNCH_FEE_PI,
+  DEFAULT_LAUNCH_FEE_OUSD,
   DEFAULT_TOTAL_SUPPLY,
   OT_CATEGORIES,
   OT_CATEGORY_LABELS,
@@ -73,7 +73,7 @@ function CreateOpenTokenPage() {
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
-    queryFn: () => fetchActiveWallet<{ id: string; pi_balance: number }>(supabase, user.id),
+    queryFn: () => fetchActiveWallet<{ id: string; ousd_balance: number }>(supabase, user.id),
   });
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
@@ -124,6 +124,11 @@ function CreateOpenTokenPage() {
       toast.error("Create a wallet first");
       return;
     }
+    const ousdBalance = Number(wallet.ousd_balance ?? 0);
+    if (ousdBalance < DEFAULT_LAUNCH_FEE_OUSD) {
+      toast.error(`Launch fee is ${DEFAULT_LAUNCH_FEE_OUSD} OUSD — insufficient available balance`);
+      return;
+    }
     setBusy(true);
     try {
       const created = await createFn({
@@ -167,7 +172,7 @@ function CreateOpenTokenPage() {
         <FairLaunchConfirm
           name={form.name}
           symbol={form.symbol}
-          fee={DEFAULT_LAUNCH_FEE_PI}
+          fee={DEFAULT_LAUNCH_FEE_OUSD}
           busy={busy}
           onBack={() => setStep("form")}
           onConfirm={launch}
@@ -187,8 +192,8 @@ function CreateOpenTokenPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Create new coin</h1>
           <p className="text-sm text-muted-foreground">
-            100% fair launch · fee {DEFAULT_LAUNCH_FEE_PI} π
-            {wallet ? ` · bal ${Number(wallet.pi_balance).toFixed(2)} π` : ""}
+            100% fair launch · fee {DEFAULT_LAUNCH_FEE_OUSD} OUSD
+            {wallet ? ` · available ${Number(wallet.ousd_balance ?? 0).toFixed(2)} OUSD` : ""}
           </p>
         </div>
       </div>

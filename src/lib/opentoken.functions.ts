@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   DEFAULT_GRADUATION_TARGET_PI,
-  DEFAULT_LAUNCH_FEE_PI,
+  DEFAULT_LAUNCH_FEE_OUSD,
   DEFAULT_TOTAL_SUPPLY,
   DEFAULT_VIRTUAL_PI,
   DEFAULT_VIRTUAL_TOKENS,
@@ -56,16 +56,17 @@ export const createOpenToken = createServerFn({ method: "POST" })
 
     const { data: wallet, error: wErr } = await supabase
       .from("wallets")
-      .select("id, pi_balance")
+      .select("id, ousd_balance")
       .eq("id", data.wallet_id)
       .eq("user_id", userId)
       .maybeSingle();
     if (wErr) throw new Error(wErr.message);
     if (!wallet) throw new Error("Wallet not found");
 
-    const fee = DEFAULT_LAUNCH_FEE_PI;
-    if (Number(wallet.pi_balance) < fee) {
-      throw new Error(`Launch fee is ${fee} Pi — insufficient balance`);
+    const fee = DEFAULT_LAUNCH_FEE_OUSD;
+    const ousdBalance = Number(wallet.ousd_balance ?? 0);
+    if (ousdBalance < fee) {
+      throw new Error(`Launch fee is ${fee} OUSD — insufficient available balance`);
     }
 
     const initial = curveFromTokenRow({
@@ -80,7 +81,7 @@ export const createOpenToken = createServerFn({ method: "POST" })
 
     const { error: feeErr } = await supabase
       .from("wallets")
-      .update({ pi_balance: Number(wallet.pi_balance) - fee })
+      .update({ ousd_balance: ousdBalance - fee })
       .eq("id", wallet.id)
       .eq("user_id", userId);
     if (feeErr) throw new Error(feeErr.message);
@@ -125,9 +126,24 @@ export const createOpenToken = createServerFn({ method: "POST" })
       // refund fee on failure
       await supabase
         .from("wallets")
-        .update({ pi_balance: Number(wallet.pi_balance) })
+        .update({ ousd_balance: ousdBalance })
         .eq("id", wallet.id);
       throw new Error(error.message);
+    }
+
+    try {
+      await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        type: "send",
+        status: "confirmed",
+        token_symbol: "OUSD",
+        counterparty: `opentoken:launch:${created.id}`,
+        amount: fee,
+        usd_value: fee,
+        memo: `OpenToken launch fee · ${data.symbol}`,
+      });
+    } catch {
+      /* ledger optional */
     }
 
     await supabase.from("ot_price_ticks").insert({

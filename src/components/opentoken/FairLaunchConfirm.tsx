@@ -1,11 +1,11 @@
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LAUNCH_FEE_PI } from "@/lib/opentoken/bonding-curve";
+import { DEFAULT_LAUNCH_FEE_OUSD } from "@/lib/opentoken/bonding-curve";
 
 export function FairLaunchConfirm({
   name,
   symbol,
-  fee = DEFAULT_LAUNCH_FEE_PI,
+  fee = DEFAULT_LAUNCH_FEE_OUSD,
   busy,
   onBack,
   onConfirm,
@@ -32,7 +32,10 @@ export function FairLaunchConfirm({
         </div>
       </div>
       <ul className="space-y-2 text-sm text-muted-foreground">
-        <li>• Launch fee: {fee} π (deducted from your active wallet)</li>
+        <li>
+          • Launch fee: <span className="font-semibold text-foreground">{fee} OUSD</span> — paid from
+          your available OUSD balance (not Pi)
+        </li>
         <li>• Metadata is set at launch and should be reviewed carefully</li>
         <li>• Price discovery starts immediately on the OpenToken curve</li>
       </ul>
@@ -46,7 +49,7 @@ export function FairLaunchConfirm({
           onClick={onConfirm}
           disabled={busy}
         >
-          {busy ? "Launching…" : "Launch coin"}
+          {busy ? "Launching…" : `Pay ${fee} OUSD & Launch`}
         </Button>
       </div>
     </div>

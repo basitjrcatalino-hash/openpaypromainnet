@@ -32,6 +32,7 @@ import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedOpentokenIndexRouteImport } from './routes/_authenticated/opentoken.index'
 import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken.$tokenId'
 import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken.admin'
 import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken.create'
@@ -171,6 +172,12 @@ const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   path: '/mint',
   getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
+const AuthenticatedOpentokenIndexRoute =
+  AuthenticatedOpentokenIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOpentokenRoute,
+  } as any)
 const AuthenticatedOpentokenTokenIdRoute =
   AuthenticatedOpentokenTokenIdRouteImport.update({
     id: '/$tokenId',
@@ -340,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/opentoken/': typeof AuthenticatedOpentokenIndexRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -362,7 +370,6 @@ export interface FileRoutesByTo {
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
-  '/opentoken': typeof AuthenticatedOpentokenRouteWithChildren
   '/ousd': typeof AuthenticatedOusdRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -388,6 +395,7 @@ export interface FileRoutesByTo {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/opentoken': typeof AuthenticatedOpentokenIndexRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -438,6 +446,7 @@ export interface FileRoutesById {
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/_authenticated/opentoken/': typeof AuthenticatedOpentokenIndexRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/_authenticated/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -488,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/opentoken/'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -510,7 +520,6 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/ledger'
     | '/nfts'
-    | '/opentoken'
     | '/ousd'
     | '/receive'
     | '/scan'
@@ -536,6 +545,7 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/opentoken'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -585,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/_authenticated/opentoken/'
     | '/_authenticated/openpay/connect/callback'
     | '/_authenticated/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -785,6 +796,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
       parentRoute: typeof AuthenticatedNftsRoute
     }
+    '/_authenticated/opentoken/': {
+      id: '/_authenticated/opentoken/'
+      path: '/'
+      fullPath: '/opentoken/'
+      preLoaderRoute: typeof AuthenticatedOpentokenIndexRouteImport
+      parentRoute: typeof AuthenticatedOpentokenRoute
+    }
     '/_authenticated/opentoken/$tokenId': {
       id: '/_authenticated/opentoken/$tokenId'
       path: '/$tokenId'
@@ -972,6 +990,7 @@ interface AuthenticatedOpentokenRouteChildren {
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
+  AuthenticatedOpentokenIndexRoute: typeof AuthenticatedOpentokenIndexRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
 }
 
@@ -981,6 +1000,7 @@ const AuthenticatedOpentokenRouteChildren: AuthenticatedOpentokenRouteChildren =
     AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
     AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
     AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
+    AuthenticatedOpentokenIndexRoute: AuthenticatedOpentokenIndexRoute,
     AuthenticatedOpentokenCreatorUserIdRoute:
       AuthenticatedOpentokenCreatorUserIdRoute,
   }

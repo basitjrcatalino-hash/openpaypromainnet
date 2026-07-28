@@ -268,19 +268,19 @@ function SettingsPage() {
   }
 
   return (
-    <div className="ph-page mx-auto max-w-lg space-y-4 md:max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Wallets, security, preferences and OpenPay integration
-        </p>
+    <div className="ph-page mx-auto max-w-lg space-y-6 md:max-w-2xl">
+      <div className="text-center md:text-left">
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Account, security, and connections</p>
       </div>
 
-      {/* Profile */}
-      <Card className="rounded-2xl border-0 shadow-none p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Profile
+      {/* Account */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Account
         </h2>
+      <Card className="rounded-2xl border-0 shadow-none p-5">
+        <h2 className="mb-4 text-sm font-semibold">Profile</h2>
         <div className="flex flex-col gap-5 md:flex-row md:items-start">
           <div className="flex flex-col items-center gap-2">
             <Avatar className="h-20 w-20 ring-2 ring-primary/30">
@@ -356,13 +356,16 @@ function SettingsPage() {
           </div>
         </div>
       </Card>
+      </section>
 
       {/* Wallets */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Wallets
+        </h2>
       <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Wallets
-          </h2>
+          <h2 className="text-sm font-semibold">Your wallets</h2>
           <Dialog>
             <DialogTrigger asChild>
               <Button
@@ -497,12 +500,48 @@ function SettingsPage() {
           ))}
         </ul>
       </Card>
+      </section>
+
+      {/* Security */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Security
+        </h2>
+      <Card className="rounded-2xl border-0 shadow-none p-5">
+        <div className="grid gap-3 md:grid-cols-3">
+          <BiometricCard
+            enabled={!!(prefs as any)?.biometric_enabled}
+            onToggle={(v) => updatePref({ biometric_enabled: v })}
+          />
+          <PinCard
+            hasPin={!!(prefs as any)?.pin_set}
+            onSave={async (pin) => {
+              const h = await sha256(`${user.id}:${pin}`);
+              await updatePref({ pin_hash: h });
+              toast.success("PIN saved");
+            }}
+            onClear={async () => {
+              await updatePref({ pin_hash: null });
+              toast.success("PIN removed");
+            }}
+          />
+          <RecoveryCard
+            backedUp={!!(prefs as any)?.recovery_backed_up}
+            onConfirm={async () => {
+              await updatePref({ recovery_backed_up: true });
+              toast.success("Marked as backed up");
+            }}
+          />
+        </div>
+      </Card>
+      </section>
 
       {/* Preferences */}
-      <Card className="rounded-2xl border-0 shadow-none p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Appearance & preferences
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Preferences
         </h2>
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="grid gap-4 md:grid-cols-2">
           <SettingRow label="Theme" desc="Choose how OpenPay looks">
             <div className="inline-flex rounded-full border border-border bg-card p-1">
@@ -597,40 +636,15 @@ function SettingsPage() {
           </SettingRow>
         </div>
       </Card>
+      </section>
 
-      {/* Security */}
-      <Card className="rounded-2xl border-0 shadow-none p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Security
+      {/* Connected */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Connected
         </h2>
-        <div className="grid gap-3 md:grid-cols-3">
-          <BiometricCard
-            enabled={!!(prefs as any)?.biometric_enabled}
-            onToggle={(v) => updatePref({ biometric_enabled: v })}
-          />
-          <PinCard
-            hasPin={!!(prefs as any)?.pin_set}
-            onSave={async (pin) => {
-              const h = await sha256(`${user.id}:${pin}`);
-              await updatePref({ pin_hash: h });
-              toast.success("PIN saved");
-            }}
-            onClear={async () => {
-              await updatePref({ pin_hash: null });
-              toast.success("PIN removed");
-            }}
-          />
-          <RecoveryCard
-            backedUp={!!(prefs as any)?.recovery_backed_up}
-            onConfirm={async () => {
-              await updatePref({ recovery_backed_up: true });
-              toast.success("Marked as backed up");
-            }}
-          />
-        </div>
-      </Card>
+      <OpenPayIntegrationCard userId={user.id} />
 
-      {/* OpenLedger / Ledger API */}
       <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
@@ -662,7 +676,6 @@ function SettingsPage() {
         </div>
       </Card>
 
-      {/* Third-party Connect + Payments docs */}
       <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
@@ -683,9 +696,7 @@ function SettingsPage() {
           </Button>
         </div>
       </Card>
-
-      {/* OpenPay integration */}
-      <OpenPayIntegrationCard userId={user.id} />
+      </section>
     </div>
   );
 }

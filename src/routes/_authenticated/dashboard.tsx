@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Blocks,
   Ellipsis,
+  Shield,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -81,6 +83,26 @@ function Dashboard() {
   const [switching, setSwitching] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [tab, setTab] = useState<"tokens" | "collectibles">("tokens");
+  const [onboardDismissed, setOnboardDismissed] = useState(() => {
+    try {
+      return localStorage.getItem("openpay-onboard-dismissed") === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  const { data: prefs } = useQuery({
+    queryKey: ["prefs", user.id],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("user_preferences")
+          .select("recovery_backed_up")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      ).data,
+  });
+  const needsBackup = prefs !== undefined && !prefs?.recovery_backed_up;
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
@@ -263,6 +285,93 @@ function Dashboard() {
         <ActionCircle label="More" icon={Ellipsis} onClick={() => setMoreOpen(true)} />
       </div>
 
+      {needsBackup && (
+        <Link
+          to="/settings"
+          className="mb-4 flex items-center gap-3 rounded-2xl bg-warning/15 px-4 py-3 press"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-warning/25 text-warning">
+            <Shield className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block text-sm font-semibold">Back up your recovery phrase</span>
+            <span className="block text-xs text-muted-foreground">
+              Protect your wallet — confirm backup in Settings
+            </span>
+          </span>
+        </Link>
+      )}
+
+      {!hasAssets && !onboardDismissed && (
+        <div className="mb-4 rounded-2xl bg-card px-4 py-4">
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div>
+              <div className="text-sm font-bold">Get started</div>
+              <p className="text-xs text-muted-foreground">Fund your wallet in a few taps</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-full p-1 text-muted-foreground hover:bg-muted press"
+              aria-label="Dismiss"
+              onClick={() => {
+                setOnboardDismissed(true);
+                try {
+                  localStorage.setItem("openpay-onboard-dismissed", "1");
+                } catch {
+                  /* ignore */
+                }
+              }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <ol className="space-y-2 text-sm">
+            <li className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2.5">
+              <span className="text-muted-foreground">1. Buy or receive OUSD</span>
+              <span className="flex gap-1.5">
+                <Link
+                  to="/topup"
+                  search={{
+                    openpay_charge: undefined,
+                    openpay_ref: undefined,
+                    openpay_tx: undefined,
+                    openpay_return: undefined,
+                    openpay_cancel: undefined,
+                  }}
+                  className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
+                >
+                  Buy
+                </Link>
+                <Link
+                  to="/receive"
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-semibold"
+                >
+                  Receive
+                </Link>
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2.5">
+              <span className="text-muted-foreground">2. Explore tokens</span>
+              <Link
+                to="/opentoken"
+                className="rounded-full bg-muted px-3 py-1 text-xs font-semibold"
+              >
+                OpenToken
+              </Link>
+            </li>
+            <li className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2.5">
+              <span className="text-muted-foreground">3. Secure your wallet</span>
+              <Link
+                to="/settings"
+                className="rounded-full bg-muted px-3 py-1 text-xs font-semibold"
+              >
+                Backup
+              </Link>
+            </li>
+          </ol>
+        </div>
+      )}
+
       {/* Tokens | Collectibles */}
       <SegmentedTabs
         tabs={[
@@ -278,26 +387,34 @@ function Dashboard() {
         <section>
           {!hasAssets ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <div className="grid h-14 w-14 place-items-center rounded-full bg-muted text-muted-foreground">
-                —
+              <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-primary">
+                <Plus className="h-6 w-6" />
               </div>
               <div className="text-sm font-semibold">No tokens yet</div>
               <p className="max-w-xs text-xs text-muted-foreground">
-                Fund your wallet to get started with assets.
+                Buy OUSD or share your address to receive funds.
               </p>
-              <Link
-                to="/topup"
-                search={{
-                  openpay_charge: undefined,
-                  openpay_ref: undefined,
-                  openpay_tx: undefined,
-                  openpay_return: undefined,
-                  openpay_cancel: undefined,
-                }}
-                className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground press"
-              >
-                Buy
-              </Link>
+              <div className="mt-1 flex gap-2">
+                <Link
+                  to="/topup"
+                  search={{
+                    openpay_charge: undefined,
+                    openpay_ref: undefined,
+                    openpay_tx: undefined,
+                    openpay_return: undefined,
+                    openpay_cancel: undefined,
+                  }}
+                  className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground press"
+                >
+                  Buy
+                </Link>
+                <Link
+                  to="/receive"
+                  className="rounded-full bg-muted px-5 py-2.5 text-sm font-semibold press"
+                >
+                  Receive
+                </Link>
+              </div>
             </div>
           ) : (
             <ul>
@@ -320,7 +437,8 @@ function Dashboard() {
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground tabular-nums">
-                          {formatCurrency(1, currency)}
+                          {formatCurrency(1, currency)} ·{" "}
+                          <span className="text-success">0.00%</span>
                         </div>
                       </div>
                     </div>
@@ -330,6 +448,11 @@ function Dashboard() {
                       </div>
                       <div className="text-xs text-muted-foreground tabular-nums">
                         {hideBalance ? "••••" : formatCurrency(ousdBalance, currency)}
+                        {!hideBalance && totalUsd > 0 && (
+                          <span className="ml-1 text-muted-foreground/80">
+                            · {((ousdBalance / totalUsd) * 100).toFixed(1)}%
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -338,6 +461,7 @@ function Dashboard() {
               {holdings.map((h) => {
                 const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                 const pct = Number(h.tokens?.change_24h ?? 0);
+                const share = totalUsd > 0 ? (usd / totalUsd) * 100 : 0;
                 const tokenId = h.tokens?.id;
                 return (
                   <li key={h.tokens?.id}>
@@ -379,6 +503,11 @@ function Dashboard() {
                         </div>
                         <div className="text-xs text-muted-foreground tabular-nums">
                           {hideBalance ? "••••" : formatCurrency(usd, currency)}
+                          {!hideBalance && (
+                            <span className="ml-1 text-muted-foreground/80">
+                              · {share.toFixed(1)}%
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -430,7 +559,7 @@ function Dashboard() {
         )}
       </section>
 
-      {!hasAssets && recentTxs.length === 0 && (
+      {!hasAssets && recentTxs.length === 0 && onboardDismissed && (
         <section className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
           <div className="grid h-16 w-16 place-items-center rounded-full bg-primary/15 text-primary">
             <Sparkles className="h-7 w-7" />

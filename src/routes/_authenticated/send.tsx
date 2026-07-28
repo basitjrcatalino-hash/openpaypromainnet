@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Clock,
   ArrowLeft,
   Camera,
   Check,
@@ -25,6 +26,12 @@ import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import {
+  isSystemCounterparty,
+  loadRecentRecipients,
+  saveRecentRecipient,
+  type RecentRecipient,
+} from "@/lib/recent-recipients";
 
 const sendSearchSchema = z.object({
   to: z.string().optional(),
@@ -125,6 +132,36 @@ function SendPage() {
         .eq("id", search.token!)
         .maybeSingle();
       return data;
+    },
+  });
+
+  const { data: recentRecipients = [] } = useQuery({
+    queryKey: ["recent-recipients", wallet?.id],
+    enabled: !!wallet?.id,
+    queryFn: async (): Promise<RecentRecipient[]> => {
+      const local = loadRecentRecipients();
+      const { data } = await supabase
+        .from("transactions")
+        .select("counterparty, created_at")
+        .eq("wallet_id", wallet!.id)
+        .eq("type", "send")
+        .not("counterparty", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(40);
+      const fromTx: RecentRecipient[] = [];
+      const seen = new Set(local.map((r) => r.address.toLowerCase()));
+      for (const row of data ?? []) {
+        const cp = row.counterparty as string;
+        if (isSystemCounterparty(cp)) continue;
+        const key = cp.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        fromTx.push({
+          address: cp,
+          at: new Date(row.created_at as string).getTime(),
+        });
+      }
+      return [...local, ...fromTx].slice(0, 8);
     },
   });
 
@@ -336,10 +373,12 @@ function SendPage() {
         );
       }
 
+      saveRecentRecipient(to.trim(), opPreview?.username ?? opPreview?.name);
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["holdings", wallet.id] });
       qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
       qc.invalidateQueries({ queryKey: ["recent-txs", wallet.id] });
+      qc.invalidateQueries({ queryKey: ["recent-recipients", wallet.id] });
       qc.invalidateQueries({ queryKey: ["ledger-entries"] });
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
       if (selected.kind === "TOKEN" && selected.tokenId) {
@@ -527,6 +566,49 @@ function SendPage() {
               </p>
             )}
           </div>
+
+          {recentRecipients.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                Recent
+              </div>
+              <ul className="overflow-hidden rounded-2xl bg-card">
+                {recentRecipients.map((r) => (
+                  <li key={r.address}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTo(r.address);
+                        setOpPreview(null);
+                        setOpError(null);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left press hover:bg-muted/40"
+                    >
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                        {(r.label ?? r.address).replace(/^@/, "").slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        {r.label ? (
+                          <>
+                            <span className="block truncate text-sm font-semibold">{r.label}</span>
+                            <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                              {shortAddress(r.address, 8, 6)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="block truncate font-mono text-sm font-semibold">
+                            {shortAddress(r.address, 10, 8)}
+                          </span>
+                        )}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <Button
             type="button"

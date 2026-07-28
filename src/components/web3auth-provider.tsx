@@ -70,6 +70,7 @@ export function AppWeb3AuthProvider({
         // Named-export shims must load before Web3Auth / Torus graph.
         await import("@/shims/events");
         await import("@/shims/loglevel");
+        await import("@/shims/deepmerge");
 
         const { getWeb3AuthContextConfig } = await import("@/lib/web3auth-config");
         const cfg = getWeb3AuthContextConfig();

@@ -73,9 +73,11 @@ export default defineConfig({
         // @toruslabs/http-helpers: `import { levels } from "loglevel"` (CJS has no named export).
         "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
         loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
+        // @toruslabs/http-helpers: `import merge from "deepmerge"` — CJS has no ESM default.
+        deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
       },
-      dedupe: ["react", "react-dom", "buffer", "events", "loglevel"],
+      dedupe: ["react", "react-dom", "buffer", "events", "loglevel", "deepmerge"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
@@ -96,9 +98,10 @@ export default defineConfig({
         "events-package",
         "loglevel",
         "loglevel-package",
+        "deepmerge",
         "process",
       ],
-      // Force Web3Auth/Torus through our events/loglevel shims.
+      // Force Web3Auth/Torus through our events/loglevel/deepmerge shims.
       exclude: [
         "@web3auth/modal",
         "@web3auth/auth",
@@ -116,7 +119,7 @@ export default defineConfig({
     ssr: {
       // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
-      noExternal: ["events", "events-package", "loglevel", "loglevel-package"],
+      noExternal: ["events", "events-package", "loglevel", "loglevel-package", "deepmerge"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

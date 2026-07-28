@@ -12,8 +12,6 @@ import {
   MoreHorizontal,
   QrCode,
   Send,
-  Sparkles,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,7 +34,7 @@ import {
   formatUSD,
   shortAddress,
 } from "@/lib/wallet-utils";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OPENPAY_NETWORK_BADGE_URL, OUSD_LOGO_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   head: ({ params }) => ({
@@ -458,18 +456,12 @@ function PhantomAssetDetail() {
 
       {/* More menu */}
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
-        <DialogContent className="max-w-sm rounded-3xl border-border bg-card p-0">
-          <div className="flex items-center justify-between px-4 pt-4">
-            <button type="button" onClick={() => setMoreOpen(false)} className="text-muted-foreground">
-              <X className="h-5 w-5" />
-            </button>
-            <DialogTitle className="sr-only">More</DialogTitle>
-            <span />
-          </div>
-          <div className="mx-4 mb-3 overflow-hidden rounded-2xl bg-muted/40">
+        <DialogContent hideClose className="max-w-sm rounded-3xl border-border bg-card p-0">
+          <DialogTitle className="sr-only">More</DialogTitle>
+          <div className="mx-4 mb-3 mt-4 overflow-hidden rounded-2xl bg-muted/40">
             {isOusd ? (
               <MoreRow
-                icon={Sparkles}
+                logoUrl={OUSD_LOGO_URL}
                 label="Earn with OUSD"
                 onClick={() => {
                   setMoreOpen(false);
@@ -478,7 +470,7 @@ function PhantomAssetDetail() {
               />
             ) : (
               <MoreRow
-                icon={Sparkles}
+                logoUrl={OPENPAY_NETWORK_BADGE_URL}
                 label="Trade on OpenToken"
                 onClick={() => {
                   setMoreOpen(false);
@@ -551,10 +543,12 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
 
 function MoreRow({
   icon: Icon,
+  logoUrl,
   label,
   onClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
+  logoUrl?: string;
   label: string;
   onClick: () => void;
 }) {
@@ -564,8 +558,16 @@ function MoreRow({
       onClick={onClick}
       className="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3.5 text-left last:border-0 hover:bg-muted/50"
     >
-      <span className="grid h-8 w-8 place-items-center rounded-full bg-background text-foreground">
-        <Icon className="h-4 w-4" />
+      <span
+        className={cn(
+          "grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-background text-foreground",
+        )}
+      >
+        {logoUrl ? (
+          <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+        ) : Icon ? (
+          <Icon className="h-4 w-4" />
+        ) : null}
       </span>
       <span className="text-sm font-medium">{label}</span>
     </button>

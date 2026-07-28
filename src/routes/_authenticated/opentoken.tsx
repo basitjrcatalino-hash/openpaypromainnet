@@ -7,7 +7,6 @@ import {
   Shield,
   BadgeCheck,
   CreditCard,
-  Sparkles,
   ArrowLeftRight,
   Compass,
   ChevronRight,
@@ -20,6 +19,7 @@ import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { formatCurrency, useCurrency, type CurrencyCode } from "@/lib/currency";
 import { formatPct } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/opentoken")({
   head: () => ({ meta: [{ title: "Home — OpenPay Pro" }] }),
@@ -185,8 +185,13 @@ function OpenTokenHome() {
             <section className="flex flex-col items-center px-2 pt-4 text-center">
               <div className="relative mb-5 grid h-36 w-36 place-items-center">
                 <div className="absolute inset-0 rounded-4xl bg-primary/20 blur-2xl" />
-                <div className="relative grid h-28 w-28 place-items-center rounded-3xl bg-linear-to-br from-primary/40 via-primary/25 to-primary/10 shadow-glow">
-                  <Sparkles className="h-12 w-12 text-primary" aria-hidden />
+                <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-3xl bg-linear-to-br from-primary/40 via-primary/25 to-primary/10 shadow-glow">
+                  <img
+                    src={OPENPAY_NETWORK_BADGE_URL}
+                    alt=""
+                    className="h-20 w-20 object-contain"
+                    aria-hidden
+                  />
                 </div>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">Welcome to OpenPay Pro</h1>

@@ -8,7 +8,6 @@ import {
   TrendingUp,
   DollarSign,
   ChevronsUpDown,
-  Sparkles,
   QrCode,
   Eye,
   EyeOff,
@@ -18,6 +17,7 @@ import {
   Ellipsis,
   Shield,
   X,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/tr
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 import { fetchWalletActivity } from "@/lib/activity";
+import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
@@ -71,7 +72,7 @@ const PRIMARY_ACTIONS = [
 ] as const;
 
 const MORE_ACTIONS = [
-  { label: "OpenToken", icon: Sparkles, to: "/opentoken" },
+  { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
@@ -633,7 +634,7 @@ function Dashboard() {
       {!showTokenSkeletons && !hasAssets && recentTxs.length === 0 && onboardDismissed && (
         <section className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
           <div className="grid h-16 w-16 place-items-center rounded-full bg-primary/15 text-primary">
-            <Sparkles className="h-7 w-7" />
+            <Wallet className="h-7 w-7" />
           </div>
           <div className="text-base font-bold">Your wallet is ready</div>
           <p className="max-w-xs text-sm text-muted-foreground">
@@ -652,7 +653,7 @@ function Dashboard() {
 
       {/* More actions sheet */}
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
-        <DialogContent className="max-w-sm rounded-3xl border-border/60 bg-card">
+        <DialogContent hideClose className="max-w-sm rounded-3xl border-border/60 bg-card">
           <DialogHeader>
             <DialogTitle>More</DialogTitle>
             <DialogDescription>Additional wallet actions</DialogDescription>
@@ -662,7 +663,8 @@ function Dashboard() {
               <ActionCircle
                 key={a.label}
                 label={a.label}
-                icon={a.icon}
+                icon={"icon" in a ? a.icon : undefined}
+                logoUrl={"logoUrl" in a ? a.logoUrl : undefined}
                 to={"to" in a ? a.to : undefined}
                 href={"href" in a ? a.href : undefined}
                 onClick={() => setMoreOpen(false)}

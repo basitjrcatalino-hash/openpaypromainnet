@@ -4,18 +4,23 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   label: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  logoUrl?: string;
   to?: string;
   href?: string;
   onClick?: () => void;
   className?: string;
 };
 
-export function ActionCircle({ label, icon: Icon, to, href, onClick, className }: Props) {
+export function ActionCircle({ label, icon: Icon, logoUrl, to, href, onClick, className }: Props) {
   const inner = (
     <>
-      <span className="ph-action-icon">
-        <Icon className="h-5 w-5" strokeWidth={2.25} />
+      <span className={cn("ph-action-icon", logoUrl && "overflow-hidden p-0")}>
+        {logoUrl ? (
+          <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+        ) : Icon ? (
+          <Icon className="h-5 w-5" strokeWidth={2.25} />
+        ) : null}
       </span>
       <span>{label}</span>
     </>

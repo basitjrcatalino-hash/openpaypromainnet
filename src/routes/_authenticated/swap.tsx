@@ -659,7 +659,7 @@ function TokenPickerDialog({
         if (!v) setQ("");
       }}
     >
-      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden rounded-3xl border-border/60 bg-background p-0 sm:max-w-md">
+      <DialogContent hideClose className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden rounded-3xl border-border/60 bg-background p-0 sm:max-w-md">
         <DialogHeader className="sr-only">
           <DialogTitle>Select token</DialogTitle>
         </DialogHeader>

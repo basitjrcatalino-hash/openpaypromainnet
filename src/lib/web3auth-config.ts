@@ -1,16 +1,15 @@
 /**
  * MetaMask Embedded Wallets (Web3Auth) — client config.
  * Docs: https://docs.metamask.io/embedded-wallets/authentication/social-logins/oauth/
+ *
+ * Import this module only from client effects / MetaMask panels — it pulls `@web3auth/modal`.
+ * For CLIENT_ID / brand color use `@/lib/web3auth-env` instead.
  */
 import { WEB3AUTH_NETWORK } from "@web3auth/modal";
 import type { Web3AuthContextConfig } from "@web3auth/modal/react";
 
-export const WEB3AUTH_CLIENT_ID =
-  (typeof import.meta !== "undefined" &&
-    String(import.meta.env?.VITE_WEB3AUTH_CLIENT_ID ?? "").trim()) ||
-  "";
-
-export const METAMASK_EMBEDDED_BRAND = "#E2761B";
+export { METAMASK_EMBEDDED_BRAND, WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-env";
+import { WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-env";
 
 /** Prefer Sapphire Devnet on localhost (Mainnet blocks local origins). */
 export function resolveWeb3AuthNetwork() {

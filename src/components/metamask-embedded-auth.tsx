@@ -6,7 +6,7 @@ import { AUTH_CONNECTION, WALLET_CONNECTORS } from "@web3auth/modal";
 
 import { Button } from "@/components/ui/button";
 import { completeWeb3AuthSupabaseSession } from "@/lib/web3auth-auth";
-import { METAMASK_EMBEDDED_BRAND, WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-config";
+import { METAMASK_EMBEDDED_BRAND, WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-env";
 import { cn } from "@/lib/utils";
 
 type SocialKey =

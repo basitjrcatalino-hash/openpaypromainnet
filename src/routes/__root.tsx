@@ -192,6 +192,12 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    void import("@/lib/buffer-polyfill")
+      .then((m) => m.ensureBuffer())
+      .catch((err) => console.warn("[buffer] early install failed", err));
+  }, []);
+
+  useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();

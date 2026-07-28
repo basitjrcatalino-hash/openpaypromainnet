@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export { METAMASK_EMBEDDED_BRAND, WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-config";
+export { METAMASK_EMBEDDED_BRAND, WEB3AUTH_CLIENT_ID } from "@/lib/web3auth-env";
 
 export async function exchangeWeb3AuthIdToken(idToken: string): Promise<{
   email: string;

@@ -1,11 +1,14 @@
 /**
  * Client: WalletConnect / EVM wallet sign-in (MetaMask, WalletConnect injectors, etc.).
  */
-import { getAddress } from "viem";
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const WALLETCONNECT_BRAND_BLUE = "#3396FF";
+
+async function checksumAddress(address: string): Promise<string> {
+  const { getAddress } = await import("viem");
+  return getAddress(address);
+}
 
 export type WcSignInChallenge = {
   domain: string;
@@ -47,7 +50,7 @@ async function connectEvmAddress(): Promise<string> {
   })) as string[];
   const address = accounts?.[0];
   if (!address) throw new Error("No account returned from wallet");
-  return getAddress(address);
+  return checksumAddress(address);
 }
 
 async function personalSign(address: string, message: string): Promise<string> {
@@ -62,8 +65,8 @@ async function personalSign(address: string, message: string): Promise<string> {
 }
 
 /** Mirror of server SIWE builder (keep in sync with walletconnect-auth.server). */
-function buildSiweMessage(challenge: WcSignInChallenge, address: string): string {
-  const checksum = getAddress(address);
+async function buildSiweMessage(challenge: WcSignInChallenge, address: string): Promise<string> {
+  const checksum = await checksumAddress(address);
   return [
     `${challenge.domain} wants you to sign in with your Ethereum account:`,
     checksum,
@@ -93,7 +96,7 @@ export async function startWalletConnectSignIn(opts?: { redirectTo?: string }): 
   }
 
   const address = await connectEvmAddress();
-  const message = buildSiweMessage(challenge, address);
+  const message = await buildSiweMessage(challenge, address);
   const signature = await personalSign(address, message);
 
   const verifyRes = await fetch("/api/public/walletconnect-auth", {

@@ -64,10 +64,13 @@ export default defineConfig({
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
-        // Force browser Buffer package (CJS) so Phantom never gets an empty binding.
-        buffer: path.resolve(rootDir, "node_modules/buffer/index.js"),
+        // Trailing slash picks package entry reliably; hard path to index.js often
+        // yields Vite `{ default: undefined }` and breaks Phantom Buffer setup.
+        buffer: path.resolve(rootDir, "node_modules/buffer/"),
+        events: path.resolve(rootDir, "node_modules/events/events.js"),
+        process: path.resolve(rootDir, "node_modules/process/browser.js"),
       },
-      dedupe: ["react", "react-dom", "buffer"],
+      dedupe: ["react", "react-dom", "buffer", "events"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
@@ -81,8 +84,11 @@ export default defineConfig({
         "@walletconnect/pay",
         "@moonpay/moonpay-react",
         "buffer",
+        "buffer/",
         "base64-js",
         "ieee754",
+        "events",
+        "process",
       ],
       esbuildOptions: {
         define: {
@@ -93,6 +99,7 @@ export default defineConfig({
     ssr: {
       // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
+      noExternal: ["events"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

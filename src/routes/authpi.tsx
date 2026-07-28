@@ -10,7 +10,7 @@ import {
   startTelegramSignIn,
 } from "@/lib/telegram-auth";
 import { WALLETCONNECT_BRAND_BLUE, startWalletConnectSignIn } from "@/lib/walletconnect-auth";
-import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-config";
+import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-env";
 import {
   PHANTOM_WALLET_LOGO,
   SOLANA_WALLET_LOGO,

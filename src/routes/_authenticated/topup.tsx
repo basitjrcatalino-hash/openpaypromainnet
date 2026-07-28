@@ -11,11 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/wallet/PageHeader";
+import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
 import { showMoonPayBuy } from "@/lib/moonpay-client";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
+import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
 import {
   createOpenPayTopupCharge,
   settleOpenPayCharge,
@@ -35,12 +38,13 @@ export const Route = createFileRoute("/_authenticated/topup")({
   component: TopUpPage,
 });
 
-type Method = "openpay_balance" | "pi" | "moonpay";
+type Method = "openpay_balance" | "pi" | "moonpay" | "solana";
 const methods: {
   id: Method;
   label: string;
   logoUrl?: string;
   icon?: LucideIcon;
+  solanaMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -61,6 +65,12 @@ const methods: {
     logoUrl: PI_NETWORK_LOGO_URL,
     desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
   },
+  {
+    id: "solana",
+    label: "Solana Pay",
+    solanaMark: true,
+    desc: "Pay with SOL or USDC · 1 USD = 1 OUSD credited",
+  },
 ];
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
@@ -69,6 +79,17 @@ const schema = z.object({
 
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
 const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
+
+function SolanaPayMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
+      />
+    </svg>
+  );
+}
 
 function TopUpPage() {
   const { user } = Route.useRouteContext();
@@ -87,6 +108,8 @@ function TopUpPage() {
   const settleCharge = useServerFn(settleOpenPayCharge);
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const getLink = useServerFn(getOpenPayLinkStatus);
+  const creditSolana = useServerFn(creditSolanaPayTopup);
+  const solanaReady = isSolanaMerchantConfigured();
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -254,8 +277,36 @@ function TopUpPage() {
     }
   }
 
+  async function settleSolanaTopup(signature: string, paidAmount: number) {
+    setBusy(true);
+    try {
+      const r = await creditSolana({
+        data: {
+          amount: paidAmount,
+          signature,
+          walletId: wallet?.id,
+        },
+      });
+      if (r.alreadyCredited) {
+        toast.message("This Solana payment was already credited");
+      } else {
+        toast.success(`Solana Pay complete · ${formatUSD(r.amount)} OUSD credited`);
+      }
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+      qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+    } catch (err) {
+      toast.error((err as Error).message || "Could not credit Solana payment");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (method === "solana") return;
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid");
@@ -341,6 +392,7 @@ function TopUpPage() {
 
   const linked = !!openpayLink?.linked;
   const amtNum = Number(amount) || 0;
+  const amountValid = schema.safeParse({ amount }).success;
   const cta =
     method === "moonpay"
       ? `Buy with MoonPay${amount ? ` · ${formatUSD(amtNum)}` : ""}`
@@ -348,7 +400,11 @@ function TopUpPage() {
         ? linked
           ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
           : "Connect OpenPay to continue"
-        : `Top up ${amount ? formatUSD(amtNum) : ""}`;
+        : method === "solana"
+          ? solanaReady
+            ? `Pay ${amount ? formatUSD(amtNum) : ""} with Solana`
+            : "Solana Pay not configured"
+          : `Top up ${amount ? formatUSD(amtNum) : ""}`;
 
   return (
     <div className="ot-phantom ph-page space-y-6 pb-8">
@@ -477,10 +533,13 @@ function TopUpPage() {
                       "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
                       selected ? "bg-primary/15 ring-2 ring-primary/40" : "bg-muted",
                       m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
+                      m.id === "solana" && "bg-[#9945FF]/15 text-[#9945FF]",
                     )}
                   >
                     {m.logoUrl ? (
                       <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                    ) : m.solanaMark ? (
+                      <SolanaPayMark className="h-5 w-5" />
                     ) : Icon ? (
                       <Icon className="h-5 w-5" />
                     ) : null}
@@ -513,6 +572,26 @@ function TopUpPage() {
           </p>
         )}
 
+        {method === "solana" && (
+          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
+            {solanaReady ? (
+              <>
+                Opens Solana Pay via Commerce Kit — connect Phantom (or scan QR), pay the amount in
+                SOL/USDC, then{" "}
+                <span className="font-medium text-foreground">
+                  {wallet?.name ?? "your wallet"}
+                </span>{" "}
+                is credited 1:1 in OUSD.
+              </>
+            ) : (
+              <>
+                Set <code className="font-mono text-[11px]">VITE_SOLANA_MERCHANT_WALLET</code> to
+                enable Solana Pay top-ups.
+              </>
+            )}
+          </p>
+        )}
+
         {method === "openpay_balance" && (
           <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
             {linked ? (
@@ -542,18 +621,62 @@ function TopUpPage() {
         )}
 
         <div className="pt-1">
-          <Button
-            type="submit"
-            disabled={busy || (method === "openpay_balance" && !linked) || amtNum < 1}
-            className="h-14 w-full rounded-full text-base font-semibold"
-          >
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-            {cta}
-          </Button>
+          {method === "solana" && solanaReady && amountValid ? (
+            <SolanaPaymentButton
+              mode="buyNow"
+              showQR
+              className="w-full"
+              paymentConfig={{
+                products: [
+                  {
+                    id: `ousd-topup-${amtNum}`,
+                    name: `OUSD top-up ${formatUSD(amtNum)}`,
+                    price: amtNum,
+                    quantity: 1,
+                  },
+                ],
+              }}
+              onPaymentStart={() => setBusy(true)}
+              onPaymentSuccess={(signature) => {
+                void settleSolanaTopup(signature, amtNum);
+              }}
+              onPaymentError={() => setBusy(false)}
+              onCancel={() => setBusy(false)}
+            >
+              <button
+                type="button"
+                disabled={busy || amtNum < 1}
+                className="flex h-14 w-full items-center justify-center rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground press disabled:opacity-50"
+              >
+                {busy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                {cta}
+              </button>
+            </SolanaPaymentButton>
+          ) : (
+            <Button
+              type="submit"
+              disabled={
+                busy ||
+                (method === "openpay_balance" && !linked) ||
+                (method === "solana" && (!solanaReady || !amountValid)) ||
+                amtNum < 1
+              }
+              className="h-14 w-full rounded-full text-base font-semibold"
+            >
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+              {cta}
+            </Button>
+          )}
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
             {method === "moonpay"
               ? "Powered by MoonPay · sandbox test purchases"
-              : "1 OUSD = $1.00 · credited to your active wallet"}
+              : method === "solana"
+                ? "Powered by Solana Pay · Commerce Kit"
+                : "1 OUSD = $1.00 · credited to your active wallet"}
           </p>
         </div>
       </form>

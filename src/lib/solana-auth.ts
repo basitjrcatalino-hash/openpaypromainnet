@@ -1,6 +1,7 @@
 /**
  * Client helpers for Sign In With Solana (Phantom SIWS).
  * Spec: https://github.com/phantom/sign-in-with-solana
+ * Desktop: Phantom browser extension via Wallet Standard / window.phantom.solana
  */
 import {
   SolanaSignIn,
@@ -13,9 +14,12 @@ import { getWallets } from "@wallet-standard/app";
 import { StandardConnect } from "@wallet-standard/features";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 import { supabase } from "@/integrations/supabase/client";
 
 export const SOLANA_BRAND_PURPLE = "#9945FF";
+
+export const PHANTOM_INSTALL_URL = "https://phantom.app/download";
 
 type PhantomProvider = {
   isPhantom?: boolean;
@@ -45,6 +49,68 @@ function getPhantomProvider(): PhantomProvider | null {
   const provider = w.phantom?.solana ?? w.solana ?? null;
   if (!provider) return null;
   return provider;
+}
+
+function listSiwsWallets(): Wallet[] {
+  try {
+    const { get } = getWallets();
+    return get().filter(
+      (w) => SolanaSignIn in w.features || SolanaSignMessage in w.features,
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** Phantom (and other extensions) inject after page load — wait briefly on desktop. */
+async function waitForDesktopWallet(timeoutMs = 2500): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (getPhantomProvider() || listSiwsWallets().length > 0) return true;
+
+  // Kick Wallet Standard discovery
+  try {
+    getWallets();
+  } catch {
+    /* ignore */
+  }
+
+  return await new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(poll);
+      clearTimeout(timer);
+      try {
+        unsub?.();
+      } catch {
+        /* ignore */
+      }
+      resolve(ok);
+    };
+
+    let unsub: (() => void) | undefined;
+    try {
+      const api = getWallets();
+      unsub = api.on("register", () => {
+        if (getPhantomProvider() || listSiwsWallets().length > 0) finish(true);
+      });
+    } catch {
+      /* ignore */
+    }
+
+    const poll = window.setInterval(() => {
+      if (getPhantomProvider() || listSiwsWallets().length > 0) finish(true);
+    }, 120);
+
+    const timer = window.setTimeout(() => finish(false), timeoutMs);
+  });
+}
+
+function desktopWalletMissingError(): Error {
+  return new Error(
+    "No Solana wallet found. Install the Phantom browser extension for desktop, then refresh this page.",
+  );
 }
 
 function toByteArray(value: Uint8Array | ArrayLike<number>): number[] {
@@ -107,10 +173,9 @@ function normalizePhantomSignIn(
 }
 
 async function signInViaWalletStandard(input: SolanaSignInInput): Promise<SolanaSignInOutput | null> {
-  const { get } = getWallets();
-  const wallets = get().filter((w) => SolanaSignIn in w.features);
+  const wallets = listSiwsWallets().filter((w) => SolanaSignIn in w.features);
 
-  // Prefer Phantom when multiple wallets are present
+  // Prefer Phantom when multiple wallets are present (desktop extension)
   const wallet =
     wallets.find((w) => /phantom/i.test(w.name)) ||
     wallets.find((w) => w.accounts.length > 0) ||
@@ -140,7 +205,7 @@ async function signInViaWalletStandard(input: SolanaSignInInput): Promise<Solana
 async function signInViaPhantomProvider(input: SolanaSignInInput): Promise<SolanaSignInOutput> {
   const provider = getPhantomProvider();
   if (!provider) {
-    throw new Error("No Solana wallet found. Install Phantom and try again.");
+    throw desktopWalletMissingError();
   }
 
   if (typeof provider.signIn === "function") {
@@ -179,8 +244,7 @@ async function signInViaPhantomProvider(input: SolanaSignInInput): Promise<Solan
 }
 
 async function signInViaSignMessageStandard(input: SolanaSignInInput): Promise<SolanaSignInOutput | null> {
-  const { get } = getWallets();
-  const wallets = get().filter((w) => SolanaSignMessage in w.features);
+  const wallets = listSiwsWallets().filter((w) => SolanaSignMessage in w.features);
   const wallet =
     wallets.find((w) => /phantom/i.test(w.name)) ||
     wallets.find((w) => w.accounts.length > 0) ||
@@ -229,6 +293,9 @@ async function signInViaSignMessageStandard(input: SolanaSignInInput): Promise<S
 export async function requestSolanaSignIn(
   input: SolanaSignInInput,
 ): Promise<SolanaSignInOutput> {
+  await ensureBuffer();
+  await waitForDesktopWallet();
+
   const viaStandard = await signInViaWalletStandard(input);
   if (viaStandard) return viaStandard;
 
@@ -237,12 +304,21 @@ export async function requestSolanaSignIn(
   } catch (err) {
     const viaMessage = await signInViaSignMessageStandard(input);
     if (viaMessage) return viaMessage;
+    if (!getPhantomProvider() && listSiwsWallets().length === 0) {
+      throw desktopWalletMissingError();
+    }
     throw err;
   }
 }
 
 export async function startSolanaSignIn(opts?: { redirectTo?: string }): Promise<void> {
   if (typeof window === "undefined") return;
+
+  await ensureBuffer();
+  const ready = await waitForDesktopWallet();
+  if (!ready && !getPhantomProvider() && listSiwsWallets().length === 0) {
+    throw desktopWalletMissingError();
+  }
 
   const origin = encodeURIComponent(window.location.origin);
   const createRes = await fetch(`/api/public/solana-auth?origin=${origin}`);
@@ -295,12 +371,5 @@ export async function startSolanaSignIn(opts?: { redirectTo?: string }): Promise
 export function hasSolanaWallet(): boolean {
   if (typeof window === "undefined") return false;
   if (getPhantomProvider()) return true;
-  try {
-    const { get } = getWallets();
-    return get().some(
-      (w: Wallet) => SolanaSignIn in w.features || SolanaSignMessage in w.features,
-    );
-  } catch {
-    return false;
-  }
+  return listSiwsWallets().length > 0;
 }

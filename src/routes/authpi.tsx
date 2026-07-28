@@ -7,7 +7,7 @@ import {
   OPENPAY_LOGO_WHITE,
   startOpenPaySignIn,
 } from "@/lib/openpay-auth";
-import { SOLANA_BRAND_PURPLE, startSolanaSignIn } from "@/lib/solana-auth";
+import { SOLANA_BRAND_PURPLE, startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
@@ -47,7 +47,7 @@ const AUTH_OPTIONS: {
   {
     id: "solana",
     label: "Solana",
-    desc: "Sign In With Solana (SIWS)",
+    desc: "Phantom extension · works on desktop web",
     accent: SOLANA_BRAND_PURPLE,
     accentFg: "#ffffff",
   },
@@ -146,7 +146,17 @@ function AuthPiPage() {
       }
     } catch (err) {
       const message = (err as Error).message || "Sign-in failed";
-      if (!/reject|cancel|denied/i.test(message)) toast.error(message);
+      if (!/reject|cancel|denied/i.test(message)) {
+        toast.error(message, {
+          action:
+            /No Solana wallet|Install the Phantom/i.test(message)
+              ? {
+                  label: "Install Phantom",
+                  onClick: () => window.open(PHANTOM_INSTALL_URL, "_blank", "noopener,noreferrer"),
+                }
+              : undefined,
+        });
+      }
       setBusy(false);
     }
   }

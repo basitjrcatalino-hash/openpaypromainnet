@@ -24,7 +24,17 @@ type PaymentButtonComponent = ComponentType<{
     theme?: Record<string, unknown>;
     showMerchantInfo?: boolean;
   };
-  paymentConfig?: unknown;
+  paymentConfig?: {
+    amount?: number;
+    currency?: string;
+    products?: Array<{
+      id: string;
+      name: string;
+      price?: number;
+      quantity?: number;
+      unitAmount?: number;
+    }>;
+  };
   children?: ReactNode;
   onPaymentStart?: () => void;
   onPaymentSuccess?: (signature: string) => void;
@@ -42,7 +52,19 @@ export type SolanaPaymentButtonProps = {
   children?: ReactNode;
   onPaymentSuccess?: (signature: string) => void;
   onPaymentError?: (error: Error) => void;
-  paymentConfig?: unknown;
+  onPaymentStart?: () => void;
+  onCancel?: () => void;
+  paymentConfig?: {
+    amount?: number;
+    currency?: string;
+    products?: Array<{
+      id: string;
+      name: string;
+      price?: number;
+      quantity?: number;
+      unitAmount?: number;
+    }>;
+  };
 };
 
 /**
@@ -58,6 +80,8 @@ export function SolanaPaymentButton({
   children,
   onPaymentSuccess,
   onPaymentError,
+  onPaymentStart,
+  onCancel,
   paymentConfig,
 }: SolanaPaymentButtonProps) {
   const [PaymentButton, setPaymentButton] = useState<PaymentButtonComponent | null>(null);
@@ -137,6 +161,7 @@ export function SolanaPaymentButton({
         paymentConfig={paymentConfig}
         onPaymentStart={() => {
           toast.message("Solana payment started");
+          onPaymentStart?.();
         }}
         onPaymentSuccess={(signature) => {
           toast.success("Solana payment confirmed");
@@ -148,6 +173,7 @@ export function SolanaPaymentButton({
         }}
         onCancel={() => {
           toast.message("Payment cancelled");
+          onCancel?.();
         }}
       >
         {children}

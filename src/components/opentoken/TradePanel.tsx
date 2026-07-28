@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, X, Sparkles, Wallet as WalletIcon, Link2, Plus } from "lucide-react";
+import { Loader2, X, Link2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buyOpenToken, sellOpenToken } from "@/lib/opentoken.functions";
@@ -21,6 +21,7 @@ import {
 import { formatNumber } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 
 type BuyMethod = "openpay_balance" | "pi";
 
@@ -28,17 +29,16 @@ const BUY_METHODS = [
   {
     id: "openpay_balance" as const,
     label: "OpenPay Balance",
-    icon: WalletIcon,
+    logoUrl: OUSD_LOGO_URL,
     desc: "Pay / top up from connected OpenPay · same as Buy",
   },
   {
     id: "pi" as const,
     label: "Pi Network (π)",
-    icon: Sparkles,
+    logoUrl: PI_NETWORK_LOGO_URL,
     desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
   },
 ];
-
 const BUY_PRESETS = [
   { label: "10", value: 10 },
   { label: "50", value: 50 },

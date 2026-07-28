@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type ComponentType, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Sparkles, Wallet as WalletIcon, Link2, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Link2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import {
   createOpenPayTopupCharge,
   settleOpenPayCharge,
@@ -37,23 +38,22 @@ type Method = "openpay_balance" | "pi";
 const methods: {
   id: Method;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  logoUrl: string;
   desc: string;
 }[] = [
   {
     id: "openpay_balance",
     label: "OpenPay Balance",
-    icon: WalletIcon,
+    logoUrl: OUSD_LOGO_URL,
     desc: "Pay from your connected OpenPay account · real debit",
   },
   {
     id: "pi",
     label: "Pi Network (π)",
-    icon: Sparkles,
+    logoUrl: PI_NETWORK_LOGO_URL,
     desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
   },
 ];
-
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
   amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
@@ -438,7 +438,6 @@ function TopUpPage() {
           <div className="overflow-hidden rounded-2xl bg-card">
             {methods.map((m, i) => {
               const selected = method === m.id;
-              const Icon = m.icon;
               return (
                 <button
                   key={m.id}
@@ -451,11 +450,15 @@ function TopUpPage() {
                 >
                   <span
                     className={cn(
-                      "grid h-11 w-11 place-items-center rounded-full",
-                      selected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                      "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
+                      selected ? "bg-primary/15 ring-2 ring-primary/40" : "bg-muted",
                     )}
                   >
-                    <Icon className="h-4.5 w-4.5" />
+                    <img
+                      src={m.logoUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">{m.label}</div>

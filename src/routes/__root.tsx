@@ -119,7 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#1a1330" },
+      { name: "theme-color", content: "#000000" },
       { title: "OpenPay Pro Wallet" },
       {
         name: "description",
@@ -168,13 +168,13 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Apply saved dashboard theme before paint so /docs and all routes match. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t==="dark";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t!=="light";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}})();`,
           }}
         />
-        {/* Early Buffer stub so Solana/Phantom chunks don't crash before the polyfill module runs. */}
+        {/* Early globals + Buffer stub so Phantom/Solana never see undefined Buffer.from */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.global=window.global||window;window.process=window.process||{env:{}};`,
+            __html: `(function(){try{var g=typeof globalThis!=="undefined"?globalThis:window;g.global=g.global||g;g.process=g.process||{env:{}};if(g.Buffer&&typeof g.Buffer.from==="function")return;function from(v,e){if(typeof v==="string"){if(e==="base64"||e==="base64url"){var s=e==="base64url"?v.replace(/-/g,"+").replace(/_/g,"/"):v;while(s.length%4)s+="=";var b=atob(s),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o}if(e==="hex"){var h=v.length%2?"0"+v:v,u=new Uint8Array(h.length/2);for(var j=0;j<u.length;j++)u[j]=parseInt(h.substr(j*2,2),16);return u}return(new TextEncoder).encode(v)}if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)}function B(a,e){if(!(this instanceof B))return from(a,e);var x=from(a,e);this.length=x.length;for(var i=0;i<x.length;i++)this[i]=x[i]}B.from=from;B.isBuffer=function(x){return x instanceof B};B.alloc=function(n){return new Uint8Array(n||0)};B.concat=function(list){var n=0,i=0;for(;i<list.length;i++)n+=list[i].length;var out=new Uint8Array(n),o=0;for(i=0;i<list.length;i++){out.set(list[i],o);o+=list[i].length}return out};g.Buffer=B;if(typeof window!=="undefined")window.Buffer=B}catch(e){}})();`,
           }}
         />
         <HeadContent />

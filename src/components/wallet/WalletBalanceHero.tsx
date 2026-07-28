@@ -21,25 +21,29 @@ export function WalletBalanceHero({
   className,
 }: Props) {
   return (
-    <div className={cn("flex flex-col items-center gap-3 py-6 text-center", className)}>
+    <div className={cn("flex flex-col items-center gap-2.5 py-7 text-center", className)}>
       <button
         type="button"
         onClick={onCycleCurrency}
-        className="flex items-center gap-2 text-[2.75rem] font-bold leading-none tracking-tight tabular-nums press"
+        className="ph-display flex items-center gap-2 press"
         aria-label="Change currency"
       >
         {hideBalance ? "••••" : balanceLabel}
-        <ChevronsUpDown className="h-5 w-5 text-muted-foreground" />
+        <ChevronsUpDown className="h-[1.125rem] w-[1.125rem] text-muted-foreground" strokeWidth={1.75} />
       </button>
       {addressLabel ? (
         <button
           type="button"
           onClick={onCopyAddress}
-          className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground press"
+          className="ph-caption flex items-center gap-1.5 transition-colors hover:text-foreground press"
           aria-label="Copy wallet address"
         >
-          <span>{addressLabel}</span>
-          {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+          <span className="font-medium tracking-wide">{addressLabel}</span>
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+          ) : (
+            <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />
+          )}
         </button>
       ) : null}
     </div>

@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * OpenPay Pro Wallet – Phantom-inspired theme.
- * Soft violet accents on near-black surfaces. Low glow, clean contrast.
+ * OpenPay Pro Wallet — Phantom + iOS 26 inspired.
+ * True black dark surfaces, SF Pro system stack, liquid-glass chrome.
  */
 
 @theme inline {
@@ -16,6 +16,19 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-sans: var(--font-phantom);
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.2;
+  --text-callout: 0.9375rem;
+  --text-callout--line-height: 1.35;
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.3;
+  --text-hero: 2.125rem;
+  --text-hero--line-height: 1.05;
+  --text-display: 2.75rem;
+  --text-display--line-height: 1;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -57,32 +70,37 @@
 }
 
 :root {
-  --radius: 1rem;
-  --ph-tabbar-content: 3.75rem;
+  --radius: 1.125rem;
+  --ph-tabbar-content: 3.85rem;
 
-  /* Phantom light: soft lavender on cool gray */
-  --background: oklch(0.97 0.01 290);
-  --foreground: oklch(0.18 0.03 290);
+  /* Phantom / SF Pro stack (SF Pro on Apple; Segoe / system elsewhere) */
+  --font-phantom:
+    "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Light: cool gray + lavender (kept readable; dark is the primary Phantom look) */
+  --background: oklch(0.97 0.008 290);
+  --foreground: oklch(0.12 0.02 290);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 290);
+  --card-foreground: oklch(0.12 0.02 290);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 290);
+  --popover-foreground: oklch(0.12 0.02 290);
 
-  --primary: oklch(0.55 0.16 295);            /* deep Phantom purple */
+  --primary: oklch(0.52 0.17 295);
   --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.78 0.09 295);       /* soft lavender #AB9FF2 */
+  --primary-glow: oklch(0.78 0.09 295);
 
-  --secondary: oklch(0.95 0.015 290);
-  --secondary-foreground: oklch(0.25 0.04 290);
+  --secondary: oklch(0.95 0.012 290);
+  --secondary-foreground: oklch(0.22 0.03 290);
 
-  --muted: oklch(0.95 0.01 290);
-  --muted-foreground: oklch(0.5 0.02 290);
+  --muted: oklch(0.95 0.008 290);
+  --muted-foreground: oklch(0.48 0.02 290);
 
-  --accent: oklch(0.94 0.035 295);
-  --accent-foreground: oklch(0.35 0.12 295);
+  --accent: oklch(0.94 0.03 295);
+  --accent-foreground: oklch(0.32 0.12 295);
 
-  --mint: oklch(0.78 0.12 165);               /* soft green accent */
+  --mint: oklch(0.78 0.12 165);
   --mint-foreground: oklch(0.22 0.05 165);
 
   --destructive: oklch(0.58 0.22 25);
@@ -90,92 +108,94 @@
   --success: oklch(0.68 0.16 155);
   --warning: oklch(0.8 0.14 85);
 
-  --border: oklch(0.9 0.015 290);
-  --input: oklch(0.92 0.015 290);
-  --ring: oklch(0.55 0.16 295);
+  --border: oklch(0.9 0.012 290);
+  --input: oklch(0.92 0.012 290);
+  --ring: oklch(0.52 0.17 295);
 
-  --chart-1: oklch(0.55 0.16 295);
+  --chart-1: oklch(0.52 0.17 295);
   --chart-2: oklch(0.72 0.1 295);
   --chart-3: oklch(0.68 0.16 155);
   --chart-4: oklch(0.45 0.12 310);
   --chart-5: oklch(0.75 0.08 280);
 
-  --sidebar: oklch(0.98 0.008 290);
-  --sidebar-foreground: oklch(0.22 0.03 290);
-  --sidebar-primary: oklch(0.55 0.16 295);
+  --sidebar: oklch(0.98 0.006 290);
+  --sidebar-foreground: oklch(0.18 0.02 290);
+  --sidebar-primary: oklch(0.52 0.17 295);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.94 0.03 295);
-  --sidebar-accent-foreground: oklch(0.3 0.1 295);
-  --sidebar-border: oklch(0.9 0.015 290);
-  --sidebar-ring: oklch(0.55 0.16 295);
+  --sidebar-accent-foreground: oklch(0.28 0.1 295);
+  --sidebar-border: oklch(0.9 0.012 290);
+  --sidebar-ring: oklch(0.52 0.17 295);
 
   --gradient-primary: linear-gradient(135deg, oklch(0.42 0.14 295), oklch(0.58 0.15 300) 55%, oklch(0.78 0.09 295));
   --gradient-mint: linear-gradient(135deg, oklch(0.72 0.12 165), oklch(0.8 0.1 150));
-  --gradient-hero: radial-gradient(circle at 20% 0%, oklch(0.55 0.16 295 / 0.18), transparent 55%),
-                   radial-gradient(circle at 85% 100%, oklch(0.78 0.09 295 / 0.14), transparent 50%);
+  --gradient-hero: radial-gradient(circle at 20% 0%, oklch(0.55 0.16 295 / 0.14), transparent 55%),
+                   radial-gradient(circle at 85% 100%, oklch(0.78 0.09 295 / 0.1), transparent 50%);
   --shadow-glow: 0 12px 40px -20px oklch(0.45 0.14 295 / 0.28);
-  --shadow-card: 0 8px 24px -12px oklch(0.18 0.03 290 / 0.1);
-  --glass-bg: oklch(1 0 0 / 0.7);
-  --glass-border: oklch(1 0 0 / 0.55);
+  --shadow-card: 0 8px 28px -16px oklch(0.18 0.03 290 / 0.12);
+  --glass-bg: oklch(1 0 0 / 0.72);
+  --glass-border: oklch(1 0 0 / 0.5);
 }
 
 .dark {
-  /* Phantom dark: near-black with violet chroma */
-  --background: oklch(0.14 0.012 290);
-  --foreground: oklch(0.97 0.005 290);
+  /* Phantom true black — not charcoal gray */
+  --background: #000000;
+  --foreground: #ffffff;
 
-  --card: oklch(0.17 0.016 290);
-  --card-foreground: oklch(0.97 0.005 290);
-  --popover: oklch(0.15 0.016 290);
-  --popover-foreground: oklch(0.97 0.005 290);
+  --card: #121212;
+  --card-foreground: #ffffff;
+  --popover: #0a0a0a;
+  --popover-foreground: #ffffff;
 
-  --primary: oklch(0.78 0.09 295);            /* #AB9FF2 soft lavender */
-  --primary-foreground: oklch(0.16 0.04 295);
-  --primary-glow: oklch(0.78 0.09 295);
+  /* Phantom lavender */
+  --primary: #ab9ff2;
+  --primary-foreground: #0b0814;
+  --primary-glow: #ab9ff2;
 
-  --secondary: oklch(0.2 0.02 290);
-  --secondary-foreground: oklch(0.95 0.005 290);
+  --secondary: #1c1c1e;
+  --secondary-foreground: #f5f5f7;
 
-  --muted: oklch(0.2 0.02 290);
-  --muted-foreground: oklch(0.68 0.02 290);
+  --muted: #1c1c1e;
+  --muted-foreground: #8e8e93;
 
-  --accent: oklch(0.22 0.04 295);
-  --accent-foreground: oklch(0.92 0.03 295);
+  --accent: #1a1625;
+  --accent-foreground: #e8e4ff;
 
-  --mint: oklch(0.78 0.12 165);
-  --mint-foreground: oklch(0.18 0.04 165);
+  --mint: #14f195;
+  --mint-foreground: #042016;
 
-  --destructive: oklch(0.68 0.2 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.74 0.15 155);
-  --warning: oklch(0.82 0.12 85);
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  --success: #30d158;
+  --warning: #ffd60a;
 
-  --border: oklch(0.28 0.025 290);
-  --input: oklch(0.24 0.025 290);
-  --ring: oklch(0.78 0.09 295);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #1c1c1e;
+  --ring: #ab9ff2;
 
-  --chart-1: oklch(0.78 0.09 295);
-  --chart-2: oklch(0.58 0.14 300);
-  --chart-3: oklch(0.74 0.15 155);
-  --chart-4: oklch(0.65 0.12 310);
-  --chart-5: oklch(0.7 0.08 280);
+  --chart-1: #ab9ff2;
+  --chart-2: #7c6fd6;
+  --chart-3: #14f195;
+  --chart-4: #bf5af2;
+  --chart-5: #64d2ff;
 
-  --sidebar: oklch(0.13 0.012 290);
-  --sidebar-foreground: oklch(0.95 0.005 290);
-  --sidebar-primary: oklch(0.78 0.09 295);
-  --sidebar-primary-foreground: oklch(0.16 0.04 295);
-  --sidebar-accent: oklch(0.22 0.04 295);
-  --sidebar-accent-foreground: oklch(0.95 0.02 295);
-  --sidebar-border: oklch(0.24 0.02 290);
-  --sidebar-ring: oklch(0.78 0.09 295);
+  --sidebar: #000000;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #ab9ff2;
+  --sidebar-primary-foreground: #0b0814;
+  --sidebar-accent: #1a1625;
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #ab9ff2;
 
-  --gradient-primary: linear-gradient(145deg, oklch(0.42 0.14 295), oklch(0.55 0.13 300) 48%, oklch(0.78 0.09 295));
-  --gradient-mint: linear-gradient(135deg, oklch(0.7 0.12 165), oklch(0.78 0.1 150));
-  --gradient-hero: radial-gradient(ellipse at 50% -20%, oklch(0.55 0.12 295 / 0.18), transparent 55%);
-  --shadow-glow: 0 14px 44px -22px oklch(0.55 0.12 295 / 0.28);
-  --shadow-card: 0 8px 24px -14px oklch(0 0 0 / 0.4);
-  --glass-bg: oklch(0.14 0.015 290 / 0.78);
-  --glass-border: oklch(1 0 0 / 0.06);
+  --gradient-primary: linear-gradient(145deg, #5b4bb7 0%, #8b7ae8 45%, #ab9ff2 100%);
+  --gradient-mint: linear-gradient(135deg, #0fb87a, #14f195);
+  --gradient-hero: radial-gradient(ellipse at 50% -10%, rgba(171, 159, 242, 0.16), transparent 52%);
+  --shadow-glow: 0 16px 48px -24px rgba(171, 159, 242, 0.35);
+  --shadow-card: 0 10px 32px -18px rgba(0, 0, 0, 0.85);
+  /* iOS 26 liquid glass */
+  --glass-bg: rgba(28, 28, 30, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.12);
 }
 
 @layer base {
@@ -188,16 +208,62 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-phantom);
+    font-size: 0.9375rem; /* 15px — Phantom / iOS body */
+    line-height: 1.35;
+    letter-spacing: -0.011em;
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, .ph-title {
+    font-family: var(--font-phantom);
+    letter-spacing: -0.022em;
+    font-weight: 680;
+  }
+  .ph-display {
+    font-size: 2.75rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .ph-hero {
+    font-size: 2.125rem;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .ph-callout {
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    font-weight: 510;
+    letter-spacing: -0.01em;
+  }
+  .ph-caption {
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    font-weight: 510;
+    letter-spacing: -0.006em;
+    color: var(--muted-foreground);
+  }
+  .ph-tab-label {
+    font-size: 0.625rem;
+    line-height: 1;
+    font-weight: 590;
+    letter-spacing: 0.01em;
   }
   button, a, [role="button"], [data-slot="button"] {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    font-family: inherit;
   }
   button:not(:disabled), a, [role="button"] {
-    transition: background-color .1s ease, color .1s ease, border-color .1s ease, opacity .1s ease;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease, opacity .12s ease,
+      box-shadow .18s ease, transform .12s ease;
   }
   button:not(:disabled):active, [role="button"]:active {
     transform: none;
@@ -226,14 +292,16 @@
 @utility glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   box-shadow: var(--shadow-card);
 }
 
 @utility glass-strong {
-  background: color-mix(in oklab, var(--card) 70%, transparent);
+  background: color-mix(in oklab, var(--card) 72%, transparent);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
 }
 
 @utility bg-gradient-primary {
@@ -300,22 +368,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 590;
+  letter-spacing: -0.01em;
   color: var(--foreground);
-  transition: transform .1s ease, opacity .1s ease;
+  transition: transform .12s ease, opacity .12s ease;
   &:active { transform: scale(0.96); }
 }
 
 @utility ph-action-icon {
   display: grid;
   place-items: center;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.35rem;
+  height: 3.35rem;
   border-radius: 9999px;
-  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  background: color-mix(in oklab, var(--primary) 16%, transparent);
   color: var(--primary);
+  box-shadow: inset 0 0 0 0.5px color-mix(in oklab, var(--primary) 28%, transparent);
 }
 
 @utility ph-row {
@@ -326,23 +396,23 @@
   gap: 0.75rem;
   padding: 0.875rem 0;
   text-align: left;
-  transition: background-color .1s ease;
+  transition: background-color .12s ease;
   &:hover { background: color-mix(in oklab, var(--muted) 50%, transparent); }
 }
 
 @utility ph-tabbar {
-  background: color-mix(in oklab, var(--background) 82%, transparent);
-  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  /* Floor padding so labels aren't clipped when safe-area is 0 (desktop / iframe). */
-  padding-bottom: max(0.625rem, env(safe-area-inset-bottom, 0px));
+  background: var(--glass-bg);
+  border-top: 0.5px solid var(--glass-border);
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
 @utility ph-header {
-  background: color-mix(in oklab, var(--background) 88%, transparent);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  background: var(--glass-bg);
+  border-bottom: 0.5px solid transparent;
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
 }
 
 @utility ph-page {
@@ -354,8 +424,9 @@
 
 @utility ph-group {
   overflow: hidden;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   background: var(--card);
+  box-shadow: inset 0 0 0 0.5px var(--glass-border);
 }
 
 /* Floating search + mint row sits just above the tabbar. */
@@ -454,3 +525,44 @@
   background: color-mix(in oklab, var(--auth-accent, var(--primary)) 12%, var(--card));
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--auth-accent, var(--primary)) 28%, transparent);
 }
+
+/*
+ * Solana Commerce Kit overlays use z-index 50 — same as our mobile tabbar / drawer.
+ * That produced a blank dark rectangle with the QR/payment UI trapped underneath.
+ * When payment is open, raise kit portals and tuck chrome below them.
+ */
+html.solana-pay-open .ph-tabbar,
+html.solana-pay-open header.ph-header {
+  z-index: 20 !important;
+}
+
+html.solana-pay-open body > div[style*="z-index: 40"],
+html.solana-pay-open body > div[style*="z-index:40"],
+html.solana-pay-open body > div[style*="z-index: 50"],
+html.solana-pay-open body > div[style*="z-index:50"] {
+  z-index: 200 !important;
+}
+
+/* Inline checkout: keep QR / wallet UI visible in the page on mobile */
+.solana-payment-button--inline {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+.solana-payment-button--inline iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: min(70vh, 36rem) !important;
+  height: min(70vh, 36rem) !important;
+  border: 0 !important;
+  border-radius: 1rem !important;
+  background: #fff !important;
+}
+
+/* Always boost kit fixed overlays even without the class (desktop overlay mode) */
+.solana-payment-button ~ div[style*="position: fixed"],
+.solana-payment-button ~ div[style*="position:fixed"] {
+  z-index: 200 !important;
+}
+

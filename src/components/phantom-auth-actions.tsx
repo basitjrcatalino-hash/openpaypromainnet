@@ -12,7 +12,7 @@ import {
   usePhantom,
 } from "@phantom/react-sdk";
 import { startSolanaSignIn } from "@/lib/solana-auth";
-import { getPhantomRedirectUrl } from "@/lib/phantom";
+import { getPhantomRedirectUrl, markPhantomOAuthPending, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import { Button } from "@/components/ui/button";
 
 function phantomErrorMessage(err: unknown): string {
@@ -100,6 +100,7 @@ export function PhantomContinueButton({
       type="button"
       disabled={waiting}
       onClick={async () => {
+        if (!ensureTopLevelAuthWindow()) return;
         setBusy(true);
         try {
           if (extensionInstalled) {
@@ -107,6 +108,7 @@ export function PhantomContinueButton({
             // Bridge effect takes over when Solana address appears; clear if it never does.
             return;
           }
+          markPhantomOAuthPending();
           open();
           setBusy(false);
         } catch (err) {
@@ -138,7 +140,9 @@ export function PhantomGoogleAppleLink({ busy }: { busy: boolean }) {
       type="button"
       disabled={busy}
       onClick={() => {
+        if (!ensureTopLevelAuthWindow()) return;
         try {
+          markPhantomOAuthPending();
           open();
         } catch (err) {
           toast.error(phantomErrorMessage(err));

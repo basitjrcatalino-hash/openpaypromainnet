@@ -19,7 +19,7 @@ export function ActionCircle({ label, icon: Icon, logoUrl, to, href, onClick, cl
         {logoUrl ? (
           <img src={logoUrl} alt="" className="h-full w-full object-cover" />
         ) : Icon ? (
-          <Icon className="h-5 w-5" strokeWidth={2.25} />
+          <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={1.75} />
         ) : null}
       </span>
       <span>{label}</span>

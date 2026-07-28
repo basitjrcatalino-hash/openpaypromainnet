@@ -616,8 +616,7 @@ function TopUpPage() {
           <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
             {solanaReady ? (
               <>
-                Opens Solana Pay via Commerce Kit — connect Phantom (or scan QR), pay the amount in
-                SOL/USDC, then{" "}
+                Opens Solana Pay in-page (QR + wallet) — pay in SOL/USDC, then{" "}
                 <span className="font-medium text-foreground">
                   {wallet?.name ?? "your wallet"}
                 </span>{" "}
@@ -665,6 +664,7 @@ function TopUpPage() {
             <SolanaPaymentButton
               mode="buyNow"
               showQR
+              position="inline"
               className="w-full"
               paymentConfig={{
                 products: [

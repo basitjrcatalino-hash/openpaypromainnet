@@ -1,12 +1,15 @@
 "use client";
 
 import {
+  Component,
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ComponentType,
+  type ErrorInfo,
   type ReactNode,
 } from "react";
 import {
@@ -50,6 +53,31 @@ type PhantomSdk = {
   darkTheme: unknown;
 };
 
+class PhantomRenderBoundary extends Component<
+  {
+    children: ReactNode;
+    fallback: ReactNode;
+    onError: (message: string) => void;
+  },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    console.error("[phantom] provider render failed", error);
+    this.props.onError(error?.message || "Phantom Connect crashed while loading");
+  }
+
+  render() {
+    if (this.state.failed) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
 /**
  * Client-only Phantom Connect provider.
  * Loads Buffer first, then the SDK — keeps CJS `buffer` / @phantom off the SSR graph.
@@ -67,6 +95,15 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
     setAttempt((n) => n + 1);
   }, []);
 
+  const onProviderError = useCallback((message: string) => {
+    setSdk(null);
+    setStatus("error");
+    const friendly = /reading 'from'|Buffer/i.test(message)
+      ? "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in."
+      : message;
+    setError(friendly);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const timer = window.setTimeout(() => {
@@ -82,6 +119,12 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
       try {
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
+
+        // Double-check before pulling Phantom (its deps call Buffer.from at init).
+        if (typeof (globalThis as { Buffer?: { from?: unknown } }).Buffer?.from !== "function") {
+          throw new Error("Buffer.from is not available in this browser");
+        }
+
         const mod = await import("@phantom/react-sdk");
         if (cancelled) return;
         setSdk({
@@ -95,7 +138,11 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setSdk(null);
         setStatus("error");
-        setError((err as Error)?.message || "Could not load Phantom Connect");
+        const raw = (err as Error)?.message || "Could not load Phantom Connect";
+        const friendly = /reading 'from'|Buffer/i.test(raw)
+          ? "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in."
+          : raw;
+        setError(friendly);
       }
     })();
 
@@ -112,21 +159,30 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
     retry,
   };
 
-  if (!sdk) {
-    return <PhantomClientContext.Provider value={ctx}>{children}</PhantomClientContext.Provider>;
-  }
-
-  const { PhantomProvider, darkTheme } = sdk;
-  const config = getPhantomProviderConfig();
+  const Provider = sdk?.PhantomProvider;
+  // Capture redirect URL once when SDK becomes ready so OAuth state matches callback origin.
+  const config = useMemo(
+    () => (sdk ? getPhantomProviderConfig() : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when sdk instance appears
+    [sdk],
+  );
 
   return (
-    <PhantomProvider
-      config={config}
-      theme={darkTheme}
-      appIcon={PHANTOM_APP_ICON}
-      appName={PHANTOM_APP_NAME}
-    >
-      <PhantomClientContext.Provider value={ctx}>{children}</PhantomClientContext.Provider>
-    </PhantomProvider>
+    <PhantomClientContext.Provider value={ctx}>
+      {sdk && Provider && config ? (
+        <PhantomRenderBoundary fallback={children} onError={onProviderError}>
+          <Provider
+            config={config}
+            theme={sdk.darkTheme}
+            appIcon={PHANTOM_APP_ICON}
+            appName={PHANTOM_APP_NAME}
+          >
+            {children}
+          </Provider>
+        </PhantomRenderBoundary>
+      ) : (
+        children
+      )}
+    </PhantomClientContext.Provider>
   );
 }

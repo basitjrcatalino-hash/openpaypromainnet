@@ -30,12 +30,15 @@ export const SOLANA_RPC_URL =
     String(import.meta.env?.VITE_SOLANA_RPC_URL ?? "").trim()) ||
   undefined;
 
-/** OpenPay Pro–aligned theme for Commerce Kit. */
+/**
+ * Theme for Commerce Kit.
+ * Prefer a light panel so QR / amounts stay readable on mobile (dark overlay was blank).
+ */
 export const SOLANA_PAYMENT_THEME = {
-  primaryColor: "#AB9FF2",
+  primaryColor: "#7C3AED",
   secondaryColor: "#14F195",
-  backgroundColor: "#1a1a2e",
-  textColor: "#ffffff",
+  backgroundColor: "#ffffff",
+  textColor: "#0f172a",
   borderRadius: "xl" as const,
   buttonShadow: "md" as const,
 };
@@ -48,4 +51,10 @@ export function resolveSolanaMerchantWallet(wallet?: string | null): string {
 
 export function isSolanaMerchantConfigured(wallet?: string | null): boolean {
   return resolveSolanaMerchantWallet(wallet).length > 0;
+}
+
+/** Mark body so CSS can raise commerce overlays above the mobile tabbar. */
+export function setSolanaPayOpen(open: boolean): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("solana-pay-open", open);
 }

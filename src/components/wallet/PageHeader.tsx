@@ -47,9 +47,9 @@ export function PageHeader({ title, backTo, onBack, right, className }: Props) {
         onClick={handleBack}
         aria-label="Go back"
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
       </Button>
-      <h1 className="min-w-0 flex-1 truncate text-center text-base font-bold">{title}</h1>
+      <h1 className="ph-title min-w-0 flex-1 truncate text-center text-[1.0625rem]">{title}</h1>
       <div className="flex h-9 min-w-9 shrink-0 items-center justify-end">{right ?? null}</div>
     </div>
   );

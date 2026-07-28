@@ -8,14 +8,15 @@ const STORAGE_KEY = "openpay-theme";
 const Ctx = createContext<ThemeCtx | null>(null);
 
 function readStoredTheme(): Theme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "light" || saved === "dark") return saved;
   } catch {
     /* ignore */
   }
-  return "light";
+  // Phantom-first: default to true-black dark
+  return "dark";
 }
 
 function applyTheme(theme: Theme) {

@@ -238,7 +238,7 @@ function AuthenticatedLayout() {
                     to={item.to}
                     preload="intent"
                     className={cn(
-                      "flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold leading-none press",
+                      "flex h-full flex-col items-center justify-center gap-1 ph-tab-label press",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
@@ -248,7 +248,7 @@ function AuthenticatedLayout() {
                         active && "bg-primary/15",
                       )}
                     >
-                      <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+                      <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2 : 1.75} />
                     </span>
                     <span className="px-0.5">{item.label}</span>
                   </Link>

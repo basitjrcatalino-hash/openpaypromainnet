@@ -11,7 +11,7 @@ import { SOLANA_BRAND_PURPLE, startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/l
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { PHANTOM_APP_ICON } from "@/lib/phantom";
+import { PHANTOM_APP_ICON, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import {
   PhantomContinueButton,
   PhantomGoogleAppleLink,
@@ -101,6 +101,10 @@ function AuthPiPage() {
   const [selected, setSelected] = useState<AuthMethod | null>(null);
   const [busy, setBusy] = useState(false);
   const [pulseId, setPulseId] = useState<AuthMethod | null>(null);
+
+  useEffect(() => {
+    ensureTopLevelAuthWindow();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

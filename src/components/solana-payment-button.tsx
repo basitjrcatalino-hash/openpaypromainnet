@@ -11,6 +11,7 @@ import {
   SOLANA_RPC_URL,
   isSolanaMerchantConfigured,
   resolveSolanaMerchantWallet,
+  setSolanaPayOpen,
 } from "@/lib/solana-payment";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,8 @@ type PaymentButtonComponent = ComponentType<{
     network?: "mainnet" | "devnet" | "testnet";
     rpcUrl?: string;
     showQR?: boolean;
+    /** overlay fights mobile tabbar (z-50); prefer inline on phone. */
+    position?: "inline" | "overlay";
     theme?: Record<string, unknown>;
     showMerchantInfo?: boolean;
   };
@@ -48,6 +51,12 @@ export type SolanaPaymentButtonProps = {
   merchantName?: string;
   mode?: "tip" | "cart" | "buyNow";
   showQR?: boolean;
+  /**
+   * Where the checkout UI renders.
+   * Default: inline on narrow viewports, overlay on desktop — overlay uses kit z-index 50
+   * which collides with our mobile tabbar unless CSS raises it.
+   */
+  position?: "inline" | "overlay" | "auto";
   className?: string;
   children?: ReactNode;
   onPaymentSuccess?: (signature: string) => void;
@@ -67,6 +76,12 @@ export type SolanaPaymentButtonProps = {
   };
 };
 
+function resolvePosition(position: "inline" | "overlay" | "auto"): "inline" | "overlay" {
+  if (position === "inline" || position === "overlay") return position;
+  if (typeof window === "undefined") return "inline";
+  return window.matchMedia("(max-width: 767px)").matches ? "inline" : "overlay";
+}
+
 /**
  * Client-only Solana Commerce Kit PaymentButton.
  * Dynamically imports the kit after mount so Nitro/workerd SSR never resolves it.
@@ -76,6 +91,7 @@ export function SolanaPaymentButton({
   merchantName = SOLANA_MERCHANT_NAME,
   mode = "tip",
   showQR = true,
+  position = "auto",
   className,
   children,
   onPaymentSuccess,
@@ -86,6 +102,18 @@ export function SolanaPaymentButton({
 }: SolanaPaymentButtonProps) {
   const [PaymentButton, setPaymentButton] = useState<PaymentButtonComponent | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [resolvedPosition, setResolvedPosition] = useState<"inline" | "overlay">(() =>
+    resolvePosition(position),
+  );
+
+  useEffect(() => {
+    setResolvedPosition(resolvePosition(position));
+    if (position !== "auto" || typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setResolvedPosition(mq.matches ? "inline" : "overlay");
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [position]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,6 +126,7 @@ export function SolanaPaymentButton({
       });
     return () => {
       cancelled = true;
+      setSolanaPayOpen(false);
     };
   }, []);
 
@@ -144,7 +173,13 @@ export function SolanaPaymentButton({
   }
 
   return (
-    <div className={cn("solana-payment-button", className)}>
+    <div
+      className={cn(
+        "solana-payment-button w-full",
+        resolvedPosition === "inline" && "solana-payment-button--inline",
+        className,
+      )}
+    >
       <PaymentButton
         config={{
           merchant: {
@@ -155,23 +190,28 @@ export function SolanaPaymentButton({
           network: SOLANA_PAYMENT_NETWORK,
           rpcUrl: SOLANA_RPC_URL,
           showQR,
+          position: resolvedPosition,
           theme: SOLANA_PAYMENT_THEME,
           showMerchantInfo: true,
         }}
         paymentConfig={paymentConfig}
         onPaymentStart={() => {
+          setSolanaPayOpen(true);
           toast.message("Solana payment started");
           onPaymentStart?.();
         }}
         onPaymentSuccess={(signature) => {
+          setSolanaPayOpen(false);
           toast.success("Solana payment confirmed");
           onPaymentSuccess?.(signature);
         }}
         onPaymentError={(error) => {
+          setSolanaPayOpen(false);
           toast.error(error.message || "Solana payment failed");
           onPaymentError?.(error);
         }}
         onCancel={() => {
+          setSolanaPayOpen(false);
           toast.message("Payment cancelled");
           onCancel?.();
         }}

@@ -64,8 +64,10 @@ export default defineConfig({
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
+        // Force browser Buffer package (CJS) so Phantom never gets an empty binding.
+        buffer: path.resolve(rootDir, "node_modules/buffer/index.js"),
       },
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "buffer"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
@@ -77,11 +79,18 @@ export default defineConfig({
         "react-dom/client",
         "@phantom/react-sdk",
         "buffer",
+        "base64-js",
+        "ieee754",
       ],
+      esbuildOptions: {
+        define: {
+          global: "globalThis",
+        },
+      },
     },
     ssr: {
       // Keep CJS `buffer` out of the SSR ESM runner (require is not defined).
-      external: ["buffer"],
+      external: ["buffer", "base64-js", "ieee754"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

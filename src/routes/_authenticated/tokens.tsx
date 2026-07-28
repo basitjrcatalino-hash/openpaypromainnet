@@ -2,7 +2,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Coins, Plus } from "lucide-react";
+import { BadgeCheck, CircleDollarSign, Plus } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ function TokensPage() {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-primary">
-            <Coins className="h-4 w-4" />
+            <CircleDollarSign className="h-4 w-4" />
           </span>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Tokens</h1>

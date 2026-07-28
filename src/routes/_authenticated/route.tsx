@@ -24,7 +24,7 @@ import {
   CheckCircle2,
   ScrollText,
   BookOpen,
-  Coins,
+  CircleDollarSign,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
-  { to: "/tokens", label: "Tokens", icon: Coins },
+  { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "Home", icon: Compass },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },

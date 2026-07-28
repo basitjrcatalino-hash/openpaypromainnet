@@ -6,7 +6,7 @@ export { LivePreview } from "./LivePreview";
 export { FairLaunchConfirm } from "./FairLaunchConfirm";
 export { TradePanel } from "./TradePanel";
 export { CurveProgress } from "./CurveProgress";
-export { PriceChart } from "./PriceChart";
+export { PriceChart, buildPegTicks } from "./PriceChart";
 export { TradesTable } from "./TradesTable";
 export { CommentThread } from "./CommentThread";
 export { TokenStats } from "./TokenStats";

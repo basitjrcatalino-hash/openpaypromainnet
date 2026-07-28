@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -14,7 +14,7 @@ import {
   ShieldAlert,
   Star,
   TrendingUp,
-  Volume2,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -194,222 +194,215 @@ function OpenTokenDetail() {
   const reserve = Number(token.curve_reserve_pi ?? 0);
   const gradTarget = Math.max(1, Number(token.graduation_target_pi ?? 1));
   const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
+  const up = change >= 0;
+  const price = Number(token.price_usd ?? 0);
 
   return (
-    <div className="ot-phantom mx-auto max-w-7xl pb-28 pt-2 md:px-2">
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-card px-4 py-2.5 text-center text-xs text-muted-foreground">
-        <span>OpenToken launchpad · bonding curve trading</span>
-        <Link
-          to="/asset/$tokenId"
-          params={{ tokenId }}
-          className="font-medium text-primary hover:underline"
+    <div className="ot-phantom mx-auto max-w-7xl animate-page-in pb-28 pt-1 md:px-2">
+      {/* Top bar */}
+      <div className="mb-4 flex items-center gap-2">
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         >
-          Wallet view
-        </Link>
+          <Link to="/opentoken">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </Button>
+        <div className="min-w-0 flex-1 text-center">
+          <div className="truncate text-sm font-bold">{token.name}</div>
+          <div className="text-[11px] text-muted-foreground">${token.symbol}</div>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
+            onClick={() => {
+              void navigator.clipboard.writeText(window.location.href);
+              toast.success("Link copied");
+            }}
+            aria-label="Share"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
+            onClick={toggleFav}
+            aria-label="Favorite"
+          >
+            <Star className={cn("h-4 w-4", favorited && "fill-amber-400 text-amber-400")} />
+          </button>
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
+            onClick={() => setReportOpen(true)}
+            aria-label="Report"
+          >
+            <Flag className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex items-start gap-3">
-                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
-                  <Link to="/opentoken">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-                  {token.logo_url ? (
-                    <img src={token.logo_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-sm font-bold text-foreground">
-                      {token.symbol?.slice(0, 2)}
-                    </div>
-                  )}
+        <div className="space-y-5">
+          {/* Hero */}
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 overflow-hidden rounded-full bg-muted shadow-lg">
+              {token.logo_url ? (
+                <img src={token.logo_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full w-full place-items-center bg-primary/20 text-lg font-bold text-primary">
+                  {token.symbol?.slice(0, 2)}
                 </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="truncate text-2xl font-bold text-foreground">{token.name}</h1>
-                    {token.is_verified && <BadgeCheck className="h-4 w-4 text-green-400" />}
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>${token.symbol}</span>
-                    {token.category && <span>{token.category}</span>}
-                    <span>{timeAgo(token.created_at)}</span>
-                    {token.contract_address && (
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-foreground"
-                        onClick={() => {
-                          void navigator.clipboard.writeText(token.contract_address!);
-                          toast.success("Address copied");
-                        }}
-                      >
-                        {shortAddress(token.contract_address)} <Copy className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                  {token.description && (
-                    <p className="mt-2 max-w-3xl text-sm text-foreground/80">{token.description}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-xl border-border bg-muted text-foreground hover:bg-muted"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link copied");
-                  }}
-                >
-                  <Share2 className="mr-1.5 h-4 w-4" /> Share
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-xl border-border bg-muted text-foreground hover:bg-muted"
-                  onClick={toggleFav}
-                >
-                  <Star className={cn("mr-1.5 h-4 w-4", favorited && "fill-warning text-warning")} />
-                  Favorite
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full text-muted-foreground hover:text-foreground"
-                  onClick={() => setReportOpen(true)}
-                >
-                  <Flag className="h-4 w-4" />
-                </Button>
-              </div>
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-1.5">
+              <h1 className="text-xl font-bold">{token.name}</h1>
+              {token.is_verified && <BadgeCheck className="h-4 w-4 text-primary" />}
+            </div>
+            <div className="mt-3 text-4xl font-bold tabular-nums tracking-tight">
+              {formatOUSD(price, { price: true, suffix: false })}
+              <span className="ml-1.5 text-base font-medium text-muted-foreground">OUSD</span>
+            </div>
+            <div
+              className={cn(
+                "mt-2 text-sm font-semibold tabular-nums",
+                up ? "text-emerald-400" : "text-red-400",
+              )}
+            >
+              {formatPct(change)} · 24h
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+              {token.category && (
+                <span className="rounded-full bg-primary/15 px-2.5 py-1 font-semibold text-primary">
+                  {token.category}
+                </span>
+              )}
+              <span>{timeAgo(token.created_at)}</span>
+              <Link
+                to="/asset/$tokenId"
+                params={{ tokenId }}
+                className="inline-flex items-center gap-1 font-semibold text-primary"
+              >
+                <Wallet className="h-3.5 w-3.5" />
+                Wallet view
+              </Link>
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <StatCard
-              label="Market cap"
-              value={formatOUSD(mcap)}
-              sub={`${formatPct(change)} 24hr`}
-              positive={change >= 0}
-            />
-            <StatCard
-              label="Price"
-              value={formatOUSD(token.price_usd, { price: true })}
-            />
-            <StatCard label="Vol 24h" value={formatOUSD(vol24, { compact: true })} />
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-2">
+            <StatPill label="Market cap" value={formatOUSD(mcap, { compact: true })} />
+            <StatPill label="Vol 24h" value={formatOUSD(vol24, { compact: true })} />
+            <StatPill label="Holders" value={formatNumber(token.holder_count ?? 0, 0)} />
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {/* Chart */}
+          <section className="rounded-3xl bg-card p-4">
+            <div className="mb-3 flex items-end justify-between gap-3">
               <div>
-                <div className="text-xs text-muted-foreground">Market cap.</div>
-                <div className="text-4xl font-bold text-foreground">{formatOUSD(mcap, { compact: true })}</div>
-                <div className={cn("mt-1 text-sm font-medium", change >= 0 ? "text-emerald-500" : "text-red-500")}>
-                  {formatOUSD(Math.abs((token.price_usd ?? 0) * change / 100), { compact: true })} ({formatPct(change)}) 24hr
+                <div className="text-[11px] text-muted-foreground">Market cap</div>
+                <div className="text-2xl font-bold tabular-nums">
+                  {formatOUSD(mcap, { compact: true })}
                 </div>
               </div>
-              <div className="w-full max-w-xs">
-                <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                  <span />
-                  <span>ATH {formatOUSD(mcap * 2.15, { compact: true })}</span>
+              <div className="min-w-28 flex-1">
+                <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
+                  <span>Curve</span>
+                  <span>{progress}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-linear-to-r from-emerald-400 to-lime-300" style={{ width: `${progress}%` }} />
+                <div className="h-1.5 rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+                  />
                 </div>
               </div>
             </div>
-
-            <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <button className="hover:text-foreground">5m</button>
-              <button className="hover:text-foreground">1h</button>
-              <button className="hover:text-foreground">Trade Display</button>
-              <button className="hover:text-foreground">Show All Bubbles</button>
-              <button className="text-foreground">Price/MCap</button>
+            <div className="overflow-hidden rounded-2xl bg-muted/30">
+              <PriceChart ticks={ticks} mode="price" trend={up ? "up" : "down"} height={200} />
             </div>
-
-            <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
-              <PriceChart ticks={ticks} mode="price" />
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-3 flex flex-wrap justify-center gap-1">
               {CHART_PERIODS.map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setChartPeriod(p)}
                   className={cn(
-                    "rounded-full px-3 py-1.5 transition-colors",
-                    chartPeriod === p ? "bg-muted text-foreground" : "hover:text-foreground",
+                    "rounded-full px-3 py-1.5 text-xs font-semibold press",
+                    chartPeriod === p
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted",
                   )}
                 >
                   {p}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-foreground">About {token.name}</h3>
-              <span className="text-xs text-muted-foreground">{timeAgo(token.created_at)}</span>
-            </div>
+          {/* About */}
+          <section className="rounded-3xl bg-card p-4">
+            <h3 className="mb-2 text-sm font-bold">About {token.name}</h3>
             {token.description ? (
-              <p className="border-l-2 border-emerald-400 pl-3 text-sm leading-6 text-foreground/80">{token.description}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{token.description}</p>
             ) : (
               <p className="text-sm text-muted-foreground">No description yet.</p>
             )}
-          </div>
+            {token.contract_address && (
+              <button
+                type="button"
+                className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-primary"
+                onClick={() => {
+                  void navigator.clipboard.writeText(token.contract_address!);
+                  toast.success("Address copied");
+                }}
+              >
+                {shortAddress(token.contract_address)} <Copy className="h-3 w-3" />
+              </button>
+            )}
+          </section>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            <MiniMetric label="Vol 24h" value={formatOUSD(vol24, { compact: true })} />
-            <MiniMetric label="Price" value={formatOUSD(token.price_usd, { price: true })} />
-            <MiniMetric label="5m" value={formatPct(change / 12)} negative={change < 0} />
-            <MiniMetric label="1h" value={formatPct(change / 6)} negative={change < 0} />
-            <MiniMetric
-              label="6h"
-              value={formatPct(change / 2)}
-              positive={change >= 0}
-              negative={change < 0}
-            />
-          </div>
-
-          <div id="ot-comments-section" className="rounded-2xl border border-border bg-card p-4">
+          {/* Comments */}
+          <section id="ot-comments-section" className="rounded-3xl bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-base font-semibold text-foreground">Comments</h3>
+                <h3 className="text-sm font-bold">Comments</h3>
               </div>
-              <span className="text-xs text-muted-foreground">{commentCount ?? 0} messages</span>
+              <span className="text-xs text-muted-foreground">{commentCount ?? 0}</span>
             </div>
             <CommentThread tokenId={tokenId} userId={user.id} />
-          </div>
+          </section>
         </div>
 
-        <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-          <div className="hidden rounded-2xl border border-border bg-card p-3 xl:block">
+        {/* Sidebar */}
+        <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+          <div className="hidden rounded-3xl bg-card p-4 xl:block">
             <TradePanel
               token={token}
               walletId={wallet?.id}
               userId={user.id}
               ousdBalance={Number(wallet?.ousd_balance ?? 0)}
               tokenBalance={holding ?? 0}
+              returnPath={`/opentoken/${tokenId}`}
             />
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="rounded-3xl bg-card p-4">
             <div className="mb-2 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-foreground">
-                <TrendingUp className="h-4 w-4 text-orange-400" />
-                <span>
-                  {token.status === "graduated" ? "Graduated to OpenDEX" : "Bonding curve → OpenDEX"}
-                </span>
+              <div className="flex items-center gap-2 font-semibold">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                {token.status === "graduated" ? "Graduated" : "Bonding curve"}
               </div>
-              <span className="text-orange-300">{progress}%</span>
+              <span className="font-semibold text-primary">{progress}%</span>
             </div>
             <div className="mb-2 h-2 rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-orange-400 transition-all"
+                className="h-full rounded-full bg-primary transition-all"
                 style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
               />
             </div>
@@ -418,7 +411,7 @@ function OpenTokenDetail() {
               {token.status === "graduated" ? (
                 <>
                   {" · "}
-                  <Link to="/swap" search={{ token: token.id }} className="text-primary hover:underline">
+                  <Link to="/swap" search={{ token: token.id }} className="font-semibold text-primary">
                     Trade on OpenDEX
                   </Link>
                 </>
@@ -426,91 +419,31 @@ function OpenTokenDetail() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Volume2 className="h-4 w-4 text-emerald-400" />
-              Voice chat
-            </div>
-            <div className="text-xs text-muted-foreground">Talk live with other {token.name} holders</div>
-            <Button className="mt-4 w-full rounded-xl bg-muted text-foreground hover:bg-muted">
-              Join voice chat
-            </Button>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-sm font-semibold text-foreground">Similar coins</div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                {similarTokens.length}+
-              </span>
-            </div>
-            <div className="space-y-3">
-              {similarTokens.slice(0, 5).map((item: any) => (
-                <Link
-                  key={item.id}
-                  to="/opentoken/$tokenId"
-                  params={{ tokenId: item.id }}
-                  className="flex items-center gap-3 rounded-xl px-1 py-1.5 transition hover:bg-muted"
-                >
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
-                    {item.logo_url ? (
-                      <img src={item.logo_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center bg-linear-to-br from-purple-600 to-purple-900 text-[10px] font-bold text-foreground">
-                        {item.symbol?.slice(0, 2)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-foreground">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">${item.symbol}</div>
-                  </div>
-                  <div className="text-right text-xs">
-                    <div className="text-foreground">{formatOUSD(item.market_cap, { compact: true })}</div>
-                    <div className="text-muted-foreground">{timeAgo(item.created_at)}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-3 text-sm font-semibold text-foreground">Token details</div>
+          <div className="rounded-3xl bg-card p-4">
+            <div className="mb-3 text-sm font-bold">Token details</div>
             <div className="space-y-3 text-sm">
               <DetailRow label="Security">
-                <div className="flex items-center gap-1.5">
-                  <span className={token.is_verified ? "text-green-400" : "text-yellow-400"}>
-                    {token.is_verified ? "Verified" : "Unverified"}
-                  </span>
-                  {!token.is_verified && <ShieldAlert className="h-3.5 w-3.5 text-yellow-400" />}
-                </div>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 font-semibold",
+                    token.is_verified ? "text-emerald-400" : "text-amber-400",
+                  )}
+                >
+                  {token.is_verified ? "Verified" : "Unverified"}
+                  {!token.is_verified && <ShieldAlert className="h-3.5 w-3.5" />}
+                </span>
               </DetailRow>
-              <DetailRow label="24h Volume">{formatOUSD(vol24, { compact: true })}</DetailRow>
-              <DetailRow label="Market cap">{formatOUSD(mcap, { compact: true })}</DetailRow>
-              <DetailRow label="Holders">{formatNumber(token.holder_count ?? 0, 0)}</DetailRow>
               <DetailRow label="Quote">OUSD</DetailRow>
-              {token.contract_address && (
-                <DetailRow label="Contract address">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(token.contract_address!);
-                      toast.success("Address copied");
-                    }}
-                  >
-                    {shortAddress(token.contract_address)}
-                    <Copy className="h-3 w-3" />
-                  </button>
-                </DetailRow>
-              )}
-              <div className="flex flex-wrap gap-2 pt-2">
+              <DetailRow label="Your balance">
+                {formatNumber(holding ?? 0, 4)} ${token.symbol}
+              </DetailRow>
+              <div className="flex flex-wrap gap-2 pt-1">
                 {token.website && (
                   <a
                     href={token.website}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-primary hover:bg-accent"
+                    className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-primary"
                   >
                     Website <ExternalLink className="h-3 w-3" />
                   </a>
@@ -528,15 +461,57 @@ function OpenTokenDetail() {
               </div>
             </div>
           </div>
+
+          {similarTokens.length > 0 && (
+            <div className="rounded-3xl bg-card p-4">
+              <div className="mb-3 text-sm font-bold">Similar coins</div>
+              <ul className="space-y-1">
+                {similarTokens.slice(0, 5).map((item: any) => (
+                  <li key={item.id}>
+                    <Link
+                      to="/opentoken/$tokenId"
+                      params={{ tokenId: item.id }}
+                      className="flex items-center gap-3 rounded-2xl px-1 py-2 press hover:bg-muted/60"
+                    >
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
+                        {item.logo_url ? (
+                          <img src={item.logo_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center bg-primary/20 text-[10px] font-bold text-primary">
+                            {item.symbol?.slice(0, 2)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold">{item.name}</div>
+                        <div className="text-xs text-muted-foreground">${item.symbol}</div>
+                      </div>
+                      <div className="text-right text-xs font-semibold tabular-nums">
+                        {formatOUSD(item.market_cap, { compact: true })}
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="ph-trade-bar border-t border-border bg-background/95 px-4 py-3 backdrop-blur-xl xl:hidden">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
-          <div className="text-xs text-muted-foreground">{formatOUSD(mcap, { compact: true })} market cap</div>
+      {/* Mobile trade bar */}
+      <div className="ph-trade-bar border-t border-border/60 bg-background/90 px-4 py-3 backdrop-blur-xl xl:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-bold tabular-nums">
+              {formatOUSD(price, { price: true })}
+            </div>
+            <div className={cn("text-xs font-semibold", up ? "text-emerald-400" : "text-red-400")}>
+              {formatPct(change)}
+            </div>
+          </div>
           <Button
-            className="rounded-full bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90"
-            onClick={() => setShowBuyPanel((v) => !v)}
+            className="h-11 min-w-28 rounded-full bg-primary px-8 font-bold text-primary-foreground"
+            onClick={() => setShowBuyPanel(true)}
           >
             Buy
           </Button>
@@ -545,9 +520,9 @@ function OpenTokenDetail() {
 
       {showBuyPanel && (
         <div className="fixed inset-0 z-60 flex flex-col justify-end xl:hidden">
-          <div className="absolute inset-0 bg-background/60" onClick={() => setShowBuyPanel(false)} />
-          <div className="relative z-10 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-4 md:mx-auto md:max-w-2xl">
-            <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-muted-foreground/40" />
+          <div className="absolute inset-0 bg-background/70" onClick={() => setShowBuyPanel(false)} />
+          <div className="relative z-10 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-3">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/40" />
             <TradePanel
               token={token}
               walletId={wallet?.id}
@@ -555,6 +530,7 @@ function OpenTokenDetail() {
               ousdBalance={Number(wallet?.ousd_balance ?? 0)}
               tokenBalance={holding ?? 0}
               onClose={() => setShowBuyPanel(false)}
+              returnPath={`/opentoken/${tokenId}`}
             />
           </div>
         </div>
@@ -563,24 +539,20 @@ function OpenTokenDetail() {
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent className="rounded-3xl border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Report token</DialogTitle>
+            <DialogTitle>Report token</DialogTitle>
           </DialogHeader>
           <Input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Why are you reporting this?"
-            className="rounded-xl border-border bg-muted text-foreground"
+            className="h-11 rounded-2xl border-0 bg-muted"
           />
           <DialogFooter>
-            <Button
-              variant="outline"
-              className="rounded-full border-border text-foreground/80"
-              onClick={() => setReportOpen(false)}
-            >
+            <Button variant="outline" className="rounded-full" onClick={() => setReportOpen(false)}>
               Cancel
             </Button>
             <Button
-              className="rounded-full"
+              className="rounded-full bg-primary text-primary-foreground"
               disabled={reason.trim().length < 3}
               onClick={submitReport}
             >
@@ -593,65 +565,22 @@ function OpenTokenDetail() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-  positive,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  positive?: boolean;
-}) {
+function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-foreground">{value}</div>
-      {sub ? (
-        <div className={cn("mt-1 text-xs", positive ? "text-green-400" : "text-muted-foreground")}>{sub}</div>
-      ) : null}
-    </div>
-  );
-}
-
-function MiniMetric({
-  label,
-  value,
-  positive,
-  negative,
-}: {
-  label: string;
-  value: string;
-  positive?: boolean;
-  negative?: boolean;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-3 text-center">
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div
-        className={cn(
-          "mt-1 text-sm font-semibold",
-          positive ? "text-green-400" : negative ? "text-red-400" : "text-foreground",
-        )}
-      >
-        {value}
+    <div className="rounded-2xl bg-card px-3 py-3 text-center">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
       </div>
+      <div className="mt-1 text-sm font-bold tabular-nums">{value}</div>
     </div>
   );
 }
 
-function DetailRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function DetailRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-muted-foreground">{label}</span>
-      <div className="text-right text-foreground">{children}</div>
+      <div className="text-right font-medium">{children}</div>
     </div>
   );
 }

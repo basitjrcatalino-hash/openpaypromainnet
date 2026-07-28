@@ -1,12 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, X, Settings2, Sparkles, Wallet as WalletIcon, Link2 } from "lucide-react";
+import { Loader2, X, Sparkles, Wallet as WalletIcon, Link2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buyOpenToken, sellOpenToken } from "@/lib/opentoken.functions";
-import { getOpenPayLinkStatus } from "@/lib/openpay-pro.functions";
+import {
+  createOpenPayTopupCharge,
+  getOpenPayLinkStatus,
+  settleOpenPayCharge,
+  settleOpenPayPayLinkTopup,
+} from "@/lib/openpay-pro.functions";
 import { topUpWithPi } from "@/lib/pi-network";
 import {
   curveFromTokenRow,
@@ -24,7 +29,7 @@ const BUY_METHODS = [
     id: "openpay_balance" as const,
     label: "OpenPay Balance",
     icon: WalletIcon,
-    desc: "Pay from your connected OpenPay account · real debit",
+    desc: "Pay / top up from connected OpenPay · same as Buy",
   },
   {
     id: "pi" as const,
@@ -35,10 +40,13 @@ const BUY_METHODS = [
 ];
 
 const BUY_PRESETS = [
-  { label: "10 OUSD", value: 10 },
-  { label: "50 OUSD", value: 50 },
-  { label: "100 OUSD", value: 100 },
+  { label: "10", value: 10 },
+  { label: "50", value: 50 },
+  { label: "100", value: 100 },
 ];
+
+const PENDING_CHARGE_KEY = "openpay_pending_charge";
+const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
 
 export function TradePanel({
   token,
@@ -48,6 +56,7 @@ export function TradePanel({
   tokenBalance,
   disabled,
   onClose,
+  returnPath,
 }: {
   token: Record<string, any>;
   walletId?: string;
@@ -56,14 +65,20 @@ export function TradePanel({
   tokenBalance: number;
   disabled?: boolean;
   onClose?: () => void;
+  /** Where OpenPay checkout should return (defaults to this token page). */
+  returnPath?: string;
 }) {
   const qc = useQueryClient();
   const buyFn = useServerFn(buyOpenToken);
   const sellFn = useServerFn(sellOpenToken);
   const getLink = useServerFn(getOpenPayLinkStatus);
+  const createCharge = useServerFn(createOpenPayTopupCharge);
+  const settleCharge = useServerFn(settleOpenPayCharge);
+  const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
   const [payMethod, setPayMethod] = useState<BuyMethod>("openpay_balance");
 
   const { data: openpayLink } = useQuery({
@@ -75,11 +90,142 @@ export function TradePanel({
   const curve = curveFromTokenRow(token);
   const amt = parseFloat(amount) || 0;
   const linked = !!openpayLink?.linked;
+  const needTopup = side === "buy" && payMethod === "openpay_balance" && amt > 0 && ousdBalance < amt;
+  const topupAmount = Math.max(0, Math.ceil((amt - ousdBalance) * 100) / 100);
+  const retPath = returnPath || `/opentoken/${token.id}`;
+
+  // Settle OpenPay return when landing back on this token page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const canceled = params.get("openpay_cancel");
+    const returned = params.get("openpay_return");
+    const chargeId =
+      params.get("openpay_charge") ||
+      (() => {
+        try {
+          return sessionStorage.getItem(PENDING_CHARGE_KEY);
+        } catch {
+          return null;
+        }
+      })();
+    const openpayRef = params.get("openpay_ref");
+    const openpayTx = params.get("openpay_tx");
+
+    if (canceled) {
+      toast.error("OpenPay payment canceled");
+      cleanReturnParams();
+      return;
+    }
+
+    if (!returned && !chargeId) return;
+
+    void (async () => {
+      try {
+        if (openpayRef || returned) {
+          let pending: { reference?: string; amount?: number } | null = null;
+          try {
+            pending = JSON.parse(sessionStorage.getItem(PENDING_PAYLINK_KEY) || "null");
+          } catch {
+            /* ignore */
+          }
+          const reference = openpayRef || pending?.reference;
+          if (reference) {
+            const r = await settlePayLink({
+              data: { reference, txId: openpayTx || undefined, fromReturn: true },
+            });
+            if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+            else toast.message((r as { message?: string }).message || "Confirming payment…");
+          }
+        }
+        if (chargeId) {
+          const r = await settleCharge({ data: { chargeId } });
+          if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+          else if (r.status) toast.message(`OpenPay charge status: ${r.status}`);
+        }
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ["active-wallet", userId] }),
+          qc.invalidateQueries({ queryKey: ["wallets"] }),
+        ]);
+      } catch (err) {
+        toast.error((err as Error).message || "Could not confirm OpenPay payment");
+      } finally {
+        try {
+          sessionStorage.removeItem(PENDING_CHARGE_KEY);
+          sessionStorage.removeItem(PENDING_PAYLINK_KEY);
+        } catch {
+          /* ignore */
+        }
+        cleanReturnParams();
+      }
+    })();
+  }, [settleCharge, settlePayLink, qc, userId]);
+
+  function cleanReturnParams() {
+    const u = new URL(window.location.href);
+    ["openpay_return", "openpay_cancel", "openpay_charge", "openpay_ref", "openpay_tx"].forEach((k) =>
+      u.searchParams.delete(k),
+    );
+    window.history.replaceState({}, "", u.pathname + u.search);
+  }
 
   const quote = useMemo(() => {
     if (side === "buy") return { kind: "buy" as const, ...quoteBuy(curve, amt) };
     return { kind: "sell" as const, ...quoteSell(curve, amt) };
   }, [curve, amt, side]);
+
+  async function payWithOpenPay(topupAmt: number) {
+    if (!walletId) {
+      toast.error("Create a wallet first");
+      return;
+    }
+    if (!linked) {
+      toast.error("Connect OpenPay in Settings first");
+      return;
+    }
+    if (topupAmt <= 0) {
+      toast.error("Enter an amount to pay");
+      return;
+    }
+    setPayBusy(true);
+    try {
+      const res = await createCharge({
+        data: {
+          amount: topupAmt,
+          origin: window.location.origin,
+          walletId,
+          returnPath: retPath,
+        },
+      });
+      if (res.mode === "checkout") {
+        const charge = res.charge;
+        if (!charge?.checkout_url || !charge?.id) {
+          throw new Error("OpenPay did not return a checkout URL");
+        }
+        try {
+          sessionStorage.setItem(PENDING_CHARGE_KEY, charge.id);
+        } catch {
+          /* ignore */
+        }
+        window.location.href = charge.checkout_url;
+        return;
+      }
+      const pending = {
+        reference: res.reference,
+        amount: res.amount,
+        partner_username: res.partner_username,
+      };
+      try {
+        sessionStorage.setItem(PENDING_PAYLINK_KEY, JSON.stringify(pending));
+      } catch {
+        /* ignore */
+      }
+      window.location.href = res.pay_url;
+    } catch (err) {
+      toast.error((err as Error).message || "OpenPay payment failed");
+      setPayBusy(false);
+    }
+  }
 
   async function executeBuy() {
     if (!walletId) {
@@ -97,7 +243,7 @@ export function TradePanel({
         return;
       }
       if (ousdBalance < amt) {
-        toast.error("Insufficient OUSD. Top up with OpenPay first.");
+        await payWithOpenPay(Math.max(amt - ousdBalance, amt));
         return;
       }
     }
@@ -176,11 +322,11 @@ export function TradePanel({
   if (graduated) {
     return (
       <div className="space-y-4 text-center">
-        <div className="text-sm font-semibold text-foreground">OpenDEX</div>
+        <div className="text-sm font-semibold">OpenDEX</div>
         <p className="text-sm text-muted-foreground">
           This token graduated from the bonding curve. Trade it on OpenDEX with OUSD pairs.
         </p>
-        <Button asChild className="w-full rounded-full">
+        <Button asChild className="h-12 w-full rounded-full bg-primary font-bold text-primary-foreground">
           <Link to="/swap" search={{ token: token.id }}>
             Trade on OpenDEX
           </Link>
@@ -201,37 +347,33 @@ export function TradePanel({
 
   const buyDisabled =
     busy ||
+    payBusy ||
     disabled ||
     !walletId ||
     amt <= 0 ||
     (payMethod === "openpay_balance" && !linked);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold text-foreground">
+          <div className="text-sm font-bold">
             {side === "buy" ? `Buy $${token.symbol}` : `Sell $${token.symbol}`}
           </div>
           <div className="text-xs text-muted-foreground">
-            Price {formatNumber(token.price_usd, token.price_usd < 0.01 ? 8 : 4)} OUSD
+            {formatNumber(token.price_usd, token.price_usd < 0.01 ? 8 : 4)} OUSD
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground">
-            <Settings2 className="h-4 w-4" />
-          </Button>
-          {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        {onClose && (
+          <button
+            type="button"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
@@ -242,8 +384,8 @@ export function TradePanel({
             setAmount("");
           }}
           className={cn(
-            "rounded-full py-2 text-sm font-medium transition-colors",
-            side === "buy" ? "bg-emerald-500 text-black" : "text-muted-foreground hover:text-foreground/80",
+            "rounded-full py-2.5 text-sm font-bold press",
+            side === "buy" ? "bg-primary text-primary-foreground" : "text-muted-foreground",
           )}
         >
           Buy
@@ -255,32 +397,26 @@ export function TradePanel({
             setAmount("");
           }}
           className={cn(
-            "rounded-full py-2 text-sm font-medium transition-colors",
-            side === "sell" ? "bg-red-600 text-foreground" : "text-muted-foreground hover:text-foreground/80",
+            "rounded-full py-2.5 text-sm font-bold press",
+            side === "sell" ? "bg-red-500 text-white" : "text-muted-foreground",
           )}
         >
           Sell
         </button>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-1 py-4">
-        <span className="text-5xl font-bold tabular-nums text-foreground">
-          {amount || "0"}
-        </span>
+      <div className="flex flex-col items-center justify-center gap-1 py-3">
+        <span className="text-5xl font-bold tabular-nums tracking-tight">{amount || "0"}</span>
         <span className="text-sm font-medium text-muted-foreground">OUSD</span>
       </div>
 
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">
-          {side === "buy" ? "OUSD" : `$${token.symbol}`}
-        </span>
+        <span className="text-muted-foreground">{side === "buy" ? "You pay" : `You sell`}</span>
         <button
           type="button"
-          className="text-emerald-400 hover:text-emerald-300"
+          className="font-semibold text-primary"
           onClick={() =>
-            setAmount(
-              String(side === "buy" ? Math.max(0, ousdBalance) : Math.max(0, tokenBalance)),
-            )
+            setAmount(String(side === "buy" ? Math.max(0, ousdBalance) : Math.max(0, tokenBalance)))
           }
         >
           Bal: {formatNumber(side === "buy" ? ousdBalance : tokenBalance, 4)}
@@ -295,35 +431,52 @@ export function TradePanel({
                 key={preset.label}
                 type="button"
                 onClick={() => setAmount(String(preset.value))}
-                className="flex-1 rounded-full bg-muted py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                className="flex-1 rounded-full bg-muted py-2.5 text-sm font-semibold press hover:bg-muted/80"
               >
                 {preset.label}
               </button>
             ))}
           </div>
 
-          <PaymentMethodPicker
-            methods={BUY_METHODS}
-            value={payMethod}
-            onChange={setPayMethod}
-          />
+          <PaymentMethodPicker methods={BUY_METHODS} value={payMethod} onChange={setPayMethod} />
 
           {payMethod === "openpay_balance" && (
-            <div className="rounded-2xl border border-border bg-muted/60 p-3 text-xs text-muted-foreground">
+            <div className="space-y-2 rounded-2xl bg-muted/60 p-3 text-xs text-muted-foreground">
               {linked ? (
                 <>
-                  Paying from connected OpenPay
-                  {openpayLink?.username
-                    ? ` @${openpayLink.username}`
-                    : openpayLink?.account_number
-                      ? ` · ${openpayLink.account_number}`
-                      : ""}
-                  . Your wallet OUSD balance is debited for this buy.
+                  <p>
+                    OpenPay connected
+                    {openpayLink?.username
+                      ? ` · @${openpayLink.username}`
+                      : openpayLink?.account_number
+                        ? ` · ${openpayLink.account_number}`
+                        : ""}
+                    . Buys debit your Pro OUSD; if balance is low we open OpenPay Pay (same as Top
+                    up).
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 w-full rounded-full border-border"
+                    disabled={payBusy || !walletId}
+                    onClick={() => void payWithOpenPay(amt > 0 ? amt : 25)}
+                  >
+                    {payBusy ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Add funds · Pay with OpenPay
+                    {amt > 0 ? ` (${formatNumber(amt, 2)})` : ""}
+                  </Button>
                 </>
               ) : (
                 <span className="flex flex-wrap items-center gap-2">
-                  Connect your OpenPay account first to buy with OpenPay Balance.
-                  <Link to="/settings" className="inline-flex items-center gap-1 font-medium text-emerald-400">
+                  Connect OpenPay to pay with your balance.
+                  <Link
+                    to="/settings"
+                    className="inline-flex items-center gap-1 font-semibold text-primary"
+                  >
                     <Link2 className="h-3.5 w-3.5" />
                     Settings → Connect
                   </Link>
@@ -332,8 +485,14 @@ export function TradePanel({
             </div>
           )}
 
+          {needTopup && linked && (
+            <div className="rounded-2xl bg-primary/10 px-3 py-2.5 text-xs text-foreground">
+              Need {formatNumber(topupAmount, 2)} more OUSD. Tap Buy to pay with OpenPay first.
+            </div>
+          )}
+
           {payMethod === "pi" && (
-            <div className="rounded-2xl border border-border bg-muted/60 p-3 text-xs text-muted-foreground">
+            <div className="rounded-2xl bg-muted/60 p-3 text-xs text-muted-foreground">
               Pay with Pi Network. 1 π = 1 OUSD credited instantly, then your buy executes.
             </div>
           )}
@@ -351,7 +510,7 @@ export function TradePanel({
               key={preset.label}
               type="button"
               onClick={() => setAmount(String(preset.value))}
-              className="flex-1 rounded-full bg-muted py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+              className="flex-1 rounded-full bg-muted py-2.5 text-sm font-semibold press"
             >
               {preset.label}
             </button>
@@ -365,7 +524,7 @@ export function TradePanel({
             <>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">You receive</span>
-                <span className="tabular-nums text-foreground">
+                <span className="font-semibold tabular-nums">
                   {formatNumber(quote.tokenOut, 4)} ${token.symbol}
                 </span>
               </div>
@@ -380,7 +539,7 @@ export function TradePanel({
             <>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">You receive</span>
-                <span className="tabular-nums text-foreground">
+                <span className="font-semibold tabular-nums">
                   {formatNumber(quote.piOut, 4)} OUSD
                 </span>
               </div>
@@ -402,10 +561,10 @@ export function TradePanel({
             type="button"
             onClick={() => onNumpad(key)}
             className={cn(
-              "flex h-14 items-center justify-center rounded-2xl text-xl font-medium text-foreground transition",
+              "flex h-14 items-center justify-center rounded-2xl text-xl font-semibold press",
               key === "backspace"
-                ? "bg-transparent text-muted-foreground hover:text-foreground"
-                : "bg-muted/40 hover:bg-muted",
+                ? "bg-transparent text-muted-foreground"
+                : "bg-muted/50 hover:bg-muted",
             )}
           >
             {key === "backspace" ? "‹" : key}
@@ -415,21 +574,23 @@ export function TradePanel({
 
       <Button
         className={cn(
-          "w-full rounded-full py-6 text-base font-semibold shadow-lg",
+          "h-14 w-full rounded-full text-base font-bold shadow-lg",
           side === "buy"
-            ? "bg-emerald-500 text-black shadow-emerald-900/30 hover:bg-emerald-400"
-            : "bg-red-600 text-foreground shadow-red-900/30 hover:bg-red-500",
+            ? "bg-primary text-primary-foreground"
+            : "bg-red-500 text-white hover:bg-red-500/90",
         )}
         disabled={side === "buy" ? buyDisabled : busy || disabled || !walletId || amt <= 0}
         onClick={submit}
       >
-        {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {(busy || payBusy) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {side === "buy"
           ? payMethod === "pi"
-            ? `Pay ${amt > 0 ? `${amt} OUSD` : ""} with Pi`
-            : linked
-              ? `Buy $${token.symbol}`
-              : "Connect OpenPay to continue"
+            ? `Pay ${amt > 0 ? `${amt} ` : ""}with Pi & Buy`
+            : !linked
+              ? "Connect OpenPay to continue"
+              : needTopup
+                ? `Pay ${formatNumber(topupAmount, 2)} OUSD with OpenPay`
+                : `Buy $${token.symbol}`
           : `Sell $${token.symbol}`}
       </Button>
     </div>

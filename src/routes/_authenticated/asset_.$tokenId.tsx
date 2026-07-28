@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
-import { PriceChart } from "@/components/opentoken";
+import { PriceChart, buildPegTicks } from "@/components/opentoken/PriceChart";
 import { cn } from "@/lib/utils";
 import {
   fetchActiveWallet,
@@ -105,6 +105,11 @@ function PhantomAssetDetail() {
       return data ?? [];
     },
   });
+
+  const chartTicks = useMemo(() => {
+    if (isOusd) return buildPegTicks(period, 1, period.length + 7);
+    return ticks;
+  }, [isOusd, period, ticks]);
 
   const meta = useMemo(() => {
     if (isOusd) {
@@ -246,32 +251,36 @@ function PhantomAssetDetail() {
           </div>
         </div>
 
-        {/* Chart */}
-        <div className="overflow-hidden rounded-2xl">
-          {isOusd ? (
-            <div className="grid h-48 place-items-center rounded-2xl border border-border bg-muted/40 text-sm text-muted-foreground">
-              Pegged at $1.00 · stablecoin
-            </div>
-          ) : (
-            <PriceChart ticks={ticks} mode="price" />
-          )}
-          <div className="mt-3 flex flex-wrap justify-center gap-1">
+        {/* Chart — Phantom-style green up / red down */}
+        <div className="-mx-4 overflow-hidden">
+          <PriceChart
+            ticks={chartTicks}
+            mode="price"
+            trend={up ? "up" : "down"}
+            height={200}
+          />
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1 px-4">
             {PERIODS.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold press",
                   period === p
-                    ? "bg-primary text-primary-foreground shadow-glow"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {p}
               </button>
             ))}
           </div>
+          {isOusd && (
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Pegged at $1.00 · stablecoin
+            </p>
+          )}
         </div>
 
         {/* Actions */}

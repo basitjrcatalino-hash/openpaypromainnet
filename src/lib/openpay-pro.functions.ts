@@ -74,6 +74,8 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         origin: z.string().url(),
         /** Wallet that should receive the credit — must be the activated one */
         walletId: z.string().uuid().optional(),
+        /** Path to return to after OpenPay checkout (e.g. /opentoken/:id) */
+        returnPath: z.string().max(200).optional(),
       })
       .parse(d),
   )
@@ -84,6 +86,12 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const origin = resolvePartnerRedirectOrigin(data.origin);
     const reference = `pro_topup_${userId.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
+    const returnPath =
+      data.returnPath && data.returnPath.startsWith("/") && !data.returnPath.startsWith("//")
+        ? data.returnPath
+        : "/topup";
+    const successUrl = `${origin}${returnPath}${returnPath.includes("?") ? "&" : "?"}openpay_return=1`;
+    const cancelUrl = `${origin}${returnPath}${returnPath.includes("?") ? "&" : "?"}openpay_cancel=1`;
 
     const creditWallet = await resolveCreditWallet<{ id: string; name?: string; address?: string }>(
       supabase,
@@ -118,8 +126,8 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         currency: "OUSD",
         description: `OUSD top-up · OpenPay Pro`,
         reference,
-        success_url: `${origin}/topup?openpay_return=1`,
-        cancel_url: `${origin}/topup?openpay_cancel=1`,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
       });
       if (!charge?.id) throw new Error("OpenPay checkout unavailable");
       charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
@@ -185,8 +193,8 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
       `?amount=${encodeURIComponent(data.amount.toFixed(2))}` +
       `&currency=OUSD` +
       `&note=${encodeURIComponent(reference)}` +
-      `&success_url=${encodeURIComponent(`${origin}/topup`)}` +
-      `&cancel_url=${encodeURIComponent(`${origin}/topup`)}`;
+      `&success_url=${encodeURIComponent(successUrl)}` +
+      `&cancel_url=${encodeURIComponent(cancelUrl)}`;
 
     // Persist pending so settle can credit the same activated wallet
     const notifications: Record<string, unknown> = {

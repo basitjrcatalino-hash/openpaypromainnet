@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import "@/lib/buffer-polyfill";
-import { ConnectBox } from "@phantom/react-sdk";
+import { lazy, Suspense, type ComponentType } from "react";
 import { Loader2 } from "lucide-react";
 import { usePhantomClientReady } from "@/components/phantom-provider";
 
@@ -9,7 +8,16 @@ import { usePhantomClientReady } from "@/components/phantom-provider";
  * redirectUrl is set dynamically to `${origin}/auth/callback` — allowlist that
  * exact URL (and Allowed Origin) in Phantom Portal for every deploy host.
  * Docs: https://docs.phantom.com/phantom-portal/configure-urls
+ *
+ * ConnectBox is lazy-loaded so @phantom/react-sdk (and CJS `buffer`) never
+ * enter the SSR module graph via routeTree.
  */
+const ConnectBox = lazy(() =>
+  import("@phantom/react-sdk").then((m) => ({
+    default: m.ConnectBox as ComponentType,
+  })),
+);
+
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
   head: () => ({ meta: [{ title: "Connecting Phantom — OpenPay Pro" }] }),
@@ -29,7 +37,11 @@ function PhantomAuthCallbackPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <ConnectBox />
+      <Suspense
+        fallback={<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+      >
+        <ConnectBox />
+      </Suspense>
     </div>
   );
 }

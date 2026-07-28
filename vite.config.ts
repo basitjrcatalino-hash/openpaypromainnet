@@ -20,8 +20,6 @@ const rpcWebsocketsBrowser = path.resolve(
   "node_modules/rpc-websockets/dist/index.browser.mjs",
 );
 
-const bufferPkg = path.resolve(rootDir, "node_modules/buffer/index.js");
-
 /**
  * Mirror Vercel/Supabase integration names into VITE_* for the browser bundle.
  * IMPORTANT: never assign empty strings — that poisons Lovable's envDefine and
@@ -66,15 +64,11 @@ export default defineConfig({
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
-        // Phantom / Solana expect the npm `buffer` package in the browser.
-        buffer: bufferPkg,
       },
-      dedupe: ["react", "react-dom", "buffer"],
+      dedupe: ["react", "react-dom"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
-      // Without prebundling, the browser gets raw module.exports and white-screens:
-      // "does not provide an export named 'jsx'".
       include: [
         "react",
         "react/jsx-runtime",
@@ -84,14 +78,10 @@ export default defineConfig({
         "@phantom/react-sdk",
         "buffer",
       ],
-      esbuildOptions: {
-        define: {
-          global: "globalThis",
-        },
-      },
     },
     ssr: {
-      // Prefer browser builds for edge/workerd when packages advertise them.
+      // Keep CJS `buffer` out of the SSR ESM runner (require is not defined).
+      external: ["buffer"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

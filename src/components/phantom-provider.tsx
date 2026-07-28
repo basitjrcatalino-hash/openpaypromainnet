@@ -8,8 +8,6 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import type { PhantomSDKConfig } from "@phantom/react-sdk";
-import "@/lib/buffer-polyfill";
 import {
   getPhantomProviderConfig,
   PHANTOM_APP_ICON,
@@ -24,7 +22,7 @@ export function usePhantomClientReady() {
 
 type PhantomSdk = {
   PhantomProvider: ComponentType<{
-    config: PhantomSDKConfig;
+    config: Record<string, unknown>;
     theme?: unknown;
     appIcon?: string;
     appName?: string;
@@ -35,8 +33,7 @@ type PhantomSdk = {
 
 /**
  * Client-only Phantom Connect provider.
- * Dynamically imports the SDK after Buffer is polyfilled so production does not
- * crash with: Cannot read properties of undefined (reading 'from').
+ * Loads Buffer first, then the SDK — keeps CJS `buffer` / @phantom off the SSR graph.
  */
 export function AppPhantomProvider({ children }: { children: ReactNode }) {
   const [sdk, setSdk] = useState<PhantomSdk | null>(null);
@@ -44,14 +41,18 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      // Ensure Buffer exists before any @solana/web3.js / Phantom module init.
-      await import("@/lib/buffer-polyfill");
-      const mod = await import("@phantom/react-sdk");
-      if (cancelled) return;
-      setSdk({
-        PhantomProvider: mod.PhantomProvider,
-        darkTheme: mod.darkTheme,
-      });
+      try {
+        const { ensureBuffer } = await import("@/lib/buffer-polyfill");
+        await ensureBuffer();
+        const mod = await import("@phantom/react-sdk");
+        if (cancelled) return;
+        setSdk({
+          PhantomProvider: mod.PhantomProvider as PhantomSdk["PhantomProvider"],
+          darkTheme: mod.darkTheme,
+        });
+      } catch (err) {
+        console.error("[phantom] failed to init", err);
+      }
     })();
     return () => {
       cancelled = true;

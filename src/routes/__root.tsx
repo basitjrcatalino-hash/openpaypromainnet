@@ -8,9 +8,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-// Must run before Phantom / Solana client code (Buffer.from).
-import "@/lib/buffer-polyfill";
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";

@@ -1,16 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
-import "@/lib/buffer-polyfill";
-import {
-  AddressType,
-  useAccounts,
-  useConnect,
-  useIsExtensionInstalled,
-  useModal,
-  usePhantom,
-} from "@phantom/react-sdk";
 import {
   OPENPAY_BRAND_BLUE,
   OPENPAY_LOGO_WHITE,
@@ -19,7 +10,11 @@ import {
 import { SOLANA_BRAND_PURPLE, startSolanaSignIn } from "@/lib/solana-auth";
 import { signInWithPi } from "@/lib/pi-network";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { getPhantomRedirectUrl, PHANTOM_APP_ICON } from "@/lib/phantom";
+import { PHANTOM_APP_ICON } from "@/lib/phantom";
+import {
+  PhantomContinueButton,
+  PhantomGoogleAppleLink,
+} from "@/components/phantom-auth-lazy";
 import { usePhantomClientReady } from "@/components/phantom-provider";
 import { cn } from "@/lib/utils";
 
@@ -97,17 +92,9 @@ function AuthOptionIcon({ id }: { id: AuthMethod }) {
   return <img src={PHANTOM_APP_ICON} width={22} height={22} alt="" className="rounded-full" />;
 }
 
-function phantomErrorMessage(err: unknown): string {
-  const message = (err as Error)?.message || String(err || "Phantom connect failed");
-  if (/failed to fetch|networkerror|load failed|cors/i.test(message)) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "this site";
-    return `Phantom blocked this origin. In Phantom Portal → Set Up, add Allowed Origin "${origin}" and Redirect URL "${getPhantomRedirectUrl()}".`;
-  }
-  return message;
-}
-
 function AuthPiPage() {
   const navigate = useNavigate();
+  const phantomReady = usePhantomClientReady();
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<AuthMethod | null>(null);
   const [busy, setBusy] = useState(false);
@@ -199,52 +186,43 @@ function AuthPiPage() {
                     } as CSSProperties
                   }
                   className={cn(
-                    "auth-option relative flex flex-col items-start gap-3 overflow-hidden rounded-2xl border p-3.5 text-left press",
-                    "auth-option-enter disabled:opacity-60",
+                    "auth-option relative flex flex-col items-start gap-3 overflow-hidden rounded-2xl border p-3.5 text-left",
+                    "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+                    "disabled:opacity-60",
                     isOn
-                      ? "auth-option-selected border-transparent"
-                      : "border-border/70 bg-muted/30 hover:bg-muted/50",
+                      ? "auth-option-selected"
+                      : "border-border/70 bg-muted/30 hover:border-border hover:bg-muted/45",
                     pulseId === opt.id && "auth-option-pulse",
                   )}
                 >
-                  {isOn ? (
-                    <span
-                      className="pointer-events-none absolute inset-0 -z-10 rounded-2xl transition-colors"
-                      style={{ backgroundColor: opt.accent }}
-                      aria-hidden
-                    />
-                  ) : null}
                   <span
                     className={cn(
-                      "grid h-11 w-11 place-items-center rounded-xl transition-transform duration-300",
-                      isOn ? "scale-105 bg-white/20" : "scale-100",
+                      "grid h-11 w-11 place-items-center rounded-xl transition-transform duration-200 ease-out",
+                      isOn ? "scale-[1.03]" : "scale-100",
                     )}
-                    style={isOn ? undefined : { backgroundColor: opt.accent }}
+                    style={{ backgroundColor: opt.accent }}
                   >
                     <AuthOptionIcon id={opt.id} />
                   </span>
                   <span className="min-w-0">
-                    <span
-                      className={cn("block text-sm font-semibold", !isOn && "text-foreground")}
-                      style={isOn ? { color: opt.accentFg } : undefined}
-                    >
-                      {opt.label}
-                    </span>
-                    <span
-                      className={cn("mt-0.5 block text-[11px] leading-snug", !isOn && "text-muted-foreground")}
-                      style={isOn ? { color: `${opt.accentFg}cc` } : undefined}
-                    >
+                    <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
                       {opt.desc}
                     </span>
                   </span>
                   <span
                     className={cn(
-                      "absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full transition-all duration-300",
-                      isOn ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                      "absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full transition-all duration-200 ease-out",
+                      isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
                     )}
-                    style={{ backgroundColor: isOn ? "rgba(255,255,255,0.25)" : undefined }}
+                    style={{
+                      backgroundColor: isOn
+                        ? `color-mix(in oklab, ${opt.accent} 18%, transparent)`
+                        : undefined,
+                      color: opt.accent,
+                    }}
                   >
-                    <Check className="h-3 w-3" style={{ color: opt.accentFg }} />
+                    <Check className="h-3 w-3" strokeWidth={2.5} />
                   </span>
                 </button>
               );
@@ -253,18 +231,27 @@ function AuthPiPage() {
 
           <div className="mt-5 space-y-2">
             {selected === "phantom" ? (
-              <PhantomContinueButton
-                busy={busy}
-                setBusy={setBusy}
-                accent={selectedOpt?.accent ?? "#AB9FF2"}
-                accentFg={selectedOpt?.accentFg ?? "#1a1330"}
-              />
+              phantomReady ? (
+                <>
+                  <PhantomContinueButton
+                    busy={busy}
+                    setBusy={setBusy}
+                    accent={selectedOpt?.accent ?? "#AB9FF2"}
+                    accentFg={selectedOpt?.accentFg ?? "#1a1330"}
+                  />
+                  <PhantomGoogleAppleLink busy={busy} />
+                </>
+              ) : (
+                <Button type="button" disabled className="h-12 w-full rounded-xl">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </Button>
+              )
             ) : (
               <Button
                 type="button"
                 disabled={!selected || busy}
                 onClick={() => selected && void continueWith(selected)}
-                className="auth-continue h-12 w-full rounded-xl text-base font-semibold hover:opacity-95 disabled:opacity-50"
+                className="h-12 w-full rounded-xl text-base font-semibold transition-[background-color,color,opacity] duration-200 ease-out hover:opacity-95 disabled:opacity-50"
                 style={
                   selectedOpt
                     ? { backgroundColor: selectedOpt.accent, color: selectedOpt.accentFg }
@@ -281,8 +268,6 @@ function AuthPiPage() {
                 )}
               </Button>
             )}
-
-            {selected === "phantom" ? <PhantomGoogleAppleLink busy={busy} /> : null}
           </div>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
@@ -335,143 +320,4 @@ async function handlePiSignIn(navigate: ReturnType<typeof useNavigate>) {
   const { username } = await signInWithPi();
   toast.success(`Signed in as @${username} via Pi Network`);
   void navigate({ to: "/dashboard" });
-}
-
-function PhantomContinueButton({
-  busy,
-  setBusy,
-  accent,
-  accentFg,
-}: {
-  busy: boolean;
-  setBusy: (v: boolean) => void;
-  accent: string;
-  accentFg: string;
-}) {
-  const ready = usePhantomClientReady();
-  if (!ready) {
-    return (
-      <Button type="button" disabled className="auth-continue h-12 w-full rounded-xl">
-        <Loader2 className="h-4 w-4 animate-spin" />
-      </Button>
-    );
-  }
-  return (
-    <PhantomContinueButtonInner
-      busy={busy}
-      setBusy={setBusy}
-      accent={accent}
-      accentFg={accentFg}
-    />
-  );
-}
-
-function PhantomContinueButtonInner({
-  busy,
-  setBusy,
-  accent,
-  accentFg,
-}: {
-  busy: boolean;
-  setBusy: (v: boolean) => void;
-  accent: string;
-  accentFg: string;
-}) {
-  const { open } = useModal();
-  const { connect, isConnecting } = useConnect();
-  const { isInstalled: extensionInstalled } = useIsExtensionInstalled();
-  const { isConnected, isLoading: phantomLoading, addresses } = usePhantom();
-  const accounts = useAccounts();
-  const bridgingRef = useRef(false);
-  const [bridging, setBridging] = useState(false);
-
-  const walletAddresses = accounts?.length ? accounts : addresses;
-  const solanaAddress = walletAddresses?.find(
-    (a) => a.addressType === AddressType.solana || String(a.addressType) === "Solana",
-  )?.address;
-
-  useEffect(() => {
-    if (!isConnected || !solanaAddress || bridgingRef.current || bridging) return;
-    let cancelled = false;
-    bridgingRef.current = true;
-    setBridging(true);
-    setBusy(true);
-    (async () => {
-      try {
-        await startSolanaSignIn({ redirectTo: "/dashboard" });
-      } catch (err) {
-        if (cancelled) return;
-        const message = (err as Error).message || "Phantom sign-in failed";
-        if (!/reject|cancel|denied/i.test(message)) toast.error(message);
-        bridgingRef.current = false;
-        setBridging(false);
-        setBusy(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isConnected, solanaAddress, bridging, setBusy]);
-
-  const waiting = busy || isConnecting || bridging || (isConnected && phantomLoading);
-
-  return (
-    <Button
-      type="button"
-      disabled={waiting}
-      onClick={async () => {
-        setBusy(true);
-        try {
-          if (extensionInstalled) {
-            await connect({ provider: "injected" });
-            return;
-          }
-          open();
-          setBusy(false);
-        } catch (err) {
-          toast.error(phantomErrorMessage(err));
-          setBusy(false);
-        }
-      }}
-      className="auth-continue h-12 w-full rounded-xl text-base font-semibold hover:opacity-95"
-      style={{ backgroundColor: accent, color: accentFg }}
-    >
-      {waiting ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <span className="inline-flex items-center gap-1.5">
-          {extensionInstalled ? "Connect Phantom extension" : "Continue with Phantom"}
-          <ChevronRight className="h-4 w-4" />
-        </span>
-      )}
-    </Button>
-  );
-}
-
-function PhantomGoogleAppleLink({ busy }: { busy: boolean }) {
-  const ready = usePhantomClientReady();
-  if (!ready) return null;
-  return <PhantomGoogleAppleLinkInner busy={busy} />;
-}
-
-function PhantomGoogleAppleLinkInner({ busy }: { busy: boolean }) {
-  const { open } = useModal();
-  const { isInstalled: extensionInstalled } = useIsExtensionInstalled();
-  if (!extensionInstalled) return null;
-  return (
-    <button
-      type="button"
-      disabled={busy}
-      onClick={() => {
-        try {
-          open();
-        } catch (err) {
-          toast.error(phantomErrorMessage(err));
-        }
-      }}
-      className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-60"
-    >
-      Or continue with Google / Apple
-    </button>
-  );
 }

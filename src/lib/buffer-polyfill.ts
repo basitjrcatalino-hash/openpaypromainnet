@@ -1,19 +1,28 @@
 /**
- * Phantom / @solana/web3.js expect Node's Buffer in the browser.
- * Without this, production throws: Cannot read properties of undefined (reading 'from')
- * i.e. Buffer.from(...) when Buffer is undefined.
+ * Client-only Buffer polyfill for Phantom / @solana/web3.js.
+ * Must NEVER be statically imported on the SSR graph — the `buffer` package is CJS
+ * and crashes Vite SSR with: ReferenceError: require is not defined.
  */
-import { Buffer } from "buffer";
+export async function ensureBuffer(): Promise<void> {
+  if (typeof window === "undefined") return;
 
-const g = globalThis as typeof globalThis & {
-  Buffer?: typeof Buffer;
-  global?: typeof globalThis;
-  process?: { env?: Record<string, string | undefined> };
-};
+  const g = globalThis as typeof globalThis & {
+    Buffer?: { from: (...args: unknown[]) => unknown };
+    global?: typeof globalThis;
+    process?: { env?: Record<string, string | undefined> };
+  };
 
-if (!g.Buffer) g.Buffer = Buffer;
-if (!g.global) g.global = g;
-if (!g.process) g.process = { env: {} };
-else if (!g.process.env) g.process.env = {};
+  if (typeof g.Buffer?.from === "function") {
+    if (!g.global) g.global = g;
+    if (!g.process) g.process = { env: {} };
+    else if (!g.process.env) g.process.env = {};
+    return;
+  }
 
-export { Buffer };
+  // @vite-ignore: keep CJS `buffer` out of the SSR dependency scanner
+  const mod = await import(/* @vite-ignore */ "buffer");
+  g.Buffer = mod.Buffer as typeof g.Buffer;
+  if (!g.global) g.global = g;
+  if (!g.process) g.process = { env: {} };
+  else if (!g.process.env) g.process.env = {};
+}

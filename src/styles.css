@@ -407,63 +407,50 @@
   min-height: 100%;
 }
 
-/* Auth method picker */
+/* Auth method picker — soft select (no solid fill / white-text flash) */
 @keyframes auth-select-enter {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-@keyframes auth-option-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-@keyframes auth-option-pulse {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes auth-continue-in {
-  from {
-    opacity: 0.55;
-    transform: translateY(6px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+@keyframes auth-option-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes auth-option-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--auth-accent, var(--primary)) 0%, transparent);
+  }
+  40% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--auth-accent, var(--primary)) 28%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--auth-accent, var(--primary)) 40%, transparent);
+  }
+}
 
 .auth-select-enter {
-  animation: auth-select-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: auth-select-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .auth-option-enter {
-  animation: auth-option-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: auth-option-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .auth-option-pulse {
-  animation: auth-option-pulse 0.4s ease-out;
+  animation: auth-option-pulse 0.45s ease-out;
 }
 .auth-option-selected {
-  box-shadow:
-    0 0 0 2px color-mix(in oklab, var(--auth-accent, var(--primary)) 55%, transparent),
-    0 12px 28px -12px color-mix(in oklab, var(--auth-accent, var(--primary)) 55%, transparent);
-}
-.auth-continue {
-  animation: auth-continue-in 0.3s ease-out both;
+  border-color: color-mix(in oklab, var(--auth-accent, var(--primary)) 50%, transparent);
+  background: color-mix(in oklab, var(--auth-accent, var(--primary)) 12%, var(--card));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--auth-accent, var(--primary)) 28%, transparent);
 }

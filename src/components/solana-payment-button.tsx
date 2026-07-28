@@ -3,7 +3,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import "@/lib/buffer-polyfill";
 
 import {
   SOLANA_MERCHANT_NAME,

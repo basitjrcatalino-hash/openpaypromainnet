@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
 import {
@@ -12,6 +12,7 @@ import {
   WALLETCONNECT_BRAND_BLUE,
   startWalletConnectSignIn,
 } from "@/lib/walletconnect-auth";
+import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-config";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
@@ -21,10 +22,17 @@ import {
   PhantomGoogleAppleLink,
 } from "@/components/phantom-auth-lazy";
 import { usePhantomClient } from "@/components/phantom-provider";
+import { AppWeb3AuthProvider } from "@/components/web3auth-provider";
 import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+
+const MetaMaskEmbeddedAuthPanel = lazy(() =>
+  import("@/components/metamask-embedded-auth").then((m) => ({
+    default: m.MetaMaskEmbeddedAuthPanel,
+  })),
+);
 
 export const Route = createFileRoute("/authpi")({
   ssr: false,
@@ -32,7 +40,13 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-type AuthMethod = "openpay" | "solana" | "pi" | "phantom" | "walletconnect";
+type AuthMethod =
+  | "openpay"
+  | "solana"
+  | "pi"
+  | "phantom"
+  | "walletconnect"
+  | "metamask";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -76,6 +90,13 @@ const AUTH_OPTIONS: {
     accent: WALLETCONNECT_BRAND_BLUE,
     accentFg: "#ffffff",
   },
+  {
+    id: "metamask",
+    label: "MetaMask",
+    desc: "Social OAuth · Embedded Wallets",
+    accent: METAMASK_EMBEDDED_BRAND,
+    accentFg: "#ffffff",
+  },
 ];
 
 function SolanaMark({ className }: { className?: string }) {
@@ -100,6 +121,17 @@ function WalletConnectMark({ className }: { className?: string }) {
   );
 }
 
+function MetaMaskMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M20.6 3.5 13.2 9l1.4-3.3L20.6 3.5Zm-17.2 0L12.7 9l-1.3-3.3L3.4 3.5Zm15.3 13.1-1.7 2.6 3.6.9.1-3.7-2 0Zm-13.9 0-2 0 .1 3.7 3.6-.9-1.7-2.6ZM18.9 9.8l1 2.1-2.4.1 1.4-2.2Zm-13.8 0L6.5 12l-2.4-.1 1-2.1ZM9.6 14.3l1.1 2.1-2.7.1 1.5-2.1Zm4.8 0 1.5 2.1.1.1-2.7-.1 1.1-2.1ZM8.5 9.8l1.8 3.4-1.1-.1-.7-3.3Zm7 0-.7 3.3-1.1.1 1.8-3.4ZM9.6 16.8l-.9 1.4 2.1-.1-.1-.4-1.2-1Zm4.8 0-1.2 1 .1.4 2.1.1.1-.1-.9-1.4Z"
+      />
+    </svg>
+  );
+}
+
 function AuthOptionIcon({ id }: { id: AuthMethod }) {
   if (id === "openpay") {
     return <img src={OPENPAY_LOGO_WHITE} width={22} height={22} alt="" />;
@@ -115,10 +147,21 @@ function AuthOptionIcon({ id }: { id: AuthMethod }) {
   if (id === "walletconnect") {
     return <WalletConnectMark className="h-5 w-5 text-white" />;
   }
+  if (id === "metamask") {
+    return <MetaMaskMark className="h-5 w-5 text-white" />;
+  }
   return <img src={PHANTOM_APP_ICON} width={22} height={22} alt="" className="rounded-full" />;
 }
 
 function AuthPiPage() {
+  return (
+    <AppWeb3AuthProvider>
+      <AuthPiPageInner />
+    </AppWeb3AuthProvider>
+  );
+}
+
+function AuthPiPageInner() {
   const navigate = useNavigate();
   const { ready: phantomReady, status: phantomStatus, error: phantomError, retry: retryPhantom } =
     usePhantomClient();
@@ -145,7 +188,6 @@ function AuthPiPage() {
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  // Pi Browser: OpenPay + Pi only. External browsers: all four methods.
   const inPiBrowser = isPiBrowser();
   const visibleOptions = inPiBrowser
     ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi")
@@ -160,6 +202,7 @@ function AuthPiPage() {
   async function continueWith(method: AuthMethod) {
     if (busy) return;
     if (!visibleOptions.some((o) => o.id === method)) return;
+    if (method === "metamask" || method === "phantom") return;
     setBusy(true);
     try {
       if (method === "openpay") {
@@ -282,7 +325,23 @@ function AuthPiPage() {
           </div>
 
           <div className="mt-5 space-y-2">
-            {selected === "phantom" ? (
+            {selected === "metamask" ? (
+              <Suspense
+                fallback={
+                  <Button type="button" disabled className="h-12 w-full rounded-xl">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading MetaMask…
+                  </Button>
+                }
+              >
+                <MetaMaskEmbeddedAuthPanel
+                  busy={busy}
+                  setBusy={setBusy}
+                  accent={selectedOpt?.accent ?? METAMASK_EMBEDDED_BRAND}
+                  accentFg={selectedOpt?.accentFg ?? "#ffffff"}
+                />
+              </Suspense>
+            ) : selected === "phantom" ? (
               phantomReady ? (
                 <>
                   <PhantomContinueButton

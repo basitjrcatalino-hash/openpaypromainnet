@@ -53,6 +53,7 @@ import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth
 import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
+import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
@@ -293,6 +294,11 @@ const ApiPublicWalletconnectAuthRoute =
     path: '/api/public/walletconnect-auth',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
+  id: '/api/public/web3auth-auth',
+  path: '/api/public/web3auth-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
   id: '/openpay/callback',
   path: '/openpay/callback',
@@ -410,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
+  '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
+  '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -528,6 +536,7 @@ export interface FileRoutesById {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
+  '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -588,6 +597,7 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/walletconnect-auth'
+    | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/walletconnect-auth'
+    | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
@@ -705,6 +716,7 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/walletconnect-auth'
+    | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/_authenticated/openpay/connect/callback'
@@ -740,6 +752,7 @@ export interface RootRouteChildren {
   ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
+  ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
@@ -1060,6 +1073,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/web3auth-auth': {
+      id: '/api/public/web3auth-auth'
+      path: '/api/public/web3auth-auth'
+      fullPath: '/api/public/web3auth-auth'
+      preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/openpay/callback': {
       id: '/auth/openpay/callback'
       path: '/openpay/callback'
@@ -1283,6 +1303,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
+  ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,

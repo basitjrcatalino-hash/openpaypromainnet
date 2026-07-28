@@ -38,6 +38,7 @@ const sendSearchSchema = z.object({
   amount: z.string().optional(),
   asset: z.enum(["OUSD", "PI"]).optional(),
   token: z.string().uuid().optional(),
+  rail: z.enum(["wallet", "openpay"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/send")({
@@ -82,7 +83,7 @@ function SendPage() {
 
   const [step, setStep] = useState<Step>("asset");
   const [busy, setBusy] = useState(false);
-  const [rail, setRail] = useState<Rail>("wallet");
+  const [rail, setRail] = useState<Rail>(search.rail === "openpay" ? "openpay" : "wallet");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [to, setTo] = useState(search.to ?? "");
   const [amount, setAmount] = useState(search.amount ?? "");
@@ -233,10 +234,13 @@ function SendPage() {
   // Deep-link: preselect asset / token and jump to recipient
   useEffect(() => {
     if (deepLinkHandled || holdingsLoading) return;
-    if (!search.token && !search.asset && !search.to && !search.amount) {
+    if (!search.token && !search.asset && !search.to && !search.amount && !search.rail) {
       setDeepLinkHandled(true);
       return;
     }
+
+    if (search.rail === "openpay") setRail("openpay");
+    else if (search.rail === "wallet") setRail("wallet");
 
     if (search.token) {
       const key = `TOKEN:${search.token}`;
@@ -256,8 +260,25 @@ function SendPage() {
       return;
     }
 
+    if (search.to) {
+      setSelectedKey("OUSD");
+      setStep("recipient");
+      setDeepLinkHandled(true);
+      return;
+    }
+
     setDeepLinkHandled(true);
-  }, [search.token, search.asset, search.to, search.amount, assets, holdingsLoading, deepLinkHandled]);
+  }, [search.token, search.asset, search.to, search.amount, search.rail, assets, holdingsLoading, deepLinkHandled]);
+
+  // After deep-link / scan into OpenPay rail, resolve account preview
+  useEffect(() => {
+    if (!deepLinkHandled) return;
+    if (rail !== "openpay") return;
+    if (!to.trim()) return;
+    if (opPreview || opError) return;
+    void verifyOpenPay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkHandled, rail, to]);
 
   useEffect(() => {
     if (selected?.kind !== "OUSD" && rail === "openpay") setRail("wallet");
@@ -273,9 +294,45 @@ function SendPage() {
 
   function applyScan(text: string) {
     const p = parsePaymentQr(text);
+    if (!p.to) {
+      toast.error("Invalid QR — no address or account found");
+      return;
+    }
     setTo(p.to);
+    setOpPreview(null);
+    setOpError(null);
     if (p.amount) setAmount(p.amount);
-    toast.success("Scanned");
+    if (p.asset && (p.asset === "OUSD" || p.asset === "PI")) {
+      setSelectedKey(p.asset);
+    }
+    // Auto-select rail from QR type (Pro wallet vs OpenPay)
+    if (p.rail === "openpay") {
+      if (selected?.kind && selected.kind !== "OUSD") {
+        setSelectedKey("OUSD");
+      } else if (!selectedKey || selectedKey === "PI") {
+        setSelectedKey("OUSD");
+      }
+      setRail("openpay");
+      toast.success("OpenPay account scanned");
+      // Resolve preview after state settles
+      window.setTimeout(() => {
+        void (async () => {
+          try {
+            const identifier = p.to.trim().replace(/^@+/, "");
+            const r = await resolveOP({ data: { identifier } });
+            if (r.ok) setOpPreview(r.account);
+            else setOpError(r.error);
+          } catch (e) {
+            setOpError((e as Error).message);
+          }
+        })();
+      }, 0);
+    } else {
+      setRail("wallet");
+      toast.success(
+        p.kind === "pro_wallet" ? "OpenPay Pro wallet scanned" : "QR scanned",
+      );
+    }
   }
 
   async function verifyOpenPay() {
@@ -503,26 +560,29 @@ function SendPage() {
                   setOpError(null);
                 }}
                 onBlur={rail === "openpay" ? verifyOpenPay : undefined}
-                placeholder={rail === "openpay" ? "OP…" : "0x… or @username"}
+                placeholder={rail === "openpay" ? "OP… or @username" : "0x… or @username"}
                 className="h-12 rounded-2xl"
                 autoFocus
               />
-              {rail === "wallet" && (
-                <QrScannerButton
-                  onResult={applyScan}
-                  trigger={
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-12 w-12 shrink-0 rounded-2xl"
-                      aria-label="Scan QR"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              )}
+              <QrScannerButton
+                onResult={applyScan}
+                hint={
+                  rail === "openpay"
+                    ? "Scan OpenPay OP account, @username, or pay link"
+                    : "Scan OpenPay Pro wallet address or payment QR"
+                }
+                trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 shrink-0 rounded-2xl"
+                    aria-label="Scan QR"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                }
+              />
             </div>
             {rail === "openpay" && (
               <p className="mt-2 text-xs text-muted-foreground">

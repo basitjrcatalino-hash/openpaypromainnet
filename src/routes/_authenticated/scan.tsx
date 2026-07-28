@@ -70,16 +70,27 @@ function ScanPage() {
     if (!parsed.to) {
       handled.current = false;
       if (alive.current) toast.error("Invalid QR code");
+      // Restart camera so user can try another code
+      if (alive.current) setCamKey((k) => k + 1);
       return;
     }
 
-    if (alive.current) toast.success("QR scanned");
+    if (alive.current) {
+      toast.success(
+        parsed.rail === "openpay"
+          ? "OpenPay account scanned"
+          : parsed.kind === "pro_wallet"
+            ? "OpenPay Pro wallet scanned"
+            : "QR scanned",
+      );
+    }
     void navigate({
       to: "/send",
       search: {
         to: parsed.to,
+        rail: parsed.rail,
         ...(parsed.amount ? { amount: parsed.amount } : {}),
-        ...(parsed.asset ? { asset: parsed.asset } : {}),
+        ...(parsed.asset ? { asset: parsed.asset } : { asset: "OUSD" as const }),
       },
     });
   };
@@ -159,7 +170,7 @@ function ScanPage() {
 
       <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4">
         <p className="mb-6 text-center text-sm text-white/70">
-          Scan a wallet address or payment QR to send
+          Scan OpenPay Pro wallet, OpenPay OP / @username, or pay link
         </p>
         <div className="mx-auto flex max-w-xs items-center justify-center gap-8">
           <button

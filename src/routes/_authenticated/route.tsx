@@ -11,7 +11,6 @@ import {
   Wallet,
   Compass,
   Settings as SettingsIcon,
-  Sparkles,
   LogOut,
   Menu,
   X,
@@ -25,6 +24,7 @@ import {
   CheckCircle2,
   ScrollText,
   BookOpen,
+  Coins,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -46,6 +46,8 @@ import {
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
+import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
+import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -59,7 +61,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
-  { to: "/opentoken/create", label: "Create", icon: Sparkles },
+  { to: "/tokens", label: "Tokens", icon: Coins },
   { to: "/opentoken", label: "Home", icon: Compass },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
@@ -69,10 +71,11 @@ function navActive(pathname: string, to: string) {
   return (
     pathname === to ||
     (to === "/dashboard" && pathname === "/") ||
+    (to === "/tokens" &&
+      (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
-      !pathname.startsWith("/opentoken/create")) ||
-    (to === "/opentoken/create" && pathname.startsWith("/opentoken/create"))
+      !pathname.startsWith("/opentoken/create"))
   );
 }
 
@@ -82,6 +85,7 @@ function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const qc = useQueryClient();
   const hideChrome = pathname === "/scan";
+  const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
   const txNotes = useTransactionNotifications(user.id);
 
@@ -131,115 +135,139 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
-      {!hideChrome && (
-        <header className="ph-header safe-pt sticky top-0 z-40 flex items-center justify-between border-b border-border/40 px-4 py-3 md:hidden">
-          <Link to="/dashboard" className="text-sm font-bold tracking-tight">
-            OpenPay Pro
-          </Link>
-          <div className="flex items-center gap-1.5">
-            <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
-            <button
-              onClick={() => setMobileOpen((v) => !v)}
-              className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground press"
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </header>
-      )}
-
-      <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
+    <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
+      <div className="relative min-h-screen bg-background text-foreground">
         {!hideChrome && (
-          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 md:flex md:flex-col">
-            <SidebarInner
-              wallets={wallets}
-              activeWallet={activeWallet}
-              profile={profile}
-              pathname={pathname}
-              onSwitchWallet={switchWallet}
-              unread={txNotes.unread}
-              onOpenNotifications={() => setNotifOpen(true)}
+          <>
+            <header
+              className={cn(
+                "ph-header safe-pt fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-border/40 px-4 py-3 transition-transform duration-300 ease-out md:hidden",
+                chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
+              )}
+            >
+              <Link to="/dashboard" className="text-sm font-bold tracking-tight">
+                OpenPay Pro
+              </Link>
+              <div className="flex items-center gap-1.5">
+                <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
+                <button
+                  onClick={() => setMobileOpen((v) => !v)}
+                  className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground press"
+                  aria-label="Toggle menu"
+                >
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+            </header>
+            {/* Spacer matches fixed mobile header height */}
+            <div
+              className="md:hidden"
+              style={{ height: "calc(3.25rem + env(safe-area-inset-top, 0px))" }}
+              aria-hidden
             />
-          </aside>
+          </>
         )}
 
-        {mobileOpen && !hideChrome && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            <div
-              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
-              onClick={() => setMobileOpen(false)}
-            />
-            <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
+        <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
+          {!hideChrome && (
+            <aside className="sticky top-0 hidden h-screen w-80 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 md:flex md:flex-col">
               <SidebarInner
                 wallets={wallets}
                 activeWallet={activeWallet}
                 profile={profile}
                 pathname={pathname}
-                onClose={() => setMobileOpen(false)}
                 onSwitchWallet={switchWallet}
                 unread={txNotes.unread}
-                onOpenNotifications={() => {
-                  setMobileOpen(false);
-                  setNotifOpen(true);
-                }}
+                onOpenNotifications={() => setNotifOpen(true)}
               />
             </aside>
-          </div>
-        )}
-
-        <main
-          className={cn(
-            "ot-phantom min-w-0 flex-1",
-            hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
           )}
-        >
-          <Outlet />
-        </main>
-      </div>
 
-      {!hideChrome && (
-        <nav className="ph-tabbar fixed inset-x-0 bottom-0 z-50 md:hidden" aria-label="Primary">
-          <div className="mx-auto grid max-w-md grid-cols-5 items-center px-1" style={{ height: "var(--ph-tabbar-content)" }}>
-            {NAV.map((item) => {
-              const Icon = item.icon;
-              const active = navActive(pathname, item.to);
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  preload="intent"
-                  className={cn(
-                    "flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold leading-none press",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <span
+          {mobileOpen && !hideChrome && (
+            <div className="fixed inset-0 z-50 md:hidden">
+              <div
+                className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+                onClick={() => setMobileOpen(false)}
+              />
+              <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
+                <SidebarInner
+                  wallets={wallets}
+                  activeWallet={activeWallet}
+                  profile={profile}
+                  pathname={pathname}
+                  onClose={() => setMobileOpen(false)}
+                  onSwitchWallet={switchWallet}
+                  unread={txNotes.unread}
+                  onOpenNotifications={() => {
+                    setMobileOpen(false);
+                    setNotifOpen(true);
+                  }}
+                />
+              </aside>
+            </div>
+          )}
+
+          <main
+            className={cn(
+              "ot-phantom min-w-0 flex-1",
+              hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
+            )}
+          >
+            <Outlet />
+          </main>
+        </div>
+
+        {!hideChrome && (
+          <nav
+            className={cn(
+              "ph-tabbar fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out md:hidden",
+              chromeVisible ? "translate-y-0" : "translate-y-full",
+            )}
+            aria-label="Primary"
+          >
+            <div
+              className="mx-auto grid max-w-md grid-cols-5 items-center px-1"
+              style={{ height: "var(--ph-tabbar-content)" }}
+            >
+              {NAV.map((item) => {
+                const Icon = item.icon;
+                const active = navActive(pathname, item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    preload="intent"
                     className={cn(
-                      "grid h-8 w-12 place-items-center rounded-full transition-colors",
-                      active && "bg-primary/15",
+                      "flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold leading-none press",
+                      active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
-                    <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
-                  </span>
-                  <span className="px-0.5">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      )}
+                    <span
+                      className={cn(
+                        "grid h-8 w-12 place-items-center rounded-full transition-colors",
+                        active && "bg-primary/15",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+                    </span>
+                    <span className="px-0.5">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
 
-      <NotificationCenter
-        open={notifOpen}
-        onOpenChange={setNotifOpen}
-        items={txNotes.items}
-        onMarkAll={txNotes.markAll}
-        onClear={txNotes.clearAll}
-        onMarkOne={txNotes.markOneRead}
-      />
-    </div>
+        <NotificationCenter
+          open={notifOpen}
+          onOpenChange={setNotifOpen}
+          items={txNotes.items}
+          onMarkAll={txNotes.markAll}
+          onClear={txNotes.clearAll}
+          onMarkOne={txNotes.markOneRead}
+        />
+      </div>
+    </ChromeVisibleProvider>
   );
 }
 

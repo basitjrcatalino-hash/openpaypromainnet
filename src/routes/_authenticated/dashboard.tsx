@@ -546,7 +546,7 @@ function Dashboard() {
             </ul>
           )}
           <Link
-            to="/opentoken"
+            to="/tokens"
             className="mt-2 flex items-center justify-center gap-2 py-3 text-sm font-semibold text-primary press"
           >
             Manage token list

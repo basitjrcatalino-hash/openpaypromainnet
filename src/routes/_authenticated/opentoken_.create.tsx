@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -11,14 +11,14 @@ import {
   ChevronRight,
   Image as ImageIcon,
   Loader2,
-  Upload,
+  Sparkles,
   Info,
   Gift,
   Zap,
   CircleDollarSign,
   Wallet,
-  X,
-  Plus,
+  Settings2,
+  BadgeCheck,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +63,9 @@ const schema = z.object({
 
 type Recipient = { address: string; pct: number; label?: string };
 
+const fieldClass =
+  "mt-1.5 h-11 rounded-2xl border-0 bg-muted px-3.5 text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/40";
+
 function CreateOpenTokenPage() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
@@ -75,6 +78,9 @@ function CreateOpenTokenPage() {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [logoDrag, setLogoDrag] = useState(false);
+  const [bannerDrag, setBannerDrag] = useState(false);
   const [form, setForm] = useState({
     name: "",
     symbol: "",
@@ -92,33 +98,37 @@ function CreateOpenTokenPage() {
     mintable: false,
   });
 
-  // Pump.fun-style creator rewards
   const [shareRewards, setShareRewards] = useState(false);
   const [rewardsDialogOpen, setRewardsDialogOpen] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([
     { address: user.id, pct: 100, label: "You (Creator)" },
   ]);
 
-  // Feature toggles
   const [mayhemMode, setMayhemMode] = useState(false);
   const [cashBack, setCashBack] = useState(false);
-  const [pairWithOUSD, setPairWithOUSD] = useState(false);
+  const [pairWithOUSD, setPairWithOUSD] = useState(true);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: () => fetchActiveWallet<{ id: string; ousd_balance: number }>(supabase, user.id),
   });
 
+  const ousdBal = Number(wallet?.ousd_balance ?? 0);
+  const canAfford = ousdBal >= DEFAULT_LAUNCH_FEE_OUSD;
+
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  async function onUpload(e: React.ChangeEvent<HTMLInputElement>, type: "logo" | "banner") {
-    const file = e.target.files?.[0];
+  async function handleFile(file: File | undefined, type: "logo" | "banner") {
     if (!file) return;
     const maxSize = type === "banner" ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error(`Max ${type === "banner" ? "5" : "15"}MB`);
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
       return;
     }
     type === "banner" ? setUploadingBanner(true) : setUploading(true);
@@ -133,6 +143,10 @@ function CreateOpenTokenPage() {
       const ref = type === "banner" ? bannerRef : logoRef;
       if (ref.current) ref.current.value = "";
     }
+  }
+
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>, type: "logo" | "banner") {
+    await handleFile(e.target.files?.[0], type);
   }
 
   function goConfirm(e: React.FormEvent) {
@@ -150,6 +164,9 @@ function CreateOpenTokenPage() {
       toast.error(parsed.error.issues[0]?.message || "Invalid form");
       return;
     }
+    if (!form.logo_url) {
+      toast.message("Tip: add a logo so your coin stands out");
+    }
     set("symbol", parsed.data.symbol);
     setStep("confirm");
   }
@@ -159,8 +176,7 @@ function CreateOpenTokenPage() {
       toast.error("Create a wallet first");
       return;
     }
-    const ousdBalance = Number(wallet.ousd_balance ?? 0);
-    if (ousdBalance < DEFAULT_LAUNCH_FEE_OUSD) {
+    if (!canAfford) {
       toast.error(`Launch fee is ${DEFAULT_LAUNCH_FEE_OUSD} OUSD — insufficient available balance`);
       return;
     }
@@ -172,6 +188,7 @@ function CreateOpenTokenPage() {
           symbol: form.symbol.toUpperCase(),
           description: form.description || null,
           logo_url: form.logo_url || null,
+          banner_url: form.banner_url || null,
           website: form.website || null,
           twitter: form.twitter || null,
           telegram: form.telegram || null,
@@ -185,7 +202,7 @@ function CreateOpenTokenPage() {
         },
       });
       toast.success(`$${created.symbol} launched`);
-      void navigate({ to: "/opentoken/$tokenId", params: { tokenId: created.id } });
+      void navigate({ to: "/asset/$tokenId", params: { tokenId: created.id } });
     } catch (err) {
       toast.error((err as Error).message || "Launch failed");
     } finally {
@@ -193,18 +210,29 @@ function CreateOpenTokenPage() {
     }
   }
 
-  /* ── confirm step ─────────────────────────────────────────────── */
   if (step === "confirm") {
     return (
-      <div className="ot-phantom mx-auto max-w-lg animate-page-in space-y-4 px-4 py-6">
-        <Button
+      <div className="ot-phantom mx-auto max-w-lg animate-page-in space-y-5 pb-8 pt-2">
+        <button
           type="button"
-          variant="ghost"
-          className="rounded-full text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground press"
           onClick={() => setStep("form")}
         >
-          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
-        </Button>
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
+        <div className="overflow-hidden rounded-3xl bg-muted/40">
+          {form.logo_url ? (
+            <img src={form.logo_url} alt="" className="aspect-video w-full object-cover" />
+          ) : (
+            <div className="grid aspect-video place-items-center bg-primary/10 text-primary">
+              <Sparkles className="h-10 w-10" />
+            </div>
+          )}
+          <div className="px-5 py-4">
+            <div className="text-lg font-bold">{form.name}</div>
+            <div className="text-sm text-muted-foreground">${form.symbol}</div>
+          </div>
+        </div>
         <FairLaunchConfirm
           name={form.name}
           symbol={form.symbol}
@@ -213,71 +241,90 @@ function CreateOpenTokenPage() {
           onBack={() => setStep("form")}
           onConfirm={launch}
         />
+        {(mayhemMode || cashBack || shareRewards || pairWithOUSD) && (
+          <div className="rounded-2xl bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
+            Launch options:{" "}
+            {[
+              pairWithOUSD && "OUSD pair",
+              mayhemMode && "Mayhem",
+              cashBack && "Cash back",
+              shareRewards && `${recipients.length} reward recipient(s)`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+        )}
       </div>
     );
   }
 
-  /* ── main form ────────────────────────────────────────────────── */
   return (
-    <div className="ot-phantom mx-auto max-w-4xl animate-page-in px-1 pb-8 pt-2">
-      {/* top bar */}
-      <div className="flex items-center gap-3 pb-5">
-        <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
-          <Link to="/opentoken">
+    <div className="ot-phantom mx-auto max-w-4xl animate-page-in pb-10 pt-1">
+      <div className="mb-6 flex items-start gap-3">
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="mt-0.5 h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Link to="/tokens">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Create new coin</h1>
-          <p className="text-xs text-muted-foreground">
-            Choose carefully, these can't be changed once the coin is created.
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold tracking-tight">Create new coin</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose carefully — name, ticker, and media can&apos;t be changed after launch.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        <form onSubmit={goConfirm} className="order-2 space-y-5 lg:order-1">
-          {/* ── coin details card ────────────────────────────────── */}
-          <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
-            <div className="text-sm font-semibold text-foreground">Coin details</div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <form onSubmit={goConfirm} className="order-2 space-y-4 lg:order-1">
+          {/* Coin details */}
+          <section className="space-y-4 rounded-3xl bg-card p-5">
+            <div className="text-[13px] font-semibold text-foreground">Coin details</div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label className="text-muted-foreground">Coin name</Label>
+                <Label className="text-xs text-muted-foreground">Coin name</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
                   placeholder="Droplink"
-                  className="mt-1 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
+                  className={fieldClass}
                   maxLength={60}
                 />
               </div>
               <div>
-                <Label className="text-muted-foreground">Ticker</Label>
+                <Label className="text-xs text-muted-foreground">Ticker</Label>
                 <Input
                   value={form.symbol}
                   onChange={(e) =>
                     set("symbol", e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
                   }
                   placeholder="ETE"
-                  className="mt-1 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
+                  className={cn(fieldClass, "font-semibold tracking-wide")}
                   maxLength={10}
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-muted-foreground">Description (Optional)</Label>
+              <Label className="text-xs text-muted-foreground">Description (optional)</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => set("description", e.target.value.slice(0, 1000))}
-                className="mt-1 min-h-20 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
+                className="mt-1.5 min-h-24 rounded-2xl border-0 bg-muted px-3.5 py-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
                 placeholder="What is this coin about?"
               />
+              <div className="mt-1 text-right text-[10px] text-muted-foreground">
+                {form.description.length}/1000
+              </div>
             </div>
 
             <div>
-              <Label className="text-muted-foreground">Category</Label>
+              <Label className="text-xs text-muted-foreground">Category</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {OT_CATEGORIES.map((c) => (
                   <button
@@ -285,10 +332,10 @@ function CreateOpenTokenPage() {
                     type="button"
                     onClick={() => set("category", c)}
                     className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      "rounded-full px-3.5 py-2 text-xs font-semibold press",
                       form.category === c
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-accent",
+                        : "bg-muted text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {OT_CATEGORY_LABELS[c]}
@@ -296,31 +343,68 @@ function CreateOpenTokenPage() {
                 ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* ── logo upload ──────────────────────────────────────── */}
-          <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
+          {/* Logo upload */}
+          <section className="space-y-3 rounded-3xl bg-card p-5">
+            <div className="text-[13px] font-semibold">Artwork</div>
             <div
-              className="cursor-pointer rounded-2xl border border-dashed border-border bg-muted/50 p-8 text-center transition hover:border-border"
+              className={cn(
+                "relative cursor-pointer rounded-3xl border border-dashed p-8 text-center transition",
+                logoDrag
+                  ? "border-primary bg-primary/10"
+                  : "border-border/80 bg-muted/40 hover:border-primary/40 hover:bg-muted/60",
+              )}
               onClick={() => logoRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setLogoDrag(true);
+              }}
+              onDragLeave={() => setLogoDrag(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setLogoDrag(false);
+                void handleFile(e.dataTransfer.files?.[0], "logo");
+              }}
             >
               {form.logo_url ? (
-                <img
-                  src={form.logo_url}
-                  alt=""
-                  className="mx-auto h-28 w-28 rounded-2xl object-cover"
-                />
+                <div className="relative mx-auto w-fit">
+                  <img
+                    src={form.logo_url}
+                    alt=""
+                    className="mx-auto h-32 w-32 rounded-3xl object-cover shadow-lg"
+                  />
+                  <button
+                    type="button"
+                    className="absolute -right-2 -top-2 grid h-8 w-8 place-items-center rounded-full bg-background text-xs font-semibold shadow press"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      set("logo_url", "");
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
               ) : (
                 <>
-                  <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" />
-                  <div className="mt-3 text-sm font-medium text-foreground/80">
-                    {uploading ? "Uploading…" : "Select video or image to upload"}
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary">
+                    {uploading ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6" />
+                    )}
+                  </div>
+                  <div className="mt-3 text-sm font-semibold">
+                    {uploading ? "Uploading…" : "Select image to upload"}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">or drag and drop it here</div>
                   <Button
                     type="button"
-                    className="mt-3 rounded-full bg-green-500 px-4 py-1 text-sm font-medium text-black hover:bg-green-400"
-                    onClick={(e) => { e.stopPropagation(); logoRef.current?.click(); }}
+                    className="mt-4 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logoRef.current?.click();
+                    }}
                   >
                     Select file
                   </Button>
@@ -336,350 +420,318 @@ function CreateOpenTokenPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                <div>
-                  <div className="font-medium text-muted-foreground">File size and type</div>
-                  Image · max 15mb · .jpg, .gif or .png recommended
-                </div>
-              </div>
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                <div>
-                  <div className="font-medium text-muted-foreground">Resolution and aspect ratio</div>
-                  Image · min 1000x1000px, 1:1 square recommended
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── social links (collapsible) ───────────────────────── */}
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 text-sm font-medium text-foreground/80"
-              onClick={() => setShowSocial((v) => !v)}
-            >
-              <span className="text-muted-foreground">⚙</span>
-              Add social links (Optional)
-              <ChevronDown className={cn("ml-auto h-4 w-4 text-muted-foreground transition", showSocial && "rotate-180")} />
-            </button>
-            {showSocial && (
-              <div className="mt-4 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <Label className="text-muted-foreground">Website</Label>
-                    <Input
-                      value={form.website}
-                      onChange={(e) => set("website", e.target.value)}
-                      className="mt-1 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
-                      placeholder="Add URL"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">X</Label>
-                    <Input
-                      value={form.twitter}
-                      onChange={(e) => set("twitter", e.target.value)}
-                      className="mt-1 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
-                      placeholder="Add URL"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Telegram</Label>
-                  <Input
-                    value={form.telegram}
-                    onChange={(e) => set("telegram", e.target.value)}
-                    className="mt-1 rounded-xl border-border bg-muted text-foreground placeholder:text-muted-foreground"
-                    placeholder="Add URL"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── banner upload (collapsible) ──────────────────────── */}
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 text-sm font-medium text-foreground/80"
-              onClick={() => setShowBanner((v) => !v)}
-            >
-              <ImageIcon className="h-4 w-4 text-muted-foreground" />
-              Add banner (Optional)
-              <ChevronDown className={cn("ml-auto h-4 w-4 text-muted-foreground transition", showBanner && "rotate-180")} />
-            </button>
-            {showBanner && (
-              <div className="mt-4 space-y-3">
-                <div className="text-xs font-medium text-foreground/80">Upload banner</div>
-                <div className="text-xs text-muted-foreground">
-                  This will be shown on the coin page in addition to the coin image. Images or animated gifs
-                  up to 5mb, 3:1 / 1500x500px original. You can only do this when creating the coin, and it
-                  cannot be changed later.
-                </div>
-                <div
-                  className="cursor-pointer rounded-2xl border border-dashed border-border bg-muted/50 p-6 text-center transition hover:border-border"
-                  onClick={() => bannerRef.current?.click()}
-                >
-                  {form.banner_url ? (
-                    <img
-                      src={form.banner_url}
-                      alt=""
-                      className="mx-auto h-24 w-full max-w-md rounded-xl object-cover"
-                    />
-                  ) : (
-                    <>
-                      <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                      <div className="mt-2 text-sm text-muted-foreground">Upload file...</div>
-                      <Button
-                        type="button"
-                        className="mt-2 rounded-full bg-green-500 px-4 py-1 text-sm font-medium text-black hover:bg-green-400"
-                        onClick={(e) => { e.stopPropagation(); bannerRef.current?.click(); }}
-                      >
-                        Select file
-                      </Button>
-                    </>
-                  )}
-                  <input
-                    ref={bannerRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => onUpload(e, "banner")}
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                    <div>
-                      <div className="font-medium text-muted-foreground">File size and type</div>
-                      Image · max 4.3mb · .jpg, .gif or .png recommended
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <ImageIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                    <div>
-                      <div className="font-medium text-muted-foreground">Resolution and aspect ratio</div>
-                      3:1 aspect ratio, 1500x500px recommended
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── share creator rewards ────────────────────────────── */}
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-muted">
-                  <Gift className="h-4 w-4 text-green-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                    Share creator rewards
-                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Share creator rewards with wallets or charities.
-                  </div>
-                </div>
-              </div>
-              <Switch
-                checked={shareRewards}
-                onCheckedChange={setShareRewards}
-                className="data-[state=checked]:bg-green-500"
+              <Hint
+                title="File size and type"
+                body="Image · max 15MB · .jpg, .gif or .png recommended"
+              />
+              <Hint
+                title="Resolution"
+                body="Min 1000×1000px, 1:1 square recommended"
               />
             </div>
+          </section>
 
+          {/* Social links */}
+          <Collapsible
+            open={showSocial}
+            onToggle={() => setShowSocial((v) => !v)}
+            icon={<Settings2 className="h-4 w-4" />}
+            title="Add social links (optional)"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field
+                label="Website"
+                value={form.website}
+                onChange={(v) => set("website", v)}
+                placeholder="https://"
+              />
+              <Field
+                label="X / Twitter"
+                value={form.twitter}
+                onChange={(v) => set("twitter", v)}
+                placeholder="@handle or URL"
+              />
+              <Field
+                label="Telegram"
+                value={form.telegram}
+                onChange={(v) => set("telegram", v)}
+                placeholder="t.me/…"
+              />
+              <Field
+                label="Discord"
+                value={form.discord}
+                onChange={(v) => set("discord", v)}
+                placeholder="discord.gg/…"
+              />
+            </div>
+          </Collapsible>
+
+          {/* Banner */}
+          <Collapsible
+            open={showBanner}
+            onToggle={() => setShowBanner((v) => !v)}
+            icon={<ImageIcon className="h-4 w-4" />}
+            title="Add banner (optional)"
+          >
+            <p className="mb-3 text-xs text-muted-foreground">
+              Shown on the coin page with your logo. Images or GIFs up to 5MB, 3:1 / 1500×500
+              recommended. Set once at creation.
+            </p>
+            <div
+              className={cn(
+                "cursor-pointer rounded-3xl border border-dashed p-6 text-center transition",
+                bannerDrag
+                  ? "border-primary bg-primary/10"
+                  : "border-border/80 bg-muted/40 hover:border-primary/40",
+              )}
+              onClick={() => bannerRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setBannerDrag(true);
+              }}
+              onDragLeave={() => setBannerDrag(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setBannerDrag(false);
+                void handleFile(e.dataTransfer.files?.[0], "banner");
+              }}
+            >
+              {form.banner_url ? (
+                <img
+                  src={form.banner_url}
+                  alt=""
+                  className="mx-auto h-28 w-full max-w-md rounded-2xl object-cover"
+                />
+              ) : (
+                <>
+                  {uploadingBanner ? (
+                    <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
+                  ) : (
+                    <ImageIcon className="mx-auto h-7 w-7 text-muted-foreground" />
+                  )}
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    {uploadingBanner ? "Uploading…" : "Upload banner…"}
+                  </div>
+                  <Button
+                    type="button"
+                    className="mt-3 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      bannerRef.current?.click();
+                    }}
+                  >
+                    Select file
+                  </Button>
+                </>
+              )}
+              <input
+                ref={bannerRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => onUpload(e, "banner")}
+              />
+            </div>
+          </Collapsible>
+
+          {/* Share creator rewards */}
+          <ToggleCard
+            icon={<Gift className="h-4 w-4 text-primary" />}
+            title="Share creator rewards"
+            subtitle="Share fees with wallets or charities"
+            checked={shareRewards}
+            onCheckedChange={setShareRewards}
+          >
             {shareRewards && (
               <button
                 type="button"
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-muted px-4 py-3 text-sm transition hover:bg-muted"
+                className="mt-3 flex w-full items-center justify-between rounded-2xl bg-muted px-4 py-3 text-sm press"
                 onClick={() => setRewardsDialogOpen(true)}
               >
-                <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 font-medium">
                   <Gift className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground/80">{recipients.length} fee recipient{recipients.length !== 1 ? "s" : ""} selected</span>
-                </div>
+                  {recipients.length} fee recipient{recipients.length !== 1 ? "s" : ""} selected
+                </span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
-          </div>
+          </ToggleCard>
 
-          {/* ── mayhem mode + cash back ──────────────────────────── */}
+          {/* Mayhem + cash back */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-muted">
-                  <Zap className="h-4 w-4 text-yellow-400" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-foreground">Mayhem mode</div>
-                  <div className="text-[11px] text-muted-foreground">Increased price volume.</div>
-                </div>
-              </div>
-              <Switch
-                checked={mayhemMode}
-                onCheckedChange={setMayhemMode}
-                className="data-[state=checked]:bg-green-500"
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-muted">
-                  <CircleDollarSign className="h-4 w-4 text-blue-400" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-foreground">Cash back</div>
-                  <div className="text-[11px] text-muted-foreground">Creator rewards go to traders.</div>
-                </div>
-              </div>
-              <Switch
-                checked={cashBack}
-                onCheckedChange={setCashBack}
-                className="data-[state=checked]:bg-green-500"
-              />
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-muted-foreground">
-            <Info className="mr-1 inline h-3 w-3" />
-            Active for 24h, only set at creation. May increase coin supply.{" "}
-            <span className="text-green-400 hover:underline cursor-pointer">learn more</span>
-          </div>
-
-          {/* ── pair with OUSD ───────────────────────────────────── */}
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-green-500/20">
-                <CircleDollarSign className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-foreground">Pair with OUSD</div>
-                <div className="text-[11px] text-muted-foreground">Create your coin with OUSD liquidity.</div>
-              </div>
-            </div>
-            <Switch
-              checked={pairWithOUSD}
-              onCheckedChange={setPairWithOUSD}
-              className="data-[state=checked]:bg-green-500"
+            <ToggleCard
+              compact
+              icon={<Zap className="h-4 w-4 text-amber-400" />}
+              title="Mayhem mode"
+              subtitle="Increased price volume"
+              checked={mayhemMode}
+              onCheckedChange={setMayhemMode}
+            />
+            <ToggleCard
+              compact
+              icon={<CircleDollarSign className="h-4 w-4 text-sky-400" />}
+              title="Cash back"
+              subtitle="Rewards go to traders"
+              checked={cashBack}
+              onCheckedChange={setCashBack}
             />
           </div>
 
-          {/* ── advanced options ─────────────────────────────────── */}
-          <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
-            <div className="text-sm font-semibold text-foreground">Advanced</div>
+          <p className="px-1 text-center text-xs text-muted-foreground">
+            <Info className="mr-1 inline h-3 w-3" />
+            Mayhem & cash back are active for 24h and only set at creation. May increase supply.{" "}
+            <a
+              href="/docs/openpay"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Learn more
+            </a>
+          </p>
+
+          {/* Pair with OUSD */}
+          <ToggleCard
+            icon={<CircleDollarSign className="h-4 w-4 text-emerald-400" />}
+            title="Pair with OUSD"
+            subtitle="Create your coin with OUSD liquidity"
+            checked={pairWithOUSD}
+            onCheckedChange={setPairWithOUSD}
+          />
+
+          {/* Advanced */}
+          <Collapsible
+            open={showAdvanced}
+            onToggle={() => setShowAdvanced((v) => !v)}
+            icon={<Settings2 className="h-4 w-4" />}
+            title="Advanced"
+          >
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label className="text-muted-foreground">Total supply</Label>
+                <Label className="text-xs text-muted-foreground">Total supply</Label>
                 <Input
                   type="number"
                   value={form.total_supply}
                   onChange={(e) =>
                     set("total_supply", Number(e.target.value) || DEFAULT_TOTAL_SUPPLY)
                   }
-                  className="mt-1 rounded-xl border-border bg-muted text-foreground"
+                  className={fieldClass}
                 />
               </div>
               <div>
-                <Label className="text-muted-foreground">Decimals</Label>
+                <Label className="text-xs text-muted-foreground">Decimals</Label>
                 <Input
                   type="number"
                   value={form.decimals}
                   onChange={(e) =>
                     set("decimals", Math.min(18, Math.max(0, Number(e.target.value) || 0)))
                   }
-                  className="mt-1 rounded-xl border-border bg-muted text-foreground"
+                  className={fieldClass}
                 />
               </div>
             </div>
-
-            <div className="flex items-center justify-between rounded-xl bg-muted p-3">
-              <div>
-                <div className="text-sm font-medium text-foreground/80">Burnable</div>
-                <div className="text-[11px] text-muted-foreground">Allow token burns</div>
-              </div>
-              <Switch checked={form.burnable} onCheckedChange={(v) => set("burnable", v)} className="data-[state=checked]:bg-green-500" />
+            <div className="mt-3 space-y-2">
+              <ToggleRow
+                title="Burnable"
+                subtitle="Allow token burns"
+                checked={form.burnable}
+                onCheckedChange={(v) => set("burnable", v)}
+              />
+              <ToggleRow
+                title="Mintable"
+                subtitle="Allow future mints (not recommended)"
+                checked={form.mintable}
+                onCheckedChange={(v) => set("mintable", v)}
+              />
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-muted p-3">
-              <div>
-                <div className="text-sm font-medium text-foreground/80">Mintable</div>
-                <div className="text-[11px] text-muted-foreground">Allow future mints (not recommended)</div>
-              </div>
-              <Switch checked={form.mintable} onCheckedChange={(v) => set("mintable", v)} className="data-[state=checked]:bg-green-500" />
-            </div>
-          </div>
+          </Collapsible>
 
-          {/* ── submit ──────────────────────────────────────────── */}
           <Button
             type="submit"
-            className="w-full rounded-full bg-green-500 py-5 text-base font-semibold text-black shadow-lg shadow-green-900/20 hover:bg-green-400"
+            className="h-14 w-full rounded-full bg-primary text-base font-bold text-primary-foreground shadow-lg press"
             disabled={uploading || uploadingBanner}
           >
             {uploading || uploadingBanner ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Upload className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-5 w-5" />
             )}
-            Create
+            Continue
           </Button>
 
-          <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-            Coin data (social links, logo, etc.) is set at launch. OpenToken is a 100% fair launch
-            — no presale, whitelist, or team allocation. Fee: {DEFAULT_LAUNCH_FEE_OUSD} OUSD
-            {wallet ? ` · available ${Number(wallet.ousd_balance ?? 0).toFixed(2)} OUSD` : ""}
+          <div className="rounded-2xl bg-muted/50 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+            Metadata is set at launch. OpenToken is a 100% fair launch — no presale, whitelist, or
+            team allocation. Fee:{" "}
+            <span className="font-semibold text-foreground">{DEFAULT_LAUNCH_FEE_OUSD} OUSD</span>
+            {wallet ? (
+              <>
+                {" "}
+                · available{" "}
+                <span className={cn("font-semibold", canAfford ? "text-foreground" : "text-red-400")}>
+                  {ousdBal.toFixed(2)} OUSD
+                </span>
+              </>
+            ) : null}
           </div>
         </form>
 
-        {/* ── live preview sidebar (desktop) + mobile strip ───── */}
-        <div className="order-1 lg:sticky lg:top-4 lg:order-2 lg:self-start">
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</div>
-            <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-muted">
-              <div className="aspect-square max-h-48 bg-muted sm:max-h-none lg:aspect-square">
+        {/* Preview */}
+        <aside className="order-1 lg:sticky lg:top-20 lg:order-2 lg:self-start">
+          <div className="rounded-3xl bg-card p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Preview
+            </div>
+            <div className="mt-3 overflow-hidden rounded-3xl bg-muted/50">
+              <div className="aspect-square">
                 {form.logo_url ? (
                   <img src={form.logo_url} alt="" className="h-full w-full object-cover" />
+                ) : form.banner_url ? (
+                  <img src={form.banner_url} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="grid h-full min-h-32 place-items-center px-4 text-center text-sm text-muted-foreground">
-                    A preview of how the coin<br />will look like
+                  <div className="grid h-full place-items-center px-6 text-center">
+                    <div>
+                      <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary">
+                        <Sparkles className="h-6 w-6" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        A preview of how the coin will look
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
-              <div className="p-3">
-                <div className="text-sm font-semibold text-foreground">
-                  {form.name || "Token name"}
+              <div className="space-y-1.5 p-4">
+                <div className="flex items-center gap-1.5 text-[15px] font-bold">
+                  <span className="truncate">{form.name || "Token name"}</span>
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary/40" />
                 </div>
-                <div className="text-xs text-muted-foreground">${form.symbol || "TICKER"}</div>
-                {form.description && (
-                  <p className="mt-1.5 line-clamp-3 text-[11px] text-muted-foreground">
-                    {form.description}
-                  </p>
-                )}
-                <div className="mt-2 text-[10px] text-muted-foreground">
-                  {OT_CATEGORY_LABELS[form.category]}
+                <div className="text-sm text-muted-foreground">${form.symbol || "TICKER"}</div>
+                {form.description ? (
+                  <p className="line-clamp-3 text-xs text-muted-foreground">{form.description}</p>
+                ) : null}
+                <div className="pt-1">
+                  <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                    {OT_CATEGORY_LABELS[form.category]}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
 
-      {/* ── share creator rewards dialog ────────────────────────── */}
+      {/* Rewards dialog */}
       <Dialog open={rewardsDialogOpen} onOpenChange={setRewardsDialogOpen}>
         <DialogContent className="rounded-3xl border-border bg-card sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-foreground">Share creator rewards</DialogTitle>
+            <DialogTitle className="text-center">Share creator rewards</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 px-2">
+          <div className="space-y-4 px-1">
             <p className="text-center text-xs text-muted-foreground">
-              Creators earn percentage rewards on all transaction fees. You may invite wallets or
-              charities to receive a portion of it. Rewards sharing{" "}
-              <span className="underline">cannot</span> be changed again.
+              Creators earn percentage rewards on fees. Invite wallets or charities to receive a
+              portion. Sharing <span className="underline">cannot</span> be changed later.
             </p>
 
-            {/* allocation bar */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Allocated</span>
               <span className="font-semibold text-foreground">
@@ -688,24 +740,34 @@ function CreateOpenTokenPage() {
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-green-500 transition-all"
-                style={{ width: `${Math.min(100, recipients.reduce((s, r) => s + r.pct, 0))}%` }}
+                className="h-full rounded-full bg-primary transition-all"
+                style={{
+                  width: `${Math.min(100, recipients.reduce((s, r) => s + r.pct, 0))}%`,
+                }}
               />
             </div>
 
-            {/* recipient list */}
             <ul className="space-y-2">
               {recipients.map((r, i) => (
-                <li key={i} className="flex items-center justify-between rounded-xl bg-muted px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-8 w-8 place-items-center rounded-full bg-muted-foreground/40 text-xs text-foreground">
+                <li
+                  key={i}
+                  className="flex items-center justify-between gap-2 rounded-2xl bg-muted px-3 py-3"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                       {r.label?.[0] ?? "?"}
                     </div>
-                    <div>
-                      <div className="text-sm text-foreground">{r.label || r.address.slice(0, 12)}</div>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">
+                        {r.label || r.address.slice(0, 12) || "Recipient"}
+                      </div>
                       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        {i === 0 && <span className="rounded bg-green-500/20 px-1 py-0.5 text-green-400">Admin</span>}
-                        🔒 {r.pct}%
+                        {i === 0 && (
+                          <span className="rounded-full bg-primary/20 px-1.5 py-0.5 text-primary">
+                            Admin
+                          </span>
+                        )}
+                        {r.pct}%
                       </div>
                     </div>
                   </div>
@@ -714,47 +776,44 @@ function CreateOpenTokenPage() {
                     value={r.pct}
                     onChange={(e) => {
                       const updated = [...recipients];
-                      updated[i] = { ...updated[i], pct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) };
+                      updated[i] = {
+                        ...updated[i],
+                        pct: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
+                      };
                       setRecipients(updated);
                     }}
-                    className="w-16 rounded-lg border-border bg-muted text-center text-sm text-foreground"
+                    className="h-9 w-16 rounded-xl border-0 bg-background text-center text-sm"
                   />
                 </li>
               ))}
             </ul>
 
-            <div className="text-center text-xs text-muted-foreground">Add more recipients</div>
-
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full border-border text-foreground/80 hover:bg-muted"
-                onClick={() => {
-                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Wallet" }]);
-                }}
+                className="rounded-full"
+                onClick={() =>
+                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Wallet" }])
+                }
               >
                 <Wallet className="mr-1.5 h-3.5 w-3.5" /> Add wallet
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full border-border text-foreground/80 hover:bg-muted"
-                onClick={() => {
-                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Charity" }]);
-                }}
+                className="rounded-full"
+                onClick={() =>
+                  setRecipients((prev) => [...prev, { address: "", pct: 0, label: "Charity" }])
+                }
               >
                 <Gift className="mr-1.5 h-3.5 w-3.5" /> Add charity
               </Button>
             </div>
 
-            <p className="text-center text-[11px] text-muted-foreground">
-              Your split is saved with this session and will be applied when you create the coin.
-            </p>
-
             <Button
               type="button"
-              className="w-full rounded-full bg-green-500 py-3 font-semibold text-black hover:bg-green-400"
+              className="h-12 w-full rounded-full bg-primary font-bold text-primary-foreground"
               onClick={() => setRewardsDialogOpen(false)}
             >
               Done
@@ -762,6 +821,141 @@ function CreateOpenTokenPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function Hint({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+      <ImageIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <div>
+        <div className="font-semibold text-foreground/80">{title}</div>
+        {body}
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={fieldClass}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+function Collapsible({
+  open,
+  onToggle,
+  icon,
+  title,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  icon: React.ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-3xl bg-card p-2">
+      <button
+        type="button"
+        className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-3 text-left text-sm font-semibold press"
+        onClick={onToggle}
+      >
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-muted text-muted-foreground">
+          {icon}
+        </span>
+        <span className="flex-1">{title}</span>
+        <ChevronDown
+          className={cn("h-4 w-4 text-muted-foreground transition", open && "rotate-180")}
+        />
+      </button>
+      {open && <div className="px-3 pb-4 pt-1">{children}</div>}
+    </section>
+  );
+}
+
+function ToggleCard({
+  icon,
+  title,
+  subtitle,
+  checked,
+  onCheckedChange,
+  children,
+  compact,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+  children?: ReactNode;
+  compact?: boolean;
+}) {
+  return (
+    <div className={cn("rounded-3xl bg-card", compact ? "p-4" : "p-4")}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold">{title}</div>
+            <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+          </div>
+        </div>
+        <Switch
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          className="data-[state=checked]:bg-primary"
+        />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ToggleRow({
+  title,
+  subtitle,
+  checked,
+  onCheckedChange,
+}: {
+  title: string;
+  subtitle: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl bg-muted px-3 py-3">
+      <div>
+        <div className="text-sm font-medium">{title}</div>
+        <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+      </div>
+      <Switch
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        className="data-[state=checked]:bg-primary"
+      />
     </div>
   );
 }

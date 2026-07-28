@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Input } from "@/components/ui/input";
+import { useChromeVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 
 type ExploreDockProps = {
@@ -28,11 +29,20 @@ export function ExploreDock({
   className,
 }: ExploreDockProps) {
   const [mounted, setMounted] = useState(false);
+  const chromeVisible = useChromeVisible();
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   return createPortal(
-    <div className={cn("ph-dock md:hidden", className)} role="search">
+    <div
+      className={cn(
+        "ph-dock md:hidden transition-transform duration-300 ease-out",
+        chromeVisible ? "translate-y-0" : "translate-y-[calc(100%+1rem)]",
+        !chromeVisible && "pointer-events-none",
+        className,
+      )}
+      role="search"
+    >
       <div className="ph-dock-inner">
         {searchOpen ? (
           <>

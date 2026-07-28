@@ -327,7 +327,7 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
   return (
     <li>
       <Link
-        to="/opentoken/$tokenId"
+        to="/asset/$tokenId"
         params={{ tokenId: t.id }}
         className="flex items-center gap-3 py-3 press"
       >

@@ -68,14 +68,15 @@ type WalletRow = Tables<"wallets">;
 const PRIMARY_ACTIONS = [
   { label: "Receive", icon: QrCode, to: "/receive" },
   { label: "Send", icon: Send, to: "/send" },
-  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
+  { label: "Pay", icon: CreditCard, to: "/wc-pay" },
   { label: "Buy", icon: Plus, to: "/topup" },
 ] as const;
 
 const MORE_ACTIONS = [
   { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
-  { label: "WC Pay", icon: CreditCard, to: "/wc-pay" },
+  { label: "MetaMask", icon: Wallet, to: "/metamask" },
+  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
 ] as const;

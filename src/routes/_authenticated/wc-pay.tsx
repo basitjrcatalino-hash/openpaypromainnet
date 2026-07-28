@@ -370,7 +370,7 @@ function WalletConnectPayPage() {
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
           <div className="min-w-0">
             <div className="text-sm font-semibold text-foreground">Something went wrong</div>
-            <p className="text-xs text-muted-foreground break-words">{error}</p>
+            <p className="text-xs text-muted-foreground wrap-break-word">{error}</p>
           </div>
         </div>
       )}

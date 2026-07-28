@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@metamask/connect-multichain": "^1.2.0",
+    "@metamask/connect-solana": "^2.1.1",
     "@moonpay/moonpay-js": "^0.7.6",
     "@moonpay/moonpay-react": "^1.10.6",
     "@phantom/react-sdk": "^2.0.2",
@@ -77,6 +79,7 @@
     "tailwindcss": "^4.2.1",
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
+    "viem": "^2.55.10",
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "^3.24.2"
   },

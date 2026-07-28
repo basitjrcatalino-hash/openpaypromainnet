@@ -8,6 +8,10 @@ import {
   startOpenPaySignIn,
 } from "@/lib/openpay-auth";
 import { SOLANA_BRAND_PURPLE, startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
+import {
+  WALLETCONNECT_BRAND_BLUE,
+  startWalletConnectSignIn,
+} from "@/lib/walletconnect-auth";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
@@ -28,7 +32,7 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-type AuthMethod = "openpay" | "solana" | "pi" | "phantom";
+type AuthMethod = "openpay" | "solana" | "pi" | "phantom" | "walletconnect";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -65,6 +69,13 @@ const AUTH_OPTIONS: {
     accent: "#AB9FF2",
     accentFg: "#1a1330",
   },
+  {
+    id: "walletconnect",
+    label: "WalletConnect",
+    desc: "MetaMask · EVM wallet sign-in",
+    accent: WALLETCONNECT_BRAND_BLUE,
+    accentFg: "#ffffff",
+  },
 ];
 
 function SolanaMark({ className }: { className?: string }) {
@@ -73,6 +84,17 @@ function SolanaMark({ className }: { className?: string }) {
       <path
         fill="currentColor"
         d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
+      />
+    </svg>
+  );
+}
+
+function WalletConnectMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true" fill="none">
+      <path
+        fill="currentColor"
+        d="M6.5 9.2c2.9-2.8 7.6-2.8 10.5 0l.35.33a.36.36 0 0 1 0 .52l-1.2 1.14a.19.19 0 0 1-.26 0l-.48-.46c-2-1.95-5.3-1.95-7.32 0l-.52.49a.19.19 0 0 1-.26 0L5.66 10a.36.36 0 0 1 0-.52l.84-.8Zm13 2.48 1.06 1a.36.36 0 0 1 0 .52l-4.8 4.55a.74.74 0 0 1-1.02 0l-3.4-3.23a.1.1 0 0 0-.13 0l-3.4 3.23a.74.74 0 0 1-1.02 0L1.99 13.2a.36.36 0 0 1 0-.52l1.06-1a.74.74 0 0 1 1.02 0l3.4 3.23a.1.1 0 0 0 .13 0l3.4-3.23a.74.74 0 0 1 1.02 0l3.4 3.23a.1.1 0 0 0 .13 0l3.4-3.23a.74.74 0 0 1 1.02 0Z"
       />
     </svg>
   );
@@ -89,6 +111,9 @@ function AuthOptionIcon({ id }: { id: AuthMethod }) {
     return (
       <img src={PI_NETWORK_LOGO_URL} width={22} height={22} alt="" className="rounded-full" />
     );
+  }
+  if (id === "walletconnect") {
+    return <WalletConnectMark className="h-5 w-5 text-white" />;
   }
   return <img src={PHANTOM_APP_ICON} width={22} height={22} alt="" className="rounded-full" />;
 }
@@ -147,6 +172,10 @@ function AuthPiPage() {
       }
       if (method === "pi") {
         await handlePiSignIn(navigate);
+        return;
+      }
+      if (method === "walletconnect") {
+        await startWalletConnectSignIn({ redirectTo: "/dashboard" });
         return;
       }
     } catch (err) {

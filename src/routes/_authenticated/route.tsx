@@ -25,6 +25,7 @@ import {
   ScrollText,
   BookOpen,
   CircleDollarSign,
+  CreditCard,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -451,6 +452,34 @@ function SidebarInner({
       </nav>
 
       <div className="space-y-0.5">
+        <Link
+          to="/wc-pay"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/wc-pay" || pathname.startsWith("/wc-pay")
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <CreditCard className="h-5 w-5" />
+          WC Pay
+        </Link>
+        <Link
+          to="/metamask"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/metamask" || pathname.startsWith("/metamask")
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <Wallet className="h-5 w-5" />
+          MetaMask
+        </Link>
         <Link
           to="/ledger"
           onClick={onClose}

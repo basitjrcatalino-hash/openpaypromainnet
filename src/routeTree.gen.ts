@@ -20,6 +20,7 @@ import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
+import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
 import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
@@ -51,6 +52,7 @@ import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
+import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
@@ -117,6 +119,11 @@ const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
 const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
   id: '/ledger',
   path: '/ledger',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
+  id: '/metamask',
+  path: '/metamask',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
@@ -280,6 +287,12 @@ const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
   path: '/api/public/supabase-config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWalletconnectAuthRoute =
+  ApiPublicWalletconnectAuthRouteImport.update({
+    id: '/api/public/walletconnect-auth',
+    path: '/api/public/walletconnect-auth',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
   id: '/openpay/callback',
   path: '/openpay/callback',
@@ -364,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
@@ -395,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -420,6 +435,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
@@ -451,6 +467,7 @@ export interface FileRoutesByTo {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -478,6 +495,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
+  '/_authenticated/metamask': typeof AuthenticatedMetamaskRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
@@ -509,6 +527,7 @@ export interface FileRoutesById {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -536,6 +555,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/ledger'
+    | '/metamask'
     | '/nfts'
     | '/opentoken'
     | '/ousd'
@@ -567,6 +587,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/walletconnect-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
@@ -592,6 +613,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/ledger'
+    | '/metamask'
     | '/nfts'
     | '/opentoken'
     | '/ousd'
@@ -623,6 +645,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/walletconnect-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/openpay/connect/callback'
@@ -649,6 +672,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
+    | '/_authenticated/metamask'
     | '/_authenticated/nfts'
     | '/_authenticated/opentoken'
     | '/_authenticated/ousd'
@@ -680,6 +704,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/walletconnect-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/_authenticated/openpay/connect/callback'
@@ -714,6 +739,7 @@ export interface RootRouteChildren {
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
+  ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
@@ -801,6 +827,13 @@ declare module '@tanstack/react-router' {
       path: '/ledger'
       fullPath: '/ledger'
       preLoaderRoute: typeof AuthenticatedLedgerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metamask': {
+      id: '/_authenticated/metamask'
+      path: '/metamask'
+      fullPath: '/metamask'
+      preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/nfts': {
@@ -1020,6 +1053,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/walletconnect-auth': {
+      id: '/api/public/walletconnect-auth'
+      path: '/api/public/walletconnect-auth'
+      fullPath: '/api/public/walletconnect-auth'
+      preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/openpay/callback': {
       id: '/auth/openpay/callback'
       path: '/openpay/callback'
@@ -1141,6 +1181,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
+  AuthenticatedMetamaskRoute: typeof AuthenticatedMetamaskRoute
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
@@ -1167,6 +1208,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
+  AuthenticatedMetamaskRoute: AuthenticatedMetamaskRoute,
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
@@ -1240,6 +1282,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
+  ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,

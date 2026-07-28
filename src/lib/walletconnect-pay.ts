@@ -34,9 +34,11 @@ export const WC_PAY_EVM_CHAINS = [
   1, 10, 56, 137, 8453, 42161, 42220, 143,
 ] as const;
 
-let clientSingleton: WalletConnectPay | null = null;
+type WalletConnectPayClient = InstanceType<typeof WalletConnectPay>;
 
-export function getWalletConnectPayClient(): WalletConnectPay {
+let clientSingleton: WalletConnectPayClient | null = null;
+
+export function getWalletConnectPayClient(): WalletConnectPayClient {
   if (typeof window === "undefined") {
     throw new Error("WalletConnect Pay is browser-only");
   }

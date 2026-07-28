@@ -580,6 +580,12 @@
 .auth-option-row:hover:not(:disabled):not(.auth-option-selected) {
   transform: translateY(-1px) scale(1.005);
 }
+.auth-option-tile:hover:not(:disabled):not(.auth-option-selected) {
+  transform: translateY(-2px) scale(1.02);
+}
+.auth-option-featured:hover:not(:disabled):not(.auth-option-selected) {
+  transform: translateY(-1px) scale(1.01);
+}
 .auth-option:active:not(:disabled) {
   transform: translateY(0) scale(0.99);
 }

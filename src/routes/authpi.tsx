@@ -49,31 +49,28 @@ type AuthMethod =
   | "walletconnect"
   | "metamask";
 
-type AuthGroup = "accounts" | "wallets";
-
 const AUTH_OPTIONS: {
   id: AuthMethod;
-  group: AuthGroup;
   label: string;
   desc: string;
   accent: string;
   accentFg: string;
   logoUrl?: string;
   logoFit?: "cover" | "contain";
+  featured?: boolean;
 }[] = [
   {
     id: "openpay",
-    group: "accounts",
     label: "OpenPay",
-    desc: "OpenPay account",
+    desc: "Sign in with your OpenPay account",
     accent: OPENPAY_BRAND_BLUE,
     accentFg: "#ffffff",
     logoUrl: OPENPAY_LOGO_WHITE,
     logoFit: "contain",
+    featured: true,
   },
   {
     id: "telegram",
-    group: "accounts",
     label: "Telegram",
     desc: "Telegram Login",
     accent: TELEGRAM_BRAND_BLUE,
@@ -83,7 +80,6 @@ const AUTH_OPTIONS: {
   },
   {
     id: "pi",
-    group: "accounts",
     label: "Pi Network",
     desc: "Pi Browser or OAuth",
     accent: "#7038A1",
@@ -93,7 +89,6 @@ const AUTH_OPTIONS: {
   },
   {
     id: "solana",
-    group: "wallets",
     label: "Solana",
     desc: "Phantom extension",
     accent: "#000000",
@@ -103,7 +98,6 @@ const AUTH_OPTIONS: {
   },
   {
     id: "phantom",
-    group: "wallets",
     label: "Phantom",
     desc: "Extension · Google · Apple",
     accent: "#AB9FF2",
@@ -113,27 +107,20 @@ const AUTH_OPTIONS: {
   },
   {
     id: "walletconnect",
-    group: "wallets",
     label: "WalletConnect",
-    desc: "MetaMask · EVM wallets",
+    desc: "EVM wallets",
     accent: WALLETCONNECT_BRAND_BLUE,
     accentFg: "#ffffff",
   },
   {
     id: "metamask",
-    group: "wallets",
     label: "MetaMask",
-    desc: "Social · Embedded Wallets",
+    desc: "Social · Embedded",
     accent: "#E2761B",
     accentFg: "#ffffff",
     logoUrl: METAMASK_WALLET_LOGO,
     logoFit: "cover",
   },
-];
-
-const AUTH_GROUPS: { id: AuthGroup; label: string }[] = [
-  { id: "accounts", label: "Accounts" },
-  { id: "wallets", label: "Wallets" },
 ];
 
 function WalletConnectMark({ className }: { className?: string }) {
@@ -272,100 +259,162 @@ function AuthPiPageInner() {
   }
 
   const selectedOpt = visibleOptions.find((o) => o.id === selected) ?? null;
+  const featuredOpt = visibleOptions.find((o) => o.featured) ?? null;
+  const gridOptions = visibleOptions.filter((o) => !o.featured);
 
   return (
-    <div className="relative flex min-h-screen items-start justify-center overflow-y-auto bg-background px-4 py-8 sm:items-center sm:py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-background px-4 py-8 sm:py-10">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
         <div className="auth-orb absolute -top-28 left-[12%] h-80 w-80 rounded-full bg-primary/25 blur-3xl opacity-50" />
         <div className="auth-orb auth-orb-delay absolute -bottom-36 right-[8%] h-96 w-96 rounded-full bg-primary-glow/30 blur-3xl opacity-40" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/40 to-background" />
       </div>
 
-      <div className="auth-select-enter w-full max-w-md py-2">
+      <div className="auth-select-enter w-full max-w-sm py-2">
         <div className="rounded-[1.75rem] border border-border/40 bg-card/95 p-6 shadow-card backdrop-blur-xl sm:p-7">
-          <div className="mb-5 text-center">
+          <div className="mb-6 text-center">
             <div className="auth-badge-float mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
               Premium Web3 wallet
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">Welcome to OpenPay Pro</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Choose how you want to sign in</p>
+            <h1 className="text-2xl font-semibold tracking-tight">OpenPay Pro</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Sign in to continue</p>
           </div>
 
           <div
-            className="space-y-4"
             role="listbox"
             aria-label="Sign-in methods"
             aria-activedescendant={selected ? `auth-opt-${selected}` : undefined}
+            className="space-y-4"
           >
-            {AUTH_GROUPS.map((group) => {
-              const items = visibleOptions.filter((o) => o.group === group.id);
-              if (items.length === 0) return null;
-              return (
-                <section key={group.id} className="space-y-2">
-                  <h2 className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {group.label}
-                  </h2>
-                  <div className="flex flex-col gap-1.5">
-                    {items.map((opt, i) => {
-                      const isOn = selected === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          id={`auth-opt-${opt.id}`}
-                          type="button"
-                          role="option"
-                          aria-selected={isOn}
-                          disabled={busy}
-                          onClick={() => pick(opt.id)}
-                          style={
-                            {
-                              "--auth-accent": opt.accent,
-                              animationDelay: `${70 + i * 45}ms`,
-                            } as CSSProperties
-                          }
-                          className={cn(
-                            "auth-option auth-option-row relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border px-3 py-2.5 text-left",
-                            "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
-                            "disabled:opacity-60",
-                            isOn ? "auth-option-selected" : "border-border/60 bg-muted/25",
-                            pulseId === opt.id && "auth-option-pulse",
-                          )}
-                        >
-                          <span
-                            className="auth-option-icon grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl transition-transform duration-200 ease-out"
-                            style={{ backgroundColor: opt.accent }}
-                          >
-                            <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold text-foreground">
-                              {opt.label}
-                            </span>
-                            <span className="mt-0.5 block truncate text-[11px] leading-snug text-muted-foreground">
-                              {opt.desc}
-                            </span>
-                          </span>
-                          <span
-                            className={cn(
-                              "grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-200 ease-out",
-                              isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
-                            )}
-                            style={{
-                              backgroundColor: isOn
-                                ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
-                                : undefined,
-                              color: opt.accent,
-                            }}
-                          >
-                            <Check className="h-3 w-3" strokeWidth={2.5} />
-                          </span>
-                        </button>
-                      );
-                    })}
+            {featuredOpt ? (
+              <button
+                id={`auth-opt-${featuredOpt.id}`}
+                type="button"
+                role="option"
+                aria-selected={selected === featuredOpt.id}
+                disabled={busy}
+                onClick={() => pick(featuredOpt.id)}
+                style={{ "--auth-accent": featuredOpt.accent } as CSSProperties}
+                className={cn(
+                  "auth-option auth-option-featured relative flex w-full items-center gap-3.5 overflow-hidden rounded-2xl border px-4 py-3.5 text-left",
+                  "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+                  "disabled:opacity-60",
+                  selected === featuredOpt.id
+                    ? "auth-option-selected"
+                    : "border-border/60 bg-muted/20",
+                  pulseId === featuredOpt.id && "auth-option-pulse",
+                )}
+              >
+                <span
+                  className="auth-option-icon grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl"
+                  style={{ backgroundColor: featuredOpt.accent }}
+                >
+                  <AuthOptionIcon
+                    id={featuredOpt.id}
+                    logoUrl={featuredOpt.logoUrl}
+                    logoFit={featuredOpt.logoFit}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-foreground">
+                    {featuredOpt.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {featuredOpt.desc}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all duration-200",
+                    selected === featuredOpt.id ? "scale-100 opacity-100" : "scale-75 opacity-0",
+                  )}
+                  style={{
+                    backgroundColor:
+                      selected === featuredOpt.id
+                        ? `color-mix(in oklab, ${featuredOpt.accent} 22%, transparent)`
+                        : undefined,
+                    color: featuredOpt.accent,
+                  }}
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </span>
+              </button>
+            ) : null}
+
+            {gridOptions.length > 0 ? (
+              <div className="space-y-3">
+                {featuredOpt ? (
+                  <div className="flex items-center gap-3 px-1">
+                    <div className="h-px flex-1 bg-border/70" />
+                    <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      or continue with
+                    </span>
+                    <div className="h-px flex-1 bg-border/70" />
                   </div>
-                </section>
-              );
-            })}
+                ) : null}
+
+                <div className="grid grid-cols-3 gap-2">
+                  {gridOptions.map((opt, i) => {
+                    const isOn = selected === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        id={`auth-opt-${opt.id}`}
+                        type="button"
+                        role="option"
+                        aria-selected={isOn}
+                        disabled={busy}
+                        onClick={() => pick(opt.id)}
+                        title={opt.desc}
+                        style={
+                          {
+                            "--auth-accent": opt.accent,
+                            animationDelay: `${80 + i * 40}ms`,
+                          } as CSSProperties
+                        }
+                        className={cn(
+                          "auth-option auth-option-tile relative flex flex-col items-center gap-2 rounded-2xl border px-2 py-3 text-center",
+                          "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+                          "disabled:opacity-60",
+                          isOn ? "auth-option-selected" : "border-border/55 bg-muted/20",
+                          pulseId === opt.id && "auth-option-pulse",
+                        )}
+                      >
+                        <span
+                          className="auth-option-icon grid h-11 w-11 place-items-center overflow-hidden rounded-xl"
+                          style={{ backgroundColor: opt.accent }}
+                        >
+                          <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
+                        </span>
+                        <span className="w-full truncate text-[11px] font-semibold leading-tight text-foreground">
+                          {opt.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full transition-all duration-200",
+                            isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
+                          )}
+                          style={{
+                            backgroundColor: isOn
+                              ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
+                              : undefined,
+                            color: opt.accent,
+                          }}
+                        >
+                          <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedOpt && !selectedOpt.featured ? (
+                  <p className="auth-cta-swap text-center text-xs text-muted-foreground">
+                    {selectedOpt.desc}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-5 space-y-2">

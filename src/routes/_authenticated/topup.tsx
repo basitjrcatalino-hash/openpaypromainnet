@@ -5,7 +5,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Link2, CheckCircle2, CreditCard, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { MoonPayBuyWidget } from "@moonpay/moonpay-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
+import { showMoonPayBuy } from "@/lib/moonpay-client";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import {
   createOpenPayTopupCharge,
@@ -77,7 +77,6 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
-  const [moonpayVisible, setMoonpayVisible] = useState(false);
   const [pendingPayLink, setPendingPayLink] = useState<{
     reference: string;
     amount: number;
@@ -266,7 +265,16 @@ function TopUpPage() {
     setBusy(true);
     try {
       if (method === "moonpay") {
-        setMoonpayVisible(true);
+        await showMoonPayBuy({
+          amount: parsed.data.amount,
+          baseCurrencyCode: "usd",
+          defaultCurrencyCode: "eth",
+          onTransactionCompleted: () => {
+            toast.success("MoonPay purchase complete");
+            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+          },
+        });
         return;
       }
       if (method === "openpay_balance") {
@@ -549,23 +557,6 @@ function TopUpPage() {
           </p>
         </div>
       </form>
-
-      <MoonPayBuyWidget
-        variant="overlay"
-        baseCurrencyCode="usd"
-        baseCurrencyAmount={String(Math.max(amtNum, 20) || 100)}
-        defaultCurrencyCode="eth"
-        visible={moonpayVisible}
-        onClose={async () => {
-          setMoonpayVisible(false);
-        }}
-        onTransactionCompleted={async () => {
-          toast.success("MoonPay purchase complete");
-          setMoonpayVisible(false);
-          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-        }}
-      />
     </div>
   );
 }

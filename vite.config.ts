@@ -62,6 +62,20 @@ export default defineConfig({
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
       },
+      dedupe: ["react", "react-dom"],
+    },
+    optimizeDeps: {
+      // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
+      // Without prebundling, the browser gets raw module.exports and white-screens:
+      // "does not provide an export named 'jsx'".
+      include: [
+        "react",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "react-dom",
+        "react-dom/client",
+        "@phantom/react-sdk",
+      ],
     },
     ssr: {
       // Prefer browser builds for edge/workerd when packages advertise them.

@@ -19,6 +19,7 @@ import {
   BookOpen,
   FileText,
   Shield,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -68,6 +69,7 @@ function SettingsPage() {
   const [importPhrase, setImportPhrase] = useState("");
   const [creating, setCreating] = useState(false);
   const [mnemonic, setMnemonic] = useState<string[] | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
@@ -742,11 +744,51 @@ function SettingsPage() {
           </li>
         </ul>
       </section>
+
+      {/* Account */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Account
+        </h2>
+        <ul className="overflow-hidden rounded-2xl bg-card">
+          <li>
+            <button
+              type="button"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true);
+                try {
+                  await supabase.auth.signOut();
+                  qc.clear();
+                  toast.success("Signed out");
+                  await router.navigate({ to: "/authpi", replace: true });
+                } catch (err) {
+                  toast.error((err as Error).message || "Could not sign out");
+                  setSigningOut(false);
+                }
+              }}
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/40 disabled:opacity-60"
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
+                {signingOut ? (
+                  <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                ) : (
+                  <LogOut className="h-4.5 w-4.5" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-destructive">Sign out</span>
+                <span className="block text-xs text-muted-foreground">
+                  Log out of this account on this device
+                </span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </section>
     </div>
   );
 }
-
-function OpenPayIntegrationCard({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const unlinkOpenPay = useServerFn(unlinkOpenPayAccount);
   const startConnect = useServerFn(startOpenPayConnect);

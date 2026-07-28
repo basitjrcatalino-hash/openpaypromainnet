@@ -450,6 +450,13 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
                 env: "OPENPAY_OAUTH_CLIENT_ID · OPENPAY_PARTNER_API_KEY",
               },
               {
+                name: "Telegram",
+                desc: "Telegram Login OIDC + PKCE (oauth.telegram.org)",
+                endpoint: "GET/POST /api/public/telegram-auth",
+                callback: "/auth/telegram/callback",
+                env: "TELEGRAM_CLIENT_ID · TELEGRAM_CLIENT_SECRET",
+              },
+              {
                 name: "Solana",
                 desc: "Sign In With Solana (Phantom / Wallet Standard)",
                 endpoint: "GET/POST /api/public/solana-auth",

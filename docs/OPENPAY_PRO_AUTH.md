@@ -15,6 +15,7 @@ Complete setup for every sign-in method on **OpenPay Pro** (`/authpi`). Use this
 | Method            | Type                                         | Entry                               | Backend                                   |
 | ----------------- | -------------------------------------------- | ----------------------------------- | ----------------------------------------- |
 | **OpenPay**       | OAuth 2.0 (OpenPay account)                  | `startOpenPaySignIn()`              | `GET/POST /api/public/openpay-auth`       |
+| **Telegram**      | Telegram Login (OIDC + PKCE)                 | `startTelegramSignIn()`             | `GET/POST /api/public/telegram-auth`      |
 | **Solana**        | Sign In With Solana (SIWS)                   | `startSolanaSignIn()`               | `GET/POST /api/public/solana-auth`        |
 | **Pi Network**    | Pi Browser SDK or Pi OAuth                   | `signInWithPi()` / Pi authorize URL | `POST /api/public/pi-auth`                |
 | **Phantom**       | Phantom Connect (extension · Google · Apple) | Phantom React SDK                   | `/auth/callback`                          |
@@ -337,25 +338,72 @@ JWKS (social): [api-auth.web3auth.io/.well-known/jwks.json](https://api-auth.web
 
 ---
 
+## Telegram Login (OIDC)
+
+**Docs:** [Log In With Telegram](https://core.telegram.org/bots/telegram-login)
+
+**What it does:** Authorization Code + PKCE against `oauth.telegram.org`. Verifies `id_token` via JWKS, provisions a Supabase user, signs in.
+
+### Env
+
+```bash
+VITE_TELEGRAM_CLIENT_ID="8393279456"   # Bot Client ID from @BotFather
+TELEGRAM_CLIENT_ID="8393279456"
+TELEGRAM_CLIENT_SECRET="…"             # Server-only — never VITE_
+# Optional fixed callback; else `${requestOrigin}/auth/telegram/callback`
+# TELEGRAM_REDIRECT_URI="https://your-origin/auth/telegram/callback"
+```
+
+### @BotFather allowlist (Bot Settings → Web Login)
+
+Register **origins** and matching **redirect URIs**:
+
+| Origin | Redirect URI |
+| ------ | ------------ |
+| `https://openpaypro.space` | `https://openpaypro.space/auth/telegram/callback` |
+| `https://openpaypromainnet.lovable.app` | `https://openpaypromainnet.lovable.app/auth/telegram/callback` |
+| `https://openpaypromainnet.vercel.app` | `https://openpaypromainnet.vercel.app/auth/telegram/callback` |
+| `http://localhost:8080` (or your Vite port) | `http://localhost:PORT/auth/telegram/callback` |
+
+### Flow
+
+1. `GET /api/public/telegram-auth?origin=…` → `authorize_url` + signed `state` (PKCE verifier inside).
+2. User authorizes at `https://oauth.telegram.org/auth`.
+3. Callback `/auth/telegram/callback?code=…&state=…`.
+4. `POST /api/public/telegram-auth` exchanges code, verifies JWT, returns `{ email, password }`.
+5. Client `signInWithPassword` → `/dashboard`.
+
+### Key files
+
+| File | Role |
+| ---- | ---- |
+| `src/lib/telegram-auth.ts` | Client start |
+| `src/lib/telegram-auth.server.ts` | PKCE, token, JWKS |
+| `src/routes/api/public/telegram-auth.ts` | HTTP API |
+| `src/routes/auth.telegram.callback.tsx` | Browser callback |
+
+---
+
 ## UI integration (`/authpi`)
 
 File: `src/routes/authpi.tsx`
 
-1. User selects a method tile (OpenPay · Solana · Pi · Phantom · WalletConnect · MetaMask).
+1. User selects a method tile (OpenPay · Telegram · Solana · Pi · Phantom · WalletConnect · MetaMask).
 2. Primary CTA updates (“Continue with …”).
 3. Phantom / MetaMask show method-specific panels (Connect buttons + social chips).
 4. Pi Browser filters tiles to OpenPay + Pi only.
 
-Brand logos live under `public/auth-*.png` / `auth-pi.jpg` (see `PHANTOM_WALLET_LOGO`, `SOLANA_WALLET_LOGO`, `METAMASK_WALLET_LOGO`, `PI_NETWORK_AUTH_LOGO` in `src/lib/phantom.ts`).
+Brand logos live under `public/auth-*.png` / `auth-pi.jpg` / `auth-telegram.svg` (see `PHANTOM_WALLET_LOGO`, `SOLANA_WALLET_LOGO`, `METAMASK_WALLET_LOGO`, `PI_NETWORK_AUTH_LOGO` in `src/lib/phantom.ts`).
 
 ---
 
 ## Security checklist
 
-- [ ] Never put `opk_`, `wcp_`, `WEB3AUTH_CLIENT_SECRET`, or Supabase **service role** in `VITE_*` vars.
+- [ ] Never put `opk_`, `wcp_`, `WEB3AUTH_CLIENT_SECRET`, `TELEGRAM_CLIENT_SECRET`, or Supabase **service role** in `VITE_*` vars.
 - [ ] Verify OAuth `state` on every callback.
-- [ ] WalletConnect / Solana / Web3Auth: always verify signatures or JWTs **server-side**.
+- [ ] WalletConnect / Solana / Web3Auth / Telegram: always verify signatures or JWTs **server-side**.
 - [ ] Web3Auth: always validate JWT `audience` = your Client ID.
+- [ ] Telegram: allowlist every production + preview redirect URI in @BotFather Web Login.
 - [ ] Phantom: allowlist every production + preview origin in Phantom Portal.
 - [ ] Prefer Sapphire Devnet for localhost Web3Auth; Mainnet for production hosts.
 - [ ] Rotate any secret that was committed or pasted into chat.
@@ -367,6 +415,7 @@ Brand logos live under `public/auth-*.png` / `auth-pi.jpg` (see `PHANTOM_WALLET_
 | Method             | Endpoints                                                                    |
 | ------------------ | ---------------------------------------------------------------------------- |
 | OpenPay            | `GET/POST /api/public/openpay-auth` · callback `/auth/openpay/callback`      |
+| Telegram           | `GET/POST /api/public/telegram-auth` · callback `/auth/telegram/callback`    |
 | Solana             | `GET/POST /api/public/solana-auth`                                           |
 | Pi                 | `POST /api/public/pi-auth` · callback `/auth/pi/callback`                    |
 | Phantom            | SDK → `/auth/callback`                                                       |

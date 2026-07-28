@@ -52,10 +52,12 @@ import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
+import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
+import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
@@ -289,6 +291,11 @@ const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
   path: '/api/public/supabase-config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
+  id: '/api/public/telegram-auth',
+  path: '/api/public/telegram-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWalletconnectAuthRoute =
   ApiPublicWalletconnectAuthRouteImport.update({
     id: '/api/public/walletconnect-auth',
@@ -308,6 +315,11 @@ const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
 const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
   id: '/pi/callback',
   path: '/pi/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
+  id: '/telegram/callback',
+  path: '/telegram/callback',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedOpenpayConnectCallbackRoute =
@@ -422,10 +434,12 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -482,10 +496,12 @@ export interface FileRoutesByTo {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -544,10 +560,12 @@ export interface FileRoutesById {
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
+  '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
+  '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
@@ -606,10 +624,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/auth/telegram/callback'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -666,10 +686,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/auth/telegram/callback'
     | '/openpay/connect/callback'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
@@ -727,10 +749,12 @@ export interface FileRouteTypes {
     | '/api/public/pi-auth'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
+    | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
+    | '/auth/telegram/callback'
     | '/_authenticated/openpay/connect/callback'
     | '/_authenticated/opentoken_/creator/$userId'
     | '/api/public/docs/openpay'
@@ -764,6 +788,7 @@ export interface RootRouteChildren {
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
   ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
+  ApiPublicTelegramAuthRoute: typeof ApiPublicTelegramAuthRoute
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
@@ -1080,6 +1105,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/telegram-auth': {
+      id: '/api/public/telegram-auth'
+      path: '/api/public/telegram-auth'
+      fullPath: '/api/public/telegram-auth'
+      preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/walletconnect-auth': {
       id: '/api/public/walletconnect-auth'
       path: '/api/public/walletconnect-auth'
@@ -1106,6 +1138,13 @@ declare module '@tanstack/react-router' {
       path: '/pi/callback'
       fullPath: '/auth/pi/callback'
       preLoaderRoute: typeof AuthPiCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/telegram/callback': {
+      id: '/auth/telegram/callback'
+      path: '/telegram/callback'
+      fullPath: '/auth/telegram/callback'
+      preLoaderRoute: typeof AuthTelegramCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_authenticated/openpay/connect/callback': {
@@ -1280,12 +1319,14 @@ interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthOpenpayCallbackRoute: typeof AuthOpenpayCallbackRoute
   AuthPiCallbackRoute: typeof AuthPiCallbackRoute
+  AuthTelegramCallbackRoute: typeof AuthTelegramCallbackRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   AuthOpenpayCallbackRoute: AuthOpenpayCallbackRoute,
   AuthPiCallbackRoute: AuthPiCallbackRoute,
+  AuthTelegramCallbackRoute: AuthTelegramCallbackRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -1323,6 +1364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
   ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
+  ApiPublicTelegramAuthRoute: ApiPublicTelegramAuthRoute,
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,

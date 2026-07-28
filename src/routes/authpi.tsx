@@ -4,6 +4,11 @@ import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
 import { startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
+import {
+  TELEGRAM_AUTH_LOGO,
+  TELEGRAM_BRAND_BLUE,
+  startTelegramSignIn,
+} from "@/lib/telegram-auth";
 import { WALLETCONNECT_BRAND_BLUE, startWalletConnectSignIn } from "@/lib/walletconnect-auth";
 import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-config";
 import {
@@ -35,7 +40,14 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-type AuthMethod = "openpay" | "solana" | "pi" | "phantom" | "walletconnect" | "metamask";
+type AuthMethod =
+  | "openpay"
+  | "telegram"
+  | "solana"
+  | "pi"
+  | "phantom"
+  | "walletconnect"
+  | "metamask";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -54,6 +66,15 @@ const AUTH_OPTIONS: {
     accentFg: "#ffffff",
     logoUrl: OPENPAY_LOGO_WHITE,
     logoFit: "contain",
+  },
+  {
+    id: "telegram",
+    label: "Telegram",
+    desc: "Sign in with Telegram Login",
+    accent: TELEGRAM_BRAND_BLUE,
+    accentFg: "#ffffff",
+    logoUrl: TELEGRAM_AUTH_LOGO,
+    logoFit: "cover",
   },
   {
     id: "solana",
@@ -199,6 +220,10 @@ function AuthPiPageInner() {
     try {
       if (method === "openpay") {
         await startOpenPaySignIn({ redirectTo: "/dashboard" });
+        return;
+      }
+      if (method === "telegram") {
+        await startTelegramSignIn({ redirectTo: "/dashboard" });
         return;
       }
       if (method === "solana") {

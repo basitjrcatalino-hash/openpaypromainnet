@@ -1,4 +1,20 @@
-// Tiny mock helpers – not real cryptography. Used to simulate wallet creation.
+/**
+ * OpenPay Pro ledger helpers.
+ * Recovery phrases are app-level secrets: same phrase → same recovery_hash → same
+ * ledger row (address + balances). Not BIP39 / chain keypairs.
+ */
+
+const WORDS = [
+  "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+  "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+  "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+  "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+  "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+  "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+  "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+  "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+];
+
 export function generateAddress(prefix = "0x"): string {
   const hex = "0123456789abcdef";
   let s = "";
@@ -6,21 +22,98 @@ export function generateAddress(prefix = "0x"): string {
   return prefix + s;
 }
 
-const WORDS = [
-  "abandon","ability","able","about","above","absent","absorb","abstract","absurd","abuse",
-  "access","accident","account","accuse","achieve","acid","acoustic","acquire","across","act",
-  "action","actor","actress","actual","adapt","add","addict","address","adjust","admit",
-  "adult","advance","advice","aerobic","affair","afford","afraid","again","age","agent",
-  "agree","ahead","aim","air","airport","aisle","alarm","album","alcohol","alert",
-];
-
 export function generateMnemonic(words = 12): string[] {
   const out: string[] = [];
+  const used = new Set<string>();
   while (out.length < words) {
     const w = WORDS[Math.floor(Math.random() * WORDS.length)];
+    if (used.has(w)) continue;
+    used.add(w);
     out.push(w);
   }
   return out;
+}
+
+export function normalizeMnemonic(input: string | string[]): string[] {
+  const raw = Array.isArray(input) ? input.join(" ") : input;
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+export function isValidMnemonicLength(words: string[]): boolean {
+  return words.length === 12 || words.length === 24;
+}
+
+export async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Stable secret fingerprint — never store the plaintext phrase in the DB. */
+export async function recoveryHashFromPhrase(phrase: string | string[]): Promise<string> {
+  const words = normalizeMnemonic(phrase);
+  return sha256Hex(`openpay-pro-recovery:v1:${words.join(" ")}`);
+}
+
+/** Deterministic OpenPay Pro address derived from the recovery hash. */
+export async function addressFromRecoveryHash(recoveryHash: string, prefix = "0x"): Promise<string> {
+  const derived = await sha256Hex(`openpay-pro-address:v1:${recoveryHash.toLowerCase()}`);
+  return `${prefix}${derived.slice(0, 40)}`;
+}
+
+export type DerivedOpenPayWallet = {
+  words: string[];
+  phrase: string;
+  recovery_hash: string;
+  address: string;
+};
+
+export async function deriveWalletFromPhrase(
+  phrase: string | string[],
+): Promise<DerivedOpenPayWallet> {
+  const words = normalizeMnemonic(phrase);
+  if (!isValidMnemonicLength(words)) {
+    throw new Error("Enter a valid 12- or 24-word recovery phrase");
+  }
+  const recovery_hash = await recoveryHashFromPhrase(words);
+  const address = await addressFromRecoveryHash(recovery_hash);
+  return { words, phrase: words.join(" "), recovery_hash, address };
+}
+
+export async function createFreshRecoveryWallet(): Promise<DerivedOpenPayWallet> {
+  return deriveWalletFromPhrase(generateMnemonic(12));
+}
+
+const PHRASE_SESSION_PREFIX = "opp:recovery:";
+
+export function stashRecoveryPhrase(walletId: string, phrase: string) {
+  try {
+    sessionStorage.setItem(`${PHRASE_SESSION_PREFIX}${walletId}`, phrase);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function peekRecoveryPhrase(walletId: string): string | null {
+  try {
+    return sessionStorage.getItem(`${PHRASE_SESSION_PREFIX}${walletId}`);
+  } catch {
+    return null;
+  }
+}
+
+export function clearRecoveryPhrase(walletId: string) {
+  try {
+    sessionStorage.removeItem(`${PHRASE_SESSION_PREFIX}${walletId}`);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function shortAddress(addr?: string | null, head = 6, tail = 4): string {
@@ -111,6 +204,45 @@ type WalletQueryClient = {
   from: (table: string) => any;
 };
 
+function isMissingRemovedAtColumn(message?: string | null): boolean {
+  const m = (message || "").toLowerCase();
+  return m.includes("removed_at") && (m.includes("column") || m.includes("schema") || m.includes("does not exist"));
+}
+
+/**
+ * List a user's wallets. Filters soft-removed rows when `removed_at` exists;
+ * falls back cleanly before that migration is applied.
+ */
+export async function listUserWallets<T = Record<string, unknown>>(
+  supabase: WalletQueryClient,
+  userId: string,
+  columns = "id,user_id,name,address,is_active,ousd_balance,pi_balance,created_at",
+): Promise<T[]> {
+  const primary = await supabase
+    .from("wallets")
+    .select(columns)
+    .eq("user_id", userId)
+    .is("removed_at", null)
+    .order("is_active", { ascending: false })
+    .order("created_at", { ascending: true });
+
+  if (!primary.error) return (primary.data as T[]) ?? [];
+
+  if (!isMissingRemovedAtColumn(primary.error.message)) {
+    throw new Error(primary.error.message);
+  }
+
+  const fallback = await supabase
+    .from("wallets")
+    .select(columns)
+    .eq("user_id", userId)
+    .order("is_active", { ascending: false })
+    .order("created_at", { ascending: true });
+
+  if (fallback.error) throw new Error(fallback.error.message);
+  return (fallback.data as T[]) ?? [];
+}
+
 /**
  * Load the user's activated wallet (is_active first). Never use bare limit(1)
  * without this order — Postgres can return a different wallet and top-ups
@@ -121,16 +253,8 @@ export async function fetchActiveWallet<T = Record<string, unknown>>(
   userId: string,
   columns = "*",
 ): Promise<T | null> {
-  const { data, error } = await supabase
-    .from("wallets")
-    .select(columns)
-    .eq("user_id", userId)
-    .order("is_active", { ascending: false })
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as T | null) ?? null;
+  const rows = await listUserWallets<T>(supabase, userId, columns);
+  return rows[0] ?? null;
 }
 
 /** Resolve a wallet the user owns, preferring an explicit id then the active one. */
@@ -140,14 +264,28 @@ export async function resolveCreditWallet<T extends { id: string } = { id: strin
   walletId?: string | null,
 ): Promise<T | null> {
   if (walletId) {
-    const { data, error } = await supabase
+    const withFilter = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("id", walletId)
+      .eq("user_id", userId)
+      .is("removed_at", null)
+      .maybeSingle();
+
+    if (!withFilter.error && withFilter.data) return withFilter.data as T;
+
+    if (withFilter.error && !isMissingRemovedAtColumn(withFilter.error.message)) {
+      throw new Error(withFilter.error.message);
+    }
+
+    const fallback = await supabase
       .from("wallets")
       .select("*")
       .eq("id", walletId)
       .eq("user_id", userId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (data) return data as T;
+    if (fallback.error) throw new Error(fallback.error.message);
+    if (fallback.data) return fallback.data as T;
   }
   return fetchActiveWallet<T>(supabase, userId);
 }

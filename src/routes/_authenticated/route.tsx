@@ -33,7 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { shortAddress } from "@/lib/wallet-utils";
+import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -96,15 +96,7 @@ function AuthenticatedLayout() {
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_active", { ascending: false })
-        .order("created_at", { ascending: true });
-      return data ?? [];
-    },
+    queryFn: () => listUserWallets(supabase, user.id, "*"),
   });
 
   const activeWallet = wallets[0];

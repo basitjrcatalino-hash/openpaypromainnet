@@ -1,7 +1,7 @@
 "use client";
 
+import * as React from "react";
 import {
-  Component,
   createContext,
   useCallback,
   useContext,
@@ -53,7 +53,8 @@ type PhantomSdk = {
   darkTheme: unknown;
 };
 
-class PhantomRenderBoundary extends Component<
+/** Use React.Component (namespace) — named `Component` can be undefined under circular ESM init. */
+class PhantomRenderBoundary extends React.Component<
   {
     children: ReactNode;
     fallback: ReactNode;

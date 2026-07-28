@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
+import { formatNumber, formatPct, createFreshRecoveryWallet, fetchActiveWallet, listUserWallets, shortAddress, stashRecoveryPhrase } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTokenPrice, useCurrency } from "@/lib/currency";
 import {
@@ -114,30 +114,12 @@ function Dashboard() {
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
-    queryFn: async (): Promise<WalletRow[]> => {
-      const { data } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_active", { ascending: false })
-        .order("created_at", { ascending: true });
-      return data ?? [];
-    },
+    queryFn: (): Promise<WalletRow[]> => listUserWallets<WalletRow>(supabase, user.id, "*"),
   });
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["active-wallet", user.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_active", { ascending: false })
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
+    queryFn: () => fetchActiveWallet<WalletRow>(supabase, user.id),
   });
 
   const {
@@ -171,22 +153,43 @@ function Dashboard() {
   useEffect(() => {
     if (walletLoading || wallet) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("wallets")
-        .insert({
-          user_id: user.id,
-          name: "Main Wallet",
-          address: generateAddress(),
-          is_active: true,
-          ousd_balance: 0,
-          pi_balance: 0,
-        })
-        .select()
-        .single();
-      if (!error && data) {
-        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-        qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-        toast.success("Your wallet is ready");
+      try {
+        const derived = await createFreshRecoveryWallet();
+        let created = await supabase
+          .from("wallets")
+          .insert({
+            user_id: user.id,
+            name: "Main Wallet",
+            address: derived.address,
+            recovery_hash: derived.recovery_hash,
+            is_active: true,
+            ousd_balance: 0,
+            pi_balance: 0,
+          } as any)
+          .select("id")
+          .single();
+        if (created.error && /recovery_hash/i.test(created.error.message)) {
+          created = await supabase
+            .from("wallets")
+            .insert({
+              user_id: user.id,
+              name: "Main Wallet",
+              address: derived.address,
+              is_active: true,
+              ousd_balance: 0,
+              pi_balance: 0,
+            })
+            .select("id")
+            .single();
+        }
+        if (!created.error && created.data) {
+          stashRecoveryPhrase(created.data.id, derived.phrase);
+          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+          toast.success("Your wallet is ready — back up your recovery phrase in Settings");
+        }
+      } catch {
+        /* ignore race if another tab created first */
       }
     })();
   }, [wallet, walletLoading, user.id, qc]);

@@ -79,6 +79,7 @@ export default defineConfig({
         "react-dom/client",
         "@phantom/react-sdk",
         "@walletconnect/pay",
+        "@moonpay/moonpay-react",
         "buffer",
         "base64-js",
         "ieee754",
@@ -90,8 +91,8 @@ export default defineConfig({
       },
     },
     ssr: {
-      // Keep CJS `buffer` out of the SSR ESM runner (require is not defined).
-      external: ["buffer", "base64-js", "ieee754"],
+      // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
+      external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

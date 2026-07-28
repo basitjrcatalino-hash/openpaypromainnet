@@ -20,19 +20,35 @@ import {
   FileText,
   Shield,
   LogOut,
+  Pencil,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
-import { generateAddress, generateMnemonic, shortAddress } from "@/lib/wallet-utils";
+import {
+  createFreshRecoveryWallet,
+  deriveWalletFromPhrase,
+  formatUSD,
+  listUserWallets,
+  normalizeMnemonic,
+  isValidMnemonicLength,
+  peekRecoveryPhrase,
+  shortAddress,
+  stashRecoveryPhrase,
+  generateMnemonic,
+  recoveryHashFromPhrase,
+} from "@/lib/wallet-utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -68,21 +84,41 @@ function SettingsPage() {
   const router = useRouter();
   const [newName, setNewName] = useState("");
   const [importPhrase, setImportPhrase] = useState("");
+  const [importAddress, setImportAddress] = useState("");
   const [creating, setCreating] = useState(false);
   const [mnemonic, setMnemonic] = useState<string[] | null>(null);
+  const [createdAddress, setCreatedAddress] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addTab, setAddTab] = useState<"create" | "import">("create");
   const [signingOut, setSigningOut] = useState(false);
+  const [renameId, setRenameId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("is_active", { ascending: false })
-          .order("created_at", { ascending: true })
-      ).data ?? [],
+    queryFn: () => listUserWallets(supabase, user.id),
+  });
+
+  const { data: recoveryFlags = {} } = useQuery({
+    queryKey: ["wallet-recovery-flags", user.id, wallets.map((w: { id: string }) => w.id).join(",")],
+    enabled: wallets.length > 0,
+    queryFn: async () => {
+      const entries = await Promise.all(
+        wallets.map(async (w: { id: string }) => {
+          try {
+            const { data, error } = await supabase.rpc("wallet_has_recovery", {
+              p_wallet_id: w.id,
+            });
+            if (error) return [w.id, false] as const;
+            return [w.id, !!data] as const;
+          } catch {
+            return [w.id, false] as const;
+          }
+        }),
+      );
+      return Object.fromEntries(entries) as Record<string, boolean>;
+    },
   });
 
   const { data: prefs } = useQuery({
@@ -121,6 +157,15 @@ function SettingsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.display_name, (profile as any)?.username]);
+
+  function resetAddDialog() {
+    setNewName("");
+    setImportPhrase("");
+    setImportAddress("");
+    setMnemonic(null);
+    setCreatedAddress(null);
+    setAddTab("create");
+  }
 
   async function saveProfile() {
     const dn = displayName.trim();
@@ -186,15 +231,56 @@ function SettingsPage() {
     }
     setCreating(true);
     try {
-      const m = generateMnemonic();
-      setMnemonic(m);
-      await supabase
+      const derived = await createFreshRecoveryWallet();
+      await supabase.from("wallets").update({ is_active: false }).eq("user_id", user.id);
+      let inserted:
+        | { id: string; address: string; name: string }
+        | null = null;
+
+      const withHash = await supabase
         .from("wallets")
-        .insert({ user_id: user.id, name: newName.trim(), address: generateAddress() });
-      toast.success("Wallet created");
+        .insert({
+          user_id: user.id,
+          name: newName.trim(),
+          address: derived.address,
+          recovery_hash: derived.recovery_hash,
+          is_active: true,
+          ousd_balance: 0,
+          pi_balance: 0,
+        } as any)
+        .select("id,address,name")
+        .single();
+
+      if (withHash.error) {
+        const msg = withHash.error.message.toLowerCase();
+        if (!msg.includes("recovery_hash")) throw withHash.error;
+        const legacy = await supabase
+          .from("wallets")
+          .insert({
+            user_id: user.id,
+            name: newName.trim(),
+            address: derived.address,
+            is_active: true,
+            ousd_balance: 0,
+            pi_balance: 0,
+          })
+          .select("id,address,name")
+          .single();
+        if (legacy.error) throw legacy.error;
+        inserted = legacy.data;
+      } else {
+        inserted = withHash.data;
+      }
+
+      stashRecoveryPhrase(inserted.id, derived.phrase);
+      setMnemonic(derived.words);
+      setCreatedAddress(inserted.address);
+      toast.success("Wallet created — save your recovery phrase");
       setNewName("");
       qc.invalidateQueries({ queryKey: ["wallets", user.id] });
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["wallet-recovery-flags", user.id] });
+      router.invalidate();
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -203,23 +289,84 @@ function SettingsPage() {
   }
 
   async function importWallet() {
-    if (importPhrase.trim().split(/\s+/).length < 12) {
-      toast.error("Enter a 12-word phrase");
+    const words = normalizeMnemonic(importPhrase);
+    if (!isValidMnemonicLength(words)) {
+      toast.error("Enter a valid 12- or 24-word recovery phrase");
       return;
     }
     setCreating(true);
     try {
-      await supabase
-        .from("wallets")
-        .insert({ user_id: user.id, name: "Imported wallet", address: generateAddress() });
-      toast.success("Wallet imported");
+      const derived = await deriveWalletFromPhrase(words);
+      const optionalAddr = importAddress.trim();
+      const { data, error } = await supabase.rpc("import_openpay_wallet", {
+        p_recovery_hash: derived.recovery_hash,
+        p_address: derived.address,
+        p_name: newName.trim() || "Imported wallet",
+      });
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (
+          msg.includes("import_openpay_wallet") ||
+          msg.includes("could not find the function") ||
+          msg.includes("schema cache")
+        ) {
+          throw new Error(
+            "Wallet recovery migration not applied yet. Run 20260729010000_wallet_recovery_import.sql, then retry.",
+          );
+        }
+        throw error;
+      }
+      const row = data as {
+        id: string;
+        address: string;
+        name: string;
+        ousd_balance?: number;
+        pi_balance?: number;
+      };
+      if (optionalAddr && optionalAddr.toLowerCase() !== String(row.address).toLowerCase()) {
+        toast.message(
+          `Restored ${shortAddress(row.address)} — phrase controls this OpenPay Pro ledger`,
+        );
+      }
+      stashRecoveryPhrase(row.id, derived.phrase);
+      const bal = Number(row.ousd_balance ?? 0);
+      toast.success(
+        bal > 0
+          ? `Imported ${row.name} · ${formatUSD(bal)} OUSD`
+          : `Imported ${row.name} · ${shortAddress(row.address)}`,
+      );
       setImportPhrase("");
+      setImportAddress("");
+      setAddOpen(false);
+      resetAddDialog();
       qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["wallet-recovery-flags", user.id] });
+      qc.invalidateQueries({ queryKey: ["holdings"] });
+      router.invalidate();
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
       setCreating(false);
     }
+  }
+
+  async function importByAddressOnly() {
+    const addr = importAddress.trim();
+    if (!addr) {
+      toast.error("Paste an OpenPay Pro wallet address");
+      return;
+    }
+    const match = wallets.find(
+      (w: { address: string }) => w.address.toLowerCase() === addr.toLowerCase(),
+    );
+    if (!match) {
+      toast.error("Address not in your account — import with the recovery phrase to restore it");
+      return;
+    }
+    await setActive(match.id);
+    setAddOpen(false);
+    resetAddDialog();
   }
 
   async function setActive(id: string) {
@@ -236,8 +383,42 @@ function SettingsPage() {
       toast.error("Keep at least one wallet");
       return;
     }
-    await supabase.from("wallets").delete().eq("id", id);
+    const { error } = await supabase.rpc("remove_openpay_wallet", { p_wallet_id: id });
+    if (error) {
+      // Fallback before soft-delete migration is applied
+      const wasActive = wallets.some(
+        (w: { id: string; is_active: boolean }) => w.id === id && w.is_active,
+      );
+      const { error: delErr } = await supabase.from("wallets").delete().eq("id", id);
+      if (delErr) {
+        toast.error(error.message);
+        return;
+      }
+      if (wasActive) {
+        const next = wallets.find((w: { id: string }) => w.id !== id);
+        if (next) await supabase.from("wallets").update({ is_active: true }).eq("id", next.id);
+      }
+    }
     toast.success("Wallet removed");
+    setConfirmDeleteId(null);
+    qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+    qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+    router.invalidate();
+  }
+
+  async function renameWallet() {
+    if (!renameId || !renameValue.trim()) return;
+    const { error } = await supabase
+      .from("wallets")
+      .update({ name: renameValue.trim() })
+      .eq("id", renameId)
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Wallet renamed");
+    setRenameId(null);
     qc.invalidateQueries({ queryKey: ["wallets", user.id] });
     qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
   }
@@ -276,7 +457,7 @@ function SettingsPage() {
     <div className="ot-phantom ph-page mx-auto max-w-lg space-y-6 pb-8 md:max-w-2xl">
       <PageHeader title="Settings" />
       <p className="-mt-2 text-center text-sm text-muted-foreground md:text-left">
-        Account, security, and connections
+        Manage wallets, security, and connections
       </p>
 
       {/* Account */}
@@ -363,149 +544,339 @@ function SettingsPage() {
       </div>
       </section>
 
-      {/* Wallets */}
+      {/* Wallets — Phantom-style manage */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Wallets
         </h2>
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Your wallets</h2>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                className="rounded-full bg-primary text-primary-foreground"
-              >
-                <Plus className="mr-1.5 h-4 w-4" /> Add wallet
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md rounded-3xl">
-              <DialogHeader>
-                <DialogTitle>Add wallet</DialogTitle>
-              </DialogHeader>
-              <Tabs defaultValue="create">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="create">Create</TabsTrigger>
-                  <TabsTrigger value="import">Import</TabsTrigger>
-                </TabsList>
-                <TabsContent value="create" className="mt-4 space-y-3">
-                  <Label>Wallet name</Label>
-                  <Input
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Trading"
-                  />
-                  <Button
-                    onClick={createWallet}
-                    disabled={creating}
-                    className="w-full rounded-2xl bg-primary text-primary-foreground"
-                  >
-                    {creating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <WalletIcon className="mr-2 h-4 w-4" />
-                    )}{" "}
-                    Generate wallet
-                  </Button>
-                  {mnemonic && (
-                    <div className="rounded-2xl border border-warning/40 bg-warning/10 p-3 text-xs">
-                      <div className="mb-2 font-semibold">⚠️ Save your recovery phrase</div>
-                      <div className="grid grid-cols-3 gap-2 font-mono">
-                        {mnemonic.map((w, i) => (
-                          <div key={i} className="rounded-md bg-card px-2 py-1">
-                            {i + 1}. {w}
-                          </div>
-                        ))}
-                      </div>
+        <div className="overflow-hidden rounded-2xl bg-card">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold">Manage wallets</h2>
+              <p className="text-xs text-muted-foreground">
+                Switch, rename, backup, or import your OpenPay Pro ledgers
+              </p>
+            </div>
+            <Dialog
+              open={addOpen}
+              onOpenChange={(o) => {
+                setAddOpen(o);
+                if (!o) resetAddDialog();
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button size="sm" className="rounded-full bg-primary text-primary-foreground">
+                  <Plus className="mr-1.5 h-4 w-4" /> Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle>Add wallet</DialogTitle>
+                  <DialogDescription>
+                    Create a new OpenPay Pro wallet or restore one with your recovery phrase.
+                  </DialogDescription>
+                </DialogHeader>
+                <Tabs
+                  value={addTab}
+                  onValueChange={(v) => setAddTab(v as "create" | "import")}
+                >
+                  <TabsList className="grid w-full grid-cols-2 rounded-full">
+                    <TabsTrigger value="create" className="rounded-full">
+                      Create
+                    </TabsTrigger>
+                    <TabsTrigger value="import" className="rounded-full">
+                      Import
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="create" className="mt-4 space-y-3">
+                    <div>
+                      <Label>Wallet name</Label>
+                      <Input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Main Wallet"
+                        className="mt-1.5"
+                        maxLength={40}
+                      />
+                    </div>
+                    {!mnemonic ? (
                       <Button
-                        size="sm"
+                        onClick={createWallet}
+                        disabled={creating}
+                        className="w-full rounded-2xl bg-primary text-primary-foreground"
+                      >
+                        {creating ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <WalletIcon className="mr-2 h-4 w-4" />
+                        )}{" "}
+                        Create wallet
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+                          <div className="mb-1.5 flex items-center gap-1.5 font-semibold">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            Safety — save this phrase offline
+                          </div>
+                          <ul className="list-disc space-y-1 pl-4">
+                            <li>Anyone with these words can restore this exact OpenPay Pro wallet and its balances.</li>
+                            <li>Never share them. OpenPay staff will never ask for your phrase.</li>
+                            <li>Store offline — screenshot or cloud notes are risky.</li>
+                          </ul>
+                          {createdAddress && (
+                            <p className="mt-2 font-mono text-[11px] opacity-90">
+                              Address: {shortAddress(createdAddress, 8, 6)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+                          {mnemonic.map((w, i) => (
+                            <div
+                              key={`${w}-${i}`}
+                              className="rounded-xl border border-border/60 bg-muted/40 px-2 py-1.5"
+                            >
+                              <span className="text-muted-foreground">{i + 1}.</span> {w}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 rounded-full"
+                            onClick={() => {
+                              navigator.clipboard.writeText(mnemonic.join(" "));
+                              toast.success("Phrase copied");
+                            }}
+                          >
+                            <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 rounded-full bg-primary text-primary-foreground"
+                            onClick={async () => {
+                              await updatePref({ recovery_backed_up: true });
+                              toast.success("You're all set");
+                              setAddOpen(false);
+                              resetAddDialog();
+                            }}
+                          >
+                            I've saved it
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="import" className="mt-4 space-y-3">
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+                      <div className="mb-1 flex items-center gap-1.5 font-semibold">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Safety
+                      </div>
+                      Only paste a phrase you trust. Import restores that exact OpenPay Pro wallet
+                      address, OUSD / Pi balances, and token holdings.
+                    </div>
+                    <div>
+                      <Label>Wallet name (optional)</Label>
+                      <Input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Imported wallet"
+                        className="mt-1.5"
+                        maxLength={40}
+                      />
+                    </div>
+                    <div>
+                      <Label>12-word recovery phrase</Label>
+                      <Textarea
+                        value={importPhrase}
+                        onChange={(e) => setImportPhrase(e.target.value)}
+                        placeholder="word1 word2 word3 …"
+                        className="mt-1.5 min-h-[88px] rounded-2xl font-mono text-sm"
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                    </div>
+                    <div>
+                      <Label>OpenPay Pro address (optional check)</Label>
+                      <Input
+                        value={importAddress}
+                        onChange={(e) => setImportAddress(e.target.value)}
+                        placeholder="0x… or your OpenPay address"
+                        className="mt-1.5 font-mono text-sm"
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Phrase alone restores the exact ledger. Address-only switches a wallet you
+                        already own.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={importWallet}
+                      disabled={creating || !importPhrase.trim()}
+                      className="w-full rounded-2xl bg-primary text-primary-foreground"
+                    >
+                      {creating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <KeyRound className="mr-2 h-4 w-4" />
+                      )}{" "}
+                      Import wallet
+                    </Button>
+                    {importAddress.trim() && !importPhrase.trim() && (
+                      <Button
                         variant="outline"
-                        className="mt-2 w-full rounded-full"
+                        onClick={importByAddressOnly}
+                        className="w-full rounded-2xl"
+                      >
+                        Switch to this address
+                      </Button>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <ul className="divide-y divide-border/50">
+            {wallets.map((w: any) => {
+              const ousd = Number(w.ousd_balance ?? 0);
+              const pi = Number(w.pi_balance ?? 0);
+              const hasRecovery = !!recoveryFlags[w.id];
+              return (
+                <li key={w.id} className="px-3 py-2.5">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-left press hover:bg-muted/40"
+                      onClick={() => !w.is_active && setActive(w.id)}
+                    >
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
+                        <WalletIcon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5 text-sm font-semibold">
+                          <span className="truncate">{w.name}</span>
+                          {w.is_active && (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          )}
+                        </span>
+                        <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                          {shortAddress(w.address, 6, 4)}
+                        </span>
+                        <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
+                          {formatUSD(ousd)}
+                          {pi > 0 ? ` · ${pi.toLocaleString()} π` : ""}
+                          {!hasRecovery ? " · needs backup" : ""}
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-full"
+                        aria-label="Copy address"
                         onClick={() => {
-                          navigator.clipboard.writeText(mnemonic.join(" "));
-                          toast.success("Phrase copied");
+                          navigator.clipboard.writeText(w.address);
+                          toast.success("Address copied");
                         }}
                       >
-                        <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy phrase
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-full"
+                        aria-label="Rename"
+                        onClick={() => {
+                          setRenameId(w.id);
+                          setRenameValue(w.name);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      {!w.is_active && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-full"
+                          aria-label="Set active"
+                          onClick={() => setActive(w.id)}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-full"
+                        aria-label="Remove"
+                        onClick={() => setConfirmDeleteId(w.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>
-                  )}
-                </TabsContent>
-                <TabsContent value="import" className="mt-4 space-y-3">
-                  <Label>12-word recovery phrase</Label>
-                  <Input
-                    value={importPhrase}
-                    onChange={(e) => setImportPhrase(e.target.value)}
-                    placeholder="abandon ability able …"
-                  />
-                  <Button
-                    onClick={importWallet}
-                    disabled={creating}
-                    className="w-full rounded-2xl bg-primary text-primary-foreground"
-                  >
-                    {creating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <KeyRound className="mr-2 h-4 w-4" />
-                    )}{" "}
-                    Import
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+                  </div>
+                </li>
+              );
+            })}
+            {wallets.length === 0 && (
+              <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+                No wallets yet — create or import one
+              </li>
+            )}
+          </ul>
         </div>
-        <ul className="space-y-2">
-          {wallets.map((w: any) => (
-            <li
-              key={w.id}
-              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 p-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-                  <WalletIcon className="h-4 w-4" />
-                </span>
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold">
-                    {w.name}
-                    {w.is_active && (
-                      <span className="rounded-full bg-mint/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mint-foreground">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <div className="font-mono text-xs text-muted-foreground">
-                    {shortAddress(w.address)}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {!w.is_active && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => setActive(w.id)}
-                  >
-                    <Check className="mr-1 h-3.5 w-3.5" />
-                    Activate
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => removeWallet(w.id)}
-                  aria-label="Remove"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
       </section>
+
+      <Dialog open={!!renameId} onOpenChange={(o) => !o && setRenameId(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Rename wallet</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            maxLength={40}
+            placeholder="Wallet name"
+          />
+          <DialogFooter>
+            <Button
+              className="rounded-full bg-primary text-primary-foreground"
+              onClick={renameWallet}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Remove wallet?</DialogTitle>
+            <DialogDescription>
+              This removes the wallet from this account. If it has a recovery phrase backed up, you
+              can import it again later to restore the same address and balances.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="rounded-full" onClick={() => setConfirmDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-full"
+              onClick={() => confirmDeleteId && removeWallet(confirmDeleteId)}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Security */}
       <section className="space-y-2">
@@ -531,10 +902,15 @@ function SettingsPage() {
             }}
           />
           <RecoveryCard
+            wallets={wallets as Array<{ id: string; name: string; address: string; is_active: boolean }>}
+            recoveryFlags={recoveryFlags}
             backedUp={!!(prefs as any)?.recovery_backed_up}
             onConfirm={async () => {
               await updatePref({ recovery_backed_up: true });
               toast.success("Marked as backed up");
+            }}
+            onAttached={() => {
+              qc.invalidateQueries({ queryKey: ["wallet-recovery-flags", user.id] });
             }}
           />
         </div>
@@ -1075,18 +1451,65 @@ function PinCard({
 }
 
 function RecoveryCard({
+  wallets,
+  recoveryFlags,
   backedUp,
   onConfirm,
+  onAttached,
 }: {
+  wallets: Array<{ id: string; name: string; address: string; is_active: boolean }>;
+  recoveryFlags: Record<string, boolean>;
   backedUp: boolean;
   onConfirm: () => Promise<void>;
+  onAttached: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [phrase, setPhrase] = useState<string[] | null>(null);
-  function reveal() {
-    setPhrase(generateMnemonic());
-    setOpen(true);
+  const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"reveal" | "attach" | "missing">("missing");
+  const active = wallets.find((w) => w.is_active) ?? wallets[0];
+
+  async function openBackup() {
+    if (!active) {
+      toast.error("No wallet to back up");
+      return;
+    }
+    const sessionPhrase = peekRecoveryPhrase(active.id);
+    if (sessionPhrase) {
+      setPhrase(sessionPhrase.split(" "));
+      setMode("reveal");
+      setOpen(true);
+      return;
+    }
+    if (recoveryFlags[active.id]) {
+      setPhrase(null);
+      setMode("missing");
+      setOpen(true);
+      return;
+    }
+    // Legacy wallet — generate phrase once and attach without changing address/balances
+    setBusy(true);
+    try {
+      const words = generateMnemonic(12);
+      const hash = await recoveryHashFromPhrase(words);
+      const { error } = await supabase.rpc("attach_wallet_recovery", {
+        p_wallet_id: active.id,
+        p_recovery_hash: hash,
+      });
+      if (error) throw error;
+      stashRecoveryPhrase(active.id, words.join(" "));
+      setPhrase(words);
+      setMode("attach");
+      setOpen(true);
+      onAttached();
+      toast.success("Recovery phrase linked to this wallet");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
@@ -1096,42 +1519,66 @@ function RecoveryCard({
         Recovery phrase{" "}
         {backedUp && <span className="ml-1 text-[10px] uppercase text-mint-foreground">saved</span>}
       </div>
-      <div className="text-xs text-muted-foreground">Backup your seed phrase</div>
+      <div className="text-xs text-muted-foreground">
+        Backup the active wallet so you can import the exact address later
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <Button size="sm" variant="outline" className="mt-3 w-full rounded-full" onClick={reveal}>
-          Reveal phrase
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3 w-full rounded-full"
+          onClick={openBackup}
+          disabled={busy}
+        >
+          {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+          {active && recoveryFlags[active.id] ? "View backup status" : "Back up phrase"}
         </Button>
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle>Your recovery phrase</DialogTitle>
+            <DialogTitle>
+              {mode === "missing" ? "Phrase already backed up" : "Your recovery phrase"}
+            </DialogTitle>
             <DialogDescription>
-              Write these 12 words down and store offline. Anyone with these words controls your
-              wallet.
+              {mode === "missing"
+                ? "For security, OpenPay Pro never stores your words. Use the phrase you saved when you created or backed up this wallet to import it again."
+                : "Write these 12 words down and store offline. Anyone with these words can restore this exact OpenPay Pro wallet and its balances. Never share them."}
             </DialogDescription>
           </DialogHeader>
           {phrase && (
-            <div className="grid grid-cols-3 gap-2 font-mono text-xs">
-              {phrase.map((w, i) => (
-                <div key={i} className="rounded-md bg-card px-2 py-1.5 border border-border/60">
-                  {i + 1}. {w}
+            <>
+              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-950 dark:text-amber-100">
+                <div className="mb-1 flex items-center gap-1.5 font-semibold">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Safety
                 </div>
-              ))}
-            </div>
+                Screenshot and cloud notes are risky. Prefer paper stored offline.
+                {active && (
+                  <p className="mt-1 font-mono opacity-90">{shortAddress(active.address, 8, 6)}</p>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+                {phrase.map((w, i) => (
+                  <div key={`${w}-${i}`} className="rounded-md border border-border/60 bg-card px-2 py-1.5">
+                    {i + 1}. {w}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
           <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              className="rounded-full"
-              onClick={() => {
-                if (phrase) {
+            {phrase && (
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => {
                   navigator.clipboard.writeText(phrase.join(" "));
                   toast.success("Copied");
-                }
-              }}
-            >
-              <Copy className="mr-1.5 h-3.5 w-3.5" />
-              Copy
-            </Button>
+                }}
+              >
+                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                Copy
+              </Button>
+            )}
             <Button
               className="rounded-full bg-primary text-primary-foreground"
               onClick={async () => {
@@ -1139,7 +1586,7 @@ function RecoveryCard({
                 setOpen(false);
               }}
             >
-              I've backed it up
+              {mode === "missing" ? "Got it" : "I've backed it up"}
             </Button>
           </DialogFooter>
         </DialogContent>

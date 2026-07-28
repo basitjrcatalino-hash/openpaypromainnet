@@ -1018,6 +1018,8 @@ export type Database = {
           name: string
           ousd_balance: number
           pi_balance: number
+          recovery_hash?: string | null
+          removed_at?: string | null
           user_id: string
         }
         Insert: {
@@ -1028,6 +1030,8 @@ export type Database = {
           name: string
           ousd_balance?: number
           pi_balance?: number
+          recovery_hash?: string | null
+          removed_at?: string | null
           user_id: string
         }
         Update: {
@@ -1038,6 +1042,8 @@ export type Database = {
           name?: string
           ousd_balance?: number
           pi_balance?: number
+          recovery_hash?: string | null
+          removed_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1047,6 +1053,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attach_wallet_recovery: {
+        Args: { p_wallet_id: string; p_recovery_hash: string }
+        Returns: Json
+      }
       backfill_ledger_entries: { Args: never; Returns: Json }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
@@ -1057,6 +1067,15 @@ export type Database = {
         Returns: boolean
       }
       has_user_pin: { Args: never; Returns: boolean }
+      import_openpay_wallet: {
+        Args: {
+          p_recovery_hash: string
+          p_address: string
+          p_name?: string
+        }
+        Returns: Json
+      }
+      remove_openpay_wallet: { Args: { p_wallet_id: string }; Returns: Json }
       ot_execute_trade: {
         Args: {
           p_token_id: string
@@ -1068,6 +1087,7 @@ export type Database = {
         Returns: Json
       }
       verify_user_pin: { Args: { _pin_hash: string }; Returns: boolean }
+      wallet_has_recovery: { Args: { p_wallet_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

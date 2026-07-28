@@ -1,5 +1,5 @@
 /** Networks available in OpenDEX token pickers. Only OpenPay is live today. */
-export type SwapNetworkId = "openpay" | "solana" | "ethereum" | "bitcoin";
+export type SwapNetworkId = "openpay" | "solana" | "ethereum" | "bitcoin" | "pi";
 
 export type SwapNetwork = {
   id: SwapNetworkId;
@@ -38,6 +38,13 @@ export const SWAP_NETWORKS: SwapNetwork[] = [
     short: "BTC",
     status: "soon",
     accent: "#F7931A",
+  },
+  {
+    id: "pi",
+    label: "Pi Network",
+    short: "PI",
+    status: "soon",
+    accent: "#6B4EFF",
   },
 ];
 

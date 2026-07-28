@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -75,6 +77,16 @@ const AuthRoute = AuthRouteImport.update({
 const AuthpiRoute = AuthpiRouteImport.update({
   id: '/authpi',
   path: '/authpi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
@@ -315,6 +327,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -364,6 +378,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -415,6 +431,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -466,6 +484,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/privacy'
+    | '/terms'
     | '/testnet-reward'
     | '/activity'
     | '/dashboard'
@@ -515,6 +535,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/privacy'
+    | '/terms'
     | '/testnet-reward'
     | '/activity'
     | '/dashboard'
@@ -565,6 +587,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/authpi'
+    | '/privacy'
+    | '/terms'
     | '/testnet-reward'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
@@ -616,6 +640,8 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
@@ -663,6 +689,20 @@ declare module '@tanstack/react-router' {
       path: '/authpi'
       fullPath: '/authpi'
       preLoaderRoute: typeof AuthpiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/testnet-reward': {
@@ -1084,6 +1124,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,

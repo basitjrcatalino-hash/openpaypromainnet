@@ -26,7 +26,7 @@ import {
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import {
@@ -54,6 +54,7 @@ type SwapToken = {
   price_usd: number;
   logo_url?: string | null;
   status?: string | null;
+  is_verified?: boolean | null;
   isOusd?: boolean;
 };
 
@@ -64,6 +65,7 @@ const OUSD_TOKEN: SwapToken = {
   price_usd: 1,
   logo_url: OUSD_LOGO_URL,
   status: "quote",
+  is_verified: true,
   isOusd: true,
 };
 
@@ -94,7 +96,7 @@ function OpenDexPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tokens")
-        .select("id, name, symbol, price_usd, logo_url, status, market_cap")
+        .select("id, name, symbol, price_usd, logo_url, status, market_cap, is_verified")
         .eq("is_hidden", false)
         .order("market_cap", { ascending: false });
       if (error) throw error;
@@ -505,6 +507,11 @@ function trimAmt(n: number) {
   return s || "0";
 }
 
+function isTokenVerified(token?: SwapToken | null) {
+  if (!token) return false;
+  return !!token.isOusd || !!token.is_verified;
+}
+
 function SwapSide({
   label,
   tokens,
@@ -561,8 +568,8 @@ function SwapSide({
         >
           <TokenLogo token={selected} size="sm" showNetworkBadge />
           <span>{selected?.symbol ?? "Select"}</span>
-          {selected && (selected.isOusd || selected.status === "graduated") && (
-            <BadgeCheck className="h-3.5 w-3.5 fill-primary text-primary-foreground" />
+          {selected && isTokenVerified(selected) && (
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-primary text-primary-foreground" />
           )}
           <span className="text-muted-foreground">▾</span>
         </button>
@@ -724,7 +731,7 @@ function TokenPickerDialog({
           ) : (
             filtered.map((t) => {
               const bal = balances.get(t.id) ?? 0;
-              const verified = !!t.isOusd || t.status === "graduated";
+              const verified = isTokenVerified(t);
               return (
                 <button
                   key={t.id}
@@ -785,7 +792,7 @@ function TokenLogo({
   showNetworkBadge?: boolean;
 }) {
   const dim = size === "sm" ? "h-7 w-7 text-[9px]" : "h-10 w-10 text-[11px]";
-  const badge = size === "sm" ? "h-3.5 w-3.5 text-[7px]" : "h-4 w-4 text-[8px]";
+  const badge = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
 
   let logo: ReactNode;
   if (!token) {
@@ -809,21 +816,22 @@ function TokenLogo({
     );
   }
 
-  if (!showNetworkBadge) return logo;
+  // OUSD already is the OpenPay mark — no network badge overlay
+  if (!showNetworkBadge || token?.isOusd) return logo;
 
   return (
     <span className="relative inline-flex shrink-0">
       {logo}
-      <span
-        className={cn(
-          "absolute -bottom-0.5 -right-0.5 grid place-items-center rounded-full border-2 border-card bg-primary font-bold text-primary-foreground",
-          badge,
-        )}
+      <img
+        src={OPENPAY_NETWORK_BADGE_URL}
+        alt=""
         title="OpenPay"
         aria-hidden
-      >
-        OP
-      </span>
+        className={cn(
+          "absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-card bg-card object-cover",
+          badge,
+        )}
+      />
     </span>
   );
 }

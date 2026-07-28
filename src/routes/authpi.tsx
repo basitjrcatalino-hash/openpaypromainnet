@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   OPENPAY_BRAND_BLUE,
   OPENPAY_LOGO_WHITE,
@@ -47,8 +47,8 @@ function AuthPiPage() {
       <div className="w-full max-w-md">
         <div className="rounded-3xl bg-card p-7 shadow-card">
           <div className="mb-8 text-center">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3 w-3" /> Premium Web3 wallet
+            <div className="mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
+              Premium Web3 wallet
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -82,7 +82,18 @@ function AuthPiPage() {
           </Button>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
-            By continuing you agree to OpenPay's Terms & Privacy Policy.
+            By continuing you agree to OpenPay&apos;s{" "}
+            <Link to="/terms" className="font-medium text-foreground underline-offset-2 hover:underline">
+              Terms
+            </Link>{" "}
+            &{" "}
+            <Link
+              to="/privacy"
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </div>

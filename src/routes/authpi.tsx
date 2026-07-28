@@ -7,6 +7,7 @@ import {
   OPENPAY_LOGO_WHITE,
   startOpenPaySignIn,
 } from "@/lib/openpay-auth";
+import { SOLANA_BRAND_PURPLE, startSolanaSignIn } from "@/lib/solana-auth";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,21 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
+function SolanaMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
+      />
+    </svg>
+  );
+}
+
 function AuthPiPage() {
   const navigate = useNavigate();
   const [openPayBusy, setOpenPayBusy] = useState(false);
+  const [solanaBusy, setSolanaBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Only redirect if already signed in — never auto-start OpenPay auth
@@ -52,34 +65,64 @@ function AuthPiPage() {
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in with OpenPay to access OUSD, tokens & NFTs
+              Sign in with OpenPay or Solana to access OUSD, tokens & NFTs
             </p>
           </div>
 
-          <Button
-            type="button"
-            onClick={async () => {
-              setOpenPayBusy(true);
-              try {
-                await startOpenPaySignIn({ redirectTo: "/dashboard" });
-              } catch (err) {
-                toast.error((err as Error).message || "OpenPay sign-in failed");
-                setOpenPayBusy(false);
-              }
-            }}
-            disabled={openPayBusy}
-            className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
-            style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
-          >
-            {openPayBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <span className="inline-flex items-center gap-2.5">
-                <img src={OPENPAY_LOGO_WHITE} width={20} height={20} alt="" />
-                Sign in with OpenPay
-              </span>
-            )}
-          </Button>
+          <div className="space-y-3">
+            <Button
+              type="button"
+              onClick={async () => {
+                setOpenPayBusy(true);
+                try {
+                  await startOpenPaySignIn({ redirectTo: "/dashboard" });
+                } catch (err) {
+                  toast.error((err as Error).message || "OpenPay sign-in failed");
+                  setOpenPayBusy(false);
+                }
+              }}
+              disabled={openPayBusy || solanaBusy}
+              className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
+              style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
+            >
+              {openPayBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <span className="inline-flex items-center gap-2.5">
+                  <img src={OPENPAY_LOGO_WHITE} width={20} height={20} alt="" />
+                  Sign in with OpenPay
+                </span>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              onClick={async () => {
+                setSolanaBusy(true);
+                try {
+                  await startSolanaSignIn({ redirectTo: "/dashboard" });
+                } catch (err) {
+                  const message = (err as Error).message || "Solana sign-in failed";
+                  if (!/reject|cancel|denied/i.test(message)) {
+                    toast.error(message);
+                  }
+                  setSolanaBusy(false);
+                }
+              }}
+              disabled={openPayBusy || solanaBusy}
+              className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
+              style={{ backgroundColor: SOLANA_BRAND_PURPLE }}
+            >
+              {solanaBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <span className="inline-flex items-center gap-2.5">
+                  <SolanaMark className="h-5 w-5" />
+                  Sign in with Solana
+                </span>
+              )}
+            </Button>
+          </div>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
             By continuing you agree to OpenPay&apos;s{" "}

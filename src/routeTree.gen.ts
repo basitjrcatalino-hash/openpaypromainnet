@@ -45,6 +45,7 @@ import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc
 import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
@@ -245,6 +246,11 @@ const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
   path: '/api/public/pi-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
+  id: '/api/public/solana-auth',
+  path: '/api/public/solana-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
   id: '/api/public/supabase-config',
   path: '/api/public/supabase-config',
@@ -359,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -410,6 +417,7 @@ export interface FileRoutesByTo {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -463,6 +471,7 @@ export interface FileRoutesById {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -567,6 +577,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -619,6 +630,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -650,6 +662,7 @@ export interface RootRouteChildren {
   ApiPublicOpenpayAuthRoute: typeof ApiPublicOpenpayAuthRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -915,6 +928,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/solana-auth': {
+      id: '/api/public/solana-auth'
+      path: '/api/public/solana-auth'
+      fullPath: '/api/public/solana-auth'
+      preLoaderRoute: typeof ApiPublicSolanaAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/supabase-config': {
       id: '/api/public/supabase-config'
       path: '/api/public/supabase-config'
@@ -1134,6 +1154,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicOpenpayAuthRoute: ApiPublicOpenpayAuthRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,

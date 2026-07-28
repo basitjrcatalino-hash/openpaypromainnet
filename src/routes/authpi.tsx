@@ -9,6 +9,7 @@ import {
 } from "@/lib/openpay-auth";
 import { SOLANA_BRAND_PURPLE, startSolanaSignIn } from "@/lib/solana-auth";
 import { signInWithPi } from "@/lib/pi-network";
+import { isPiBrowser } from "@/lib/piSdk";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { PHANTOM_APP_ICON } from "@/lib/phantom";
 import {
@@ -114,6 +115,12 @@ function AuthPiPage() {
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
+  // Pi Browser: OpenPay + Pi only. External browsers: all four methods.
+  const inPiBrowser = isPiBrowser();
+  const visibleOptions = inPiBrowser
+    ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi")
+    : AUTH_OPTIONS;
+
   function pick(id: AuthMethod) {
     setSelected(id);
     setPulseId(id);
@@ -122,6 +129,7 @@ function AuthPiPage() {
 
   async function continueWith(method: AuthMethod) {
     if (busy) return;
+    if (!visibleOptions.some((o) => o.id === method)) return;
     setBusy(true);
     try {
       if (method === "openpay") {
@@ -143,7 +151,7 @@ function AuthPiPage() {
     }
   }
 
-  const selectedOpt = AUTH_OPTIONS.find((o) => o.id === selected) ?? null;
+  const selectedOpt = visibleOptions.find((o) => o.id === selected) ?? null;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
@@ -168,7 +176,7 @@ function AuthPiPage() {
             aria-label="Sign-in methods"
             aria-activedescendant={selected ? `auth-opt-${selected}` : undefined}
           >
-            {AUTH_OPTIONS.map((opt, i) => {
+            {visibleOptions.map((opt, i) => {
               const isOn = selected === opt.id;
               return (
                 <button
@@ -292,12 +300,8 @@ function AuthPiPage() {
 
 async function handlePiSignIn(navigate: ReturnType<typeof useNavigate>) {
   const PI_CLIENT_ID = import.meta.env.VITE_PI_CLIENT_ID as string | undefined;
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
-  const isPiBrowser =
-    /PiBrowser/i.test(ua) ||
-    (typeof window !== "undefined" && Boolean((window as unknown as { Pi?: unknown }).Pi));
 
-  if (!isPiBrowser) {
+  if (!isPiBrowser()) {
     if (!PI_CLIENT_ID) {
       throw new Error("Pi sign-in is not configured (missing client ID).");
     }

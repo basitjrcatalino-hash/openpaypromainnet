@@ -19,8 +19,18 @@ export const PHANTOM_REDIRECT_URL =
 
 export const PHANTOM_APP_NAME = "OpenPay Pro";
 
+/** OpenPay app icon registered in Phantom Portal (not the Phantom brand mark). */
 export const PHANTOM_APP_ICON =
   "https://phantom-portal20240925173430423400000001.s3.ca-central-1.amazonaws.com/icons/2e2b40dc-1916-4d04-8e1d-bdc7c20f63a5.jpg";
+
+/** Official Phantom wallet logo for UI (auth tiles, etc.). */
+export const PHANTOM_WALLET_LOGO = "/auth-phantom.png";
+
+export const SOLANA_WALLET_LOGO = "/auth-solana.png";
+
+export const METAMASK_WALLET_LOGO = "/auth-metamask.png";
+
+export const PI_NETWORK_AUTH_LOGO = "/auth-pi.jpg";
 
 export const PHANTOM_PROVIDERS = ["google", "apple", "injected"] as const;
 

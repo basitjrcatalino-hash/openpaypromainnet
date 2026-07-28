@@ -2,14 +2,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-/** Public raw markdown for third-party integrators */
+/** Public raw markdown for third-party integrators (integration + Pro auth). */
 export const Route = createFileRoute("/api/public/docs/openpay")({
   server: {
     handlers: {
       GET: async () => {
         try {
-          const file = path.join(process.cwd(), "docs", "OPENPAY_INTEGRATION.md");
-          const body = await readFile(file, "utf8");
+          const root = process.cwd();
+          const integration = await readFile(
+            path.join(root, "docs", "OPENPAY_INTEGRATION.md"),
+            "utf8",
+          );
+          let auth = "";
+          try {
+            auth = await readFile(path.join(root, "docs", "OPENPAY_PRO_AUTH.md"), "utf8");
+          } catch {
+            /* optional */
+          }
+          const body = auth ? `${integration.trim()}\n\n---\n\n${auth.trim()}\n` : integration;
           return new Response(body, {
             status: 200,
             headers: {

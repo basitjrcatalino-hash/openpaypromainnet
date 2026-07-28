@@ -2,31 +2,26 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
-import {
-  OPENPAY_BRAND_BLUE,
-  OPENPAY_LOGO_WHITE,
-  startOpenPaySignIn,
-} from "@/lib/openpay-auth";
-import { SOLANA_BRAND_PURPLE, startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
-import {
-  WALLETCONNECT_BRAND_BLUE,
-  startWalletConnectSignIn,
-} from "@/lib/walletconnect-auth";
+import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
+import { startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
+import { WALLETCONNECT_BRAND_BLUE, startWalletConnectSignIn } from "@/lib/walletconnect-auth";
 import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-config";
-import { signInWithPi } from "@/lib/pi-network";
-import { isPiBrowser } from "@/lib/piSdk";
-import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { PHANTOM_APP_ICON, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import {
-  PhantomContinueButton,
-  PhantomGoogleAppleLink,
-} from "@/components/phantom-auth-lazy";
+  PHANTOM_WALLET_LOGO,
+  SOLANA_WALLET_LOGO,
+  METAMASK_WALLET_LOGO,
+  PI_NETWORK_AUTH_LOGO,
+  ensureTopLevelAuthWindow,
+} from "@/lib/phantom";
+import { PhantomContinueButton, PhantomGoogleAppleLink } from "@/components/phantom-auth-lazy";
 import { usePhantomClient } from "@/components/phantom-provider";
 import { AppWeb3AuthProvider } from "@/components/web3auth-provider";
 import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { signInWithPi } from "@/lib/pi-network";
+import { isPiBrowser } from "@/lib/piSdk";
 
 const MetaMaskEmbeddedAuthPanel = lazy(() =>
   import("@/components/metamask-embedded-auth").then((m) => ({
@@ -40,13 +35,7 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-type AuthMethod =
-  | "openpay"
-  | "solana"
-  | "pi"
-  | "phantom"
-  | "walletconnect"
-  | "metamask";
+type AuthMethod = "openpay" | "solana" | "pi" | "phantom" | "walletconnect" | "metamask";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -54,6 +43,8 @@ const AUTH_OPTIONS: {
   desc: string;
   accent: string;
   accentFg: string;
+  logoUrl?: string;
+  logoFit?: "cover" | "contain";
 }[] = [
   {
     id: "openpay",
@@ -61,20 +52,26 @@ const AUTH_OPTIONS: {
     desc: "Sign in with your OpenPay account",
     accent: OPENPAY_BRAND_BLUE,
     accentFg: "#ffffff",
+    logoUrl: OPENPAY_LOGO_WHITE,
+    logoFit: "contain",
   },
   {
     id: "solana",
     label: "Solana",
     desc: "Phantom extension · works on desktop web",
-    accent: SOLANA_BRAND_PURPLE,
+    accent: "#000000",
     accentFg: "#ffffff",
+    logoUrl: SOLANA_WALLET_LOGO,
+    logoFit: "cover",
   },
   {
     id: "pi",
     label: "Pi Network",
     desc: "Continue with Pi Browser or OAuth",
-    accent: "#6F3CC3",
+    accent: "#7038A1",
     accentFg: "#ffffff",
+    logoUrl: PI_NETWORK_AUTH_LOGO,
+    logoFit: "cover",
   },
   {
     id: "phantom",
@@ -82,6 +79,8 @@ const AUTH_OPTIONS: {
     desc: "Extension, Google, or Apple",
     accent: "#AB9FF2",
     accentFg: "#1a1330",
+    logoUrl: PHANTOM_WALLET_LOGO,
+    logoFit: "cover",
   },
   {
     id: "walletconnect",
@@ -94,21 +93,12 @@ const AUTH_OPTIONS: {
     id: "metamask",
     label: "MetaMask",
     desc: "Social OAuth · Embedded Wallets",
-    accent: METAMASK_EMBEDDED_BRAND,
+    accent: "#E2761B",
     accentFg: "#ffffff",
+    logoUrl: METAMASK_WALLET_LOGO,
+    logoFit: "cover",
   },
 ];
-
-function SolanaMark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
-      />
-    </svg>
-  );
-}
 
 function WalletConnectMark({ className }: { className?: string }) {
   return (
@@ -121,36 +111,34 @@ function WalletConnectMark({ className }: { className?: string }) {
   );
 }
 
-function MetaMaskMark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M20.6 3.5 13.2 9l1.4-3.3L20.6 3.5Zm-17.2 0L12.7 9l-1.3-3.3L3.4 3.5Zm15.3 13.1-1.7 2.6 3.6.9.1-3.7-2 0Zm-13.9 0-2 0 .1 3.7 3.6-.9-1.7-2.6ZM18.9 9.8l1 2.1-2.4.1 1.4-2.2Zm-13.8 0L6.5 12l-2.4-.1 1-2.1ZM9.6 14.3l1.1 2.1-2.7.1 1.5-2.1Zm4.8 0 1.5 2.1.1.1-2.7-.1 1.1-2.1ZM8.5 9.8l1.8 3.4-1.1-.1-.7-3.3Zm7 0-.7 3.3-1.1.1 1.8-3.4ZM9.6 16.8l-.9 1.4 2.1-.1-.1-.4-1.2-1Zm4.8 0-1.2 1 .1.4 2.1.1.1-.1-.9-1.4Z"
-      />
-    </svg>
-  );
-}
-
-function AuthOptionIcon({ id }: { id: AuthMethod }) {
-  if (id === "openpay") {
-    return <img src={OPENPAY_LOGO_WHITE} width={22} height={22} alt="" />;
-  }
-  if (id === "solana") {
-    return <SolanaMark className="h-5 w-5 text-white" />;
-  }
-  if (id === "pi") {
+function AuthOptionIcon({
+  id,
+  logoUrl,
+  logoFit = "cover",
+}: {
+  id: AuthMethod;
+  logoUrl?: string;
+  logoFit?: "cover" | "contain";
+}) {
+  if (logoUrl) {
     return (
-      <img src={PI_NETWORK_LOGO_URL} width={22} height={22} alt="" className="rounded-full" />
+      <img
+        src={logoUrl}
+        alt=""
+        width={44}
+        height={44}
+        className={cn(
+          "h-full w-full",
+          logoFit === "contain" ? "object-contain p-2" : "object-cover",
+        )}
+        draggable={false}
+      />
     );
   }
   if (id === "walletconnect") {
     return <WalletConnectMark className="h-5 w-5 text-white" />;
   }
-  if (id === "metamask") {
-    return <MetaMaskMark className="h-5 w-5 text-white" />;
-  }
-  return <img src={PHANTOM_APP_ICON} width={22} height={22} alt="" className="rounded-full" />;
+  return null;
 }
 
 function AuthPiPage() {
@@ -163,8 +151,12 @@ function AuthPiPage() {
 
 function AuthPiPageInner() {
   const navigate = useNavigate();
-  const { ready: phantomReady, status: phantomStatus, error: phantomError, retry: retryPhantom } =
-    usePhantomClient();
+  const {
+    ready: phantomReady,
+    status: phantomStatus,
+    error: phantomError,
+    retry: retryPhantom,
+  } = usePhantomClient();
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<AuthMethod | null>(null);
   const [busy, setBusy] = useState(false);
@@ -225,13 +217,12 @@ function AuthPiPageInner() {
       const message = (err as Error).message || "Sign-in failed";
       if (!/reject|cancel|denied/i.test(message)) {
         toast.error(message, {
-          action:
-            /No Solana wallet|Install the Phantom/i.test(message)
-              ? {
-                  label: "Install Phantom",
-                  onClick: () => window.open(PHANTOM_INSTALL_URL, "_blank", "noopener,noreferrer"),
-                }
-              : undefined,
+          action: /No Solana wallet|Install the Phantom/i.test(message)
+            ? {
+                label: "Install Phantom",
+                onClick: () => window.open(PHANTOM_INSTALL_URL, "_blank", "noopener,noreferrer"),
+              }
+            : undefined,
         });
       }
       setBusy(false);
@@ -242,18 +233,19 @@ function AuthPiPageInner() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
-      <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true">
-        <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-primary blur-3xl opacity-20" />
-        <div className="absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-primary-glow blur-3xl opacity-15" />
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+        <div className="auth-orb absolute -top-28 left-[12%] h-80 w-80 rounded-full bg-primary/25 blur-3xl opacity-50" />
+        <div className="auth-orb auth-orb-delay absolute -bottom-36 right-[8%] h-96 w-96 rounded-full bg-primary-glow/30 blur-3xl opacity-40" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/40 to-background" />
       </div>
 
       <div className="auth-select-enter w-full max-w-md">
-        <div className="rounded-3xl bg-card p-7 shadow-card">
+        <div className="rounded-[1.75rem] border border-border/40 bg-card/95 p-7 shadow-card backdrop-blur-xl">
           <div className="mb-7 text-center">
-            <div className="mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
+            <div className="auth-badge-float mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
               Premium Web3 wallet
             </div>
-            <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">Select your sign-in method</p>
           </div>
 
@@ -277,27 +269,24 @@ function AuthPiPageInner() {
                   style={
                     {
                       "--auth-accent": opt.accent,
-                      animationDelay: `${80 + i * 70}ms`,
+                      animationDelay: `${90 + i * 75}ms`,
                     } as CSSProperties
                   }
                   className={cn(
                     "auth-option relative flex flex-col items-start gap-3 overflow-hidden rounded-2xl border p-3.5 text-left",
                     "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
                     "disabled:opacity-60",
-                    isOn
-                      ? "auth-option-selected"
-                      : "border-border/70 bg-muted/30 hover:border-border hover:bg-muted/45",
+                    isOn ? "auth-option-selected" : "border-border/70 bg-muted/30",
                     pulseId === opt.id && "auth-option-pulse",
                   )}
                 >
                   <span
                     className={cn(
-                      "grid h-11 w-11 place-items-center rounded-xl transition-transform duration-200 ease-out",
-                      isOn ? "scale-[1.03]" : "scale-100",
+                      "auth-option-icon grid h-11 w-11 place-items-center overflow-hidden rounded-xl transition-transform duration-200 ease-out",
                     )}
                     style={{ backgroundColor: opt.accent }}
                   >
-                    <AuthOptionIcon id={opt.id} />
+                    <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-foreground">{opt.label}</span>
@@ -312,7 +301,7 @@ function AuthPiPageInner() {
                     )}
                     style={{
                       backgroundColor: isOn
-                        ? `color-mix(in oklab, ${opt.accent} 18%, transparent)`
+                        ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
                         : undefined,
                       color: opt.accent,
                     }}
@@ -326,86 +315,95 @@ function AuthPiPageInner() {
 
           <div className="mt-5 space-y-2">
             {selected === "metamask" ? (
-              <Suspense
-                fallback={
-                  <Button type="button" disabled className="h-12 w-full rounded-xl">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading MetaMask…
-                  </Button>
-                }
-              >
-                <MetaMaskEmbeddedAuthPanel
-                  busy={busy}
-                  setBusy={setBusy}
-                  accent={selectedOpt?.accent ?? METAMASK_EMBEDDED_BRAND}
-                  accentFg={selectedOpt?.accentFg ?? "#ffffff"}
-                />
-              </Suspense>
-            ) : selected === "phantom" ? (
-              phantomReady ? (
-                <>
-                  <PhantomContinueButton
+              <div key="metamask-panel" className="auth-cta-swap">
+                <Suspense
+                  fallback={
+                    <Button type="button" disabled className="h-12 w-full rounded-full">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading MetaMask…
+                    </Button>
+                  }
+                >
+                  <MetaMaskEmbeddedAuthPanel
                     busy={busy}
                     setBusy={setBusy}
-                    accent={selectedOpt?.accent ?? "#AB9FF2"}
-                    accentFg={selectedOpt?.accentFg ?? "#1a1330"}
+                    accent={selectedOpt?.accent ?? METAMASK_EMBEDDED_BRAND}
+                    accentFg={selectedOpt?.accentFg ?? "#ffffff"}
                   />
-                  <PhantomGoogleAppleLink busy={busy} />
-                </>
-              ) : phantomStatus === "error" ? (
-                <div className="space-y-2">
-                  <p className="text-center text-xs text-destructive">
-                    {phantomError || "Phantom Connect failed to load."}
-                  </p>
-                  <Button
-                    type="button"
-                    className="h-12 w-full rounded-xl text-base font-semibold"
-                    style={{
-                      backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
-                      color: selectedOpt?.accentFg ?? "#1a1330",
-                    }}
-                    onClick={() => retryPhantom()}
-                  >
-                    Retry Phantom
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 w-full rounded-xl"
-                    disabled={busy}
-                    onClick={() => {
-                      setSelected("solana");
-                      void continueWith("solana");
-                    }}
-                  >
-                    Continue with Solana instead
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Button
-                    type="button"
-                    disabled
-                    className="h-12 w-full rounded-xl"
-                    style={{
-                      backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
-                      color: selectedOpt?.accentFg ?? "#1a1330",
-                    }}
-                  >
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading Phantom…
-                  </Button>
-                  <p className="text-center text-[11px] text-muted-foreground">
-                    Preparing wallet connect. If this stalls, pick Solana or retry.
-                  </p>
-                </div>
-              )
+                </Suspense>
+              </div>
+            ) : selected === "phantom" ? (
+              <div key="phantom-panel" className="auth-cta-swap space-y-2">
+                {phantomReady ? (
+                  <>
+                    <PhantomContinueButton
+                      busy={busy}
+                      setBusy={setBusy}
+                      accent={selectedOpt?.accent ?? "#AB9FF2"}
+                      accentFg={selectedOpt?.accentFg ?? "#1a1330"}
+                    />
+                    <PhantomGoogleAppleLink busy={busy} />
+                  </>
+                ) : phantomStatus === "error" ? (
+                  <div className="space-y-2">
+                    <p className="text-center text-xs text-destructive">
+                      {phantomError || "Phantom Connect failed to load."}
+                    </p>
+                    <Button
+                      type="button"
+                      className="h-12 w-full rounded-full text-base font-semibold"
+                      style={{
+                        backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
+                        color: selectedOpt?.accentFg ?? "#1a1330",
+                      }}
+                      onClick={() => retryPhantom()}
+                    >
+                      Retry Phantom
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11 w-full rounded-full"
+                      disabled={busy}
+                      onClick={() => {
+                        setSelected("solana");
+                        void continueWith("solana");
+                      }}
+                    >
+                      Continue with Solana instead
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      disabled
+                      className="h-12 w-full rounded-full"
+                      style={{
+                        backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
+                        color: selectedOpt?.accentFg ?? "#1a1330",
+                      }}
+                    >
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading Phantom…
+                    </Button>
+                    <p className="text-center text-[11px] text-muted-foreground">
+                      Preparing wallet connect. If this stalls, pick Solana or retry.
+                    </p>
+                  </div>
+                )}
+              </div>
             ) : (
               <Button
+                key={selected ?? "none"}
                 type="button"
                 disabled={!selected || busy}
                 onClick={() => selected && void continueWith(selected)}
-                className="h-12 w-full rounded-xl text-base font-semibold transition-[background-color,color,opacity] duration-200 ease-out hover:opacity-95 disabled:opacity-50"
+                className={cn(
+                  "auth-cta-swap h-12 w-full rounded-full text-base font-semibold",
+                  "transition-[background-color,color,opacity,transform] duration-200 ease-out",
+                  "hover:opacity-95 hover:brightness-105 active:scale-[0.99] disabled:opacity-50",
+                )}
                 style={
                   selectedOpt
                     ? { backgroundColor: selectedOpt.accent, color: selectedOpt.accentFg }
@@ -426,7 +424,10 @@ function AuthPiPageInner() {
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
             By continuing you agree to OpenPay&apos;s{" "}
-            <Link to="/terms" className="font-medium text-foreground underline-offset-2 hover:underline">
+            <Link
+              to="/terms"
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
               Terms
             </Link>{" "}
             &{" "}

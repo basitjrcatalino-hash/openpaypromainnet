@@ -2,13 +2,33 @@
 
 Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance payments** to your product — the same integration used by [OpenPay Pro](https://openpaypromainnet.lovable.app).
 
-| | |
-|---|---|
-| **OpenPay app** | [https://openpy.space](https://openpy.space) |
-| **Partner API portal** | [https://openpy.space/partner-api](https://openpy.space/partner-api) |
-| **Auth docs** | [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth) |
-| **Partner API** | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
-| **Live docs (this site)** | [/docs/openpay](/docs/openpay) |
+|                                   |                                                                                                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OpenPay app**                   | [https://openpy.space](https://openpy.space)                                                                                                             |
+| **Partner API portal**            | [https://openpy.space/partner-api](https://openpy.space/partner-api)                                                                                     |
+| **Auth docs**                     | [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)                                                                                   |
+| **Partner API**                   | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`                                                                             |
+| **Live docs (this site)**         | [/docs/openpay](/docs/openpay)                                                                                                                           |
+| **Pro auth methods (full setup)** | [/docs/openpay#auth](/docs/openpay#auth) · [OPENPAY_PRO_AUTH.md](./OPENPAY_PRO_AUTH.md) · [/api/public/docs/openpay-auth](/api/public/docs/openpay-auth) |
+
+---
+
+## OpenPay Pro wallet sign-in methods
+
+OpenPay Pro (`/authpi`) supports six authentication methods. Full exact setup (env, flows, files, security):
+
+→ **[OpenPay Pro Authentication Integration Guide](./OPENPAY_PRO_AUTH.md)**  
+→ Live page: [`/docs/openpay#auth`](/docs/openpay#auth)  
+→ Raw Markdown: [`/api/public/docs/openpay-auth`](/api/public/docs/openpay-auth)
+
+| Method        | Integration                                     |
+| ------------- | ----------------------------------------------- |
+| OpenPay       | OAuth 2.0 Connect                               |
+| Solana        | Sign In With Solana (Phantom / Wallet Standard) |
+| Pi Network    | Pi Browser SDK or Pi OAuth                      |
+| Phantom       | Phantom Connect (extension · Google · Apple)    |
+| WalletConnect | EVM SIWE login                                  |
+| MetaMask      | Embedded Wallets social OAuth (Web3Auth)        |
 
 ---
 
@@ -42,9 +62,11 @@ https://openpy.space/connect
 Drop-in button:
 
 ```html
-<a href="https://openpy.space/connect?client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
-   style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
-   padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
+<a
+  href="https://openpy.space/connect?client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
+  style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
+   padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;"
+>
   Connect with OpenPay
 </a>
 ```
@@ -208,19 +230,19 @@ Auth header for all of these:
 Authorization: Bearer opk_live_YOUR_KEY
 ```
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/me` | Partner owner profile + balance |
-| GET | `/balance` | Partner treasury balance |
-| GET | `/accounts/:id` | Resolve `@user`, `OP…`, or email |
-| POST | `/transfers` | Push OUSD from partner → user |
-| GET | `/transfers` | List partner transfers |
-| POST | `/charges` | Create PayButton checkout |
-| GET | `/charges/:id` | Charge status |
-| POST | `/charges/:id/cancel` | Cancel unpaid charge |
-| POST | `/oauth/token` | Exchange Connect code |
-| GET | `/user/me` | End-user profile (`opa_live_…`) |
-| GET | `/user/balance` | End-user balance (`opa_live_…`) |
+| Method | Path                  | Purpose                          |
+| ------ | --------------------- | -------------------------------- |
+| GET    | `/me`                 | Partner owner profile + balance  |
+| GET    | `/balance`            | Partner treasury balance         |
+| GET    | `/accounts/:id`       | Resolve `@user`, `OP…`, or email |
+| POST   | `/transfers`          | Push OUSD from partner → user    |
+| GET    | `/transfers`          | List partner transfers           |
+| POST   | `/charges`            | Create PayButton checkout        |
+| GET    | `/charges/:id`        | Charge status                    |
+| POST   | `/charges/:id/cancel` | Cancel unpaid charge             |
+| POST   | `/oauth/token`        | Exchange Connect code            |
+| GET    | `/user/me`            | End-user profile (`opa_live_…`)  |
+| GET    | `/user/balance`       | End-user balance (`opa_live_…`)  |
 
 ### Push payout example
 
@@ -294,12 +316,12 @@ export async function createCharge({ amount, reference, success_url, cancel_url 
 
 ## 6. Errors
 
-| Status | Meaning |
-|--------|---------|
-| 401 | Missing / invalid / revoked key or token (`invalid_client` on token exchange) |
-| 403 | Origin not whitelisted |
-| 404 | Recipient / charge not found |
-| 400 | Validation (amount, insufficient balance, ambiguous SQL, etc.) |
+| Status | Meaning                                                                       |
+| ------ | ----------------------------------------------------------------------------- |
+| 401    | Missing / invalid / revoked key or token (`invalid_client` on token exchange) |
+| 403    | Origin not whitelisted                                                        |
+| 404    | Recipient / charge not found                                                  |
+| 400    | Validation (amount, insufficient balance, ambiguous SQL, etc.)                |
 
 **`invalid_client` on `/oauth/token`:** `client_id` or `client_secret` (`opk_live_…`) wrong, or secret has extra quotes in env.
 

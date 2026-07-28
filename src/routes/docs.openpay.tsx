@@ -4,6 +4,7 @@ import {
   BookOpen,
   Copy,
   ExternalLink,
+  Fingerprint,
   KeyRound,
   Link2,
   Moon,
@@ -33,8 +34,7 @@ export const Route = createFileRoute("/docs/openpay")({
   component: OpenPayDocsPage,
 });
 
-const API =
-  "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
+const API = "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
 const CONNECT = "https://openpy.space/connect";
 const PAY_HOST = "https://openpy.space";
 const PARTNER_PORTAL = "https://openpy.space/partner-api";
@@ -115,7 +115,12 @@ function OpenPayDocsPage() {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button asChild variant="outline" size="sm" className="hidden rounded-full sm:inline-flex">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden rounded-full sm:inline-flex"
+            >
               <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
                 Partner API
                 <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
@@ -139,12 +144,15 @@ function OpenPayDocsPage() {
             </Badge>
           </div>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Connect auth &amp; OpenPay payments
+            Connect auth, Pro sign-in methods &amp; payments
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-            Add <strong className="text-foreground">Connect with OpenPay</strong> (OAuth 2.0) and
-            accept <strong className="text-foreground">OpenPay balance</strong> payments — the same
-            stack used by OpenPay Pro. Live developer portal:{" "}
+            Add <strong className="text-foreground">Connect with OpenPay</strong> (OAuth 2.0),
+            integrate every{" "}
+            <strong className="text-foreground">OpenPay Pro wallet auth method</strong> (Solana,
+            Phantom, Pi, WalletConnect, MetaMask Embedded), and accept{" "}
+            <strong className="text-foreground">OpenPay balance</strong> payments. Live developer
+            portal:{" "}
             <a
               href={PARTNER_PORTAL}
               target="_blank"
@@ -163,8 +171,19 @@ function OpenPayDocsPage() {
               </a>
             </Button>
             <Button asChild variant="outline" size="sm" className="rounded-full">
+              <a href="#auth">
+                <Fingerprint className="mr-1.5 h-3.5 w-3.5" />
+                Pro auth setup
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-full">
               <a href="/api/public/docs/openpay" target="_blank" rel="noreferrer">
                 Raw Markdown
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-full">
+              <a href="/api/public/docs/openpay-auth" target="_blank" rel="noreferrer">
+                Auth Markdown
               </a>
             </Button>
             <Button
@@ -188,8 +207,8 @@ function OpenPayDocsPage() {
               </p>
               <h2 className="mt-1 text-lg font-bold">Partner API · openpy.space</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Create an app, copy Client ID + API key, set your domain for redirects, then ship Sign
-                in, transfers, or PayButton.
+                Create an app, copy Client ID + API key, set your domain for redirects, then ship
+                Sign in, transfers, or PayButton.
               </p>
             </div>
             <Button asChild variant="outline" size="sm" className="rounded-full shrink-0">
@@ -233,7 +252,10 @@ function OpenPayDocsPage() {
               ["Step 3", "Sign in / pay", "Auth · PayButton"],
               ["Step 4", "Go live", "Secrets on server"],
             ].map(([step, title, sub]) => (
-              <li key={step} className="rounded-2xl border border-border bg-background/60 px-3 py-2.5">
+              <li
+                key={step}
+                className="rounded-2xl border border-border bg-background/60 px-3 py-2.5"
+              >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {step}
                 </div>
@@ -249,10 +271,11 @@ function OpenPayDocsPage() {
             ["#partner-portal", "0. Partner API portal"],
             ["#setup", "1. Partner app setup"],
             ["#connect", "2. Connect (OAuth)"],
-            ["#pay", "3. Accept payments"],
-            ["#openpay-to-pro", "4. OpenPay → Pro"],
-            ["#api", "5. API cheat sheet"],
-            ["#errors", "6. Errors & checklist"],
+            ["#auth", "3. Pro auth methods (full)"],
+            ["#pay", "4. Accept payments"],
+            ["#openpay-to-pro", "5. OpenPay → Pro"],
+            ["#api", "6. API cheat sheet"],
+            ["#errors", "7. Errors & checklist"],
           ].map(([href, label]) => (
             <a
               key={href}
@@ -295,7 +318,9 @@ function OpenPayDocsPage() {
               </li>
               <li>
                 Redirect auto-fill registers{" "}
-                <code className="rounded bg-muted px-1 text-foreground">/auth/openpay/callback</code>{" "}
+                <code className="rounded bg-muted px-1 text-foreground">
+                  /auth/openpay/callback
+                </code>{" "}
                 and{" "}
                 <code className="rounded bg-muted px-1 text-foreground">
                   /openpay/connect/callback
@@ -331,12 +356,13 @@ function OpenPayDocsPage() {
                 → Register app.
               </li>
               <li>
-                Copy the <code className="rounded bg-muted px-1">opk_live_…</code> API key immediately
-                (shown once). Save the Client ID (UUID).
+                Copy the <code className="rounded bg-muted px-1">opk_live_…</code> API key
+                immediately (shown once). Save the Client ID (UUID).
               </li>
               <li>
-                Enter only your domain (e.g. <code className="rounded bg-muted px-1">www.yourapp.com</code>
-                ) and click <strong>Auto-fill &amp; save</strong> for redirect URIs.
+                Enter only your domain (e.g.{" "}
+                <code className="rounded bg-muted px-1">www.yourapp.com</code>) and click{" "}
+                <strong>Auto-fill &amp; save</strong> for redirect URIs.
               </li>
               <li>
                 Or register exact URIs manually, e.g.{" "}
@@ -353,8 +379,8 @@ function OpenPayDocsPage() {
             <p className="text-sm text-muted-foreground">
               Authorization Code flow. Scopes: <code className="text-foreground">profile</code>,{" "}
               <code className="text-foreground">balance</code>. User lands on the Authorize screen,
-              signs in, Allow → your callback receives <code className="text-foreground">opc_…</code>
-              .
+              signs in, Allow → your callback receives{" "}
+              <code className="text-foreground">opc_…</code>.
             </p>
           </div>
 
@@ -386,7 +412,176 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
           </div>
         </Section>
 
-        <Section id="pay" eyebrow="Step 3" title="Accept OpenPay balance payments">
+        <Section id="auth" eyebrow="Step 3" title="OpenPay Pro — all sign-in methods">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <div className="flex items-start gap-3">
+              <Fingerprint className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <p className="text-foreground">
+                  Exact setup for every method on{" "}
+                  <Link
+                    to="/authpi"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    /authpi
+                  </Link>
+                  . Full Markdown:{" "}
+                  <a
+                    href="/api/public/docs/openpay-auth"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    /api/public/docs/openpay-auth
+                  </a>{" "}
+                  · source <code className="text-foreground">docs/OPENPAY_PRO_AUTH.md</code>.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              {
+                name: "OpenPay",
+                desc: "OAuth 2.0 Connect — profile + balance scopes",
+                endpoint: "GET/POST /api/public/openpay-auth",
+                callback: "/auth/openpay/callback",
+                env: "OPENPAY_OAUTH_CLIENT_ID · OPENPAY_PARTNER_API_KEY",
+              },
+              {
+                name: "Solana",
+                desc: "Sign In With Solana (Phantom / Wallet Standard)",
+                endpoint: "GET/POST /api/public/solana-auth",
+                callback: "—",
+                env: "OPENPAY_AUTH_PASSWORD_SECRET (or SOLANA_…)",
+              },
+              {
+                name: "Pi Network",
+                desc: "Pi Browser SDK or Pi OAuth (external browser)",
+                endpoint: "POST /api/public/pi-auth",
+                callback: "/auth/pi/callback",
+                env: "VITE_PI_CLIENT_ID",
+              },
+              {
+                name: "Phantom",
+                desc: "Extension · Google · Apple via Phantom Connect",
+                endpoint: "Phantom SDK",
+                callback: "/auth/callback",
+                env: "VITE_PHANTOM_APP_ID (+ Portal allowlists)",
+              },
+              {
+                name: "WalletConnect",
+                desc: "EVM SIWE (personal_sign) → Supabase session",
+                endpoint: "GET/POST /api/public/walletconnect-auth",
+                callback: "—",
+                env: "Auth secret · optional WCP Pay keys",
+              },
+              {
+                name: "MetaMask",
+                desc: "Embedded Wallets social OAuth (Web3Auth JWKS)",
+                endpoint: "POST /api/public/web3auth-auth",
+                callback: "Web3Auth modal / social chips",
+                env: "VITE_WEB3AUTH_CLIENT_ID · WEB3AUTH_CLIENT_SECRET · JWKS",
+              },
+            ].map((m) => (
+              <Card
+                key={m.name}
+                className="space-y-2 rounded-3xl border-border bg-card p-4 shadow-none"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-foreground">{m.name}</h3>
+                  <Badge variant="outline" className="rounded-full text-[10px]">
+                    /authpi
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">{m.desc}</p>
+                <dl className="space-y-1 text-[11px]">
+                  <div>
+                    <dt className="text-muted-foreground">API</dt>
+                    <dd className="font-mono text-foreground break-all">{m.endpoint}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Callback</dt>
+                    <dd className="font-mono text-foreground">{m.callback}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Env</dt>
+                    <dd className="text-foreground">{m.env}</dd>
+                  </div>
+                </dl>
+              </Card>
+            ))}
+          </div>
+
+          <p className="text-sm font-medium text-foreground">Shared server secrets</p>
+          <Code>{`OPENPAY_AUTH_PASSWORD_SECRET="long-random-string"
+SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="eyJ..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."   # server only — admin.createUser`}</Code>
+
+          <p className="text-sm font-medium text-foreground">MetaMask Embedded (Web3Auth)</p>
+          <Code>{`VITE_WEB3AUTH_CLIENT_ID="your-client-id"
+WEB3AUTH_CLIENT_ID="your-client-id"
+WEB3AUTH_CLIENT_SECRET="your-secret"   # never VITE_
+WEB3AUTH_JWKS_URL="https://api-auth.web3auth.io/.well-known/jwks.json"
+# Enable Google / X / Apple / GitHub / Discord / Facebook in developer.metamask.io`}</Code>
+
+          <p className="text-sm font-medium text-foreground">Phantom Portal</p>
+          <Code>{`VITE_PHANTOM_APP_ID="your-app-id"
+# Allowlist each origin + /auth/callback in Phantom Portal
+# https://your.domain
+# https://your.domain/auth/callback
+# http://localhost:PORT (+ /auth/callback)`}</Code>
+
+          <p className="text-sm font-medium text-foreground">Client starters</p>
+          <Code>{`import { startOpenPaySignIn } from "@/lib/openpay-auth"
+import { startSolanaSignIn } from "@/lib/solana-auth"
+import { startWalletConnectSignIn } from "@/lib/walletconnect-auth"
+import { signInWithPi } from "@/lib/pi-network"
+
+await startOpenPaySignIn({ redirectTo: "/dashboard" })
+await startSolanaSignIn({ redirectTo: "/dashboard" })
+await startWalletConnectSignIn({ redirectTo: "/dashboard" })
+// MetaMask: use MetaMaskEmbeddedAuthPanel + Web3AuthProvider on /authpi
+// Phantom: PhantomContinueButton / Google·Apple via @phantom/react-sdk`}</Code>
+
+          <Card className="space-y-2 rounded-3xl border-border bg-card p-5 text-sm shadow-none">
+            <div className="flex items-center gap-2 font-semibold text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Security
+            </div>
+            <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+              <li>
+                Never expose <code className="text-foreground">opk_</code>,{" "}
+                <code className="text-foreground">wcp_</code>,{" "}
+                <code className="text-foreground">WEB3AUTH_CLIENT_SECRET</code>, or service role in
+                the browser
+              </li>
+              <li>
+                Verify OAuth <code className="text-foreground">state</code> on every callback
+              </li>
+              <li>
+                Web3Auth: always check JWT <code className="text-foreground">aud</code> = your
+                Client ID
+              </li>
+              <li>Verify Solana / SIWE signatures server-side before issuing credentials</li>
+            </ul>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button asChild size="sm" className="rounded-full">
+                <Link to="/authpi">Open /authpi</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <a href="/api/public/docs/openpay-auth" target="_blank" rel="noreferrer">
+                  Full auth Markdown
+                  <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                </a>
+              </Button>
+            </div>
+          </Card>
+        </Section>
+
+        <Section id="pay" eyebrow="Step 4" title="Accept OpenPay balance payments">
           <div className="flex items-start gap-3 rounded-3xl border border-border bg-card p-4">
             <Wallet className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <p className="text-sm text-muted-foreground">
@@ -435,17 +630,17 @@ curl -H "Authorization: Bearer opa_live_..." ${API}/user/balance`}</Code>
           </Card>
         </Section>
 
-        <Section id="openpay-to-pro" eyebrow="Step 4" title="OpenPay → OpenPay Pro transfers">
+        <Section id="openpay-to-pro" eyebrow="Step 5" title="OpenPay → OpenPay Pro transfers">
           <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
             <p className="text-foreground">
-              Send OUSD from OpenPay into a Pro wallet using note routing + inbound API (mirror of Pro
-              → OpenPay send).
+              Send OUSD from OpenPay into a Pro wallet using note routing + inbound API (mirror of
+              Pro → OpenPay send).
             </p>
             <p>
-              Note: <code className="rounded bg-muted px-1 text-foreground">pro_xfer:@alice:r_ref</code>{" "}
-              or{" "}
-              <code className="rounded bg-muted px-1 text-foreground">pro_xfer:0x…:r_ref</code> (Pro
-              wallet address)
+              Note:{" "}
+              <code className="rounded bg-muted px-1 text-foreground">pro_xfer:@alice:r_ref</code>{" "}
+              or <code className="rounded bg-muted px-1 text-foreground">pro_xfer:0x…:r_ref</code>{" "}
+              (Pro wallet address)
             </p>
             <Code>{`# By @username
 curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \\
@@ -459,13 +654,15 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
   -H "Content-Type: application/json" \\
   -d '{"to":"0x7bf2…851a","amount":25,"openpay_tx_id":"TX2","note":"pro_xfer:0x7bf2…851a:r_2"}'`}</Code>
             <p>
-              Pro users: <strong className="text-foreground">Receive → Create OpenPay receive link</strong>
-              . OpenPay product prompt: <code className="text-foreground">docs/OPENPAY_SEND_TO_PRO_PROMPT.md</code>.
+              Pro users:{" "}
+              <strong className="text-foreground">Receive → Create OpenPay receive link</strong>.
+              OpenPay product prompt:{" "}
+              <code className="text-foreground">docs/OPENPAY_SEND_TO_PRO_PROMPT.md</code>.
             </p>
           </Card>
         </Section>
 
-        <Section id="api" eyebrow="Step 5" title="API cheat sheet">
+        <Section id="api" eyebrow="Step 6" title="API cheat sheet">
           <div className="overflow-x-auto rounded-3xl border border-border">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
@@ -511,7 +708,7 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
           </p>
         </Section>
 
-        <Section id="errors" eyebrow="Step 6" title="Errors & launch checklist">
+        <Section id="errors" eyebrow="Step 7" title="Errors & launch checklist">
           <Card className="space-y-2 rounded-3xl border-border bg-card p-5 text-sm shadow-none">
             <p>
               <strong>401 / invalid_client</strong> — bad or quoted{" "}
@@ -542,8 +739,9 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
 
         <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
           <p>
-            Full markdown: <code className="text-foreground">docs/OPENPAY_INTEGRATION.md</code> ·
-            Partner portal:{" "}
+            Integration markdown:{" "}
+            <code className="text-foreground">docs/OPENPAY_INTEGRATION.md</code> · Auth methods:{" "}
+            <code className="text-foreground">docs/OPENPAY_PRO_AUTH.md</code> · Partner portal:{" "}
             <a
               href={PARTNER_PORTAL}
               target="_blank"

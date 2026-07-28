@@ -138,19 +138,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:image",
         content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png",
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d9cde8a5-4047-4067-b26c-a3e35f846b50/id-preview-c50b7170--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1785229551414.png",
       },
       {
         name: "twitter:image",
         content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cf7a1b66-b4b6-48cf-a269-8d6f0e6d22e5/id-preview-300ba3c0--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1784981745384.png",
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d9cde8a5-4047-4067-b26c-a3e35f846b50/id-preview-c50b7170--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1785229551414.png",
       },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
   }),
   shellComponent: RootShell,

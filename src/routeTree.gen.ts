@@ -31,6 +31,7 @@ import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
@@ -170,6 +171,11 @@ const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
   id: '/admin/testnet-progress',
   path: '/admin/testnet-progress',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
   id: '/docs/openpay',
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -410,6 +417,7 @@ export interface FileRoutesByTo {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -465,6 +473,7 @@ export interface FileRoutesById {
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/auth/callback'
     | '/docs/openpay'
     | '/admin/topup'
     | '/asset/$tokenId'
@@ -573,6 +583,7 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/admin/testnet-progress'
+    | '/auth/callback'
     | '/docs/openpay'
     | '/admin/topup'
     | '/asset/$tokenId'
@@ -627,6 +638,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
     | '/admin/testnet-progress'
+    | '/auth/callback'
     | '/docs/openpay'
     | '/_authenticated/admin/topup'
     | '/_authenticated/asset_/$tokenId'
@@ -842,6 +854,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/testnet-progress'
       preLoaderRoute: typeof AdminTestnetProgressRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/docs/openpay': {
       id: '/docs/openpay'
@@ -1134,11 +1153,13 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
   AuthOpenpayCallbackRoute: typeof AuthOpenpayCallbackRoute
   AuthPiCallbackRoute: typeof AuthPiCallbackRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
   AuthOpenpayCallbackRoute: AuthOpenpayCallbackRoute,
   AuthPiCallbackRoute: AuthPiCallbackRoute,
 }

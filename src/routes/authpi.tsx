@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { AddressType, useAccounts, useModal, usePhantom } from "@phantom/react-sdk";
 import {
   OPENPAY_BRAND_BLUE,
   OPENPAY_LOGO_WHITE,
   startOpenPaySignIn,
 } from "@/lib/openpay-auth";
-import { SOLANA_BRAND_PURPLE, startSolanaSignIn } from "@/lib/solana-auth";
+import { startSolanaSignIn } from "@/lib/solana-auth";
+import { PHANTOM_APP_ICON } from "@/lib/phantom";
+import { usePhantomClientReady } from "@/components/phantom-provider";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,24 +21,11 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-function SolanaMark({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
-      />
-    </svg>
-  );
-}
-
 function AuthPiPage() {
   const navigate = useNavigate();
-  const [openPayBusy, setOpenPayBusy] = useState(false);
-  const [solanaBusy, setSolanaBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const phantomReady = usePhantomClientReady();
 
-  // Only redirect if already signed in — never auto-start OpenPay auth
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -49,6 +39,58 @@ function AuthPiPage() {
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+  if (!phantomReady) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return <AuthPiContent />;
+}
+
+function AuthPiContent() {
+  const { open } = useModal();
+  const { isConnected, isLoading: phantomLoading, addresses } = usePhantom();
+  const accounts = useAccounts();
+  const [openPayBusy, setOpenPayBusy] = useState(false);
+  const [phantomBusy, setPhantomBusy] = useState(false);
+  const bridgingRef = useRef(false);
+
+  const walletAddresses = accounts?.length ? accounts : addresses;
+  const solanaAddress = walletAddresses?.find(
+    (a) => a.addressType === AddressType.solana || String(a.addressType) === "Solana",
+  )?.address;
+
+  // After Phantom Connect, bridge into OpenPay Supabase session via SIWS
+  useEffect(() => {
+    if (!isConnected || !solanaAddress || bridgingRef.current || phantomBusy) return;
+
+    let cancelled = false;
+    bridgingRef.current = true;
+    setPhantomBusy(true);
+
+    (async () => {
+      try {
+        await startSolanaSignIn({ redirectTo: "/dashboard" });
+      } catch (err) {
+        if (cancelled) return;
+        const message = (err as Error).message || "Phantom sign-in failed";
+        if (!/reject|cancel|denied/i.test(message)) {
+          toast.error(message);
+        }
+        bridgingRef.current = false;
+        setPhantomBusy(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, solanaAddress, phantomBusy]);
+
+  const busy = openPayBusy || phantomBusy || phantomLoading;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
@@ -65,7 +107,7 @@ function AuthPiPage() {
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in with OpenPay or Solana to access OUSD, tokens & NFTs
+              Sign in with OpenPay or connect Phantom to access OUSD, tokens & NFTs
             </p>
           </div>
 
@@ -81,7 +123,7 @@ function AuthPiPage() {
                   setOpenPayBusy(false);
                 }
               }}
-              disabled={openPayBusy || solanaBusy}
+              disabled={busy}
               className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
               style={{ backgroundColor: OPENPAY_BRAND_BLUE }}
             >
@@ -97,31 +139,37 @@ function AuthPiPage() {
 
             <Button
               type="button"
-              onClick={async () => {
-                setSolanaBusy(true);
+              onClick={() => {
                 try {
-                  await startSolanaSignIn({ redirectTo: "/dashboard" });
+                  open();
                 } catch (err) {
-                  const message = (err as Error).message || "Solana sign-in failed";
-                  if (!/reject|cancel|denied/i.test(message)) {
-                    toast.error(message);
-                  }
-                  setSolanaBusy(false);
+                  toast.error((err as Error).message || "Could not open Phantom Connect");
                 }
               }}
-              disabled={openPayBusy || solanaBusy}
-              className="h-12 w-full rounded-xl text-base font-semibold text-white hover:opacity-95"
-              style={{ backgroundColor: SOLANA_BRAND_PURPLE }}
+              disabled={busy}
+              className="h-12 w-full rounded-xl bg-[#AB9FF2] text-base font-semibold text-[#1a1330] hover:opacity-95"
             >
-              {solanaBusy ? (
+              {phantomBusy || (isConnected && phantomLoading) ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <span className="inline-flex items-center gap-2.5">
-                  <SolanaMark className="h-5 w-5" />
-                  Sign in with Solana
+                  <img
+                    src={PHANTOM_APP_ICON}
+                    width={20}
+                    height={20}
+                    alt=""
+                    className="rounded-full"
+                  />
+                  Connect Phantom
                 </span>
               )}
             </Button>
+
+            {isConnected && solanaAddress && phantomBusy ? (
+              <p className="text-center text-xs text-muted-foreground">
+                Phantom connected · finishing sign-in…
+              </p>
+            ) : null}
           </div>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">

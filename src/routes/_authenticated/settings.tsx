@@ -31,6 +31,7 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { useTheme } from "@/components/theme-provider";
+import { PhantomSettingsRows } from "@/components/phantom-settings";
 import { generateAddress, generateMnemonic, shortAddress } from "@/lib/wallet-utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -751,6 +752,7 @@ function SettingsPage() {
           Account
         </h2>
         <ul className="overflow-hidden rounded-2xl bg-card">
+          <PhantomSettingsRows />
           <li>
             <button
               type="button"

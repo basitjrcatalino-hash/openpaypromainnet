@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/wallet/PageHeader";
+import { SolanaReceivePanel } from "@/components/solana-receive-panel";
 import { cn } from "@/lib/utils";
 import {
   claimOpenPayInbound,
@@ -63,7 +64,7 @@ function ReceivePage() {
   const [asset, setAsset] = useState<"OUSD" | "PI">("OUSD");
   const [opAmount, setOpAmount] = useState("");
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<"wallet" | "openpay">("wallet");
+  const [tab, setTab] = useState<"wallet" | "openpay" | "solana">("wallet");
   const [walletQrUrl, setWalletQrUrl] = useState<string>("");
   const [opQrUrl, setOpQrUrl] = useState<string>("");
   const [opLink, setOpLink] = useState<{
@@ -322,12 +323,12 @@ function ReceivePage() {
     <div className="ot-phantom ph-page space-y-5 pb-8">
       <PageHeader title="Receive" backTo="/dashboard" />
 
-      <div className="mx-auto grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl bg-muted/50 p-1">
+      <div className="mx-auto grid w-full max-w-sm grid-cols-3 gap-1 rounded-2xl bg-muted/50 p-1">
         <button
           type="button"
           onClick={() => setTab("wallet")}
           className={cn(
-            "rounded-xl px-3 py-2.5 text-xs font-semibold press",
+            "rounded-xl px-2 py-2.5 text-xs font-semibold press",
             tab === "wallet" ? "bg-card text-foreground" : "text-muted-foreground",
           )}
         >
@@ -337,11 +338,21 @@ function ReceivePage() {
           type="button"
           onClick={() => setTab("openpay")}
           className={cn(
-            "rounded-xl px-3 py-2.5 text-xs font-semibold press",
+            "rounded-xl px-2 py-2.5 text-xs font-semibold press",
             tab === "openpay" ? "bg-card text-foreground" : "text-muted-foreground",
           )}
         >
           From OpenPay
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("solana")}
+          className={cn(
+            "rounded-xl px-2 py-2.5 text-xs font-semibold press",
+            tab === "solana" ? "bg-card text-foreground" : "text-muted-foreground",
+          )}
+        >
+          Solana
         </button>
       </div>
 
@@ -535,6 +546,8 @@ function ReceivePage() {
           )}
         </div>
       )}
+
+      {tab === "solana" && <SolanaReceivePanel />}
     </div>
   );
 }

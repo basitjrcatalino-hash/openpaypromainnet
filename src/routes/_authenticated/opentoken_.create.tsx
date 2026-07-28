@@ -291,7 +291,7 @@ function CreateOpenTokenPage() {
                 <Input
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
-                  placeholder="Droplink"
+                  placeholder="Open Coin"
                   className={fieldClass}
                   maxLength={60}
                 />
@@ -303,7 +303,7 @@ function CreateOpenTokenPage() {
                   onChange={(e) =>
                     set("symbol", e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
                   }
-                  placeholder="ETE"
+                  placeholder="OPEN"
                   className={cn(fieldClass, "font-semibold tracking-wide")}
                   maxLength={10}
                 />

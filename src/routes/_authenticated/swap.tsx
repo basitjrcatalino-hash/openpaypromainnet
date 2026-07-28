@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowDown,
-  Check,
-  ChevronDown,
+  ArrowUpDown,
+  BadgeCheck,
+  Info,
   Loader2,
   Search,
   Settings2,
@@ -23,15 +23,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
+import {
+  applyOpenDexFee,
+  OPENDEX_SWAP_FEE_BPS,
+  opendexFeePct,
+} from "@/lib/opendex-fee";
+import {
+  DEFAULT_SWAP_NETWORK,
+  SWAP_NETWORKS,
+  type SwapNetworkId,
+} from "@/lib/swap-networks";
 
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
+const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
@@ -77,6 +87,7 @@ function OpenDexPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [network, setNetwork] = useState<SwapNetworkId>(DEFAULT_SWAP_NETWORK);
 
   const { data: dbTokens = [] } = useQuery({
     queryKey: ["tokens-opendex"],
@@ -126,13 +137,11 @@ function OpenDexPage() {
     return map;
   }, [wallet, holdings]);
 
-  /** From list = OUSD + tokens the user actually holds (matches dashboard assets). */
   const fromTokens = useMemo(() => {
     const held = dbTokens.filter((t) => (balanceMap.get(t.id) ?? 0) > 0);
     return [OUSD_TOKEN, ...held];
   }, [dbTokens, balanceMap]);
 
-  /** To list = OUSD + all listed tokens (prefer held / graduated first). */
   const toTokens = useMemo(() => {
     const sorted = [...dbTokens].sort((a, b) => {
       const ah = (balanceMap.get(a.id) ?? 0) > 0 ? 1 : 0;
@@ -190,7 +199,9 @@ function OpenDexPage() {
 
   const amt = Number(amount) || 0;
   const rawOutput = amt > 0 && rate > 0 ? amt * rate : 0;
-  const minOut = rawOutput * (1 - slippage / 100);
+  const { fee: feeOut, net: netOutput } = applyOpenDexFee(rawOutput);
+  const minOut = netOutput * (1 - slippage / 100);
+  const feeUsd = feeOut * (Number(toToken?.price_usd) || 0);
   const samePair = !!from && !!to && from === to;
   const needsOusd = from !== OUSD_SWAP_ID && to !== OUSD_SWAP_ID;
 
@@ -216,7 +227,6 @@ function OpenDexPage() {
   function flip() {
     const nextFrom = to;
     const nextTo = from;
-    // Only flip into From if user holds that asset (or OUSD)
     if (nextFrom !== OUSD_SWAP_ID && (balanceMap.get(nextFrom) ?? 0) <= 0) {
       toast.error("You don't hold that token to swap from");
       return;
@@ -281,7 +291,7 @@ function OpenDexPage() {
           to_id: to,
           amount: amt,
           slippage,
-          expected_out: rawOutput,
+          expected_out: netOutput,
         },
       });
       toast.success(
@@ -307,7 +317,7 @@ function OpenDexPage() {
     !!wallet?.id;
 
   return (
-    <div className="ot-phantom ph-page space-y-5 pb-8">
+    <div className="ot-phantom ph-page space-y-4 pb-8">
       <PageHeader
         title="Swap"
         backTo="/dashboard"
@@ -323,9 +333,9 @@ function OpenDexPage() {
         }
       />
 
-      <p className="-mt-2 text-center text-sm text-muted-foreground">OpenDEX · wallet balances</p>
+      <p className="-mt-1 text-center text-sm text-muted-foreground">OpenDEX · wallet balances</p>
 
-      <div className="space-y-1">
+      <div className="relative space-y-2">
         <SwapSide
           label="You pay"
           tokens={fromTokens}
@@ -335,18 +345,22 @@ function OpenDexPage() {
           onAmount={setAmount}
           balance={fromBal}
           editable
-          onMax={() => setAmount(String(fromBal))}
+          onHalf={() => setAmount(trimAmt(fromBal / 2))}
+          onMax={() => setAmount(trimAmt(fromBal))}
           emptyHint="No tokens in your wallet yet"
+          network={network}
+          onNetworkChange={setNetwork}
+          balances={balanceMap}
         />
 
-        <div className="relative z-10 -my-2 flex justify-center">
+        <div className="relative z-10 -my-3.5 flex justify-center">
           <button
             type="button"
             onClick={flip}
-            className="grid h-11 w-11 place-items-center rounded-full border-4 border-background bg-muted text-foreground press hover:bg-accent"
+            className="grid h-10 w-10 place-items-center rounded-full border-4 border-background bg-muted text-foreground press hover:bg-accent"
             aria-label="Flip tokens"
           >
-            <ArrowDown className="h-4 w-4" />
+            <ArrowUpDown className="h-4 w-4" />
           </button>
         </div>
 
@@ -355,9 +369,12 @@ function OpenDexPage() {
           tokens={toTokens}
           value={to}
           onChange={pickTo}
-          amount={rawOutput > 0 ? formatNumber(rawOutput, 8) : ""}
+          amount={netOutput > 0 ? formatNumber(netOutput, 8) : ""}
           onAmount={() => {}}
           balance={toBal}
+          network={network}
+          onNetworkChange={setNetwork}
+          balances={balanceMap}
         />
       </div>
 
@@ -369,9 +386,24 @@ function OpenDexPage() {
               : "—"}
           </Row>
           <Row label="Min received">
-            {rawOutput > 0 ? `${formatNumber(minOut, 8)} ${toToken?.symbol ?? ""}` : "—"}
+            {netOutput > 0 ? `${formatNumber(minOut, 8)} ${toToken?.symbol ?? ""}` : "—"}
           </Row>
           <Row label="Slippage">{slippage}%</Row>
+          <Row label="Swap fee">
+            {netOutput > 0 || amt > 0 ? (
+              <span className="inline-flex flex-col items-end gap-0.5">
+                <span>
+                  {formatNumber(feeOut, feeOut > 0 && feeOut < 0.01 ? 8 : 4)}{" "}
+                  {toToken?.symbol ?? ""}
+                </span>
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  {FEE_PCT}% · ~{formatOUSD(feeUsd, { compact: true })}
+                </span>
+              </span>
+            ) : (
+              `${FEE_PCT}%`
+            )}
+          </Row>
         </div>
       </div>
 
@@ -405,7 +437,7 @@ function OpenDexPage() {
           <DialogHeader>
             <DialogTitle>Swap settings</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <div className="mb-2 text-sm font-medium">Slippage tolerance</div>
               <div className="flex flex-wrap gap-2">
@@ -415,9 +447,9 @@ function OpenDexPage() {
                     type="button"
                     onClick={() => applySlippagePreset(p)}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                      "rounded-xl border px-3.5 py-2 text-sm font-semibold transition",
                       slippage === p && !customSlippage
-                        ? "border-primary bg-primary/10 text-primary"
+                        ? "border-primary bg-primary/15 text-primary"
                         : "border-border hover:bg-muted",
                     )}
                   >
@@ -425,18 +457,39 @@ function OpenDexPage() {
                   </button>
                 ))}
               </div>
-              <div className="mt-3 flex items-center gap-2">
+              <div className="relative mt-3">
                 <Input
+                  id="custom-slippage"
                   inputMode="decimal"
                   placeholder="Custom"
                   value={customSlippage}
                   onChange={(e) => applyCustomSlippage(e.target.value.replace(/[^0-9.]/g, ""))}
-                  className="rounded-xl"
+                  className="h-11 rounded-xl pr-10"
                 />
-                <span className="text-sm text-muted-foreground">%</span>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  %
+                </span>
               </div>
             </div>
-            <Button className="w-full rounded-full" onClick={() => setSettingsOpen(false)}>
+
+            <div className="rounded-2xl bg-muted/50 p-4">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-sm font-medium">Swap fee</span>
+                <span className="text-sm font-semibold tabular-nums text-primary">{FEE_PCT}%</span>
+              </div>
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                OpenDEX takes a {FEE_PCT}% platform fee ({OPENDEX_SWAP_FEE_BPS} bps) from the
+                output amount on every swap. This is separate from slippage.
+              </p>
+              {amt > 0 && toToken && feeOut > 0 && (
+                <p className="mt-2 text-xs tabular-nums text-foreground">
+                  Est. fee: {formatNumber(feeOut, 6)} {toToken.symbol} (
+                  {formatOUSD(feeUsd, { compact: true })})
+                </p>
+              )}
+            </div>
+
+            <Button className="h-12 w-full rounded-full" onClick={() => setSettingsOpen(false)}>
               Done
             </Button>
           </div>
@@ -444,6 +497,12 @@ function OpenDexPage() {
       </Dialog>
     </div>
   );
+}
+
+function trimAmt(n: number) {
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  const s = n.toFixed(8).replace(/\.?0+$/, "");
+  return s || "0";
 }
 
 function SwapSide({
@@ -455,8 +514,12 @@ function SwapSide({
   onAmount,
   balance,
   editable,
+  onHalf,
   onMax,
   emptyHint,
+  network,
+  onNetworkChange,
+  balances,
 }: {
   label: string;
   tokens: SwapToken[];
@@ -466,141 +529,306 @@ function SwapSide({
   onAmount: (v: string) => void;
   balance: number;
   editable?: boolean;
+  onHalf?: () => void;
   onMax?: () => void;
   emptyHint?: string;
+  network: SwapNetworkId;
+  onNetworkChange: (n: SwapNetworkId) => void;
+  balances: Map<string, number>;
 }) {
   const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-  const selected = tokens.find((t) => t.id === value) ?? (value ? undefined : undefined);
-
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-    if (!qq) return tokens;
-    return tokens.filter(
-      (t) =>
-        t.symbol.toLowerCase().includes(qq) ||
-        t.name.toLowerCase().includes(qq),
-    );
-  }, [tokens, q]);
+  const selected = tokens.find((t) => t.id === value);
 
   return (
-    <div className="rounded-2xl bg-card p-4">
-      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{label}</span>
-        <button
-          type="button"
-          className={cn("tabular-nums", editable && onMax && "font-medium text-primary")}
-          onClick={editable && onMax ? onMax : undefined}
-        >
-          Bal: {formatNumber(balance, balance > 0 && balance < 1 ? 6 : 4)}
-          {editable && onMax && balance > 0 ? " · Max" : ""}
-        </button>
-      </div>
+    <div className="rounded-3xl bg-card p-4">
+      <div className="mb-3 text-xs font-medium text-muted-foreground">{label}</div>
 
-      <div className="flex items-center gap-2">
-        <Popover
-          open={open}
-          onOpenChange={(v) => {
-            setOpen(v);
-            if (!v) setQ("");
-          }}
-        >
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-2.5 py-2 text-sm font-semibold hover:bg-accent"
-            >
-              <TokenLogo token={selected} size="sm" />
-              <span>{selected?.symbol ?? "Select"}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-2">
-            <div className="relative mb-2">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search token"
-                className="h-9 rounded-xl pl-8"
-                autoFocus
-              />
-            </div>
-            <div className="max-h-64 space-y-0.5 overflow-y-auto">
-              {filtered.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(t.id);
-                    setOpen(false);
-                    setQ("");
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left hover:bg-muted",
-                    t.id === value && "bg-primary/10",
-                  )}
-                >
-                  <TokenLogo token={t} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 text-sm font-semibold">
-                      {t.symbol}
-                      {t.isOusd && (
-                        <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          Quote
-                        </span>
-                      )}
-                    </div>
-                    <div className="truncate text-[11px] text-muted-foreground">{t.name}</div>
-                  </div>
-                  <div className="text-right text-[11px] text-muted-foreground tabular-nums">
-                    {formatOUSD(t.price_usd, { price: true, suffix: false })}
-                  </div>
-                  {t.id === value && <Check className="h-4 w-4 text-primary" />}
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <div className="py-6 text-center text-xs text-muted-foreground">
-                  {emptyHint ?? "No tokens found"}
-                </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-
+      <div className="flex items-start justify-between gap-3">
         <Input
-          className="border-0 bg-transparent text-right text-xl font-semibold shadow-none focus-visible:ring-0"
+          className="h-auto flex-1 border-0 bg-transparent p-0 text-3xl font-semibold tracking-tight shadow-none focus-visible:ring-0"
           placeholder="0"
           value={amount}
           onChange={(e) => onAmount(e.target.value.replace(/[^0-9.]/g, ""))}
           readOnly={!editable}
           inputMode="decimal"
+          aria-label={label}
         />
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-2 text-sm font-semibold press hover:bg-accent"
+        >
+          <TokenLogo token={selected} size="sm" showNetworkBadge />
+          <span>{selected?.symbol ?? "Select"}</span>
+          {selected && (selected.isOusd || selected.status === "graduated") && (
+            <BadgeCheck className="h-3.5 w-3.5 fill-primary text-primary-foreground" />
+          )}
+          <span className="text-muted-foreground">▾</span>
+        </button>
       </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span className="text-xs tabular-nums text-muted-foreground">
+          Bal: {formatNumber(balance, balance > 0 && balance < 1 ? 6 : 4)}
+        </span>
+        {editable && (
+          <div className="flex items-center gap-1.5">
+            {onHalf && balance > 0 && (
+              <button
+                type="button"
+                onClick={onHalf}
+                className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground press hover:bg-accent hover:text-foreground"
+              >
+                50%
+              </button>
+            )}
+            {onMax && balance > 0 && (
+              <button
+                type="button"
+                onClick={onMax}
+                className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-primary press hover:bg-accent"
+              >
+                Max
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <TokenPickerDialog
+        open={open}
+        onOpenChange={setOpen}
+        tokens={tokens}
+        value={value}
+        onChange={onChange}
+        emptyHint={emptyHint}
+        network={network}
+        onNetworkChange={onNetworkChange}
+        balances={balances}
+      />
     </div>
   );
 }
 
-function TokenLogo({ token, size = "md" }: { token?: SwapToken | null; size?: "sm" | "md" }) {
-  const dim = size === "sm" ? "h-6 w-6 text-[9px]" : "h-8 w-8 text-[10px]";
-  if (!token) return <div className={cn("shrink-0 rounded-full bg-muted", dim)} />;
-  if (token.isOusd) return <OusdIcon className={cn("shrink-0 rounded-full object-cover", dim)} />;
-  if (token.logo_url) {
-    return <img src={token.logo_url} alt="" className={cn("shrink-0 rounded-full object-cover", dim)} />;
-  }
+function TokenPickerDialog({
+  open,
+  onOpenChange,
+  tokens,
+  value,
+  onChange,
+  emptyHint,
+  network,
+  onNetworkChange,
+  balances,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  tokens: SwapToken[];
+  value: string;
+  onChange: (v: string) => void;
+  emptyHint?: string;
+  network: SwapNetworkId;
+  onNetworkChange: (n: SwapNetworkId) => void;
+  balances: Map<string, number>;
+}) {
+  const [q, setQ] = useState("");
+  const live = network === "openpay";
+
+  const filtered = useMemo(() => {
+    if (!live) return [];
+    const qq = q.trim().toLowerCase();
+    if (!qq) return tokens;
+    return tokens.filter(
+      (t) => t.symbol.toLowerCase().includes(qq) || t.name.toLowerCase().includes(qq),
+    );
+  }, [tokens, q, live]);
+
   return (
-    <div
-      className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-primary/20 font-bold text-primary",
-        dim,
-      )}
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) setQ("");
+      }}
     >
-      {token.symbol.slice(0, 2)}
-    </div>
+      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden rounded-3xl border-border/60 bg-background p-0 sm:max-w-md">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Select token</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3 p-4 pb-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search..."
+              className="h-11 rounded-2xl border-0 bg-muted pl-10"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {SWAP_NETWORKS.map((n) => {
+              const active = network === n.id;
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => {
+                    onNetworkChange(n.id);
+                    if (n.status === "soon") {
+                      toast.message(`${n.label} coming soon`, {
+                        description: "OpenDEX will support this network in a future update.",
+                      });
+                    }
+                  }}
+                  className={cn(
+                    "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold press",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {n.label}
+                  {n.status === "soon" ? " · Soon" : ""}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+          {!live ? (
+            <div className="rounded-2xl bg-muted/60 px-4 py-10 text-center">
+              <p className="text-sm font-medium text-foreground">
+                {SWAP_NETWORKS.find((n) => n.id === network)?.label} not live yet
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Switch back to OpenPay to swap with your wallet balances.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-4 rounded-full"
+                onClick={() => onNetworkChange("openpay")}
+              >
+                Use OpenPay
+              </Button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              {emptyHint ?? "No tokens found"}
+            </div>
+          ) : (
+            filtered.map((t) => {
+              const bal = balances.get(t.id) ?? 0;
+              const verified = !!t.isOusd || t.status === "graduated";
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(t.id);
+                    onOpenChange(false);
+                    setQ("");
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-2xl bg-muted/70 px-3 py-3 text-left press hover:bg-muted",
+                    t.id === value && "ring-1 ring-primary/40",
+                  )}
+                >
+                  <TokenLogo token={t} showNetworkBadge />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-semibold">{t.symbol}</span>
+                      {verified && (
+                        <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-primary text-primary-foreground" />
+                      )}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {formatNumber(bal, bal > 0 && bal < 1 ? 6 : 4)} {t.symbol}
+                    </div>
+                  </div>
+                  <span className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground">
+                    <Info className="h-3.5 w-3.5" aria-hidden />
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        <div className="border-t border-border/60 p-3">
+          <Button
+            type="button"
+            variant="secondary"
+            className="h-12 w-full rounded-full"
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function TokenLogo({
+  token,
+  size = "md",
+  showNetworkBadge,
+}: {
+  token?: SwapToken | null;
+  size?: "sm" | "md";
+  showNetworkBadge?: boolean;
+}) {
+  const dim = size === "sm" ? "h-7 w-7 text-[9px]" : "h-10 w-10 text-[11px]";
+  const badge = size === "sm" ? "h-3.5 w-3.5 text-[7px]" : "h-4 w-4 text-[8px]";
+
+  let logo: ReactNode;
+  if (!token) {
+    logo = <div className={cn("shrink-0 rounded-full bg-muted", dim)} />;
+  } else if (token.isOusd) {
+    logo = <OusdIcon className={cn("shrink-0 rounded-full object-cover", dim)} />;
+  } else if (token.logo_url) {
+    logo = (
+      <img src={token.logo_url} alt="" className={cn("shrink-0 rounded-full object-cover", dim)} />
+    );
+  } else {
+    logo = (
+      <div
+        className={cn(
+          "grid shrink-0 place-items-center rounded-full bg-primary/20 font-bold text-primary",
+          dim,
+        )}
+      >
+        {token.symbol.slice(0, 2)}
+      </div>
+    );
+  }
+
+  if (!showNetworkBadge) return logo;
+
+  return (
+    <span className="relative inline-flex shrink-0">
+      {logo}
+      <span
+        className={cn(
+          "absolute -bottom-0.5 -right-0.5 grid place-items-center rounded-full border-2 border-card bg-primary font-bold text-primary-foreground",
+          badge,
+        )}
+        title="OpenPay"
+        aria-hidden
+      >
+        OP
+      </span>
+    </span>
+  );
+}
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border/50 px-3 py-3 last:border-0">
       <span className="text-muted-foreground">{label}</span>

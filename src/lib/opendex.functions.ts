@@ -1,8 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  OPENDEX_SWAP_FEE_BPS,
+  applyOpenDexFee,
+  opendexFeePct,
+} from "@/lib/opendex-fee";
 
 export const OUSD_SWAP_ID = "__ousd__";
+export { OPENDEX_SWAP_FEE_BPS, applyOpenDexFee, opendexFeePct } from "@/lib/opendex-fee";
 
 const SwapSchema = z.object({
   wallet_id: z.string().uuid(),
@@ -10,7 +16,7 @@ const SwapSchema = z.object({
   to_id: z.string().min(1),
   amount: z.number().positive().max(1e15),
   slippage: z.number().min(0).max(50).default(0.5),
-  /** Client-quoted output for slippage check (server recomputes authoritative out). */
+  /** Client-quoted net output (after fee) for slippage check. */
   expected_out: z.number().positive().optional(),
 });
 
@@ -67,9 +73,12 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     const rawOut = round8((amtIn * fromPrice) / toPrice);
     if (rawOut <= 0) throw new Error("Swap amount too small");
 
+    const { fee: feeOut, net: amountOut } = applyOpenDexFee(rawOut);
+    if (amountOut <= 0) throw new Error("Swap amount too small after fee");
+
     if (expected_out != null && expected_out > 0) {
       const minAcceptable = expected_out * (1 - slippage / 100);
-      if (rawOut + 1e-12 < minAcceptable) {
+      if (amountOut + 1e-12 < minAcceptable) {
         throw new Error("Price moved beyond slippage tolerance");
       }
     }
@@ -117,7 +126,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
-    // Credit to
+    // Credit to (net of OpenDEX fee)
     if (toIsOusd) {
       const { data: fresh } = await supabase
         .from("wallets")
@@ -127,7 +136,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       const cur = Number(fresh?.ousd_balance ?? 0);
       const { error } = await supabase
         .from("wallets")
-        .update({ ousd_balance: round8(cur + rawOut) })
+        .update({ ousd_balance: round8(cur + amountOut) })
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
@@ -142,7 +151,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
         const { error } = await supabase
           .from("token_holdings")
           .update({
-            balance: round8(Number(hold.balance) + rawOut),
+            balance: round8(Number(hold.balance) + amountOut),
             updated_at: new Date().toISOString(),
           })
           .eq("id", hold.id);
@@ -151,7 +160,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
         const { error } = await supabase.from("token_holdings").insert({
           wallet_id,
           token_id: to_id,
-          balance: rawOut,
+          balance: amountOut,
           updated_at: new Date().toISOString(),
         });
         if (error) throw new Error(error.message);
@@ -159,6 +168,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     }
 
     const usdValue = round8(amtIn * fromPrice);
+    const feeUsd = round8(feeOut * toPrice);
     const nonOusdId = fromIsOusd ? to_id : from_id;
     const txRef = `odx_${globalThis.crypto?.randomUUID?.()?.replace(/-/g, "") ?? `${Date.now()}${Math.random().toString(16).slice(2)}`}`;
 
@@ -171,7 +181,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       counterparty: "OpenDEX",
       amount: amtIn,
       usd_value: usdValue,
-      memo: `OpenDEX swap ${amtIn} ${fromToken.symbol} → ${rawOut} ${toToken.symbol}`,
+      memo: `OpenDEX swap ${amtIn} ${fromToken.symbol} → ${amountOut} ${toToken.symbol} · fee ${feeOut} ${toToken.symbol} (${opendexFeePct()}%)`,
       tx_hash: txRef,
     });
     if (txErr) throw new Error(txErr.message);
@@ -179,7 +189,10 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     return {
       ok: true as const,
       amount_in: amtIn,
-      amount_out: rawOut,
+      amount_out: amountOut,
+      fee_out: feeOut,
+      fee_bps: OPENDEX_SWAP_FEE_BPS,
+      fee_usd: feeUsd,
       from_symbol: fromToken.symbol,
       to_symbol: toToken.symbol,
       usd_value: usdValue,

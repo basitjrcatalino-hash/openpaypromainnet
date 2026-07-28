@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -55,7 +55,8 @@ export const Route = createFileRoute("/_authenticated/receive")({
 
 function ReceivePage() {
   const { user } = Route.useRouteContext();
-  const search = useSearch({ from: "/_authenticated/receive" });
+  const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const qc = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [amount, setAmount] = useState("");
@@ -92,14 +93,22 @@ function ReceivePage() {
   });
 
   const payUri = wallet?.address
-    ? `openpay:${wallet.address}?asset=${asset}${amount ? `&amount=${amount}` : ""}`
+    ? `openpay:${wallet.address}?asset=${asset}${amount ? `&amount=${encodeURIComponent(amount)}` : ""}`
     : "";
+
+  function clearReturnParams() {
+    void navigate({
+      to: "/receive",
+      search: {},
+      replace: true,
+    });
+  }
 
   // Use data-URL images instead of canvas so React doesn't fight qrcode DOM mutations.
   useEffect(() => {
     let cancelled = false;
     if (!payUri) {
-      setWalletQrUrl("");
+      setWalletQrUrl((prev) => (prev ? "" : prev));
       return;
     }
     void QRCode.toDataURL(payUri, {
@@ -122,7 +131,7 @@ function ReceivePage() {
   useEffect(() => {
     let cancelled = false;
     if (!opLink?.pay_url) {
-      setOpQrUrl("");
+      setOpQrUrl((prev) => (prev ? "" : prev));
       return;
     }
     void QRCode.toDataURL(opLink.pay_url, {
@@ -172,19 +181,19 @@ function ReceivePage() {
   useEffect(() => {
     if (search.openpay_cancel) {
       toast.error("OpenPay transfer canceled");
-      const u = new URL(window.location.href);
-      u.searchParams.delete("openpay_cancel");
-      window.history.replaceState({}, "", u.toString());
+      clearReturnParams();
       return;
     }
     if (!search.openpay_in) return;
 
+    let cancelled = false;
     (async () => {
       setBusy(true);
       try {
         let done = false;
         try {
           const c = await claimInbound({ data: { note: search.openpay_ref } });
+          if (cancelled) return;
           if (c.credited > 0) {
             toast.success(`Received ${formatUSD(c.amount)} from OpenPay`);
             done = true;
@@ -196,7 +205,7 @@ function ReceivePage() {
           /* fall through */
         }
 
-        if (!done) {
+        if (!done && !cancelled) {
           const amt = search.amount ? Number(search.amount) : undefined;
           const r = await settleInbound({
             data: {
@@ -205,30 +214,32 @@ function ReceivePage() {
               amount: amt && amt > 0 ? amt : undefined,
             },
           });
+          if (cancelled) return;
           if (r.credited) {
             toast.success(
               r.already ? "Already credited" : `Received ${formatUSD(Number(amt || 0))} from OpenPay`,
             );
           }
         }
-        await refreshBalances();
+        if (!cancelled) await refreshBalances();
       } catch (e) {
-        toast.error((e as Error).message);
+        if (!cancelled) toast.error((e as Error).message);
       } finally {
-        setBusy(false);
-        const u = new URL(window.location.href);
-        u.searchParams.delete("openpay_in");
-        u.searchParams.delete("openpay_tx");
-        u.searchParams.delete("openpay_ref");
-        u.searchParams.delete("amount");
-        window.history.replaceState({}, "", u.toString());
+        if (!cancelled) {
+          setBusy(false);
+          clearReturnParams();
+        }
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.openpay_in, search.openpay_cancel]);
 
   useEffect(() => {
-    if (!opLink) return;
+    if (!opLink?.note) return;
     let n = 0;
     const id = window.setInterval(() => {
       n += 1;
@@ -244,10 +255,14 @@ function ReceivePage() {
 
   async function copyAddr() {
     if (!wallet?.address) return;
-    await navigator.clipboard.writeText(wallet.address);
-    setCopied(true);
-    toast.success("Address copied");
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(wallet.address);
+      setCopied(true);
+      toast.success("Address copied");
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
   }
 
   function downloadQR() {
@@ -268,11 +283,15 @@ function ReceivePage() {
         await navigator.share({ title: "OpenPay payment request", text: payUri });
         return;
       } catch {
-        /* ignore */
+        /* ignore cancel */
       }
     }
-    await navigator.clipboard.writeText(payUri);
-    toast.success("Payment link copied");
+    try {
+      await navigator.clipboard.writeText(payUri);
+      toast.success("Payment link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
   }
 
   async function makeOpenPayLink() {
@@ -286,10 +305,11 @@ function ReceivePage() {
       const res = await createReceive({
         data: {
           amount: amt,
-          origin: window.location.origin,
+          origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
       });
       setOpLink(res);
+      setTab("openpay");
       toast.success("OpenPay receive link ready — share it");
     } catch (e) {
       toast.error((e as Error).message);
@@ -339,7 +359,7 @@ function ReceivePage() {
                 alt={`Receive ${asset} QR`}
                 width={220}
                 height={220}
-                className="block h-[220px] w-[220px]"
+                className="block h-55 w-55"
               />
             ) : (
               <QrCode className="h-40 w-40 text-muted-foreground" aria-hidden />
@@ -348,7 +368,7 @@ function ReceivePage() {
 
           <button
             type="button"
-            onClick={copyAddr}
+            onClick={() => void copyAddr()}
             className="mx-auto flex max-w-full items-center gap-2 rounded-full bg-muted px-4 py-2.5 font-mono text-xs text-foreground press"
           >
             <span className="truncate">{shortAddress(wallet?.address, 8, 8)}</span>
@@ -388,13 +408,14 @@ function ReceivePage() {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Optional"
                 inputMode="decimal"
+                autoComplete="off"
                 className="h-9 max-w-36 border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button type="button" variant="secondary" className="h-12 rounded-full" onClick={share}>
+            <Button type="button" variant="secondary" className="h-12 rounded-full" onClick={() => void share()}>
               <Share2 className="mr-1.5 h-4 w-4" />
               Share
             </Button>
@@ -435,6 +456,7 @@ function ReceivePage() {
                 onChange={(e) => setOpAmount(e.target.value)}
                 placeholder="Optional"
                 inputMode="decimal"
+                autoComplete="off"
                 className="h-9 max-w-36 border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
               />
             </div>
@@ -444,7 +466,7 @@ function ReceivePage() {
             type="button"
             className="h-14 w-full rounded-full text-base font-semibold"
             disabled={busy}
-            onClick={makeOpenPayLink}
+            onClick={() => void makeOpenPayLink()}
           >
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Create receive link
@@ -459,7 +481,7 @@ function ReceivePage() {
                     alt="OpenPay receive QR"
                     width={200}
                     height={200}
-                    className="block h-[200px] w-[200px]"
+                    className="block h-50 w-50"
                   />
                 ) : (
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -475,8 +497,12 @@ function ReceivePage() {
                   size="sm"
                   className="rounded-full"
                   onClick={async () => {
-                    await navigator.clipboard.writeText(opLink.pay_url);
-                    toast.success("OpenPay link copied");
+                    try {
+                      await navigator.clipboard.writeText(opLink.pay_url);
+                      toast.success("OpenPay link copied");
+                    } catch {
+                      toast.error("Copy failed");
+                    }
                   }}
                 >
                   <Copy className="mr-1.5 h-3.5 w-3.5" />

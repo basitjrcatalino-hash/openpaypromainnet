@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CandlestickChart, LineChart } from "lucide-react";
+import { CandlestickChart as CandlestickIcon, LineChart as LineChartIcon } from "lucide-react";
 import { formatNumber, formatOUSD, formatPct, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import {
@@ -32,7 +32,8 @@ type Candle = {
 };
 
 function valueOf(tick: ChartTick, mode: "price" | "mcap") {
-  return mode === "mcap" ? Number(tick.market_cap ?? 0) : Number(tick.price);
+  const v = mode === "mcap" ? Number(tick.market_cap ?? 0) : Number(tick.price);
+  return Number.isFinite(v) ? v : 0;
 }
 
 export function ticksToCandles(
@@ -54,6 +55,7 @@ export function ticksToCandles(
   for (const tick of chrono) {
     const v = valueOf(tick, mode);
     const ms = new Date(tick.created_at).getTime();
+    if (!Number.isFinite(ms)) continue;
     const key = Math.floor(ms / bucket) * bucket;
     const existing = map.get(key);
     if (!existing) {
@@ -80,6 +82,7 @@ export function ticksToCandles(
 }
 
 function fmtAxis(v: number, metric: "price" | "mcap") {
+  if (!Number.isFinite(v)) return "—";
   if (metric === "mcap") {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`;
     if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
@@ -102,28 +105,35 @@ function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price
   const highs = candles.map((c) => c.high);
   const min = Math.min(...lows);
   const max = Math.max(...highs);
-  const span = max - min || max * 0.02 || 1;
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return (
+      <div className="grid h-full place-items-center text-sm text-white/40">No chart data yet</div>
+    );
+  }
+  const span = max - min || Math.max(max * 0.02, 1e-12);
   const lo = min - span * 0.08;
   const hi = max + span * 0.08;
+  const range = hi - lo || 1;
 
-  const yScale = (v: number) => padT + ((hi - v) / (hi - lo)) * plotH;
+  const yScale = (v: number) => padT + ((hi - v) / range) * plotH;
   const slot = plotW / Math.max(candles.length, 1);
   const bodyW = Math.max(Math.min(slot * 0.55, 10), 2);
 
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + (hi - lo) * (1 - t));
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => lo + range * (1 - t));
+  const labelStep = Math.max(1, Math.ceil(candles.length / 5));
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-full w-full" role="img" aria-label="Terminal chart">
       {yTicks.map((v, i) => {
         const y = yScale(v);
         return (
-          <g key={i}>
+          <g key={`y-${i}`}>
             <line x1={padL} x2={w - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" />
             <text
               x={w - padR + 6}
               y={y + 3}
               fill="rgba(255,255,255,0.35)"
-              fontSize="10"
+              fontSize={10}
               fontFamily="ui-sans-serif, system-ui"
             >
               {fmtAxis(v, metric)}
@@ -141,34 +151,56 @@ function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price
         const top = Math.min(openY, closeY);
         const bodyH = Math.max(Math.abs(closeY - openY), 1.5);
         return (
-          <g key={c.ts}>
+          <g key={`c-${c.ts}-${i}`}>
             <line x1={cx} x2={cx} y1={highY} y2={lowY} stroke={color} strokeWidth={1.25} />
             <rect x={cx - bodyW / 2} y={top} width={bodyW} height={bodyH} fill={color} rx={1} />
           </g>
         );
       })}
-      {/* sparse x labels */}
-      {candles
-        .filter((_, i) => i % Math.max(1, Math.ceil(candles.length / 5)) === 0)
-        .map((c) => {
-          const idx = candles.indexOf(c);
-          const cx = padL + slot * idx + slot / 2;
-          return (
-            <text
-              key={`x-${c.ts}`}
-              x={cx}
-              y={h - 8}
-              textAnchor="middle"
-              fill="rgba(255,255,255,0.35)"
-              fontSize="9"
-              fontFamily="ui-sans-serif, system-ui"
-            >
-              {c.t}
-            </text>
-          );
-        })}
+      {candles.map((c, i) => {
+        if (i % labelStep !== 0) return null;
+        const cx = padL + slot * i + slot / 2;
+        return (
+          <text
+            key={`x-${c.ts}-${i}`}
+            x={cx}
+            y={h - 8}
+            textAnchor="middle"
+            fill="rgba(255,255,255,0.35)"
+            fontSize={9}
+            fontFamily="ui-sans-serif, system-ui"
+          >
+            {c.t}
+          </text>
+        );
+      })}
     </svg>
   );
+}
+
+/** Only mount Recharts after the box has a real size (avoids width/height -1 warnings). */
+function useChartBoxReady() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof ResizeObserver === "undefined") {
+      setReady(true);
+      return;
+    }
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      setReady(width > 0 && height > 0);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return { ref, ready };
 }
 
 type Props = {
@@ -198,6 +230,10 @@ export function TerminalChart({
   tokenKey,
   peg,
 }: Props) {
+  const reactId = useId().replace(/:/g, "");
+  const gradId = `term-area-${reactId}`;
+  const markersId = `term-markers-${reactId}`;
+  const { ref: chartBoxRef, ready: chartReady } = useChartBoxReady();
   const [metric, setMetric] = useState<"price" | "mcap">("mcap");
   const [chartStyle, setChartStyle] = useState<"candle" | "line">("candle");
   const [tradeTab, setTradeTab] = useState<"trades" | "mine">("trades");
@@ -241,7 +277,6 @@ export function TerminalChart({
 
   return (
     <div className="overflow-hidden rounded-3xl border border-border/60 bg-[#0b0d12] text-white dark:border-border dark:bg-card">
-      {/* Toolbar — Phantom terminal style */}
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2.5">
         <div className="flex items-center gap-0.5 rounded-lg bg-white/5 p-0.5">
           {TERMINAL_PERIODS.map((p) => (
@@ -270,7 +305,7 @@ export function TerminalChart({
               )}
               aria-label="Candlestick"
             >
-              <CandlestickChart className="h-3.5 w-3.5" />
+              <CandlestickIcon className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
@@ -281,7 +316,7 @@ export function TerminalChart({
               )}
               aria-label="Line"
             >
-              <LineChart className="h-3.5 w-3.5" />
+              <LineChartIcon className="h-3.5 w-3.5" />
             </button>
           </div>
 
@@ -303,8 +338,12 @@ export function TerminalChart({
             ))}
           </div>
 
-          <label className="flex cursor-pointer items-center gap-1.5 px-1 text-[11px] text-white/55">
+          <label
+            htmlFor={markersId}
+            className="flex cursor-pointer items-center gap-1.5 px-1 text-[11px] text-white/55"
+          >
             <input
+              id={markersId}
               type="checkbox"
               checked={showMarkers}
               onChange={(e) => setShowMarkers(e.target.checked)}
@@ -336,16 +375,18 @@ export function TerminalChart({
         </div>
       </div>
 
-      <div className="h-[260px] w-full px-1 pb-1 pt-2 sm:h-[300px]">
+      <div ref={chartBoxRef} className="relative h-65 w-full px-1 pb-1 pt-2 sm:h-75">
         {candles.length === 0 ? (
           <div className="grid h-full place-items-center text-sm text-white/40">No chart data yet</div>
         ) : chartStyle === "candle" ? (
           <SvgCandleChart candles={candles} metric={metric} />
+        ) : !chartReady ? (
+          <div className="grid h-full place-items-center text-sm text-white/40">Loading chart…</div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={50}>
             <AreaChart data={lineData} margin={{ top: 8, right: 48, left: 4, bottom: 4 }}>
               <defs>
-                <linearGradient id="term-area" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={stroke} stopOpacity={0.35} />
                   <stop offset="100%" stopColor={stroke} stopOpacity={0} />
                 </linearGradient>
@@ -384,7 +425,7 @@ export function TerminalChart({
                 type="monotone"
                 dataKey="v"
                 stroke={stroke}
-                fill="url(#term-area)"
+                fill={`url(#${gradId})`}
                 strokeWidth={2}
                 dot={false}
                 isAnimationActive={false}
@@ -418,7 +459,7 @@ export function TerminalChart({
 
         <div className="max-h-52 overflow-y-auto px-2 pb-2 pt-1">
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 z-[1] bg-[#0b0d12] text-[10px] uppercase text-white/40 dark:bg-card">
+            <thead className="sticky top-0 z-1 bg-[#0b0d12] text-[10px] uppercase text-white/40 dark:bg-card">
               <tr>
                 <th className="px-2 py-1.5 font-medium">Time</th>
                 <th className="px-2 py-1.5 font-medium">Type</th>

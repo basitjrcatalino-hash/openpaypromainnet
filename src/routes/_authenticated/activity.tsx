@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 import { fetchWalletActivity, type ActivityItem } from "@/lib/activity";
 
@@ -40,29 +39,27 @@ function ActivityPage() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Activity</h1>
-        <p className="text-sm text-muted-foreground">
-          Wallet transfers, OpenDEX swaps, and OpenToken buys & sells
+    <div className="ph-page space-y-4">
+      <div className="text-center md:text-left">
+        <h1 className="text-2xl font-bold tracking-tight">History</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Transfers, swaps, and OpenToken trades
         </p>
       </div>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-2 sm:p-5">
-        {txs.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            No activity yet — your transactions will appear here.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border/60 px-2 sm:px-0">
-            {txs.map((t) => (
-              <li key={`${t.source ?? "wallet"}-${t.id}`}>
-                <TxRowButton tx={t} onOpen={setSelected} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      {txs.length === 0 ? (
+        <p className="py-16 text-center text-sm text-muted-foreground">
+          No activity yet — your transactions will appear here.
+        </p>
+      ) : (
+        <ul>
+          {txs.map((t) => (
+            <li key={`${t.source ?? "wallet"}-${t.id}`}>
+              <TxRowButton tx={t} onOpen={setSelected} />
+            </li>
+          ))}
+        </ul>
+      )}
 
       <TransactionDetailSheet
         tx={selected}

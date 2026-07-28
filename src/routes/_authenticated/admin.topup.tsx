@@ -120,13 +120,13 @@ function AdminTopupPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="ph-page mx-auto max-w-3xl space-y-6 md:max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Admin · Top Up</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Admin · Top Up</h1>
         <p className="text-sm text-muted-foreground">Manage the OpenPay payment link and vouchers</p>
       </div>
 
-      <Card className="p-5 space-y-4">
+      <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
         <h2 className="text-lg font-semibold">OpenPay payment link</h2>
         <div className="space-y-2">
           <Label>Payment URL shown to users</Label>

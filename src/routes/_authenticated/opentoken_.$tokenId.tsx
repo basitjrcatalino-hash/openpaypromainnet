@@ -196,8 +196,8 @@ function OpenTokenDetail() {
   const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
 
   return (
-    <div className="ot-phantom mx-auto max-w-7xl px-4 pb-24 pt-4 md:px-6">
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card/95 px-4 py-2.5 text-center text-xs text-muted-foreground">
+    <div className="ot-phantom mx-auto max-w-7xl pb-8 pt-2 md:px-2">
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-card px-4 py-2.5 text-center text-xs text-muted-foreground">
         <span>OpenToken launchpad · bonding curve trading</span>
         <Link
           to="/asset/$tokenId"

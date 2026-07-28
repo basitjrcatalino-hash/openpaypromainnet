@@ -67,12 +67,12 @@ function NFTPage() {
   const itemsError = activityQuery.error;
 
   return (
-    <div className="space-y-6">
+    <div className="ph-page space-y-6 md:max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">OpenNFT</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Collectibles</h1>
           <p className="text-sm text-muted-foreground">
-            Live OpenPay marketplace ·{" "}
+            OpenNFT marketplace ·{" "}
             <a
               href={OPENPAY_NFT_API_DOCS_URL}
               target="_blank"
@@ -101,7 +101,7 @@ function NFTPage() {
           </Button>
           <Button
             asChild
-            className="rounded-full bg-gradient-primary text-primary-foreground shadow-glow"
+            className="rounded-full bg-primary text-primary-foreground"
           >
             <Link to="/nfts/mint">
               <Plus className="mr-1.5 h-4 w-4" /> Mint OpenNFT
@@ -121,7 +121,7 @@ function NFTPage() {
         </TabsList>
 
         <TabsContent value="collectibles" className="space-y-4">
-          <Card className="glass-strong rounded-3xl border-border/60 p-5">
+          <Card className="rounded-2xl border-0 shadow-none p-5">
             <div className="mb-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 OpenPay Collectibles
@@ -135,7 +135,7 @@ function NFTPage() {
         </TabsContent>
 
         <TabsContent value="marketplace" className="space-y-4">
-          <Card className="glass-strong rounded-3xl border-border/60 p-5">
+          <Card className="rounded-2xl border-0 shadow-none p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Live Marketplace
@@ -167,7 +167,7 @@ function NFTPage() {
               </div>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild size="sm" className="rounded-full bg-gradient-primary text-primary-foreground">
+              <Button asChild size="sm" className="rounded-full bg-primary text-primary-foreground">
                 <a href={stats?.marketplace_url || OPENPAY_NFT_MARKET_URL} target="_blank" rel="noreferrer">
                   Open marketplace
                 </a>
@@ -180,7 +180,7 @@ function NFTPage() {
             </div>
           </Card>
 
-          <Card className="glass-strong overflow-hidden rounded-3xl border-border/60 p-5">
+          <Card className="overflow-hidden rounded-2xl border-0 shadow-none p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Featured Collections
@@ -227,7 +227,7 @@ function NFTPage() {
                     rel="noreferrer"
                     className="overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow"
                   >
-                    <div className="aspect-video w-full overflow-hidden bg-gradient-primary">
+                    <div className="aspect-video w-full overflow-hidden bg-primary">
                       {c.cover_url ? (
                         <img
                           src={c.cover_url}
@@ -259,7 +259,7 @@ function NFTPage() {
             )}
           </Card>
 
-          <Card className="glass-strong rounded-3xl border-border/60 p-5">
+          <Card className="rounded-2xl border-0 shadow-none p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Recent Mints
@@ -279,7 +279,7 @@ function NFTPage() {
                 <Button
                   asChild
                   size="sm"
-                  className="mt-2 rounded-full bg-gradient-primary text-primary-foreground"
+                  className="mt-2 rounded-full bg-primary text-primary-foreground"
                 >
                   <a href={OPENPAY_NFT_MARKET_URL} target="_blank" rel="noreferrer">
                     Open openpy.space/web3/nft
@@ -292,7 +292,7 @@ function NFTPage() {
                   <ImageIcon className="h-5 w-5" />
                 </span>
                 <div className="text-sm font-semibold">No recent mints in preview</div>
-                <Button asChild size="sm" className="mt-2 rounded-full bg-gradient-primary text-primary-foreground">
+                <Button asChild size="sm" className="mt-2 rounded-full bg-primary text-primary-foreground">
                   <Link to="/nfts/mint">Mint OpenNFT</Link>
                 </Button>
               </div>
@@ -318,7 +318,7 @@ function NFTPage() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="grid h-full place-items-center bg-gradient-primary/80 text-primary-foreground">
+                          <div className="grid h-full place-items-center bg-primary/80 text-primary-foreground">
                             <ImageIcon className="h-6 w-6 opacity-80" />
                           </div>
                         )}

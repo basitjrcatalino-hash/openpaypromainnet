@@ -165,8 +165,8 @@ function MintNFT() {
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/nfts" })}>
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to Collectibles
         </Button>
-        <Card className="glass-strong space-y-4 rounded-3xl border-border/60 p-6 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground">
+        <Card className="space-y-4 rounded-2xl border-0 shadow-none p-6 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div>
@@ -177,7 +177,7 @@ function MintNFT() {
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
-            <Button asChild className="rounded-full bg-gradient-primary text-primary-foreground">
+            <Button asChild className="rounded-full bg-primary text-primary-foreground">
               <a href={success.permalink} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-1.5 h-4 w-4" /> View on OpenNFT
               </a>
@@ -246,7 +246,7 @@ function MintNFT() {
             <p className="text-muted-foreground">
               Connect OpenPay so mints go to your @username on the marketplace.
             </p>
-            <Button asChild size="sm" className="rounded-full bg-gradient-primary text-primary-foreground">
+            <Button asChild size="sm" className="rounded-full bg-primary text-primary-foreground">
               <Link to="/settings">
                 <Link2 className="mr-1.5 h-3.5 w-3.5" /> Connect OpenPay
               </Link>
@@ -255,7 +255,7 @@ function MintNFT() {
         )}
       </Card>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-6">
+      <Card className="rounded-2xl border-0 shadow-none p-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center text-muted-foreground">
             {form.media_url ? (
@@ -343,7 +343,7 @@ function MintNFT() {
           <Button
             type="submit"
             disabled={busy || statusLoading || !mintReady}
-            className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow"
+            className="h-12 w-full rounded-full bg-primary text-base font-semibold text-primary-foreground"
           >
             {busy ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

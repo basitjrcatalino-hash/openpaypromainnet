@@ -21,8 +21,6 @@ import {
   ChevronsUpDown,
   Moon,
   Sun,
-  Copy,
-  Check,
   History,
   CheckCircle2,
   ScrollText,
@@ -47,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
+import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -65,6 +64,17 @@ const NAV = [
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
+
+function navActive(pathname: string, to: string) {
+  return (
+    pathname === to ||
+    (to === "/dashboard" && pathname === "/") ||
+    (to === "/opentoken" &&
+      pathname.startsWith("/opentoken") &&
+      !pathname.startsWith("/opentoken/create")) ||
+    (to === "/opentoken/create" && pathname.startsWith("/opentoken/create"))
+  );
+}
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
@@ -121,21 +131,20 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background bg-hero-glow text-foreground">
-      {/* Mobile top bar */}
+    <div className="relative min-h-screen bg-background text-foreground">
       {!hideChrome && (
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur-xl md:hidden">
-          <Link to="/dashboard" className="text-sm font-semibold tracking-tight">
+        <header className="ph-header safe-pt sticky top-0 z-40 flex items-center justify-between border-b border-border/40 px-4 py-3 md:hidden">
+          <Link to="/dashboard" className="text-sm font-bold tracking-tight">
             OpenPay Pro
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="rounded-xl border border-border bg-card p-2"
+              className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground press"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </header>
@@ -143,7 +152,7 @@ function AuthenticatedLayout() {
 
       <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
         {!hideChrome && (
-          <aside className="sticky top-0 hidden h-screen w-85 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar/80 p-4 md:flex md:flex-col">
+          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 md:flex md:flex-col">
             <SidebarInner
               wallets={wallets as any[]}
               activeWallet={activeWallet as any}
@@ -159,10 +168,10 @@ function AuthenticatedLayout() {
         {mobileOpen && !hideChrome && (
           <div className="fixed inset-0 z-50 md:hidden">
             <div
-              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="relative flex h-full w-[320px] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
+            <aside className="relative flex h-full w-[300px] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
               <SidebarInner
                 wallets={wallets as any[]}
                 activeWallet={activeWallet as any}
@@ -181,36 +190,39 @@ function AuthenticatedLayout() {
         )}
 
         <main
-          className={cn("min-w-0 flex-1", hideChrome ? "p-0" : "px-4 pb-24 pt-4 md:px-8 md:pt-6")}
+          className={cn(
+            "ot-phantom min-w-0 flex-1",
+            hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
+          )}
         >
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile bottom tab nav */}
       {!hideChrome && (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
-          <div className="mx-auto grid max-w-md grid-cols-5">
+        <nav className="ph-tabbar fixed inset-x-0 bottom-0 z-40 md:hidden">
+          <div className="mx-auto grid max-w-md grid-cols-5 px-1 pt-1.5">
             {NAV.map((item) => {
               const Icon = item.icon;
-              const active =
-                pathname === item.to ||
-                (item.to === "/dashboard" && pathname === "/") ||
-                (item.to === "/opentoken" &&
-                  pathname.startsWith("/opentoken") &&
-                  !pathname.startsWith("/opentoken/create")) ||
-                (item.to === "/opentoken/create" && pathname.startsWith("/opentoken/create"));
+              const active = navActive(pathname, item.to);
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   preload="intent"
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors duration-100",
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                    "flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold press",
+                    active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <span
+                    className={cn(
+                      "grid h-8 w-12 place-items-center rounded-full transition-colors",
+                      active && "bg-primary/15",
+                    )}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+                  </span>
                   {item.label}
                 </Link>
               );
@@ -325,14 +337,13 @@ function SidebarInner({
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
 
   return (
-    <div className="flex min-h-full flex-col gap-4">
-      {/* Wallet selector */}
+    <div className="flex min-h-full flex-col gap-5">
       <button
         type="button"
         onClick={() => setSwitchOpen(true)}
-        className="flex shrink-0 items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card px-4 py-2.5 text-sm font-semibold hover:bg-card/80"
+        className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2 text-sm font-semibold hover:bg-muted/50 press"
       >
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <span
             role="button"
             tabIndex={0}
@@ -346,76 +357,51 @@ function SidebarInner({
                 setHideBalance((v) => !v);
               }
             }}
-            className="grid h-6 w-6 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Toggle balance"
           >
             {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </span>
           <span className="truncate">{activeWallet?.name ?? "My Wallet"}</span>
         </span>
-        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-        {onClose && (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+        <span className="flex items-center gap-1">
+          <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+          {onClose && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
                 e.stopPropagation();
                 onClose();
-              }
-            }}
-            className="ml-2 text-xs text-muted-foreground"
-          >
-            ✕
-          </span>
-        )}
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  onClose();
+                }
+              }}
+              className="ml-1 grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+            >
+              <X className="h-4 w-4" />
+            </span>
+          )}
+        </span>
       </button>
 
-      {/* Big balance card */}
-      <div className="relative shrink-0 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-white shadow-glow">
-        <div className="absolute inset-0 opacity-40" aria-hidden>
-          <div className="absolute -left-16 -top-10 h-48 w-48 rounded-full bg-mint blur-3xl" />
-          <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-primary-glow blur-3xl" />
-        </div>
-        <div className="relative flex min-h-45 flex-col items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={cycleCurrency}
-            className="flex items-center gap-2 text-4xl font-bold tracking-tight text-white tabular-nums"
-            aria-label="Change currency"
-          >
-            {hideBalance ? "••••" : formatCurrency(totalUsd, currency)}
-            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              {currency}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={copyAddress}
-            className="mt-6 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] transition-colors hover:bg-white/20"
-            aria-label="Copy wallet address"
-          >
-            <span className="opacity-80">{shortAddress(activeWallet?.address ?? null)}</span>
-            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3 opacity-80" />}
-          </button>
-        </div>
-      </div>
+      <WalletBalanceHero
+        balanceLabel={formatCurrency(totalUsd, currency)}
+        addressLabel={shortAddress(activeWallet?.address ?? null)}
+        hideBalance={hideBalance}
+        copied={copied}
+        onCycleCurrency={cycleCurrency}
+        onCopyAddress={copyAddress}
+        className="py-2"
+      />
 
-      {/* Nav */}
-      <nav className="rounded-2xl border border-border/60 bg-card/40 p-2">
+      <nav className="space-y-0.5">
         {NAV.map((item) => {
           const Icon = item.icon;
-          const active =
-            pathname === item.to ||
-            (item.to === "/dashboard" && pathname === "/") ||
-            (item.to === "/opentoken" &&
-              pathname.startsWith("/opentoken") &&
-              !pathname.startsWith("/opentoken/create")) ||
-            (item.to === "/opentoken/create" && pathname.startsWith("/opentoken/create"));
+          const active = navActive(pathname, item.to);
           return (
             <Link
               key={item.to}
@@ -423,10 +409,10 @@ function SidebarInner({
               onClick={onClose}
               preload="intent"
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors duration-100",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
                 active
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
             >
               <Icon className="h-5 w-5" />
@@ -436,40 +422,34 @@ function SidebarInner({
         })}
       </nav>
 
-      <Link
-        to="/ledger"
-        onClick={onClose}
-        preload="intent"
-        className={cn(
-          "flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 px-3 py-2.5 text-sm font-semibold transition-colors duration-100",
-          pathname === "/ledger"
-            ? "bg-sidebar-accent text-foreground"
-            : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-        )}
-      >
-        <ScrollText className="h-5 w-5 text-primary" />
-        Ledger API
-        <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          OpenLedger
-        </span>
-      </Link>
+      <div className="space-y-0.5">
+        <Link
+          to="/ledger"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/ledger"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <ScrollText className="h-5 w-5" />
+          Ledger API
+        </Link>
+        <a
+          href="/docs/openpay"
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+        >
+          <BookOpen className="h-5 w-5" />
+          OpenPay Docs
+        </a>
+      </div>
 
-      <a
-        href="/docs/openpay"
-        target="_blank"
-        rel="noreferrer"
-        onClick={onClose}
-        className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors duration-100 hover:bg-sidebar-accent/60 hover:text-foreground"
-      >
-        <BookOpen className="h-5 w-5 text-primary" />
-        OpenPay Docs
-        <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          Connect
-        </span>
-      </a>
-
-      {/* Wallet switcher list */}
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-2">
+      <div className="ph-group p-1.5">
         {wallets.map((w) => (
           <button
             key={w.id}
@@ -477,14 +457,14 @@ function SidebarInner({
             disabled={switching}
             onClick={() => handleSwitch(w.id)}
             className={cn(
-              "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left",
-              w.id === activeWallet?.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60",
+              "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left press",
+              w.id === activeWallet?.id ? "bg-primary/10" : "hover:bg-muted/50",
             )}
           >
             <span className="flex min-w-0 items-center gap-3">
               <Avatar className="h-9 w-9">
                 {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
-                <AvatarFallback className="bg-gradient-mint text-xs font-bold text-mint-foreground">
+                <AvatarFallback className="bg-primary/20 text-xs font-bold text-primary">
                   {(w.name?.[0] ?? "W").toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -509,7 +489,7 @@ function SidebarInner({
         <Link
           to="/settings"
           onClick={onClose}
-          className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary hover:bg-sidebar-accent/60"
+          className="mt-0.5 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
         >
           <Plus className="h-4 w-4" /> Add Wallet
         </Link>
@@ -525,7 +505,7 @@ function SidebarInner({
             <button
               type="button"
               onClick={toggle}
-              className="rounded-full p-1.5 hover:bg-sidebar-accent"
+              className="rounded-full p-1.5 hover:bg-muted press"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -536,13 +516,18 @@ function SidebarInner({
             </button>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start rounded-xl text-muted-foreground"
+          onClick={signOut}
+        >
           <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
         </Button>
       </div>
 
       <Dialog open={switchOpen} onOpenChange={setSwitchOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
+        <DialogContent className="max-w-sm rounded-3xl border-border/60 bg-card">
           <DialogHeader>
             <DialogTitle>Switch wallet</DialogTitle>
             <DialogDescription>Choose which wallet to use</DialogDescription>
@@ -555,12 +540,12 @@ function SidebarInner({
                   disabled={switching}
                   onClick={() => handleSwitch(w.id)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left",
-                    w.id === activeWallet?.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60",
+                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left press",
+                    w.id === activeWallet?.id ? "bg-primary/15" : "hover:bg-muted/60",
                   )}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-gradient-primary text-sm font-bold text-primary-foreground">
+                    <AvatarFallback className="bg-primary/20 text-sm font-bold text-primary">
                       {(w.name?.[0] ?? "W").toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

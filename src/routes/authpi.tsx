@@ -38,16 +38,16 @@ function AuthPiPage() {
   if (!mounted) return null;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-hero-glow px-4 py-10">
-      <div className="absolute inset-0 -z-10 opacity-50" aria-hidden="true">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
+      <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true">
         <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-primary blur-3xl opacity-20" />
         <div className="absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-primary-glow blur-3xl opacity-15" />
       </div>
 
       <div className="w-full max-w-md">
-        <div className="glass rounded-3xl p-7">
+        <div className="rounded-3xl bg-card p-7 shadow-card">
           <div className="mb-8 text-center">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1 text-xs font-medium text-accent-foreground">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3 w-3" /> Premium Web3 wallet
             </div>
             <h1 className="text-2xl font-semibold">Welcome to OpenPay Pro</h1>

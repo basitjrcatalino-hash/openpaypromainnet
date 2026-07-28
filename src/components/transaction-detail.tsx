@@ -62,7 +62,7 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
     <button
       type="button"
       onClick={() => onOpen(tx)}
-      className="flex w-full items-center gap-3 py-3 text-left text-sm transition-colors hover:bg-sidebar-accent/40 active:bg-sidebar-accent/60"
+      className="flex w-full items-center gap-3 py-3.5 text-left text-sm press hover:bg-muted/40"
     >
       {logo ? (
         <Avatar className="h-10 w-10 shrink-0">

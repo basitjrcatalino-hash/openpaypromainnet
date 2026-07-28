@@ -122,12 +122,12 @@ function CreatorProfilePage() {
         </Link>
       </Button>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
               <AvatarImage src={profile?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+              <AvatarFallback className="bg-primary text-primary-foreground">
                 {name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

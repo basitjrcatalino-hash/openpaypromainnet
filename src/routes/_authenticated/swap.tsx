@@ -308,32 +308,30 @@ function OpenDexPage() {
     !!wallet?.id;
 
   return (
-    <div className="mx-auto max-w-md animate-page-in space-y-5 px-1 pb-8">
-      <div className="flex items-start gap-3">
-        <Button asChild variant="ghost" size="icon" className="mt-0.5 rounded-full">
-          <Link to="/opentoken">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="ph-page space-y-5">
+      <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="icon" className="rounded-full">
+          <Link to="/dashboard">
+            <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">OpenDEX</h1>
-          <p className="text-sm text-muted-foreground">
-            Swap your wallet assets against OUSD — balances match your dashboard
-          </p>
+        <div className="flex-1 text-center">
+          <h1 className="text-lg font-bold tracking-tight">Swap</h1>
+          <p className="text-xs text-muted-foreground">OpenDEX · wallet balances</p>
         </div>
+        <button
+          type="button"
+          className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
+          aria-label="Swap settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Settings2 className="h-4 w-4" />
+        </button>
       </div>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 bg-card p-5 shadow-none">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-semibold">Trade</span>
-          <button
-            type="button"
-            className="rounded-full bg-muted p-1.5 hover:bg-accent"
-            aria-label="Swap settings"
-            onClick={() => setSettingsOpen(true)}
-          >
-            <Settings2 className="h-4 w-4" />
-          </button>
         </div>
 
         <SwapSide
@@ -398,7 +396,7 @@ function OpenDexPage() {
         <Button
           onClick={doSwap}
           disabled={!canSwap}
-          className="mt-4 h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow"
+          className="mt-4 h-12 w-full rounded-full bg-primary text-base font-semibold text-primary-foreground"
         >
           {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
           {!wallet
@@ -606,7 +604,7 @@ function TokenLogo({ token, size = "md" }: { token?: SwapToken | null; size?: "s
   return (
     <div
       className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-gradient-primary font-bold text-primary-foreground",
+        "grid shrink-0 place-items-center rounded-full bg-primary/20 font-bold text-primary",
         dim,
       )}
     >

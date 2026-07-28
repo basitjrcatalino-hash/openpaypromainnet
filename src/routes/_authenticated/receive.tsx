@@ -273,18 +273,18 @@ function ReceivePage() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Receive</h1>
-        <p className="text-sm text-muted-foreground">
+    <div className="ph-page space-y-5">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight">Receive</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Share your Pro wallet or get paid from OpenPay
         </p>
       </div>
 
       {/* OpenPay → Pro */}
-      <Card className="glass-strong space-y-4 rounded-3xl border-border/60 p-5">
+      <Card className="space-y-4 rounded-2xl border-0 bg-card p-5 shadow-none">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
             <WalletIcon className="h-4 w-4" />
           </span>
           <div>
@@ -310,7 +310,7 @@ function ReceivePage() {
 
         <Button
           type="button"
-          className="w-full rounded-2xl bg-gradient-primary text-primary-foreground"
+          className="w-full rounded-full bg-primary text-primary-foreground"
           disabled={busy}
           onClick={makeOpenPayLink}
         >
@@ -370,8 +370,8 @@ function ReceivePage() {
         )}
       </Card>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-6 text-center">
-        <div className="mx-auto grid place-items-center rounded-3xl bg-white p-4 shadow-card">
+      <Card className="rounded-2xl border-0 bg-card p-6 text-center shadow-none">
+        <div className="mx-auto grid place-items-center rounded-2xl bg-white p-4">
           <canvas ref={canvasRef} className="block" />
           {!payUri && <QrCode className="h-40 w-40 text-muted-foreground" />}
         </div>

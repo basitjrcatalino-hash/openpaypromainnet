@@ -87,7 +87,7 @@ function OpenPayConnectCallback() {
 
   return (
     <div className="mx-auto grid max-w-md place-items-center py-20">
-      <Card className="glass-strong flex w-full items-center gap-3 rounded-3xl border-border/60 p-6">
+      <Card className="flex w-full items-center gap-3 rounded-2xl border-0 bg-card shadow-none p-6">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
         <p className="text-sm font-medium">{status}</p>
       </Card>

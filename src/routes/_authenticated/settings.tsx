@@ -268,7 +268,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="ph-page mx-auto max-w-lg space-y-4 md:max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Settings</h1>
         <p className="text-sm text-muted-foreground">
@@ -277,7 +277,7 @@ function SettingsPage() {
       </div>
 
       {/* Profile */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Profile
         </h2>
@@ -285,7 +285,7 @@ function SettingsPage() {
           <div className="flex flex-col items-center gap-2">
             <Avatar className="h-20 w-20 ring-2 ring-primary/30">
               <AvatarImage src={(profile as any)?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-gradient-primary text-lg text-primary-foreground">
+              <AvatarFallback className="bg-primary/20 text-lg text-primary">
                 {(displayName || user.email || "U")[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -349,7 +349,7 @@ function SettingsPage() {
             <Button
               onClick={saveProfile}
               disabled={savingName}
-              className="rounded-full bg-gradient-primary text-primary-foreground"
+              className="rounded-full bg-primary text-primary-foreground"
             >
               {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save profile
             </Button>
@@ -358,7 +358,7 @@ function SettingsPage() {
       </Card>
 
       {/* Wallets */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Wallets
@@ -367,7 +367,7 @@ function SettingsPage() {
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="rounded-full bg-gradient-primary text-primary-foreground"
+                className="rounded-full bg-primary text-primary-foreground"
               >
                 <Plus className="mr-1.5 h-4 w-4" /> Add wallet
               </Button>
@@ -391,7 +391,7 @@ function SettingsPage() {
                   <Button
                     onClick={createWallet}
                     disabled={creating}
-                    className="w-full rounded-2xl bg-gradient-primary text-primary-foreground"
+                    className="w-full rounded-2xl bg-primary text-primary-foreground"
                   >
                     {creating ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -434,7 +434,7 @@ function SettingsPage() {
                   <Button
                     onClick={importWallet}
                     disabled={creating}
-                    className="w-full rounded-2xl bg-gradient-primary text-primary-foreground"
+                    className="w-full rounded-2xl bg-primary text-primary-foreground"
                   >
                     {creating ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -455,7 +455,7 @@ function SettingsPage() {
               className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 p-3"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
                   <WalletIcon className="h-4 w-4" />
                 </span>
                 <div>
@@ -499,7 +499,7 @@ function SettingsPage() {
       </Card>
 
       {/* Preferences */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Appearance & preferences
         </h2>
@@ -513,7 +513,7 @@ function SettingsPage() {
                     setTheme(t);
                     updatePref({ theme: t });
                   }}
-                  className={`rounded-full px-3 py-1 text-xs capitalize ${theme === t ? "bg-gradient-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  className={`rounded-full px-3 py-1 text-xs capitalize ${theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                 >
                   {t}
                 </button>
@@ -599,7 +599,7 @@ function SettingsPage() {
       </Card>
 
       {/* Security */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Security
         </h2>
@@ -631,7 +631,7 @@ function SettingsPage() {
       </Card>
 
       {/* OpenLedger / Ledger API */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
@@ -663,7 +663,7 @@ function SettingsPage() {
       </Card>
 
       {/* Third-party Connect + Payments docs */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
@@ -743,9 +743,9 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
     : stored?.account_number || stored?.identifier || stored?.name || "OpenPay";
 
   return (
-    <Card className="glass-strong rounded-3xl border-border/60 p-5">
+    <Card className="rounded-2xl border-0 shadow-none p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
           <Link2 className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
@@ -772,7 +772,7 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
             </Button>
           ) : (
             <Button
-              className="rounded-full bg-gradient-primary text-primary-foreground"
+              className="rounded-full bg-primary text-primary-foreground"
               disabled={busy}
               onClick={connectViaOpenPay}
             >
@@ -859,7 +859,7 @@ function BiometricCard({
   }
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
         <ShieldCheck className="h-4 w-4" />
       </span>
       <div className="mt-2 text-sm font-semibold">
@@ -915,7 +915,7 @@ function PinCard({
   }
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
         <KeyRound className="h-4 w-4" />
       </span>
       <div className="mt-2 text-sm font-semibold">
@@ -955,7 +955,7 @@ function PinCard({
               <Button
                 onClick={save}
                 disabled={busy}
-                className="rounded-full bg-gradient-primary text-primary-foreground"
+                className="rounded-full bg-primary text-primary-foreground"
               >
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save PIN
               </Button>
@@ -987,7 +987,7 @@ function RecoveryCard({
   }
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
         <RefreshCw className="h-4 w-4" />
       </span>
       <div className="mt-2 text-sm font-semibold">
@@ -1031,7 +1031,7 @@ function RecoveryCard({
               Copy
             </Button>
             <Button
-              className="rounded-full bg-gradient-primary text-primary-foreground"
+              className="rounded-full bg-primary text-primary-foreground"
               onClick={async () => {
                 await onConfirm();
                 setOpen(false);

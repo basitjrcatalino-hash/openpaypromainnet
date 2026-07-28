@@ -183,9 +183,9 @@ function PhantomAssetDetail() {
       : meta.description;
 
   return (
-    <div className="ot-phantom mx-auto max-w-lg animate-page-in pb-28">
+    <div className="ot-phantom mx-auto max-w-lg animate-page-in pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center gap-2 bg-background/90 px-3 py-3 backdrop-blur-xl md:top-0">
+      <div className="ph-header sticky top-0 z-20 flex items-center gap-2 py-3 md:rounded-2xl">
         <Button
           variant="ghost"
           size="icon"
@@ -214,7 +214,7 @@ function PhantomAssetDetail() {
             ) : meta.logo ? (
               <img src={meta.logo} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="grid h-full w-full place-items-center bg-gradient-primary text-lg font-bold text-primary-foreground">
+              <div className="grid h-full w-full place-items-center bg-primary/20 text-lg font-bold text-primary">
                 {meta.symbol.slice(0, 2)}
               </div>
             )}

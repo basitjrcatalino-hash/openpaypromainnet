@@ -81,7 +81,7 @@ function OpenTokenPortfolio() {
   }, [holdings]);
 
   return (
-    <div className="animate-page-in space-y-5">
+    <div className="ot-phantom ph-page animate-page-in space-y-5 md:max-w-2xl">
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="icon" className="rounded-full">
           <Link to="/opentoken">
@@ -145,7 +145,7 @@ function OpenTokenPortfolio() {
                       params={{ tokenId: t.id }}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-accent/40"
                     >
-                      <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
+                      <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-primary/20 text-xs font-bold text-primary">
                         {t.logo_url ? (
                           <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
                         ) : (

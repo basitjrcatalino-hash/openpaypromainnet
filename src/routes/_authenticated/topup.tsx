@@ -317,21 +317,23 @@ function TopUpPage() {
       : `Top up ${amount ? formatUSD(Number(amount)) : ""}`;
 
   return (
-    <div className="mx-auto max-w-lg space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Top Up</h1>
-        <p className="text-sm text-muted-foreground">Add OUSD to your wallet instantly</p>
+    <div className="ph-page space-y-5">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight">Buy</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Add OUSD to your wallet</p>
       </div>
 
-      <Card className="border-0 bg-gradient-primary p-5 text-white shadow-glow">
-        <div className="text-xs uppercase tracking-widest opacity-80">
-          Current OUSD balance · {wallet?.name ?? "Active wallet"}
+      <div className="rounded-2xl bg-card px-5 py-6 text-center">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Balance · {wallet?.name ?? "Active wallet"}
         </div>
-        <div className="text-3xl font-bold tabular-nums">{formatUSD(Number(wallet?.ousd_balance ?? 0))}</div>
-      </Card>
+        <div className="mt-1 text-3xl font-bold tabular-nums">
+          {formatUSD(Number(wallet?.ousd_balance ?? 0))}
+        </div>
+      </div>
 
       {pendingPayLink && (
-        <Card className="rounded-3xl border-primary/40 bg-primary/5 p-5">
+        <Card className="rounded-2xl border-0 bg-primary/10 p-5 shadow-none">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
             <div className="min-w-0 flex-1 space-y-2">
@@ -374,7 +376,7 @@ function TopUpPage() {
         </Card>
       )}
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 bg-card p-5 shadow-none">
         <form onSubmit={submit} className="space-y-5">
           <div>
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -425,7 +427,7 @@ function TopUpPage() {
                       : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
                     <m.icon className="h-4 w-4" />
                   </span>
                   <div className="flex-1">
@@ -468,7 +470,7 @@ function TopUpPage() {
           <Button
             type="submit"
             disabled={busy || (method === "openpay_balance" && !linked)}
-            className="h-12 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow"
+            className="h-12 w-full rounded-full bg-primary text-base font-semibold text-primary-foreground"
           >
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
             {cta}

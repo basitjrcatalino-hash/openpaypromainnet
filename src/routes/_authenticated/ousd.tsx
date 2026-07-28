@@ -4,7 +4,6 @@ import { Sparkles, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { formatNumber, formatUSD } from "@/lib/wallet-utils";
@@ -54,45 +53,43 @@ function OUSDPage() {
   }));
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <OusdIcon className="h-12 w-12 rounded-2xl" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-              OUSD Stablecoin Center
-            </h1>
-            <p className="text-sm text-muted-foreground">Manage your OpenPay OUSD — 1:1 backed</p>
-          </div>
+    <div className="ph-page space-y-5">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <OusdIcon className="h-16 w-16" />
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">OUSD</h1>
+          <p className="text-sm text-muted-foreground">Earn · 1:1 USD-backed stablecoin</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/20 px-3 py-1 text-xs font-semibold text-mint-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
           <Sparkles className="h-3 w-3" /> $1.00 peg
         </span>
       </div>
 
-      <Card className="relative overflow-hidden rounded-3xl border-0 bg-gradient-mint p-6 text-mint-foreground shadow-glow md:p-8">
-        <div className="text-xs uppercase tracking-widest opacity-80">Your OUSD balance</div>
-        <div className="mt-2 text-5xl font-bold tabular-nums">
-          {formatNumber(wallet?.ousd_balance ?? 0, 2)} OUSD
+      <div className="rounded-2xl bg-card px-5 py-6 text-center">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Your balance
         </div>
-        <div className="mt-1 text-sm opacity-80">
+        <div className="mt-2 text-4xl font-bold tabular-nums">
+          {formatNumber(wallet?.ousd_balance ?? 0, 2)}
+        </div>
+        <div className="mt-1 text-sm text-muted-foreground">
           ≈ {formatUSD(Number(wallet?.ousd_balance ?? 0))}
         </div>
 
-        <div className="-mx-2 mt-4 h-20">
+        <div className="mx-auto mt-4 h-16 max-w-xs">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chart}>
               <defs>
                 <linearGradient id="ouG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="black" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="black" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <Tooltip cursor={false} content={() => null} />
               <Area
                 type="monotone"
                 dataKey="v"
-                stroke="currentColor"
+                stroke="var(--primary)"
                 strokeWidth={2}
                 fill="url(#ouG)"
               />
@@ -100,34 +97,32 @@ function OUSDPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button asChild variant="secondary" className="rounded-full">
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Button asChild className="rounded-full bg-primary text-primary-foreground">
             <Link to="/send">Send</Link>
           </Button>
           <Button asChild variant="secondary" className="rounded-full">
             <Link to="/receive">Receive</Link>
           </Button>
           <Button asChild variant="secondary" className="rounded-full">
-            <Link to="/swap">OpenDEX</Link>
+            <Link to="/swap">Swap</Link>
           </Button>
         </div>
-      </Card>
+      </div>
 
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          OUSD activity
-        </h2>
+      <div>
+        <h2 className="mb-2 text-sm font-semibold">Activity</h2>
         {txs.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-muted-foreground">
             No OUSD transactions yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border/60">
+          <ul>
             {txs.map((t: any) => (
-              <li key={t.id} className="flex items-center justify-between py-3 text-sm">
+              <li key={t.id} className="ph-row">
                 <div className="flex items-center gap-3">
                   <span
-                    className={`grid h-9 w-9 place-items-center rounded-full ${t.type === "receive" ? "bg-mint/20 text-mint-foreground" : "bg-primary/15 text-primary"}`}
+                    className={`grid h-10 w-10 place-items-center rounded-full ${t.type === "receive" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"}`}
                   >
                     {t.type === "receive" ? (
                       <ArrowDownLeft className="h-4 w-4" />
@@ -150,7 +145,7 @@ function OUSDPage() {
             ))}
           </ul>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

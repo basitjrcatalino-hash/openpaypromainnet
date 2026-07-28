@@ -219,7 +219,7 @@ function CreateOpenTokenPage() {
 
   /* ── main form ────────────────────────────────────────────────── */
   return (
-    <div className="ot-phantom mx-auto max-w-4xl animate-page-in px-4 pb-24 pt-4 md:pb-12">
+    <div className="ot-phantom mx-auto max-w-4xl animate-page-in px-1 pb-8 pt-2">
       {/* top bar */}
       <div className="flex items-center gap-3 pb-5">
         <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">

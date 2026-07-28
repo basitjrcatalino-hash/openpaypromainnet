@@ -368,8 +368,8 @@ function SendPage() {
   };
 
   return (
-    <div className="mx-auto min-h-[70vh] max-w-md animate-page-in pb-24">
-      <div className="sticky top-0 z-10 mb-4 flex items-center gap-2 bg-background/90 py-2 backdrop-blur-xl">
+    <div className="ph-page min-h-[70vh]">
+      <div className="ph-header sticky top-0 z-10 mb-4 flex items-center gap-2 py-2">
         <Button
           type="button"
           variant="ghost"
@@ -394,7 +394,7 @@ function SendPage() {
               <Loader2 className="mb-2 h-5 w-5 animate-spin" /> Loading assets…
             </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            <div className="overflow-hidden rounded-2xl bg-card">
               {assets.map((a, i) => (
                 <button
                   key={a.key}
@@ -530,7 +530,7 @@ function SendPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-2xl text-base font-semibold"
+            className="h-12 w-full rounded-full text-base font-semibold"
             disabled={!to.trim()}
             onClick={continueFromRecipient}
           >
@@ -592,7 +592,7 @@ function SendPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-2xl text-base font-semibold"
+            className="h-12 w-full rounded-full text-base font-semibold"
             disabled={!amountValid || insufficient}
             onClick={continueFromAmount}
           >
@@ -636,8 +636,8 @@ function SendPage() {
             disabled={busy}
             onClick={() => void confirmSend()}
             className={cn(
-              "h-12 w-full rounded-2xl text-base font-semibold text-primary-foreground shadow-glow",
-              rail === "openpay" ? "bg-[#0070BA] hover:opacity-90" : "bg-gradient-primary",
+              "h-12 w-full rounded-full text-base font-semibold text-primary-foreground",
+              rail === "openpay" ? "bg-[#0070BA] hover:opacity-90" : "bg-primary",
             )}
           >
             {busy ? (
@@ -694,7 +694,7 @@ function AssetAvatar({
   return (
     <div
       className={cn(
-        "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground",
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/20 text-xs font-bold text-primary",
         className,
       )}
     >

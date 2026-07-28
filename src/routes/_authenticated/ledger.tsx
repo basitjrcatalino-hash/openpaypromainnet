@@ -152,7 +152,7 @@ do {
   const overview = overviewQ.data;
 
   return (
-    <div className="space-y-5">
+    <div className="ph-page mx-auto max-w-3xl space-y-5 md:max-w-4xl">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Ledger API</h1>
@@ -180,7 +180,7 @@ do {
           },
           { label: "Latest sequence", value: String(overview?.latest_sequence ?? "—") },
         ].map((s) => (
-          <Card key={s.label} className="glass-strong rounded-2xl border-border/60 p-4">
+          <Card key={s.label} className="rounded-2xl border-0 shadow-none p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               {s.label}
             </p>
@@ -190,7 +190,7 @@ do {
       </div>
 
       {/* Coverage by type + sync */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -228,7 +228,7 @@ do {
       </Card>
 
       {/* OpenLedger integration */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-4 flex items-center gap-2">
           <Plug className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -274,7 +274,7 @@ do {
       </Card>
 
       {/* Endpoints */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           API endpoints
         </h2>
@@ -307,7 +307,7 @@ do {
       </Card>
 
       {/* API keys */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-primary" />
@@ -461,7 +461,7 @@ do {
       </Card>
 
       {/* Recent entries */}
-      <Card className="glass-strong rounded-3xl border-border/60 p-5">
+      <Card className="rounded-2xl border-0 shadow-none p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Recent ledger entries

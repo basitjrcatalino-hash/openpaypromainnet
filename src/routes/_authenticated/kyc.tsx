@@ -58,13 +58,13 @@ function KycPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-4 md:py-8">
+    <div className="ph-page mx-auto max-w-lg space-y-6 py-4 md:max-w-xl">
       <header>
         <h1 className="text-2xl font-bold md:text-3xl">Identity Verification</h1>
         <p className="mt-1 text-sm text-muted-foreground">Powered by Pi Verify · Required for full access</p>
       </header>
 
-      <div className="glass rounded-3xl p-6 md:p-8">
+      <div className="rounded-2xl bg-card p-6 md:p-8">
         {isLoading ? (
           <div className="flex items-center gap-3 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading status…</div>
         ) : error ? (

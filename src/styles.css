@@ -120,17 +120,17 @@
 
 .dark {
   /* Phantom dark: near-black with violet chroma */
-  --background: oklch(0.12 0.015 290);
+  --background: oklch(0.14 0.012 290);
   --foreground: oklch(0.97 0.005 290);
 
-  --card: oklch(0.16 0.018 290);
+  --card: oklch(0.17 0.016 290);
   --card-foreground: oklch(0.97 0.005 290);
-  --popover: oklch(0.14 0.018 290);
+  --popover: oklch(0.15 0.016 290);
   --popover-foreground: oklch(0.97 0.005 290);
 
-  --primary: oklch(0.78 0.09 295);            /* #AB9FF2-like soft lavender */
+  --primary: oklch(0.78 0.09 295);            /* #AB9FF2 soft lavender */
   --primary-foreground: oklch(0.16 0.04 295);
-  --primary-glow: oklch(0.72 0.12 300);
+  --primary-glow: oklch(0.78 0.09 295);
 
   --secondary: oklch(0.2 0.02 290);
   --secondary-foreground: oklch(0.95 0.005 290);
@@ -159,23 +159,22 @@
   --chart-4: oklch(0.65 0.12 310);
   --chart-5: oklch(0.7 0.08 280);
 
-  --sidebar: oklch(0.11 0.015 290);
+  --sidebar: oklch(0.13 0.012 290);
   --sidebar-foreground: oklch(0.95 0.005 290);
   --sidebar-primary: oklch(0.78 0.09 295);
   --sidebar-primary-foreground: oklch(0.16 0.04 295);
-  --sidebar-accent: oklch(0.2 0.035 295);
+  --sidebar-accent: oklch(0.22 0.04 295);
   --sidebar-accent-foreground: oklch(0.95 0.02 295);
-  --sidebar-border: oklch(0.26 0.025 290);
+  --sidebar-border: oklch(0.24 0.02 290);
   --sidebar-ring: oklch(0.78 0.09 295);
 
-  --gradient-primary: linear-gradient(145deg, oklch(0.38 0.12 295), oklch(0.52 0.14 300) 48%, oklch(0.72 0.1 295));
+  --gradient-primary: linear-gradient(145deg, oklch(0.42 0.14 295), oklch(0.55 0.13 300) 48%, oklch(0.78 0.09 295));
   --gradient-mint: linear-gradient(135deg, oklch(0.7 0.12 165), oklch(0.78 0.1 150));
-  --gradient-hero: radial-gradient(ellipse at 30% -10%, oklch(0.5 0.14 295 / 0.22), transparent 55%),
-                   radial-gradient(ellipse at 90% 110%, oklch(0.65 0.1 310 / 0.12), transparent 50%);
-  --shadow-glow: 0 14px 44px -22px oklch(0.55 0.12 295 / 0.35);
-  --shadow-card: 0 10px 28px -14px oklch(0 0 0 / 0.45);
-  --glass-bg: oklch(0.16 0.02 290 / 0.72);
-  --glass-border: oklch(1 0 0 / 0.08);
+  --gradient-hero: radial-gradient(ellipse at 50% -20%, oklch(0.55 0.12 295 / 0.18), transparent 55%);
+  --shadow-glow: 0 14px 44px -22px oklch(0.55 0.12 295 / 0.28);
+  --shadow-card: 0 8px 24px -14px oklch(0 0 0 / 0.4);
+  --glass-bg: oklch(0.14 0.015 290 / 0.78);
+  --glass-border: oklch(1 0 0 / 0.06);
 }
 
 @layer base {
@@ -295,27 +294,78 @@
   &:active { transform: scale(0.97); }
 }
 
-/* ── OpenToken / asset surfaces: inherit OpenPay Pro theme (desktop + mobile) ─── */
+@utility ph-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground);
+  transition: transform .1s ease, opacity .1s ease;
+  &:active { transform: scale(0.96); }
+}
+
+@utility ph-action-icon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  color: var(--primary);
+}
+
+@utility ph-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+  text-align: left;
+  transition: background-color .1s ease;
+  &:hover { background: color-mix(in oklab, var(--muted) 50%, transparent); }
+}
+
+@utility ph-tabbar {
+  background: color-mix(in oklab, var(--background) 82%, transparent);
+  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility ph-header {
+  background: color-mix(in oklab, var(--background) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+@utility ph-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 32rem;
+  animation: page-in .12s ease-out both;
+}
+
+@utility ph-group {
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--card);
+}
+
+@utility safe-pb {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@utility safe-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Shared Phantom surface for all authenticated / OpenToken pages */
 .ot-phantom {
   color: var(--foreground);
   background: transparent;
   min-height: 100%;
-}
-.dark .ot-phantom {
-  /* Soft violet near-black — matches app shell, not pure #000 */
-  --background: oklch(0.12 0.015 290);
-  --foreground: oklch(0.97 0.005 290);
-  --card: oklch(0.16 0.018 290);
-  --card-foreground: oklch(0.97 0.005 290);
-  --popover: oklch(0.14 0.018 290);
-  --popover-foreground: oklch(0.97 0.005 290);
-  --border: oklch(0.28 0.025 290);
-  --muted: oklch(0.2 0.02 290);
-  --muted-foreground: oklch(0.68 0.02 290);
-  --accent: oklch(0.22 0.04 295);
-  --accent-foreground: oklch(0.92 0.03 295);
-  --primary: oklch(0.78 0.09 295);
-  --primary-foreground: oklch(0.16 0.04 295);
-  --input: oklch(0.24 0.025 290);
-  --ring: oklch(0.78 0.09 295);
 }

@@ -151,7 +151,7 @@ export function OpenNftCollectiblesPanel({
         <p className="max-w-70 text-sm text-muted-foreground">
           Link your OpenPay account to show OpenNFTs you own.
         </p>
-        <Button asChild className="rounded-full bg-gradient-primary text-primary-foreground">
+        <Button asChild className="rounded-full bg-primary text-primary-foreground">
           <Link to="/settings">
             <Link2 className="mr-1.5 h-3.5 w-3.5" /> Connect OpenPay
           </Link>
@@ -188,7 +188,7 @@ export function OpenNftCollectiblesPanel({
           href={OPENPAY_NFT_MARKET_URL}
           target="_blank"
           rel="noreferrer"
-          className="mt-1 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
+          className="mt-1 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
         >
           Browse OpenPay NFTs
         </a>

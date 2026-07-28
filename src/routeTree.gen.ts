@@ -44,6 +44,7 @@ import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authent
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
+import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
 import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
@@ -243,6 +244,11 @@ const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
   path: '/api/public/moonpay-sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
+  id: '/api/public/moonpay-webhook',
+  path: '/api/public/moonpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
   id: '/api/public/openpay-auth',
   path: '/api/public/openpay-auth',
@@ -376,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
+  '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
+  '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -486,6 +494,7 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
+  '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -542,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
+    | '/api/public/moonpay-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -596,6 +606,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
+    | '/api/public/moonpay-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -651,6 +662,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
+    | '/api/public/moonpay-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -684,6 +696,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicMoonpaySignRoute: typeof ApiPublicMoonpaySignRoute
+  ApiPublicMoonpayWebhookRoute: typeof ApiPublicMoonpayWebhookRoute
   ApiPublicOpenpayAuthRoute: typeof ApiPublicOpenpayAuthRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
@@ -946,6 +959,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMoonpaySignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/moonpay-webhook': {
+      id: '/api/public/moonpay-webhook'
+      path: '/api/public/moonpay-webhook'
+      fullPath: '/api/public/moonpay-webhook'
+      preLoaderRoute: typeof ApiPublicMoonpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/openpay-auth': {
       id: '/api/public/openpay-auth'
       path: '/api/public/openpay-auth'
@@ -1193,6 +1213,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicMoonpaySignRoute: ApiPublicMoonpaySignRoute,
+  ApiPublicMoonpayWebhookRoute: ApiPublicMoonpayWebhookRoute,
   ApiPublicOpenpayAuthRoute: ApiPublicOpenpayAuthRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,

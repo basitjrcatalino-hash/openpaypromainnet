@@ -20,7 +20,7 @@ import {
   missingSupabaseEnvMessage,
 } from "@/integrations/supabase/env";
 import { MoonPayProvider } from "@moonpay/moonpay-react";
-import { MOONPAY_API_KEY } from "@/lib/moonpay";
+import { MOONPAY_API_KEY, MOONPAY_DEBUG } from "@/lib/moonpay";
 import { AppPhantomProvider } from "@/components/phantom-provider";
 
 async function ensureBrowserSupabaseConfig() {
@@ -203,7 +203,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <MoonPayProvider apiKey={MOONPAY_API_KEY} debug={false}>
+        <MoonPayProvider apiKey={MOONPAY_API_KEY} debug={MOONPAY_DEBUG}>
           <AppPhantomProvider>
             <SplashScreen />
             <Outlet />

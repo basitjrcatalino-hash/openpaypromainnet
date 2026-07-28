@@ -16,7 +16,7 @@ import {
   PhantomContinueButton,
   PhantomGoogleAppleLink,
 } from "@/components/phantom-auth-lazy";
-import { usePhantomClientReady } from "@/components/phantom-provider";
+import { usePhantomClient } from "@/components/phantom-provider";
 import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -95,7 +95,8 @@ function AuthOptionIcon({ id }: { id: AuthMethod }) {
 
 function AuthPiPage() {
   const navigate = useNavigate();
-  const phantomReady = usePhantomClientReady();
+  const { ready: phantomReady, status: phantomStatus, error: phantomError, retry: retryPhantom } =
+    usePhantomClient();
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<AuthMethod | null>(null);
   const [busy, setBusy] = useState(false);
@@ -259,10 +260,53 @@ function AuthPiPage() {
                   />
                   <PhantomGoogleAppleLink busy={busy} />
                 </>
+              ) : phantomStatus === "error" ? (
+                <div className="space-y-2">
+                  <p className="text-center text-xs text-destructive">
+                    {phantomError || "Phantom Connect failed to load."}
+                  </p>
+                  <Button
+                    type="button"
+                    className="h-12 w-full rounded-xl text-base font-semibold"
+                    style={{
+                      backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
+                      color: selectedOpt?.accentFg ?? "#1a1330",
+                    }}
+                    onClick={() => retryPhantom()}
+                  >
+                    Retry Phantom
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full rounded-xl"
+                    disabled={busy}
+                    onClick={() => {
+                      setSelected("solana");
+                      void continueWith("solana");
+                    }}
+                  >
+                    Continue with Solana instead
+                  </Button>
+                </div>
               ) : (
-                <Button type="button" disabled className="h-12 w-full rounded-xl">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    disabled
+                    className="h-12 w-full rounded-xl"
+                    style={{
+                      backgroundColor: selectedOpt?.accent ?? "#AB9FF2",
+                      color: selectedOpt?.accentFg ?? "#1a1330",
+                    }}
+                  >
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading Phantom…
+                  </Button>
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Preparing wallet connect. If this stalls, pick Solana or retry.
+                  </p>
+                </div>
               )
             ) : (
               <Button

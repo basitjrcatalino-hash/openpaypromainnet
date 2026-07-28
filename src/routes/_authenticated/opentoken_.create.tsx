@@ -74,6 +74,7 @@ function CreateOpenTokenPage() {
   const bannerRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [busy, setBusy] = useState(false);
+  const [initialBuy, setInitialBuy] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
@@ -114,7 +115,8 @@ function CreateOpenTokenPage() {
   });
 
   const ousdBal = Number(wallet?.ousd_balance ?? 0);
-  const canAfford = ousdBal >= DEFAULT_LAUNCH_FEE_OUSD;
+  const totalDue = DEFAULT_LAUNCH_FEE_OUSD + Math.max(0, initialBuy);
+  const canAfford = ousdBal >= totalDue;
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -177,7 +179,9 @@ function CreateOpenTokenPage() {
       return;
     }
     if (!canAfford) {
-      toast.error(`Launch fee is ${DEFAULT_LAUNCH_FEE_OUSD} OUSD — insufficient available balance`);
+      toast.error(
+        `Need ${totalDue} OUSD (mint fee ${DEFAULT_LAUNCH_FEE_OUSD}${initialBuy > 0 ? ` + buy ${initialBuy}` : ""}) — available ${ousdBal.toFixed(2)}`,
+      );
       return;
     }
     setBusy(true);
@@ -199,10 +203,16 @@ function CreateOpenTokenPage() {
           burnable: form.burnable,
           mintable: form.mintable,
           wallet_id: wallet.id,
+          initial_buy_ousd: Math.max(0, initialBuy),
         },
       });
-      toast.success(`$${created.symbol} launched`);
-      void navigate({ to: "/asset/$tokenId", params: { tokenId: created.id } });
+      const bought = Number((created as { creator_buy?: { token_amount?: number } })?.creator_buy?.token_amount ?? 0);
+      toast.success(
+        bought > 0
+          ? `$${created.symbol} minted · you received tokens`
+          : `$${created.symbol} minted`,
+      );
+      void navigate({ to: "/opentoken/$tokenId", params: { tokenId: created.id } });
     } catch (err) {
       toast.error((err as Error).message || "Launch failed");
     } finally {
@@ -238,6 +248,9 @@ function CreateOpenTokenPage() {
           symbol={form.symbol}
           fee={DEFAULT_LAUNCH_FEE_OUSD}
           busy={busy}
+          ousdBalance={ousdBal}
+          initialBuy={initialBuy}
+          onInitialBuyChange={setInitialBuy}
           onBack={() => setStep("form")}
           onConfirm={launch}
         />
@@ -660,14 +673,14 @@ function CreateOpenTokenPage() {
           </Button>
 
           <div className="rounded-2xl bg-muted/50 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-            Metadata is set at launch. OpenToken is a 100% fair launch — no presale, whitelist, or
-            team allocation. Fee:{" "}
+            Metadata is set at launch. Mint fee:{" "}
             <span className="font-semibold text-foreground">{DEFAULT_LAUNCH_FEE_OUSD} OUSD</span>
+            . Optional creator buy at mint (pump.fun-style). Graduates at 100,000 OUSD bonded.
             {wallet ? (
               <>
                 {" "}
                 · available{" "}
-                <span className={cn("font-semibold", canAfford ? "text-foreground" : "text-red-400")}>
+                <span className={cn("font-semibold", ousdBal >= DEFAULT_LAUNCH_FEE_OUSD ? "text-foreground" : "text-red-400")}>
                   {ousdBal.toFixed(2)} OUSD
                 </span>
               </>

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Star, BadgeCheck, Radio } from "lucide-react";
 import { formatOUSD, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import { curveFromTokenRow, curveProgress, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
+import { curveFromTokenRow, curveProgress, isOpenTokenGraduated, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
 import { GraduationBadge } from "./GraduationBadge";
 
 export type OtTokenCardData = {
@@ -34,6 +34,7 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
   const progress = curveProgress(curve);
   const change = Number(token.change_24h ?? 0);
   const cat = (token.category as OtCategory) || "meme";
+  const graduated = isOpenTokenGraduated(token);
 
   return (
     <Link
@@ -54,8 +55,8 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
             </div>
           )}
           <div className="absolute left-2 top-2 flex gap-1">
-            {token.status === "graduated" && <GraduationBadge size="sm" />}
-            {token.status === "curve" && progress > 0.05 && (
+            {graduated && <GraduationBadge size="sm" />}
+            {!graduated && progress > 0.05 && (
               <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
                 {(progress * 100).toFixed(0)}%
               </span>

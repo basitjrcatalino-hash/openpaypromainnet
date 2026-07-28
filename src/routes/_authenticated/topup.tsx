@@ -15,10 +15,11 @@ import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
-import { showMoonPayBuy } from "@/lib/moonpay-client";
+import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
 import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
+import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import {
   createOpenPayTopupCharge,
   settleOpenPayCharge,
@@ -57,7 +58,7 @@ const methods: {
     id: "moonpay",
     label: "MoonPay",
     icon: CreditCard,
-    desc: "Buy ETH & crypto with card · MoonPay sandbox",
+    desc: "Card / Apple Pay / Google Pay · MoonPay → OUSD",
   },
   {
     id: "pi",
@@ -98,6 +99,11 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
+  const [moonpayVisible, setMoonpayVisible] = useState(false);
+  const [moonpaySession, setMoonpaySession] = useState<{
+    amount: number;
+    externalTransactionId: string;
+  } | null>(null);
   const [pendingPayLink, setPendingPayLink] = useState<{
     reference: string;
     amount: number;
@@ -109,6 +115,7 @@ function TopUpPage() {
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const getLink = useServerFn(getOpenPayLinkStatus);
   const creditSolana = useServerFn(creditSolanaPayTopup);
+  const creditMoonPay = useServerFn(creditMoonPayTopup);
   const solanaReady = isSolanaMerchantConfigured();
 
   const { data: wallet } = useQuery({
@@ -277,6 +284,36 @@ function TopUpPage() {
     }
   }
 
+  async function settleMoonPayTopup(txId: string, paidAmount: number) {
+    setBusy(true);
+    try {
+      const r = await creditMoonPay({
+        data: {
+          amount: paidAmount,
+          moonpayTransactionId: txId,
+          walletId: wallet?.id,
+        },
+      });
+      if (r.alreadyCredited) {
+        toast.message("This MoonPay payment was already credited");
+      } else {
+        toast.success(`MoonPay complete · ${formatUSD(r.amount)} OUSD credited`);
+      }
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+      qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+      qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+      qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+      setAmount("");
+    } catch (err) {
+      toast.error((err as Error).message || "Could not credit MoonPay payment");
+    } finally {
+      setBusy(false);
+      setMoonpayVisible(false);
+      setMoonpaySession(null);
+    }
+  }
+
   async function settleSolanaTopup(signature: string, paidAmount: number) {
     setBusy(true);
     try {
@@ -316,16 +353,16 @@ function TopUpPage() {
     setBusy(true);
     try {
       if (method === "moonpay") {
-        await showMoonPayBuy({
+        if (!wallet?.id) {
+          toast.error("Select an active wallet first");
+          return;
+        }
+        const externalTransactionId = `ousd_${wallet.id}_${Date.now()}`;
+        setMoonpaySession({
           amount: parsed.data.amount,
-          baseCurrencyCode: "usd",
-          defaultCurrencyCode: "eth",
-          onTransactionCompleted: () => {
-            toast.success("MoonPay purchase complete");
-            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-            qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-          },
+          externalTransactionId,
         });
+        setMoonpayVisible(true);
         return;
       }
       if (method === "openpay_balance") {
@@ -567,8 +604,11 @@ function TopUpPage() {
 
         {method === "moonpay" && (
           <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            Opens the MoonPay widget to buy test ETH with card. Complete a sandbox purchase to
-            verify the integration (ETH must be enabled in your MoonPay dashboard).
+            Opens the MoonPay widget to pay with card. When the purchase completes,{" "}
+            <span className="font-medium text-foreground">
+              {wallet?.name ?? "your wallet"}
+            </span>{" "}
+            is credited 1:1 in OUSD (sandbox key · test cards in MoonPay dashboard).
           </p>
         )}
 
@@ -673,13 +713,36 @@ function TopUpPage() {
           )}
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
             {method === "moonpay"
-              ? "Powered by MoonPay · sandbox test purchases"
+              ? "Powered by MoonPay · card → OUSD credit"
               : method === "solana"
                 ? "Powered by Solana Pay · Commerce Kit"
                 : "1 OUSD = $1.00 · credited to your active wallet"}
           </p>
         </div>
       </form>
+
+      {moonpaySession ? (
+        <MoonPayBuyOverlay
+          visible={moonpayVisible}
+          amount={moonpaySession.amount}
+          externalCustomerId={user.id}
+          externalTransactionId={moonpaySession.externalTransactionId}
+          onClose={() => {
+            setMoonpayVisible(false);
+            setMoonpaySession(null);
+            setBusy(false);
+          }}
+          onTransactionCompleted={async ({ id, baseCurrencyAmount, status }) => {
+            if (status && status !== "completed") {
+              toast.message(`MoonPay status: ${status}`);
+              setMoonpayVisible(false);
+              return;
+            }
+            const paid = Number(baseCurrencyAmount) || moonpaySession.amount;
+            await settleMoonPayTopup(id, paid);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

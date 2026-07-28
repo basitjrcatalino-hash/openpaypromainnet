@@ -1,7 +1,7 @@
 /**
  * Client-only Buffer polyfill for Phantom / @solana/web3.js.
- * Must NEVER be statically imported on the SSR graph — the `buffer` package is CJS
- * and crashes Vite SSR with: ReferenceError: require is not defined.
+ * Only call from browser useEffect / dynamic imports — never static-import this
+ * module on the SSR graph (CJS `buffer` crashes Vite SSR with require is not defined).
  */
 export async function ensureBuffer(): Promise<void> {
   if (typeof window === "undefined") return;
@@ -19,8 +19,9 @@ export async function ensureBuffer(): Promise<void> {
     return;
   }
 
-  // @vite-ignore: keep CJS `buffer` out of the SSR dependency scanner
-  const mod = await import(/* @vite-ignore */ "buffer");
+  // Resolved by Vite for the client chunk (do NOT use @vite-ignore — that breaks
+  // browser resolution and leaves Phantom stuck on "loading").
+  const mod = await import("buffer");
   g.Buffer = mod.Buffer as typeof g.Buffer;
   if (!g.global) g.global = g;
   if (!g.process) g.process = { env: {} };

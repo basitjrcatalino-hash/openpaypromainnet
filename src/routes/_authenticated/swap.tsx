@@ -481,7 +481,7 @@ function OpenDexPage() {
               </div>
               <p className="text-[12px] leading-relaxed text-muted-foreground">
                 OpenDEX takes a {FEE_PCT}% platform fee ({OPENDEX_SWAP_FEE_BPS} bps) from the
-                output amount on every swap. This is separate from slippage.
+                output amount on every swap. Fees credit @openpay. Separate from slippage.
               </p>
               {amt > 0 && toToken && feeOut > 0 && (
                 <p className="mt-2 text-xs tabular-nums text-foreground">

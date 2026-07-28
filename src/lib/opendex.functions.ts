@@ -186,6 +186,35 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     });
     if (txErr) throw new Error(txErr.message);
 
+    // Platform swap fee → @openpay treasury
+    if (feeOut > 0) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { creditPlatformFeeOusd, creditPlatformFeeToken } = await import(
+          "@/lib/platform-treasury"
+        );
+        if (toIsOusd) {
+          await creditPlatformFeeOusd(supabaseAdmin, {
+            amount: feeOut,
+            sourceWalletId: wallet_id,
+            counterparty: `opendex:${txRef}`,
+            memo: `OpenDEX swap fee · ${feeOut} OUSD → @openpay`,
+          });
+        } else {
+          await creditPlatformFeeToken(supabaseAdmin, {
+            amount: feeOut,
+            tokenId: to_id,
+            tokenSymbol: toToken.symbol,
+            usdValue: feeUsd,
+            sourceWalletId: wallet_id,
+            memo: `OpenDEX swap fee · ${feeOut} ${toToken.symbol} → @openpay`,
+          });
+        }
+      } catch (e) {
+        console.error("[opendex] fee treasury credit failed", (e as Error).message);
+      }
+    }
+
     return {
       ok: true as const,
       amount_in: amtIn,

@@ -19,6 +19,7 @@ export {
 export { TradesTable, type OtTradeRow } from "./TradesTable";
 export { TerminalChart, TERMINAL_PERIODS, type TerminalPeriod } from "./TerminalChart";
 export { CommentThread } from "./CommentThread";
+export { TokenLiveChat } from "./TokenLiveChat";
 export { TokenStats } from "./TokenStats";
 export { GraduationBadge } from "./GraduationBadge";
 export { OtSkeletonGrid } from "./OtSkeleton";

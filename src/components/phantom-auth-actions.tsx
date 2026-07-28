@@ -54,6 +54,15 @@ export function PhantomContinueButton({
     bridgingRef.current = true;
     setBridging(true);
     setBusy(true);
+
+    const timeout = window.setTimeout(() => {
+      if (cancelled) return;
+      toast.error("Phantom sign-in timed out. Try again or use Solana.");
+      bridgingRef.current = false;
+      setBridging(false);
+      setBusy(false);
+    }, 45_000);
+
     (async () => {
       try {
         await startSolanaSignIn({ redirectTo: "/dashboard" });
@@ -64,14 +73,27 @@ export function PhantomContinueButton({
         bridgingRef.current = false;
         setBridging(false);
         setBusy(false);
+      } finally {
+        window.clearTimeout(timeout);
       }
     })();
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
     };
   }, [isConnected, solanaAddress, bridging, setBusy]);
 
-  const waiting = busy || isConnecting || bridging || (isConnected && phantomLoading);
+  // Connected but no Solana address yet — don't spin forever.
+  useEffect(() => {
+    if (!busy || !isConnected || solanaAddress || bridging || isConnecting) return;
+    const t = window.setTimeout(() => {
+      toast.error("Phantom connected but no Solana address was returned. Try again.");
+      setBusy(false);
+    }, 8_000);
+    return () => window.clearTimeout(t);
+  }, [busy, isConnected, solanaAddress, bridging, isConnecting, setBusy]);
+
+  const waiting = busy || isConnecting || bridging || (isConnected && phantomLoading && !solanaAddress);
 
   return (
     <Button
@@ -82,6 +104,7 @@ export function PhantomContinueButton({
         try {
           if (extensionInstalled) {
             await connect({ provider: "injected" });
+            // Bridge effect takes over when Solana address appears; clear if it never does.
             return;
           }
           open();
@@ -121,7 +144,7 @@ export function PhantomGoogleAppleLink({ busy }: { busy: boolean }) {
           toast.error(phantomErrorMessage(err));
         }
       }}
-      className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-60"
+      className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-50"
     >
       Or continue with Google / Apple
     </button>

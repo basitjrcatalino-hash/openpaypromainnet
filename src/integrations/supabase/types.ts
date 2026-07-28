@@ -671,6 +671,44 @@ export type Database = {
         }
         Relationships: []
       }
+      ot_token_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_token_chat_messages_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ot_favorites: {
         Row: {
           created_at: string

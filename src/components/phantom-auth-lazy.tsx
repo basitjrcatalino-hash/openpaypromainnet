@@ -16,8 +16,9 @@ const PhantomGoogleAppleLinkInner = lazy(() =>
 
 function PhantomFallback() {
   return (
-    <Button type="button" disabled className="h-12 w-full rounded-xl">
-      <Loader2 className="h-4 w-4 animate-spin" />
+    <Button type="button" disabled className="h-12 w-full rounded-xl font-semibold">
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Loading Phantom…
     </Button>
   );
 }

@@ -3,42 +3,36 @@ import {
   MOONPAY_API_KEY,
   buildMoonPayBuyUrl,
   moonPayEnvironment,
+  requestMoonPayUrlSignature,
 } from "@/lib/moonpay";
 
 type ShowBuyOpts = {
   amount: string | number;
   baseCurrencyCode?: string;
   defaultCurrencyCode?: string;
+  externalCustomerId?: string;
+  externalTransactionId?: string;
   onClose?: () => void;
   onTransactionCompleted?: () => void;
 };
 
 /**
- * Open MoonPay buy overlay without sending an empty `signature` param.
- * (@moonpay/moonpay-react always sets signature:"" which MoonPay rejects.)
+ * Fallback: open MoonPay buy overlay via @moonpay/moonpay-js.
+ * Prefer MoonPayBuyOverlay (React widget) on the top-up page.
  */
 export async function showMoonPayBuy(opts: ShowBuyOpts): Promise<void> {
   const amount = String(Math.max(Number(opts.amount) || 20, 20));
   const baseCurrencyCode = opts.baseCurrencyCode || "usd";
   const defaultCurrencyCode = opts.defaultCurrencyCode || "eth";
 
-  let signature: string | undefined;
-  try {
-    const draft = buildMoonPayBuyUrl({
-      amount,
-      baseCurrencyCode,
-      defaultCurrencyCode,
-    });
-    const res = await fetch(
-      `/api/public/moonpay-sign?url=${encodeURIComponent(draft)}`,
-    );
-    if (res.ok) {
-      const body = (await res.json()) as { signature?: string; configured?: boolean };
-      if (body.signature) signature = body.signature;
-    }
-  } catch {
-    /* signing optional when secret is not configured */
-  }
+  const draft = buildMoonPayBuyUrl({
+    amount,
+    baseCurrencyCode,
+    defaultCurrencyCode,
+    externalCustomerId: opts.externalCustomerId,
+    externalTransactionId: opts.externalTransactionId,
+  });
+  const signature = await requestMoonPayUrlSignature(draft);
 
   const params: Record<string, string> = {
     apiKey: MOONPAY_API_KEY,
@@ -46,7 +40,8 @@ export async function showMoonPayBuy(opts: ShowBuyOpts): Promise<void> {
     baseCurrencyAmount: amount,
     defaultCurrencyCode,
   };
-  // Never send signature:"" — MoonPay treats that as an invalid signature.
+  if (opts.externalCustomerId) params.externalCustomerId = opts.externalCustomerId;
+  if (opts.externalTransactionId) params.externalTransactionId = opts.externalTransactionId;
   if (signature) params.signature = signature;
 
   try {
@@ -66,16 +61,17 @@ export async function showMoonPayBuy(opts: ShowBuyOpts): Promise<void> {
           opts.onTransactionCompleted?.();
         },
       },
-    });
+    } as unknown as Parameters<NonNullable<typeof init>>[0]);
 
     if (!widget) throw new Error("MoonPay widget failed to initialize");
     widget.show();
   } catch (err) {
-    // Fallback: open unsigned sandbox URL in a new tab (still no empty signature)
     const url = buildMoonPayBuyUrl({
       amount,
       baseCurrencyCode,
       defaultCurrencyCode,
+      externalCustomerId: opts.externalCustomerId,
+      externalTransactionId: opts.externalTransactionId,
       signature,
     });
     window.open(url, "_blank", "noopener,noreferrer");

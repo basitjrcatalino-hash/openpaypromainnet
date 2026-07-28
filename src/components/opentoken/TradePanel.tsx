@@ -15,8 +15,10 @@ import {
 import { topUpWithPi } from "@/lib/pi-network";
 import {
   curveFromTokenRow,
+  isOpenTokenGraduated,
   quoteBuy,
   quoteSell,
+  OPENTOKEN_TRADE_FEE_BPS,
 } from "@/lib/opentoken/bonding-curve";
 import { formatNumber } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
@@ -86,7 +88,9 @@ export function TradePanel({
     queryFn: () => getLink(),
   });
 
-  const graduated = token.status === "graduated" || token.status === "halted";
+  const halted = token.status === "halted";
+  // Only block OpenToken trading after true 100k OUSD graduation (or halt).
+  const graduated = halted || isOpenTokenGraduated(token);
   const curve = curveFromTokenRow(token);
   const amt = parseFloat(amount) || 0;
   const linked = !!openpayLink?.linked;
@@ -529,6 +533,14 @@ export function TradePanel({
                 </span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Fee ({OPENTOKEN_TRADE_FEE_BPS / 100}%)
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {formatNumber(quote.fee, 4)} OUSD
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Avg price</span>
                 <span className="tabular-nums text-muted-foreground">
                   {formatNumber(quote.avgPrice, 8)} OUSD
@@ -541,6 +553,14 @@ export function TradePanel({
                 <span className="text-muted-foreground">You receive</span>
                 <span className="font-semibold tabular-nums">
                   {formatNumber(quote.piOut, 4)} OUSD
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Fee ({OPENTOKEN_TRADE_FEE_BPS / 100}%)
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {formatNumber(quote.fee, 4)} OUSD
                 </span>
               </div>
               <div className="flex justify-between">

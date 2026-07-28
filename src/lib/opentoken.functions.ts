@@ -48,6 +48,8 @@ export const createOpenToken = createServerFn({ method: "POST" })
         burnable: z.boolean().default(false),
         mintable: z.boolean().default(false),
         wallet_id: z.string().uuid(),
+        /** Optional pump.fun-style creator buy at launch (OUSD). */
+        initial_buy_ousd: z.number().min(0).max(50_000).optional().default(0),
       })
       .parse(d),
   )
@@ -64,9 +66,13 @@ export const createOpenToken = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Wallet not found");
 
     const fee = DEFAULT_LAUNCH_FEE_OUSD;
+    const initialBuy = Math.max(0, Number(data.initial_buy_ousd ?? 0));
+    const totalDue = fee + initialBuy;
     const ousdBalance = Number(wallet.ousd_balance ?? 0);
-    if (ousdBalance < fee) {
-      throw new Error(`Launch fee is ${fee} OUSD — insufficient available balance`);
+    if (ousdBalance < totalDue) {
+      throw new Error(
+        `Need ${totalDue} OUSD (mint fee ${fee}${initialBuy > 0 ? ` + buy ${initialBuy}` : ""}) — available ${ousdBalance.toFixed(2)}`,
+      );
     }
 
     const initial = curveFromTokenRow({
@@ -123,11 +129,7 @@ export const createOpenToken = createServerFn({ method: "POST" })
 
     const { data: created, error } = await supabase.from("tokens").insert(row).select("*").single();
     if (error) {
-      // refund fee on failure
-      await supabase
-        .from("wallets")
-        .update({ ousd_balance: ousdBalance })
-        .eq("id", wallet.id);
+      await supabase.from("wallets").update({ ousd_balance: ousdBalance }).eq("id", wallet.id);
       throw new Error(error.message);
     }
 
@@ -140,10 +142,24 @@ export const createOpenToken = createServerFn({ method: "POST" })
         counterparty: `opentoken:launch:${created.id}`,
         amount: fee,
         usd_value: fee,
-        memo: `OpenToken launch fee · ${data.symbol}`,
+        memo: `OpenToken mint fee · ${data.symbol}`,
       });
     } catch {
       /* ledger optional */
+    }
+
+    // Platform mint fee → @openpay treasury wallet
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { creditPlatformFeeOusd } = await import("@/lib/platform-treasury");
+      await creditPlatformFeeOusd(supabaseAdmin, {
+        amount: fee,
+        sourceWalletId: wallet.id,
+        counterparty: `opentoken:mint:${created.id}`,
+        memo: `Platform mint fee · $${data.symbol} → @openpay`,
+      });
+    } catch (e) {
+      console.error("[opentoken] mint fee treasury credit failed", (e as Error).message);
     }
 
     await supabase.from("ot_price_ticks").insert({
@@ -152,7 +168,35 @@ export const createOpenToken = createServerFn({ method: "POST" })
       market_cap: price * data.total_supply,
     });
 
-    return created;
+    let creatorBuy: { token_amount?: number; pi_amount?: number } | null = null;
+    if (initialBuy > 0) {
+      const { data: trade, error: tradeErr } = await supabase.rpc("ot_execute_trade", {
+        p_token_id: created.id,
+        p_wallet_id: wallet.id,
+        p_side: "buy",
+        p_pi_amount: initialBuy,
+        p_token_amount: null,
+      });
+      if (tradeErr) {
+        // Token exists; creator can still buy manually — surface soft warning via return
+        console.error("[opentoken] creator initial buy failed", tradeErr.message);
+      } else {
+        creatorBuy = trade as { token_amount?: number; pi_amount?: number };
+      }
+    }
+
+    const { data: refreshed } = await supabase
+      .from("tokens")
+      .select("*")
+      .eq("id", created.id)
+      .maybeSingle();
+
+    return {
+      ...(refreshed ?? created),
+      creator_buy: creatorBuy,
+      mint_fee: fee,
+      initial_buy_ousd: initialBuy,
+    };
   });
 
 export const buyOpenToken = createServerFn({ method: "POST" })

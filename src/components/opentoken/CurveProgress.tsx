@@ -5,6 +5,7 @@ import {
   remainingTokens,
   spotPrice,
   quoteBuy,
+  isOpenTokenGraduated,
 } from "@/lib/opentoken/bonding-curve";
 import { GraduationBadge } from "./GraduationBadge";
 
@@ -14,7 +15,7 @@ export function CurveProgress({ token }: { token: Record<string, any> }) {
   const price = spotPrice(curve);
   const next = quoteBuy(curve, 1).nextPrice;
   const remaining = remainingTokens(curve);
-  const graduated = token.status === "graduated";
+  const graduated = isOpenTokenGraduated(token);
 
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">

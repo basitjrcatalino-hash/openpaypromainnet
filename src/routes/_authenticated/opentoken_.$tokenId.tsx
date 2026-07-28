@@ -40,11 +40,12 @@ import {
 } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { reportOpenToken } from "@/lib/opentoken.functions";
-import { DEFAULT_GRADUATION_TARGET_PI } from "@/lib/opentoken/bonding-curve";
+import { isOpenTokenGraduated, resolveGraduationTarget } from "@/lib/opentoken/bonding-curve";
 import {
   CommentThread,
   PhantomSparkline,
   TerminalChart,
+  TokenLiveChat,
   TradePanel,
   type OtTradeRow,
   type PhantomPeriod,
@@ -74,6 +75,7 @@ function OpenTokenDetail() {
     }
   });
   const [showBuyPanel, setShowBuyPanel] = useState(false);
+  const [socialTab, setSocialTab] = useState<"live" | "comments">("live");
 
   const { data: token, isLoading } = useQuery({
     queryKey: ["ot-token", tokenId],
@@ -275,12 +277,9 @@ function OpenTokenDetail() {
   const mcap = Number(token.market_cap ?? 0);
   const vol24 = Number(token.volume_24h ?? 0);
   const reserve = Number(token.curve_reserve_pi ?? 0);
-  const rawGradTarget = Number(token.graduation_target_pi ?? DEFAULT_GRADUATION_TARGET_PI);
-  const gradTarget =
-    rawGradTarget === 400 || rawGradTarget <= 0
-      ? DEFAULT_GRADUATION_TARGET_PI
-      : Math.max(1, rawGradTarget);
-  const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
+  const gradTarget = resolveGraduationTarget(token.graduation_target_pi);
+  const progress = Math.max(0, Math.min(100, Math.round((reserve / gradTarget) * 100)));
+  const fullyGraduated = isOpenTokenGraduated(token);
   const up = change >= 0;
   const price = Number(token.price_usd ?? 0);
   const devAddress = creatorWallet?.address ?? null;
@@ -444,7 +443,7 @@ function OpenTokenDetail() {
                       <div className="h-1.5 rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+                          style={{ width: `${fullyGraduated ? 100 : progress}%` }}
                         />
                       </div>
                     </div>
@@ -499,16 +498,51 @@ function OpenTokenDetail() {
             )}
           </section>
 
-          {/* Comments */}
+          {/* Live chat + comments */}
           <section id="ot-comments-section" className="rounded-3xl bg-card p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-bold">Comments</h3>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1 rounded-full bg-muted/60 p-1">
+                <button
+                  type="button"
+                  onClick={() => setSocialTab("live")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold press",
+                    socialTab === "live"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  </span>
+                  Live
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSocialTab("comments")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold press",
+                    socialTab === "comments"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Comments
+                </button>
               </div>
-              <span className="text-xs text-muted-foreground">{commentCount ?? 0}</span>
+              {socialTab === "comments" ? (
+                <span className="text-xs text-muted-foreground">{commentCount ?? 0}</span>
+              ) : (
+                <span className="text-[10px] font-medium text-emerald-500">Community pump</span>
+              )}
             </div>
-            <CommentThread tokenId={tokenId} userId={user.id} />
+            {socialTab === "live" ? (
+              <TokenLiveChat tokenId={tokenId} userId={user.id} />
+            ) : (
+              <CommentThread tokenId={tokenId} userId={user.id} />
+            )}
           </section>
         </div>
 
@@ -531,7 +565,9 @@ function OpenTokenDetail() {
               <DetailRow label="Name">{token.name}</DetailRow>
               <DetailRow label="Symbol">${token.symbol}</DetailRow>
               <DetailRow label="Status">
-                <span className="font-semibold capitalize">{token.status ?? "curve"}</span>
+                <span className="font-semibold capitalize">
+                  {fullyGraduated ? "graduated" : token.status === "halted" ? "halted" : "curve"}
+                </span>
               </DetailRow>
               <DetailRow label="Supply">
                 {formatNumber(Number(token.total_supply ?? 0), 0)}
@@ -589,26 +625,28 @@ function OpenTokenDetail() {
             <div className="mb-2 flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 font-semibold">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                {token.status === "graduated" ? "Graduated" : "Bonding curve"}
+                {fullyGraduated ? "Graduated" : "Bonding curve"}
               </div>
               <span className="font-semibold text-primary">{progress}%</span>
             </div>
             <div className="mb-2 h-2 rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+                style={{ width: `${fullyGraduated ? 100 : progress}%` }}
               />
             </div>
             <div className="text-xs text-muted-foreground">
               {formatNumber(reserve, 0)} / {formatNumber(gradTarget, 0)} OUSD to OpenDEX
-              {token.status === "graduated" ? (
+              {fullyGraduated ? (
                 <>
                   {" · "}
                   <Link to="/swap" search={{ token: token.id }} className="font-semibold text-primary">
                     Trade on OpenDEX
                   </Link>
                 </>
-              ) : null}
+              ) : (
+                <> · Buy & sell on OpenToken until 100,000 OUSD</>
+              )}
             </div>
           </div>
 

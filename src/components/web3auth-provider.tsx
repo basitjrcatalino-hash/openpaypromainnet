@@ -67,10 +67,12 @@ export function AppWeb3AuthProvider({
       try {
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
-        // Named-export shims must load before Web3Auth / Torus graph.
+        // ESM shims for MetaMask Embedded (Web3Auth) CJS deps.
+        // https://docs.metamask.io/embedded-wallets/authentication
         await import("@/shims/events");
         await import("@/shims/loglevel");
         await import("@/shims/deepmerge");
+        await import("@/shims/json-stable-stringify");
 
         const { getWeb3AuthContextConfig } = await import("@/lib/web3auth-config");
         const cfg = getWeb3AuthContextConfig();

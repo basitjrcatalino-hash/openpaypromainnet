@@ -49,6 +49,20 @@ mirrorVite("VITE_SUPABASE_PROJECT_ID", [
 
 const onVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
+/**
+ * MetaMask Embedded Wallets (Web3Auth) — CJS packages that break under Vite ESM
+ * when served raw from node_modules. Aliases point at pure-ESM shims.
+ * Docs: https://docs.metamask.io/embedded-wallets/authentication
+ */
+const web3authCjsShims = {
+  "events-package": path.resolve(rootDir, "node_modules/events/events.js"),
+  events: path.resolve(rootDir, "src/shims/events.ts"),
+  "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
+  loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
+  deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
+  "json-stable-stringify": path.resolve(rootDir, "src/shims/json-stable-stringify.ts"),
+} as const;
+
 export default defineConfig({
   // Pin Nitro to Vercel when building there (Lovable default is Cloudflare).
   nitro: onVercel ? { preset: "vercel" } : undefined,
@@ -67,20 +81,22 @@ export default defineConfig({
         // Trailing slash picks package entry reliably; hard path to index.js often
         // yields Vite `{ default: undefined }` and breaks Phantom Buffer setup.
         buffer: path.resolve(rootDir, "node_modules/buffer/"),
-        // Web3Auth SafeEventEmitter needs a real named `EventEmitter` export.
-        "events-package": path.resolve(rootDir, "node_modules/events/events.js"),
-        events: path.resolve(rootDir, "src/shims/events.ts"),
-        // @toruslabs/http-helpers: `import { levels } from "loglevel"` (CJS has no named export).
-        "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
-        loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
-        // @toruslabs/http-helpers: `import merge from "deepmerge"` — CJS has no ESM default.
-        deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
+        ...web3authCjsShims,
       },
-      dedupe: ["react", "react-dom", "buffer", "events", "loglevel", "deepmerge"],
+      dedupe: [
+        "react",
+        "react-dom",
+        "buffer",
+        "events",
+        "loglevel",
+        "deepmerge",
+        "json-stable-stringify",
+      ],
     },
     optimizeDeps: {
-      // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
+      // Prebundle Web3Auth so transitive CJS deps get ESM interop (do NOT exclude —
+      // excluding forces raw node_modules imports and breaks default exports).
       include: [
         "react",
         "react/jsx-runtime",
@@ -90,6 +106,11 @@ export default defineConfig({
         "@phantom/react-sdk",
         "@walletconnect/pay",
         "@moonpay/moonpay-react",
+        "@web3auth/modal",
+        "@web3auth/modal/react",
+        "@web3auth/auth",
+        "@web3auth/no-modal",
+        "@toruslabs/http-helpers",
         "buffer",
         "buffer/",
         "base64-js",
@@ -99,16 +120,8 @@ export default defineConfig({
         "loglevel",
         "loglevel-package",
         "deepmerge",
+        "json-stable-stringify",
         "process",
-      ],
-      // Force Web3Auth/Torus through our events/loglevel/deepmerge shims.
-      exclude: [
-        "@web3auth/modal",
-        "@web3auth/auth",
-        "@web3auth/no-modal",
-        "@toruslabs/http-helpers",
-        "@toruslabs/base-controllers",
-        "@toruslabs/loglevel-sentry",
       ],
       esbuildOptions: {
         define: {
@@ -119,7 +132,14 @@ export default defineConfig({
     ssr: {
       // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
-      noExternal: ["events", "events-package", "loglevel", "loglevel-package", "deepmerge"],
+      noExternal: [
+        "events",
+        "events-package",
+        "loglevel",
+        "loglevel-package",
+        "deepmerge",
+        "json-stable-stringify",
+      ],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

@@ -1,6 +1,6 @@
 /**
  * MetaMask Embedded Wallets (Web3Auth) — client config.
- * Docs: https://docs.metamask.io/embedded-wallets/authentication/social-logins/oauth/
+ * Docs: https://docs.metamask.io/embedded-wallets/authentication
  *
  * Import this module only from client effects / MetaMask panels — it pulls `@web3auth/modal`.
  * For CLIENT_ID / brand color use `@/lib/web3auth-env` instead.

@@ -1,5 +1,3 @@
-import { AddressType } from "@phantom/react-sdk";
-
 /** Phantom Portal App ID (client-safe). */
 export const PHANTOM_APP_ID =
   (typeof import.meta !== "undefined" &&
@@ -26,11 +24,8 @@ export const PHANTOM_APP_ICON =
 
 export const PHANTOM_PROVIDERS = ["google", "apple", "injected"] as const;
 
-export const PHANTOM_ADDRESS_TYPES = [
-  AddressType.solana,
-  AddressType.ethereum,
-  AddressType.sui,
-] as const;
+/** Keep as plain strings so this module never pulls @phantom/react-sdk (Buffer crash). */
+export const PHANTOM_ADDRESS_TYPES = ["solana", "ethereum", "sui"] as const;
 
 /**
  * Redirect after Google/Apple OAuth. Must exactly match a Phantom Portal Redirect URL

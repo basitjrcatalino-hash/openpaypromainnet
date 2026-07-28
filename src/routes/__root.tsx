@@ -8,6 +8,9 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+// Must run before Phantom / Solana client code (Buffer.from).
+import "@/lib/buffer-polyfill";
+
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -169,6 +172,12 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t==="dark";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}})();`,
+          }}
+        />
+        {/* Early Buffer stub so Solana/Phantom chunks don't crash before the polyfill module runs. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.global=window.global||window;window.process=window.process||{env:{}};`,
           }}
         />
         <HeadContent />

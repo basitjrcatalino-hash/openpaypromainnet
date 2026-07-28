@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/buffer-polyfill";
 import { useState } from "react";
 import { AddressType, useAccounts, useDisconnect, usePhantom } from "@phantom/react-sdk";
 import { Link2Off, Loader2, Wallet } from "lucide-react";

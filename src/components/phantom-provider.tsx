@@ -1,7 +1,15 @@
 "use client";
 
-import { createContext, useContext, type ReactNode, useEffect, useMemo, useState } from "react";
-import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
+import type { PhantomSDKConfig } from "@phantom/react-sdk";
+import "@/lib/buffer-polyfill";
 import {
   getPhantomProviderConfig,
   PHANTOM_APP_ICON,
@@ -14,25 +22,50 @@ export function usePhantomClientReady() {
   return useContext(PhantomClientReadyContext);
 }
 
+type PhantomSdk = {
+  PhantomProvider: ComponentType<{
+    config: PhantomSDKConfig;
+    theme?: unknown;
+    appIcon?: string;
+    appName?: string;
+    children?: ReactNode;
+  }>;
+  darkTheme: unknown;
+};
+
 /**
- * Client-only Phantom Connect provider (avoids SSR/window issues).
- * redirectUrl is derived from window.location.origin so it matches the
- * environment you're actually running (Lovable / Vercel / local / custom domain).
+ * Client-only Phantom Connect provider.
+ * Dynamically imports the SDK after Buffer is polyfilled so production does not
+ * crash with: Cannot read properties of undefined (reading 'from').
  */
 export function AppPhantomProvider({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(false);
+  const [sdk, setSdk] = useState<PhantomSdk | null>(null);
 
   useEffect(() => {
-    setReady(true);
+    let cancelled = false;
+    void (async () => {
+      // Ensure Buffer exists before any @solana/web3.js / Phantom module init.
+      await import("@/lib/buffer-polyfill");
+      const mod = await import("@phantom/react-sdk");
+      if (cancelled) return;
+      setSdk({
+        PhantomProvider: mod.PhantomProvider,
+        darkTheme: mod.darkTheme,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const config = useMemo(() => (ready ? getPhantomProviderConfig() : null), [ready]);
-
-  if (!ready || !config) {
+  if (!sdk) {
     return (
       <PhantomClientReadyContext.Provider value={false}>{children}</PhantomClientReadyContext.Provider>
     );
   }
+
+  const { PhantomProvider, darkTheme } = sdk;
+  const config = getPhantomProviderConfig();
 
   return (
     <PhantomProvider

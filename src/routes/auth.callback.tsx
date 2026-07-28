@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import "@/lib/buffer-polyfill";
 import { ConnectBox } from "@phantom/react-sdk";
 import { Loader2 } from "lucide-react";
 import { usePhantomClientReady } from "@/components/phantom-provider";

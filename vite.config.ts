@@ -20,6 +20,8 @@ const rpcWebsocketsBrowser = path.resolve(
   "node_modules/rpc-websockets/dist/index.browser.mjs",
 );
 
+const bufferPkg = path.resolve(rootDir, "node_modules/buffer/index.js");
+
 /**
  * Mirror Vercel/Supabase integration names into VITE_* for the browser bundle.
  * IMPORTANT: never assign empty strings — that poisons Lovable's envDefine and
@@ -58,11 +60,16 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    define: {
+      global: "globalThis",
+    },
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
+        // Phantom / Solana expect the npm `buffer` package in the browser.
+        buffer: bufferPkg,
       },
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "buffer"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
@@ -75,7 +82,13 @@ export default defineConfig({
         "react-dom",
         "react-dom/client",
         "@phantom/react-sdk",
+        "buffer",
       ],
+      esbuildOptions: {
+        define: {
+          global: "globalThis",
+        },
+      },
     },
     ssr: {
       // Prefer browser builds for edge/workerd when packages advertise them.

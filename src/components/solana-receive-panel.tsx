@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/buffer-polyfill";
 import { AddressType, useAccounts, usePhantom } from "@phantom/react-sdk";
 import { Link } from "@tanstack/react-router";
 import { Wallet as WalletIcon } from "lucide-react";

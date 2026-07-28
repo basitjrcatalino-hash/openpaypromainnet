@@ -262,7 +262,6 @@ function Dashboard() {
             className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] transition-colors hover:bg-white/20"
             aria-label="Copy address"
           >
-            <span className="grid h-4 w-4 place-items-center rounded-full bg-white/20">◆</span>
             <span className="opacity-90">{shortAddress(wallet?.address ?? null, 6, 6)}</span>
             {copied ? (
               <Check className="h-3.5 w-3.5" />

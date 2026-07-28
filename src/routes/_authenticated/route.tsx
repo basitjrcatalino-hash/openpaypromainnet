@@ -399,7 +399,7 @@ function SidebarInner({
             className="mt-6 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-[11px] transition-colors hover:bg-white/20"
             aria-label="Copy wallet address"
           >
-            <span className="opacity-80">◆ {shortAddress(activeWallet?.address ?? null)}</span>
+            <span className="opacity-80">{shortAddress(activeWallet?.address ?? null)}</span>
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3 opacity-80" />}
           </button>
         </div>
@@ -491,7 +491,7 @@ function SidebarInner({
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold">{w.name}</span>
                 <span className="block truncate font-mono text-[10px] text-muted-foreground">
-                  ◆ {shortAddress(w.address, 4, 4)}
+                  {shortAddress(w.address, 4, 4)}
                 </span>
               </span>
             </span>

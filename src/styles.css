@@ -577,6 +577,9 @@
   background: color-mix(in oklab, var(--auth-accent, var(--muted)) 8%, var(--muted));
   box-shadow: 0 10px 24px -16px color-mix(in oklab, var(--auth-accent, #000) 40%, transparent);
 }
+.auth-option-row:hover:not(:disabled):not(.auth-option-selected) {
+  transform: translateY(-1px) scale(1.005);
+}
 .auth-option:active:not(:disabled) {
   transform: translateY(0) scale(0.99);
 }
@@ -590,6 +593,17 @@
 .auth-option-selected .auth-option-icon {
   transform: scale(1.06);
   box-shadow: 0 8px 18px -10px color-mix(in oklab, var(--auth-accent, #000) 55%, transparent);
+}
+.auth-method-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+}
+.auth-method-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.auth-method-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
 }
 .auth-badge-float {
   animation: auth-badge-float 3.2s ease-in-out infinite;

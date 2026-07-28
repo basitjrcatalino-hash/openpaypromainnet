@@ -98,8 +98,15 @@ export default defineConfig({
         "loglevel-package",
         "process",
       ],
-      // Force Web3Auth through our events/loglevel shims (stale prebundles break named exports).
-      exclude: ["@web3auth/modal", "@web3auth/auth", "@toruslabs/http-helpers"],
+      // Force Web3Auth/Torus through our events/loglevel shims.
+      exclude: [
+        "@web3auth/modal",
+        "@web3auth/auth",
+        "@web3auth/no-modal",
+        "@toruslabs/http-helpers",
+        "@toruslabs/base-controllers",
+        "@toruslabs/loglevel-sentry",
+      ],
       esbuildOptions: {
         define: {
           global: "globalThis",

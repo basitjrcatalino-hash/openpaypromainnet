@@ -22,12 +22,16 @@ type LogRoot = {
 };
 
 function resolveLog(mod: unknown): LogRoot {
-  if (!mod || typeof mod !== "object" && typeof mod !== "function") {
-    throw new Error("[loglevel shim] package export missing");
+  if (!mod) throw new Error("[loglevel shim] package export missing");
+  if (typeof mod === "function") {
+    const fn = mod as LogRoot & { levels?: Record<string, number> };
+    if (fn.levels && typeof fn.getLogger === "function") return fn;
   }
-  const m = mod as LogRoot;
-  if (m.levels && typeof m.getLogger === "function") return m;
-  if (m.default && m.default.levels) return m.default;
+  if (typeof mod === "object") {
+    const m = mod as LogRoot;
+    if (m.levels && typeof m.getLogger === "function") return m;
+    if (m.default) return resolveLog(m.default);
+  }
   throw new Error("[loglevel shim] logger.levels missing");
 }
 

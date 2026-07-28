@@ -19,8 +19,6 @@ import {
   getSupabaseUrl,
   missingSupabaseEnvMessage,
 } from "@/integrations/supabase/env";
-import { AppMoonPayProvider } from "@/components/moonpay-provider";
-import { AppPhantomProvider } from "@/components/phantom-provider";
 
 async function ensureBrowserSupabaseConfig() {
   if (typeof window === "undefined") return;
@@ -170,11 +168,11 @@ function RootShell({ children }: { children: ReactNode }) {
             __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t!=="light";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}})();`,
           }}
         />
-        {/* Early globals + Buffer stub so Phantom/Solana never see undefined Buffer.from.
-            Marked __openpayStub so ensureBuffer() always upgrades to the real package. */}
+        {/* Early Buffer + EventEmitter so wallet SDKs never see undefined globals.
+            No __openpayStub — this is a usable Buffer until ensureBuffer upgrades it. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var g=typeof globalThis!=="undefined"?globalThis:window;g.global=g.global||g;g.process=g.process||{env:{}};if(g.Buffer&&typeof g.Buffer.from==="function"&&!g.Buffer.__openpayStub&&typeof g.Buffer.allocUnsafe==="function")return;function from(v,e){if(typeof v==="string"){if(e==="base64"||e==="base64url"){var s=e==="base64url"?v.replace(/-/g,"+").replace(/_/g,"/"):v;while(s.length%4)s+="=";var b=atob(s),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o}if(e==="hex"){var h=v.length%2?"0"+v:v,u=new Uint8Array(h.length/2);for(var j=0;j<u.length;j++)u[j]=parseInt(h.substr(j*2,2),16);return u}return(new TextEncoder).encode(v)}if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)}function B(a,e){if(!(this instanceof B))return from(a,e);var x=from(a,e);this.length=x.length;for(var i=0;i<x.length;i++)this[i]=x[i]}B.from=from;B.isBuffer=function(x){return x instanceof B};B.alloc=function(n){return new Uint8Array(n||0)};B.allocUnsafe=B.alloc;B.concat=function(list){var n=0,i=0;for(;i<list.length;i++)n+=list[i].length;var out=new Uint8Array(n),o=0;for(i=0;i<list.length;i++){out.set(list[i],o);o+=list[i].length}return out};B.__openpayStub=1;g.Buffer=B;if(typeof window!=="undefined")window.Buffer=B}catch(e){}})();`,
+            __html: `(function(){try{var g=typeof globalThis!=="undefined"?globalThis:window;g.global=g.global||g;g.process=g.process||{env:{}};function from(v,e){if(typeof v==="string"){if(e==="base64"||e==="base64url"){var s=e==="base64url"?v.replace(/-/g,"+").replace(/_/g,"/"):v;while(s.length%4)s+="=";var b=atob(s),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o}if(e==="hex"){var h=v.length%2?"0"+v:v,u=new Uint8Array(h.length/2);for(var j=0;j<u.length;j++)u[j]=parseInt(h.substr(j*2,2),16);return u}return(new TextEncoder).encode(v)}if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)}if(!(g.Buffer&&typeof g.Buffer.from==="function"&&typeof g.Buffer.allocUnsafe==="function"&&!g.Buffer.__openpayStub&&!g.Buffer.__openpayEarly)){function B(a,e){if(!(this instanceof B))return from(a,e);var x=from(a,e);this.length=x.length;for(var i=0;i<x.length;i++)this[i]=x[i]}B.from=from;B.isBuffer=function(x){return x instanceof B||!!(x&&x.__isOpenPayBuffer)};B.alloc=function(n,f){var a=new Uint8Array(n||0);if(typeof f==="number")a.fill(f);return a};B.allocUnsafe=B.alloc;B.concat=function(list){var n=0,i=0;for(;i<list.length;i++)n+=list[i].length;var out=new Uint8Array(n),o=0;for(i=0;i<list.length;i++){out.set(list[i],o);o+=list[i].length}return out};B.byteLength=function(s,e){return from(s,e).length};B.__openpayEarly=1;g.Buffer=B;if(typeof window!=="undefined")window.Buffer=B}if(typeof g.EventEmitter!=="function"){function EE(){this._events={};this._eventsCount=0}EE.prototype.on=EE.prototype.addListener=function(t,f){ (this._events[t]=this._events[t]||[]).push(f);return this};EE.prototype.once=function(t,f){var s=this;function w(){s.off(t,w);return f.apply(s,arguments)}this.on(t,w);return this};EE.prototype.off=EE.prototype.removeListener=function(t,f){var a=this._events[t];if(!a)return this;this._events[t]=a.filter(function(x){return x!==f});return this};EE.prototype.emit=function(t){var a=this._events[t]||[],args=[].slice.call(arguments,1);for(var i=0;i<a.length;i++)try{a[i].apply(this,args)}catch(e){setTimeout(function(){throw e},0)}return a.length>0};EE.prototype.removeAllListeners=function(t){if(t)delete this._events[t];else this._events={};return this};EE.EventEmitter=EE;g.EventEmitter=EE}catch(e){}})();`,
           }}
         />
         <HeadContent />
@@ -209,13 +207,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AppMoonPayProvider>
-          <AppPhantomProvider>
-            <SplashScreen />
-            <Outlet />
-            <Toaster richColors position="top-right" />
-          </AppPhantomProvider>
-        </AppMoonPayProvider>
+        <SplashScreen />
+        <Outlet />
+        <Toaster richColors position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>
   );

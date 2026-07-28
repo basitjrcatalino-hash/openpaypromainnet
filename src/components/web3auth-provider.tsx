@@ -47,6 +47,8 @@ export function AppWeb3AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
+        // Prime the events named export before Web3Auth SafeEventEmitter loads.
+        await import("@/shims/events");
 
         const { getWeb3AuthContextConfig } = await import("@/lib/web3auth-config");
         const cfg = getWeb3AuthContextConfig();

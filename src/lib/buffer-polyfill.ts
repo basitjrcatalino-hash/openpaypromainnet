@@ -21,6 +21,8 @@ type BufferLike = {
   prototype?: object;
   /** Set by the inline __root stub — means "upgrade me". */
   __openpayStub?: boolean | number;
+  /** Lightweight early Buffer from __root — upgrade to Uint8Array fallback. */
+  __openpayEarly?: boolean | number;
 };
 
 function hasBufferApi(v: unknown): v is BufferLike {
@@ -31,7 +33,7 @@ function hasBufferApi(v: unknown): v is BufferLike {
 
 function isRealBuffer(Buf: BufferLike | undefined | null): boolean {
   if (!Buf || typeof Buf.from !== "function") return false;
-  if (Buf.__openpayStub) return false;
+  if (Buf.__openpayStub || Buf.__openpayEarly) return false;
   return typeof Buf.allocUnsafe === "function" || typeof Buf.alloc === "function";
 }
 

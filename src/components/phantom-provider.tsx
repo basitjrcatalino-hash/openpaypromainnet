@@ -121,9 +121,14 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
 
-        // ensureBuffer upgrades the early __root stub to feross/buffer or a Uint8Array fallback.
-        const Buf = (globalThis as { Buffer?: { from?: unknown; __openpayStub?: unknown; allocUnsafe?: unknown } })
-          .Buffer;
+        const Buf = (globalThis as {
+          Buffer?: {
+            from?: unknown;
+            __openpayStub?: unknown;
+            __openpayEarly?: unknown;
+            allocUnsafe?: unknown;
+          };
+        }).Buffer;
         if (typeof Buf?.from !== "function") {
           throw new Error("Buffer.from is not available in this browser");
         }

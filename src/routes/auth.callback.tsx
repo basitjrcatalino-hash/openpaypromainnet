@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { usePhantomClient, usePhantomClientReady } from "@/components/phantom-provider";
+import {
+  AppPhantomProvider,
+  usePhantomClient,
+  usePhantomClientReady,
+} from "@/components/phantom-provider";
 import {
   hasPhantomOAuthCallbackParams,
   readPhantomOAuthPending,
@@ -31,8 +35,16 @@ export const Route = createFileRoute("/auth/callback")({
     error_description:
       typeof s.error_description === "string" ? s.error_description : undefined,
   }),
-  component: PhantomAuthCallbackPage,
+  component: PhantomAuthCallbackRoute,
 });
+
+function PhantomAuthCallbackRoute() {
+  return (
+    <AppPhantomProvider>
+      <PhantomAuthCallbackPage />
+    </AppPhantomProvider>
+  );
+}
 
 function PhantomAuthCallbackPage() {
   const ready = usePhantomClientReady();

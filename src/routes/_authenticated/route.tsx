@@ -49,6 +49,8 @@ import { useTransactionNotifications } from "@/hooks/use-transaction-notificatio
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
+import { AppMoonPayProvider } from "@/components/moonpay-provider";
+import { AppPhantomProvider } from "@/components/phantom-provider";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -128,7 +130,9 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
+    <AppMoonPayProvider>
+      <AppPhantomProvider>
+        <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
       <div className="relative min-h-screen bg-background text-foreground">
         {!hideChrome && (
           <>
@@ -261,6 +265,8 @@ function AuthenticatedLayout() {
         />
       </div>
     </ChromeVisibleProvider>
+      </AppPhantomProvider>
+    </AppMoonPayProvider>
   );
 }
 

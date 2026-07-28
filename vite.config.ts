@@ -67,7 +67,9 @@ export default defineConfig({
         // Trailing slash picks package entry reliably; hard path to index.js often
         // yields Vite `{ default: undefined }` and breaks Phantom Buffer setup.
         buffer: path.resolve(rootDir, "node_modules/buffer/"),
-        events: path.resolve(rootDir, "node_modules/events/events.js"),
+        // Web3Auth SafeEventEmitter needs a real named `EventEmitter` export.
+        "events-package": path.resolve(rootDir, "node_modules/events/events.js"),
+        events: path.resolve(rootDir, "src/shims/events.ts"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
       },
       dedupe: ["react", "react-dom", "buffer", "events"],
@@ -88,8 +90,11 @@ export default defineConfig({
         "base64-js",
         "ieee754",
         "events",
+        "events-package",
         "process",
       ],
+      // Force Web3Auth through our events shim (stale prebundles break SafeEventEmitter).
+      exclude: ["@web3auth/modal", "@web3auth/auth"],
       esbuildOptions: {
         define: {
           global: "globalThis",
@@ -99,7 +104,7 @@ export default defineConfig({
     ssr: {
       // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
-      noExternal: ["events"],
+      noExternal: ["events", "events-package"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

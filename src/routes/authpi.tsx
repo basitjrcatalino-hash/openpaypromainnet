@@ -19,7 +19,7 @@ import {
   ensureTopLevelAuthWindow,
 } from "@/lib/phantom";
 import { PhantomContinueButton, PhantomGoogleAppleLink } from "@/components/phantom-auth-lazy";
-import { usePhantomClient } from "@/components/phantom-provider";
+import { AppPhantomProvider, usePhantomClient } from "@/components/phantom-provider";
 import { AppWeb3AuthProvider } from "@/components/web3auth-provider";
 import { cn } from "@/lib/utils";
 
@@ -163,10 +163,12 @@ function AuthOptionIcon({
 }
 
 function AuthPiPage() {
+  // Phantom only here — never mount Web3Auth until MetaMask is selected
+  // (SafeEventEmitter crashes if `events.EventEmitter` interop is broken).
   return (
-    <AppWeb3AuthProvider>
+    <AppPhantomProvider>
       <AuthPiPageInner />
-    </AppWeb3AuthProvider>
+    </AppPhantomProvider>
   );
 }
 
@@ -341,21 +343,23 @@ function AuthPiPageInner() {
           <div className="mt-5 space-y-2">
             {selected === "metamask" ? (
               <div key="metamask-panel" className="auth-cta-swap">
-                <Suspense
-                  fallback={
-                    <Button type="button" disabled className="h-12 w-full rounded-full">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading MetaMask…
-                    </Button>
-                  }
-                >
-                  <MetaMaskEmbeddedAuthPanel
-                    busy={busy}
-                    setBusy={setBusy}
-                    accent={selectedOpt?.accent ?? METAMASK_EMBEDDED_BRAND}
-                    accentFg={selectedOpt?.accentFg ?? "#ffffff"}
-                  />
-                </Suspense>
+                <AppWeb3AuthProvider>
+                  <Suspense
+                    fallback={
+                      <Button type="button" disabled className="h-12 w-full rounded-full">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading MetaMask…
+                      </Button>
+                    }
+                  >
+                    <MetaMaskEmbeddedAuthPanel
+                      busy={busy}
+                      setBusy={setBusy}
+                      accent={selectedOpt?.accent ?? METAMASK_EMBEDDED_BRAND}
+                      accentFg={selectedOpt?.accentFg ?? "#ffffff"}
+                    />
+                  </Suspense>
+                </AppWeb3AuthProvider>
               </div>
             ) : selected === "phantom" ? (
               <div key="phantom-panel" className="auth-cta-swap space-y-2">

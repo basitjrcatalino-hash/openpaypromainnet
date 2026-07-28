@@ -6,12 +6,14 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   BadgeCheck,
+  CandlestickChart,
   Copy,
   ExternalLink,
   Flag,
   MessageCircle,
   Share2,
   ShieldAlert,
+  Sparkles,
   Star,
   TrendingUp,
   Wallet,
@@ -38,12 +40,23 @@ import {
 } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { reportOpenToken } from "@/lib/opentoken.functions";
-import { CommentThread, PhantomSparkline, TradePanel, type PhantomPeriod } from "@/components/opentoken";
+import { DEFAULT_GRADUATION_TARGET_PI } from "@/lib/opentoken/bonding-curve";
+import {
+  CommentThread,
+  PhantomSparkline,
+  TerminalChart,
+  TradePanel,
+  type OtTradeRow,
+  type PhantomPeriod,
+  type TerminalPeriod,
+} from "@/components/opentoken";
 
 export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId")({
   head: () => ({ meta: [{ title: "Token — OpenToken" }] }),
   component: OpenTokenDetail,
 });
+
+type ChartView = "simple" | "terminal";
 
 function OpenTokenDetail() {
   const { tokenId } = Route.useParams();
@@ -52,7 +65,14 @@ function OpenTokenDetail() {
   const reportFn = useServerFn(reportOpenToken);
   const [reportOpen, setReportOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [chartPeriod, setChartPeriod] = useState<PhantomPeriod>("1D");
+  const [chartPeriod, setChartPeriod] = useState<PhantomPeriod | TerminalPeriod>("1D");
+  const [chartView, setChartView] = useState<ChartView>(() => {
+    try {
+      return localStorage.getItem("ot-chart-view") === "terminal" ? "terminal" : "simple";
+    } catch {
+      return "simple";
+    }
+  });
   const [showBuyPanel, setShowBuyPanel] = useState(false);
 
   const { data: token, isLoading } = useQuery({
@@ -91,15 +111,80 @@ function OpenTokenDetail() {
   const { data: ticks = [] } = useQuery({
     queryKey: ["ot-ticks", tokenId, chartPeriod],
     queryFn: async () => {
+      const limit =
+        chartPeriod === "5M" || chartPeriod === "15M"
+          ? 60
+          : chartPeriod === "1H"
+            ? 48
+            : chartPeriod === "1D"
+              ? 96
+              : 180;
       const { data } = await supabase
         .from("ot_price_ticks")
         .select("created_at, price, market_cap")
         .eq("token_id", tokenId)
         .order("created_at", { ascending: false })
-        .limit(chartPeriod === "1H" ? 48 : chartPeriod === "1D" ? 96 : 180);
+        .limit(limit);
       return data ?? [];
     },
   });
+
+  const { data: trades = [] } = useQuery({
+    queryKey: ["ot-trades", tokenId],
+    queryFn: async (): Promise<OtTradeRow[]> => {
+      const { data } = await supabase
+        .from("ot_trades")
+        .select("id, side, pi_amount, token_amount, price, created_at, tx_ref, user_id")
+        .eq("token_id", tokenId)
+        .order("created_at", { ascending: false })
+        .limit(40);
+      return (data ?? []) as OtTradeRow[];
+    },
+  });
+
+  const { data: creatorWallet } = useQuery({
+    queryKey: ["ot-creator-wallet", token?.creator_id],
+    enabled: !!token?.creator_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("wallets")
+        .select("address, name")
+        .eq("user_id", token!.creator_id!)
+        .order("is_active", { ascending: false })
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: creatorProfile } = useQuery({
+    queryKey: ["ot-creator-profile", token?.creator_id],
+    enabled: !!token?.creator_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, username, avatar_url")
+        .eq("id", token!.creator_id!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  function setView(next: ChartView) {
+    setChartView(next);
+    try {
+      localStorage.setItem("ot-chart-view", next);
+    } catch {
+      /* ignore */
+    }
+    if (next === "terminal" && (chartPeriod === "YTD" || chartPeriod === "ALL")) {
+      setChartPeriod("1D");
+    }
+    if (next === "simple" && (chartPeriod === "5M" || chartPeriod === "15M")) {
+      setChartPeriod("1D");
+    }
+  }
 
   const { data: favorited } = useQuery({
     queryKey: ["ot-fav", tokenId, user.id],
@@ -190,10 +275,19 @@ function OpenTokenDetail() {
   const mcap = Number(token.market_cap ?? 0);
   const vol24 = Number(token.volume_24h ?? 0);
   const reserve = Number(token.curve_reserve_pi ?? 0);
-  const gradTarget = Math.max(1, Number(token.graduation_target_pi ?? 1));
+  const rawGradTarget = Number(token.graduation_target_pi ?? DEFAULT_GRADUATION_TARGET_PI);
+  const gradTarget =
+    rawGradTarget === 400 || rawGradTarget <= 0
+      ? DEFAULT_GRADUATION_TARGET_PI
+      : Math.max(1, rawGradTarget);
   const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
   const up = change >= 0;
   const price = Number(token.price_usd ?? 0);
+  const devAddress = creatorWallet?.address ?? null;
+  const creatorLabel =
+    creatorProfile?.username ||
+    creatorProfile?.display_name ||
+    (token.creator_id ? shortAddress(token.creator_id, 4, 4) : "Unknown");
 
   return (
     <div className="ot-phantom mx-auto max-w-7xl animate-page-in pb-28 pt-1 md:px-2">
@@ -298,39 +392,89 @@ function OpenTokenDetail() {
             <StatPill label="Holders" value={formatNumber(token.holder_count ?? 0, 0)} />
           </div>
 
-          {/* Chart — Phantom sparkline (green up / red down) */}
+          {/* Chart — Simple sparkline or Terminal (Phantom-style) */}
           <section className="space-y-3">
-            <div className="rounded-3xl bg-card p-4">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <div className="text-[11px] text-muted-foreground">Market cap</div>
-                  <div className="text-2xl font-bold tabular-nums">
-                    {formatOUSD(mcap, { compact: true })}
-                  </div>
-                </div>
-                <div className="min-w-28 flex-1">
-                  <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
-                    <span>Curve</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
-                    />
-                  </div>
-                </div>
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="text-sm font-semibold text-muted-foreground">Chart</div>
+              <div className="flex rounded-xl bg-muted/60 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setView("simple")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold press",
+                    chartView === "simple"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Simple
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("terminal")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold press",
+                    chartView === "terminal"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <CandlestickChart className="h-3.5 w-3.5" />
+                  Terminal
+                </button>
               </div>
             </div>
-            <PhantomSparkline
-              period={chartPeriod}
-              onPeriodChange={setChartPeriod}
-              ticks={ticks}
-              price={price}
-              changePct={change}
-              tokenKey={tokenId}
-              peg={String(token.symbol ?? "").toUpperCase() === "OUSD"}
-            />
+
+            {chartView === "simple" ? (
+              <>
+                <div className="rounded-3xl bg-card p-4">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] text-muted-foreground">Market cap</div>
+                      <div className="text-2xl font-bold tabular-nums">
+                        {formatOUSD(mcap, { compact: true })}
+                      </div>
+                    </div>
+                    <div className="min-w-28 flex-1">
+                      <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
+                        <span>Curve</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <PhantomSparkline
+                  period={chartPeriod}
+                  onPeriodChange={(p) => setChartPeriod(p)}
+                  ticks={ticks}
+                  price={price}
+                  changePct={change}
+                  tokenKey={tokenId}
+                  peg={String(token.symbol ?? "").toUpperCase() === "OUSD"}
+                />
+              </>
+            ) : (
+              <TerminalChart
+                period={chartPeriod}
+                onPeriodChange={(p) => setChartPeriod(p)}
+                ticks={ticks}
+                trades={trades}
+                myUserId={user.id}
+                price={price}
+                mcap={mcap}
+                changePct={change}
+                symbol={token.symbol}
+                tokenKey={tokenId}
+                peg={String(token.symbol ?? "").toUpperCase() === "OUSD"}
+              />
+            )}
           </section>
 
           {/* About */}
@@ -382,6 +526,66 @@ function OpenTokenDetail() {
           </div>
 
           <div className="rounded-3xl bg-card p-4">
+            <div className="mb-3 text-sm font-bold">Token info</div>
+            <div className="space-y-3 text-sm">
+              <DetailRow label="Name">{token.name}</DetailRow>
+              <DetailRow label="Symbol">${token.symbol}</DetailRow>
+              <DetailRow label="Status">
+                <span className="font-semibold capitalize">{token.status ?? "curve"}</span>
+              </DetailRow>
+              <DetailRow label="Supply">
+                {formatNumber(Number(token.total_supply ?? 0), 0)}
+              </DetailRow>
+              <DetailRow label="Decimals">{String(token.decimals ?? 9)}</DetailRow>
+              <DetailRow label="Creator">
+                {token.creator_id ? (
+                  <Link
+                    to="/opentoken/creator/$userId"
+                    params={{ userId: token.creator_id }}
+                    className="font-semibold text-primary"
+                  >
+                    @{creatorLabel.replace(/^@/, "")}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+              </DetailRow>
+              <DetailRow label="Dev wallet">
+                {devAddress ? (
+                  <button
+                    type="button"
+                    className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(devAddress);
+                      toast.success("Dev wallet copied");
+                    }}
+                  >
+                    <span className="truncate">{shortAddress(devAddress, 8, 8)}</span>
+                    <Copy className="h-3 w-3 shrink-0" />
+                  </button>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </DetailRow>
+              {token.contract_address ? (
+                <DetailRow label="Contract">
+                  <button
+                    type="button"
+                    className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(token.contract_address!);
+                      toast.success("Contract copied");
+                    }}
+                  >
+                    <span className="truncate">{shortAddress(token.contract_address, 8, 8)}</span>
+                    <Copy className="h-3 w-3 shrink-0" />
+                  </button>
+                </DetailRow>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-card p-4">
             <div className="mb-2 flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 font-semibold">
                 <TrendingUp className="h-4 w-4 text-primary" />
@@ -396,7 +600,7 @@ function OpenTokenDetail() {
               />
             </div>
             <div className="text-xs text-muted-foreground">
-              {formatNumber(reserve, 2)} / {formatNumber(gradTarget, 2)} OUSD to OpenDEX
+              {formatNumber(reserve, 0)} / {formatNumber(gradTarget, 0)} OUSD to OpenDEX
               {token.status === "graduated" ? (
                 <>
                   {" · "}

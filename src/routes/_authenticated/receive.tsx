@@ -1,6 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Copy,
@@ -63,14 +63,14 @@ function ReceivePage() {
   const [opAmount, setOpAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"wallet" | "openpay">("wallet");
+  const [walletQrUrl, setWalletQrUrl] = useState<string>("");
+  const [opQrUrl, setOpQrUrl] = useState<string>("");
   const [opLink, setOpLink] = useState<{
     pay_url: string;
     note: string;
     partner_username?: string;
     address?: string | null;
   } | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const opCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const createReceive = useServerFn(createOpenPayReceiveLink);
   const settleInbound = useServerFn(settleOpenPayInboundReceive);
@@ -95,30 +95,57 @@ function ReceivePage() {
     ? `openpay:${wallet.address}?asset=${asset}${amount ? `&amount=${amount}` : ""}`
     : "";
 
+  // Use data-URL images instead of canvas so React doesn't fight qrcode DOM mutations.
   useEffect(() => {
-    if (!canvasRef.current || !payUri) return;
-    QRCode.toCanvas(canvasRef.current, payUri, {
+    let cancelled = false;
+    if (!payUri) {
+      setWalletQrUrl("");
+      return;
+    }
+    void QRCode.toDataURL(payUri, {
       width: 220,
       margin: 1,
       color: { dark: "#111111", light: "#ffffff" },
       errorCorrectionLevel: "M",
-    }).catch(() => {});
+    })
+      .then((url) => {
+        if (!cancelled) setWalletQrUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setWalletQrUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [payUri]);
 
   useEffect(() => {
-    if (!opCanvasRef.current || !opLink?.pay_url) return;
-    QRCode.toCanvas(opCanvasRef.current, opLink.pay_url, {
+    let cancelled = false;
+    if (!opLink?.pay_url) {
+      setOpQrUrl("");
+      return;
+    }
+    void QRCode.toDataURL(opLink.pay_url, {
       width: 200,
       margin: 1,
       color: { dark: "#111111", light: "#ffffff" },
       errorCorrectionLevel: "M",
-    }).catch(() => {});
+    })
+      .then((url) => {
+        if (!cancelled) setOpQrUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setOpQrUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [opLink?.pay_url]);
 
   async function refreshBalances() {
-    qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-    qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
-    qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+    void qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+    void qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+    void qc.invalidateQueries({ queryKey: ["wallets", user.id] });
   }
 
   async function checkForPayment(opts: { silent?: boolean } = {}) {
@@ -224,11 +251,13 @@ function ReceivePage() {
   }
 
   function downloadQR() {
-    if (!canvasRef.current) return;
-    const url = canvasRef.current.toDataURL("image/png");
+    if (!walletQrUrl) {
+      toast.error("QR not ready yet");
+      return;
+    }
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `openpay-${wallet?.address?.slice(0, 8)}.png`;
+    a.href = walletQrUrl;
+    a.download = `openpay-${wallet?.address?.slice(0, 8) ?? "wallet"}.png`;
     a.click();
   }
 
@@ -273,7 +302,6 @@ function ReceivePage() {
     <div className="ot-phantom ph-page space-y-5 pb-8">
       <PageHeader title="Receive" backTo="/dashboard" />
 
-      {/* Segmented control */}
       <div className="mx-auto grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl bg-muted/50 p-1">
         <button
           type="button"
@@ -305,8 +333,17 @@ function ReceivePage() {
           </div>
 
           <div className="mx-auto grid w-fit place-items-center rounded-3xl bg-white p-5 shadow-sm">
-            <canvas ref={canvasRef} className="block" />
-            {!payUri && <QrCode className="h-40 w-40 text-muted-foreground" />}
+            {walletQrUrl ? (
+              <img
+                src={walletQrUrl}
+                alt={`Receive ${asset} QR`}
+                width={220}
+                height={220}
+                className="block h-[220px] w-[220px]"
+              />
+            ) : (
+              <QrCode className="h-40 w-40 text-muted-foreground" aria-hidden />
+            )}
           </div>
 
           <button
@@ -315,13 +352,17 @@ function ReceivePage() {
             className="mx-auto flex max-w-full items-center gap-2 rounded-full bg-muted px-4 py-2.5 font-mono text-xs text-foreground press"
           >
             <span className="truncate">{shortAddress(wallet?.address, 8, 8)}</span>
-            {copied ? <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 shrink-0" />
+            )}
           </button>
 
           <div className="overflow-hidden rounded-2xl bg-card">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
               <span className="text-sm text-muted-foreground">Asset</span>
-              <div className="flex gap-1 rounded-lg bg-muted/60 p-0.5">
+              <div className="flex gap-1 rounded-lg bg-muted/60 p-0.5" role="group" aria-label="Asset">
                 {(["OUSD", "PI"] as const).map((a) => (
                   <button
                     key={a}
@@ -338,13 +379,16 @@ function ReceivePage() {
               </div>
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <span className="text-sm text-muted-foreground">Amount</span>
+              <label htmlFor="receive-amount" className="text-sm text-muted-foreground">
+                Amount
+              </label>
               <Input
+                id="receive-amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Optional"
                 inputMode="decimal"
-                className="h-9 max-w-[9rem] border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
+                className="h-9 max-w-36 border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
               />
             </div>
           </div>
@@ -354,7 +398,13 @@ function ReceivePage() {
               <Share2 className="mr-1.5 h-4 w-4" />
               Share
             </Button>
-            <Button type="button" variant="secondary" className="h-12 rounded-full" onClick={downloadQR}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 rounded-full"
+              onClick={downloadQR}
+              disabled={!walletQrUrl}
+            >
               <Download className="mr-1.5 h-4 w-4" />
               Save QR
             </Button>
@@ -376,13 +426,16 @@ function ReceivePage() {
 
           <div className="overflow-hidden rounded-2xl bg-card">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <span className="text-sm text-muted-foreground">Amount</span>
+              <label htmlFor="receive-op-amount" className="text-sm text-muted-foreground">
+                Amount
+              </label>
               <Input
+                id="receive-op-amount"
                 value={opAmount}
                 onChange={(e) => setOpAmount(e.target.value)}
                 placeholder="Optional"
                 inputMode="decimal"
-                className="h-9 max-w-[9rem] border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
+                className="h-9 max-w-36 border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
               />
             </div>
           </div>
@@ -400,7 +453,17 @@ function ReceivePage() {
           {opLink && (
             <div className="space-y-4 overflow-hidden rounded-2xl bg-card p-4">
               <div className="mx-auto grid w-fit place-items-center rounded-2xl bg-white p-3">
-                <canvas ref={opCanvasRef} className="block" />
+                {opQrUrl ? (
+                  <img
+                    src={opQrUrl}
+                    alt="OpenPay receive QR"
+                    width={200}
+                    height={200}
+                    className="block h-[200px] w-[200px]"
+                  />
+                ) : (
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                )}
               </div>
               <p className="break-all text-center font-mono text-[10px] text-muted-foreground">
                 {opLink.note}
@@ -431,7 +494,7 @@ function ReceivePage() {
                   size="sm"
                   className="rounded-full"
                   disabled={busy}
-                  onClick={() => checkForPayment()}
+                  onClick={() => void checkForPayment()}
                 >
                   {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
                   Check payment

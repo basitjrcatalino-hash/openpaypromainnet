@@ -42,6 +42,7 @@ import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -135,7 +136,10 @@ function Dashboard() {
     },
   });
 
-  const { data: holdings = [] } = useQuery({
+  const {
+    data: holdings,
+    isPending: holdingsPending,
+  } = useQuery({
     queryKey: ["holdings", wallet?.id],
     enabled: !!wallet?.id,
     queryFn: async (): Promise<HoldingRow[]> => {
@@ -147,13 +151,18 @@ function Dashboard() {
     },
   });
 
-  const { data: recentTxs = [], isLoading: recentLoading } = useQuery({
+  const { data: recentTxs = [], isLoading: recentLoading, isPending: recentPending } = useQuery({
     queryKey: ["recent-txs", wallet?.id],
     enabled: !!wallet?.id,
     staleTime: 10_000,
     refetchOnMount: "always",
     queryFn: () => fetchWalletActivity(supabase, wallet!.id, 12),
   });
+
+  /** First paint — skeletons instead of empty “No tokens” flash. */
+  const showTokenSkeletons = walletLoading || (!!wallet?.id && holdingsPending);
+  const showActivitySkeletons = walletLoading || (!!wallet?.id && (recentLoading || recentPending));
+  const holdingsList = holdings ?? [];
 
   useEffect(() => {
     if (walletLoading || wallet) return;
@@ -184,23 +193,23 @@ function Dashboard() {
   const [copied, setCopied] = useState(false);
 
   const ousdBalance = Number(wallet?.ousd_balance ?? 0);
-  const holdingsUsd = holdings.reduce(
+  const holdingsUsd = holdingsList.reduce(
     (sum, h) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
     0,
   );
   const totalUsd = holdingsUsd + ousdBalance;
-  const hasAssets = holdings.length > 0 || ousdBalance > 0;
-  const assetCount = holdings.length + (ousdBalance > 0 ? 1 : 0);
+  const hasAssets = holdingsList.length > 0 || ousdBalance > 0;
+  const assetCount = holdingsList.length + (ousdBalance > 0 ? 1 : 0);
 
   const filteredHoldings = useMemo(() => {
     const qq = tokenQuery.trim().toLowerCase();
-    if (!qq) return holdings;
-    return holdings.filter((h) => {
+    if (!qq) return holdingsList;
+    return holdingsList.filter((h) => {
       const name = h.tokens?.name?.toLowerCase() ?? "";
       const symbol = h.tokens?.symbol?.toLowerCase() ?? "";
       return name.includes(qq) || symbol.includes(qq);
     });
-  }, [holdings, tokenQuery]);
+  }, [holdingsList, tokenQuery]);
 
   const showOusdRow =
     ousdBalance > 0 &&
@@ -271,8 +280,14 @@ function Dashboard() {
           onClick={() => setSwitchOpen(true)}
           className="inline-flex items-center gap-1 text-[15px] font-semibold press"
         >
-          {wallet?.name ?? "Main Wallet"}
-          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          {walletLoading && !wallet ? (
+            <Skeleton className="h-5 w-28 rounded-full" />
+          ) : (
+            <>
+              {wallet?.name ?? "Main Wallet"}
+              <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </>
+          )}
         </button>
         <div className="flex items-center">
           <button
@@ -295,14 +310,21 @@ function Dashboard() {
       </div>
 
       {/* Flat balance hero */}
-      <WalletBalanceHero
-        balanceLabel={formatCurrency(totalUsd, currency)}
-        addressLabel={shortAddress(wallet?.address ?? null, 6, 6)}
-        hideBalance={hideBalance}
-        copied={copied}
-        onCycleCurrency={cycleCurrency}
-        onCopyAddress={copyAddress}
-      />
+      {walletLoading && !wallet ? (
+        <div className="flex flex-col items-center gap-3 py-6">
+          <Skeleton className="h-12 w-44 rounded-xl" />
+          <Skeleton className="h-4 w-28 rounded-full" />
+        </div>
+      ) : (
+        <WalletBalanceHero
+          balanceLabel={formatCurrency(totalUsd, currency)}
+          addressLabel={shortAddress(wallet?.address ?? null, 6, 6)}
+          hideBalance={hideBalance}
+          copied={copied}
+          onCycleCurrency={cycleCurrency}
+          onCopyAddress={copyAddress}
+        />
+      )}
 
       {/* Circular actions */}
       <div className="mb-6 flex items-start justify-center gap-5 sm:gap-6">
@@ -329,7 +351,7 @@ function Dashboard() {
         </Link>
       )}
 
-      {!hasAssets && !onboardDismissed && (
+      {!showTokenSkeletons && !hasAssets && !onboardDismissed && (
         <div className="mb-4 rounded-2xl bg-card px-4 py-4">
           <div className="mb-3 flex items-start justify-between gap-2">
             <div>
@@ -412,8 +434,16 @@ function Dashboard() {
 
       {tab === "tokens" ? (
         <section>
-          {!hasAssets ? (
-            <div className="flex flex-col items-center gap-3 py-12 text-center">
+          {showTokenSkeletons ? (
+            <ul className="animate-in fade-in duration-300" aria-busy="true" aria-label="Loading tokens">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i}>
+                  <TokenRowSkeleton delayMs={i * 60} />
+                </li>
+              ))}
+            </ul>
+          ) : !hasAssets ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center animate-in fade-in duration-300">
               <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-primary">
                 <Plus className="h-6 w-6" />
               </div>
@@ -446,7 +476,7 @@ function Dashboard() {
           ) : !showOusdRow && filteredHoldings.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No matching tokens</p>
           ) : (
-            <ul>
+            <ul className="animate-in fade-in duration-300">
               {showOusdRow && (
                 <li>
                   <button
@@ -550,7 +580,13 @@ function Dashboard() {
             className="mt-2 flex items-center justify-center gap-2 py-3 text-sm font-semibold text-primary press"
           >
             Manage token list
-            <span className="text-muted-foreground">{assetCount}</span>
+            <span className="text-muted-foreground">
+              {showTokenSkeletons ? (
+                <Skeleton className="inline-block h-4 w-5 translate-y-0.5 rounded" />
+              ) : (
+                assetCount
+              )}
+            </span>
           </Link>
         </section>
       ) : (
@@ -573,12 +609,18 @@ function Dashboard() {
             See all
           </Link>
         </header>
-        {recentLoading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
+        {showActivitySkeletons ? (
+          <ul className="animate-in fade-in duration-300" aria-busy="true" aria-label="Loading activity">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <li key={i}>
+                <ActivityRowSkeleton delayMs={i * 70} />
+              </li>
+            ))}
+          </ul>
         ) : recentTxs.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No activity yet</p>
         ) : (
-          <ul>
+          <ul className="animate-in fade-in duration-300">
             {recentTxs.slice(0, 5).map((t) => (
               <li key={`${t.source ?? "wallet"}-${t.id}`}>
                 <TxRowButton tx={t} onOpen={setSelectedTx} />
@@ -588,7 +630,7 @@ function Dashboard() {
         )}
       </section>
 
-      {!hasAssets && recentTxs.length === 0 && onboardDismissed && (
+      {!showTokenSkeletons && !hasAssets && recentTxs.length === 0 && onboardDismissed && (
         <section className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
           <div className="grid h-16 w-16 place-items-center rounded-full bg-primary/15 text-primary">
             <Sparkles className="h-7 w-7" />
@@ -691,6 +733,45 @@ function Dashboard() {
         }}
         placeholder="Search tokens"
       />
+    </div>
+  );
+}
+
+function TokenRowSkeleton({ delayMs = 0 }: { delayMs?: number }) {
+  return (
+    <div
+      className="ph-row pointer-events-none"
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="h-3 w-20 rounded-md" />
+        </div>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <Skeleton className="h-4 w-16 rounded-md" />
+        <Skeleton className="h-3 w-12 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+function ActivityRowSkeleton({ delayMs = 0 }: { delayMs?: number }) {
+  return (
+    <div
+      className="ph-row pointer-events-none"
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-3 w-16 rounded-md" />
+        </div>
+      </div>
+      <Skeleton className="h-4 w-14 rounded-md" />
     </div>
   );
 }

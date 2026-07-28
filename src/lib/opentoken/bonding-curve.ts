@@ -2,7 +2,7 @@
 
 export const DEFAULT_VIRTUAL_PI = 30;
 export const DEFAULT_VIRTUAL_TOKENS = 1_073_000_191;
-export const DEFAULT_GRADUATION_TARGET_PI = 400;
+export const DEFAULT_GRADUATION_TARGET_PI = 100_000;
 export const DEFAULT_TOTAL_SUPPLY = 1_000_000_000;
 /** Launch fee charged in OUSD (1:1 with USD display balance). */
 export const DEFAULT_LAUNCH_FEE_OUSD = 0.1;
@@ -80,7 +80,11 @@ export function curveFromTokenRow(t: {
     reservePi: Number(t.curve_reserve_pi ?? 0),
     supplySold: Number(t.curve_supply_sold ?? 0),
     totalSupply: Number(t.total_supply ?? DEFAULT_TOTAL_SUPPLY),
-    graduationTargetPi: Number(t.graduation_target_pi ?? DEFAULT_GRADUATION_TARGET_PI),
+    graduationTargetPi: (() => {
+      const raw = Number(t.graduation_target_pi ?? DEFAULT_GRADUATION_TARGET_PI);
+      // Legacy launches used 400 OUSD — treat as the new 100k target.
+      return raw === 400 || raw <= 0 ? DEFAULT_GRADUATION_TARGET_PI : raw;
+    })(),
   };
 }
 

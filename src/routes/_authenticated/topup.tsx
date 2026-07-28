@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Sparkles, Wallet as WalletIcon, Link2, CheckCircle2 } from "lucide-react";
@@ -34,14 +34,24 @@ export const Route = createFileRoute("/_authenticated/topup")({
 });
 
 type Method = "openpay_balance" | "pi";
-const methods: { id: Method; label: string; icon: any; desc: string }[] = [
+const methods: {
+  id: Method;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  desc: string;
+}[] = [
   {
     id: "openpay_balance",
     label: "OpenPay Balance",
     icon: WalletIcon,
     desc: "Pay from your connected OpenPay account · real debit",
   },
-  { id: "pi", label: "Pi Network (π)", icon: Sparkles, desc: "Pay with Pi · 1 π = 1 OUSD credited instantly" },
+  {
+    id: "pi",
+    label: "Pi Network (π)",
+    icon: Sparkles,
+    desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
+  },
 ];
 
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -236,7 +246,7 @@ function TopUpPage() {
     }
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) {
@@ -383,20 +393,24 @@ function TopUpPage() {
       <form onSubmit={submit} className="space-y-6">
         {/* Amount */}
         <section>
-          <Label className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Label
+            htmlFor="topup-amount"
+            className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
             Amount
           </Label>
           <div className="flex items-baseline justify-center gap-1">
             <span className="text-3xl font-bold text-muted-foreground">$</span>
             <Input
+              id="topup-amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              type="number"
-              min="1"
-              step="any"
-              required
+              type="text"
               inputMode="decimal"
-              className="h-auto w-full max-w-[12rem] border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
+              pattern="[0-9]*[.]?[0-9]*"
+              required
+              aria-label="Top up amount in USD"
+              className="h-auto w-full max-w-48 border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
             />
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
@@ -424,6 +438,7 @@ function TopUpPage() {
           <div className="overflow-hidden rounded-2xl bg-card">
             {methods.map((m, i) => {
               const selected = method === m.id;
+              const Icon = m.icon;
               return (
                 <button
                   key={m.id}
@@ -440,7 +455,7 @@ function TopUpPage() {
                       selected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
                     )}
                   >
-                    <m.icon className="h-[18px] w-[18px]" />
+                    <Icon className="h-4.5 w-4.5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">{m.label}</div>
@@ -448,11 +463,14 @@ function TopUpPage() {
                   </div>
                   <span
                     className={cn(
-                      "grid h-5 w-5 place-items-center rounded-full border-2",
+                      "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2",
                       selected ? "border-primary bg-primary" : "border-muted-foreground/40",
                     )}
+                    aria-hidden
                   >
-                    {selected ? <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" /> : null}
+                    {selected ? (
+                      <span className="h-2 w-2 rounded-full bg-primary-foreground" />
+                    ) : null}
                   </span>
                 </button>
               );

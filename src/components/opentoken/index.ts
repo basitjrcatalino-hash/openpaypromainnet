@@ -16,7 +16,8 @@ export {
   type PhantomPeriod,
   type ChartTick,
 } from "./PriceChart";
-export { TradesTable } from "./TradesTable";
+export { TradesTable, type OtTradeRow } from "./TradesTable";
+export { TerminalChart, TERMINAL_PERIODS, type TerminalPeriod } from "./TerminalChart";
 export { CommentThread } from "./CommentThread";
 export { TokenStats } from "./TokenStats";
 export { GraduationBadge } from "./GraduationBadge";

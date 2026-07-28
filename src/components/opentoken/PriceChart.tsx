@@ -117,6 +117,10 @@ export function PriceChart({
 
 function periodSpanMs(period: string) {
   switch (period) {
+    case "5M":
+      return 5 * 60 * 1000;
+    case "15M":
+      return 15 * 60 * 1000;
     case "1H":
       return 60 * 60 * 1000;
     case "1D":
@@ -134,6 +138,10 @@ function periodSpanMs(period: string) {
 
 function periodPoints(period: string) {
   switch (period) {
+    case "5M":
+      return 40;
+    case "15M":
+      return 48;
     case "1H":
       return 48;
     case "1D":
@@ -144,6 +152,25 @@ function periodPoints(period: string) {
       return 140;
     default:
       return 160;
+  }
+}
+
+export function candleBucketMs(period: string) {
+  switch (period) {
+    case "5M":
+      return 15 * 1000;
+    case "15M":
+      return 30 * 1000;
+    case "1H":
+      return 60 * 1000;
+    case "1D":
+      return 15 * 60 * 1000;
+    case "1W":
+      return 60 * 60 * 1000;
+    case "1M":
+      return 4 * 60 * 60 * 1000;
+    default:
+      return 24 * 60 * 60 * 1000;
   }
 }
 

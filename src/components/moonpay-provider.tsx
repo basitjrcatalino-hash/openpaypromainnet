@@ -1,32 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { lazy, Suspense, useState, type ErrorInfo, type ReactNode } from "react";
+import { useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import { MOONPAY_API_KEY, MOONPAY_DEBUG } from "@/lib/moonpay";
+
+type MoonPayProviderComponent = React.ComponentType<{
+  apiKey: string;
+  debug?: boolean;
+  children?: ReactNode;
+}>;
 
 /**
  * Client-only MoonPay wrapper.
- * Never static-import `@moonpay/moonpay-react` from `__root` — its bundle has
- * `class Logger2 extends Logger` which can throw
- * "Class extends value undefined is not a constructor or null" under Vite ESM
- * circular init and blank every route (docs, settings, etc.).
+ * Never static-import `@moonpay/moonpay-react` from `__root` — that package can throw
+ * "Class extends value undefined is not a constructor or null" during Vite ESM init
+ * and blank every route (docs, settings, etc.).
  */
-const MoonPayProviderLazy = lazy(async () => {
-  try {
-    const mod = await import("@moonpay/moonpay-react");
-    if (!mod?.MoonPayProvider) {
-      throw new Error("MoonPayProvider export missing");
-    }
-    return { default: mod.MoonPayProvider };
-  } catch (err) {
-    console.error("[moonpay] failed to load SDK", err);
-    function Passthrough({ children }: { children?: ReactNode }) {
-      return <>{children}</>;
-    }
-    return { default: Passthrough };
-  }
-});
-
 class MoonPayBoundary extends React.Component<
   { children: ReactNode; fallback: ReactNode },
   { failed: boolean }
@@ -48,19 +37,36 @@ class MoonPayBoundary extends React.Component<
 }
 
 export function AppMoonPayProvider({ children }: { children: ReactNode }) {
-  const [enabled] = useState(() => typeof window !== "undefined");
+  const [Provider, setProvider] = useState<MoonPayProviderComponent | null>(null);
 
-  if (!enabled) {
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const mod = await import("@moonpay/moonpay-react");
+        if (cancelled) return;
+        if (typeof mod.MoonPayProvider !== "function") {
+          throw new Error("MoonPayProvider export missing");
+        }
+        setProvider(() => mod.MoonPayProvider as MoonPayProviderComponent);
+      } catch (err) {
+        console.error("[moonpay] failed to load SDK", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!Provider) {
     return <>{children}</>;
   }
 
   return (
     <MoonPayBoundary fallback={children}>
-      <Suspense fallback={<>{children}</>}>
-        <MoonPayProviderLazy apiKey={MOONPAY_API_KEY} debug={MOONPAY_DEBUG}>
-          {children}
-        </MoonPayProviderLazy>
-      </Suspense>
+      <Provider apiKey={MOONPAY_API_KEY} debug={MOONPAY_DEBUG}>
+        {children}
+      </Provider>
     </MoonPayBoundary>
   );
 }

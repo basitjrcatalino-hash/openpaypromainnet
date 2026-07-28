@@ -70,6 +70,17 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+type SettingsWallet = {
+  id: string;
+  user_id: string;
+  name: string;
+  address: string;
+  is_active: boolean;
+  ousd_balance: number | null;
+  pi_balance: number | null;
+  created_at: string;
+};
+
 async function sha256(text: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf))
@@ -97,15 +108,19 @@ function SettingsPage() {
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
-    queryFn: () => listUserWallets(supabase, user.id),
+    queryFn: () => listUserWallets<SettingsWallet>(supabase, user.id),
   });
 
   const { data: recoveryFlags = {} } = useQuery({
-    queryKey: ["wallet-recovery-flags", user.id, wallets.map((w: { id: string }) => w.id).join(",")],
+    queryKey: [
+      "wallet-recovery-flags",
+      user.id,
+      wallets.map((w) => w.id).join(","),
+    ],
     enabled: wallets.length > 0,
     queryFn: async () => {
       const entries = await Promise.all(
-        wallets.map(async (w: { id: string }) => {
+        wallets.map(async (w) => {
           try {
             const { data, error } = await supabase.rpc("wallet_has_recovery", {
               p_wallet_id: w.id,
@@ -357,9 +372,7 @@ function SettingsPage() {
       toast.error("Paste an OpenPay Pro wallet address");
       return;
     }
-    const match = wallets.find(
-      (w: { address: string }) => w.address.toLowerCase() === addr.toLowerCase(),
-    );
+    const match = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
     if (!match) {
       toast.error("Address not in your account — import with the recovery phrase to restore it");
       return;
@@ -386,16 +399,14 @@ function SettingsPage() {
     const { error } = await supabase.rpc("remove_openpay_wallet", { p_wallet_id: id });
     if (error) {
       // Fallback before soft-delete migration is applied
-      const wasActive = wallets.some(
-        (w: { id: string; is_active: boolean }) => w.id === id && w.is_active,
-      );
+      const wasActive = wallets.some((w) => w.id === id && w.is_active);
       const { error: delErr } = await supabase.from("wallets").delete().eq("id", id);
       if (delErr) {
         toast.error(error.message);
         return;
       }
       if (wasActive) {
-        const next = wallets.find((w: { id: string }) => w.id !== id);
+        const next = wallets.find((w) => w.id !== id);
         if (next) await supabase.from("wallets").update({ is_active: true }).eq("id", next.id);
       }
     }
@@ -741,7 +752,7 @@ function SettingsPage() {
           </div>
 
           <ul className="divide-y divide-border/50">
-            {wallets.map((w: any) => {
+            {wallets.map((w) => {
               const ousd = Number(w.ousd_balance ?? 0);
               const pi = Number(w.pi_balance ?? 0);
               const hasRecovery = !!recoveryFlags[w.id];
@@ -902,7 +913,7 @@ function SettingsPage() {
             }}
           />
           <RecoveryCard
-            wallets={wallets as Array<{ id: string; name: string; address: string; is_active: boolean }>}
+            wallets={wallets}
             recoveryFlags={recoveryFlags}
             backedUp={!!(prefs as any)?.recovery_backed_up}
             onConfirm={async () => {
@@ -1457,7 +1468,7 @@ function RecoveryCard({
   onConfirm,
   onAttached,
 }: {
-  wallets: Array<{ id: string; name: string; address: string; is_active: boolean }>;
+  wallets: SettingsWallet[];
   recoveryFlags: Record<string, boolean>;
   backedUp: boolean;
   onConfirm: () => Promise<void>;

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Star, BadgeCheck, Radio } from "lucide-react";
-import { formatOUSD, timeAgo } from "@/lib/wallet-utils";
+import { formatOUSD, formatPct, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { curveFromTokenRow, curveProgress, isOpenTokenGraduated, OT_CATEGORY_LABELS, type OtCategory } from "@/lib/opentoken/bonding-curve";
 import { GraduationBadge } from "./GraduationBadge";
@@ -84,9 +84,13 @@ export function TokenCard({ token, compact }: { token: OtTokenCardData; compact?
             <div className="text-xs text-muted-foreground">${token.symbol}</div>
           </div>
           {!compact && (
-            <div className={cn("text-xs font-medium tabular-nums", change >= 0 ? "text-success" : "text-destructive")}>
-              {change >= 0 ? "+" : ""}
-              {change.toFixed(1)}%
+            <div
+              className={cn(
+                "text-xs font-semibold tabular-nums",
+                change >= 0 ? "text-success" : "text-destructive",
+              )}
+            >
+              {formatPct(change)}
             </div>
           )}
         </div>

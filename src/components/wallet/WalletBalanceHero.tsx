@@ -20,6 +20,8 @@ export function WalletBalanceHero({
   onCopyAddress,
   className,
 }: Props) {
+  const showAddress = Boolean(addressLabel && addressLabel !== "—");
+
   return (
     <div className={cn("flex flex-col items-center gap-2.5 py-7 text-center", className)}>
       <button
@@ -28,17 +30,19 @@ export function WalletBalanceHero({
         className="ph-display flex items-center gap-2 press"
         aria-label="Change currency"
       >
-        {hideBalance ? "••••" : balanceLabel}
-        <ChevronsUpDown className="h-[1.125rem] w-[1.125rem] text-muted-foreground" strokeWidth={1.75} />
+        <span suppressHydrationWarning>{hideBalance ? "••••" : balanceLabel}</span>
+        <ChevronsUpDown className="h-4.5 w-4.5 text-muted-foreground" strokeWidth={1.75} />
       </button>
-      {addressLabel ? (
+      {showAddress ? (
         <button
           type="button"
           onClick={onCopyAddress}
           className="ph-caption flex items-center gap-1.5 transition-colors hover:text-foreground press"
           aria-label="Copy wallet address"
         >
-          <span className="font-medium tracking-wide">{addressLabel}</span>
+          <span className="font-medium tracking-wide" suppressHydrationWarning>
+            {addressLabel}
+          </span>
           {copied ? (
             <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
           ) : (

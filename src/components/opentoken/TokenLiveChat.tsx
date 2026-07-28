@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -24,20 +22,7 @@ type ChatRow = {
   profile?: { display_name?: string | null; username?: string | null; avatar_url?: string | null };
 };
 
-const EMOJI_STICKERS = [
-  "🚀",
-  "💎",
-  "🔥",
-  "📈",
-  "🐸",
-  "💰",
-  "🧠",
-  "⚡",
-  "🌙",
-  "🫡",
-  "👑",
-  "🎯",
-];
+const EMOJI_STICKERS = ["🚀", "💎", "🔥", "📈", "🐸", "💰", "🧠", "⚡", "🌙", "🫡", "👑", "🎯"];
 
 /** Curated reaction GIFs (public Giphy media). */
 const PUMP_GIFS = [
@@ -73,6 +58,22 @@ const PUMP_GIFS = [
   },
 ];
 
+function errMessage(err: unknown): string {
+  if (!err) return "";
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null && "message" in err) {
+    return String((err as { message: unknown }).message ?? "");
+  }
+  return String(err);
+}
+
+function isMissingChatTable(message: string) {
+  return /relation|ot_token_chat_messages|schema cache|does not exist|Could not find the table/i.test(
+    message,
+  );
+}
+
 export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: string }) {
   const qc = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -80,18 +81,30 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
   const [busy, setBusy] = useState(false);
   const [panel, setPanel] = useState<"none" | "emoji" | "gif">("none");
   const [gifUrl, setGifUrl] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-  const { data: messages = [], isLoading } = useQuery({
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { data, isLoading } = useQuery({
     queryKey: ["ot-live-chat", tokenId],
-    queryFn: async () => {
-      const { data, error } = await supabase
+    enabled: Boolean(tokenId),
+    retry: false,
+    // Never throw — missing tables / RLS errors must not hit the console via React Query.
+    queryFn: async (): Promise<{ rows: ChatRow[]; error: string | null }> => {
+      const { data: rows, error: qErr } = await supabase
         .from("ot_token_chat_messages")
         .select("id, body, kind, media_url, created_at, user_id")
         .eq("token_id", tokenId)
         .order("created_at", { ascending: true })
         .limit(120);
-      if (error) throw error;
-      const ids = [...new Set((data ?? []).map((c) => c.user_id))];
+
+      if (qErr) {
+        return { rows: [], error: errMessage(qErr) || "Could not load chat" };
+      }
+
+      const ids = [...new Set((rows ?? []).map((c) => c.user_id))];
       const profiles: Record<string, ChatRow["profile"]> = {};
       if (ids.length) {
         const { data: ps } = await supabase
@@ -100,15 +113,22 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
           .in("id", ids);
         for (const p of ps ?? []) profiles[p.id] = p;
       }
-      return (data ?? []).map((c) => ({
-        ...c,
-        kind: (c.kind as ChatKind) || "text",
-        profile: profiles[c.user_id],
-      })) as ChatRow[];
+      return {
+        rows: (rows ?? []).map((c) => ({
+          ...c,
+          kind: (c.kind as ChatKind) || "text",
+          profile: profiles[c.user_id],
+        })),
+        error: null,
+      };
     },
   });
 
+  const messages = data?.rows ?? [];
+  const loadError = data?.error ?? null;
+
   useEffect(() => {
+    if (!tokenId) return;
     const channel = supabase
       .channel(`ot-chat-${tokenId}`)
       .on(
@@ -130,8 +150,9 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
   }, [tokenId, qc]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (!mounted || messages.length === 0) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages.length, mounted]);
 
   async function send(payload: {
     kind: ChatKind;
@@ -142,21 +163,21 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
     if (!text && !payload.media_url) return;
     setBusy(true);
     try {
-      const { error } = await supabase.from("ot_token_chat_messages").insert({
+      const { error: insertErr } = await supabase.from("ot_token_chat_messages").insert({
         token_id: tokenId,
         user_id: userId,
         kind: payload.kind,
         body: text || payload.kind,
         media_url: payload.media_url ?? null,
       });
-      if (error) throw error;
+      if (insertErr) throw insertErr;
       setBody("");
       setGifUrl("");
       setPanel("none");
       await qc.invalidateQueries({ queryKey: ["ot-live-chat", tokenId] });
     } catch (err) {
-      const msg = (err as Error).message || "Could not send";
-      if (/relation|ot_token_chat_messages|schema cache/i.test(msg)) {
+      const msg = errMessage(err) || "Could not send";
+      if (isMissingChatTable(msg)) {
         toast.error("Live chat needs a DB migration — run ot_token_chat_messages on Supabase");
       } else {
         toast.error(msg);
@@ -165,6 +186,8 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
       setBusy(false);
     }
   }
+
+  const missingTable = Boolean(loadError && isMissingChatTable(loadError));
 
   return (
     <div className="flex h-[min(28rem,70vh)] flex-col overflow-hidden rounded-2xl border border-border/50 bg-muted/20">
@@ -182,6 +205,12 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading chat…</p>
+        ) : missingTable ? (
+          <p className="text-sm text-muted-foreground">
+            Chat is unavailable until the live-chat migration is applied.
+          </p>
+        ) : loadError ? (
+          <p className="text-sm text-muted-foreground">Could not load chat. Try again later.</p>
         ) : messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Be first to pump — send a message, sticker, or GIF.
@@ -205,7 +234,7 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
                   >
                     {m.profile?.username || m.profile?.display_name || "Trader"}
                   </Link>
-                  <span>{timeAgo(m.created_at)}</span>
+                  <span suppressHydrationWarning>{mounted ? timeAgo(m.created_at) : ""}</span>
                 </div>
                 {m.kind === "emoji" || m.kind === "sticker" ? (
                   <p className="text-3xl leading-none">{m.body}</p>
@@ -217,7 +246,7 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
                     <img
                       src={m.media_url}
                       alt=""
-                      className="max-h-40 max-w-[220px] rounded-xl object-cover"
+                      className="max-h-40 max-w-55 rounded-xl object-cover"
                       loading="lazy"
                     />
                   </div>
@@ -274,9 +303,7 @@ export function TokenLiveChat({ tokenId, userId }: { tokenId: string; userId: st
               size="sm"
               className="h-9 rounded-xl"
               disabled={busy || !/^https?:\/\//i.test(gifUrl.trim())}
-              onClick={() =>
-                void send({ kind: "gif", body: "GIF", media_url: gifUrl.trim() })
-              }
+              onClick={() => void send({ kind: "gif", body: "GIF", media_url: gifUrl.trim() })}
             >
               Send
             </Button>

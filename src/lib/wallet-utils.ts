@@ -75,10 +75,19 @@ export function formatNumber(
   }).format(v);
 }
 
+/** Phantom-style % change: +/− sign, grouping for large moves (e.g. +1,131%). */
 export function formatPct(n: number | string | null | undefined): string {
-  const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
-  const sign = v > 0 ? "+" : "";
-  return `${sign}${v.toFixed(2)}%`;
+  const v = typeof n === "string" ? parseFloat(n) : Number(n ?? 0);
+  if (!Number.isFinite(v)) return "0.00%";
+  const abs = Math.abs(v);
+  const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+  const body = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(abs);
+  if (v > 0) return `+${body}%`;
+  if (v < 0) return `-${body}%`;
+  return `${body}%`;
 }
 
 export function timeAgo(date: string | Date | null | undefined): string {

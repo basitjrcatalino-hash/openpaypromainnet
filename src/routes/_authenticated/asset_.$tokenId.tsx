@@ -35,6 +35,7 @@ import {
   shortAddress,
 } from "@/lib/wallet-utils";
 import { OPENPAY_NETWORK_BADGE_URL, OUSD_LOGO_URL } from "@/lib/token-logos";
+import { websiteHref } from "@/lib/opentoken/social";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   head: ({ params }) => ({
@@ -367,11 +368,11 @@ function PhantomAssetDetail() {
               {aboutOpen ? "Show Less" : "Show More"}
             </button>
           )}
-          {meta.website && (
+          {meta.website && websiteHref(meta.website) && (
             <a
-              href={meta.website}
+              href={websiteHref(meta.website)!}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent"
             >
               <Globe className="h-4 w-4" /> Website

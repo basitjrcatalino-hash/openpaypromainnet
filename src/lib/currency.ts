@@ -49,6 +49,38 @@ export function formatCurrency(
   }
 }
 
+/**
+ * Phantom-style unit price: extra digits for sub-cent tokens, ellipsis when truncated.
+ */
+export function formatTokenPrice(
+  usd: number,
+  code: CurrencyCode = "USD",
+  opts: { maxLen?: number } = {},
+): string {
+  const c = CURRENCIES.find((x) => x.code === code) ?? CURRENCIES[0];
+  const value = Number(usd || 0) * c.rate;
+  if (!Number.isFinite(value) || value === 0) return `${c.symbol}0.00`;
+
+  const abs = Math.abs(value);
+  let maxFrac = 2;
+  if (abs < 0.000001) maxFrac = 10;
+  else if (abs < 0.0001) maxFrac = 8;
+  else if (abs < 0.01) maxFrac = 6;
+  else if (abs < 1) maxFrac = 5;
+  else maxFrac = 2;
+
+  const body = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: abs >= 1 ? 2 : Math.min(2, maxFrac),
+    maximumFractionDigits: maxFrac,
+    useGrouping: abs >= 1_000,
+  }).format(value);
+
+  const full = `${c.symbol}${body}`;
+  const maxLen = opts.maxLen ?? 10;
+  if (full.length > maxLen) return `${full.slice(0, maxLen - 1)}…`;
+  return full;
+}
+
 export function useCurrency() {
   const [code, setCode] = useState<CurrencyCode>("USD");
   useEffect(() => {

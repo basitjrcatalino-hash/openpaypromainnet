@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { formatNumber, formatPct, generateAddress, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import { formatCurrency, useCurrency } from "@/lib/currency";
+import { formatCurrency, formatTokenPrice, useCurrency } from "@/lib/currency";
 import {
   Dialog,
   DialogContent,
@@ -496,8 +496,8 @@ function Dashboard() {
                             Earn
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {formatCurrency(1, currency)} ·{" "}
+          <div className="text-xs text-muted-foreground tabular-nums">
+                          {formatTokenPrice(1, currency)}{" "}
                           <span className="text-success">0.00%</span>
                         </div>
                       </div>
@@ -548,7 +548,7 @@ function Dashboard() {
                         <div className="min-w-0">
                           <div className="truncate text-[15px] font-semibold">{h.tokens?.name}</div>
                           <div className="text-xs text-muted-foreground tabular-nums">
-                            {formatCurrency(Number(h.tokens?.price_usd ?? 0), currency)} ·{" "}
+                            {formatTokenPrice(Number(h.tokens?.price_usd ?? 0), currency)}{" "}
                             <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>
                               {formatPct(pct)}
                             </span>

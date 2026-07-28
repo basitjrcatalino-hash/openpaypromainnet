@@ -27,16 +27,27 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(readStoredTheme);
+  // SSR + first client paint always "dark" so React HTML matches. The head script
+  // already applied the real theme to the DOM before paint; we sync state after mount.
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    const stored = readStoredTheme();
+    setThemeState(stored);
+    applyTheme(stored);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     applyTheme(theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {
       /* ignore */
     }
-  }, [theme]);
+  }, [theme, hydrated]);
 
   const value: ThemeCtx = {
     theme,

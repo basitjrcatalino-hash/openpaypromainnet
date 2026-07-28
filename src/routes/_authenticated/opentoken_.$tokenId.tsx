@@ -42,6 +42,12 @@ import { cn } from "@/lib/utils";
 import { reportOpenToken } from "@/lib/opentoken.functions";
 import { isOpenTokenGraduated, resolveGraduationTarget } from "@/lib/opentoken/bonding-curve";
 import {
+  discordHref,
+  telegramHref,
+  twitterHref,
+  websiteHref,
+} from "@/lib/opentoken/social";
+import {
   CommentThread,
   PhantomSparkline,
   TerminalChart,
@@ -51,6 +57,7 @@ import {
   type PhantomPeriod,
   type TerminalPeriod,
 } from "@/components/opentoken";
+import { TokenTradeBar, TokenTradeSheet } from "@/components/opentoken/TokenTradeBar";
 
 export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId")({
   head: () => ({ meta: [{ title: "Token — OpenToken" }] }),
@@ -289,7 +296,7 @@ function OpenTokenDetail() {
     (token.creator_id ? shortAddress(token.creator_id, 4, 4) : "Unknown");
 
   return (
-    <div className="ot-phantom mx-auto max-w-7xl animate-page-in pb-28 pt-1 md:px-2">
+    <div className="ot-phantom mx-auto max-w-7xl animate-page-in pb-32 pt-1 md:px-2 lg:pb-8">
       {/* Top bar */}
       <div className="mb-4 flex items-center gap-2">
         <Button
@@ -337,7 +344,7 @@ function OpenTokenDetail() {
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
           {/* Hero */}
           <div className="text-center">
@@ -546,9 +553,9 @@ function OpenTokenDetail() {
           </section>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
-          <div className="hidden rounded-3xl bg-card p-4 xl:block">
+        {/* Sidebar — desktop/tablet trade panel (replaces floating Buy bar) */}
+        <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <div className="hidden rounded-3xl bg-card p-4 lg:block">
             <TradePanel
               token={token}
               walletId={wallet?.id}
@@ -669,26 +676,40 @@ function OpenTokenDetail() {
                 {formatNumber(holding ?? 0, 4)} ${token.symbol}
               </DetailRow>
               <div className="flex flex-wrap gap-2 pt-1">
-                {token.website && (
-                  <a
-                    href={token.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-primary"
-                  >
-                    Website <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                {token.twitter && (
-                  <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-                    X · {token.twitter}
-                  </span>
-                )}
-                {token.telegram && (
-                  <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-                    TG · {token.telegram}
-                  </span>
-                )}
+                {[
+                  {
+                    key: "website",
+                    label: "Website",
+                    href: websiteHref(token.website),
+                  },
+                  {
+                    key: "x",
+                    label: "X",
+                    href: twitterHref(token.twitter),
+                  },
+                  {
+                    key: "telegram",
+                    label: "Telegram",
+                    href: telegramHref(token.telegram),
+                  },
+                  {
+                    key: "discord",
+                    label: "Discord",
+                    href: discordHref(token.discord),
+                  },
+                ]
+                  .filter((s) => s.href)
+                  .map((s) => (
+                    <a
+                      key={s.key}
+                      href={s.href!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-primary press"
+                    >
+                      {s.label} <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ))}
               </div>
             </div>
           </div>
@@ -729,43 +750,23 @@ function OpenTokenDetail() {
         </div>
       </div>
 
-      {/* Mobile trade bar */}
-      <div className="ph-trade-bar border-t border-border/60 bg-background/90 px-4 py-3 backdrop-blur-xl xl:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-bold tabular-nums">
-              {formatOUSD(price, { price: true })}
-            </div>
-            <div className={cn("text-xs font-semibold", up ? "text-emerald-400" : "text-red-400")}>
-              {formatPct(change)}
-            </div>
-          </div>
-          <Button
-            className="h-11 min-w-28 rounded-full bg-primary px-8 font-bold text-primary-foreground"
-            onClick={() => setShowBuyPanel(true)}
-          >
-            Buy
-          </Button>
-        </div>
-      </div>
-
-      {showBuyPanel && (
-        <div className="fixed inset-0 z-60 flex flex-col justify-end xl:hidden">
-          <div className="absolute inset-0 bg-background/70" onClick={() => setShowBuyPanel(false)} />
-          <div className="relative z-10 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-3">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/40" />
-            <TradePanel
-              token={token}
-              walletId={wallet?.id}
-              userId={user.id}
-              ousdBalance={Number(wallet?.ousd_balance ?? 0)}
-              tokenBalance={holding ?? 0}
-              onClose={() => setShowBuyPanel(false)}
-              returnPath={`/opentoken/${tokenId}`}
-            />
-          </div>
-        </div>
-      )}
+      {/* Mobile trade bar + sheet (portaled — never floats mid-page) */}
+      <TokenTradeBar
+        price={price}
+        change={change}
+        onBuy={() => setShowBuyPanel(true)}
+      />
+      <TokenTradeSheet open={showBuyPanel} onClose={() => setShowBuyPanel(false)}>
+        <TradePanel
+          token={token}
+          walletId={wallet?.id}
+          userId={user.id}
+          ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+          tokenBalance={holding ?? 0}
+          onClose={() => setShowBuyPanel(false)}
+          returnPath={`/opentoken/${tokenId}`}
+        />
+      </TokenTradeSheet>
 
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent className="rounded-3xl border-border bg-card">

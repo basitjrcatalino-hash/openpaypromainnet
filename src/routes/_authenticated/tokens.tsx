@@ -8,9 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { OusdIcon } from "@/components/ousd-icon";
-import { formatCurrency, useCurrency, type CurrencyCode } from "@/lib/currency";
-import { formatPct } from "@/lib/wallet-utils";
-import { cn } from "@/lib/utils";
+import { useCurrency, type CurrencyCode } from "@/lib/currency";
+import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
 
 export const Route = createFileRoute("/_authenticated/tokens")({
   head: () => ({ meta: [{ title: "Tokens — OpenPay Pro" }] }),
@@ -94,12 +93,7 @@ function TokensPage() {
                   <div className="text-xs text-muted-foreground">OUSD · Stablecoin</div>
                 </div>
               </div>
-              <div className="shrink-0 text-right">
-                <div className="text-[15px] font-semibold tabular-nums">
-                  {formatCurrency(1, currency)}
-                </div>
-                <div className="text-xs font-semibold text-emerald-400 tabular-nums">0.00%</div>
-              </div>
+              <TokenPriceRate price={1} change={0} currency={currency} />
             </Link>
           </li>
         )}
@@ -160,19 +154,7 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
           <div className="truncate text-[15px] font-semibold">{t.name}</div>
           <div className="text-xs text-muted-foreground">{t.symbol}</div>
         </div>
-        <div className="shrink-0 text-right">
-          <div className="text-[15px] font-semibold tabular-nums">
-            {price > 0 ? formatCurrency(price, currency) : "—"}
-          </div>
-          <div
-            className={cn(
-              "text-xs font-semibold tabular-nums",
-              change >= 0 ? "text-emerald-400" : "text-red-400",
-            )}
-          >
-            {formatPct(change)}
-          </div>
-        </div>
+        <TokenPriceRate price={price} change={change} currency={currency} />
       </Link>
     </li>
   );

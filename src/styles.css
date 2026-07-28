@@ -452,12 +452,28 @@
   max-width: 32rem;
 }
 
-/* Buy/trade CTA strip above tabbar (token detail). */
+/* Buy/trade CTA strip — mobile only; sits just above the tabbar.
+   Portaled to body (see TokenTradeBar). On md+ the tabbar is hidden, so
+   bottom collapses to the safe-area edge. */
 @utility ph-trade-bar {
   position: fixed;
   inset-inline: 0;
-  bottom: calc(var(--ph-tabbar-content, 3.75rem) + max(0.625rem, env(safe-area-inset-bottom, 0px)));
   z-index: 45;
+  bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .ph-trade-bar {
+    bottom: calc(
+      var(--ph-tabbar-content, 3.75rem) + max(0.5rem, env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  /* When chrome (tabbar) is scrolled away, dock flush to the screen bottom. */
+  .ph-trade-bar[data-chrome="hidden"] {
+    bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @utility safe-pb {

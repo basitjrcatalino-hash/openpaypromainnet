@@ -16,8 +16,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
-import { formatCurrency, useCurrency, type CurrencyCode } from "@/lib/currency";
-import { formatPct } from "@/lib/wallet-utils";
+import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
+import { useCurrency, type CurrencyCode } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 
@@ -352,19 +352,7 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
           <div className="truncate text-[15px] font-semibold">{t.name}</div>
           <div className="text-xs text-muted-foreground">{t.symbol}</div>
         </div>
-        <div className="shrink-0 text-right">
-          <div className="text-[15px] font-semibold tabular-nums">
-            {price > 0 ? formatCurrency(price, currency) : "—"}
-          </div>
-          <div
-            className={cn(
-              "text-xs font-semibold tabular-nums",
-              change >= 0 ? "text-emerald-400" : "text-red-400",
-            )}
-          >
-            {formatPct(change)}
-          </div>
-        </div>
+        <TokenPriceRate price={price} change={change} currency={currency} />
       </Link>
     </li>
   );
@@ -380,9 +368,9 @@ function TokenSkeleton({ count }: { count: number }) {
             <div className="h-3.5 w-24 rounded bg-muted" />
             <div className="h-3 w-12 rounded bg-muted" />
           </div>
-          <div className="space-y-1.5 text-right">
-            <div className="ml-auto h-3.5 w-16 rounded bg-muted" />
-            <div className="ml-auto h-3 w-12 rounded bg-muted" />
+          <div className="flex items-center gap-2">
+            <div className="h-3.5 w-14 rounded bg-muted" />
+            <div className="h-3.5 w-12 rounded bg-muted" />
           </div>
         </div>
       ))}

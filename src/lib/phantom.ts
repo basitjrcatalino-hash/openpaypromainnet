@@ -6,11 +6,18 @@ export const PHANTOM_APP_ID =
     String(import.meta.env?.VITE_PHANTOM_APP_ID ?? "").trim()) ||
   "42ba7350-53ef-4b1e-aba6-43f7905b094e";
 
-/** Must match an allowlisted Redirect URL in Phantom Portal. */
-export const PHANTOM_REDIRECT_URL =
+/**
+ * Optional explicit redirect override (must be allowlisted in Phantom Portal).
+ * Prefer leaving unset so the SDK uses the current origin + /auth/callback.
+ */
+export const PHANTOM_REDIRECT_URL_ENV =
   (typeof import.meta !== "undefined" &&
     String(import.meta.env?.VITE_PHANTOM_REDIRECT_URL ?? "").trim()) ||
-  "https://openpaypro.space/auth/callback";
+  "";
+
+/** @deprecated Use getPhantomRedirectUrl() — kept for docs/fallback. */
+export const PHANTOM_REDIRECT_URL =
+  PHANTOM_REDIRECT_URL_ENV || "https://openpaypro.space/auth/callback";
 
 export const PHANTOM_APP_NAME = "OpenPay Pro";
 
@@ -25,13 +32,35 @@ export const PHANTOM_ADDRESS_TYPES = [
   AddressType.sui,
 ] as const;
 
+/**
+ * Redirect after Google/Apple OAuth. Must exactly match a Phantom Portal Redirect URL
+ * and the Allowed Origin must include this page's origin.
+ * Docs: https://docs.phantom.com/phantom-portal/configure-urls
+ */
+export function getPhantomRedirectUrl(): string {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}/auth/callback`;
+  }
+  return PHANTOM_REDIRECT_URL;
+}
+
 export function getPhantomProviderConfig() {
   return {
     providers: [...PHANTOM_PROVIDERS],
     appId: PHANTOM_APP_ID,
     addressTypes: [...PHANTOM_ADDRESS_TYPES],
     authOptions: {
-      redirectUrl: PHANTOM_REDIRECT_URL,
+      redirectUrl: getPhantomRedirectUrl(),
     },
   };
 }
+
+/** Origins / redirects to allowlist in Phantom Portal for this project. */
+export const PHANTOM_PORTAL_ALLOWLIST_HINTS = [
+  "https://openpaypro.space",
+  "https://openpaypro.space/auth/callback",
+  "https://openpaypromainnet.lovable.app",
+  "https://openpaypromainnet.lovable.app/auth/callback",
+  "https://openpaypromainnet.vercel.app",
+  "https://openpaypromainnet.vercel.app/auth/callback",
+] as const;

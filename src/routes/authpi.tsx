@@ -2,14 +2,21 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { AddressType, useAccounts, useModal, usePhantom } from "@phantom/react-sdk";
+import {
+  AddressType,
+  useAccounts,
+  useConnect,
+  useIsExtensionInstalled,
+  useModal,
+  usePhantom,
+} from "@phantom/react-sdk";
 import {
   OPENPAY_BRAND_BLUE,
   OPENPAY_LOGO_WHITE,
   startOpenPaySignIn,
 } from "@/lib/openpay-auth";
 import { startSolanaSignIn } from "@/lib/solana-auth";
-import { PHANTOM_APP_ICON } from "@/lib/phantom";
+import { getPhantomRedirectUrl, PHANTOM_APP_ICON } from "@/lib/phantom";
 import { usePhantomClientReady } from "@/components/phantom-provider";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -50,8 +57,19 @@ function AuthPiPage() {
   return <AuthPiContent />;
 }
 
+function phantomErrorMessage(err: unknown): string {
+  const message = (err as Error)?.message || String(err || "Phantom connect failed");
+  if (/failed to fetch|networkerror|load failed|cors/i.test(message)) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "this site";
+    return `Phantom blocked this origin. In Phantom Portal → Set Up, add Allowed Origin "${origin}" and Redirect URL "${getPhantomRedirectUrl()}".`;
+  }
+  return message;
+}
+
 function AuthPiContent() {
   const { open } = useModal();
+  const { connect, isConnecting } = useConnect();
+  const { isInstalled: extensionInstalled } = useIsExtensionInstalled();
   const { isConnected, isLoading: phantomLoading, addresses } = usePhantom();
   const accounts = useAccounts();
   const [openPayBusy, setOpenPayBusy] = useState(false);
@@ -90,7 +108,20 @@ function AuthPiContent() {
     };
   }, [isConnected, solanaAddress, phantomBusy]);
 
-  const busy = openPayBusy || phantomBusy || phantomLoading;
+  const busy = openPayBusy || phantomBusy || phantomLoading || isConnecting;
+
+  async function connectPhantom() {
+    try {
+      // Extension path avoids Google/Apple OAuth + Portal redirect requirements.
+      if (extensionInstalled) {
+        await connect({ provider: "injected" });
+        return;
+      }
+      open();
+    } catch (err) {
+      toast.error(phantomErrorMessage(err));
+    }
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
@@ -139,17 +170,11 @@ function AuthPiContent() {
 
             <Button
               type="button"
-              onClick={() => {
-                try {
-                  open();
-                } catch (err) {
-                  toast.error((err as Error).message || "Could not open Phantom Connect");
-                }
-              }}
+              onClick={() => void connectPhantom()}
               disabled={busy}
               className="h-12 w-full rounded-xl bg-[#AB9FF2] text-base font-semibold text-[#1a1330] hover:opacity-95"
             >
-              {phantomBusy || (isConnected && phantomLoading) ? (
+              {phantomBusy || isConnecting || (isConnected && phantomLoading) ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <span className="inline-flex items-center gap-2.5">
@@ -160,10 +185,27 @@ function AuthPiContent() {
                     alt=""
                     className="rounded-full"
                   />
-                  Connect Phantom
+                  {extensionInstalled ? "Connect Phantom extension" : "Connect Phantom"}
                 </span>
               )}
             </Button>
+
+            {!extensionInstalled ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  try {
+                    open();
+                  } catch (err) {
+                    toast.error(phantomErrorMessage(err));
+                  }
+                }}
+                className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-60"
+              >
+                Or continue with Google / Apple
+              </button>
+            ) : null}
 
             {isConnected && solanaAddress && phantomBusy ? (
               <p className="text-center text-xs text-muted-foreground">

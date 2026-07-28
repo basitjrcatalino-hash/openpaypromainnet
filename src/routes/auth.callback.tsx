@@ -5,7 +5,9 @@ import { usePhantomClientReady } from "@/components/phantom-provider";
 
 /**
  * Phantom Connect OAuth redirect target.
- * Must match Phantom Portal Redirect URLs: https://openpaypro.space/auth/callback
+ * redirectUrl is set dynamically to `${origin}/auth/callback` — allowlist that
+ * exact URL (and Allowed Origin) in Phantom Portal for every deploy host.
+ * Docs: https://docs.phantom.com/phantom-portal/configure-urls
  */
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,

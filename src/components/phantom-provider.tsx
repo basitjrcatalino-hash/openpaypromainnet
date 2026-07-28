@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, type ReactNode, useEffect, useState } from "react";
+import { createContext, useContext, type ReactNode, useEffect, useMemo, useState } from "react";
 import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
 import {
   getPhantomProviderConfig,
@@ -16,6 +16,8 @@ export function usePhantomClientReady() {
 
 /**
  * Client-only Phantom Connect provider (avoids SSR/window issues).
+ * redirectUrl is derived from window.location.origin so it matches the
+ * environment you're actually running (Lovable / Vercel / local / custom domain).
  */
 export function AppPhantomProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -24,7 +26,9 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  if (!ready) {
+  const config = useMemo(() => (ready ? getPhantomProviderConfig() : null), [ready]);
+
+  if (!ready || !config) {
     return (
       <PhantomClientReadyContext.Provider value={false}>{children}</PhantomClientReadyContext.Provider>
     );
@@ -32,7 +36,7 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
 
   return (
     <PhantomProvider
-      config={getPhantomProviderConfig()}
+      config={config}
       theme={darkTheme}
       appIcon={PHANTOM_APP_ICON}
       appName={PHANTOM_APP_NAME}

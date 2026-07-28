@@ -78,6 +78,7 @@ export default defineConfig({
         "react-dom",
         "react-dom/client",
         "@phantom/react-sdk",
+        "@walletconnect/pay",
         "buffer",
         "base64-js",
         "ieee754",

@@ -30,6 +30,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
@@ -166,6 +167,11 @@ const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
 const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
   id: '/topup',
   path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
+  id: '/wc-pay',
+  path: '/wc-pay',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
@@ -368,6 +374,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -423,6 +430,7 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
+  '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -537,6 +546,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
     | '/docs/openpay'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
     | '/docs/openpay'
@@ -648,6 +659,7 @@ export interface FileRouteTypes {
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
+    | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
     | '/docs/openpay'
@@ -859,6 +871,13 @@ declare module '@tanstack/react-router' {
       path: '/topup'
       fullPath: '/topup'
       preLoaderRoute: typeof AuthenticatedTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wc-pay': {
+      id: '/_authenticated/wc-pay'
+      path: '/wc-pay'
+      fullPath: '/wc-pay'
+      preLoaderRoute: typeof AuthenticatedWcPayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/admin/testnet-progress': {
@@ -1132,6 +1151,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
+  AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
   AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
@@ -1157,6 +1177,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
+  AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
   AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,

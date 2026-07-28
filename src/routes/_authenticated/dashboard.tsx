@@ -18,6 +18,7 @@ import {
   Shield,
   X,
   Wallet,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -74,6 +75,7 @@ const PRIMARY_ACTIONS = [
 const MORE_ACTIONS = [
   { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
+  { label: "WC Pay", icon: CreditCard, to: "/wc-pay" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
 ] as const;
@@ -658,7 +660,7 @@ function Dashboard() {
             <DialogTitle>More</DialogTitle>
             <DialogDescription>Additional wallet actions</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-4 gap-4 py-2">
+          <div className="grid grid-cols-4 gap-4 py-2 sm:grid-cols-5">
             {MORE_ACTIONS.map((a) => (
               <ActionCircle
                 key={a.label}

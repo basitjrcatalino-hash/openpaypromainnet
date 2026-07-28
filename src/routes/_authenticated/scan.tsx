@@ -4,6 +4,7 @@ import { ArrowLeft, ImageIcon, Flashlight, FlashlightOff, Loader2 } from "lucide
 import { toast } from "sonner";
 
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
+import { isWalletConnectPayLink, normalizeWalletConnectPayLink } from "@/lib/walletconnect-pay";
 import { scanQrFromFile, stopQrInstance, useQrCamera } from "@/lib/qr-camera";
 
 export const Route = createFileRoute("/_authenticated/scan")({
@@ -65,6 +66,16 @@ function ScanPage() {
   finishRef.current = async (text: string) => {
     await stopQrInstance(scannerRef.current);
     scannerRef.current = null;
+
+    // WalletConnect Pay merchant links → dedicated pay flow
+    if (isWalletConnectPayLink(text)) {
+      if (alive.current) toast.success("WalletConnect Pay link scanned");
+      void navigate({
+        to: "/wc-pay",
+        search: { link: normalizeWalletConnectPayLink(text) },
+      });
+      return;
+    }
 
     const parsed = parsePaymentQr(text);
     if (!parsed.to) {
@@ -170,7 +181,7 @@ function ScanPage() {
 
       <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4">
         <p className="mb-6 text-center text-sm text-white/70">
-          Scan OpenPay Pro wallet, OpenPay OP / @username, or pay link
+          Scan OpenPay Pro wallet, OpenPay OP / @username, WalletConnect Pay, or pay link
         </p>
         <div className="mx-auto flex max-w-xs items-center justify-center gap-8">
           <button

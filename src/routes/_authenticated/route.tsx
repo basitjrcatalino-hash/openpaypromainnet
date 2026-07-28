@@ -60,7 +60,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Wallet", icon: Wallet },
   { to: "/opentoken/create", label: "Create", icon: Sparkles },
-  { to: "/opentoken", label: "OpenToken", icon: Compass },
+  { to: "/opentoken", label: "Home", icon: Compass },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -154,9 +154,9 @@ function AuthenticatedLayout() {
         {!hideChrome && (
           <aside className="sticky top-0 hidden h-screen w-80 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 md:flex md:flex-col">
             <SidebarInner
-              wallets={wallets as any[]}
-              activeWallet={activeWallet as any}
-              profile={profile as any}
+              wallets={wallets}
+              activeWallet={activeWallet}
+              profile={profile}
               pathname={pathname}
               onSwitchWallet={switchWallet}
               unread={txNotes.unread}
@@ -171,11 +171,11 @@ function AuthenticatedLayout() {
               className="absolute inset-0 bg-background/70 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="relative flex h-full w-[300px] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
+            <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
               <SidebarInner
-                wallets={wallets as any[]}
-                activeWallet={activeWallet as any}
-                profile={profile as any}
+                wallets={wallets}
+                activeWallet={activeWallet}
+                profile={profile}
                 pathname={pathname}
                 onClose={() => setMobileOpen(false)}
                 onSwitchWallet={switchWallet}

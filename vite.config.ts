@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { Plugin } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
@@ -49,19 +50,38 @@ mirrorVite("VITE_SUPABASE_PROJECT_ID", [
 
 const onVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
+const eventsShim = path.resolve(rootDir, "src/shims/events.ts");
+const safeEventEmitterShim = path.resolve(rootDir, "src/shims/safe-event-emitter.ts");
+
 /**
- * MetaMask Embedded Wallets (Web3Auth) — CJS packages that break under Vite ESM
- * when served raw from node_modules. Aliases point at pure-ESM shims.
+ * Force Web3Auth SafeEventEmitter + events through pure-ESM shims.
+ * Relative imports like `./safeEventEmitter.js` ignore package-name aliases.
  * Docs: https://docs.metamask.io/embedded-wallets/authentication
  */
-const web3authCjsShims = {
-  "events-package": path.resolve(rootDir, "node_modules/events/events.js"),
-  events: path.resolve(rootDir, "src/shims/events.ts"),
-  "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
-  loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
-  deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
-  "json-stable-stringify": path.resolve(rootDir, "src/shims/json-stable-stringify.ts"),
-} as const;
+function web3authEventsShimPlugin(): Plugin {
+  return {
+    name: "web3auth-events-shim",
+    enforce: "pre",
+    resolveId(id, importer) {
+      if (id === "events" || id === "node:events") return eventsShim;
+
+      const base = id.split("?")[0] || id;
+      const looksLikeSafeEE =
+        /safeEventEmitter/i.test(base) || /safe-event-emitter/i.test(base);
+      if (!looksLikeSafeEE) return null;
+
+      if (
+        !importer ||
+        importer.includes("@web3auth") ||
+        importer.includes("safe-event-emitter") ||
+        id.includes("@web3auth")
+      ) {
+        return safeEventEmitterShim;
+      }
+      return null;
+    },
+  };
+}
 
 export default defineConfig({
   // Pin Nitro to Vercel when building there (Lovable default is Cloudflare).
@@ -72,17 +92,21 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [web3authEventsShimPlugin()],
     define: {
       global: "globalThis",
     },
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
-        // Trailing slash picks package entry reliably; hard path to index.js often
-        // yields Vite `{ default: undefined }` and breaks Phantom Buffer setup.
         buffer: path.resolve(rootDir, "node_modules/buffer/"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
-        ...web3authCjsShims,
+        events: eventsShim,
+        "node:events": eventsShim,
+        loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
+        "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
+        deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
+        "json-stable-stringify": path.resolve(rootDir, "src/shims/json-stable-stringify.ts"),
       },
       dedupe: [
         "react",
@@ -95,8 +119,8 @@ export default defineConfig({
       ],
     },
     optimizeDeps: {
-      // Prebundle Web3Auth so transitive CJS deps get ESM interop (do NOT exclude —
-      // excluding forces raw node_modules imports and breaks default exports).
+      // Exclude Web3Auth so SafeEventEmitter/events shims always apply.
+      // Prebundling Web3Auth re-introduces broken CJS `EventEmitter` interop.
       include: [
         "react",
         "react/jsx-runtime",
@@ -106,22 +130,22 @@ export default defineConfig({
         "@phantom/react-sdk",
         "@walletconnect/pay",
         "@moonpay/moonpay-react",
-        "@web3auth/modal",
-        "@web3auth/modal/react",
-        "@web3auth/auth",
-        "@web3auth/no-modal",
-        "@toruslabs/http-helpers",
         "buffer",
         "buffer/",
         "base64-js",
         "ieee754",
         "events",
-        "events-package",
         "loglevel",
         "loglevel-package",
         "deepmerge",
         "json-stable-stringify",
         "process",
+      ],
+      exclude: [
+        "@web3auth/modal",
+        "@web3auth/modal/react",
+        "@web3auth/auth",
+        "@web3auth/no-modal",
       ],
       esbuildOptions: {
         define: {
@@ -130,11 +154,9 @@ export default defineConfig({
       },
     },
     ssr: {
-      // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
       noExternal: [
         "events",
-        "events-package",
         "loglevel",
         "loglevel-package",
         "deepmerge",

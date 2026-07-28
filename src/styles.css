@@ -58,6 +58,7 @@
 
 :root {
   --radius: 1rem;
+  --ph-tabbar-content: 3.75rem;
 
   /* Phantom light: soft lavender on cool gray */
   --background: oklch(0.97 0.01 290);
@@ -213,9 +214,10 @@
   }
 }
 
+/* Opacity-only: transform would create a containing block and break position:fixed docks/tabbars. */
 @keyframes page-in {
-  from { opacity: 0.92; transform: translate3d(0, 4px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0.88; }
+  to   { opacity: 1; }
 }
 @utility animate-page-in {
   animation: page-in .12s ease-out both;
@@ -333,7 +335,8 @@
   border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Floor padding so labels aren't clipped when safe-area is 0 (desktop / iframe). */
+  padding-bottom: max(0.625rem, env(safe-area-inset-bottom, 0px));
 }
 
 @utility ph-header {
@@ -355,8 +358,42 @@
   background: var(--card);
 }
 
+/* Floating search + mint row sits just above the tabbar. */
+@utility ph-dock {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 45;
+  pointer-events: none;
+  padding-bottom: calc(
+    var(--ph-tabbar-content, 3.75rem) + max(0.625rem, env(safe-area-inset-bottom, 0px)) + 0.5rem
+  );
+}
+
+@utility ph-dock-inner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 0;
+  margin-inline: auto;
+  width: 100%;
+  max-width: 32rem;
+}
+
+/* Buy/trade CTA strip above tabbar (token detail). */
+@utility ph-trade-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--ph-tabbar-content, 3.75rem) + max(0.625rem, env(safe-area-inset-bottom, 0px)));
+  z-index: 45;
+}
+
 @utility safe-pb {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  /* Tabbar + floating dock clearance */
+  padding-bottom: calc(
+    var(--ph-tabbar-content, 3.75rem) + max(0.625rem, env(safe-area-inset-bottom, 0px)) + 4.25rem
+  );
 }
 
 @utility safe-pt {

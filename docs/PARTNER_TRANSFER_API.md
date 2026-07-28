@@ -6,6 +6,8 @@ For the full **Connect + Payments** guide for third-party apps, see
 [`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
 [`/docs/openpay`](https://openpaypromainnet.lovable.app/docs/openpay).
 
+**Partner API portal:** [https://openpy.space/partner-api](https://openpy.space/partner-api)  
+**Auth docs:** [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  
 **Base URL:** `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
 
 ## Authentication

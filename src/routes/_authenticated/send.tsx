@@ -170,7 +170,7 @@ function SendPage() {
       {
         key: "OUSD",
         kind: "OUSD",
-        name: "OpenPay OUSD",
+        name: "OpenUSD OUSD",
         symbol: "OUSD",
         balance: Number(wallet?.ousd_balance ?? 0),
         priceUsd: 1,

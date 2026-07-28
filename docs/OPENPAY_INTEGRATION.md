@@ -5,6 +5,8 @@ Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance
 | | |
 |---|---|
 | **OpenPay app** | [https://openpy.space](https://openpy.space) |
+| **Partner API portal** | [https://openpy.space/partner-api](https://openpy.space/partner-api) |
+| **Auth docs** | [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth) |
 | **Partner API** | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
 | **Live docs (this site)** | [/docs/openpay](/docs/openpay) |
 
@@ -12,14 +14,12 @@ Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance
 
 ## 1. Create a partner app
 
-1. Sign in to OpenPay → Developer / Partner apps.
-2. Create an app (name + your site URL).
-3. Copy:
-   - **client_id** — UUID (e.g. `e9248f5d-3971-4cbc-9032-9b678c9b71ae`)
-   - **API key** — `opk_live_…` (this is also your OAuth `client_secret`)
-4. Register **exact** redirect URIs (no trailing slash), e.g.:
+1. Open the [Partner API portal](https://openpy.space/partner-api) → **Apps & keys** → Register app.
+2. Copy the `opk_live_…` API key immediately (shown once). Save the **client_id** (UUID).
+3. Enter only your domain (e.g. `www.yourapp.com`) and click **Auto-fill & save**, or register **exact** redirect URIs (no trailing slash), e.g.:
    - `https://yourapp.com/openpay/callback`
    - `https://yourapp.com/openpay/connect/callback`
+   - Auto-fill also registers `/auth/openpay/callback` and `/openpay/connect/callback`
 
 Never expose `opk_live_…` in the browser. Use it only on your backend.
 
@@ -320,6 +320,8 @@ export async function createCharge({ amount, reference, success_url, cancel_url 
 
 ## Related
 
+- Partner API portal: [https://openpy.space/partner-api](https://openpy.space/partner-api)
+- Auth tutorial: [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)
 - OpenPay → OpenPay Pro transfers: [`OPENPAY_TO_PRO.md`](./OPENPAY_TO_PRO.md)
 - OpenPay Send feature prompt: [`OPENPAY_SEND_TO_PRO_PROMPT.md`](./OPENPAY_SEND_TO_PRO_PROMPT.md)
 - Partner Transfer API detail: [`PARTNER_TRANSFER_API.md`](./PARTNER_TRANSFER_API.md)

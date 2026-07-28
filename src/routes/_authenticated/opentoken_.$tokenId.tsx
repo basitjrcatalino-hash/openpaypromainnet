@@ -196,7 +196,7 @@ function OpenTokenDetail() {
   const progress = Math.max(4, Math.min(100, Math.round((reserve / gradTarget) * 100)));
 
   return (
-    <div className="ot-phantom mx-auto max-w-7xl pb-8 pt-2 md:px-2">
+    <div className="ot-phantom mx-auto max-w-7xl pb-28 pt-2 md:px-2">
       <div className="mb-4 flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-card px-4 py-2.5 text-center text-xs text-muted-foreground">
         <span>OpenToken launchpad · bonding curve trading</span>
         <Link
@@ -531,8 +531,8 @@ function OpenTokenDetail() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-14 z-50 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-xl xl:hidden">
-        <div className="flex items-center justify-between gap-4">
+      <div className="ph-trade-bar border-t border-border bg-background/95 px-4 py-3 backdrop-blur-xl xl:hidden">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
           <div className="text-xs text-muted-foreground">{formatOUSD(mcap, { compact: true })} market cap</div>
           <Button
             className="rounded-full bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90"
@@ -546,7 +546,7 @@ function OpenTokenDetail() {
       {showBuyPanel && (
         <div className="fixed inset-0 z-60 flex flex-col justify-end xl:hidden">
           <div className="absolute inset-0 bg-background/60" onClick={() => setShowBuyPanel(false)} />
-          <div className="relative z-10 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-8 pt-4 md:mx-auto md:max-w-2xl">
+          <div className="relative z-10 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-4 md:mx-auto md:max-w-2xl">
             <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-muted-foreground/40" />
             <TradePanel
               token={token}

@@ -3,8 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Plus,
-  Search,
   Wallet,
   Shield,
   BadgeCheck,
@@ -13,13 +11,12 @@ import {
   ArrowLeftRight,
   Compass,
   ChevronRight,
-  X,
   type LucideIcon,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { formatCurrency, useCurrency, type CurrencyCode } from "@/lib/currency";
 import { formatPct } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
@@ -127,7 +124,7 @@ function OpenTokenHome() {
     topTab === "home" ? null : topTab === "trade" ? trending : exploreList;
 
   return (
-    <div className="ot-phantom relative mx-auto w-full max-w-lg animate-page-in pb-28 md:max-w-2xl">
+    <div className="ot-phantom relative mx-auto w-full max-w-lg animate-page-in md:max-w-2xl">
       {/* Phantom-style pill header */}
       <div className="ph-header sticky top-0 z-30 -mx-4 px-3 pb-3 pt-2 md:mx-0 md:rounded-2xl">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -180,33 +177,6 @@ function OpenTokenHome() {
           </div>
         </div>
       </div>
-
-      {/* Inline search panel when FAB search opened on desktop / focus */}
-      {searchOpen && (
-        <div className="mb-4 flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search OpenPay"
-              autoFocus
-              className="h-11 rounded-full border-0 bg-muted pl-10 text-sm"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchOpen(false);
-              setQ("");
-            }}
-            className="grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground press"
-            aria-label="Close search"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
 
       {/* HOME tab — Phantom Explore Home */}
       {topTab === "home" && (
@@ -294,26 +264,13 @@ function OpenTokenHome() {
         </div>
       )}
 
-      {/* Phantom-style floating search + mint FAB */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:left-auto md:right-0 md:w-[min(100%,42rem)]">
-        <div className="pointer-events-auto flex items-center gap-3 px-4 pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] pt-2 md:pb-6">
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className="flex h-12 flex-1 items-center gap-2.5 rounded-full bg-muted/90 px-4 text-left text-sm text-muted-foreground shadow-lg backdrop-blur-xl press"
-          >
-            <Search className="h-4 w-4 shrink-0" />
-            <span className="truncate">{q || "Search OpenPay"}</span>
-          </button>
-          <Link
-            to="/opentoken/create"
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
-            aria-label="Mint / create coin"
-          >
-            <Plus className="h-6 w-6" strokeWidth={2.5} />
-          </Link>
-        </div>
-      </div>
+      {/* Floating search + mint — Home / Trade / Explore */}
+      <ExploreDock
+        query={q}
+        onQueryChange={setQ}
+        searchOpen={searchOpen}
+        onSearchOpenChange={setSearchOpen}
+      />
     </div>
   );
 }

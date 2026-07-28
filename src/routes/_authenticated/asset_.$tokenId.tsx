@@ -109,7 +109,7 @@ function PhantomAssetDetail() {
   const meta = useMemo(() => {
     if (isOusd) {
       return {
-        name: "OpenPay OUSD",
+        name: "OpenUSD OUSD",
         symbol: "OUSD",
         logo: OUSD_LOGO_URL,
         price: 1,

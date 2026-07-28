@@ -200,8 +200,8 @@ function AuthenticatedLayout() {
       </div>
 
       {!hideChrome && (
-        <nav className="ph-tabbar fixed inset-x-0 bottom-0 z-40 md:hidden">
-          <div className="mx-auto grid max-w-md grid-cols-5 px-1 pt-1.5">
+        <nav className="ph-tabbar fixed inset-x-0 bottom-0 z-50 md:hidden" aria-label="Primary">
+          <div className="mx-auto grid max-w-md grid-cols-5 items-center px-1" style={{ height: "var(--ph-tabbar-content)" }}>
             {NAV.map((item) => {
               const Icon = item.icon;
               const active = navActive(pathname, item.to);
@@ -211,7 +211,7 @@ function AuthenticatedLayout() {
                   to={item.to}
                   preload="intent"
                   className={cn(
-                    "flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold press",
+                    "flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold leading-none press",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
@@ -223,7 +223,7 @@ function AuthenticatedLayout() {
                   >
                     <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
                   </span>
-                  {item.label}
+                  <span className="px-0.5">{item.label}</span>
                 </Link>
               );
             })}

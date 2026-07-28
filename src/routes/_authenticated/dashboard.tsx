@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Send,
@@ -39,6 +39,7 @@ import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 import { fetchWalletActivity } from "@/lib/activity";
 import { ActionCircle } from "@/components/wallet/ActionCircle";
+import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 
@@ -83,6 +84,8 @@ function Dashboard() {
   const [switching, setSwitching] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [tab, setTab] = useState<"tokens" | "collectibles">("tokens");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [tokenQuery, setTokenQuery] = useState("");
   const [onboardDismissed, setOnboardDismissed] = useState(() => {
     try {
       return localStorage.getItem("openpay-onboard-dismissed") === "1";
@@ -188,6 +191,30 @@ function Dashboard() {
   const totalUsd = holdingsUsd + ousdBalance;
   const hasAssets = holdings.length > 0 || ousdBalance > 0;
   const assetCount = holdings.length + (ousdBalance > 0 ? 1 : 0);
+
+  const filteredHoldings = useMemo(() => {
+    const qq = tokenQuery.trim().toLowerCase();
+    if (!qq) return holdings;
+    return holdings.filter((h) => {
+      const name = h.tokens?.name?.toLowerCase() ?? "";
+      const symbol = h.tokens?.symbol?.toLowerCase() ?? "";
+      return name.includes(qq) || symbol.includes(qq);
+    });
+  }, [holdings, tokenQuery]);
+
+  const showOusdRow =
+    ousdBalance > 0 &&
+    (!tokenQuery.trim() ||
+      (() => {
+        const qq = tokenQuery.trim().toLowerCase();
+        return (
+          "openusd ousd".includes(qq) ||
+          "openpay ousd".includes(qq) ||
+          "ousd".includes(qq) ||
+          qq.includes("ousd") ||
+          qq.includes("openusd")
+        );
+      })());
 
   async function copyAddress() {
     if (!wallet?.address) return;
@@ -416,9 +443,11 @@ function Dashboard() {
                 </Link>
               </div>
             </div>
+          ) : !showOusdRow && filteredHoldings.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">No matching tokens</p>
           ) : (
             <ul>
-              {ousdBalance > 0 && (
+              {showOusdRow && (
                 <li>
                   <button
                     type="button"
@@ -431,7 +460,7 @@ function Dashboard() {
                       <OusdIcon className="h-11 w-11 shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 text-[15px] font-semibold">
-                          OpenPay OUSD
+                          OpenUSD OUSD
                           <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
                             Earn
                           </span>
@@ -458,7 +487,7 @@ function Dashboard() {
                   </button>
                 </li>
               )}
-              {holdings.map((h) => {
+              {filteredHoldings.map((h) => {
                 const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                 const pct = Number(h.tokens?.change_24h ?? 0);
                 const share = totalUsd > 0 ? (usd / totalUsd) * 100 : 0;
@@ -651,6 +680,17 @@ function Dashboard() {
           </Link>
         </DialogContent>
       </Dialog>
+
+      <ExploreDock
+        query={tokenQuery}
+        onQueryChange={setTokenQuery}
+        searchOpen={searchOpen}
+        onSearchOpenChange={(open) => {
+          setSearchOpen(open);
+          if (open) setTab("tokens");
+        }}
+        placeholder="Search tokens"
+      />
     </div>
   );
 }

@@ -1,21 +1,21 @@
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  RefreshCw,
-  Sparkles,
-  ShoppingCart,
+  ArrowLeftRight,
+  Coins,
   Copy,
   Check,
   ExternalLink,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { Tables } from "@/integrations/supabase/types";
 import type { ActivityItem } from "@/lib/activity";
 import { supabase } from "@/integrations/supabase/client";
-import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
+import { formatNumber, formatUSD, shortAddress, timeAgo } from "@/lib/wallet-utils";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -32,91 +32,187 @@ export type TxRow = Tables<"transactions"> | ActivityItem;
 
 export function txIcon(type: string) {
   if (type === "receive" || type === "buy") return ArrowDownLeft;
-  if (type === "swap") return RefreshCw;
-  if (type === "mint") return Sparkles;
-  if (type === "sell") return ShoppingCart;
+  if (type === "swap") return ArrowLeftRight;
+  if (type === "mint") return Coins;
+  if (type === "sell") return ArrowUpRight;
   return ArrowUpRight;
 }
 
-function activityTitle(tx: TxRow) {
-  const item = tx as ActivityItem;
-  if (item.source === "opentoken") {
-    return `${tx.type === "sell" ? "Sell" : "Buy"} ${tx.token_symbol ?? ""}`;
-  }
-  if (tx.type === "swap") {
-    return `Swap ${tx.token_symbol ?? ""}`;
-  }
-  return `${tx.type} ${tx.token_symbol ?? ""}`;
+function isIncoming(type: string) {
+  return type === "receive" || type === "buy" || type === "reward";
 }
 
+function isOpenDexTx(tx: TxRow) {
+  return (
+    (tx.counterparty ?? "").toLowerCase() === "opendex" ||
+    (tx.memo ?? "").toLowerCase().includes("opendex") ||
+    tx.type === "swap"
+  );
+}
+
+function isOpenTokenTx(tx: TxRow) {
+  const item = tx as ActivityItem;
+  return (
+    item.source === "opentoken" ||
+    (tx.counterparty ?? "").toLowerCase() === "opentoken" ||
+    (tx.memo ?? "").toLowerCase().includes("opentoken")
+  );
+}
+
+export function activityTitle(tx: TxRow) {
+  const symbol = (tx.token_symbol ?? "").trim();
+  const ot = isOpenTokenTx(tx);
+  if (ot) {
+    return `${tx.type === "sell" ? "Sold" : "Bought"} ${symbol || "token"}`;
+  }
+  if (tx.type === "swap" || isOpenDexTx(tx)) {
+    return `Swapped ${symbol || "tokens"}`;
+  }
+  if (tx.type === "receive") return `Received ${symbol || "OUSD"}`;
+  if (tx.type === "send") return `Sent ${symbol || "OUSD"}`;
+  if (tx.type === "buy") return `Bought ${symbol || "OUSD"}`;
+  if (tx.type === "sell") return `Sold ${symbol || "OUSD"}`;
+  if (tx.type === "mint") return `Minted ${symbol || "NFT"}`;
+  if (tx.type === "reward") return `Reward ${symbol || ""}`.trim();
+  return `${tx.type} ${symbol}`.trim();
+}
+
+function activitySubtitle(tx: TxRow) {
+  const item = tx as ActivityItem;
+  const ot = isOpenTokenTx(tx);
+  const odx = isOpenDexTx(tx);
+  if (ot) return item.token_name ? `OpenToken · ${item.token_name}` : "OpenToken";
+  if (odx) return "OpenDEX";
+  if (tx.counterparty) return shortAddress(tx.counterparty);
+  return timeAgo(tx.created_at);
+}
+
+function resolveLogo(tx: TxRow): string | null {
+  const item = tx as ActivityItem;
+  if (item.logo_url) return item.logo_url;
+  const symbol = (tx.token_symbol ?? "").toUpperCase();
+  if (symbol === "OUSD" || symbol.includes("OUSD")) return OUSD_LOGO_URL;
+  return null;
+}
+
+/** Phantom-style activity row — compact title, soft amount colors, direction badge. */
 export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => void }) {
   const Icon = txIcon(tx.type);
-  const item = tx as ActivityItem;
-  const logo = item.logo_url;
-  const isOpenToken = item.source === "opentoken";
-  const isOpenDex =
-    (tx.counterparty ?? "").toLowerCase() === "opendex" ||
-    (tx.memo ?? "").toLowerCase().includes("opendex");
+  const logo = resolveLogo(tx);
+  const incoming = isIncoming(tx.type);
+  const failed = tx.status === "failed";
+  const pending = tx.status === "pending";
+  const ot = isOpenTokenTx(tx);
 
   return (
     <button
       type="button"
       onClick={() => onOpen(tx)}
-      className="flex w-full items-center gap-3 py-3.5 text-left text-sm press hover:bg-muted/40"
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/50"
     >
-      {logo ? (
-        <Avatar className="h-10 w-10 shrink-0">
-          <AvatarImage src={logo} alt={tx.token_symbol ?? ""} />
-          <AvatarFallback className="bg-primary/15 text-primary">
+      <span className="relative shrink-0">
+        {logo ? (
+          <Avatar className="h-11 w-11">
+            <AvatarImage src={logo} alt={tx.token_symbol ?? ""} />
+            <AvatarFallback className="bg-muted text-muted-foreground">
+              <Icon className="h-4 w-4" />
+            </AvatarFallback>
+          </Avatar>
+        ) : (
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground">
             <Icon className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-      ) : (
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-          <Icon className="h-4 w-4" />
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold capitalize">{activityTitle(tx)}</span>
-          {isOpenToken && (
-            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-              OpenToken
-            </span>
-          )}
-          {isOpenDex && (
-            <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-300">
-              OpenDEX
-            </span>
-          )}
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            {tx.status}
           </span>
+        )}
+        <span
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card",
+            failed
+              ? "bg-destructive text-destructive-foreground"
+              : incoming
+                ? "bg-emerald-500 text-white"
+                : "bg-foreground text-background",
+          )}
+          aria-hidden
+        >
+          <Icon className="h-2.5 w-2.5" strokeWidth={2.5} />
+        </span>
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[15px] font-semibold text-foreground">
+          {activityTitle(tx)}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {isOpenToken
-            ? `${item.token_name ?? "Bonding curve"} · `
-            : isOpenDex
-              ? `${tx.memo?.replace(/^OpenDEX swap\s+/i, "") ?? "Spot swap"} · `
-              : tx.counterparty
-                ? `${shortAddress(tx.counterparty)} · `
-                : ""}
-          {new Date(tx.created_at).toLocaleString()}
+        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="truncate">{activitySubtitle(tx)}</span>
+          {(failed || pending) && (
+            <>
+              <span aria-hidden>·</span>
+              <span
+                className={cn(
+                  "font-medium capitalize",
+                  failed ? "text-destructive" : "text-amber-600 dark:text-amber-400",
+                )}
+              >
+                {tx.status}
+              </span>
+            </>
+          )}
         </div>
       </div>
+
       <div className="shrink-0 text-right tabular-nums">
-        <div className="font-semibold">
-          {isOpenToken && tx.type === "buy" ? "+" : isOpenToken && tx.type === "sell" ? "−" : ""}
-          {formatNumber(tx.amount, 6)}
+        <div
+          className={cn(
+            "text-[15px] font-semibold",
+            incoming && !failed ? "text-emerald-600 dark:text-emerald-400" : "text-foreground",
+          )}
+        >
+          {incoming ? "+" : ot && tx.type === "sell" ? "−" : tx.type === "send" ? "−" : ""}
+          {formatNumber(tx.amount, tx.amount >= 1_000_000 ? 2 : 4)}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {isOpenToken || isOpenDex
-            ? `${formatNumber(tx.usd_value, 4)} OUSD`
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          {ot || isOpenDexTx(tx)
+            ? `${formatNumber(tx.usd_value, 2)} OUSD`
             : formatUSD(tx.usd_value)}
         </div>
       </div>
     </button>
   );
+}
+
+/** Group label like Phantom: Today / Yesterday / Month Day */
+export function activityDateGroupLabel(iso: string, now = new Date()): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Earlier";
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((startToday.getTime() - startThat.getTime()) / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    ...(d.getFullYear() !== now.getFullYear() ? { year: "numeric" as const } : {}),
+  });
+}
+
+export function groupActivityByDate<T extends { created_at: string }>(
+  items: T[],
+): { label: string; items: T[] }[] {
+  const groups: { label: string; items: T[] }[] = [];
+  const index = new Map<string, number>();
+  const now = new Date();
+  for (const item of items) {
+    const label = activityDateGroupLabel(item.created_at, now);
+    const existing = index.get(label);
+    if (existing == null) {
+      index.set(label, groups.length);
+      groups.push({ label, items: [item] });
+    } else {
+      groups[existing].items.push(item);
+    }
+  }
+  return groups;
 }
 
 export function TransactionDetailSheet({
@@ -147,8 +243,9 @@ export function TransactionDetailSheet({
   if (!tx) return null;
 
   const Icon = txIcon(tx.type);
-  const isIn = tx.type === "receive" || tx.type === "buy";
+  const incoming = isIncoming(tx.type);
   const openLedgerHash = ledgerEntry?.tx_hash || tx.tx_hash;
+  const logo = resolveLogo(tx);
 
   async function copy(label: string, value: string) {
     try {
@@ -165,40 +262,62 @@ export function TransactionDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[88vh] overflow-y-auto rounded-t-3xl border-border/60 px-5 pb-8 pt-4 duration-200 data-[state=closed]:duration-150 data-[state=open]:duration-200"
+        className="max-h-[88vh] overflow-y-auto rounded-t-3xl border-border/60 bg-background px-5 pb-8 pt-4 duration-200 data-[state=closed]:duration-150 data-[state=open]:duration-200"
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted" />
         <SheetHeader className="space-y-1 text-left">
           <div className="mb-2 flex items-center gap-3">
-            <span
-              className={cn(
-                "grid h-12 w-12 place-items-center rounded-full",
-                isIn ? "bg-success/15 text-success" : "bg-primary/15 text-primary",
+            <span className="relative shrink-0">
+              {logo ? (
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={logo} alt="" />
+                  <AvatarFallback className="bg-muted">
+                    <Icon className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <span
+                  className={cn(
+                    "grid h-12 w-12 place-items-center rounded-full",
+                    incoming ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-foreground",
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
               )}
-            >
-              <Icon className="h-5 w-5" />
+              <span
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-background",
+                  incoming ? "bg-emerald-500 text-white" : "bg-foreground text-background",
+                )}
+              >
+                <Icon className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </span>
             </span>
             <div>
-              <SheetTitle className="capitalize">
-                {tx.type} {tx.token_symbol ?? ""}
-              </SheetTitle>
+              <SheetTitle>{activityTitle(tx)}</SheetTitle>
               <SheetDescription className="capitalize">{tx.status}</SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <div className="mt-2 rounded-2xl border border-border/60 bg-card p-5 text-center">
+        <div className="mt-2 rounded-2xl bg-card p-5 text-center">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Amount</div>
-          <div className="mt-1 text-3xl font-bold tabular-nums">
-            {isIn ? "+" : "−"}
+          <div
+            className={cn(
+              "mt-1 text-3xl font-bold tabular-nums",
+              incoming ? "text-emerald-600 dark:text-emerald-400" : "text-foreground",
+            )}
+          >
+            {incoming ? "+" : "−"}
             {formatNumber(tx.amount, 6)} {tx.token_symbol ?? ""}
           </div>
           <div className="mt-1 text-sm text-muted-foreground">{formatUSD(tx.usd_value)}</div>
         </div>
 
-        <dl className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-card/60 p-4 text-sm">
+        <dl className="mt-4 space-y-3 rounded-2xl bg-card/80 p-4 text-sm">
           <DetailRow label="Date" value={new Date(tx.created_at).toLocaleString()} />
-          <DetailRow label="Status" value={tx.status} />
+          <DetailRow label="Status" value={tx.status} className="capitalize" />
           <DetailRow label="Type" value={tx.type} className="capitalize" />
           {tx.token_symbol && <DetailRow label="Asset" value={tx.token_symbol} />}
           {tx.counterparty && (
@@ -292,7 +411,7 @@ function DetailRow({
 }: {
   label: string;
   value: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 }) {
   return (

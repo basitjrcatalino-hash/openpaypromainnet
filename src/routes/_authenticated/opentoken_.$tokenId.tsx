@@ -10,10 +10,10 @@ import {
   Copy,
   ExternalLink,
   Flag,
+  LineChart,
   MessageCircle,
   Share2,
   ShieldAlert,
-  Sparkles,
   Star,
   TrendingUp,
   Wallet,
@@ -407,7 +407,7 @@ function OpenTokenDetail() {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <LineChart className="h-3.5 w-3.5" />
                   Simple
                 </button>
                 <button

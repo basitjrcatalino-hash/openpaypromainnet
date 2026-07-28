@@ -11,6 +11,7 @@ import {
 import { CandlestickChart as CandlestickIcon, LineChart as LineChartIcon } from "lucide-react";
 import { formatNumber, formatOUSD, formatPct, timeAgo } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
 import {
   candleBucketMs,
   resolveChartTicks,
@@ -30,6 +31,36 @@ type Candle = {
   close: number;
   up: boolean;
 };
+
+type ChartChrome = {
+  grid: string;
+  axis: string;
+  muted: string;
+  tooltipBg: string;
+  tooltipBorder: string;
+  tooltipText: string;
+};
+
+function chromeFor(theme: "light" | "dark"): ChartChrome {
+  if (theme === "dark") {
+    return {
+      grid: "rgba(255,255,255,0.06)",
+      axis: "rgba(255,255,255,0.35)",
+      muted: "rgba(255,255,255,0.4)",
+      tooltipBg: "#12151c",
+      tooltipBorder: "rgba(255,255,255,0.1)",
+      tooltipText: "#fff",
+    };
+  }
+  return {
+    grid: "rgba(15,23,42,0.08)",
+    axis: "rgba(15,23,42,0.45)",
+    muted: "rgba(15,23,42,0.4)",
+    tooltipBg: "#ffffff",
+    tooltipBorder: "rgba(15,23,42,0.12)",
+    tooltipText: "#0f172a",
+  };
+}
 
 function valueOf(tick: ChartTick, mode: "price" | "mcap") {
   const v = mode === "mcap" ? Number(tick.market_cap ?? 0) : Number(tick.price);
@@ -91,7 +122,15 @@ function fmtAxis(v: number, metric: "price" | "mcap") {
   return v < 0.01 ? formatNumber(v, 6) : formatNumber(v, 4);
 }
 
-function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price" | "mcap" }) {
+function SvgCandleChart({
+  candles,
+  metric,
+  chrome,
+}: {
+  candles: Candle[];
+  metric: "price" | "mcap";
+  chrome: ChartChrome;
+}) {
   const w = 640;
   const h = 260;
   const padL = 8;
@@ -107,7 +146,9 @@ function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price
   const max = Math.max(...highs);
   if (!Number.isFinite(min) || !Number.isFinite(max)) {
     return (
-      <div className="grid h-full place-items-center text-sm text-white/40">No chart data yet</div>
+      <div className="grid h-full place-items-center text-sm text-muted-foreground">
+        No chart data yet
+      </div>
     );
   }
   const span = max - min || Math.max(max * 0.02, 1e-12);
@@ -128,11 +169,11 @@ function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price
         const y = yScale(v);
         return (
           <g key={`y-${i}`}>
-            <line x1={padL} x2={w - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" />
+            <line x1={padL} x2={w - padR} y1={y} y2={y} stroke={chrome.grid} />
             <text
               x={w - padR + 6}
               y={y + 3}
-              fill="rgba(255,255,255,0.35)"
+              fill={chrome.axis}
               fontSize={10}
               fontFamily="ui-sans-serif, system-ui"
             >
@@ -166,7 +207,7 @@ function SvgCandleChart({ candles, metric }: { candles: Candle[]; metric: "price
             x={cx}
             y={h - 8}
             textAnchor="middle"
-            fill="rgba(255,255,255,0.35)"
+            fill={chrome.axis}
             fontSize={9}
             fontFamily="ui-sans-serif, system-ui"
           >
@@ -230,6 +271,8 @@ export function TerminalChart({
   tokenKey,
   peg,
 }: Props) {
+  const { theme } = useTheme();
+  const chrome = chromeFor(theme);
   const reactId = useId().replace(/:/g, "");
   const gradId = `term-area-${reactId}`;
   const markersId = `term-markers-${reactId}`;
@@ -276,9 +319,9 @@ export function TerminalChart({
   const stroke = up ? "#22c55e" : "#ef4444";
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-border/60 bg-[#0b0d12] text-white dark:border-border dark:bg-card">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2.5">
-        <div className="flex items-center gap-0.5 rounded-lg bg-white/5 p-0.5">
+    <div className="overflow-hidden rounded-3xl border border-border/60 bg-card text-foreground">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-3 py-2.5">
+        <div className="flex items-center gap-0.5 rounded-lg bg-muted/70 p-0.5">
           {TERMINAL_PERIODS.map((p) => (
             <button
               key={p}
@@ -286,7 +329,9 @@ export function TerminalChart({
               onClick={() => onPeriodChange(p)}
               className={cn(
                 "rounded-md px-2.5 py-1 text-[11px] font-semibold press",
-                period === p ? "bg-white/15 text-white" : "text-white/50 hover:text-white",
+                period === p
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {p}
@@ -295,15 +340,18 @@ export function TerminalChart({
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          <div className="flex rounded-lg bg-white/5 p-0.5">
+          <div className="flex rounded-lg bg-muted/70 p-0.5">
             <button
               type="button"
               onClick={() => setChartStyle("candle")}
               className={cn(
                 "grid h-7 w-7 place-items-center rounded-md",
-                chartStyle === "candle" ? "bg-white/15 text-white" : "text-white/45",
+                chartStyle === "candle"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
               )}
               aria-label="Candlestick"
+              title="Candlestick"
             >
               <CandlestickIcon className="h-3.5 w-3.5" />
             </button>
@@ -312,15 +360,18 @@ export function TerminalChart({
               onClick={() => setChartStyle("line")}
               className={cn(
                 "grid h-7 w-7 place-items-center rounded-md",
-                chartStyle === "line" ? "bg-white/15 text-white" : "text-white/45",
+                chartStyle === "line"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
               )}
               aria-label="Line"
+              title="Line"
             >
               <LineChartIcon className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="flex rounded-lg bg-white/5 p-0.5">
+          <div className="flex rounded-lg bg-muted/70 p-0.5">
             {(["price", "mcap"] as const).map((m) => (
               <button
                 key={m}
@@ -329,8 +380,8 @@ export function TerminalChart({
                 className={cn(
                   "rounded-md px-2.5 py-1 text-[11px] font-semibold press",
                   metric === m
-                    ? "bg-emerald-500/25 text-emerald-300"
-                    : "text-white/45 hover:text-white",
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {m === "price" ? "Price" : "MCap"}
@@ -340,14 +391,14 @@ export function TerminalChart({
 
           <label
             htmlFor={markersId}
-            className="flex cursor-pointer items-center gap-1.5 px-1 text-[11px] text-white/55"
+            className="flex cursor-pointer items-center gap-1.5 px-1 text-[11px] text-muted-foreground"
           >
             <input
               id={markersId}
               type="checkbox"
               checked={showMarkers}
               onChange={(e) => setShowMarkers(e.target.checked)}
-              className="h-3 w-3 accent-emerald-400"
+              className="h-3 w-3 accent-emerald-500"
             />
             Trade markers
           </label>
@@ -356,7 +407,7 @@ export function TerminalChart({
 
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-3">
         <div>
-          <div className="text-[10px] font-medium uppercase tracking-wide text-white/45">
+          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {metric === "mcap" ? "Market cap" : "Price"} · {symbol}
           </div>
           <div className="mt-0.5 text-xl font-bold tabular-nums">
@@ -368,7 +419,9 @@ export function TerminalChart({
         <div
           className={cn(
             "rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums",
-            up ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400",
+            up
+              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              : "bg-red-500/15 text-red-600 dark:text-red-400",
           )}
         >
           {formatPct(changePct)} · 24h
@@ -377,11 +430,15 @@ export function TerminalChart({
 
       <div ref={chartBoxRef} className="relative h-65 w-full px-1 pb-1 pt-2 sm:h-75">
         {candles.length === 0 ? (
-          <div className="grid h-full place-items-center text-sm text-white/40">No chart data yet</div>
+          <div className="grid h-full place-items-center text-sm text-muted-foreground">
+            No chart data yet
+          </div>
         ) : chartStyle === "candle" ? (
-          <SvgCandleChart candles={candles} metric={metric} />
+          <SvgCandleChart candles={candles} metric={metric} chrome={chrome} />
         ) : !chartReady ? (
-          <div className="grid h-full place-items-center text-sm text-white/40">Loading chart…</div>
+          <div className="grid h-full place-items-center text-sm text-muted-foreground">
+            Loading chart…
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={50}>
             <AreaChart data={lineData} margin={{ top: 8, right: 48, left: 4, bottom: 4 }}>
@@ -391,10 +448,10 @@ export function TerminalChart({
                   <stop offset="100%" stopColor={stroke} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid stroke={chrome.grid} vertical={false} />
               <XAxis
                 dataKey="t"
-                tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
+                tick={{ fill: chrome.axis, fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={48}
@@ -403,18 +460,18 @@ export function TerminalChart({
                 domain={["auto", "auto"]}
                 orientation="right"
                 width={48}
-                tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
+                tick={{ fill: chrome.axis, fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => fmtAxis(v, metric)}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#12151c",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: chrome.tooltipBg,
+                  border: `1px solid ${chrome.tooltipBorder}`,
                   borderRadius: 12,
                   fontSize: 12,
-                  color: "#fff",
+                  color: chrome.tooltipText,
                 }}
                 formatter={(v: number) => [
                   fmtAxis(v, metric),
@@ -435,7 +492,7 @@ export function TerminalChart({
         )}
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-border/60">
         <div className="flex gap-1 px-3 pt-2">
           {(
             [
@@ -449,7 +506,9 @@ export function TerminalChart({
               onClick={() => setTradeTab(id)}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold press",
-                tradeTab === id ? "bg-white/10 text-white" : "text-white/45 hover:text-white",
+                tradeTab === id
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {label}
@@ -459,7 +518,7 @@ export function TerminalChart({
 
         <div className="max-h-52 overflow-y-auto px-2 pb-2 pt-1">
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 z-1 bg-[#0b0d12] text-[10px] uppercase text-white/40 dark:bg-card">
+            <thead className="sticky top-0 z-1 bg-card text-[10px] uppercase text-muted-foreground">
               <tr>
                 <th className="px-2 py-1.5 font-medium">Time</th>
                 <th className="px-2 py-1.5 font-medium">Type</th>
@@ -470,7 +529,7 @@ export function TerminalChart({
             <tbody>
               {visibleTrades.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-2 py-8 text-center text-white/35">
+                  <td colSpan={4} className="px-2 py-8 text-center text-muted-foreground">
                     {tradeTab === "mine" ? "No trades from you yet" : "No trades yet"}
                   </td>
                 </tr>
@@ -478,23 +537,27 @@ export function TerminalChart({
                 visibleTrades.map((t) => {
                   const buy = t.side === "buy";
                   return (
-                    <tr key={t.id} className="border-t border-white/5">
-                      <td className="px-2 py-1.5 text-white/45">{timeAgo(t.created_at)}</td>
+                    <tr key={t.id} className="border-t border-border/40">
+                      <td className="px-2 py-1.5 text-muted-foreground">{timeAgo(t.created_at)}</td>
                       <td
                         className={cn(
                           "px-2 py-1.5 font-semibold",
-                          buy ? "text-emerald-400" : "text-orange-400",
+                          buy
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-orange-600 dark:text-orange-400",
                         )}
                       >
                         {buy ? "Buy" : "Sell"}
                       </td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-white/80">
+                      <td className="px-2 py-1.5 text-right tabular-nums text-foreground/80">
                         {formatNumber(t.price, t.price < 0.01 ? 8 : 4)}
                       </td>
                       <td
                         className={cn(
                           "px-2 py-1.5 text-right tabular-nums font-medium",
-                          buy ? "text-emerald-400" : "text-orange-400",
+                          buy
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-orange-600 dark:text-orange-400",
                         )}
                       >
                         {formatNumber(t.token_amount, 2)}

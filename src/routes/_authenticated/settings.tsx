@@ -789,6 +789,8 @@ function SettingsPage() {
     </div>
   );
 }
+
+function OpenPayIntegrationCard({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const unlinkOpenPay = useServerFn(unlinkOpenPayAccount);
   const startConnect = useServerFn(startOpenPayConnect);

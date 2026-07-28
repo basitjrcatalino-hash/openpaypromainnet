@@ -70,9 +70,12 @@ export default defineConfig({
         // Web3Auth SafeEventEmitter needs a real named `EventEmitter` export.
         "events-package": path.resolve(rootDir, "node_modules/events/events.js"),
         events: path.resolve(rootDir, "src/shims/events.ts"),
+        // @toruslabs/http-helpers: `import { levels } from "loglevel"` (CJS has no named export).
+        "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
+        loglevel: path.resolve(rootDir, "src/shims/loglevel.ts"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
       },
-      dedupe: ["react", "react-dom", "buffer", "events"],
+      dedupe: ["react", "react-dom", "buffer", "events", "loglevel"],
     },
     optimizeDeps: {
       // Phantom / Commerce Kit import production `react/jsx-runtime` (CJS).
@@ -91,10 +94,12 @@ export default defineConfig({
         "ieee754",
         "events",
         "events-package",
+        "loglevel",
+        "loglevel-package",
         "process",
       ],
-      // Force Web3Auth through our events shim (stale prebundles break SafeEventEmitter).
-      exclude: ["@web3auth/modal", "@web3auth/auth"],
+      // Force Web3Auth through our events/loglevel shims (stale prebundles break named exports).
+      exclude: ["@web3auth/modal", "@web3auth/auth", "@toruslabs/http-helpers"],
       esbuildOptions: {
         define: {
           global: "globalThis",
@@ -104,7 +109,7 @@ export default defineConfig({
     ssr: {
       // Keep CJS `buffer` / MoonPay off the SSR ESM runner.
       external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
-      noExternal: ["events", "events-package"],
+      noExternal: ["events", "events-package", "loglevel", "loglevel-package"],
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

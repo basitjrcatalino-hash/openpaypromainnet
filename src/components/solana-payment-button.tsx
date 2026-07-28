@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { PaymentButton, type PaymentButtonProps } from "@solana-commerce/kit";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -15,6 +14,24 @@ import {
 } from "@/lib/solana-payment";
 import { cn } from "@/lib/utils";
 
+type PaymentButtonComponent = ComponentType<{
+  config: {
+    merchant: { name: string; wallet: string };
+    mode: "tip" | "cart" | "buyNow";
+    network?: "mainnet" | "devnet" | "testnet";
+    rpcUrl?: string;
+    showQR?: boolean;
+    theme?: Record<string, unknown>;
+    showMerchantInfo?: boolean;
+  };
+  paymentConfig?: unknown;
+  children?: ReactNode;
+  onPaymentStart?: () => void;
+  onPaymentSuccess?: (signature: string) => void;
+  onPaymentError?: (error: Error) => void;
+  onCancel?: () => void;
+}>;
+
 export type SolanaPaymentButtonProps = {
   /** Solana address that receives funds. Falls back to VITE_SOLANA_MERCHANT_WALLET. */
   merchantWallet?: string | null;
@@ -23,14 +40,14 @@ export type SolanaPaymentButtonProps = {
   showQR?: boolean;
   className?: string;
   children?: ReactNode;
-  onPaymentSuccess?: PaymentButtonProps["onPaymentSuccess"];
-  onPaymentError?: PaymentButtonProps["onPaymentError"];
-  paymentConfig?: PaymentButtonProps["paymentConfig"];
+  onPaymentSuccess?: (signature: string) => void;
+  onPaymentError?: (error: Error) => void;
+  paymentConfig?: unknown;
 };
 
 /**
  * Client-only Solana Commerce Kit PaymentButton.
- * Handles wallet connect, token selection, and tip/pay UI out of the box.
+ * Dynamically imports the kit after mount so Nitro/workerd SSR never resolves it.
  */
 export function SolanaPaymentButton({
   merchantWallet,
@@ -43,15 +60,39 @@ export function SolanaPaymentButton({
   onPaymentError,
   paymentConfig,
 }: SolanaPaymentButtonProps) {
-  const [ready, setReady] = useState(false);
+  const [PaymentButton, setPaymentButton] = useState<PaymentButtonComponent | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    setReady(true);
+    let cancelled = false;
+    void import("@solana-commerce/kit")
+      .then((mod) => {
+        if (!cancelled) setPaymentButton(() => mod.PaymentButton as PaymentButtonComponent);
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError((err as Error).message || "Failed to load Solana payments");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const wallet = resolveSolanaMerchantWallet(merchantWallet);
 
-  if (!ready) {
+  if (loadError) {
+    return (
+      <div
+        className={cn(
+          "rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-center text-xs text-destructive",
+          className,
+        )}
+      >
+        {loadError}
+      </div>
+    );
+  }
+
+  if (!PaymentButton) {
     return (
       <div
         className={cn(

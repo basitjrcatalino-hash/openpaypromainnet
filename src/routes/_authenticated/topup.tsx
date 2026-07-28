@@ -2,9 +2,10 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Link2, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Link2, CheckCircle2, CreditCard, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MoonPayBuyWidget } from "@moonpay/moonpay-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,11 +35,12 @@ export const Route = createFileRoute("/_authenticated/topup")({
   component: TopUpPage,
 });
 
-type Method = "openpay_balance" | "pi";
+type Method = "openpay_balance" | "pi" | "moonpay";
 const methods: {
   id: Method;
   label: string;
-  logoUrl: string;
+  logoUrl?: string;
+  icon?: LucideIcon;
   desc: string;
 }[] = [
   {
@@ -46,6 +48,12 @@ const methods: {
     label: "OpenPay Balance",
     logoUrl: OUSD_LOGO_URL,
     desc: "Pay from your connected OpenPay account · real debit",
+  },
+  {
+    id: "moonpay",
+    label: "MoonPay",
+    icon: CreditCard,
+    desc: "Buy ETH & crypto with card · MoonPay sandbox",
   },
   {
     id: "pi",
@@ -69,6 +77,7 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
+  const [moonpayVisible, setMoonpayVisible] = useState(false);
   const [pendingPayLink, setPendingPayLink] = useState<{
     reference: string;
     amount: number;
@@ -256,6 +265,10 @@ function TopUpPage() {
 
     setBusy(true);
     try {
+      if (method === "moonpay") {
+        setMoonpayVisible(true);
+        return;
+      }
       if (method === "openpay_balance") {
         if (!openpayLink?.linked) {
           toast.error("Connect OpenPay in Settings first");
@@ -321,11 +334,13 @@ function TopUpPage() {
   const linked = !!openpayLink?.linked;
   const amtNum = Number(amount) || 0;
   const cta =
-    method === "openpay_balance"
-      ? linked
-        ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
-        : "Connect OpenPay to continue"
-      : `Top up ${amount ? formatUSD(amtNum) : ""}`;
+    method === "moonpay"
+      ? `Buy with MoonPay${amount ? ` · ${formatUSD(amtNum)}` : ""}`
+      : method === "openpay_balance"
+        ? linked
+          ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
+          : "Connect OpenPay to continue"
+        : `Top up ${amount ? formatUSD(amtNum) : ""}`;
 
   return (
     <div className="ot-phantom ph-page space-y-6 pb-8">
@@ -438,6 +453,7 @@ function TopUpPage() {
           <div className="overflow-hidden rounded-2xl bg-card">
             {methods.map((m, i) => {
               const selected = method === m.id;
+              const Icon = m.icon;
               return (
                 <button
                   key={m.id}
@@ -452,13 +468,14 @@ function TopUpPage() {
                     className={cn(
                       "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
                       selected ? "bg-primary/15 ring-2 ring-primary/40" : "bg-muted",
+                      m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                     )}
                   >
-                    <img
-                      src={m.logoUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
+                    {m.logoUrl ? (
+                      <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                    ) : Icon ? (
+                      <Icon className="h-5 w-5" />
+                    ) : null}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">{m.label}</div>
@@ -480,6 +497,13 @@ function TopUpPage() {
             })}
           </div>
         </section>
+
+        {method === "moonpay" && (
+          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
+            Opens the MoonPay widget to buy test ETH with card. Complete a sandbox purchase to
+            verify the integration (ETH must be enabled in your MoonPay dashboard).
+          </p>
+        )}
 
         {method === "openpay_balance" && (
           <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
@@ -519,10 +543,29 @@ function TopUpPage() {
             {cta}
           </Button>
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            1 OUSD = $1.00 · credited to your active wallet
+            {method === "moonpay"
+              ? "Powered by MoonPay · sandbox test purchases"
+              : "1 OUSD = $1.00 · credited to your active wallet"}
           </p>
         </div>
       </form>
+
+      <MoonPayBuyWidget
+        variant="overlay"
+        baseCurrencyCode="usd"
+        baseCurrencyAmount={String(Math.max(amtNum, 20) || 100)}
+        defaultCurrencyCode="eth"
+        visible={moonpayVisible}
+        onClose={async () => {
+          setMoonpayVisible(false);
+        }}
+        onTransactionCompleted={async () => {
+          toast.success("MoonPay purchase complete");
+          setMoonpayVisible(false);
+          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+        }}
+      />
     </div>
   );
 }

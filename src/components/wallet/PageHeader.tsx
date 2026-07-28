@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   title: string;
   /** Absolute app path, e.g. "/dashboard" */
-  backTo?: "/dashboard" | "/opentoken" | "/settings" | "/activity" | "/send" | "/receive" | "/swap";
+  backTo?: string;
   onBack?: () => void;
   right?: ReactNode;
   className?: string;
@@ -22,7 +22,7 @@ export function PageHeader({ title, backTo, onBack, right, className }: Props) {
       return;
     }
     if (backTo) {
-      void router.navigate({ to: backTo });
+      void router.navigate({ to: backTo as "/dashboard" });
       return;
     }
     if (typeof window !== "undefined" && window.history.length > 1) {

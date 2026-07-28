@@ -1,21 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  QrCode,
+  Send,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/wallet/PageHeader";
+import { PhantomSparkline, type PhantomPeriod } from "@/components/opentoken/PriceChart";
 import { formatNumber, formatUSD } from "@/lib/wallet-utils";
 import { OusdIcon } from "@/components/ousd-icon";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/ousd")({
-  head: () => ({ meta: [{ title: "OUSD — OpenPay Pro Wallet" }] }),
+  head: () => ({ meta: [{ title: "OpenUSD — OpenPay Pro Wallet" }] }),
   component: OUSDPage,
 });
 
 function OUSDPage() {
   const { user } = Route.useRouteContext();
+  const [period, setPeriod] = useState<PhantomPeriod>("1D");
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -47,82 +55,104 @@ function OUSDPage() {
       ).data ?? [],
   });
 
-  const chart = Array.from({ length: 30 }).map((_, i) => ({
-    t: i,
-    v: 100 + Math.sin(i / 3) * 12 + i,
-  }));
+  const bal = Number(wallet?.ousd_balance ?? 0);
 
   return (
-    <div className="ph-page space-y-5">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <OusdIcon className="h-16 w-16" />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">OUSD</h1>
-          <p className="text-sm text-muted-foreground">Earn · 1:1 USD-backed stablecoin</p>
+    <div className="ot-phantom ph-page space-y-6 pb-8">
+      <PageHeader title="OpenUSD" backTo="/dashboard" />
+
+      <div className="text-center">
+        <div className="mx-auto mb-3 h-16 w-16">
+          <OusdIcon className="h-16 w-16" />
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
-          <Sparkles className="h-3 w-3" /> $1.00 peg
-        </span>
+        <div className="text-4xl font-bold tabular-nums tracking-tight">{formatUSD(1)}</div>
+        <div className="mt-2 inline-flex items-center gap-2 text-sm">
+          <span className="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
+            +$0.00
+          </span>
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            0.00%
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">Pegged stablecoin · 1 OUSD = $1</p>
       </div>
 
-      <div className="rounded-2xl bg-card px-5 py-6 text-center">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Your balance
-        </div>
-        <div className="mt-2 text-4xl font-bold tabular-nums">
-          {formatNumber(wallet?.ousd_balance ?? 0, 2)}
-        </div>
-        <div className="mt-1 text-sm text-muted-foreground">
-          ≈ {formatUSD(Number(wallet?.ousd_balance ?? 0))}
-        </div>
+      <PhantomSparkline
+        period={period}
+        onPeriodChange={setPeriod}
+        ticks={null}
+        price={1}
+        changePct={0}
+        tokenKey="ousd"
+        peg
+        footnote="Pegged at $1.00 · stablecoin"
+      />
 
-        <div className="mx-auto mt-4 h-16 max-w-xs">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chart}>
-              <defs>
-                <linearGradient id="ouG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Tooltip cursor={false} content={() => null} />
-              <Area
-                type="monotone"
-                dataKey="v"
-                stroke="var(--primary)"
-                strokeWidth={2}
-                fill="url(#ouG)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Button asChild className="rounded-full bg-primary text-primary-foreground">
-            <Link to="/send">Send</Link>
-          </Button>
-          <Button asChild variant="secondary" className="rounded-full">
-            <Link to="/receive">Receive</Link>
-          </Button>
-          <Button asChild variant="secondary" className="rounded-full">
-            <Link to="/swap">Swap</Link>
-          </Button>
-        </div>
+      <div className="grid grid-cols-3 gap-3">
+        <Link to="/send" search={{ asset: "OUSD" }} className="flex flex-col items-center gap-2">
+          <span className="grid h-14 w-full place-items-center rounded-2xl bg-muted text-primary transition hover:bg-accent hover:text-accent-foreground">
+            <Send className="h-5 w-5" />
+          </span>
+          <span className="text-xs font-medium text-foreground">Send</span>
+        </Link>
+        <Link to="/receive" className="flex flex-col items-center gap-2">
+          <span className="grid h-14 w-full place-items-center rounded-2xl bg-muted text-primary transition hover:bg-accent hover:text-accent-foreground">
+            <QrCode className="h-5 w-5" />
+          </span>
+          <span className="text-xs font-medium text-foreground">Receive</span>
+        </Link>
+        <Link to="/swap" className="flex flex-col items-center gap-2">
+          <span className="grid h-14 w-full place-items-center rounded-2xl bg-muted text-primary transition hover:bg-accent hover:text-accent-foreground">
+            <ArrowLeftRight className="h-5 w-5" />
+          </span>
+          <span className="text-xs font-medium text-foreground">Swap</span>
+        </Link>
       </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold">Activity</h2>
+      <section>
+        <h2 className="mb-2 text-sm text-muted-foreground">Balance</h2>
+        <div className="overflow-hidden rounded-2xl bg-card">
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <span className="text-sm text-muted-foreground">Available</span>
+            <div className="text-right">
+              <div className="font-semibold tabular-nums">{formatNumber(bal, 2)} OUSD</div>
+              <div className="text-xs text-muted-foreground">{formatUSD(bal)}</div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between border-t border-border/60 px-4 py-3.5">
+            <span className="text-sm text-muted-foreground">Wallet</span>
+            <span className="text-sm font-medium">{wallet?.name ?? "Main Wallet"}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm text-muted-foreground">Activity</h2>
+          <Link to="/activity" className="text-xs font-semibold text-primary">
+            See all
+          </Link>
+        </div>
         {txs.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            No OUSD transactions yet.
-          </p>
+          <p className="py-10 text-center text-sm text-muted-foreground">No OUSD transactions yet.</p>
         ) : (
-          <ul>
-            {txs.map((t: any) => (
-              <li key={t.id} className="ph-row">
+          <ul className="overflow-hidden rounded-2xl bg-card">
+            {txs.map((t: any, i: number) => (
+              <li
+                key={t.id}
+                className={cn(
+                  "flex items-center justify-between gap-3 px-4 py-3.5",
+                  i > 0 && "border-t border-border/60",
+                )}
+              >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`grid h-10 w-10 place-items-center rounded-full ${t.type === "receive" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"}`}
+                    className={cn(
+                      "grid h-10 w-10 place-items-center rounded-full",
+                      t.type === "receive"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                        : "bg-primary/15 text-primary",
+                    )}
                   >
                     {t.type === "receive" ? (
                       <ArrowDownLeft className="h-4 w-4" />
@@ -145,7 +175,7 @@ function OUSDPage() {
             ))}
           </ul>
         )}
-      </div>
+      </section>
     </div>
   );
 }

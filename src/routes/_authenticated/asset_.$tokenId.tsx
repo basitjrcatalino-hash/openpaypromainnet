@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
-import { PriceChart, buildPegTicks } from "@/components/opentoken/PriceChart";
+import { PhantomSparkline, type PhantomPeriod } from "@/components/opentoken/PriceChart";
 import { cn } from "@/lib/utils";
 import {
   fetchActiveWallet,
@@ -45,15 +45,13 @@ export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   component: PhantomAssetDetail,
 });
 
-const PERIODS = ["1H", "1D", "1W", "1M", "YTD", "ALL"] as const;
-
 function PhantomAssetDetail() {
   const { tokenId } = Route.useParams();
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
 
-  const [period, setPeriod] = useState<(typeof PERIODS)[number]>("1D");
+  const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -101,15 +99,10 @@ function PhantomAssetDetail() {
         .select("created_at, price, market_cap")
         .eq("token_id", tokenId)
         .order("created_at", { ascending: false })
-        .limit(period === "1H" ? 24 : period === "1D" ? 96 : 180);
+        .limit(period === "1H" ? 48 : period === "1D" ? 96 : 180);
       return data ?? [];
     },
   });
-
-  const chartTicks = useMemo(() => {
-    if (isOusd) return buildPegTicks(period, 1, period.length + 7);
-    return ticks;
-  }, [isOusd, period, ticks]);
 
   const meta = useMemo(() => {
     if (isOusd) {
@@ -251,37 +244,17 @@ function PhantomAssetDetail() {
           </div>
         </div>
 
-        {/* Chart — Phantom-style green up / red down */}
-        <div className="-mx-4 overflow-hidden">
-          <PriceChart
-            ticks={chartTicks}
-            mode="price"
-            trend={up ? "up" : "down"}
-            height={200}
-          />
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-1 px-4">
-            {PERIODS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold press",
-                  period === p
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-          {isOusd && (
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Pegged at $1.00 · stablecoin
-            </p>
-          )}
-        </div>
+        {/* Chart — Phantom-style green up / red down (all tokens) */}
+        <PhantomSparkline
+          period={period}
+          onPeriodChange={setPeriod}
+          ticks={isOusd ? null : ticks}
+          price={meta.price}
+          changePct={meta.change}
+          tokenKey={isOusd ? "ousd" : tokenId}
+          peg={isOusd}
+          footnote={isOusd ? "Pegged at $1.00 · stablecoin" : undefined}
+        />
 
         {/* Actions */}
         <div className="grid grid-cols-4 gap-3">

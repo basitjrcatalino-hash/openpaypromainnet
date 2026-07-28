@@ -21,12 +21,12 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { useTheme } from "@/components/theme-provider";
 import { generateAddress, generateMnemonic, shortAddress } from "@/lib/wallet-utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -268,18 +268,18 @@ function SettingsPage() {
   }
 
   return (
-    <div className="ph-page mx-auto max-w-lg space-y-6 md:max-w-2xl">
-      <div className="text-center md:text-left">
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Account, security, and connections</p>
-      </div>
+    <div className="ot-phantom ph-page mx-auto max-w-lg space-y-6 pb-8 md:max-w-2xl">
+      <PageHeader title="Settings" />
+      <p className="-mt-2 text-center text-sm text-muted-foreground md:text-left">
+        Account, security, and connections
+      </p>
 
       {/* Account */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Account
         </h2>
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <h2 className="mb-4 text-sm font-semibold">Profile</h2>
         <div className="flex flex-col gap-5 md:flex-row md:items-start">
           <div className="flex flex-col items-center gap-2">
@@ -355,7 +355,7 @@ function SettingsPage() {
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
       </section>
 
       {/* Wallets */}
@@ -363,7 +363,7 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Wallets
         </h2>
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Your wallets</h2>
           <Dialog>
@@ -499,7 +499,7 @@ function SettingsPage() {
             </li>
           ))}
         </ul>
-      </Card>
+      </div>
       </section>
 
       {/* Security */}
@@ -507,7 +507,7 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Security
         </h2>
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <div className="grid gap-3 md:grid-cols-3">
           <BiometricCard
             enabled={!!(prefs as any)?.biometric_enabled}
@@ -533,7 +533,7 @@ function SettingsPage() {
             }}
           />
         </div>
-      </Card>
+      </div>
       </section>
 
       {/* Preferences */}
@@ -541,7 +541,7 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Preferences
         </h2>
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <div className="grid gap-4 md:grid-cols-2">
           <SettingRow label="Theme" desc="Choose how OpenPay looks">
             <div className="inline-flex rounded-full border border-border bg-card p-1">
@@ -635,7 +635,7 @@ function SettingsPage() {
             />
           </SettingRow>
         </div>
-      </Card>
+      </div>
       </section>
 
       {/* Connected */}
@@ -645,7 +645,7 @@ function SettingsPage() {
         </h2>
       <OpenPayIntegrationCard userId={user.id} />
 
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
@@ -674,9 +674,9 @@ function SettingsPage() {
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
 
-      <Card className="rounded-2xl border-0 shadow-none p-5">
+      <div className="overflow-hidden rounded-2xl bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
@@ -695,7 +695,7 @@ function SettingsPage() {
             </a>
           </Button>
         </div>
-      </Card>
+      </div>
       </section>
     </div>
   );
@@ -754,7 +754,7 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
     : stored?.account_number || stored?.identifier || stored?.name || "OpenPay";
 
   return (
-    <Card className="rounded-2xl border-0 shadow-none p-5">
+    <div className="overflow-hidden rounded-2xl bg-card p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
           <Link2 className="h-4 w-4" />
@@ -797,7 +797,7 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 

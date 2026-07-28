@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
@@ -309,46 +309,50 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
+  const amtNum = Number(amount) || 0;
   const cta =
     method === "openpay_balance"
       ? linked
-        ? `Pay ${amount ? formatUSD(Number(amount)) : ""} with OpenPay`
+        ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
         : "Connect OpenPay to continue"
-      : `Top up ${amount ? formatUSD(Number(amount)) : ""}`;
+      : `Top up ${amount ? formatUSD(amtNum) : ""}`;
 
   return (
-    <div className="ph-page space-y-5">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Buy</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Add OUSD to your wallet</p>
-      </div>
+    <div className="ot-phantom ph-page space-y-6 pb-8">
+      <PageHeader title="Buy" backTo="/dashboard" />
 
-      <div className="rounded-2xl bg-card px-5 py-6 text-center">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Balance · {wallet?.name ?? "Active wallet"}
-        </div>
-        <div className="mt-1 text-3xl font-bold tabular-nums">
+      {/* Hero balance — Phantom-style */}
+      <div className="px-1 text-center">
+        <p className="text-sm text-muted-foreground">
+          {wallet?.name ?? "Main Wallet"} · OUSD
+        </p>
+        <div className="mt-1 text-4xl font-bold tabular-nums tracking-tight text-foreground">
           {formatUSD(Number(wallet?.ousd_balance ?? 0))}
         </div>
+        <p className="mt-2 text-sm text-muted-foreground">Add OUSD to your wallet</p>
       </div>
 
       {pendingPayLink && (
-        <Card className="rounded-2xl border-0 bg-primary/10 p-5 shadow-none">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-sm font-semibold">Waiting for OpenPay payment</p>
-              <p className="text-xs text-muted-foreground">
-                Pay {formatUSD(pendingPayLink.amount)}
-                {pendingPayLink.partner_username
-                  ? ` to @${pendingPayLink.partner_username}`
-                  : ""}{" "}
-                from your OpenPay account, then confirm here.
-              </p>
+        <div className="overflow-hidden rounded-2xl bg-card">
+          <div className="flex items-start gap-3 px-4 py-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1 space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Waiting for OpenPay payment</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Pay {formatUSD(pendingPayLink.amount)}
+                  {pendingPayLink.partner_username
+                    ? ` to @${pendingPayLink.partner_username}`
+                    : ""}{" "}
+                  from your OpenPay account, then confirm here.
+                </p>
+              </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  className="rounded-full"
+                  className="h-10 rounded-full px-5"
                   disabled={busy}
                   onClick={confirmPayLink}
                 >
@@ -357,8 +361,8 @@ function TopUpPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="rounded-full"
+                  variant="ghost"
+                  className="h-10 rounded-full px-4 text-muted-foreground"
                   onClick={() => {
                     setPendingPayLink(null);
                     try {
@@ -373,15 +377,17 @@ function TopUpPage() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
-      <Card className="rounded-2xl border-0 bg-card p-5 shadow-none">
-        <form onSubmit={submit} className="space-y-5">
-          <div>
-            <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Amount (USD)
-            </Label>
+      <form onSubmit={submit} className="space-y-6">
+        {/* Amount */}
+        <section>
+          <Label className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Amount
+          </Label>
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-3xl font-bold text-muted-foreground">$</span>
             <Input
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -389,97 +395,113 @@ function TopUpPage() {
               min="1"
               step="any"
               required
-              className="h-14 text-2xl font-bold tabular-nums"
+              inputMode="decimal"
+              className="h-auto w-full max-w-[12rem] border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
             />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {presets.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setAmount(String(p))}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    amount === String(p)
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-muted",
-                  )}
-                >
-                  ${p}
-                </button>
-              ))}
-            </div>
           </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+            {presets.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setAmount(String(p))}
+                className={cn(
+                  "rounded-lg px-3.5 py-2 text-xs font-semibold press",
+                  amount === String(p)
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                )}
+              >
+                ${p}
+              </button>
+            ))}
+          </div>
+        </section>
 
-          <div>
-            <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Payment method
-            </Label>
-            <div className="space-y-2">
-              {methods.map((m) => (
+        {/* Payment method — flat Phantom list */}
+        <section>
+          <h2 className="mb-2 px-1 text-sm text-muted-foreground">Pay with</h2>
+          <div className="overflow-hidden rounded-2xl bg-card">
+            {methods.map((m, i) => {
+              const selected = method === m.id;
+              return (
                 <button
                   key={m.id}
                   type="button"
                   onClick={() => setMethod(m.id)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all",
-                    method === m.id
-                      ? "border-primary bg-primary/5 shadow-glow"
-                      : "border-border hover:bg-muted/50",
+                    "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-muted/40",
+                    i > 0 && "border-t border-border/60",
                   )}
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
-                    <m.icon className="h-4 w-4" />
+                  <span
+                    className={cn(
+                      "grid h-11 w-11 place-items-center rounded-full",
+                      selected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                    )}
+                  >
+                    <m.icon className="h-[18px] w-[18px]" />
                   </span>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold">{m.label}</div>
-                    <div className="text-xs text-muted-foreground">{m.desc}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-foreground">{m.label}</div>
+                    <div className="truncate text-xs text-muted-foreground">{m.desc}</div>
                   </div>
+                  <span
+                    className={cn(
+                      "grid h-5 w-5 place-items-center rounded-full border-2",
+                      selected ? "border-primary bg-primary" : "border-muted-foreground/40",
+                    )}
+                  >
+                    {selected ? <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" /> : null}
+                  </span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
+        </section>
 
-          {method === "openpay_balance" && (
-            <div className="rounded-2xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              {linked ? (
-                <>
-                  Paying from connected OpenPay
-                  {openpayLink?.username
-                    ? ` @${openpayLink.username}`
-                    : openpayLink?.account_number
-                      ? ` · ${openpayLink.account_number}`
-                      : ""}
-                  . You’ll confirm on OpenPay — your OpenPay balance is debited, then{" "}
-                  <span className="font-semibold text-foreground">
-                    {wallet?.name ?? "your active wallet"}
-                  </span>{" "}
-                  is credited.
-                </>
-              ) : (
-                <span className="flex flex-wrap items-center gap-2">
-                  Connect your OpenPay account first so Top Up can debit your balance.
-                  <Link to="/settings" className="inline-flex items-center gap-1 font-medium text-primary">
-                    <Link2 className="h-3.5 w-3.5" />
-                    Settings → Connect
-                  </Link>
-                </span>
-              )}
-            </div>
-          )}
+        {method === "openpay_balance" && (
+          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
+            {linked ? (
+              <>
+                Paying from connected OpenPay
+                {openpayLink?.username
+                  ? ` @${openpayLink.username}`
+                  : openpayLink?.account_number
+                    ? ` · ${openpayLink.account_number}`
+                    : ""}
+                . Confirm on OpenPay — balance is debited, then{" "}
+                <span className="font-medium text-foreground">
+                  {wallet?.name ?? "your wallet"}
+                </span>{" "}
+                is credited.
+              </>
+            ) : (
+              <>
+                Connect OpenPay in Settings first.{" "}
+                <Link to="/settings" className="inline-flex items-center gap-1 font-semibold text-primary">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Connect
+                </Link>
+              </>
+            )}
+          </p>
+        )}
 
+        <div className="pt-1">
           <Button
             type="submit"
-            disabled={busy || (method === "openpay_balance" && !linked)}
-            className="h-12 w-full rounded-full bg-primary text-base font-semibold text-primary-foreground"
+            disabled={busy || (method === "openpay_balance" && !linked) || amtNum < 1}
+            className="h-14 w-full rounded-full text-base font-semibold"
           >
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
             {cta}
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">
-            New accounts start with a zero balance. Top up to begin.
+          <p className="mt-3 text-center text-[11px] text-muted-foreground">
+            1 OUSD = $1.00 · credited to your active wallet
           </p>
-        </form>
-      </Card>
+        </div>
+      </form>
     </div>
   );
 }

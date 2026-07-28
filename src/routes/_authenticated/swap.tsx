@@ -1,10 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowDown,
-  ArrowLeft,
   Check,
   ChevronDown,
   Loader2,
@@ -16,7 +15,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
@@ -308,34 +307,27 @@ function OpenDexPage() {
     !!wallet?.id;
 
   return (
-    <div className="ph-page space-y-5">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon" className="rounded-full">
-          <Link to="/dashboard">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div className="flex-1 text-center">
-          <h1 className="text-lg font-bold tracking-tight">Swap</h1>
-          <p className="text-xs text-muted-foreground">OpenDEX · wallet balances</p>
-        </div>
-        <button
-          type="button"
-          className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
-          aria-label="Swap settings"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Settings2 className="h-4 w-4" />
-        </button>
-      </div>
+    <div className="ot-phantom ph-page space-y-5 pb-8">
+      <PageHeader
+        title="Swap"
+        backTo="/dashboard"
+        right={
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Swap settings"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 className="h-4 w-4" />
+          </button>
+        }
+      />
 
-      <Card className="rounded-2xl border-0 bg-card p-5 shadow-none">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-semibold">Trade</span>
-        </div>
+      <p className="-mt-2 text-center text-sm text-muted-foreground">OpenDEX · wallet balances</p>
 
+      <div className="space-y-1">
         <SwapSide
-          label="From"
+          label="You pay"
           tokens={fromTokens}
           value={from}
           onChange={pickFrom}
@@ -347,11 +339,11 @@ function OpenDexPage() {
           emptyHint="No tokens in your wallet yet"
         />
 
-        <div className="my-2 flex justify-center">
+        <div className="relative z-10 -my-2 flex justify-center">
           <button
             type="button"
             onClick={flip}
-            className="rounded-full border border-border bg-card p-2 shadow-card hover:bg-accent"
+            className="grid h-11 w-11 place-items-center rounded-full border-4 border-background bg-muted text-foreground press hover:bg-accent"
             aria-label="Flip tokens"
           >
             <ArrowDown className="h-4 w-4" />
@@ -359,7 +351,7 @@ function OpenDexPage() {
         </div>
 
         <SwapSide
-          label="To"
+          label="You receive"
           tokens={toTokens}
           value={to}
           onChange={pickTo}
@@ -367,51 +359,46 @@ function OpenDexPage() {
           onAmount={() => {}}
           balance={toBal}
         />
+      </div>
 
-        <div className="mt-4 space-y-1.5 rounded-2xl bg-muted/40 p-3 text-xs">
+      <div className="overflow-hidden rounded-2xl bg-card">
+        <div className="space-y-0 px-1 py-1 text-sm">
           <Row label="Rate">
             {fromToken && toToken && rate > 0
               ? `1 ${fromToken.symbol} = ${formatNumber(rate, 8)} ${toToken.symbol}`
               : "—"}
           </Row>
-          <Row label="You pay">
-            {amt > 0 ? `${formatNumber(amt, 8)} ${fromToken?.symbol ?? ""}` : "0"}
-          </Row>
-          <Row label="You receive">
-            {rawOutput > 0 ? `${formatNumber(rawOutput, 8)} ${toToken?.symbol ?? ""}` : "0"}
-          </Row>
           <Row label="Min received">
-            {rawOutput > 0 ? `${formatNumber(minOut, 8)} ${toToken?.symbol ?? ""}` : "0"}
+            {rawOutput > 0 ? `${formatNumber(minOut, 8)} ${toToken?.symbol ?? ""}` : "—"}
           </Row>
           <Row label="Slippage">{slippage}%</Row>
-          <Row label="Wallet OUSD">{formatNumber(balanceMap.get(OUSD_SWAP_ID) ?? 0, 4)}</Row>
         </div>
+      </div>
 
-        {(samePair || needsOusd) && (
-          <p className="mt-2 text-center text-xs text-destructive">
-            {samePair ? "Choose different tokens" : "One side must be OUSD"}
-          </p>
-        )}
+      {(samePair || needsOusd) && (
+        <p className="text-center text-xs text-destructive">
+          {samePair ? "Choose different tokens" : "One side must be OUSD"}
+        </p>
+      )}
 
-        <Button
-          onClick={doSwap}
-          disabled={!canSwap}
-          className="mt-4 h-12 w-full rounded-full bg-primary text-base font-semibold text-primary-foreground"
-        >
-          {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-          {!wallet
-            ? "Create a wallet first"
-            : !fromToken || !toToken
-              ? "Select tokens"
-              : samePair || needsOusd
-                ? "Invalid pair"
-                : amt > fromBal
-                  ? `Insufficient ${fromToken.symbol}`
-                  : amt > 0
-                    ? `Swap ${formatNumber(amt, 4)} ${fromToken.symbol}`
-                    : "Enter an amount"}
-        </Button>
-      </Card>
+      <Button
+        onClick={doSwap}
+        disabled={!canSwap}
+        className="h-14 w-full rounded-full text-base font-semibold"
+      >
+        {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+        {!wallet
+          ? "Create a wallet first"
+          : !fromToken || !toToken
+            ? "Select tokens"
+            : samePair || needsOusd
+              ? "Invalid pair"
+              : amt > fromBal
+                ? `Insufficient ${fromToken.symbol}`
+                : amt > 0
+                  ? `Swap ${formatNumber(amt, 4)} ${fromToken.symbol}`
+                  : "Enter an amount"}
+      </Button>
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-sm rounded-3xl">
@@ -497,12 +484,12 @@ function SwapSide({
   }, [tokens, q]);
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-muted/30 p-3">
+    <div className="rounded-2xl bg-card p-4">
       <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
         <span>{label}</span>
         <button
           type="button"
-          className={cn("tabular-nums", editable && onMax && "hover:text-primary")}
+          className={cn("tabular-nums", editable && onMax && "font-medium text-primary")}
           onClick={editable && onMax ? onMax : undefined}
         >
           Bal: {formatNumber(balance, balance > 0 && balance < 1 ? 6 : 4)}
@@ -521,7 +508,7 @@ function SwapSide({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-sm font-semibold hover:bg-accent"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-2.5 py-2 text-sm font-semibold hover:bg-accent"
             >
               <TokenLogo token={selected} size="sm" />
               <span>{selected?.symbol ?? "Select"}</span>
@@ -615,9 +602,9 @@ function TokenLogo({ token, size = "md" }: { token?: SwapToken | null; size?: "s
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 border-b border-border/50 px-3 py-3 last:border-0">
       <span className="text-muted-foreground">{label}</span>
-      <div className="text-right font-medium tabular-nums">{children}</div>
+      <div className="text-right text-sm font-medium tabular-nums text-foreground">{children}</div>
     </div>
   );
 }

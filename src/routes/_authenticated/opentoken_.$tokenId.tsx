@@ -38,14 +38,12 @@ import {
 } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { reportOpenToken } from "@/lib/opentoken.functions";
-import { CommentThread, PriceChart, TradePanel } from "@/components/opentoken";
+import { CommentThread, PhantomSparkline, TradePanel, type PhantomPeriod } from "@/components/opentoken";
 
 export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId")({
   head: () => ({ meta: [{ title: "Token — OpenToken" }] }),
   component: OpenTokenDetail,
 });
-
-const CHART_PERIODS = ["LIVE", "1D", "1W", "1M", "1Y", "ALL"] as const;
 
 function OpenTokenDetail() {
   const { tokenId } = Route.useParams();
@@ -54,7 +52,7 @@ function OpenTokenDetail() {
   const reportFn = useServerFn(reportOpenToken);
   const [reportOpen, setReportOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [chartPeriod, setChartPeriod] = useState<string>("LIVE");
+  const [chartPeriod, setChartPeriod] = useState<PhantomPeriod>("1D");
   const [showBuyPanel, setShowBuyPanel] = useState(false);
 
   const { data: token, isLoading } = useQuery({
@@ -91,14 +89,14 @@ function OpenTokenDetail() {
   });
 
   const { data: ticks = [] } = useQuery({
-    queryKey: ["ot-ticks", tokenId],
+    queryKey: ["ot-ticks", tokenId, chartPeriod],
     queryFn: async () => {
       const { data } = await supabase
         .from("ot_price_ticks")
         .select("created_at, price, market_cap")
         .eq("token_id", tokenId)
         .order("created_at", { ascending: false })
-        .limit(120);
+        .limit(chartPeriod === "1H" ? 48 : chartPeriod === "1D" ? 96 : 180);
       return data ?? [];
     },
   });
@@ -300,48 +298,39 @@ function OpenTokenDetail() {
             <StatPill label="Holders" value={formatNumber(token.holder_count ?? 0, 0)} />
           </div>
 
-          {/* Chart */}
-          <section className="rounded-3xl bg-card p-4">
-            <div className="mb-3 flex items-end justify-between gap-3">
-              <div>
-                <div className="text-[11px] text-muted-foreground">Market cap</div>
-                <div className="text-2xl font-bold tabular-nums">
-                  {formatOUSD(mcap, { compact: true })}
+          {/* Chart — Phantom sparkline (green up / red down) */}
+          <section className="space-y-3">
+            <div className="rounded-3xl bg-card p-4">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-[11px] text-muted-foreground">Market cap</div>
+                  <div className="text-2xl font-bold tabular-nums">
+                    {formatOUSD(mcap, { compact: true })}
+                  </div>
+                </div>
+                <div className="min-w-28 flex-1">
+                  <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
+                    <span>Curve</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="min-w-28 flex-1">
-                <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
-                  <span>Curve</span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{ width: `${token.status === "graduated" ? 100 : progress}%` }}
-                  />
-                </div>
-              </div>
             </div>
-            <div className="overflow-hidden rounded-2xl bg-muted/30">
-              <PriceChart ticks={ticks} mode="price" trend={up ? "up" : "down"} height={200} />
-            </div>
-            <div className="mt-3 flex flex-wrap justify-center gap-1">
-              {CHART_PERIODS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setChartPeriod(p)}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-semibold press",
-                    chartPeriod === p
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <PhantomSparkline
+              period={chartPeriod}
+              onPeriodChange={setChartPeriod}
+              ticks={ticks}
+              price={price}
+              changePct={change}
+              tokenKey={tokenId}
+              peg={String(token.symbol ?? "").toUpperCase() === "OUSD"}
+            />
           </section>
 
           {/* About */}

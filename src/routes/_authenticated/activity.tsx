@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { fetchWalletActivity, type ActivityItem } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/activity")({
@@ -39,20 +40,18 @@ function ActivityPage() {
   });
 
   return (
-    <div className="ph-page space-y-4">
-      <div className="text-center md:text-left">
-        <h1 className="text-2xl font-bold tracking-tight">History</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Transfers, swaps, and OpenToken trades
-        </p>
-      </div>
+    <div className="ot-phantom ph-page space-y-4 pb-8">
+      <PageHeader title="History" backTo="/dashboard" />
+      <p className="-mt-2 text-center text-sm text-muted-foreground">
+        Transfers, swaps, and OpenToken trades
+      </p>
 
       {txs.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted-foreground">
           No activity yet — your transactions will appear here.
         </p>
       ) : (
-        <ul>
+        <ul className="overflow-hidden rounded-2xl bg-card">
           {txs.map((t) => (
             <li key={`${t.source ?? "wallet"}-${t.id}`}>
               <TxRowButton tx={t} onOpen={setSelected} />

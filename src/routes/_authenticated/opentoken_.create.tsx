@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Image as ImageIcon,
   Loader2,
-  Sparkles,
+  Plus,
   Info,
   Gift,
   Zap,
@@ -225,7 +225,7 @@ function CreateOpenTokenPage() {
             <img src={form.logo_url} alt="" className="aspect-video w-full object-cover" />
           ) : (
             <div className="grid aspect-video place-items-center bg-primary/10 text-primary">
-              <Sparkles className="h-10 w-10" />
+              <Plus className="h-10 w-10" />
             </div>
           )}
           <div className="px-5 py-4">
@@ -654,7 +654,7 @@ function CreateOpenTokenPage() {
             {uploading || uploadingBanner ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 h-5 w-5" />
+              <Plus className="mr-2 h-5 w-5" />
             )}
             Continue
           </Button>
@@ -691,7 +691,7 @@ function CreateOpenTokenPage() {
                   <div className="grid h-full place-items-center px-6 text-center">
                     <div>
                       <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary">
-                        <Sparkles className="h-6 w-6" />
+                        <Plus className="h-6 w-6" />
                       </div>
                       <p className="text-sm text-muted-foreground">
                         A preview of how the coin will look

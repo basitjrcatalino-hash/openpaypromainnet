@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Clock,
-  ArrowLeft,
   Camera,
   Check,
   ChevronRight,
@@ -20,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { OusdIcon } from "@/components/ousd-icon";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { sendAsset } from "@/lib/transfer.functions";
@@ -407,21 +407,8 @@ function SendPage() {
   };
 
   return (
-    <div className="ph-page min-h-[70vh]">
-      <div className="ph-header sticky top-0 z-10 mb-4 flex items-center gap-2 py-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-full"
-          onClick={goBack}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="flex-1 text-center text-lg font-bold tracking-tight">{titles[step]}</h1>
-        <div className="w-9" />
-      </div>
+    <div className="ot-phantom ph-page min-h-[70vh] pb-8">
+      <PageHeader title={titles[step]} onBack={goBack} />
 
       {step === "asset" && (
         <div className="space-y-2">

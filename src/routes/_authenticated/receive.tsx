@@ -16,15 +16,16 @@ import { toast } from "sonner";
 import QRCode from "qrcode";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/wallet/PageHeader";
+import { cn } from "@/lib/utils";
 import {
   claimOpenPayInbound,
   createOpenPayReceiveLink,
   settleOpenPayInboundReceive,
 } from "@/lib/openpay-pro.functions";
-import { formatUSD } from "@/lib/wallet-utils";
+import { formatUSD, shortAddress } from "@/lib/wallet-utils";
 
 export const Route = createFileRoute("/_authenticated/receive")({
   head: () => ({ meta: [{ title: "Receive — OpenPay Pro Wallet" }] }),
@@ -61,6 +62,7 @@ function ReceivePage() {
   const [asset, setAsset] = useState<"OUSD" | "PI">("OUSD");
   const [opAmount, setOpAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<"wallet" | "openpay">("wallet");
   const [opLink, setOpLink] = useState<{
     pay_url: string;
     note: string;
@@ -96,9 +98,9 @@ function ReceivePage() {
   useEffect(() => {
     if (!canvasRef.current || !payUri) return;
     QRCode.toCanvas(canvasRef.current, payUri, {
-      width: 240,
+      width: 220,
       margin: 1,
-      color: { dark: "#003087", light: "#ffffff" },
+      color: { dark: "#111111", light: "#ffffff" },
       errorCorrectionLevel: "M",
     }).catch(() => {});
   }, [payUri]);
@@ -108,7 +110,7 @@ function ReceivePage() {
     QRCode.toCanvas(opCanvasRef.current, opLink.pay_url, {
       width: 200,
       margin: 1,
-      color: { dark: "#003087", light: "#ffffff" },
+      color: { dark: "#111111", light: "#ffffff" },
       errorCorrectionLevel: "M",
     }).catch(() => {});
   }, [opLink?.pay_url]);
@@ -119,7 +121,6 @@ function ReceivePage() {
     qc.invalidateQueries({ queryKey: ["wallets", user.id] });
   }
 
-  /** Reconcile real OpenPay credits (works even when the payer is someone else). */
   async function checkForPayment(opts: { silent?: boolean } = {}) {
     setBusy(true);
     try {
@@ -141,7 +142,6 @@ function ReceivePage() {
     }
   }
 
-  // Settle OpenPay → Pro inbound return
   useEffect(() => {
     if (search.openpay_cancel) {
       toast.error("OpenPay transfer canceled");
@@ -155,7 +155,6 @@ function ReceivePage() {
     (async () => {
       setBusy(true);
       try {
-        // 1) Reconcile against the real OpenPay ledger first (authoritative).
         let done = false;
         try {
           const c = await claimInbound({ data: { note: search.openpay_ref } });
@@ -167,10 +166,9 @@ function ReceivePage() {
             done = true;
           }
         } catch {
-          /* fall through to redirect settle */
+          /* fall through */
         }
 
-        // 2) Fallback: settle from the redirect params.
         if (!done) {
           const amt = search.amount ? Number(search.amount) : undefined;
           const r = await settleInbound({
@@ -202,7 +200,6 @@ function ReceivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.openpay_in, search.openpay_cancel]);
 
-  // Auto-poll for the payment while a receive link is open.
   useEffect(() => {
     if (!opLink) return;
     let n = 0;
@@ -273,160 +270,182 @@ function ReceivePage() {
   }
 
   return (
-    <div className="ph-page space-y-5">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Receive</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Share your Pro wallet or get paid from OpenPay
-        </p>
+    <div className="ot-phantom ph-page space-y-5 pb-8">
+      <PageHeader title="Receive" backTo="/dashboard" />
+
+      {/* Segmented control */}
+      <div className="mx-auto grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl bg-muted/50 p-1">
+        <button
+          type="button"
+          onClick={() => setTab("wallet")}
+          className={cn(
+            "rounded-xl px-3 py-2.5 text-xs font-semibold press",
+            tab === "wallet" ? "bg-card text-foreground" : "text-muted-foreground",
+          )}
+        >
+          Wallet QR
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("openpay")}
+          className={cn(
+            "rounded-xl px-3 py-2.5 text-xs font-semibold press",
+            tab === "openpay" ? "bg-card text-foreground" : "text-muted-foreground",
+          )}
+        >
+          From OpenPay
+        </button>
       </div>
 
-      {/* OpenPay → Pro */}
-      <Card className="space-y-4 rounded-2xl border-0 bg-card p-5 shadow-none">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-            <WalletIcon className="h-4 w-4" />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold">Receive from OpenPay</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Generate a link so someone on OpenPay can send OUSD to your Pro wallet (same rail as
-              Pay @tag).
-            </p>
+      {tab === "wallet" && (
+        <div className="space-y-5">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">{wallet?.name ?? "Main Wallet"}</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">Scan to receive {asset}</p>
           </div>
-        </div>
 
-        <div>
-          <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Amount (optional)
-          </label>
-          <Input
-            value={opAmount}
-            onChange={(e) => setOpAmount(e.target.value)}
-            placeholder="25.00"
-            inputMode="decimal"
-          />
-        </div>
-
-        <Button
-          type="button"
-          className="w-full rounded-full bg-primary text-primary-foreground"
-          disabled={busy}
-          onClick={makeOpenPayLink}
-        >
-          {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Create OpenPay receive link
-        </Button>
-
-        {opLink && (
-          <div className="space-y-3 rounded-2xl border border-border bg-muted/30 p-4">
-            <div className="mx-auto grid w-fit place-items-center rounded-2xl bg-white p-3">
-              <canvas ref={opCanvasRef} className="block" />
-            </div>
-            <p className="break-all font-mono text-[10px] text-muted-foreground">{opLink.note}</p>
-            {opLink.address ? (
-              <p className="break-all font-mono text-[10px] text-muted-foreground">
-                Pro address · {opLink.address}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(opLink.pay_url);
-                  toast.success("OpenPay link copied");
-                }}
-              >
-                <Copy className="mr-1.5 h-3.5 w-3.5" />
-                Copy link
-              </Button>
-              <Button asChild size="sm" className="rounded-full">
-                <a href={opLink.pay_url} target="_blank" rel="noreferrer">
-                  Open
-                  <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                </a>
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="rounded-full"
-                disabled={busy}
-                onClick={() => checkForPayment()}
-              >
-                {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-                Check for payment
-              </Button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Payer opens the link on OpenPay, pays
-              {opLink.partner_username ? ` @${opLink.partner_username}` : ""}, then you are credited
-              on Pro. If the payer is someone else, tap “Check for payment” to credit your wallet.
-            </p>
+          <div className="mx-auto grid w-fit place-items-center rounded-3xl bg-white p-5 shadow-sm">
+            <canvas ref={canvasRef} className="block" />
+            {!payUri && <QrCode className="h-40 w-40 text-muted-foreground" />}
           </div>
-        )}
-      </Card>
 
-      <Card className="rounded-2xl border-0 bg-card p-6 text-center shadow-none">
-        <div className="mx-auto grid place-items-center rounded-2xl bg-white p-4">
-          <canvas ref={canvasRef} className="block" />
-          {!payUri && <QrCode className="h-40 w-40 text-muted-foreground" />}
-        </div>
-
-        <div className="mt-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            Your Pro wallet address
-          </div>
           <button
+            type="button"
             onClick={copyAddr}
-            className="mt-1 inline-flex items-center gap-2 break-all rounded-full bg-muted px-3 py-1.5 font-mono text-xs hover:bg-accent"
+            className="mx-auto flex max-w-full items-center gap-2 rounded-full bg-muted px-4 py-2.5 font-mono text-xs text-foreground press"
           >
-            {wallet?.address ?? "—"}
-            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            <span className="truncate">{shortAddress(wallet?.address, 8, 8)}</span>
+            {copied ? <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
           </button>
-        </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-3 text-left">
-          <div>
-            <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Asset
-            </label>
-            <select
-              value={asset}
-              onChange={(e) => setAsset(e.target.value as "OUSD" | "PI")}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-            >
-              <option>OUSD</option>
-              <option>PI</option>
-            </select>
+          <div className="overflow-hidden rounded-2xl bg-card">
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Asset</span>
+              <div className="flex gap-1 rounded-lg bg-muted/60 p-0.5">
+                {(["OUSD", "PI"] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAsset(a)}
+                    className={cn(
+                      "rounded-md px-3 py-1.5 text-xs font-semibold",
+                      asset === a ? "bg-background text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Amount</span>
+              <Input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Optional"
+                inputMode="decimal"
+                className="h-9 max-w-[9rem] border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
+              />
+            </div>
           </div>
-          <div className="col-span-2">
-            <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Amount (optional)
-            </label>
-            <Input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              inputMode="decimal"
-            />
-          </div>
-        </div>
 
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Button type="button" variant="outline" className="rounded-full" onClick={share}>
-            <Share2 className="mr-1.5 h-3.5 w-3.5" />
-            Share
-          </Button>
-          <Button type="button" variant="outline" className="rounded-full" onClick={downloadQR}>
-            <Download className="mr-1.5 h-3.5 w-3.5" />
-            QR
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-12 rounded-full" onClick={share}>
+              <Share2 className="mr-1.5 h-4 w-4" />
+              Share
+            </Button>
+            <Button type="button" variant="secondary" className="h-12 rounded-full" onClick={downloadQR}>
+              <Download className="mr-1.5 h-4 w-4" />
+              Save QR
+            </Button>
+          </div>
         </div>
-      </Card>
+      )}
+
+      {tab === "openpay" && (
+        <div className="space-y-5">
+          <div className="text-center">
+            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-primary">
+              <WalletIcon className="h-6 w-6" />
+            </span>
+            <p className="text-lg font-semibold text-foreground">Receive from OpenPay</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create a link so someone can pay you from OpenPay
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl bg-card">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Amount</span>
+              <Input
+                value={opAmount}
+                onChange={(e) => setOpAmount(e.target.value)}
+                placeholder="Optional"
+                inputMode="decimal"
+                className="h-9 max-w-[9rem] border-0 bg-transparent text-right font-semibold shadow-none focus-visible:ring-0"
+              />
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            className="h-14 w-full rounded-full text-base font-semibold"
+            disabled={busy}
+            onClick={makeOpenPayLink}
+          >
+            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Create receive link
+          </Button>
+
+          {opLink && (
+            <div className="space-y-4 overflow-hidden rounded-2xl bg-card p-4">
+              <div className="mx-auto grid w-fit place-items-center rounded-2xl bg-white p-3">
+                <canvas ref={opCanvasRef} className="block" />
+              </div>
+              <p className="break-all text-center font-mono text-[10px] text-muted-foreground">
+                {opLink.note}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(opLink.pay_url);
+                    toast.success("OpenPay link copied");
+                  }}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copy link
+                </Button>
+                <Button asChild size="sm" className="rounded-full">
+                  <a href={opLink.pay_url} target="_blank" rel="noreferrer">
+                    Open
+                    <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                  </a>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  disabled={busy}
+                  onClick={() => checkForPayment()}
+                >
+                  {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                  Check payment
+                </Button>
+              </div>
+              <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+                Payer opens the link on OpenPay
+                {opLink.partner_username ? ` (@${opLink.partner_username})` : ""}, then you are
+                credited on Pro.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -120,9 +120,13 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
 
-        // Double-check before pulling Phantom (its deps call Buffer.from at init).
-        if (typeof (globalThis as { Buffer?: { from?: unknown } }).Buffer?.from !== "function") {
+        // Prefer the real feross/buffer — stub alone breaks Phantom at runtime.
+        const Buf = (globalThis as { Buffer?: { from?: unknown; __openpayStub?: unknown } }).Buffer;
+        if (typeof Buf?.from !== "function") {
           throw new Error("Buffer.from is not available in this browser");
+        }
+        if (Buf.__openpayStub) {
+          throw new Error("Buffer polyfill did not upgrade past the early stub");
         }
 
         const mod = await import("@phantom/react-sdk");
@@ -139,7 +143,7 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
         setSdk(null);
         setStatus("error");
         const raw = (err as Error)?.message || "Could not load Phantom Connect";
-        const friendly = /reading 'from'|Buffer/i.test(raw)
+        const friendly = /reading 'from'|Buffer|polyfill|stub/i.test(raw)
           ? "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in."
           : raw;
         setError(friendly);

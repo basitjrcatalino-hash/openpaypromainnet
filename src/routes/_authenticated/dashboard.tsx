@@ -44,6 +44,7 @@ import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
+import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
 
@@ -294,7 +295,8 @@ function Dashboard() {
 
   const [hideBalance, setHideBalance] = useState(false);
   const [selectedTx, setSelectedTx] = useState<TxRow | null>(null);
-  const { code: currency, cycle: cycleCurrency } = useCurrency();
+  const { code: currency, setCode: setCurrency } = useCurrency();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const ledgerUsd = ledgerAssets.reduce(
@@ -402,7 +404,7 @@ function Dashboard() {
         <div className="flex items-center">
           <button
             type="button"
-            onClick={cycleCurrency}
+            onClick={() => setCurrencyOpen(true)}
             className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 press"
             aria-label="Change currency"
           >
@@ -431,7 +433,7 @@ function Dashboard() {
           addressLabel={shortAddress(wallet?.address ?? null, 6, 6)}
           hideBalance={hideBalance}
           copied={copied}
-          onCycleCurrency={cycleCurrency}
+          onCycleCurrency={() => setCurrencyOpen(true)}
           onCopyAddress={copyAddress}
         />
       )}
@@ -822,6 +824,13 @@ function Dashboard() {
         switching={switching}
         currency={currency}
         hideBalance={hideBalance}
+      />
+
+      <CurrencyPickerSheet
+        open={currencyOpen}
+        onOpenChange={setCurrencyOpen}
+        value={currency}
+        onSelect={setCurrency}
       />
 
       <ExploreDock

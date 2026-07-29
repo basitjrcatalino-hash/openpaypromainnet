@@ -32,11 +32,22 @@ function ScanPage() {
   const alive = useRef(true);
   const finishRef = useRef<(text: string) => Promise<void>>(async () => undefined);
   const [flash, setFlash] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const [scannerActive, setScannerActive] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    const timer = setTimeout(() => setScannerActive(true), 350);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const scanner = usePhantomQrScanner({
     videoRef,
     fallbackElId: FALLBACK_EL_ID,
-    active: true,
+    active: scannerActive,
     onResult: (text) => {
       if (handled.current) return;
       handled.current = true;
@@ -139,12 +150,18 @@ function ScanPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black text-white">
+    <div
+      className={cn(
+        "fixed inset-0 z-50 overflow-hidden bg-black text-white transition-[opacity,transform] duration-300 ease-out",
+        entered ? "scale-100 opacity-100" : "scale-95 opacity-0",
+      )}
+    >
       <video
         ref={videoRef}
         className={cn(
-          "absolute inset-0 z-0 h-full w-full object-cover",
+          "absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-500",
           scanner.mode !== "native" && "invisible",
+          scanner.starting && "opacity-0",
         )}
         playsInline
         muted
@@ -174,11 +191,10 @@ function ScanPage() {
         <div className="flex w-full items-stretch">
           <div className="flex-1 bg-black/60" />
           <div className="relative h-[min(72vw,18.5rem)] w-[min(72vw,18.5rem)] shrink-0">
-            {/* Corner brackets — Phantom style */}
-            <span className="absolute -left-0.5 -top-0.5 h-11 w-11 rounded-tl-[1.15rem] border-l-[3.5px] border-t-[3.5px] border-white" />
-            <span className="absolute -right-0.5 -top-0.5 h-11 w-11 rounded-tr-[1.15rem] border-r-[3.5px] border-t-[3.5px] border-white" />
-            <span className="absolute -bottom-0.5 -left-0.5 h-11 w-11 rounded-bl-[1.15rem] border-b-[3.5px] border-l-[3.5px] border-white" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-11 w-11 rounded-br-[1.15rem] border-b-[3.5px] border-r-[3.5px] border-white" />
+            <span className="ph-scan-bracket absolute -left-0.5 -top-0.5 h-11 w-11 rounded-tl-[1.15rem] border-l-[3.5px] border-t-[3.5px] border-white" />
+            <span className="ph-scan-bracket absolute -right-0.5 -top-0.5 h-11 w-11 rounded-tr-[1.15rem] border-r-[3.5px] border-t-[3.5px] border-white [animation-delay:60ms]" />
+            <span className="ph-scan-bracket absolute -bottom-0.5 -left-0.5 h-11 w-11 rounded-bl-[1.15rem] border-b-[3.5px] border-l-[3.5px] border-white [animation-delay:120ms]" />
+            <span className="ph-scan-bracket absolute -bottom-0.5 -right-0.5 h-11 w-11 rounded-br-[1.15rem] border-b-[3.5px] border-r-[3.5px] border-white [animation-delay:180ms]" />
             {/* Scan line */}
             {!scanner.error && !scanner.starting && (
               <div className="ph-scan-line absolute inset-x-3 h-0.5 rounded-full bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.85)]" />

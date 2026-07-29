@@ -344,6 +344,14 @@
   animation: scan-line 2.1s cubic-bezier(.4,0,.2,1) infinite;
 }
 
+@keyframes scan-bracket-in {
+  0% { opacity: 0; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@utility ph-scan-bracket {
+  animation: scan-bracket-in 0.4s cubic-bezier(.22,1,.36,1) both;
+}
+
 @utility glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);

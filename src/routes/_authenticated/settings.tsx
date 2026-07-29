@@ -36,8 +36,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { ManageWalletsSheet } from "@/components/wallet/ManageWalletsSheet";
+import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
+import {
+  currencyListLabel,
+  getCurrencyMeta,
+  useCurrency,
+} from "@/lib/currency";
 import {
   createFreshRecoveryWallet,
   deriveWalletFromPhrase,
@@ -105,6 +111,8 @@ function SettingsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [addTab, setAddTab] = useState<"create" | "import">("create");
   const [manageOpen, setManageOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { code: displayCurrency, setCode: setDisplayCurrency } = useCurrency();
   const [signingOut, setSigningOut] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -665,6 +673,16 @@ function SettingsPage() {
           onRemove={(w) => setConfirmDeleteId(w.id)}
         />
 
+        <CurrencyPickerSheet
+          open={currencyOpen}
+          onOpenChange={setCurrencyOpen}
+          value={prefs?.currency || displayCurrency || "USD"}
+          onSelect={(code) => {
+            setDisplayCurrency(code);
+            void updatePref({ currency: code });
+          }}
+        />
+
         <Dialog
           open={addOpen}
           onOpenChange={(o) => {
@@ -956,16 +974,18 @@ function SettingsPage() {
               </div>
             </SettingRow>
             <SettingRow label="Currency" desc="Display fiat values in">
-              <select
-                value={prefs?.currency ?? "USD"}
-                onChange={(e) => updatePref({ currency: e.target.value })}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              <button
+                type="button"
+                onClick={() => setCurrencyOpen(true)}
+                className="flex h-9 max-w-[14rem] items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
               >
-                <option>USD</option>
-                <option>EUR</option>
-                <option>GBP</option>
-                <option>JPY</option>
-              </select>
+                <span className="truncate">
+                  {currencyListLabel(
+                    getCurrencyMeta(prefs?.currency || displayCurrency || "USD"),
+                  )}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
             </SettingRow>
             <SettingRow label="Language" desc="Interface language">
               <select

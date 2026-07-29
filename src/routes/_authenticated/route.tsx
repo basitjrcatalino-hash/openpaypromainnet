@@ -45,6 +45,7 @@ import {
   WalletSwitcherDialog,
 } from "@/components/wallet/WalletSwitcherDialog";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
+import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { fetchWalletPortfolioTotals } from "@/lib/wallet-portfolio";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
@@ -408,7 +409,8 @@ function SidebarInner({
   const [hideBalance, setHideBalance] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
-  const { code: currency, cycle: cycleCurrency } = useCurrency();
+  const { code: currency, setCode: setCurrency } = useCurrency();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const { data: activeHoldings = [] } = useQuery({
@@ -552,7 +554,7 @@ function SidebarInner({
         addressLabel={shortAddress(activeWallet?.address ?? null)}
         hideBalance={hideBalance}
         copied={copied}
-        onCycleCurrency={cycleCurrency}
+        onCycleCurrency={() => setCurrencyOpen(true)}
         onCopyAddress={copyAddress}
         className="py-2"
       />
@@ -684,6 +686,16 @@ function SidebarInner({
         currency={currency}
         hideBalance={hideBalance}
         onNavigateAway={onClose}
+      />
+
+      <CurrencyPickerSheet
+        open={currencyOpen}
+        onOpenChange={setCurrencyOpen}
+        value={currency}
+        onSelect={(code) => {
+          setCurrency(code);
+          onClose?.();
+        }}
       />
     </div>
   );

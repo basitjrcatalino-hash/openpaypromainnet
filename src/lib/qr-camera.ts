@@ -209,8 +209,14 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
 
       el = document.getElementById(elementId);
       if (!el || el.clientWidth <= 0 || el.clientHeight <= 0) {
-        onErrorRef.current?.("Scanner view not ready. Tap Try again.");
-        return;
+        // One more attempt with longer wait for late-layout cases
+        await new Promise((r) => setTimeout(r, 500));
+        if (cancelled) return;
+        el = document.getElementById(elementId);
+        if (!el || el.clientWidth <= 0 || el.clientHeight <= 0) {
+          onErrorRef.current?.("Scanner view not ready. Tap Try again.");
+          return;
+        }
       }
 
       el.innerHTML = "";
@@ -359,7 +365,19 @@ export function usePhantomQrScanner({
     handledRef.current = false;
 
     const BD = getBarcodeDetector();
-    if (!BD) {
+    if (!BD || !navigator.mediaDevices?.getUserMedia) {
+      setUseFallback(true);
+      return;
+    }
+
+    // Verify BarcodeDetector actually works (some browsers declare it but throw)
+    try {
+      const testDetector = new BD({ formats: ["qr_code"] });
+      if (!testDetector || typeof testDetector.detect !== "function") {
+        setUseFallback(true);
+        return;
+      }
+    } catch {
       setUseFallback(true);
       return;
     }
@@ -446,7 +464,6 @@ export function usePhantomQrScanner({
         });
       } catch (e) {
         if (cancelled) return;
-        // Fall back to html5-qrcode for broader device support
         setUseFallback(true);
         setError(null);
         setStarting(true);
@@ -454,8 +471,18 @@ export function usePhantomQrScanner({
       }
     })();
 
+    // Timeout: if still starting after 8s on native path, switch to fallback
+    const timeout = setTimeout(() => {
+      if (!cancelled && starting) {
+        setUseFallback(true);
+        setStarting(true);
+        setError(null);
+      }
+    }, 8000);
+
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
       cancelAnimationFrame(raf);
       const video = videoRef.current;
       if (video) {

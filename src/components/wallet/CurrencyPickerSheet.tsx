@@ -51,7 +51,7 @@ function CurrencyList({
   }
 
   return (
-    <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl bg-[#121212]">
+    <ul className="divide-y divide-border overflow-hidden rounded-2xl bg-muted/60 dark:bg-muted/40">
       {filtered.map((c) => (
         <CurrencyRow
           key={c.code}
@@ -78,7 +78,7 @@ function CurrencyRow({
       <button
         type="button"
         onClick={onSelect}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left press"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left press hover:bg-muted/80"
       >
         <span className="min-w-0 truncate text-[15px] font-medium text-foreground">
           {currencyListLabel(currency)}
@@ -88,7 +88,7 @@ function CurrencyRow({
             "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
             selected
               ? "border-primary bg-primary"
-              : "border-muted-foreground/40 bg-transparent",
+              : "border-muted-foreground/50 bg-background",
           )}
           aria-hidden
         >

@@ -56,26 +56,30 @@ export const creditMoonPayTopup = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Active wallet not found");
 
     const creditAmt = Math.round(amount * 100) / 100;
-    const newBal = Number(wallet.ousd_balance ?? 0) + creditAmt;
-    const { error: uErr } = await supabase
-      .from("wallets")
-      .update({ ousd_balance: newBal })
-      .eq("id", wallet.id);
-    if (uErr) throw uErr;
-
-    const { error: txErr } = await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "buy",
-      status: "confirmed",
-      token_symbol: "OUSD",
-      counterparty: `moonpay:${moonpayTransactionId.slice(0, 12)}`,
-      amount: creditAmt,
-      usd_value: creditAmt,
-      tx_hash: txHash,
-      memo: `MoonPay top-up · ${moonpayTransactionId}`,
-    });
-    if (txErr) {
-      if (/duplicate|unique/i.test(txErr.message)) {
+    const { creditTopupWithFee } = await import("./topup-fee");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      const credited = await creditTopupWithFee({
+        client: supabase,
+        admin: supabaseAdmin,
+        userWalletId: wallet.id,
+        grossAmount: creditAmt,
+        counterparty: `moonpay:${moonpayTransactionId.slice(0, 12)}`,
+        txHash,
+        memo: `MoonPay top-up · ${moonpayTransactionId}`,
+      });
+      return {
+        ok: true as const,
+        alreadyCredited: false as const,
+        amount: credited.netAmount,
+        grossAmount: credited.grossAmount,
+        feeAmount: credited.feeAmount,
+        walletId: wallet.id,
+        balance: credited.balance,
+      };
+    } catch (txErr) {
+      const msg = (txErr as Error).message ?? "";
+      if (/duplicate|unique/i.test(msg)) {
         return {
           ok: true as const,
           alreadyCredited: true as const,
@@ -85,12 +89,4 @@ export const creditMoonPayTopup = createServerFn({ method: "POST" })
       }
       throw txErr;
     }
-
-    return {
-      ok: true as const,
-      alreadyCredited: false as const,
-      amount: creditAmt,
-      walletId: wallet.id,
-      balance: newBal,
-    };
   });

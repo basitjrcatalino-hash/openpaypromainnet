@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -10,6 +11,7 @@ import {
   ExternalLink,
   Globe,
   MoreHorizontal,
+  Plus,
   QrCode,
   Send,
 } from "lucide-react";
@@ -36,10 +38,27 @@ import {
 } from "@/lib/wallet-utils";
 import { OPENPAY_NETWORK_BADGE_URL, OUSD_LOGO_URL } from "@/lib/token-logos";
 import { websiteHref } from "@/lib/opentoken/social";
+import { buyOpenToken } from "@/lib/opentoken.functions";
+import {
+  settleOpenPayCharge,
+  settleOpenPayPayLinkTopup,
+} from "@/lib/openpay-pro.functions";
+import {
+  AssetBuySheet,
+  PENDING_CHARGE_KEY,
+  runPendingAssetBuy,
+} from "@/components/wallet/AssetBuySheet";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   head: ({ params }) => ({
     meta: [{ title: `${params.tokenId === "ousd" ? "OUSD" : "Token"} — OpenPay Pro` }],
+  }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
+    openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
+    openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,
+    openpay_return: s.openpay_return ? "1" : undefined,
+    openpay_cancel: s.openpay_cancel ? "1" : undefined,
   }),
   component: PhantomAssetDetail,
 });
@@ -48,12 +67,18 @@ function PhantomAssetDetail() {
   const { tokenId } = Route.useParams();
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const search = useSearch({ from: "/_authenticated/asset_/$tokenId" });
+  const qc = useQueryClient();
+  const settleCharge = useServerFn(settleOpenPayCharge);
+  const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
+  const buyFn = useServerFn(buyOpenToken);
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
 
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
+  const [buyOpen, setBuyOpen] = useState(false);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -145,6 +170,95 @@ function PhantomAssetDetail() {
   const valueUsd = balance * meta.price;
   const changeAbs = valueUsd * (meta.change / 100);
   const up = meta.change >= 0;
+  const returnPath = `/asset/${tokenId}`;
+
+  useEffect(() => {
+    if (search.openpay_cancel) {
+      toast.error("OpenPay payment canceled");
+      const u = new URL(window.location.href);
+      u.searchParams.delete("openpay_cancel");
+      window.history.replaceState({}, "", u.toString());
+      return;
+    }
+
+    const settle = async () => {
+      try {
+        if (search.openpay_return && search.openpay_ref) {
+          const r = await settlePayLink({
+            data: { reference: search.openpay_ref, txId: search.openpay_tx, fromReturn: true },
+          });
+          if (r.credited && wallet?.id) {
+            const pending = await runPendingAssetBuy({
+              buyFn,
+              walletId: wallet.id,
+              onGraduated: () => toast.success("Token graduated to OpenDEX!"),
+            });
+            if (pending?.bought) {
+              toast.success(
+                `Bought ${formatNumber(pending.tokenAmount, 4)} $${pending.symbol}`,
+              );
+            } else if (pending?.toppedUp) {
+              toast.success("OpenPay payment complete · OUSD credited");
+            } else {
+              toast.success("OpenPay payment complete · OUSD credited");
+            }
+            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            qc.invalidateQueries({ queryKey: ["ot-holding", tokenId] });
+          }
+        } else if (search.openpay_charge || search.openpay_return) {
+          let chargeId = search.openpay_charge;
+          if (!chargeId) {
+            try {
+              chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined;
+            } catch {
+              /* ignore */
+            }
+          }
+          if (chargeId) {
+            const r = await settleCharge({ data: { chargeId } });
+            if (r.credited && wallet?.id) {
+              const pending = await runPendingAssetBuy({
+                buyFn,
+                walletId: wallet.id,
+              });
+              if (pending?.bought) {
+                toast.success(
+                  `Bought ${formatNumber(pending.tokenAmount, 4)} $${pending.symbol}`,
+                );
+              } else {
+                toast.success("OpenPay payment complete · OUSD credited");
+              }
+              qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+              qc.invalidateQueries({ queryKey: ["ot-holding", tokenId] });
+            }
+            try {
+              sessionStorage.removeItem(PENDING_CHARGE_KEY);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+      } catch (e) {
+        toast.error((e as Error).message);
+      } finally {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("openpay_return");
+        u.searchParams.delete("openpay_ref");
+        u.searchParams.delete("openpay_tx");
+        u.searchParams.delete("openpay_charge");
+        window.history.replaceState({}, "", u.toString());
+      }
+    };
+
+    if (
+      search.openpay_return ||
+      search.openpay_charge ||
+      search.openpay_ref
+    ) {
+      void settle();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.openpay_return, search.openpay_charge, search.openpay_ref, wallet?.id]);
 
   async function copy(text: string, label = "Copied") {
     try {
@@ -255,18 +369,9 @@ function PhantomAssetDetail() {
           footnote={isOusd ? "Pegged at $1.00 · stablecoin" : undefined}
         />
 
-        {/* Actions */}
-        <div className="grid grid-cols-4 gap-3">
-          <ActionTile
-            icon={ArrowLeftRight}
-            label="Swap"
-            onClick={() =>
-              navigate({
-                to: "/swap",
-                search: isOusd ? {} : { token: tokenId },
-              })
-            }
-          />
+        {/* Actions — Phantom-style with Buy */}
+        <div className="grid grid-cols-5 gap-2">
+          <ActionTile icon={Plus} label="Buy" primary onClick={() => setBuyOpen(true)} />
           <ActionTile
             icon={Send}
             label="Send"
@@ -274,6 +379,16 @@ function PhantomAssetDetail() {
               navigate({
                 to: "/send",
                 search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+              })
+            }
+          />
+          <ActionTile
+            icon={ArrowLeftRight}
+            label="Swap"
+            onClick={() =>
+              navigate({
+                to: "/swap",
+                search: isOusd ? {} : { token: tokenId },
               })
             }
           />
@@ -505,6 +620,26 @@ function PhantomAssetDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AssetBuySheet
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+        userId={user.id}
+        walletId={wallet?.id}
+        ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+        token={{
+          id: isOusd ? "ousd" : tokenId,
+          symbol: meta.symbol,
+          name: meta.name,
+          price: meta.price,
+          isOusd,
+          status: meta.status,
+        }}
+        returnPath={returnPath}
+        onNavigateSwap={() =>
+          navigate({ to: "/swap", search: isOusd ? {} : { token: tokenId } })
+        }
+      />
     </div>
   );
 }
@@ -513,17 +648,26 @@ function ActionTile({
   icon: Icon,
   label,
   onClick,
+  primary,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   onClick: () => void;
+  primary?: boolean;
 }) {
   return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-2">
-      <span className="grid h-14 w-full place-items-center rounded-2xl border border-border/80 bg-muted/80 text-primary transition hover:bg-accent hover:text-accent-foreground">
+    <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5">
+      <span
+        className={cn(
+          "grid h-12 w-full place-items-center rounded-2xl border transition press",
+          primary
+            ? "border-primary/40 bg-primary text-primary-foreground"
+            : "border-border/80 bg-muted/80 text-primary hover:bg-accent",
+        )}
+      >
         <Icon className="h-5 w-5" />
       </span>
-      <span className="text-xs font-medium text-foreground">{label}</span>
+      <span className="text-[11px] font-medium text-foreground">{label}</span>
     </button>
   );
 }

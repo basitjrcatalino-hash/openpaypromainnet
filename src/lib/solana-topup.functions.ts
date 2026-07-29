@@ -54,27 +54,30 @@ export const creditSolanaPayTopup = createServerFn({ method: "POST" })
     }
     if (!wallet) throw new Error("Active wallet not found");
 
-    const newBal = Number(wallet.ousd_balance ?? 0) + amount;
-    const { error: uErr } = await supabase
-      .from("wallets")
-      .update({ ousd_balance: newBal })
-      .eq("id", wallet.id);
-    if (uErr) throw uErr;
-
-    const { error: txErr } = await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "buy",
-      status: "confirmed",
-      token_symbol: "OUSD",
-      counterparty: `solana:${signature.slice(0, 12)}`,
-      amount,
-      usd_value: amount,
-      tx_hash: signature,
-      memo: `Solana Pay top-up · ${signature}`,
-    });
-    if (txErr) {
-      // Race: another request credited first
-      if (/duplicate|unique/i.test(txErr.message)) {
+    const { creditTopupWithFee } = await import("./topup-fee");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      const credited = await creditTopupWithFee({
+        client: supabase,
+        admin: supabaseAdmin,
+        userWalletId: wallet.id,
+        grossAmount: amount,
+        counterparty: `solana:${signature.slice(0, 12)}`,
+        txHash: signature,
+        memo: `Solana Pay top-up · ${signature}`,
+      });
+      return {
+        ok: true as const,
+        alreadyCredited: false as const,
+        amount: credited.netAmount,
+        grossAmount: credited.grossAmount,
+        feeAmount: credited.feeAmount,
+        walletId: wallet.id,
+        balance: credited.balance,
+      };
+    } catch (txErr) {
+      const msg = (txErr as Error).message ?? "";
+      if (/duplicate|unique/i.test(msg)) {
         return {
           ok: true as const,
           alreadyCredited: true as const,
@@ -84,12 +87,4 @@ export const creditSolanaPayTopup = createServerFn({ method: "POST" })
       }
       throw txErr;
     }
-
-    return {
-      ok: true as const,
-      alreadyCredited: false as const,
-      amount,
-      walletId: wallet.id,
-      balance: newBal,
-    };
   });

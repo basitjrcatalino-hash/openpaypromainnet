@@ -45,12 +45,19 @@ export const getTopupSettings = createServerFn({ method: "GET" })
       .eq("id", 1)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ?? { id: 1, openpay_payment_url: null, instructions: null };
+    return data ?? { id: 1, openpay_payment_url: null, instructions: null, fee_bps: 0, fee_wallet_address: null };
   });
 
 const SettingsSchema = z.object({
   openpay_payment_url: z.string().url().max(500).nullable().optional(),
   instructions: z.string().max(2000).nullable().optional(),
+  fee_bps: z.number().int().min(0).max(10_000).optional(),
+  fee_wallet_address: z
+    .string()
+    .max(42)
+    .nullable()
+    .optional()
+    .refine((v) => !v || /^0x[a-fA-F0-9]{40}$/i.test(v), "Invalid wallet address"),
 });
 
 export const updateTopupSettings = createServerFn({ method: "POST" })
@@ -63,11 +70,15 @@ export const updateTopupSettings = createServerFn({ method: "POST" })
       .update({
         openpay_payment_url: data.openpay_payment_url ?? null,
         instructions: data.instructions ?? null,
+        fee_bps: data.fee_bps ?? 0,
+        fee_wallet_address: data.fee_wallet_address?.trim().toLowerCase() ?? null,
         updated_at: new Date().toISOString(),
         updated_by: context.userId,
       })
       .eq("id", 1);
     if (error) throw new Error(error.message);
+    const { clearTopupFeeSettingsCache } = await import("./topup-fee");
+    clearTopupFeeSettingsCache();
     return { ok: true };
   });
 
@@ -195,8 +206,8 @@ export const getPublicTopupInfo = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("topup_settings")
-      .select("openpay_payment_url, instructions")
+      .select("openpay_payment_url, instructions, fee_bps, fee_wallet_address")
       .eq("id", 1)
       .maybeSingle();
-    return data ?? { openpay_payment_url: null, instructions: null };
+    return data ?? { openpay_payment_url: null, instructions: null, fee_bps: 0, fee_wallet_address: null };
   });

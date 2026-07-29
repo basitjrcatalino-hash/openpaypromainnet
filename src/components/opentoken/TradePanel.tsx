@@ -50,6 +50,27 @@ const BUY_PRESETS = [
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
 const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
 
+/** Store a clean amount string (avoid float junk like 1153846.15384615). */
+function toAmountInput(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "";
+  const decimals = Math.abs(n) >= 1_000_000 ? 2 : 8;
+  return String(Number(n.toFixed(decimals)));
+}
+
+/** Compact / group the hero amount when it would overflow the screen. */
+function formatAmountDisplay(raw: string): string {
+  if (!raw) return "0";
+  if (raw.endsWith(".")) return raw;
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n)) return raw;
+  if (Math.abs(n) >= 1_000_000) return formatNumber(n, 2, { compact: true });
+  if (Math.abs(n) >= 10_000) {
+    const frac = raw.includes(".") ? Math.min(4, (raw.split(".")[1] ?? "").length) : 0;
+    return formatNumber(n, frac, { compact: false });
+  }
+  return raw;
+}
+
 export function TradePanel({
   token,
   walletId,
@@ -410,8 +431,12 @@ export function TradePanel({
       </div>
 
       <div className="flex flex-col items-center justify-center gap-1 py-3">
-        <span className="text-5xl font-bold tabular-nums tracking-tight">{amount || "0"}</span>
-        <span className="text-sm font-medium text-muted-foreground">OUSD</span>
+        <span className="max-w-full truncate text-5xl font-bold tabular-nums tracking-tight">
+          {formatAmountDisplay(amount)}
+        </span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {side === "buy" ? "OUSD" : `$${token.symbol}`}
+        </span>
       </div>
 
       <div className="flex items-center justify-between text-xs">
@@ -420,7 +445,9 @@ export function TradePanel({
           type="button"
           className="font-semibold text-primary"
           onClick={() =>
-            setAmount(String(side === "buy" ? Math.max(0, ousdBalance) : Math.max(0, tokenBalance)))
+            setAmount(
+              toAmountInput(side === "buy" ? Math.max(0, ousdBalance) : Math.max(0, tokenBalance)),
+            )
           }
         >
           Bal: {formatNumber(side === "buy" ? ousdBalance : tokenBalance, 4)}
@@ -513,7 +540,7 @@ export function TradePanel({
             <button
               key={preset.label}
               type="button"
-              onClick={() => setAmount(String(preset.value))}
+              onClick={() => setAmount(toAmountInput(preset.value))}
               className="flex-1 rounded-full bg-muted py-2.5 text-sm font-semibold press"
             >
               {preset.label}

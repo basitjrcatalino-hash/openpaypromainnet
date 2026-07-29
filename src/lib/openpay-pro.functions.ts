@@ -237,6 +237,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { openpayPro } = await import("./openpay-pro.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { supabase, userId } = context;
 
     const { data: prefs } = await supabase
@@ -337,21 +338,13 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
     );
     if (!wallet) throw new Error("Active wallet not found");
 
-    const newBal = Number(wallet.ousd_balance ?? 0) + amount;
-    const { error: uErr } = await supabase
-      .from("wallets")
-      .update({ ousd_balance: newBal })
-      .eq("id", wallet.id);
-    if (uErr) throw new Error(uErr.message);
-
-    await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "buy",
-      status: "confirmed",
-      token_symbol: "OUSD",
+    const { creditTopupWithFee } = await import("./topup-fee");
+    const credited = await creditTopupWithFee({
+      client: supabase,
+      admin: supabaseAdmin,
+      userWalletId: wallet.id,
+      grossAmount: amount,
       counterparty,
-      amount,
-      usd_value: amount,
       memo: `OpenPay balance top-up · ${reference}`,
     });
 
@@ -364,7 +357,14 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     });
 
-    return { credited: true as const, status: "paid" as const, balance: newBal, wallet_id: wallet.id };
+    return {
+      credited: true as const,
+      status: "paid" as const,
+      balance: credited.balance,
+      wallet_id: wallet.id,
+      netAmount: credited.netAmount,
+      feeAmount: credited.feeAmount,
+    };
   });
 
 // Poll after the buyer returns from OpenPay hosted checkout. If paid and not
@@ -410,21 +410,14 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Active wallet not found");
 
     const amount = Number(charge.amount);
-    const newBal = Number(wallet.ousd_balance ?? 0) + amount;
-    const { error: uErr } = await supabase
-      .from("wallets")
-      .update({ ousd_balance: newBal })
-      .eq("id", wallet.id);
-    if (uErr) throw new Error(uErr.message);
 
-    await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "buy",
-      status: "confirmed",
-      token_symbol: "OUSD",
+    const { creditTopupWithFee } = await import("./topup-fee");
+    const credited = await creditTopupWithFee({
+      client: supabase,
+      admin: supabaseAdmin,
+      userWalletId: wallet.id,
+      grossAmount: amount,
       counterparty,
-      amount,
-      usd_value: amount,
       memo: `OpenPay checkout ${charge.id}`,
     });
 
@@ -438,7 +431,14 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
       });
     }
 
-    return { status: "paid", credited: true, balance: newBal, wallet_id: wallet.id };
+    return {
+      status: "paid",
+      credited: true,
+      balance: credited.balance,
+      wallet_id: wallet.id,
+      netAmount: credited.netAmount,
+      feeAmount: credited.feeAmount,
+    };
   });
 
 // Push OpenPay balance from the partner wallet to any OpenPay user

@@ -115,30 +115,23 @@ export async function creditMoonPayWebhookTopup(opts: {
   }
   if (!wallet) throw new Error("Wallet not found for MoonPay customer");
 
-  const newBal = Number(wallet.ousd_balance ?? 0) + amount;
-  const { error: uErr } = await supabaseAdmin
-    .from("wallets")
-    .update({ ousd_balance: newBal })
-    .eq("id", wallet.id);
-  if (uErr) throw uErr;
-
-  const { error: txErr } = await supabaseAdmin.from("transactions").insert({
-    wallet_id: wallet.id,
-    type: "buy",
-    status: "confirmed",
-    token_symbol: "OUSD",
-    counterparty: `moonpay:${opts.transactionId.slice(0, 12)}`,
-    amount,
-    usd_value: amount,
-    tx_hash: txHash,
-    memo: `MoonPay webhook top-up · ${opts.transactionId}`,
-  });
-  if (txErr) {
-    if (/duplicate|unique/i.test(txErr.message)) {
+  const { creditTopupWithFee } = await import("./topup-fee");
+  try {
+    const credited = await creditTopupWithFee({
+      client: supabaseAdmin,
+      admin: supabaseAdmin,
+      userWalletId: wallet.id,
+      grossAmount: amount,
+      counterparty: `moonpay:${opts.transactionId.slice(0, 12)}`,
+      txHash,
+      memo: `MoonPay webhook top-up · ${opts.transactionId}`,
+    });
+    return { ok: true, alreadyCredited: false, amount: credited.netAmount };
+  } catch (txErr) {
+    const msg = (txErr as Error).message ?? "";
+    if (/duplicate|unique/i.test(msg)) {
       return { ok: true, alreadyCredited: true, amount };
     }
     throw txErr;
   }
-
-  return { ok: true, alreadyCredited: false, amount };
 }

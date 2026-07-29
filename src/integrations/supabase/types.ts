@@ -834,6 +834,8 @@ export type Database = {
       }
       topup_settings: {
         Row: {
+          fee_bps: number
+          fee_wallet_address: string | null
           id: number
           instructions: string | null
           openpay_payment_url: string | null
@@ -841,6 +843,8 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          fee_bps?: number
+          fee_wallet_address?: string | null
           id?: number
           instructions?: string | null
           openpay_payment_url?: string | null
@@ -848,6 +852,8 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          fee_bps?: number
+          fee_wallet_address?: string | null
           id?: number
           instructions?: string | null
           openpay_payment_url?: string | null

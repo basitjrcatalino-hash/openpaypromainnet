@@ -52,6 +52,8 @@ function AdminTopupPage() {
 
   const [url, setUrl] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [feePercent, setFeePercent] = useState("0");
+  const [feeWallet, setFeeWallet] = useState("");
   const [amount, setAmount] = useState("10");
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
@@ -90,14 +92,25 @@ function AdminTopupPage() {
   }
 
   const settings = settingsQ.data;
-  if (settings && url === "" && instructions === "") {
+  if (settings && url === "" && instructions === "" && feePercent === "0" && feeWallet === "") {
     if (settings.openpay_payment_url) setUrl(settings.openpay_payment_url);
     if (settings.instructions) setInstructions(settings.instructions);
+    if (settings.fee_bps != null) setFeePercent(String(Number(settings.fee_bps) / 100));
+    if (settings.fee_wallet_address) setFeeWallet(settings.fee_wallet_address);
   }
 
   const saveM = useMutation({
-    mutationFn: () =>
-      saveSettings({ data: { openpay_payment_url: url || null, instructions: instructions || null } }),
+    mutationFn: () => {
+      const bps = Math.round(Number(feePercent || 0) * 100);
+      return saveSettings({
+        data: {
+          openpay_payment_url: url || null,
+          instructions: instructions || null,
+          fee_bps: Number.isFinite(bps) ? Math.max(0, Math.min(10_000, bps)) : 0,
+          fee_wallet_address: feeWallet.trim() || null,
+        },
+      });
+    },
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["topup-settings"] }); qc.invalidateQueries({ queryKey: ["public-topup"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -140,6 +153,45 @@ function AdminTopupPage() {
         <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>
           {saveM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save settings
+        </Button>
+      </Card>
+
+      <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
+        <h2 className="text-lg font-semibold">Top-up fee</h2>
+        <p className="text-sm text-muted-foreground">
+          Fee is deducted from each top-up before crediting the user. All fees are sent to your fee
+          wallet address.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Fee (%)</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={feePercent}
+              onChange={(e) => setFeePercent(e.target.value)}
+              placeholder="e.g. 1.5"
+            />
+            <p className="text-xs text-muted-foreground">0 = no fee. Example: 1.5% on $100 → $1.50 fee.</p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Fee wallet address</Label>
+            <Input
+              value={feeWallet}
+              onChange={(e) => setFeeWallet(e.target.value)}
+              placeholder="0x…"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              Must match an existing wallet in OpenPay Pro (e.g. your Platform fees wallet).
+            </p>
+          </div>
+        </div>
+        <Button onClick={() => saveM.mutate()} disabled={saveM.isPending} variant="secondary">
+          {saveM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Save fee settings
         </Button>
       </Card>
 

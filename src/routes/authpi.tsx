@@ -81,7 +81,7 @@ const AUTH_OPTIONS: {
   {
     id: "pi",
     label: "Pi Network",
-    desc: "Pi Browser or OAuth",
+    desc: "Sign in with your Pi account",
     accent: "#7038A1",
     accentFg: "#ffffff",
     logoUrl: PI_NETWORK_AUTH_LOGO,
@@ -210,6 +210,54 @@ function AuthPiPageInner() {
     ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi")
     : AUTH_OPTIONS;
 
+  function renderFeaturedOption(opt: (typeof AUTH_OPTIONS)[number], delayMs = 0) {
+    const isOn = selected === opt.id;
+    return (
+      <button
+        key={opt.id}
+        id={`auth-opt-${opt.id}`}
+        type="button"
+        role="option"
+        aria-selected={isOn}
+        disabled={busy}
+        onClick={() => pick(opt.id)}
+        style={{ "--auth-accent": opt.accent, animationDelay: `${delayMs}ms` } as CSSProperties}
+        className={cn(
+          "auth-option auth-option-featured relative flex w-full items-center gap-3.5 overflow-hidden rounded-2xl border px-4 py-3.5 text-left",
+          "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+          "disabled:opacity-60",
+          isOn ? "auth-option-selected" : "border-border/60 bg-muted/20",
+          pulseId === opt.id && "auth-option-pulse",
+        )}
+      >
+        <span
+          className="auth-option-icon grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl"
+          style={{ backgroundColor: opt.accent }}
+        >
+          <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-semibold text-foreground">{opt.label}</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">{opt.desc}</span>
+        </span>
+        <span
+          className={cn(
+            "grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all duration-200",
+            isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
+          )}
+          style={{
+            backgroundColor: isOn
+              ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
+              : undefined,
+            color: opt.accent,
+          }}
+        >
+          <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </span>
+      </button>
+    );
+  }
+
   function pick(id: AuthMethod) {
     setSelected(id);
     setPulseId(id);
@@ -259,8 +307,9 @@ function AuthPiPageInner() {
   }
 
   const selectedOpt = visibleOptions.find((o) => o.id === selected) ?? null;
-  const featuredOpt = visibleOptions.find((o) => o.featured) ?? null;
-  const gridOptions = visibleOptions.filter((o) => !o.featured);
+  const featuredOpt = inPiBrowser ? null : (visibleOptions.find((o) => o.featured) ?? null);
+  const piBrowserRows = inPiBrowser ? visibleOptions : [];
+  const gridOptions = inPiBrowser ? [] : visibleOptions.filter((o) => !o.featured);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-background px-4 py-8 sm:py-10">
@@ -286,59 +335,25 @@ function AuthPiPageInner() {
             aria-activedescendant={selected ? `auth-opt-${selected}` : undefined}
             className="space-y-4"
           >
-            {featuredOpt ? (
-              <button
-                id={`auth-opt-${featuredOpt.id}`}
-                type="button"
-                role="option"
-                aria-selected={selected === featuredOpt.id}
-                disabled={busy}
-                onClick={() => pick(featuredOpt.id)}
-                style={{ "--auth-accent": featuredOpt.accent } as CSSProperties}
-                className={cn(
-                  "auth-option auth-option-featured relative flex w-full items-center gap-3.5 overflow-hidden rounded-2xl border px-4 py-3.5 text-left",
-                  "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
-                  "disabled:opacity-60",
-                  selected === featuredOpt.id
-                    ? "auth-option-selected"
-                    : "border-border/60 bg-muted/20",
-                  pulseId === featuredOpt.id && "auth-option-pulse",
-                )}
-              >
-                <span
-                  className="auth-option-icon grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl"
-                  style={{ backgroundColor: featuredOpt.accent }}
-                >
-                  <AuthOptionIcon
-                    id={featuredOpt.id}
-                    logoUrl={featuredOpt.logoUrl}
-                    logoFit={featuredOpt.logoFit}
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold text-foreground">
-                    {featuredOpt.label}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {featuredOpt.desc}
-                  </span>
-                </span>
-                <span
-                  className={cn(
-                    "grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all duration-200",
-                    selected === featuredOpt.id ? "scale-100 opacity-100" : "scale-75 opacity-0",
-                  )}
-                  style={{
-                    backgroundColor:
-                      selected === featuredOpt.id
-                        ? `color-mix(in oklab, ${featuredOpt.accent} 22%, transparent)`
-                        : undefined,
-                    color: featuredOpt.accent,
-                  }}
-                >
-                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </span>
-              </button>
+            {inPiBrowser ? (
+              <div className="space-y-3">
+                {piBrowserRows.map((opt, i) => (
+                  <div key={opt.id}>
+                    {i > 0 ? (
+                      <div className="mb-3 flex items-center gap-3 px-1">
+                        <div className="h-px flex-1 bg-border/70" />
+                        <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          or continue with
+                        </span>
+                        <div className="h-px flex-1 bg-border/70" />
+                      </div>
+                    ) : null}
+                    {renderFeaturedOption(opt, i * 60)}
+                  </div>
+                ))}
+              </div>
+            ) : featuredOpt ? (
+              renderFeaturedOption(featuredOpt)
             ) : null}
 
             {gridOptions.length > 0 ? (

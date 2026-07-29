@@ -18,7 +18,7 @@ import {
   Shield,
   X,
   Wallet,
-  CreditCard,
+  BadgeCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +44,7 @@ import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
+import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -60,6 +61,7 @@ type HoldingRow = {
     price_usd: number | null;
     change_24h: number | null;
     logo_url: string | null;
+    is_verified: boolean | null;
   } | null;
 };
 
@@ -68,14 +70,12 @@ type WalletRow = Tables<"wallets">;
 const PRIMARY_ACTIONS = [
   { label: "Receive", icon: QrCode, to: "/receive" },
   { label: "Send", icon: Send, to: "/send" },
-  { label: "Pay", icon: CreditCard, to: "/wc-pay" },
   { label: "Buy", icon: Plus, to: "/topup" },
 ] as const;
 
 const MORE_ACTIONS = [
   { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
-  { label: "MetaMask", icon: Wallet, to: "/metamask" },
   { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
@@ -125,15 +125,16 @@ function Dashboard() {
   const {
     data: holdings,
     isPending: holdingsPending,
+    isFetching: holdingsFetching,
   } = useQuery({
     queryKey: ["holdings", wallet?.id],
     enabled: !!wallet?.id,
     queryFn: async (): Promise<HoldingRow[]> => {
       const { data } = await supabase
         .from("token_holdings")
-        .select("balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url)")
+        .select("balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url, is_verified)")
         .eq("wallet_id", wallet!.id);
-      return (data ?? []) as HoldingRow[];
+      return ((data ?? []) as HoldingRow[]).filter((h) => h.tokens != null);
     },
   });
 
@@ -145,10 +146,12 @@ function Dashboard() {
     queryFn: () => fetchWalletActivity(supabase, wallet!.id, 12),
   });
 
-  /** First paint — skeletons instead of empty “No tokens” flash. */
-  const showTokenSkeletons = walletLoading || (!!wallet?.id && holdingsPending);
+  /** Skeletons on first load and while switching wallets (fetching with no rows yet). */
+  const showTokenSkeletons =
+    walletLoading || (!!wallet?.id && (holdingsPending || (holdingsFetching && holdings == null)));
   const showActivitySkeletons = walletLoading || (!!wallet?.id && (recentLoading || recentPending));
   const holdingsList = holdings ?? [];
+  const tokensRefreshing = holdingsFetching && !showTokenSkeletons;
 
   useEffect(() => {
     if (walletLoading || wallet) return;
@@ -483,7 +486,13 @@ function Dashboard() {
           ) : !showOusdRow && filteredHoldings.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No matching tokens</p>
           ) : (
-            <ul className="animate-in fade-in duration-300">
+            <ul
+              className={cn(
+                "animate-in fade-in duration-300",
+                tokensRefreshing && "opacity-60 transition-opacity",
+              )}
+              aria-busy={tokensRefreshing || undefined}
+            >
               {showOusdRow && (
                 <li>
                   <button
@@ -494,7 +503,10 @@ function Dashboard() {
                     className="ph-row press"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <OusdIcon className="h-11 w-11 shrink-0" />
+                      <div className="relative h-11 w-11 shrink-0">
+                        <OusdIcon className="h-11 w-11" />
+                        <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+                      </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 text-[15px] font-semibold">
                           OpenUSD OUSD
@@ -543,14 +555,12 @@ function Dashboard() {
                       className="ph-row press"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <Avatar className="h-11 w-11 shrink-0">
-                          {h.tokens?.logo_url ? (
-                            <AvatarImage src={h.tokens.logo_url} alt={h.tokens.name} />
-                          ) : null}
-                          <AvatarFallback className="bg-primary/20 text-[10px] font-bold text-primary">
-                            {(h.tokens?.symbol ?? "?").slice(0, 3)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <TokenAvatar
+                          logoUrl={h.tokens?.logo_url}
+                          name={h.tokens?.name}
+                          symbol={h.tokens?.symbol}
+                          verified={h.tokens?.is_verified}
+                        />
                         <div className="min-w-0">
                           <div className="truncate text-[15px] font-semibold">{h.tokens?.name}</div>
                           <div className="text-xs text-muted-foreground tabular-nums">

@@ -42,35 +42,31 @@ export const Route = createFileRoute("/api/public/pi-payments/incomplete")({
                 userId,
               );
               if (wallet) {
-                await admin.from("wallets")
-                  .update({ ousd_balance: Number(wallet.ousd_balance ?? 0) + ousdAmount })
-                  .eq("id", wallet.id);
-                await admin.from("transactions").insert({
-                  wallet_id: wallet.id,
-                  type: "buy",
-                  status: "confirmed",
-                  token_symbol: "OUSD",
+                const { creditTopupWithFee } = await import("@/lib/topup-fee");
+                const credited = await creditTopupWithFee({
+                  client: admin,
+                  admin,
+                  userWalletId: wallet.id,
+                  grossAmount: ousdAmount,
                   counterparty: `pi:${paymentId}`,
-                  amount: ousdAmount,
-                  usd_value: ousdAmount,
-                  tx_hash: useTxid,
+                  txHash: useTxid,
                   memo: `Pi Network top-up (recovered) · ${payment.memo ?? paymentId}`,
                 });
+                await admin.from("pi_payments").upsert(
+                  {
+                    user_id: userId,
+                    payment_id: paymentId,
+                    txid: useTxid,
+                    pi_amount: payment.amount,
+                    ousd_credited: credited.netAmount,
+                    memo: payment.memo,
+                    metadata: payment.metadata as Record<string, unknown>,
+                    status: "completed",
+                    completed_at: new Date().toISOString(),
+                  },
+                  { onConflict: "payment_id" },
+                );
               }
-              await admin.from("pi_payments").upsert(
-                {
-                  user_id: userId,
-                  payment_id: paymentId,
-                  txid: useTxid,
-                  pi_amount: payment.amount,
-                  ousd_credited: ousdAmount,
-                  memo: payment.memo,
-                  metadata: payment.metadata as Record<string, unknown>,
-                  status: "completed",
-                  completed_at: new Date().toISOString(),
-                },
-                { onConflict: "payment_id" },
-              );
             }
           }
 

@@ -26,6 +26,8 @@ import {
   settleOpenPayPayLinkTopup,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
+import { getPublicTopupInfo } from "@/lib/topup-admin.functions";
+import { calcTopupFee } from "@/lib/topup-fee";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -137,6 +139,17 @@ function TopUpPage() {
     queryKey: ["openpay-link", user.id],
     queryFn: () => getLink(),
   });
+
+  const getTopupInfo = useServerFn(getPublicTopupInfo);
+  const { data: topupInfo } = useQuery({
+    queryKey: ["public-topup"],
+    queryFn: () => getTopupInfo(),
+  });
+
+  const amtNum = Number(amount) || 0;
+  const feeBps = Number(topupInfo?.fee_bps ?? 0);
+  const feeBreakdown = calcTopupFee(amtNum, feeBps);
+  const hasFee = feeBreakdown.fee > 0;
 
   useEffect(() => {
     try {
@@ -428,7 +441,6 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
-  const amtNum = Number(amount) || 0;
   const amountValid = schema.safeParse({ amount }).success;
   const cta =
     method === "moonpay"
@@ -546,6 +558,22 @@ function TopUpPage() {
               </button>
             ))}
           </div>
+          {hasFee && amtNum > 0 && (
+            <div className="mt-4 rounded-2xl bg-muted/50 px-4 py-3 text-center text-xs text-muted-foreground">
+              <div className="flex items-center justify-between gap-2">
+                <span>Top-up fee ({(feeBps / 100).toFixed(2)}%)</span>
+                <span className="font-semibold tabular-nums text-destructive">
+                  −{formatUSD(feeBreakdown.fee)}
+                </span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-border/50 pt-1.5">
+                <span className="font-medium text-foreground">You receive</span>
+                <span className="text-sm font-bold tabular-nums text-foreground">
+                  {formatUSD(feeBreakdown.net)} OUSD
+                </span>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Payment method — flat Phantom list */}

@@ -45,18 +45,14 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
           );
           if (!wallet) throw new Error("No active wallet for user");
 
-          const newBalance = Number(wallet.ousd_balance ?? 0) + ousdAmount;
-          await admin.from("wallets").update({ ousd_balance: newBalance }).eq("id", wallet.id);
-
-          await admin.from("transactions").insert({
-            wallet_id: wallet.id,
-            type: "buy",
-            status: "confirmed",
-            token_symbol: "OUSD",
+          const { creditTopupWithFee } = await import("@/lib/topup-fee");
+          const credited = await creditTopupWithFee({
+            client: admin,
+            admin,
+            userWalletId: wallet.id,
+            grossAmount: ousdAmount,
             counterparty: `pi:${paymentId}`,
-            amount: ousdAmount,
-            usd_value: ousdAmount,
-            tx_hash: txid,
+            txHash: txid,
             memo: `Pi Network top-up · ${payment.memo ?? paymentId}`,
           });
 
@@ -66,7 +62,7 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
               payment_id: paymentId,
               txid,
               pi_amount: payment.amount,
-              ousd_credited: ousdAmount,
+              ousd_credited: credited.netAmount,
               memo: payment.memo,
               metadata: payment.metadata as Record<string, unknown>,
               status: "completed",
@@ -75,7 +71,11 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
             { onConflict: "payment_id" },
           );
 
-          return Response.json({ ok: true, ousdCredited: ousdAmount });
+          return Response.json({
+            ok: true,
+            ousdCredited: credited.netAmount,
+            feeAmount: credited.feeAmount,
+          });
         } catch (err) {
           console.error("[pi complete]", err);
           return Response.json({ error: (err as Error).message }, { status: 500 });

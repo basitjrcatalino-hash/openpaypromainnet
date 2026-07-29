@@ -93,7 +93,10 @@ function AuthenticatedLayout() {
   });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const qc = useQueryClient();
-  const hideChrome = pathname === "/scan";
+  const hideChrome =
+    pathname === "/scan" ||
+    pathname === "/opentoken/terminal" ||
+    pathname.startsWith("/opentoken/terminal/");
   const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
   const txNotes = useTransactionNotifications(user.id);

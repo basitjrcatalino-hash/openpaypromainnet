@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { walletGradient } from "@/lib/wallet-portfolio";
 
 type Props = {
-  address: string;
+  address?: string | null;
   name?: string | null;
   size?: "sm" | "md" | "lg";
   active?: boolean;
@@ -22,8 +22,9 @@ export function WalletAvatar({
   active = false,
   className,
 }: Props) {
-  const [from, to] = walletGradient(address);
-  const initial = (name?.[0] ?? address.slice(2, 3) ?? "W").toUpperCase();
+  const safeAddress = address ?? "";
+  const [from, to] = walletGradient(safeAddress);
+  const initial = (name?.trim()?.[0] || safeAddress.slice(2, 3) || "W").toUpperCase();
 
   return (
     <span

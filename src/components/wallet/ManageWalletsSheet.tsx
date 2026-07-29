@@ -59,7 +59,7 @@ type Props = {
 export function ManageWalletsSheet({
   open,
   onOpenChange,
-  wallets,
+  wallets: walletsProp,
   recoveryFlags = {},
   switching = false,
   onSelect,
@@ -71,12 +71,15 @@ export function ManageWalletsSheet({
   const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [actionsWallet, setActionsWallet] = useState<ManageWallet | null>(null);
+  const wallets = Array.isArray(walletsProp) ? walletsProp : [];
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return wallets;
     return wallets.filter(
-      (w) => w.name.toLowerCase().includes(q) || w.address.toLowerCase().includes(q),
+      (w) =>
+        (w.name ?? "").toLowerCase().includes(q) ||
+        (w.address ?? "").toLowerCase().includes(q),
     );
   }, [wallets, query]);
 

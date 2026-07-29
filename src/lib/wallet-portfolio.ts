@@ -17,12 +17,13 @@ const WALLET_GRADIENTS: Array<[string, string]> = [
   ["#4FACFE", "#00F2FE"],
 ];
 
-export function walletGradient(address: string): [string, string] {
+export function walletGradient(address: string | null | undefined): [string, string] {
+  const s = typeof address === "string" ? address : "";
   let hash = 0;
-  for (let i = 0; i < address.length; i++) {
-    hash = (hash * 31 + address.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
   }
-  return WALLET_GRADIENTS[hash % WALLET_GRADIENTS.length];
+  return WALLET_GRADIENTS[hash % WALLET_GRADIENTS.length] ?? WALLET_GRADIENTS[0];
 }
 
 export async function fetchWalletPortfolioTotals(

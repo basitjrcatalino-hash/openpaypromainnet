@@ -109,10 +109,11 @@ function SettingsPage() {
   const [renameValue, setRenameValue] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const { data: wallets = [] } = useQuery({
+  const { data: walletsData } = useQuery({
     queryKey: ["wallets", user.id],
     queryFn: () => listUserWallets<SettingsWallet>(supabase, user.id),
   });
+  const wallets = Array.isArray(walletsData) ? walletsData : [];
 
   const { data: recoveryFlags = {} } = useQuery({
     queryKey: ["wallet-recovery-flags", user.id, wallets.map((w) => w.id).join(",")],

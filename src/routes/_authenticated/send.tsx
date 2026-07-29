@@ -29,8 +29,8 @@ import { sendViaOpenPay, resolveOpenPayAccount, getOpenPayLinkStatus, startOpenP
 import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { readMajorBalance } from "@/lib/ledger-majors";
 import {
   isSystemCounterparty,
   loadRecentRecipients,
@@ -41,7 +41,20 @@ import {
 const sendSearchSchema = z.object({
   to: z.string().optional(),
   amount: z.string().optional(),
-  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT"]).optional(),
+  asset: z.enum([
+    "OUSD",
+    "PI",
+    "BTC",
+    "ETH",
+    "SOL",
+    "USDC",
+    "USDT",
+    "PYUSD",
+    "USDG",
+    "USD1",
+    "CASH",
+    "EURC",
+  ]).optional(),
   token: z.string().uuid().optional(),
   rail: z.enum(["wallet", "openpay"]).optional(),
 });
@@ -57,7 +70,20 @@ type Step = "asset" | "recipient" | "amount";
 
 type SendableAsset = {
   key: string;
-  kind: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "TOKEN";
+  kind:
+    | "OUSD"
+    | "PI"
+    | "BTC"
+    | "ETH"
+    | "SOL"
+    | "USDC"
+    | "USDT"
+    | "PYUSD"
+    | "USDG"
+    | "USD1"
+    | "CASH"
+    | "EURC"
+    | "TOKEN";
   tokenId?: string;
   name: string;
   symbol: string;
@@ -215,73 +241,18 @@ function SendPage() {
         logoUrl: null,
       },
     ];
-    const majors: Array<{
-      key: "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
-      kind: "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
-      name: string;
-      bal: number;
-      price: number;
-      logo: string;
-    }> = [
-      {
-        key: "BTC",
-        kind: "BTC",
-        name: MAJOR_TOKENS.btc.name,
-        bal: Number(wallet?.btc_balance ?? 0),
-        price: majorMarketById(majorMarkets, "btc").price,
-        logo: MAJOR_TOKENS.btc.logoUrl,
-      },
-      {
-        key: "ETH",
-        kind: "ETH",
-        name: MAJOR_TOKENS.eth.name,
-        bal: Number(wallet?.eth_balance ?? 0),
-        price: majorMarketById(majorMarkets, "eth").price,
-        logo: MAJOR_TOKENS.eth.logoUrl,
-      },
-      {
-        key: "SOL",
-        kind: "SOL",
-        name: MAJOR_TOKENS.sol.name,
-        bal: Number(wallet?.sol_balance ?? 0),
-        price: majorMarketById(majorMarkets, "sol").price,
-        logo: MAJOR_TOKENS.sol.logoUrl,
-      },
-      {
-        key: "USDC",
-        kind: "USDC",
-        name: MAJOR_TOKENS.usdc.name,
-        bal: Number((wallet as { usdc_balance?: number } | null)?.usdc_balance ?? 0),
-        price: majorMarketById(majorMarkets, "usdc").price,
-        logo: MAJOR_TOKENS.usdc.logoUrl,
-      },
-      {
-        key: "USDT",
-        kind: "USDT",
-        name: MAJOR_TOKENS.usdt.name,
-        bal: Number((wallet as { usdt_balance?: number } | null)?.usdt_balance ?? 0),
-        price: majorMarketById(majorMarkets, "usdt").price,
-        logo: MAJOR_TOKENS.usdt.logoUrl,
-      },
-      {
-        key: "PI",
-        kind: "PI",
-        name: MAJOR_TOKENS.pi.name,
-        bal: Number(wallet?.pi_balance ?? 0),
-        price: majorMarketById(majorMarkets, "pi").price,
-        logo: PI_NETWORK_LOGO_URL,
-      },
-    ];
-    for (const m of majors) {
-      if (m.bal > 0 || search.asset === m.key) {
+    for (const id of MAJOR_TOKEN_IDS) {
+      const def = MAJOR_TOKENS[id];
+      const bal = readMajorBalance(wallet as Record<string, unknown> | null, id);
+      if (bal > 0 || search.asset === def.symbol) {
         list.push({
-          key: m.key,
-          kind: m.kind,
-          name: m.name,
-          symbol: m.key,
-          balance: m.bal,
-          priceUsd: m.price,
-          logoUrl: m.logo,
+          key: def.symbol,
+          kind: def.symbol as SendableAsset["kind"],
+          name: def.name,
+          symbol: def.symbol,
+          balance: bal,
+          priceUsd: majorMarketById(majorMarkets, id).price,
+          logoUrl: def.logoUrl,
         });
       }
     }
@@ -317,19 +288,7 @@ function SendPage() {
       });
     }
     return list;
-  }, [
-    wallet?.ousd_balance,
-    wallet?.pi_balance,
-    wallet?.btc_balance,
-    wallet?.eth_balance,
-    wallet?.sol_balance,
-    (wallet as { usdc_balance?: number } | null)?.usdc_balance,
-    (wallet as { usdt_balance?: number } | null)?.usdt_balance,
-    holdings,
-    deepToken,
-    search.asset,
-    majorMarkets,
-  ]);
+  }, [wallet, holdings, deepToken, search.asset, majorMarkets]);
 
   const selected = assets.find((a) => a.key === selectedKey) ?? null;
   const amountNum = Number(amount);
@@ -1101,16 +1060,7 @@ function AssetAvatar({
     return <OusdIcon className={cn("h-10 w-10", className)} />;
   }
 
-  const src =
-    asset.kind === "PI"
-      ? PI_NETWORK_LOGO_URL
-      : asset.kind === "BTC"
-        ? asset.logoUrl || MAJOR_TOKENS.btc.logoUrl
-        : asset.kind === "ETH"
-          ? asset.logoUrl || MAJOR_TOKENS.eth.logoUrl
-          : asset.kind === "SOL"
-            ? asset.logoUrl || MAJOR_TOKENS.sol.logoUrl
-            : asset.logoUrl;
+  const src = asset.logoUrl;
 
   if (src) {
     return (

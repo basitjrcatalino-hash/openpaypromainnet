@@ -1,7 +1,9 @@
+import { isLedgerAssetCode, type LedgerAssetCode } from "@/lib/ledger-majors";
+
 export type ParsedPaymentQr = {
   to: string;
   amount?: string;
-  asset?: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT";
+  asset?: LedgerAssetCode;
   /** OpenToken uuid when QR targets a specific OpenPay token. */
   token?: string;
   /** Which send rail this QR should use. */
@@ -27,21 +29,10 @@ function classifyRecipient(to: string): Pick<ParsedPaymentQr, "rail" | "kind"> {
   return { rail: "wallet", kind: "unknown" };
 }
 
-function parseAsset(
-  raw: string | null,
-): "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | undefined {
-  if (
-    raw === "OUSD" ||
-    raw === "PI" ||
-    raw === "BTC" ||
-    raw === "ETH" ||
-    raw === "SOL" ||
-    raw === "USDC" ||
-    raw === "USDT"
-  ) {
-    return raw;
-  }
-  return undefined;
+function parseAsset(raw: string | null): LedgerAssetCode | undefined {
+  if (!raw) return undefined;
+  const up = raw.toUpperCase();
+  return isLedgerAssetCode(up) ? up : undefined;
 }
 
 function fromParts(

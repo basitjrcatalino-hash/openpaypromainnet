@@ -14,11 +14,17 @@ import {
   SOL_SWAP_ID,
   USDC_SWAP_ID,
   USDT_SWAP_ID,
+  PYUSD_SWAP_ID,
+  USDG_SWAP_ID,
+  USD1_SWAP_ID,
+  CASH_SWAP_ID,
+  EURC_SWAP_ID,
   fetchMajorUsdPrices,
   isLedgerSwapId,
   majorBalancePatch,
   majorIdFromSwapId,
   readMajorBalance,
+  walletMajorSelect,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
@@ -31,6 +37,11 @@ export {
   SOL_SWAP_ID,
   USDC_SWAP_ID,
   USDT_SWAP_ID,
+  PYUSD_SWAP_ID,
+  USDG_SWAP_ID,
+  USD1_SWAP_ID,
+  CASH_SWAP_ID,
+  EURC_SWAP_ID,
 } from "@/lib/ledger-majors";
 export { OPENDEX_SWAP_FEE_BPS, applyOpenDexFee, opendexFeePct } from "@/lib/opendex-fee";
 
@@ -59,8 +70,7 @@ type QuoteToken = {
   major?: LedgerMajorId;
 };
 
-const WALLET_COLS =
-  "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance";
+const WALLET_COLS = walletMajorSelect("id, user_id, ousd_balance");
 
 export const executeOpenDexSwap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -246,7 +256,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       const { data: fresh } = await supabase
         .from("wallets")
         .select(
-          "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
+          WALLET_COLS,
         )
         .eq("id", wallet_id)
         .maybeSingle();

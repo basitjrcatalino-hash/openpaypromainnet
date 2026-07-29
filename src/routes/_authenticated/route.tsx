@@ -50,6 +50,8 @@ import {
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { fetchWalletPortfolioTotals, walletLedgerUsd } from "@/lib/wallet-portfolio";
+import { MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
+import { LEDGER_BALANCE_COLUMN } from "@/lib/ledger-majors";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
@@ -439,10 +441,13 @@ function SidebarInner({
 
   const walletIds = wallets.map((w) => w.id).join(",");
   const balanceFingerprint = wallets
-    .map(
-      (w) =>
-        `${w.id}:${w.ousd_balance ?? 0}:${w.pi_balance ?? 0}:${w.btc_balance ?? 0}:${w.eth_balance ?? 0}:${w.sol_balance ?? 0}:${(w as { usdc_balance?: number }).usdc_balance ?? 0}:${(w as { usdt_balance?: number }).usdt_balance ?? 0}`,
-    )
+    .map((w) => {
+      const row = w as Record<string, unknown>;
+      const majors = MAJOR_TOKEN_IDS.map(
+        (id) => `${id}=${Number(row[LEDGER_BALANCE_COLUMN[id]] ?? 0)}`,
+      ).join("|");
+      return `${w.id}:${w.ousd_balance ?? 0}:${majors}`;
+    })
     .join("|");
   const { data: portfolioTotals = {} } = useQuery({
     queryKey: ["wallet-portfolio-totals", walletIds, balanceFingerprint],

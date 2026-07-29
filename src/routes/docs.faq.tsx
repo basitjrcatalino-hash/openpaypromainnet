@@ -33,7 +33,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "Balances",
     q: "Why did my dashboard and sidebar balances look different?",
-    a: "They now use the same formula: all ledger majors (OUSD, PI, BTC, ETH, SOL, USDC, USDT) plus OpenToken holdings. Refresh if you still see a stale number.",
+    a: "They now use the same formula: all ledger majors (OUSD, PI, BTC, ETH, SOL, USDC, USDT, PYUSD, USDG, USD1, CASH, EURC) plus OpenToken holdings. Refresh if you still see a stale number.",
   },
   {
     category: "Send & receive",

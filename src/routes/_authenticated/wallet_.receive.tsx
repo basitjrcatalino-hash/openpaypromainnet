@@ -22,19 +22,27 @@ import {
 } from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
-import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
+import { LEDGER_ASSET_CODES, type LedgerAssetCode } from "@/lib/ledger-majors";
 import { linkPiWallet } from "@/lib/pi-network";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { shortAddress } from "@/lib/wallet-utils";
 
 const RECEIVE_NOTE_KEY = "openpay-receive-wallet-note-v1";
 
+const NETWORK_ENUM = [
+  "openpay",
+  "bitcoin",
+  "ethereum",
+  "solana",
+  "pi",
+  ...MAJOR_TOKEN_IDS,
+] as const;
+
 const searchSchema = z.object({
-  network: z
-    .enum(["openpay", "bitcoin", "ethereum", "solana", "usdc", "usdt", "pi"])
-    .optional(),
-  asset: z.enum(["OUSD", "BTC", "ETH", "SOL", "USDC", "USDT", "PI"]).optional(),
+  network: z.enum(NETWORK_ENUM).optional(),
+  asset: z.enum(LEDGER_ASSET_CODES).optional(),
   /** OpenToken uuid — receive QR for a specific OpenPay token (not OUSD/majors). */
   token: z.string().uuid().optional(),
 });
@@ -45,8 +53,8 @@ export const Route = createFileRoute("/_authenticated/wallet_/receive")({
   component: WalletReceivePage,
 });
 
-type NetworkId = "openpay" | "bitcoin" | "ethereum" | "solana" | "usdc" | "usdt" | "pi";
-type AssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
+type NetworkId = (typeof NETWORK_ENUM)[number];
+type AssetCode = LedgerAssetCode;
 type ReceiveToken = {
   id: string;
   name: string;
@@ -70,58 +78,28 @@ const NETWORKS: Array<{
     logoUrl: OUSD_LOGO_URL,
     isOusd: true,
   },
-  {
-    id: "bitcoin",
-    label: "Bitcoin",
-    asset: "BTC",
-    accent: "#F7931A",
-    logoUrl: MAJOR_TOKENS.btc.logoUrl,
-  },
-  {
-    id: "ethereum",
-    label: "Ethereum",
-    asset: "ETH",
-    accent: "#627EEA",
-    logoUrl: MAJOR_TOKENS.eth.logoUrl,
-  },
-  {
-    id: "solana",
-    label: "Solana",
-    asset: "SOL",
-    accent: "#9945FF",
-    logoUrl: MAJOR_TOKENS.sol.logoUrl,
-  },
-  {
-    id: "usdc",
-    label: "USDC",
-    asset: "USDC",
-    accent: "#2775CA",
-    logoUrl: MAJOR_TOKENS.usdc.logoUrl,
-  },
-  {
-    id: "usdt",
-    label: "USDT",
-    asset: "USDT",
-    accent: "#26A17B",
-    logoUrl: MAJOR_TOKENS.usdt.logoUrl,
-  },
-  {
-    id: "pi",
-    label: "Pi Network",
-    asset: "PI",
-    accent: "#6B4EFF",
-    logoUrl: PI_NETWORK_LOGO_URL,
-  },
+  ...MAJOR_TOKEN_IDS.map((id) => ({
+    id: id as NetworkId,
+    label: MAJOR_TOKENS[id].symbol,
+    asset: MAJOR_TOKENS[id].symbol as AssetCode,
+    accent: id === "btc" ? "#F7931A" : id === "eth" || id === "eurc" ? "#627EEA" : id === "sol" ? "#9945FF" : "#2775CA",
+    logoUrl: MAJOR_TOKENS[id].logoUrl,
+  })),
 ];
 
-function networkFromAsset(asset: AssetCode): NetworkId {
-  if (asset === "BTC") return "bitcoin";
-  if (asset === "ETH") return "ethereum";
-  if (asset === "SOL") return "solana";
-  if (asset === "USDC") return "usdc";
-  if (asset === "USDT") return "usdt";
-  if (asset === "PI") return "pi";
+function normalizeNetwork(raw: string | undefined): NetworkId {
+  if (!raw) return "openpay";
+  if (raw === "bitcoin") return "btc";
+  if (raw === "ethereum") return "eth";
+  if (raw === "solana") return "sol";
+  if ((NETWORK_ENUM as readonly string[]).includes(raw)) return raw as NetworkId;
   return "openpay";
+}
+
+function networkFromAsset(asset: AssetCode): NetworkId {
+  if (asset === "OUSD") return "openpay";
+  const major = MAJOR_TOKEN_IDS.find((id) => MAJOR_TOKENS[id].symbol === asset);
+  return major ?? "openpay";
 }
 
 function WalletReceivePage() {
@@ -134,7 +112,7 @@ function WalletReceivePage() {
   const initialNetwork =
     tokenId
       ? "openpay"
-      : (search.network ?? (search.asset ? networkFromAsset(search.asset) : "openpay"));
+      : normalizeNetwork(search.network ?? (search.asset ? networkFromAsset(search.asset) : "openpay"));
   const [network, setNetwork] = useState<NetworkId>(initialNetwork);
   const [qrUrl, setQrUrl] = useState("");
   const [copied, setCopied] = useState(false);

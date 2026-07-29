@@ -38,7 +38,20 @@ import {
   SOL_SWAP_ID,
   USDC_SWAP_ID,
   USDT_SWAP_ID,
+  PYUSD_SWAP_ID,
+  USDG_SWAP_ID,
+  USD1_SWAP_ID,
+  CASH_SWAP_ID,
+  EURC_SWAP_ID,
 } from "@/lib/opendex.functions";
+import {
+  LEDGER_MAJOR_SWAP_IDS,
+  majorIdFromSwapId,
+  majorsForNetwork,
+  networkForMajor,
+  readMajorBalance,
+  type LedgerMajorId,
+} from "@/lib/ledger-majors";
 import {
   applyOpenDexFee,
   OPENDEX_SWAP_FEE_BPS,
@@ -54,21 +67,30 @@ import {
   majorMarketById,
   MAJOR_TOKEN_IDS,
   MAJOR_TOKENS,
+  MAJOR_SYMBOLS,
 } from "@/lib/major-tokens";
-import {
-  LEDGER_MAJOR_SWAP_IDS,
-  majorsForNetwork,
-  networkForMajor,
-  readMajorBalance,
-  type LedgerMajorId,
-} from "@/lib/ledger-majors";
 
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
 const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
-  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT"]).optional(),
+  asset: z
+    .enum([
+      "OUSD",
+      "PI",
+      "BTC",
+      "ETH",
+      "SOL",
+      "USDC",
+      "USDT",
+      "PYUSD",
+      "USDG",
+      "USD1",
+      "CASH",
+      "EURC",
+    ])
+    .optional(),
 });
 
 type SwapToken = {
@@ -132,12 +154,7 @@ function OpenDexPage() {
         .order("market_cap", { ascending: false });
       if (error) throw error;
       return (data ?? []).filter(
-        (t) =>
-          t.symbol !== "OUSD" &&
-          t.symbol !== "PI" &&
-          t.symbol !== "BTC" &&
-          t.symbol !== "ETH" &&
-          t.symbol !== "SOL",
+        (t) => !MAJOR_SYMBOLS.has((t.symbol ?? "").toUpperCase()),
       ) as SwapToken[];
     },
   });
@@ -175,9 +192,7 @@ function OpenDexPage() {
       (
         await supabase
           .from("wallets")
-          .select(
-            "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
-          )
+          .select("*")
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
@@ -249,6 +264,11 @@ function OpenDexPage() {
       SOL: SOL_SWAP_ID,
       USDC: USDC_SWAP_ID,
       USDT: USDT_SWAP_ID,
+      PYUSD: PYUSD_SWAP_ID,
+      USDG: USDG_SWAP_ID,
+      USD1: USD1_SWAP_ID,
+      CASH: CASH_SWAP_ID,
+      EURC: EURC_SWAP_ID,
     };
 
     const prefFromAsset =
@@ -256,22 +276,18 @@ function OpenDexPage() {
         ? allTokens.get(assetToId[assetParam]) ?? null
         : null;
 
+    const majorFromTokenParam = tokenParam
+      ? majorIdFromSwapId(tokenParam) ||
+        (tokenParam in LEDGER_MAJOR_SWAP_IDS
+          ? (tokenParam as keyof typeof LEDGER_MAJOR_SWAP_IDS)
+          : null)
+      : null;
     const prefFromToken = tokenParam
       ? tokenParam === "ousd" || tokenParam === OUSD_SWAP_ID
         ? OUSD_TOKEN
-        : tokenParam === "btc" || tokenParam === BTC_SWAP_ID
-          ? allTokens.get(BTC_SWAP_ID)
-          : tokenParam === "eth" || tokenParam === ETH_SWAP_ID
-            ? allTokens.get(ETH_SWAP_ID)
-            : tokenParam === "sol" || tokenParam === SOL_SWAP_ID
-              ? allTokens.get(SOL_SWAP_ID)
-              : tokenParam === "usdc" || tokenParam === USDC_SWAP_ID
-                ? allTokens.get(USDC_SWAP_ID)
-                : tokenParam === "usdt" || tokenParam === USDT_SWAP_ID
-                  ? allTokens.get(USDT_SWAP_ID)
-                  : tokenParam === "pi" || tokenParam === PI_SWAP_ID
-                    ? allTokens.get(PI_SWAP_ID)
-                    : dbTokens.find((t) => t.id === tokenParam)
+        : majorFromTokenParam
+          ? allTokens.get(LEDGER_MAJOR_SWAP_IDS[majorFromTokenParam])
+          : dbTokens.find((t) => t.id === tokenParam)
       : null;
 
     const pref =

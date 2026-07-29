@@ -37,7 +37,7 @@ import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/tr
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 import { fetchWalletActivity } from "@/lib/activity";
-import { OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
@@ -47,6 +47,7 @@ import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { readMajorBalance } from "@/lib/ledger-majors";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -174,13 +175,7 @@ function Dashboard() {
 
   const ledgerAssets = useMemo((): LedgerAsset[] => {
     if (!wallet) return [];
-    const btcM = majorMarketById(majorMarkets, "btc");
-    const ethM = majorMarketById(majorMarkets, "eth");
-    const solM = majorMarketById(majorMarkets, "sol");
-    const usdcM = majorMarketById(majorMarkets, "usdc");
-    const usdtM = majorMarketById(majorMarkets, "usdt");
-    const piM = majorMarketById(majorMarkets, "pi");
-    return [
+    const rows: LedgerAsset[] = [
       {
         id: "ousd",
         name: "OpenUSD OUSD",
@@ -192,61 +187,21 @@ function Dashboard() {
         isOusd: true,
         badge: "Earn",
       },
-      {
-        id: "btc",
-        name: MAJOR_TOKENS.btc.name,
-        symbol: "BTC",
-        balance: Number(wallet.btc_balance ?? 0),
-        priceUsd: btcM.price,
-        change24h: btcM.change24h,
-        logoUrl: MAJOR_TOKENS.btc.logoUrl,
-      },
-      {
-        id: "eth",
-        name: MAJOR_TOKENS.eth.name,
-        symbol: "ETH",
-        balance: Number(wallet.eth_balance ?? 0),
-        priceUsd: ethM.price,
-        change24h: ethM.change24h,
-        logoUrl: MAJOR_TOKENS.eth.logoUrl,
-      },
-      {
-        id: "sol",
-        name: MAJOR_TOKENS.sol.name,
-        symbol: "SOL",
-        balance: Number(wallet.sol_balance ?? 0),
-        priceUsd: solM.price,
-        change24h: solM.change24h,
-        logoUrl: MAJOR_TOKENS.sol.logoUrl,
-      },
-      {
-        id: "usdc",
-        name: MAJOR_TOKENS.usdc.name,
-        symbol: "USDC",
-        balance: Number((wallet as { usdc_balance?: number }).usdc_balance ?? 0),
-        priceUsd: usdcM.price,
-        change24h: usdcM.change24h,
-        logoUrl: MAJOR_TOKENS.usdc.logoUrl,
-      },
-      {
-        id: "usdt",
-        name: MAJOR_TOKENS.usdt.name,
-        symbol: "USDT",
-        balance: Number((wallet as { usdt_balance?: number }).usdt_balance ?? 0),
-        priceUsd: usdtM.price,
-        change24h: usdtM.change24h,
-        logoUrl: MAJOR_TOKENS.usdt.logoUrl,
-      },
-      {
-        id: "pi",
-        name: MAJOR_TOKENS.pi.name,
-        symbol: "PI",
-        balance: Number(wallet.pi_balance ?? 0),
-        priceUsd: piM.price,
-        change24h: piM.change24h,
-        logoUrl: PI_NETWORK_LOGO_URL,
-      },
     ];
+    for (const id of Object.keys(MAJOR_TOKENS) as Array<keyof typeof MAJOR_TOKENS>) {
+      const def = MAJOR_TOKENS[id];
+      const m = majorMarketById(majorMarkets, id);
+      rows.push({
+        id,
+        name: def.name,
+        symbol: def.symbol,
+        balance: readMajorBalance(wallet as Record<string, unknown>, id),
+        priceUsd: m.price,
+        change24h: m.change24h,
+        logoUrl: def.logoUrl,
+      });
+    }
+    return rows;
   }, [wallet, majorMarkets]);
 
   useEffect(() => {
@@ -603,7 +558,17 @@ function Dashboard() {
                     <button
                       type="button"
                       onClick={() =>
-                        navigate({ to: "/asset/$tokenId", params: { tokenId: a.id } })
+                        navigate({
+                          to: "/asset/$tokenId",
+                          params: { tokenId: a.id },
+                          search: {
+                            openpay_charge: undefined,
+                            openpay_ref: undefined,
+                            openpay_tx: undefined,
+                            openpay_return: undefined,
+                            openpay_cancel: undefined,
+                          },
+                        })
                       }
                       className="ph-row press"
                     >

@@ -37,7 +37,7 @@ export type AssetBuyTarget = {
   price: number;
   isOusd?: boolean;
   /** When set, buy converts OUSD → this major ledger balance at market price */
-  majorId?: "btc" | "eth" | "sol" | "pi" | "usdc" | "usdt";
+  majorId?: import("@/lib/major-tokens").MajorTokenId;
   status?: string | null;
 };
 
@@ -869,7 +869,11 @@ export async function runPendingAssetBuy(opts: {
     graduated?: boolean;
   }>;
   buyMajorFn?: (args: {
-    data: { wallet_id: string; major_id: "btc" | "eth" | "sol" | "pi" | "usdc" | "usdt"; usd_amount: number };
+    data: {
+      wallet_id: string;
+      major_id: import("@/lib/major-tokens").MajorTokenId;
+      usd_amount: number;
+    };
   }) => Promise<{ token_amount: number; symbol: string }>;
   swapFn?: (args: {
     data: {
@@ -895,7 +899,7 @@ export async function runPendingAssetBuy(opts: {
     tokenId: string;
     symbol: string;
     isOusd?: boolean;
-    majorId?: "btc" | "eth" | "sol" | "pi" | "usdc" | "usdt";
+    majorId?: import("@/lib/major-tokens").MajorTokenId;
     amount: number;
     graduated?: boolean;
   };

@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchMajorUsdPrices, type LedgerMajorId } from "@/lib/ledger-majors";
+import {
+  FALLBACK_MAJOR_USD_PRICES,
+  LEDGER_BALANCE_COLUMN,
+  fetchMajorUsdPrices,
+  type LedgerMajorId,
+} from "@/lib/ledger-majors";
+import { MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
 
 export type WalletBalanceSource = {
   id: string;
@@ -10,44 +16,30 @@ export type WalletBalanceSource = {
   sol_balance?: number | null;
   usdc_balance?: number | null;
   usdt_balance?: number | null;
+  pyusd_balance?: number | null;
+  usdg_balance?: number | null;
+  usd1_balance?: number | null;
+  cash_balance?: number | null;
+  eurc_balance?: number | null;
+  [key: string]: unknown;
 };
 
-export type MajorUsdPriceMap = Partial<Record<LedgerMajorId, number>> & {
-  pi?: number;
-  btc?: number;
-  eth?: number;
-  sol?: number;
-  usdc?: number;
-  usdt?: number;
-};
+export type MajorUsdPriceMap = Partial<Record<LedgerMajorId, number>>;
 
-const FALLBACK_MAJOR_USD: Required<
-  Pick<MajorUsdPriceMap, "pi" | "btc" | "eth" | "sol" | "usdc" | "usdt">
-> = {
-  pi: 0.079,
-  btc: 65000,
-  eth: 1920,
-  sol: 74,
-  usdc: 1,
-  usdt: 1,
-};
-
-/** Ledger majors (OUSD + PI/BTC/ETH/SOL/USDC/USDT) in USD — shared by dashboard & sidebar. */
+/** Ledger majors (OUSD + all majors) in USD — shared by dashboard & sidebar. */
 export function walletLedgerUsd(
   wallet: WalletBalanceSource | null | undefined,
   prices?: MajorUsdPriceMap | null,
 ): number {
   if (!wallet) return 0;
-  const p = { ...FALLBACK_MAJOR_USD, ...prices };
-  return (
-    Number(wallet.ousd_balance ?? 0) +
-    Number(wallet.pi_balance ?? 0) * (p.pi ?? FALLBACK_MAJOR_USD.pi) +
-    Number(wallet.btc_balance ?? 0) * (p.btc ?? FALLBACK_MAJOR_USD.btc) +
-    Number(wallet.eth_balance ?? 0) * (p.eth ?? FALLBACK_MAJOR_USD.eth) +
-    Number(wallet.sol_balance ?? 0) * (p.sol ?? FALLBACK_MAJOR_USD.sol) +
-    Number(wallet.usdc_balance ?? 0) * (p.usdc ?? FALLBACK_MAJOR_USD.usdc) +
-    Number(wallet.usdt_balance ?? 0) * (p.usdt ?? FALLBACK_MAJOR_USD.usdt)
-  );
+  let sum = Number(wallet.ousd_balance ?? 0);
+  for (const id of MAJOR_TOKEN_IDS) {
+    const col = LEDGER_BALANCE_COLUMN[id];
+    const bal = Number(wallet[col] ?? 0);
+    const px = prices?.[id] ?? FALLBACK_MAJOR_USD_PRICES[id];
+    sum += bal * px;
+  }
+  return sum;
 }
 
 /** Deterministic Phantom-style gradient pair from wallet address. */
@@ -87,8 +79,7 @@ export async function fetchWalletPortfolioTotals(
   for (const row of data ?? []) {
     const walletId = row.wallet_id as string;
     const tokens = row.tokens as { price_usd?: number | null } | null;
-    const usd =
-      Number(row.balance ?? 0) * Number(tokens?.price_usd ?? 0);
+    const usd = Number(row.balance ?? 0) * Number(tokens?.price_usd ?? 0);
     holdingsByWallet[walletId] = (holdingsByWallet[walletId] ?? 0) + usd;
   }
 

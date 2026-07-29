@@ -1032,6 +1032,11 @@ export type Database = {
           sol_balance: number
           usdc_balance: number
           usdt_balance: number
+          pyusd_balance: number
+          usdg_balance: number
+          usd1_balance: number
+          cash_balance: number
+          eurc_balance: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1049,6 +1054,11 @@ export type Database = {
           sol_balance?: number
           usdc_balance?: number
           usdt_balance?: number
+          pyusd_balance?: number
+          usdg_balance?: number
+          usd1_balance?: number
+          cash_balance?: number
+          eurc_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1066,6 +1076,11 @@ export type Database = {
           sol_balance?: number
           usdc_balance?: number
           usdt_balance?: number
+          pyusd_balance?: number
+          usdg_balance?: number
+          usd1_balance?: number
+          cash_balance?: number
+          eurc_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id?: string

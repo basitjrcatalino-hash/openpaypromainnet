@@ -6,6 +6,7 @@ import {
   majorBalancePatch,
   majorIdFromAssetCode,
   readMajorBalance,
+  walletMajorSelect,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 
@@ -13,7 +14,21 @@ const SendSchema = z
   .object({
     to: z.string().trim().min(2).max(120),
     amount: z.number().positive().max(1e15),
-    asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT", "TOKEN"]),
+    asset: z.enum([
+      "OUSD",
+      "PI",
+      "BTC",
+      "ETH",
+      "SOL",
+      "USDC",
+      "USDT",
+      "PYUSD",
+      "USDG",
+      "USD1",
+      "CASH",
+      "EURC",
+      "TOKEN",
+    ]),
     tokenId: z.string().uuid().optional().nullable(),
     memo: z.string().max(140).optional().nullable(),
   })
@@ -75,8 +90,7 @@ async function resolveRecipientAddress(
   return trimmed.replace(/^@+/, "");
 }
 
-const WALLET_SELECT =
-  "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance";
+const WALLET_SELECT = walletMajorSelect("id, address, ousd_balance");
 
 export const sendAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

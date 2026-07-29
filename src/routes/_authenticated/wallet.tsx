@@ -22,8 +22,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
-import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { readMajorBalance } from "@/lib/ledger-majors";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { formatNumber, shortAddress } from "@/lib/wallet-utils";
@@ -60,9 +61,7 @@ function CryptoWalletPage() {
       (
         await supabase
           .from("wallets")
-          .select(
-            "id, name, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
-          )
+          .select("*")
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
@@ -103,67 +102,21 @@ function CryptoWalletPage() {
         receiveTo: "/wallet/receive?network=openpay&asset=OUSD",
         isOusd: true,
       },
-      {
-        key: "btc",
-        symbol: "BTC",
-        name: MAJOR_TOKENS.btc.name,
-        network: "Bitcoin",
-        balance: Number(wallet?.btc_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "btc").price,
-        logoUrl: MAJOR_TOKENS.btc.logoUrl,
-        receiveTo: "/wallet/receive?network=bitcoin&asset=BTC",
-      },
-      {
-        key: "eth",
-        symbol: "ETH",
-        name: MAJOR_TOKENS.eth.name,
-        network: "Ethereum",
-        balance: Number(wallet?.eth_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "eth").price,
-        logoUrl: MAJOR_TOKENS.eth.logoUrl,
-        receiveTo: "/wallet/receive?network=ethereum&asset=ETH",
-      },
-      {
-        key: "sol",
-        symbol: "SOL",
-        name: MAJOR_TOKENS.sol.name,
-        network: "Solana",
-        balance: Number(wallet?.sol_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "sol").price,
-        logoUrl: MAJOR_TOKENS.sol.logoUrl,
-        receiveTo: "/wallet/receive?network=solana&asset=SOL",
-      },
-      {
-        key: "usdc",
-        symbol: "USDC",
-        name: MAJOR_TOKENS.usdc.name,
-        network: "Solana",
-        balance: Number(wallet?.usdc_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "usdc").price,
-        logoUrl: MAJOR_TOKENS.usdc.logoUrl,
-        receiveTo: "/wallet/receive?network=usdc&asset=USDC",
-      },
-      {
-        key: "usdt",
-        symbol: "USDT",
-        name: MAJOR_TOKENS.usdt.name,
-        network: "Solana",
-        balance: Number(wallet?.usdt_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "usdt").price,
-        logoUrl: MAJOR_TOKENS.usdt.logoUrl,
-        receiveTo: "/wallet/receive?network=usdt&asset=USDT",
-      },
-      {
-        key: "pi",
-        symbol: "PI",
-        name: MAJOR_TOKENS.pi.name,
-        network: "Pi Network",
-        balance: Number(wallet?.pi_balance ?? 0),
-        priceUsd: majorMarketById(majorMarkets, "pi").price,
-        logoUrl: PI_NETWORK_LOGO_URL,
-        receiveTo: "/wallet/receive?network=pi&asset=PI",
-      },
     ];
+
+    for (const id of MAJOR_TOKEN_IDS) {
+      const def = MAJOR_TOKENS[id];
+      rows.push({
+        key: id,
+        symbol: def.symbol,
+        name: def.name,
+        network: def.network,
+        balance: readMajorBalance(wallet as Record<string, unknown> | null, id),
+        priceUsd: majorMarketById(majorMarkets, id).price,
+        logoUrl: def.logoUrl,
+        receiveTo: `/wallet/receive?network=${id}&asset=${def.symbol}`,
+      });
+    }
 
     for (const h of holdings) {
       const t = h.tokens as {
@@ -278,48 +231,34 @@ function CryptoWalletPage() {
                     isOusd: true,
                     logoUrl: OUSD_LOGO_URL,
                   },
-                  {
-                    network: "bitcoin" as const,
-                    label: "Bitcoin",
-                    asset: "BTC" as const,
-                    logoUrl: MAJOR_TOKENS.btc.logoUrl,
-                  },
-                  {
-                    network: "ethereum" as const,
-                    label: "Ethereum",
-                    asset: "ETH" as const,
-                    logoUrl: MAJOR_TOKENS.eth.logoUrl,
-                  },
-                  {
-                    network: "solana" as const,
-                    label: "Solana",
-                    asset: "SOL" as const,
-                    logoUrl: MAJOR_TOKENS.sol.logoUrl,
-                  },
-                  {
-                    network: "usdc" as const,
-                    label: "USDC",
-                    asset: "USDC" as const,
-                    logoUrl: MAJOR_TOKENS.usdc.logoUrl,
-                  },
-                  {
-                    network: "usdt" as const,
-                    label: "USDT",
-                    asset: "USDT" as const,
-                    logoUrl: MAJOR_TOKENS.usdt.logoUrl,
-                  },
-                  {
-                    network: "pi" as const,
-                    label: "Pi Network",
-                    asset: "PI" as const,
-                    logoUrl: PI_NETWORK_LOGO_URL,
-                  },
+                  ...MAJOR_TOKEN_IDS.map((id) => ({
+                    network: id,
+                    label: MAJOR_TOKENS[id].symbol,
+                    asset: MAJOR_TOKENS[id].symbol,
+                    isOusd: false as const,
+                    logoUrl: MAJOR_TOKENS[id].logoUrl,
+                  })),
                 ]
               ).map((n) => (
                 <Link
                   key={n.network}
                   to="/wallet/receive"
-                  search={{ network: n.network, asset: n.asset }}
+                  search={{
+                    network: n.network,
+                    asset: n.asset as
+                      | "OUSD"
+                      | "BTC"
+                      | "ETH"
+                      | "SOL"
+                      | "PI"
+                      | "USDC"
+                      | "USDT"
+                      | "PYUSD"
+                      | "USDG"
+                      | "USD1"
+                      | "CASH"
+                      | "EURC",
+                  }}
                   className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 press hover:bg-muted/40"
                 >
                   {n.isOusd ? (
@@ -345,41 +284,40 @@ function CryptoWalletPage() {
             <ul className="overflow-hidden rounded-2xl border border-border bg-card">
               {assets.map((a, i) => {
                 const usd = a.balance * (a.priceUsd > 0 ? a.priceUsd : 0);
+                const isMajor = a.key === "ousd" || MAJOR_TOKEN_IDS.includes(a.key as (typeof MAJOR_TOKEN_IDS)[number]);
                 return (
                   <li key={a.key} className={cn(i > 0 && "border-t border-border")}>
                     <Link
                       to="/wallet/receive"
                       search={
-                        a.key === "ousd" ||
-                        a.key === "btc" ||
-                        a.key === "eth" ||
-                        a.key === "sol" ||
-                        a.key === "usdc" ||
-                        a.key === "usdt" ||
-                        a.key === "pi"
+                        isMajor
                           ? {
-                              network:
-                                a.key === "ousd"
-                                  ? "openpay"
-                                  : a.key === "btc"
-                                    ? "bitcoin"
-                                    : a.key === "eth"
-                                      ? "ethereum"
-                                      : a.key === "sol"
-                                        ? "solana"
-                                        : a.key === "usdc"
-                                          ? "usdc"
-                                          : a.key === "usdt"
-                                            ? "usdt"
-                                            : "pi",
+                              network: (a.key === "ousd" ? "openpay" : a.key) as
+                                | "openpay"
+                                | "btc"
+                                | "eth"
+                                | "sol"
+                                | "pi"
+                                | "usdc"
+                                | "usdt"
+                                | "pyusd"
+                                | "usdg"
+                                | "usd1"
+                                | "cash"
+                                | "eurc",
                               asset: a.symbol as
                                 | "OUSD"
                                 | "BTC"
                                 | "ETH"
                                 | "SOL"
+                                | "PI"
                                 | "USDC"
                                 | "USDT"
-                                | "PI",
+                                | "PYUSD"
+                                | "USDG"
+                                | "USD1"
+                                | "CASH"
+                                | "EURC",
                             }
                           : { network: "openpay", token: a.key }
                       }

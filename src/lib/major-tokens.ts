@@ -1,16 +1,29 @@
 /**
- * Major tokens — Phantom-style catalog for BTC / ETH / SOL / PI / USDC / USDT.
+ * Major tokens — Phantom-style catalog for BTC / ETH / SOL / PI + USD stables / EURC.
  * Market stats refreshed from CoinGecko public API.
- * Refs:
- * - https://www.coingecko.com/en/coins/bitcoin
- * - https://www.coingecko.com/en/coins/ethereum
- * - https://www.coingecko.com/en/coins/solana
- * - https://www.coingecko.com/en/coins/pi-network
- * - https://phantom.com/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (USDC)
- * - https://phantom.com/tokens/solana/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB (USDT)
+ *
+ * Stablecoin Phantom refs:
+ * - USDC  EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+ * - USDT  Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB
+ * - PYUSD 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo
+ * - USDG  2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH
+ * - USD1  USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB
+ * - CASH  CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH
+ * - EURC  0x1abaea1f7c830bd89acc67ec4af516284b1bc33c (Ethereum)
  */
 
-export type MajorTokenId = "btc" | "eth" | "sol" | "pi" | "usdc" | "usdt";
+export type MajorTokenId =
+  | "btc"
+  | "eth"
+  | "sol"
+  | "pi"
+  | "usdc"
+  | "usdt"
+  | "pyusd"
+  | "usdg"
+  | "usd1"
+  | "cash"
+  | "eurc";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -31,6 +44,8 @@ export type MajorTokenDef = {
   native: boolean;
   /** Verified Solana SPL mint when applicable */
   mintAddress?: string;
+  /** Verified EVM contract when applicable */
+  contractAddress?: string;
   /** Phantom token page for mint verification */
   phantomUrl?: string;
 };
@@ -97,7 +112,6 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     website: "https://minepi.com/",
     twitter: "https://x.com/PiCoreTeam",
     coingeckoId: "pi-network",
-    // Not listed on MoonPay — buy opens with a notice on asset detail
     createdLabel: "Mar 2019",
     createdAt: "2019-03-14T00:00:00.000Z",
     native: true,
@@ -144,12 +158,108 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "USDT (Tether) is the largest USD-pegged stablecoin, issued by Tether Limited. On Solana it runs as a native SPL token. OpenPay Pro credits USDT to your custodial ledger at market price. Confirm the mint Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB before accepting external USDT — fake stables with similar names circulate on Solana.",
   },
+  pyusd: {
+    id: "pyusd",
+    name: "PayPal USD",
+    symbol: "PYUSD",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/31212/large/PYUSD.png",
+    website: "https://www.paypal.com/pyusd",
+    twitter: "https://x.com/PayPal",
+    coingeckoId: "paypal-usd",
+    createdLabel: "Aug 2023",
+    createdAt: "2023-08-07T00:00:00.000Z",
+    native: false,
+    mintAddress: "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+    about:
+      "PayPal USD (PYUSD) is a USD stablecoin issued by Paxos Trust Company, 100% backed by U.S. dollar deposits, short-term Treasuries, and cash equivalents, redeemable 1:1 for USD. On Solana verify mint 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo before accepting transfers.",
+  },
+  usdg: {
+    id: "usdg",
+    name: "Global Dollar",
+    symbol: "USDG",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/52578/large/usdg.png",
+    website: "https://www.globaldollar.com",
+    twitter: "https://x.com/GlobalDollarUSD",
+    coingeckoId: "global-dollar",
+    createdLabel: "Jan 2025",
+    createdAt: "2025-01-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH",
+    about:
+      "USDG (Global Dollar) is a fully backed USD stablecoin issued by Paxos, redeemable 1:1 for U.S. dollars and backed by dollar deposits, short-term Treasuries, and cash equivalents. On Solana verify mint 2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH.",
+  },
+  usd1: {
+    id: "usd1",
+    name: "World Liberty Financial USD",
+    symbol: "USD1",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/54693/large/USD1.png",
+    website: "https://www.worldlibertyfinancial.com",
+    twitter: "https://x.com/worldlibertyfi",
+    coingeckoId: "usd1-wlfi",
+    createdLabel: "Jul 2025",
+    createdAt: "2025-07-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB",
+    about:
+      "USD1 is the World Liberty Financial USD stablecoin — designed to stay stable, secure, and transparent. OpenPay Pro credits USD1 on your custodial ledger at market price. Verify Solana mint USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB before accepting external transfers.",
+  },
+  cash: {
+    id: "cash",
+    name: "CASH",
+    symbol: "CASH",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    website: "https://phantom.com/cash",
+    twitter: "https://x.com/phantom",
+    /** Not always listed on CoinGecko — fallback peg $1 used when markets miss. */
+    coingeckoId: "phantom-cash",
+    createdLabel: "Aug 2025",
+    createdAt: "2025-08-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH",
+    about:
+      "CASH is Phantom's USD-pegged stablecoin on Solana, designed with Open Issuance by Bridge and Stripe for real-world utility. One CASH targets one U.S. dollar. Always verify mint CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH — look-alike stables are common.",
+  },
+  eurc: {
+    id: "eurc",
+    name: "EURC",
+    symbol: "EURC",
+    network: "Ethereum",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/26045/large/euro-coin.png",
+    website: "https://www.circle.com/eurc",
+    twitter: "https://x.com/circle",
+    coingeckoId: "euro-coin",
+    createdLabel: "Jun 2022",
+    createdAt: "2022-06-01T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x1abaea1f7c830bd89acc67ec4af516284b1bc33c",
+    phantomUrl:
+      "https://phantom.com/tokens/ethereum/0x1abaea1f7c830bd89acc67ec4af516284b1bc33c",
+    about:
+      "EURC (Euro Coin) is a euro-backed stablecoin issued by Circle under the same reserve model as USDC — designed to be redeemable 1:1 for euros held in euro-denominated accounts. On Ethereum verify contract 0x1abaea1f7c830bd89acc67ec4af516284b1bc33c. OpenPay Pro marks EURC to USD via live market price when buying with OUSD.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
 
 export function isMajorTokenId(id: string): id is MajorTokenId {
-  return id === "btc" || id === "eth" || id === "sol" || id === "pi" || id === "usdc" || id === "usdt";
+  return Object.prototype.hasOwnProperty.call(MAJOR_TOKENS, id);
 }
 
 export function getMajorToken(id: string): MajorTokenDef | null {
@@ -165,6 +275,11 @@ export const MAJOR_SYMBOLS = new Set([
   "PI",
   "USDC",
   "USDT",
+  "PYUSD",
+  "USDG",
+  "USD1",
+  "CASH",
+  "EURC",
   "BITCOIN",
   "ETHEREUM",
   "SOLANA",
@@ -173,6 +288,11 @@ export const MAJOR_SYMBOLS = new Set([
   "USD COIN",
   "USDCOIN",
   "TETHER",
+  "PAYPAL USD",
+  "GLOBAL DOLLAR",
+  "WORLD LIBERTY FINANCIAL USD",
+  "EURO COIN",
+  "EUROC",
 ]);
 
 export type MajorMarketSnapshot = {
@@ -212,6 +332,10 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   "pi-network": "pi",
   "usd-coin": "usdc",
   tether: "usdt",
+  "paypal-usd": "pyusd",
+  "global-dollar": "usdg",
+  "usd1-wlfi": "usd1",
+  "euro-coin": "eurc",
 };
 
 /** Fallback static values if CoinGecko is unreachable. */
@@ -288,10 +412,72 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     athDate: "2018-07-24T00:00:00.000Z",
     atlDate: "2015-03-02T00:00:00.000Z",
   },
+  pyusd: {
+    price: 1,
+    change24h: 0,
+    marketCap: 6.8e8,
+    volume24h: 2.9e7,
+    totalSupply: 6.8e8,
+    circulatingSupply: 6.8e8,
+    ath: 1.11,
+    atl: 0.93,
+    athDate: "2024-01-01T00:00:00.000Z",
+    atlDate: "2023-08-01T00:00:00.000Z",
+  },
+  usdg: {
+    price: 1,
+    change24h: 0,
+    marketCap: 6.33e8,
+    volume24h: 4.3e7,
+    totalSupply: 6.33e8,
+    circulatingSupply: 6.33e8,
+    ath: 1.0,
+    atl: 1.0,
+    athDate: "2025-01-01T00:00:00.000Z",
+    atlDate: "2025-01-01T00:00:00.000Z",
+  },
+  usd1: {
+    price: 1,
+    change24h: 0,
+    marketCap: 1e9,
+    volume24h: 3.1e7,
+    totalSupply: 1.02e9,
+    circulatingSupply: 1.02e9,
+    ath: 1.0,
+    atl: 1.0,
+    athDate: "2025-07-01T00:00:00.000Z",
+    atlDate: "2025-07-01T00:00:00.000Z",
+  },
+  cash: {
+    price: 1,
+    change24h: 0,
+    marketCap: 1.23e8,
+    volume24h: 8e6,
+    totalSupply: 1.23e8,
+    circulatingSupply: 1.23e8,
+    ath: 1.0,
+    atl: 1.0,
+    athDate: "2025-08-01T00:00:00.000Z",
+    atlDate: "2025-08-01T00:00:00.000Z",
+  },
+  eurc: {
+    price: 1.08,
+    change24h: 0,
+    marketCap: 3.32e8,
+    volume24h: 5.4e6,
+    totalSupply: 2.9e8,
+    circulatingSupply: 2.9e8,
+    ath: 1.18,
+    atl: 1.03,
+    athDate: "2023-01-01T00:00:00.000Z",
+    atlDate: "2022-06-01T00:00:00.000Z",
+  },
 };
 
 export async function fetchMajorMarkets(): Promise<MajorMarketSnapshot[]> {
-  const ids = MAJOR_TOKEN_IDS.map((id) => MAJOR_TOKENS[id].coingeckoId).join(",");
+  const ids = MAJOR_TOKEN_IDS.map((id) => MAJOR_TOKENS[id].coingeckoId)
+    .filter((cg) => cg !== "phantom-cash")
+    .join(",");
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=24h`,

@@ -7,6 +7,7 @@ import { BadgeCheck, CircleDollarSign, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
+import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { OusdIcon } from "@/components/ousd-icon";
 import { useCurrency, type CurrencyCode } from "@/lib/currency";
 import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
@@ -110,7 +111,7 @@ function TokensPage() {
           </div>
         </div>
         <Button asChild size="sm" className="rounded-full">
-          <Link to="/opentoken/create">
+          <Link to="/opentoken/create" search={{}}>
             <Plus className="mr-1 h-4 w-4" />
             Create
           </Link>
@@ -120,9 +121,17 @@ function TokensPage() {
       <ul className="pb-4">
         {showOusd && (
           <li>
-            <Link to="/asset/$tokenId" params={{ tokenId: "ousd" }} className="ph-row press">
+            <Link
+              to="/asset/$tokenId"
+              params={{ tokenId: "ousd" }}
+              search={{}}
+              className="ph-row press"
+            >
               <div className="flex min-w-0 items-center gap-3">
-                <OusdIcon className="h-11 w-11 shrink-0" />
+                <div className="relative h-11 w-11 shrink-0">
+                  <OusdIcon className="h-11 w-11" />
+                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+                </div>
                 <div className="min-w-0">
                   <div className="ph-row-title truncate">OpenUSD OUSD</div>
                   <div className="ph-row-sub">OUSD · Stablecoin</div>
@@ -180,12 +189,19 @@ function MajorTokenRow({
   const m = majorMarketById(markets, id);
   return (
     <li>
-      <Link to="/asset/$tokenId" params={{ tokenId: id }} className="ph-row press">
+      <Link
+        to="/asset/$tokenId"
+        params={{ tokenId: id }}
+        search={{}}
+        className="ph-row press"
+      >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
-            <img src={def.logoUrl} alt="" className="h-full w-full object-cover" />
-            <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
-          </div>
+          <TokenAvatar
+            logoUrl={def.logoUrl}
+            name={def.name}
+            symbol={def.symbol}
+            verified
+          />
           <div className="min-w-0">
             <div className="ph-row-title truncate">{def.name}</div>
             <div className="ph-row-sub">
@@ -207,21 +223,16 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
       <Link
         to="/asset/$tokenId"
         params={{ tokenId: t.id }}
+        search={{}}
         className="ph-row press"
       >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
-            {t.logo_url ? (
-              <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="grid h-full w-full place-items-center bg-primary/20 text-xs font-bold text-primary">
-                {t.symbol?.slice(0, 2)}
-              </div>
-            )}
-            {t.is_verified && (
-              <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
-            )}
-          </div>
+          <TokenAvatar
+            logoUrl={t.logo_url}
+            name={t.name}
+            symbol={t.symbol}
+            verified={Boolean(t.is_verified)}
+          />
           <div className="min-w-0">
             <div className="ph-row-title truncate">{t.name}</div>
             <div className="ph-row-sub">{t.symbol}</div>

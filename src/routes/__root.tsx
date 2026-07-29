@@ -37,8 +37,9 @@ async function ensureBrowserSupabaseConfig() {
       ]),
     );
   }
-  (window as unknown as { __OPENPAY_PUBLIC__?: { url: string; publishableKey: string } })
-    .__OPENPAY_PUBLIC__ = {
+  (
+    window as unknown as { __OPENPAY_PUBLIC__?: { url: string; publishableKey: string } }
+  ).__OPENPAY_PUBLIC__ = {
     url: cfg.url,
     publishableKey: cfg.publishableKey,
   };
@@ -149,6 +150,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
     ],
   }),

@@ -471,6 +471,12 @@ function PhantomAssetDetail() {
             primary
             onClick={() => {
               if (isMajor) {
+                if (!majorDef?.moonpayCode) {
+                  toast.info(
+                    `${meta.symbol} isn’t available on MoonPay yet — buy on an exchange that lists Pi Network.`,
+                  );
+                  return;
+                }
                 setMoonpayOpen(true);
               } else {
                 setBuyOpen(true);
@@ -601,7 +607,7 @@ function PhantomAssetDetail() {
               />
             )}
             {isOusd && <InfoRow label="Peg" value="$1.00 USD" last />}
-            {isMajor && <InfoRow label="Type" value="Native L1" last />}
+            {isMajor && <InfoRow label="Type" value={`Native · ${meta.network}`} last />}
             {!isOusd && !isMajor && <InfoRow label="Status" value={String(meta.status)} last />}
           </div>
         </section>
@@ -610,24 +616,28 @@ function PhantomAssetDetail() {
         <section>
           <h2 className="mb-2 text-sm text-muted-foreground">About</h2>
           <p className="text-sm leading-relaxed text-foreground/90">{aboutPreview}</p>
-          {meta.description.length > 140 && (
-            <button
-              type="button"
-              className="mt-1 text-sm font-medium text-primary"
-              onClick={() => setAboutOpen((v) => !v)}
-            >
-              {aboutOpen ? "Show Less" : "Show More"}
-            </button>
-          )}
-          {meta.website && websiteHref(meta.website) && (
-            <a
-              href={websiteHref(meta.website)!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent"
-            >
-              <Globe className="h-4 w-4" /> Website
-            </a>
+          {(meta.description.length > 140 || (meta.website && websiteHref(meta.website))) && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
+              {meta.description.length > 140 && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary"
+                  onClick={() => setAboutOpen((v) => !v)}
+                >
+                  {aboutOpen ? "Show Less" : "Show More"}
+                </button>
+              )}
+              {meta.website && websiteHref(meta.website) && (
+                <a
+                  href={websiteHref(meta.website)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent"
+                >
+                  <Globe className="h-4 w-4" /> Website
+                </a>
+              )}
+            </div>
           )}
         </section>
 

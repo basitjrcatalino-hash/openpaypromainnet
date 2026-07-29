@@ -3,18 +3,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  BadgeCheck,
-  ChevronDown,
-  Loader2,
-  Search,
-  ArrowLeft,
-} from "lucide-react";
+import { BadgeCheck, ChevronDown, Loader2, Search, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatOUSD, fetchActiveWallet, shortAddress, timeAgo } from "@/lib/wallet-utils";
+import {
+  formatNumber,
+  formatOUSD,
+  fetchActiveWallet,
+  shortAddress,
+  timeAgo,
+} from "@/lib/wallet-utils";
 import { buyOpenToken, sellOpenToken } from "@/lib/opentoken.functions";
 import {
   curveFromTokenRow,
@@ -27,12 +27,7 @@ import { TerminalChart, type TerminalPeriod } from "@/components/opentoken";
 import type { OtTradeRow } from "@/components/opentoken";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_authenticated/opentoken_/terminal")({
   head: () => ({ meta: [{ title: "Terminal — OpenPay Pro" }] }),
@@ -64,6 +59,29 @@ type TokenRow = {
 type SortKey = "market_cap" | "volume_24h" | "change_24h" | "price_usd" | "created_at";
 type TradeSide = "buy" | "sell";
 
+const EMPTY_TOKENS: TokenRow[] = [];
+const EMPTY_TRADES: OtTradeRow[] = [];
+
+type HolderRow = {
+  balance: number;
+  wallet_id: string;
+  wallets: { address: string; name: string; user_id: string } | null;
+};
+const EMPTY_HOLDERS: HolderRow[] = [];
+
+type PositionRow = {
+  balance: number;
+  token_id: string;
+  tokens: {
+    id: string;
+    name: string;
+    symbol: string;
+    price_usd: number;
+    logo_url: string | null;
+  } | null;
+};
+const EMPTY_POSITIONS: PositionRow[] = [];
+
 function TerminalPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
@@ -83,19 +101,22 @@ function TerminalPage() {
   const [tradeSheetOpen, setTradeSheetOpen] = useState(false);
 
   // Fetch all tokens
-  const { data: tokens = [], isLoading: tokensLoading } = useQuery({
+  const { data: tokensData, isLoading: tokensLoading } = useQuery({
     queryKey: ["terminal-tokens"],
     staleTime: 15_000,
     queryFn: async (): Promise<TokenRow[]> => {
       const { data } = await supabase
         .from("tokens")
-        .select("id, name, symbol, price_usd, market_cap, volume_24h, change_24h, logo_url, is_verified, status, holder_count, total_supply, curve_supply_sold, curve_reserve_pi, curve_virtual_pi, curve_virtual_tokens, graduation_target_pi, created_at, category")
+        .select(
+          "id, name, symbol, price_usd, market_cap, volume_24h, change_24h, logo_url, is_verified, status, holder_count, total_supply, curve_supply_sold, curve_reserve_pi, curve_virtual_pi, curve_virtual_tokens, graduation_target_pi, created_at, category",
+        )
         .eq("is_hidden", false)
         .order("market_cap", { ascending: false })
         .limit(200);
       return (data ?? []) as TokenRow[];
     },
   });
+  const tokens: TokenRow[] = tokensData ?? EMPTY_TOKENS;
 
   // Auto-select first token
   useEffect(() => {
@@ -112,7 +133,12 @@ function TerminalPage() {
   // Active wallet
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
-    queryFn: () => fetchActiveWallet<{ id: string; ousd_balance: number }>(supabase, user.id, "id, ousd_balance"),
+    queryFn: () =>
+      fetchActiveWallet<{ id: string; ousd_balance: number }>(
+        supabase,
+        user.id,
+        "id, ousd_balance",
+      ),
   });
 
   // User holding of selected token
@@ -135,7 +161,8 @@ function TerminalPage() {
     queryKey: ["ot-ticks", selectedTokenId, chartPeriod],
     enabled: !!selectedTokenId,
     queryFn: async () => {
-      const limit = chartPeriod === "5M" || chartPeriod === "15M" ? 60 : chartPeriod === "1H" ? 48 : 96;
+      const limit =
+        chartPeriod === "5M" || chartPeriod === "15M" ? 60 : chartPeriod === "1H" ? 48 : 96;
       const { data } = await supabase
         .from("ot_price_ticks")
         .select("created_at, price, market_cap")
@@ -147,7 +174,7 @@ function TerminalPage() {
   });
 
   // Recent trades for selected token
-  const { data: trades = [] } = useQuery({
+  const { data: tradesData } = useQuery({
     queryKey: ["ot-trades", selectedTokenId],
     enabled: !!selectedTokenId,
     queryFn: async (): Promise<OtTradeRow[]> => {
@@ -160,12 +187,13 @@ function TerminalPage() {
       return (data ?? []) as OtTradeRow[];
     },
   });
+  const trades: OtTradeRow[] = tradesData ?? EMPTY_TRADES;
 
   // Top holders for selected token
-  const { data: holders = [] } = useQuery({
+  const { data: holdersData } = useQuery({
     queryKey: ["ot-holders", selectedTokenId],
     enabled: !!selectedTokenId && tradeTab === "holders",
-    queryFn: async () => {
+    queryFn: async (): Promise<HolderRow[]> => {
       const { data } = await supabase
         .from("token_holdings")
         .select("balance, wallet_id, wallets:wallet_id(address, name, user_id)")
@@ -173,31 +201,25 @@ function TerminalPage() {
         .gt("balance", 0)
         .order("balance", { ascending: false })
         .limit(25);
-      return (data ?? []) as Array<{
-        balance: number;
-        wallet_id: string;
-        wallets: { address: string; name: string; user_id: string } | null;
-      }>;
+      return (data ?? []) as HolderRow[];
     },
   });
+  const holders: HolderRow[] = holdersData ?? EMPTY_HOLDERS;
 
   // User positions (all tokens user holds)
-  const { data: positions = [] } = useQuery({
+  const { data: positionsData } = useQuery({
     queryKey: ["ot-positions", wallet?.id],
     enabled: !!wallet?.id && tradeTab === "positions",
-    queryFn: async () => {
+    queryFn: async (): Promise<PositionRow[]> => {
       const { data } = await supabase
         .from("token_holdings")
         .select("balance, token_id, tokens:token_id(id, name, symbol, price_usd, logo_url)")
         .eq("wallet_id", wallet!.id)
         .gt("balance", 0);
-      return (data ?? []) as Array<{
-        balance: number;
-        token_id: string;
-        tokens: { id: string; name: string; symbol: string; price_usd: number; logo_url: string | null } | null;
-      }>;
+      return (data ?? []) as PositionRow[];
     },
   });
+  const positions: PositionRow[] = positionsData ?? EMPTY_POSITIONS;
 
   // Sort & filter tokens
   const sortedTokens = useMemo(() => {
@@ -308,26 +330,46 @@ function TerminalPage() {
             className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1.5 py-1 text-left hover:bg-muted/40 md:pointer-events-none md:hover:bg-transparent"
           >
             {selectedToken.logo_url ? (
-              <img src={selectedToken.logo_url} alt="" className="h-7 w-7 shrink-0 rounded-full sm:h-6 sm:w-6" />
+              <img
+                src={selectedToken.logo_url}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-full sm:h-6 sm:w-6"
+              />
             ) : (
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/20 text-[10px] font-bold text-primary sm:h-6 sm:w-6">
                 {selectedToken.symbol.slice(0, 2)}
               </span>
             )}
             <span className="truncate text-sm font-bold">{selectedToken.symbol}</span>
-            {selectedToken.is_verified && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" />}
+            {selectedToken.is_verified && (
+              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
+            )}
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground md:hidden" />
             <div className="ml-auto hidden items-center gap-3 overflow-x-auto text-xs lg:flex">
               <span className="whitespace-nowrap">
-                Price: <span className="font-semibold tabular-nums">${formatNumber(selectedToken.price_usd, 6)}</span>
+                Price:{" "}
+                <span className="font-semibold tabular-nums">
+                  ${formatNumber(selectedToken.price_usd, 6)}
+                </span>
               </span>
               <span className="whitespace-nowrap">
-                MCap: <span className="font-semibold tabular-nums">${formatNumber(selectedToken.market_cap, 0, { compact: true })}</span>
+                MCap:{" "}
+                <span className="font-semibold tabular-nums">
+                  ${formatNumber(selectedToken.market_cap, 0, { compact: true })}
+                </span>
               </span>
               <span className="whitespace-nowrap">
-                24h Vol: <span className="font-semibold tabular-nums">${formatNumber(selectedToken.volume_24h, 0, { compact: true })}</span>
+                24h Vol:{" "}
+                <span className="font-semibold tabular-nums">
+                  ${formatNumber(selectedToken.volume_24h, 0, { compact: true })}
+                </span>
               </span>
-              <span className={cn("whitespace-nowrap font-semibold", selectedToken.change_24h >= 0 ? "text-emerald-400" : "text-red-400")}>
+              <span
+                className={cn(
+                  "whitespace-nowrap font-semibold",
+                  selectedToken.change_24h >= 0 ? "text-emerald-400" : "text-red-400",
+                )}
+              >
                 {selectedToken.change_24h >= 0 ? "+" : ""}
                 {formatNumber(selectedToken.change_24h, 2)}%
               </span>
@@ -368,7 +410,12 @@ function TerminalPage() {
           <span className="whitespace-nowrap text-muted-foreground">
             Vol ${formatNumber(selectedToken.volume_24h, 0, { compact: true })}
           </span>
-          <span className={cn("whitespace-nowrap font-semibold", selectedToken.change_24h >= 0 ? "text-emerald-400" : "text-red-400")}>
+          <span
+            className={cn(
+              "whitespace-nowrap font-semibold",
+              selectedToken.change_24h >= 0 ? "text-emerald-400" : "text-red-400",
+            )}
+          >
             {selectedToken.change_24h >= 0 ? "+" : ""}
             {formatNumber(selectedToken.change_24h, 2)}%
           </span>
@@ -393,7 +440,7 @@ function TerminalPage() {
 
         {/* Center - Chart + Trades */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative min-h-[220px] flex-1 border-b border-border/40 sm:min-h-[280px]">
+          <div className="relative min-h-55 flex-1 border-b border-border/40 sm:min-h-70">
             {selectedToken ? (
               <div className="flex h-full flex-col p-0.5 sm:p-1">
                 <TerminalChart
@@ -438,31 +485,54 @@ function TerminalPage() {
             </div>
             <div className="flex-1 overflow-auto text-xs">
               {tradeTab === "trades" && (
-                <table className="w-full min-w-[480px]">
+                <table className="w-full min-w-120">
                   <thead className="sticky top-0 bg-card/90 backdrop-blur-sm">
                     <tr className="text-[10px] uppercase text-muted-foreground">
                       <th className="px-2 py-1.5 text-left font-medium sm:px-3">Time</th>
                       <th className="px-2 py-1.5 text-left font-medium sm:px-3">Type</th>
                       <th className="px-2 py-1.5 text-right font-medium sm:px-3">Price</th>
                       <th className="px-2 py-1.5 text-right font-medium sm:px-3">Amount</th>
-                      <th className="hidden px-2 py-1.5 text-right font-medium sm:table-cell sm:px-3">Value $</th>
-                      <th className="hidden px-2 py-1.5 text-right font-medium md:table-cell md:px-3">Wallet</th>
+                      <th className="hidden px-2 py-1.5 text-right font-medium sm:table-cell sm:px-3">
+                        Value $
+                      </th>
+                      <th className="hidden px-2 py-1.5 text-right font-medium md:table-cell md:px-3">
+                        Wallet
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {trades.length === 0 ? (
-                      <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No trades yet</td></tr>
+                      <tr>
+                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                          No trades yet
+                        </td>
+                      </tr>
                     ) : (
                       trades.map((t) => (
                         <tr key={t.id} className="border-b border-border/20 hover:bg-muted/30">
-                          <td className="px-2 py-1.5 tabular-nums text-muted-foreground sm:px-3">{timeAgo(t.created_at)}</td>
-                          <td className={cn("px-2 py-1.5 font-semibold sm:px-3", t.side === "buy" ? "text-emerald-400" : "text-red-400")}>
+                          <td className="px-2 py-1.5 tabular-nums text-muted-foreground sm:px-3">
+                            {timeAgo(t.created_at)}
+                          </td>
+                          <td
+                            className={cn(
+                              "px-2 py-1.5 font-semibold sm:px-3",
+                              t.side === "buy" ? "text-emerald-400" : "text-red-400",
+                            )}
+                          >
                             {t.side === "buy" ? "Buy" : "Sell"}
                           </td>
-                          <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">${formatNumber(t.price, 6)}</td>
-                          <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">{formatNumber(t.token_amount, 2)}</td>
-                          <td className="hidden px-2 py-1.5 text-right tabular-nums sm:table-cell sm:px-3">${formatNumber(t.pi_amount, 2)}</td>
-                          <td className="hidden px-2 py-1.5 text-right font-mono text-muted-foreground md:table-cell md:px-3">{shortAddress(t.user_id, 4, 4)}</td>
+                          <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">
+                            ${formatNumber(t.price, 6)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">
+                            {formatNumber(t.token_amount, 2)}
+                          </td>
+                          <td className="hidden px-2 py-1.5 text-right tabular-nums sm:table-cell sm:px-3">
+                            ${formatNumber(t.pi_amount, 2)}
+                          </td>
+                          <td className="hidden px-2 py-1.5 text-right font-mono text-muted-foreground md:table-cell md:px-3">
+                            {shortAddress(t.user_id, 4, 4)}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -480,23 +550,36 @@ function TerminalPage() {
                   </thead>
                   <tbody>
                     {positions.length === 0 ? (
-                      <tr><td colSpan={3} className="px-3 py-6 text-center text-muted-foreground">No positions yet</td></tr>
+                      <tr>
+                        <td colSpan={3} className="px-3 py-6 text-center text-muted-foreground">
+                          No positions yet
+                        </td>
+                      </tr>
                     ) : (
                       positions.map((p) => (
                         <tr
                           key={p.token_id}
-                          className={cn("cursor-pointer border-b border-border/20 hover:bg-muted/30", p.token_id === selectedTokenId && "bg-primary/5")}
+                          className={cn(
+                            "cursor-pointer border-b border-border/20 hover:bg-muted/30",
+                            p.token_id === selectedTokenId && "bg-primary/5",
+                          )}
                           onClick={() => setSelectedTokenId(p.token_id)}
                         >
                           <td className="px-3 py-1.5">
                             <span className="flex items-center gap-2">
                               {p.tokens?.logo_url ? (
-                                <img src={p.tokens.logo_url} alt="" className="h-4 w-4 rounded-full" />
+                                <img
+                                  src={p.tokens.logo_url}
+                                  alt=""
+                                  className="h-4 w-4 rounded-full"
+                                />
                               ) : null}
                               <span className="font-medium">{p.tokens?.symbol ?? "?"}</span>
                             </span>
                           </td>
-                          <td className="px-3 py-1.5 text-right tabular-nums">{formatNumber(p.balance, 4)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {formatNumber(p.balance, 4)}
+                          </td>
                           <td className="px-3 py-1.5 text-right tabular-nums">
                             ${formatNumber(p.balance * (p.tokens?.price_usd ?? 0), 2)}
                           </td>
@@ -518,15 +601,29 @@ function TerminalPage() {
                   </thead>
                   <tbody>
                     {holders.length === 0 ? (
-                      <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">No holders</td></tr>
+                      <tr>
+                        <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                          No holders
+                        </td>
+                      </tr>
                     ) : (
                       holders.map((h, i) => (
-                        <tr key={h.wallet_id} className="border-b border-border/20 hover:bg-muted/30">
+                        <tr
+                          key={h.wallet_id}
+                          className="border-b border-border/20 hover:bg-muted/30"
+                        >
                           <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
-                          <td className="px-3 py-1.5 font-mono">{shortAddress(h.wallets?.address ?? h.wallet_id, 6, 4)}</td>
-                          <td className="px-3 py-1.5 text-right tabular-nums">{formatNumber(h.balance, 2)}</td>
+                          <td className="px-3 py-1.5 font-mono">
+                            {shortAddress(h.wallets?.address ?? h.wallet_id, 6, 4)}
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {formatNumber(h.balance, 2)}
+                          </td>
                           <td className="px-3 py-1.5 text-right tabular-nums text-muted-foreground">
-                            {selectedToken ? formatNumber((h.balance / selectedToken.total_supply) * 100, 2) : "0"}%
+                            {selectedToken
+                              ? formatNumber((h.balance / selectedToken.total_supply) * 100, 2)
+                              : "0"}
+                            %
                           </td>
                         </tr>
                       ))
@@ -583,7 +680,10 @@ function TerminalPage() {
 
       {/* Mobile trade sheet */}
       <Sheet open={tradeSheetOpen} onOpenChange={setTradeSheetOpen}>
-        <SheetContent side="bottom" className="flex h-[80dvh] flex-col gap-0 p-0 sm:h-auto sm:max-h-[85dvh]">
+        <SheetContent
+          side="bottom"
+          className="flex h-[80dvh] flex-col gap-0 p-0 sm:h-auto sm:max-h-[85dvh]"
+        >
           <SheetHeader className="border-b border-border/40 px-4 py-3 text-left">
             <SheetTitle className="text-base">
               {selectedToken ? `Trade $${selectedToken.symbol}` : "Trade"}
@@ -649,53 +749,84 @@ function TokenListPanel({
         </div>
       </div>
       <div className="flex items-center gap-1 border-b border-border/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-        <button type="button" onClick={() => handleSort("market_cap")} className={cn("flex-1 truncate text-left hover:text-foreground", sortKey === "market_cap" && "text-foreground")}>
+        <button
+          type="button"
+          onClick={() => handleSort("market_cap")}
+          className={cn(
+            "flex-1 truncate text-left hover:text-foreground",
+            sortKey === "market_cap" && "text-foreground",
+          )}
+        >
           Token
         </button>
-        <button type="button" onClick={() => handleSort("price_usd")} className={cn("w-14 text-right hover:text-foreground", sortKey === "price_usd" && "text-foreground")}>
+        <button
+          type="button"
+          onClick={() => handleSort("price_usd")}
+          className={cn(
+            "w-14 text-right hover:text-foreground",
+            sortKey === "price_usd" && "text-foreground",
+          )}
+        >
           Price
         </button>
-        <button type="button" onClick={() => handleSort("change_24h")} className={cn("w-12 text-right hover:text-foreground", sortKey === "change_24h" && "text-foreground")}>
+        <button
+          type="button"
+          onClick={() => handleSort("change_24h")}
+          className={cn(
+            "w-12 text-right hover:text-foreground",
+            sortKey === "change_24h" && "text-foreground",
+          )}
+        >
           24h %
         </button>
       </div>
       <div className="flex-1 overflow-y-auto overscroll-contain">
-        {tokensLoading ? (
-          Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 px-2 py-2 sm:py-1.5">
-              <Skeleton className="h-6 w-6 rounded-full" />
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="ml-auto h-3 w-10" />
-            </div>
-          ))
-        ) : (
-          sortedTokens.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => onSelect(t.id)}
-              className={cn(
-                "flex w-full items-center gap-2 px-2 py-2 text-left text-xs transition-colors sm:py-1.5",
-                t.id === selectedTokenId
-                  ? "bg-primary/10 text-foreground"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              {t.logo_url ? (
-                <img src={t.logo_url} alt="" className="h-6 w-6 shrink-0 rounded-full sm:h-5 sm:w-5" />
-              ) : (
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/20 text-[8px] font-bold text-primary sm:h-5 sm:w-5">
-                  {t.symbol.slice(0, 2)}
+        {tokensLoading
+          ? Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2 px-2 py-2 sm:py-1.5">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="ml-auto h-3 w-10" />
+              </div>
+            ))
+          : sortedTokens.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onSelect(t.id)}
+                className={cn(
+                  "flex w-full items-center gap-2 px-2 py-2 text-left text-xs transition-colors sm:py-1.5",
+                  t.id === selectedTokenId
+                    ? "bg-primary/10 text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                )}
+              >
+                {t.logo_url ? (
+                  <img
+                    src={t.logo_url}
+                    alt=""
+                    className="h-6 w-6 shrink-0 rounded-full sm:h-5 sm:w-5"
+                  />
+                ) : (
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/20 text-[8px] font-bold text-primary sm:h-5 sm:w-5">
+                    {t.symbol.slice(0, 2)}
+                  </span>
+                )}
+                <span className="min-w-0 flex-1 truncate font-medium">{t.symbol}</span>
+                <span className="shrink-0 tabular-nums">
+                  ${formatNumber(t.price_usd, t.price_usd < 0.01 ? 6 : 4)}
                 </span>
-              )}
-              <span className="min-w-0 flex-1 truncate font-medium">{t.symbol}</span>
-              <span className="shrink-0 tabular-nums">${formatNumber(t.price_usd, t.price_usd < 0.01 ? 6 : 4)}</span>
-              <span className={cn("w-11 shrink-0 text-right tabular-nums", t.change_24h >= 0 ? "text-emerald-400" : "text-red-400")}>
-                {t.change_24h >= 0 ? "+" : ""}{formatNumber(t.change_24h, 1)}%
-              </span>
-            </button>
-          ))
-        )}
+                <span
+                  className={cn(
+                    "w-11 shrink-0 text-right tabular-nums",
+                    t.change_24h >= 0 ? "text-emerald-400" : "text-red-400",
+                  )}
+                >
+                  {t.change_24h >= 0 ? "+" : ""}
+                  {formatNumber(t.change_24h, 1)}%
+                </span>
+              </button>
+            ))}
       </div>
     </div>
   );
@@ -801,9 +932,11 @@ function TradePanel({
                   </span>
                 </div>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-muted-foreground">Fee ({OPENTOKEN_TRADE_FEE_BPS / 100}%)</span>
+                  <span className="text-muted-foreground">
+                    Fee ({OPENTOKEN_TRADE_FEE_BPS / 100}%)
+                  </span>
                   <span className="tabular-nums text-muted-foreground">
-                    {formatNumber((quote.fee ?? 0), 4)} OUSD
+                    {formatNumber(quote.fee ?? 0, 4)} OUSD
                   </span>
                 </div>
               </div>
@@ -816,7 +949,9 @@ function TradePanel({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Holdings</span>
-                <span className="tabular-nums">{formatNumber(holding, 4)} ${selectedToken.symbol}</span>
+                <span className="tabular-nums">
+                  {formatNumber(holding, 4)} ${selectedToken.symbol}
+                </span>
               </div>
             </div>
 
@@ -845,10 +980,19 @@ function TradePanel({
                 Token Info
               </h4>
               <div className="space-y-1.5 text-xs">
-                <InfoRow label="Market Cap" value={`$${formatNumber(selectedToken.market_cap, 0, { compact: true })}`} />
-                <InfoRow label="24h Volume" value={`$${formatNumber(selectedToken.volume_24h, 0, { compact: true })}`} />
+                <InfoRow
+                  label="Market Cap"
+                  value={`$${formatNumber(selectedToken.market_cap, 0, { compact: true })}`}
+                />
+                <InfoRow
+                  label="24h Volume"
+                  value={`$${formatNumber(selectedToken.volume_24h, 0, { compact: true })}`}
+                />
                 <InfoRow label="Holders" value={String(selectedToken.holder_count)} />
-                <InfoRow label="Supply" value={formatNumber(selectedToken.total_supply, 0, { compact: true })} />
+                <InfoRow
+                  label="Supply"
+                  value={formatNumber(selectedToken.total_supply, 0, { compact: true })}
+                />
                 <InfoRow label="Status" value={selectedToken.status} />
                 <InfoRow label="Created" value={timeAgo(selectedToken.created_at)} />
               </div>

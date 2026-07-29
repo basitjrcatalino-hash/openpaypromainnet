@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
 import { startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
-import {
-  TELEGRAM_AUTH_LOGO,
-  TELEGRAM_BRAND_BLUE,
-  startTelegramSignIn,
-} from "@/lib/telegram-auth";
+import { TELEGRAM_AUTH_LOGO, TELEGRAM_BRAND_BLUE, startTelegramSignIn } from "@/lib/telegram-auth";
 import { WALLETCONNECT_BRAND_BLUE, startWalletConnectSignIn } from "@/lib/walletconnect-auth";
 import { METAMASK_EMBEDDED_BRAND } from "@/lib/web3auth-env";
 import {
@@ -43,14 +39,7 @@ export const Route = createFileRoute("/authpi")({
 });
 
 type AuthMethod =
-  | "openpay"
-  | "telegram"
-  | "solana"
-  | "pi"
-  | "phantom"
-  | "walletconnect"
-  | "metamask"
-  | "privy";
+  "openpay" | "telegram" | "solana" | "pi" | "phantom" | "walletconnect" | "metamask" | "privy";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -138,7 +127,12 @@ function PrivyLoginButton({ busy, setBusy }: { busy: boolean; setBusy: (v: boole
   if (!PRIVY_APP_ID) {
     return (
       <div className="space-y-2">
-        <Button type="button" disabled className="h-12 w-full rounded-full" style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}>
+        <Button
+          type="button"
+          disabled
+          className="h-12 w-full rounded-full"
+          style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}
+        >
           Privy not configured
         </Button>
         <p className="text-center text-[11px] text-destructive">Set VITE_PRIVY_APP_ID to enable</p>
@@ -153,60 +147,99 @@ function PrivyLoginButton({ busy, setBusy }: { busy: boolean; setBusy: (v: boole
   );
 }
 
+type PrivyHook = () => {
+  login: () => void;
+  ready: boolean;
+  authenticated: boolean;
+  user: {
+    id: string;
+    email?: { address: string } | null;
+    wallet?: { address: string } | null;
+  } | null;
+};
+
 function PrivyLoginInner({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
-  const [mod, setMod] = useState<any>(null);
-  const navigate = useNavigate();
+  const [usePrivy, setUsePrivy] = useState<PrivyHook | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const m = await import("@privy-io/react-auth");
-      if (!cancelled) setMod(m);
+      try {
+        const m = await import("@privy-io/react-auth");
+        if (!cancelled) setUsePrivy(() => m.usePrivy as PrivyHook);
+      } catch (err) {
+        console.error("[privy] Failed to load SDK", err);
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (!mod) {
+  if (!usePrivy) {
     return (
-      <Button type="button" disabled className="h-12 w-full rounded-full" style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}>
+      <Button
+        type="button"
+        disabled
+        className="h-12 w-full rounded-full"
+        style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}
+      >
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Privy…
       </Button>
     );
   }
 
-  const PrivyHookConsumer = mod.__PrivyHookConsumer ?? (() => {
-    const { login, ready, authenticated, user } = mod.usePrivy();
+  return <PrivySessionButton usePrivy={usePrivy} busy={busy} setBusy={setBusy} />;
+}
 
-    useEffect(() => {
-      if (authenticated && user) {
-        void (async () => {
-          setBusy(true);
-          try {
-            await completePrivySupabaseSession({ id: user.id, email: user.email, wallet: user.wallet });
-            navigate({ to: "/dashboard" });
-          } catch (err) {
-            toast.error((err as Error).message || "Privy sign-in failed");
-            setBusy(false);
-          }
-        })();
+function PrivySessionButton({
+  usePrivy,
+  busy,
+  setBusy,
+}: {
+  usePrivy: PrivyHook;
+  busy: boolean;
+  setBusy: (v: boolean) => void;
+}) {
+  const { login, ready, authenticated, user } = usePrivy();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authenticated || !user) return;
+    let cancelled = false;
+    void (async () => {
+      setBusy(true);
+      try {
+        await completePrivySupabaseSession({
+          id: user.id,
+          email: user.email,
+          wallet: user.wallet,
+        });
+        if (!cancelled) navigate({ to: "/dashboard" });
+      } catch (err) {
+        if (!cancelled) {
+          toast.error((err as Error).message || "Privy sign-in failed");
+          setBusy(false);
+        }
       }
-    }, [authenticated, user]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, user, navigate, setBusy]);
 
-    return (
-      <Button
-        type="button"
-        disabled={busy || !ready}
-        onClick={() => login()}
-        className="h-12 w-full rounded-full text-base font-semibold"
-        style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}
-      >
-        {!ready ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        {ready ? "Continue with Privy" : "Initializing…"}
-      </Button>
-    );
-  });
-
-  return <PrivyHookConsumer />;
+  return (
+    <Button
+      type="button"
+      disabled={busy || !ready}
+      onClick={() => login()}
+      className="h-12 w-full rounded-full text-base font-semibold"
+      style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}
+    >
+      {!ready ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      {ready ? "Continue with Privy" : "Initializing…"}
+    </Button>
+  );
 }
 
 function WalletConnectMark({ className }: { className?: string }) {
@@ -215,6 +248,19 @@ function WalletConnectMark({ className }: { className?: string }) {
       <path
         fill="currentColor"
         d="M6.5 9.2c2.9-2.8 7.6-2.8 10.5 0l.35.33a.36.36 0 0 1 0 .52l-1.2 1.14a.19.19 0 0 1-.26 0l-.48-.46c-2-1.95-5.3-1.95-7.32 0l-.52.49a.19.19 0 0 1-.26 0L5.66 10a.36.36 0 0 1 0-.52l.84-.8Zm13 2.48 1.06 1a.36.36 0 0 1 0 .52l-4.8 4.55a.74.74 0 0 1-1.02 0l-3.4-3.23a.1.1 0 0 0-.13 0l-3.4 3.23a.74.74 0 0 1-1.02 0L1.99 13.2a.36.36 0 0 1 0-.52l1.06-1a.74.74 0 0 1 1.02 0l3.4 3.23a.1.1 0 0 0 .13 0l3.4-3.23a.74.74 0 0 1 1.02 0l3.4 3.23a.1.1 0 0 0 .13 0l3.4-3.23a.74.74 0 0 1 1.02 0Z"
+      />
+    </svg>
+  );
+}
+
+function PrivyMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true" fill="none">
+      {/* Privy-style logomark: soft rounded tile + P */}
+      <rect x="3" y="3" width="26" height="26" rx="8" fill="currentColor" opacity="0.22" />
+      <path
+        fill="currentColor"
+        d="M10 8h7.4c3.85 0 6.35 2.15 6.35 5.55 0 3.45-2.5 5.6-6.35 5.6H14.1V24H10V8Zm4.1 7.9h3c1.65 0 2.65-.9 2.65-2.35S18.75 11.2 17.1 11.2h-3v4.7Z"
       />
     </svg>
   );
@@ -229,6 +275,9 @@ function AuthOptionIcon({
   logoUrl?: string;
   logoFit?: "cover" | "contain";
 }) {
+  if (id === "privy") {
+    return <PrivyMark className="h-7 w-7 text-white" />;
+  }
   if (logoUrl) {
     return (
       <img
@@ -399,16 +448,19 @@ function AuthPiPageInner() {
 
   return (
     <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0c0a1a] px-4 py-8 text-white sm:py-10">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        aria-hidden="true"
+      >
         <div className="auth-bg-mesh absolute inset-0" />
-        <div className="auth-orb absolute -top-20 left-[10%] h-[28rem] w-[28rem] rounded-full bg-[#7c3aed]/30 blur-[100px] animate-[auth-float_8s_ease-in-out_infinite]" />
-        <div className="auth-orb auth-orb-delay absolute -bottom-24 right-[5%] h-[32rem] w-[32rem] rounded-full bg-[#6366f1]/25 blur-[120px] animate-[auth-float_10s_ease-in-out_infinite_reverse]" />
+        <div className="auth-orb absolute -top-20 left-[10%] h-112 w-md rounded-full bg-[#7c3aed]/30 blur-[100px] animate-[auth-float_8s_ease-in-out_infinite]" />
+        <div className="auth-orb auth-orb-delay absolute -bottom-24 right-[5%] h-128 w-lg rounded-full bg-[#6366f1]/25 blur-[120px] animate-[auth-float_10s_ease-in-out_infinite_reverse]" />
         <div className="absolute top-[30%] left-[55%] h-60 w-60 rounded-full bg-[#a78bfa]/20 blur-[80px] animate-[auth-float_12s_ease-in-out_2s_infinite]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0c0a1a]/50 to-[#0c0a1a]" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#0c0a1a]/50 to-[#0c0a1a]" />
       </div>
 
       <div className="auth-select-enter w-full max-w-sm py-2">
-        <div className="rounded-[1.75rem] border border-white/[0.08] bg-white/[0.05] p-6 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-7">
+        <div className="rounded-[1.75rem] border border-white/8 bg-white/5 p-6 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-7">
           <div className="mb-6 text-center">
             <div className="auth-badge-float mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
               Premium Web3 wallet

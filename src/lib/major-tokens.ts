@@ -1,10 +1,14 @@
 /**
- * Major L1 tokens — Phantom-style catalog for BTC / ETH / SOL.
+ * Major tokens — Phantom-style catalog for BTC / ETH / SOL / PI.
  * Market stats refreshed from CoinGecko public API.
- * Refs: https://phantom.com/tokens/bitcoin | ethereum | solana
+ * Refs:
+ * - https://www.coingecko.com/en/coins/bitcoin
+ * - https://www.coingecko.com/en/coins/ethereum
+ * - https://www.coingecko.com/en/coins/solana
+ * - https://www.coingecko.com/en/coins/pi-network
  */
 
-export type MajorTokenId = "btc" | "eth" | "sol";
+export type MajorTokenId = "btc" | "eth" | "sol" | "pi";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -16,11 +20,12 @@ export type MajorTokenDef = {
   website: string;
   twitter?: string;
   coingeckoId: string;
-  moonpayCode: string;
+  /** MoonPay currency code when buyable; omit if not supported */
+  moonpayCode?: string;
   createdLabel: string;
   createdAt: string;
   about: string;
-  /** No on-chain contract — native L1 asset */
+  /** Native chain asset (no ERC-20 / SPL contract in OpenPay) */
   native: true;
 };
 
@@ -76,12 +81,29 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "SOL is the native token of the Solana blockchain — a high-throughput Layer 1 launched in 2020. Proof of History plus Proof of Stake delivers fast finality and sub-cent fees. SOL pays every network fee, funds smart-contract execution, and is the staking asset for validators. Solana hosts a major ecosystem across DeFi, NFTs, payments, and consumer apps.",
   },
+  pi: {
+    id: "pi",
+    name: "Pi Network",
+    symbol: "PI",
+    network: "Pi Network",
+    category: "Layer 1",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/54342/large/pi_network.jpg?1739347576",
+    website: "https://minepi.com/",
+    twitter: "https://x.com/PiCoreTeam",
+    coingeckoId: "pi-network",
+    // Not listed on MoonPay — buy opens with a notice on asset detail
+    createdLabel: "Mar 2019",
+    createdAt: "2019-03-14T00:00:00.000Z",
+    native: true,
+    about:
+      "Pi Network is a mobile-first cryptocurrency project that lets users mine PI from their phones with a social consensus model. The open mainnet listed PI for trading in 2025. PI is the native asset of the Pi blockchain — used for transfers, ecosystem apps, and network participation. Market data is sourced from CoinGecko.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
 
 export function isMajorTokenId(id: string): id is MajorTokenId {
-  return id === "btc" || id === "eth" || id === "sol";
+  return id === "btc" || id === "eth" || id === "sol" || id === "pi";
 }
 
 export function getMajorToken(id: string): MajorTokenDef | null {
@@ -90,7 +112,17 @@ export function getMajorToken(id: string): MajorTokenDef | null {
 }
 
 /** Symbols that should be hidden from DB list when majors are pinned. */
-export const MAJOR_SYMBOLS = new Set(["BTC", "ETH", "SOL", "BITCOIN", "ETHEREUM", "SOLANA"]);
+export const MAJOR_SYMBOLS = new Set([
+  "BTC",
+  "ETH",
+  "SOL",
+  "PI",
+  "BITCOIN",
+  "ETHEREUM",
+  "SOLANA",
+  "PI NETWORK",
+  "PINETWORK",
+]);
 
 export type MajorMarketSnapshot = {
   id: MajorTokenId;
@@ -126,9 +158,10 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   bitcoin: "btc",
   ethereum: "eth",
   solana: "sol",
+  "pi-network": "pi",
 };
 
-/** Fallback static mid-2026-ish values if CoinGecko is unreachable. */
+/** Fallback static values if CoinGecko is unreachable. */
 const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sparkline">> = {
   btc: {
     price: 65000,
@@ -165,6 +198,18 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atl: 0.5,
     athDate: "2025-01-01T00:00:00.000Z",
     atlDate: "2020-05-01T00:00:00.000Z",
+  },
+  pi: {
+    price: 0.079,
+    change24h: 0,
+    marketCap: 8.66e8,
+    volume24h: 1.13e7,
+    totalSupply: 16_833_495_111,
+    circulatingSupply: 10_941_771_822,
+    ath: 2.99,
+    atl: 0.070586,
+    athDate: "2025-02-26T08:41:03.000Z",
+    atlDate: "2026-07-14T02:37:30.000Z",
   },
 };
 

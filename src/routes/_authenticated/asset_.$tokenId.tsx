@@ -288,7 +288,9 @@ function PhantomAssetDetail() {
   const returnPath = `/asset/${tokenId}`;
 
   const receivePayUri = wallet?.address
-    ? `openpay:${wallet.address}?asset=${isOusd || isMajor ? ledgerAsset : meta.symbol}`
+    ? isOusd || isMajor
+      ? `openpay:${wallet.address}?asset=${ledgerAsset}`
+      : `openpay:${wallet.address}?asset=${encodeURIComponent(meta.symbol)}&token=${tokenId}`
     : "";
 
   useEffect(() => {

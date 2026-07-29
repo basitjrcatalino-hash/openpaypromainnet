@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ExternalLink, ImageIcon, Link2, Loader2 } from "lucide-react";
+import { ChevronDown, ExternalLink, ImageIcon, Link2, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/bags.functions";
 import { bagsTokenUrl, LAMPORTS_PER_SOL, solscanTxUrl } from "@/lib/bags-client";
 import { ensureBuffer } from "@/lib/buffer-polyfill";
+import { uploadMedia } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/bags_/launch")({
@@ -33,11 +34,34 @@ const BUY_PRESETS = [
   { label: "0.5", sol: "0.5" },
 ] as const;
 
+/** Public sample artwork for quick launch tests */
+const SAMPLE_IMAGE_URL = "https://i.ibb.co/DPYPzVdN/app-icon-ios.png";
+
+const SAMPLE_COIN = {
+  name: "OpenPay Sample",
+  symbol: "OPSAMP",
+  description: "Sample Bags launch on OpenPay Pro — replace with your own details before going live.",
+  imageUrl: SAMPLE_IMAGE_URL,
+} as const;
+
+function isValidHttpUrl(value: string): boolean {
+  const s = value.trim();
+  if (!s || /^https?:\/\/\.+$/i.test(s) || /^https?:\/\/…+$/i.test(s)) return false;
+  try {
+    const u = new URL(s);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function BagsLaunchPage() {
+  const { user } = Route.useRouteContext();
   const createInfo = useServerFn(bagsCreateTokenInfo);
   const createConfig = useServerFn(bagsCreateFeeShareConfig);
   const createLaunch = useServerFn(bagsCreateLaunchTx);
   const sendSigned = useServerFn(bagsSendSignedTx);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [wallet, setWallet] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -51,13 +75,50 @@ function BagsLaunchPage() {
   const [feeSharing, setFeeSharing] = useState(true);
   const [initialBuySol, setInitialBuySol] = useState("0.1");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [resultMint, setResultMint] = useState<string | null>(null);
   const [resultSig, setResultSig] = useState<string | null>(null);
+
+  async function handleImageFile(file: File | undefined | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (JPG, PNG, GIF, WEBP)");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Image must be under 15MB");
+      return;
+    }
+    setUploading(true);
+    setImageError(false);
+    try {
+      const url = await uploadMedia(file, user.id, "bags");
+      setImageUrl(url);
+      toast.success("Image uploaded");
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  function applySample() {
+    setName(SAMPLE_COIN.name);
+    setSymbol(SAMPLE_COIN.symbol);
+    setDescription(SAMPLE_COIN.description);
+    setImageUrl(SAMPLE_COIN.imageUrl);
+    setImageError(false);
+    toast.success("Sample coin details applied — edit before launching");
+  }
 
   async function launch() {
     setBusy(true);
     setResultMint(null);
     setResultSig(null);
+    setImageError(false);
     try {
       await ensureBuffer();
       const { connectBagsWallet, signAndSendBagsTransactions } = await import("@/lib/bags-sign");
@@ -66,9 +127,15 @@ function BagsLaunchPage() {
         address = await connectBagsWallet();
         setWallet(address);
       }
-      if (!name.trim() || !symbol.trim() || !description.trim() || !imageUrl.trim()) {
-        throw new Error("Name, ticker, description, and image URL are required");
+
+      if (!name.trim()) throw new Error("Enter a token name");
+      if (!symbol.trim()) throw new Error("Enter a ticker symbol");
+      if (!description.trim()) throw new Error("Enter a description");
+      if (!imageUrl.trim() || !isValidHttpUrl(imageUrl)) {
+        setImageError(true);
+        throw new Error("Upload a token image (or paste a full https:// image link)");
       }
+
       const buySol = Number(initialBuySol);
       if (!Number.isFinite(buySol) || buySol < 0) {
         throw new Error("Initial buy must be a valid SOL amount");
@@ -172,33 +239,168 @@ function BagsLaunchPage() {
         </h2>
 
         <div className="mb-3">
-          <label className="mb-1.5 block text-xs text-muted-foreground">Image URL</label>
+          <label className="mb-1.5 block text-xs text-muted-foreground">Token image</label>
           <div
+            role="button"
+            tabIndex={0}
+            onClick={() => !uploading && fileRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (!uploading) fileRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              void handleImageFile(e.dataTransfer.files?.[0]);
+            }}
             className={cn(
-              "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-3 py-5",
-              imageUrl.trim() && "border-emerald-500/30",
+              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-5 transition-colors",
+              dragOver
+                ? "border-emerald-500 bg-emerald-500/10"
+                : imageError
+                  ? "border-destructive bg-destructive/10"
+                  : imageUrl.trim() && isValidHttpUrl(imageUrl)
+                    ? "border-emerald-500/40 bg-muted/30"
+                    : "border-border bg-muted/40 hover:border-emerald-500/40",
+              uploading && "pointer-events-none opacity-70",
             )}
           >
-            {imageUrl.trim() ? (
-              <img
-                src={imageUrl.trim()}
-                alt=""
-                className="h-20 w-20 rounded-xl object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
+            {imageUrl.trim() && isValidHttpUrl(imageUrl) ? (
+              <div className="relative">
+                <img
+                  src={imageUrl.trim()}
+                  alt=""
+                  className="h-24 w-24 rounded-xl object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <button
+                  type="button"
+                  className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-background text-xs font-bold shadow press"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageUrl("");
+                    setImageError(true);
+                  }}
+                  aria-label="Remove image"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : uploading ? (
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+              <ImageIcon
+                className={cn(
+                  "h-8 w-8",
+                  imageError ? "text-destructive" : "text-muted-foreground/50",
+                )}
+              />
             )}
-            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              Upload image
+            <span
+              className={cn(
+                "text-[11px] font-bold uppercase tracking-wide",
+                imageError ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              {uploading
+                ? "Uploading…"
+                : imageUrl.trim() && isValidHttpUrl(imageUrl)
+                  ? "Change image"
+                  : imageError
+                    ? "Image required"
+                    : "Upload image"}
             </span>
+            <span className="text-[11px] text-muted-foreground">
+              Drag & drop or tap · JPG, PNG, GIF · max 15MB
+            </span>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-full bg-emerald-500 text-black hover:bg-emerald-400"
+                disabled={uploading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileRef.current?.click();
+                }}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                {uploading ? "Uploading…" : "Select file"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="rounded-full"
+                disabled={uploading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageUrl(SAMPLE_IMAGE_URL);
+                  setImageError(false);
+                  toast.success("Sample image applied");
+                }}
+              >
+                Use sample image
+              </Button>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => void handleImageFile(e.target.files?.[0])}
+            />
+          </div>
+          {imageError ? (
+            <p className="mt-1.5 text-[11px] font-medium text-destructive">
+              Upload a file, use sample image, or paste a full image URL (https://…)
+            </p>
+          ) : null}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+              disabled={uploading || busy}
+              onClick={applySample}
+            >
+              Fill sample coin
+            </Button>
+            <span className="text-[11px] text-muted-foreground">
+              Name, ticker, description + sample art
+            </span>
+          </div>
+          <div className="mt-2">
+            <label htmlFor="bags-image-url" className="text-[11px] text-muted-foreground">
+              Or paste image URL
+            </label>
             <Input
+              id="bags-image-url"
               value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className={cn(fieldClass, "w-full")}
-              placeholder="https://…"
+              onChange={(e) => {
+                setImageUrl(e.target.value);
+                if (isValidHttpUrl(e.target.value)) setImageError(false);
+              }}
+              className={cn(
+                fieldClass,
+                "w-full",
+                imageError && "border-destructive focus-visible:ring-destructive/30",
+              )}
+              placeholder="Paste full image link…"
             />
           </div>
         </div>
@@ -360,7 +562,7 @@ function BagsLaunchPage() {
       <Button
         type="button"
         className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-black hover:bg-emerald-400"
-        disabled={busy}
+        disabled={busy || uploading}
         onClick={() => void launch()}
       >
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Launch with Phantom"}

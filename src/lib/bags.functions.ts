@@ -202,7 +202,11 @@ export const bagsCreateTokenInfo = createServerFn({ method: "POST" })
         name: z.string().trim().min(1).max(32),
         symbol: z.string().trim().min(1).max(10),
         description: z.string().trim().min(1).max(500),
-        imageUrl: z.string().url().max(2000),
+        imageUrl: z
+          .string()
+          .trim()
+          .url("Upload an image or paste a valid https:// image URL")
+          .max(2000),
         telegram: z.string().trim().max(120).optional(),
         twitter: z.string().trim().max(120).optional(),
         website: z.string().url().max(500).optional().or(z.literal("")),

@@ -362,7 +362,20 @@ function SendPage() {
     setOpPreview(null);
     setOpError(null);
     if (p.amount) setAmount(p.amount);
-    if (p.asset && (p.asset === "OUSD" || p.asset === "PI" || p.asset === "BTC" || p.asset === "ETH" || p.asset === "SOL")) {
+    if (p.token) {
+      setSelectedKey(`TOKEN:${p.token}`);
+      setDeepLinkHandled(false);
+      void navigate({
+        to: "/send",
+        search: {
+          token: p.token,
+          to: p.to,
+          amount: p.amount,
+          rail: p.rail === "openpay" ? "openpay" : "wallet",
+        },
+        replace: true,
+      });
+    } else if (p.asset && (p.asset === "OUSD" || p.asset === "PI" || p.asset === "BTC" || p.asset === "ETH" || p.asset === "SOL")) {
       setSelectedKey(p.asset);
     }
     // Auto-select rail from QR type (Pro wallet vs OpenPay)

@@ -62,8 +62,9 @@ async function ensureInit(): Promise<void> {
   initPromise = (async () => {
     await loadSdk();
     if (!window.Pi) throw new Error("Pi SDK unavailable");
-    // Pi.init may return a Promise — await fully before authenticate/createPayment.
-    await Promise.resolve(window.Pi.init({ version: "2.0", sandbox: true }));
+    const { isPiSandbox } = await import("@/lib/piSdk");
+    // Match A2U / Pi Browser sandbox setting so auth tokens validate against /v2/me.
+    await Promise.resolve(window.Pi.init({ version: "2.0", sandbox: isPiSandbox() }));
   })();
   return initPromise;
 }

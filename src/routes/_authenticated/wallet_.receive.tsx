@@ -32,6 +32,8 @@ const RECEIVE_NOTE_KEY = "openpay-receive-wallet-note-v1";
 const searchSchema = z.object({
   network: z.enum(["openpay", "bitcoin", "ethereum", "solana", "pi"]).optional(),
   asset: z.enum(["OUSD", "BTC", "ETH", "SOL", "PI"]).optional(),
+  /** OpenToken uuid — receive QR for a specific OpenPay token (not OUSD/majors). */
+  token: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/wallet_/receive")({
@@ -42,6 +44,12 @@ export const Route = createFileRoute("/_authenticated/wallet_/receive")({
 
 type NetworkId = "openpay" | "bitcoin" | "ethereum" | "solana" | "pi";
 type AssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "PI";
+type ReceiveToken = {
+  id: string;
+  name: string;
+  symbol: string;
+  logo_url: string | null;
+};
 
 const NETWORKS: Array<{
   id: NetworkId;
@@ -102,8 +110,11 @@ function WalletReceivePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
+  const tokenId = search.token;
   const initialNetwork =
-    search.network ?? (search.asset ? networkFromAsset(search.asset) : "openpay");
+    tokenId
+      ? "openpay"
+      : (search.network ?? (search.asset ? networkFromAsset(search.asset) : "openpay"));
   const [network, setNetwork] = useState<NetworkId>(initialNetwork);
   const [qrUrl, setQrUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -144,10 +155,38 @@ function WalletReceivePage() {
       ).data,
   });
 
+  const { data: openToken, isLoading: tokenLoading } = useQuery({
+    queryKey: ["receive-token", tokenId],
+    enabled: !!tokenId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tokens")
+        .select("id, name, symbol, logo_url")
+        .eq("id", tokenId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as ReceiveToken | null;
+    },
+  });
+
+  const displayAsset = openToken?.symbol ?? selected.asset;
+  const displayLabel = openToken
+    ? openToken.name || openToken.symbol
+    : selected.label;
+  const displayLogo = openToken?.logo_url ?? selected.logoUrl;
+  const displayIsOusd = !openToken && !!selected.isOusd;
+
   const payUri = useMemo(() => {
     if (!wallet?.address) return "";
+    if (openToken?.id) {
+      const params = new URLSearchParams({
+        asset: openToken.symbol,
+        token: openToken.id,
+      });
+      return `openpay:${wallet.address}?${params.toString()}`;
+    }
     return `openpay:${wallet.address}?asset=${selected.asset}`;
-  }, [wallet?.address, selected.asset]);
+  }, [wallet?.address, selected.asset, openToken]);
 
   useEffect(() => {
     let cancelled = false;
@@ -186,7 +225,7 @@ function WalletReceivePage() {
     try {
       await navigator.clipboard.writeText(wallet.address);
       setCopied(true);
-      toast.success(`${selected.asset} receive address copied`);
+      toast.success(`${displayAsset} receive address copied`);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       toast.error("Copy failed");
@@ -208,8 +247,8 @@ function WalletReceivePage() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Receive ${selected.asset}`,
-          text: `Send ${selected.asset} to my OpenPay Pro wallet`,
+          title: `Receive ${displayAsset}`,
+          text: `Send ${displayAsset} to my OpenPay Pro wallet`,
           url: payUri,
         });
       } else {
@@ -219,6 +258,8 @@ function WalletReceivePage() {
       /* user cancelled */
     }
   }
+
+  const pageLoading = isLoading || (!!tokenId && tokenLoading);
 
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in pb-10">
@@ -260,7 +301,9 @@ function WalletReceivePage() {
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-extrabold tracking-tight">Receive</h1>
-          <p className="ph-caption">Pick a network · OpenPay Pro wallet</p>
+          <p className="ph-caption">
+            {openToken ? `${openToken.symbol} · OpenPay token` : "Pick a network · OpenPay Pro wallet"}
+          </p>
         </div>
         <Button
           type="button"
@@ -274,7 +317,8 @@ function WalletReceivePage() {
         </Button>
       </header>
 
-      {/* Network chips — Phantom style */}
+      {/* Network chips — Phantom style (majors only; OpenToken QR is token-specific) */}
+      {!openToken ? (
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {NETWORKS.map((n) => {
           const active = network === n.id;
@@ -301,10 +345,28 @@ function WalletReceivePage() {
           );
         })}
       </div>
+      ) : (
+        <div className="mb-5">
+          <Link
+            to="/wallet/receive"
+            search={{ network: "openpay", asset: "OUSD" }}
+            className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            ← Receive network assets
+          </Link>
+        </div>
+      )}
 
-      {isLoading ? (
+      {pageLoading ? (
         <div className="rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Loading wallet…
+        </div>
+      ) : tokenId && !openToken ? (
+        <div className="rounded-3xl border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">Token not found.</p>
+          <Button asChild className="mt-4 rounded-full">
+            <Link to="/wallet">Back to Wallet</Link>
+          </Button>
         </div>
       ) : !wallet?.address ? (
         <div className="rounded-3xl border border-border bg-card p-6 text-center">
@@ -317,24 +379,28 @@ function WalletReceivePage() {
         <div className="space-y-4">
           <div className="rounded-3xl border border-border bg-card p-6 text-center">
             <div className="mb-1 flex items-center justify-center gap-2">
-              {selected.isOusd ? (
+              {displayIsOusd ? (
                 <OusdIcon className="h-8 w-8 rounded-full" />
-              ) : selected.logoUrl ? (
+              ) : displayLogo ? (
                 <img
-                  src={selected.logoUrl}
+                  src={displayLogo}
                   alt=""
                   className="h-8 w-8 rounded-full object-cover"
                 />
-              ) : null}
-              <p className="text-lg font-extrabold tracking-tight">{selected.asset}</p>
+              ) : (
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-muted text-[10px] font-bold">
+                  {displayAsset.slice(0, 2)}
+                </span>
+              )}
+              <p className="text-lg font-extrabold tracking-tight">{displayAsset}</p>
             </div>
             <p className="ph-caption">
-              {selected.label} · credits your OpenPay Pro balance
+              {displayLabel} · credits your OpenPay Pro balance
             </p>
 
             <div className="mx-auto mt-5 grid h-52 w-52 place-items-center rounded-2xl border border-border bg-white p-3">
               {qrUrl ? (
-                <img src={qrUrl} alt={`Receive ${selected.asset} QR`} className="h-full w-full" />
+                <img src={qrUrl} alt={`Receive ${displayAsset} QR`} className="h-full w-full" />
               ) : (
                 <QrCode className="h-16 w-16 text-muted-foreground" />
               )}
@@ -389,13 +455,15 @@ function WalletReceivePage() {
           </div>
 
           <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-center text-[11px] leading-relaxed text-muted-foreground">
-            Send <strong className="text-foreground">{selected.asset}</strong> to this OpenPay Pro
-            address. Your <strong className="text-foreground">{selected.label}</strong> balance
-            updates when another OpenPay user sends you {selected.asset}. Use the matching network
-            tab for each token.
+            Send <strong className="text-foreground">{displayAsset}</strong> to this OpenPay Pro
+            address. Your{" "}
+            <strong className="text-foreground">{displayLabel}</strong> balance updates when another
+            OpenPay user sends you {displayAsset}
+            {openToken ? " on OpenPay." : ". Use the matching network tab for each token."}
           </div>
 
-          {/* All networks list */}
+          {/* All networks list — hide when viewing a specific OpenToken QR */}
+          {!openToken ? (
           <section>
             <h2 className="ph-label mb-2 px-1">All receive addresses</h2>
             <ul className="overflow-hidden rounded-2xl border border-border bg-card">
@@ -438,6 +506,7 @@ function WalletReceivePage() {
               ))}
             </ul>
           </section>
+          ) : null}
         </div>
       )}
     </div>

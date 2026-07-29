@@ -2,6 +2,8 @@ export type ParsedPaymentQr = {
   to: string;
   amount?: string;
   asset?: "OUSD" | "PI" | "BTC" | "ETH" | "SOL";
+  /** OpenToken uuid when QR targets a specific OpenPay token. */
+  token?: string;
   /** Which send rail this QR should use. */
   rail: "wallet" | "openpay";
   kind: "pro_wallet" | "openpay_account" | "unknown";
@@ -30,16 +32,26 @@ function parseAsset(raw: string | null): "OUSD" | "PI" | "BTC" | "ETH" | "SOL" |
   return undefined;
 }
 
-function fromParts(toRaw: string, amount?: string | null, assetRaw?: string | null): ParsedPaymentQr {
+function fromParts(
+  toRaw: string,
+  amount?: string | null,
+  assetRaw?: string | null,
+  tokenRaw?: string | null,
+): ParsedPaymentQr {
   const to = toRaw.trim().replace(/^@+/, "").replace(/^\/+/, "");
   const amountClean = amount?.trim() || undefined;
   const asset = parseAsset(assetRaw ?? null);
+  const token =
+    tokenRaw && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tokenRaw.trim())
+      ? tokenRaw.trim()
+      : undefined;
   const cls = classifyRecipient(to);
   // Keep @ for display on openpay usernames that were explicitly @-prefixed in URL path
   return {
     to,
     amount: amountClean,
     asset,
+    token,
     ...cls,
   };
 }
@@ -68,6 +80,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
         handle,
         url.searchParams.get("amount") ?? url.searchParams.get("value"),
         url.searchParams.get("asset") ?? "OUSD",
+        url.searchParams.get("token"),
       );
     }
 
@@ -83,6 +96,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
         toParam,
         url.searchParams.get("amount") ?? url.searchParams.get("value"),
         url.searchParams.get("asset"),
+        url.searchParams.get("token"),
       );
     }
   } catch {
@@ -139,6 +153,7 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
             recipient,
             params.get("amount") ?? params.get("value"),
             params.get("asset"),
+            params.get("token"),
           );
         }
       }
@@ -149,6 +164,7 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
         addr,
         params.get("amount") ?? params.get("value"),
         params.get("asset"),
+        params.get("token"),
       );
     }
   } catch {
@@ -163,6 +179,7 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
       addr,
       params.get("amount") ?? params.get("value"),
       params.get("asset"),
+      params.get("token"),
     );
   }
 

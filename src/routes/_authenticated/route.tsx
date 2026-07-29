@@ -71,6 +71,9 @@ const NAV = [
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
+/** Mobile bottom tab bar — Settings stays in the sidebar/menu only. */
+const FOOTER_NAV = NAV.filter((item) => item.to !== "/settings");
+
 function navActive(pathname: string, to: string) {
   return (
     pathname === to ||
@@ -256,10 +259,10 @@ function AuthenticatedLayout() {
             aria-label="Primary"
           >
             <div
-              className="mx-auto flex max-w-md items-center gap-0.5 overflow-x-auto px-1"
+              className="mx-auto flex max-w-md items-center gap-0.5 overflow-x-auto overscroll-x-contain px-1 scrollbar-none [-webkit-overflow-scrolling:touch]"
               style={{ height: "var(--ph-tabbar-content)" }}
             >
-              {NAV.map((item) => {
+              {FOOTER_NAV.map((item) => {
                 const Icon = item.icon;
                 const active = navActive(pathname, item.to);
                 const bags = item.to === "/bags";

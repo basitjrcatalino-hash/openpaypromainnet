@@ -16,7 +16,12 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             headers: { Authorization: `Bearer ${accessToken}` },
           });
           if (!meRes.ok) {
-            return Response.json({ error: "Invalid Pi access token" }, { status: 401 });
+            const detail = await meRes.text().catch(() => "");
+            console.error("[pi-auth] /v2/me failed", meRes.status, detail.slice(0, 200));
+            return Response.json(
+              { error: "Invalid Pi access token. Try signing in with Pi again." },
+              { status: 401 },
+            );
           }
           const me = (await meRes.json()) as { uid?: string; username?: string };
           if (!me?.uid || !me?.username) {
@@ -26,12 +31,19 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           // Deterministic password derived from a server-only secret + uid.
           // Prefer the dedicated PI_AUTH_PASSWORD_SECRET so we don't depend on
           // SUPABASE_SERVICE_ROLE_KEY being readable as plain env on Lovable Cloud.
-          const { getSupabaseServiceRoleKey } = await import(
+          const { getSupabaseServiceRoleKey, hasSupabaseAdminEnv } = await import(
             "@/integrations/supabase/env.server"
           );
-          const { getSupabasePublishableKey } = await import(
-            "@/integrations/supabase/env"
-          );
+          const { getSupabasePublishableKey } = await import("@/integrations/supabase/env");
+          if (!hasSupabaseAdminEnv()) {
+            return Response.json(
+              {
+                error:
+                  "Pi sign-in is not configured (missing SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEY).",
+              },
+              { status: 503 },
+            );
+          }
           const passSecret =
             process.env.PI_AUTH_PASSWORD_SECRET ||
             getSupabaseServiceRoleKey() ||
@@ -49,40 +61,29 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             .digest("hex");
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { provisionPasswordUser } = await import("@/lib/auth-provision.server");
 
-          const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true,
-            user_metadata: {
-              pi_uid: me.uid,
-              pi_username: me.username,
-              display_name: me.username,
-              provider: "pi-network",
-            },
-          });
-
-          if (createErr && !/registered|exists|duplicate/i.test(createErr.message)) {
-            return Response.json({ error: createErr.message }, { status: 500 });
-          }
-
-          if (!created?.user) {
-            // Existing user: reset password to deterministic value so sign-in works.
-            const { data: list } = await supabaseAdmin.auth.admin.listUsers();
-            const existing = list?.users.find((u) => u.email === email);
-            if (!existing) {
-              return Response.json({ error: "Failed to provision Pi user" }, { status: 500 });
-            }
-            await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+          try {
+            await provisionPasswordUser(supabaseAdmin, {
+              email,
               password,
-              user_metadata: {
-                ...existing.user_metadata,
+              metadata: {
                 pi_uid: me.uid,
                 pi_username: me.username,
-                display_name: existing.user_metadata?.display_name ?? me.username,
+                display_name: me.username,
                 provider: "pi-network",
               },
             });
+          } catch (err) {
+            console.error("[pi-auth] provision failed", err);
+            return Response.json(
+              {
+                error:
+                  (err as Error).message ||
+                  "Failed to provision Pi user. Check Supabase service role key.",
+              },
+              { status: 500 },
+            );
           }
 
           return Response.json({ email, password, username: me.username, uid: me.uid });

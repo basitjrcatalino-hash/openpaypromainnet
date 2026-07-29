@@ -71,12 +71,12 @@ const PRIMARY_ACTIONS = [
   { label: "Receive", icon: QrCode, to: "/receive" },
   { label: "Send", icon: Send, to: "/send" },
   { label: "Buy", icon: Plus, to: "/topup" },
+  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
 ] as const;
 
 const MORE_ACTIONS = [
   { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
-  { label: "Swap", icon: ArrowLeftRight, to: "/swap" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
 ] as const;
@@ -417,7 +417,7 @@ function Dashboard() {
       )}
 
       {/* Circular actions */}
-      <div className="mb-6 flex items-start justify-center gap-5 sm:gap-6">
+      <div className="mb-6 flex items-start justify-center gap-3.5 sm:gap-6">
         {PRIMARY_ACTIONS.map((a) => (
           <ActionCircle key={a.label} label={a.label} icon={a.icon} to={a.to} />
         ))}

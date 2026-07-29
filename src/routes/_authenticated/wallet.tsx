@@ -162,7 +162,7 @@ function CryptoWalletPage() {
         balance: Number(h.balance ?? 0),
         priceUsd: Number(t.price_usd ?? 0),
         logoUrl: t.logo_url ?? null,
-        receiveTo: `/receive?asset=OUSD`,
+        receiveTo: `/wallet/receive?network=openpay&token=${t.id}`,
       });
     }
 
@@ -332,7 +332,7 @@ function CryptoWalletPage() {
                                         : "pi",
                               asset: a.symbol as "OUSD" | "BTC" | "ETH" | "SOL" | "PI",
                             }
-                          : { network: "openpay", asset: "OUSD" }
+                          : { network: "openpay", token: a.key }
                       }
                       className="flex items-center gap-3 px-4 py-3 press hover:bg-muted/30"
                     >

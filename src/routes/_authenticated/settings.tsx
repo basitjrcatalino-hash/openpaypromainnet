@@ -22,7 +22,7 @@ import {
   LogOut,
   Pencil,
   AlertTriangle,
-  CheckCircle2,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +34,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/wallet/PageHeader";
+import { WalletAvatar } from "@/components/wallet/WalletAvatar";
+import { ManageWalletsSheet } from "@/components/wallet/ManageWalletsSheet";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
 import {
@@ -101,6 +103,7 @@ function SettingsPage() {
   const [createdAddress, setCreatedAddress] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addTab, setAddTab] = useState<"create" | "import">("create");
+  const [manageOpen, setManageOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -112,11 +115,7 @@ function SettingsPage() {
   });
 
   const { data: recoveryFlags = {} } = useQuery({
-    queryKey: [
-      "wallet-recovery-flags",
-      user.id,
-      wallets.map((w) => w.id).join(","),
-    ],
+    queryKey: ["wallet-recovery-flags", user.id, wallets.map((w) => w.id).join(",")],
     enabled: wallets.length > 0,
     queryFn: async () => {
       const entries = await Promise.all(
@@ -248,9 +247,7 @@ function SettingsPage() {
     try {
       const derived = await createFreshRecoveryWallet();
       await supabase.from("wallets").update({ is_active: false }).eq("user_id", user.id);
-      let inserted:
-        | { id: string; address: string; name: string }
-        | null = null;
+      let inserted: { id: string; address: string; name: string } | null = null;
 
       const withHash = await supabase
         .from("wallets")
@@ -383,6 +380,8 @@ function SettingsPage() {
   }
 
   async function setActive(id: string) {
+    const current = wallets.find((w) => w.is_active);
+    if (current?.id === id) return;
     await supabase.from("wallets").update({ is_active: false }).eq("user_id", user.id);
     await supabase.from("wallets").update({ is_active: true }).eq("id", id);
     toast.success("Active wallet switched");
@@ -449,10 +448,7 @@ function SettingsPage() {
         ...(patch.notifications as Record<string, unknown>),
       };
       // Preserve OpenPay link unless this patch explicitly clears it
-      if (
-        latest.openpay &&
-        !Object.prototype.hasOwnProperty.call(patch.notifications, "openpay")
-      ) {
+      if (latest.openpay && !Object.prototype.hasOwnProperty.call(patch.notifications, "openpay")) {
         next.openpay = latest.openpay;
       }
       patch = { ...patch, notifications: next };
@@ -463,6 +459,9 @@ function SettingsPage() {
     qc.invalidateQueries({ queryKey: ["prefs", user.id] });
     qc.invalidateQueries({ queryKey: ["openpay-link", user.id] });
   }
+
+  const activeWallet = wallets.find((w) => w.is_active) ?? wallets[0];
+  const activeNeedsBackup = activeWallet ? !recoveryFlags[activeWallet.id] : false;
 
   return (
     <div className="ot-phantom ph-page mx-auto max-w-lg space-y-6 pb-8 md:max-w-2xl">
@@ -476,371 +475,366 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Account
         </h2>
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <h2 className="mb-4 text-sm font-semibold">Profile</h2>
-        <div className="flex flex-col gap-5 md:flex-row md:items-start">
-          <div className="flex flex-col items-center gap-2">
-            <Avatar className="h-20 w-20 ring-2 ring-primary/30">
-              <AvatarImage src={(profile as any)?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-primary/20 text-lg text-primary">
-                {(displayName || user.email || "U")[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <input
-              ref={fileRef}
-              hidden
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-              )}{" "}
-              Photo
-            </Button>
-          </div>
-          <div className="flex-1 space-y-3">
-            <div>
-              <Label htmlFor="dn">Display name</Label>
-              <Input
-                id="dn"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
-                maxLength={40}
-                className="mt-1.5"
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <h2 className="mb-4 text-sm font-semibold">Profile</h2>
+          <div className="flex flex-col gap-5 md:flex-row md:items-start">
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-20 w-20 ring-2 ring-primary/30">
+                <AvatarImage src={(profile as any)?.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-primary/20 text-lg text-primary">
+                  {(displayName || user.email || "U")[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <input
+                ref={fileRef}
+                hidden
+                type="file"
+                accept="image/*"
+                onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])}
               />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                )}{" "}
+                Photo
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="un">Username</Label>
-              <Input
-                id="un"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="username"
-                maxLength={30}
-                className="mt-1.5"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Others can send to you using{" "}
-                <span className="font-mono">@{username || "yourname"}</span>. Email:{" "}
-                <span className="font-mono">{user.email}</span>
-                {(profile as any)?.pi_username && (
-                  <>
-                    {" "}
-                    · Pi: <span className="font-mono">@{(profile as any).pi_username}</span>
-                  </>
-                )}
-              </p>
+            <div className="flex-1 space-y-3">
+              <div>
+                <Label htmlFor="dn">Display name</Label>
+                <Input
+                  id="dn"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  maxLength={40}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="un">Username</Label>
+                <Input
+                  id="un"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="username"
+                  maxLength={30}
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Others can send to you using{" "}
+                  <span className="font-mono">@{username || "yourname"}</span>. Email:{" "}
+                  <span className="font-mono">{user.email}</span>
+                  {(profile as any)?.pi_username && (
+                    <>
+                      {" "}
+                      · Pi: <span className="font-mono">@{(profile as any).pi_username}</span>
+                    </>
+                  )}
+                </p>
+              </div>
+              <Button
+                onClick={saveProfile}
+                disabled={savingName}
+                className="rounded-full bg-primary text-primary-foreground"
+              >
+                {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save profile
+              </Button>
             </div>
-            <Button
-              onClick={saveProfile}
-              disabled={savingName}
-              className="rounded-full bg-primary text-primary-foreground"
-            >
-              {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save profile
-            </Button>
           </div>
         </div>
-      </div>
       </section>
 
-      {/* Wallets — Phantom-style manage */}
+      {/* Wallets — Phantom-style drawer selection */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Wallets
         </h2>
         <div className="overflow-hidden rounded-2xl bg-card">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <h2 className="text-sm font-semibold">Manage wallets</h2>
-              <p className="text-xs text-muted-foreground">
-                Switch, rename, backup, or import your OpenPay Pro ledgers
-              </p>
-            </div>
-            <Dialog
-              open={addOpen}
-              onOpenChange={(o) => {
-                setAddOpen(o);
-                if (!o) resetAddDialog();
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="rounded-full bg-primary text-primary-foreground">
-                  <Plus className="mr-1.5 h-4 w-4" /> Add
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle>Add wallet</DialogTitle>
-                  <DialogDescription>
-                    Create a new OpenPay Pro wallet or restore one with your recovery phrase.
-                  </DialogDescription>
-                </DialogHeader>
-                <Tabs
-                  value={addTab}
-                  onValueChange={(v) => setAddTab(v as "create" | "import")}
-                >
-                  <TabsList className="grid w-full grid-cols-2 rounded-full">
-                    <TabsTrigger value="create" className="rounded-full">
-                      Create
-                    </TabsTrigger>
-                    <TabsTrigger value="import" className="rounded-full">
-                      Import
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="create" className="mt-4 space-y-3">
-                    <div>
-                      <Label>Wallet name</Label>
-                      <Input
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="Main Wallet"
-                        className="mt-1.5"
-                        maxLength={40}
-                      />
-                    </div>
-                    {!mnemonic ? (
-                      <Button
-                        onClick={createWallet}
-                        disabled={creating}
-                        className="w-full rounded-2xl bg-primary text-primary-foreground"
-                      >
-                        {creating ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <WalletIcon className="mr-2 h-4 w-4" />
-                        )}{" "}
-                        Create wallet
-                      </Button>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
-                          <div className="mb-1.5 flex items-center gap-1.5 font-semibold">
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            Safety — save this phrase offline
-                          </div>
-                          <ul className="list-disc space-y-1 pl-4">
-                            <li>Anyone with these words can restore this exact OpenPay Pro wallet and its balances.</li>
-                            <li>Never share them. OpenPay staff will never ask for your phrase.</li>
-                            <li>Store offline — screenshot or cloud notes are risky.</li>
-                          </ul>
-                          {createdAddress && (
-                            <p className="mt-2 font-mono text-[11px] opacity-90">
-                              Address: {shortAddress(createdAddress, 8, 6)}
-                            </p>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 font-mono text-xs">
-                          {mnemonic.map((w, i) => (
-                            <div
-                              key={`${w}-${i}`}
-                              className="rounded-xl border border-border/60 bg-muted/40 px-2 py-1.5"
-                            >
-                              <span className="text-muted-foreground">{i + 1}.</span> {w}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 rounded-full"
-                            onClick={() => {
-                              navigator.clipboard.writeText(mnemonic.join(" "));
-                              toast.success("Phrase copied");
-                            }}
-                          >
-                            <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="flex-1 rounded-full bg-primary text-primary-foreground"
-                            onClick={async () => {
-                              await updatePref({ recovery_backed_up: true });
-                              toast.success("You're all set");
-                              setAddOpen(false);
-                              resetAddDialog();
-                            }}
-                          >
-                            I've saved it
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                  <TabsContent value="import" className="mt-4 space-y-3">
-                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
-                      <div className="mb-1 flex items-center gap-1.5 font-semibold">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Safety
-                      </div>
-                      Only paste a phrase you trust. Import restores that exact OpenPay Pro wallet
-                      address, OUSD / Pi balances, and token holdings.
-                    </div>
-                    <div>
-                      <Label>Wallet name (optional)</Label>
-                      <Input
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="Imported wallet"
-                        className="mt-1.5"
-                        maxLength={40}
-                      />
-                    </div>
-                    <div>
-                      <Label>12-word recovery phrase</Label>
-                      <Textarea
-                        value={importPhrase}
-                        onChange={(e) => setImportPhrase(e.target.value)}
-                        placeholder="word1 word2 word3 …"
-                        className="mt-1.5 min-h-[88px] rounded-2xl font-mono text-sm"
-                        autoComplete="off"
-                        spellCheck={false}
-                      />
-                    </div>
-                    <div>
-                      <Label>OpenPay Pro address (optional check)</Label>
-                      <Input
-                        value={importAddress}
-                        onChange={(e) => setImportAddress(e.target.value)}
-                        placeholder="0x… or your OpenPay address"
-                        className="mt-1.5 font-mono text-sm"
-                        autoComplete="off"
-                        spellCheck={false}
-                      />
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        Phrase alone restores the exact ledger. Address-only switches a wallet you
-                        already own.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={importWallet}
-                      disabled={creating || !importPhrase.trim()}
-                      className="w-full rounded-2xl bg-primary text-primary-foreground"
-                    >
-                      {creating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <KeyRound className="mr-2 h-4 w-4" />
-                      )}{" "}
-                      Import wallet
-                    </Button>
-                    {importAddress.trim() && !importPhrase.trim() && (
-                      <Button
-                        variant="outline"
-                        onClick={importByAddressOnly}
-                        className="w-full rounded-2xl"
-                      >
-                        Switch to this address
-                      </Button>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <button
+            type="button"
+            onClick={() => setManageOpen(true)}
+            className="flex w-full items-center gap-3 px-4 py-4 text-left press hover:bg-muted/40"
+          >
+            {activeWallet ? (
+              <WalletAvatar
+                address={activeWallet.address}
+                name={activeWallet.name}
+                size="lg"
+                active
+              />
+            ) : (
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary">
+                <WalletIcon className="h-5 w-5" />
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="truncate text-[15px] font-bold">
+                  {activeWallet?.name ?? "No wallet"}
+                </span>
+                {activeWallet?.is_active ? (
+                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                    Active
+                  </span>
+                ) : null}
+              </span>
+              {activeWallet ? (
+                <>
+                  <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
+                    {shortAddress(activeWallet.address, 6, 4)}
+                  </span>
+                  <span className="mt-1 block text-lg font-extrabold tabular-nums tracking-tight">
+                    {formatUSD(Number(activeWallet.ousd_balance ?? 0))}
+                  </span>
+                  {activeNeedsBackup ? (
+                    <span className="mt-0.5 block text-[11px] font-medium text-amber-500">
+                      Needs backup
+                    </span>
+                  ) : (
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {wallets.length} wallet{wallets.length === 1 ? "" : "s"} · tap to switch
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Create or import an OpenPay Pro ledger
+                </span>
+              )}
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+          </button>
 
-          <ul className="divide-y divide-border/50">
-            {wallets.map((w) => {
-              const ousd = Number(w.ousd_balance ?? 0);
-              const pi = Number(w.pi_balance ?? 0);
-              const hasRecovery = !!recoveryFlags[w.id];
-              return (
-                <li key={w.id} className="px-3 py-2.5">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-left press hover:bg-muted/40"
-                      onClick={() => !w.is_active && setActive(w.id)}
-                    >
-                      <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
-                        <WalletIcon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5 text-sm font-semibold">
-                          <span className="truncate">{w.name}</span>
-                          {w.is_active && (
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" />
-                          )}
-                        </span>
-                        <span className="block truncate font-mono text-[11px] text-muted-foreground">
-                          {shortAddress(w.address, 6, 4)}
-                        </span>
-                        <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
-                          {formatUSD(ousd)}
-                          {pi > 0 ? ` · ${pi.toLocaleString()} π` : ""}
-                          {!hasRecovery ? " · needs backup" : ""}
-                        </span>
-                      </span>
-                    </button>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 rounded-full"
-                        aria-label="Copy address"
-                        onClick={() => {
-                          navigator.clipboard.writeText(w.address);
-                          toast.success("Address copied");
-                        }}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 rounded-full"
-                        aria-label="Rename"
-                        onClick={() => {
-                          setRenameId(w.id);
-                          setRenameValue(w.name);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      {!w.is_active && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-full"
-                          aria-label="Set active"
-                          onClick={() => setActive(w.id)}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </Button>
+          <div className="grid grid-cols-2 border-t border-border/50">
+            <button
+              type="button"
+              onClick={() => setManageOpen(true)}
+              className="flex items-center justify-center gap-2 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/40 press"
+            >
+              <WalletIcon className="h-4 w-4 text-primary" />
+              Your wallets
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetAddDialog();
+                setAddOpen(true);
+              }}
+              className="flex items-center justify-center gap-2 border-l border-border/50 py-3.5 text-sm font-semibold text-primary hover:bg-primary/10 press"
+            >
+              <Plus className="h-4 w-4" />
+              Add wallet
+            </button>
+          </div>
+        </div>
+
+        <ManageWalletsSheet
+          open={manageOpen}
+          onOpenChange={setManageOpen}
+          wallets={wallets}
+          recoveryFlags={recoveryFlags}
+          onSelect={(id) => void setActive(id)}
+          onAdd={() => {
+            resetAddDialog();
+            setAddOpen(true);
+          }}
+          onRename={(w) => {
+            setRenameId(w.id);
+            setRenameValue(w.name);
+          }}
+          onCopy={(w) => {
+            void navigator.clipboard.writeText(w.address);
+            toast.success("Address copied");
+          }}
+          onRemove={(w) => setConfirmDeleteId(w.id)}
+        />
+
+        <Dialog
+          open={addOpen}
+          onOpenChange={(o) => {
+            setAddOpen(o);
+            if (!o) resetAddDialog();
+          }}
+        >
+          <DialogContent className="max-w-md rounded-3xl">
+            <DialogHeader>
+              <DialogTitle>Add wallet</DialogTitle>
+              <DialogDescription>
+                Create a new OpenPay Pro wallet or restore one with your recovery phrase.
+              </DialogDescription>
+            </DialogHeader>
+            <Tabs value={addTab} onValueChange={(v) => setAddTab(v as "create" | "import")}>
+              <TabsList className="grid w-full grid-cols-2 rounded-full">
+                <TabsTrigger value="create" className="rounded-full">
+                  Create
+                </TabsTrigger>
+                <TabsTrigger value="import" className="rounded-full">
+                  Import
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="create" className="mt-4 space-y-3">
+                <div>
+                  <Label>Wallet name</Label>
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Main Wallet"
+                    className="mt-1.5"
+                    maxLength={40}
+                  />
+                </div>
+                {!mnemonic ? (
+                  <Button
+                    onClick={createWallet}
+                    disabled={creating}
+                    className="w-full rounded-2xl bg-primary text-primary-foreground"
+                  >
+                    {creating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <WalletIcon className="mr-2 h-4 w-4" />
+                    )}{" "}
+                    Create wallet
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+                      <div className="mb-1.5 flex items-center gap-1.5 font-semibold">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Safety — save this phrase offline
+                      </div>
+                      <ul className="list-disc space-y-1 pl-4">
+                        <li>
+                          Anyone with these words can restore this exact OpenPay Pro wallet and its
+                          balances.
+                        </li>
+                        <li>Never share them. OpenPay staff will never ask for your phrase.</li>
+                        <li>Store offline — screenshot or cloud notes are risky.</li>
+                      </ul>
+                      {createdAddress && (
+                        <p className="mt-2 font-mono text-[11px] opacity-90">
+                          Address: {shortAddress(createdAddress, 8, 6)}
+                        </p>
                       )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+                      {mnemonic.map((w, i) => (
+                        <div
+                          key={`${w}-${i}`}
+                          className="rounded-xl border border-border/60 bg-muted/40 px-2 py-1.5"
+                        >
+                          <span className="text-muted-foreground">{i + 1}.</span> {w}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
                       <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 rounded-full"
-                        aria-label="Remove"
-                        onClick={() => setConfirmDeleteId(w.id)}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 rounded-full"
+                        onClick={() => {
+                          navigator.clipboard.writeText(mnemonic.join(" "));
+                          toast.success("Phrase copied");
+                        }}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 rounded-full bg-primary text-primary-foreground"
+                        onClick={async () => {
+                          await updatePref({ recovery_backed_up: true });
+                          toast.success("You're all set");
+                          setAddOpen(false);
+                          resetAddDialog();
+                        }}
+                      >
+                        I've saved it
                       </Button>
                     </div>
                   </div>
-                </li>
-              );
-            })}
-            {wallets.length === 0 && (
-              <li className="px-4 py-8 text-center text-sm text-muted-foreground">
-                No wallets yet — create or import one
-              </li>
-            )}
-          </ul>
-        </div>
+                )}
+              </TabsContent>
+              <TabsContent value="import" className="mt-4 space-y-3">
+                <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+                  <div className="mb-1 flex items-center gap-1.5 font-semibold">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Safety
+                  </div>
+                  Only paste a phrase you trust. Import restores that exact OpenPay Pro wallet
+                  address, OUSD / Pi balances, and token holdings.
+                </div>
+                <div>
+                  <Label>Wallet name (optional)</Label>
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Imported wallet"
+                    className="mt-1.5"
+                    maxLength={40}
+                  />
+                </div>
+                <div>
+                  <Label>12-word recovery phrase</Label>
+                  <Textarea
+                    value={importPhrase}
+                    onChange={(e) => setImportPhrase(e.target.value)}
+                    placeholder="word1 word2 word3 …"
+                    className="mt-1.5 min-h-[88px] rounded-2xl font-mono text-sm"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                <div>
+                  <Label>OpenPay Pro address (optional check)</Label>
+                  <Input
+                    value={importAddress}
+                    onChange={(e) => setImportAddress(e.target.value)}
+                    placeholder="0x… or your OpenPay address"
+                    className="mt-1.5 font-mono text-sm"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Phrase alone restores the exact ledger. Address-only switches a wallet you
+                    already own.
+                  </p>
+                </div>
+                <Button
+                  onClick={importWallet}
+                  disabled={creating || !importPhrase.trim()}
+                  className="w-full rounded-2xl bg-primary text-primary-foreground"
+                >
+                  {creating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="mr-2 h-4 w-4" />
+                  )}{" "}
+                  Import wallet
+                </Button>
+                {importAddress.trim() && !importPhrase.trim() && (
+                  <Button
+                    variant="outline"
+                    onClick={importByAddressOnly}
+                    className="w-full rounded-2xl"
+                  >
+                    Switch to this address
+                  </Button>
+                )}
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
       </section>
 
       <Dialog open={!!renameId} onOpenChange={(o) => !o && setRenameId(null)}>
@@ -875,7 +869,11 @@ function SettingsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="rounded-full" onClick={() => setConfirmDeleteId(null)}>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setConfirmDeleteId(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -894,38 +892,38 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Security
         </h2>
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <div className="grid gap-3 md:grid-cols-3">
-          <BiometricCard
-            enabled={!!(prefs as any)?.biometric_enabled}
-            onToggle={(v) => updatePref({ biometric_enabled: v })}
-          />
-          <PinCard
-            hasPin={!!(prefs as any)?.pin_set}
-            onSave={async (pin) => {
-              const h = await sha256(`${user.id}:${pin}`);
-              await updatePref({ pin_hash: h });
-              toast.success("PIN saved");
-            }}
-            onClear={async () => {
-              await updatePref({ pin_hash: null });
-              toast.success("PIN removed");
-            }}
-          />
-          <RecoveryCard
-            wallets={wallets}
-            recoveryFlags={recoveryFlags}
-            backedUp={!!(prefs as any)?.recovery_backed_up}
-            onConfirm={async () => {
-              await updatePref({ recovery_backed_up: true });
-              toast.success("Marked as backed up");
-            }}
-            onAttached={() => {
-              qc.invalidateQueries({ queryKey: ["wallet-recovery-flags", user.id] });
-            }}
-          />
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="grid gap-3 md:grid-cols-3">
+            <BiometricCard
+              enabled={!!(prefs as any)?.biometric_enabled}
+              onToggle={(v) => updatePref({ biometric_enabled: v })}
+            />
+            <PinCard
+              hasPin={!!(prefs as any)?.pin_set}
+              onSave={async (pin) => {
+                const h = await sha256(`${user.id}:${pin}`);
+                await updatePref({ pin_hash: h });
+                toast.success("PIN saved");
+              }}
+              onClear={async () => {
+                await updatePref({ pin_hash: null });
+                toast.success("PIN removed");
+              }}
+            />
+            <RecoveryCard
+              wallets={wallets}
+              recoveryFlags={recoveryFlags}
+              backedUp={!!(prefs as any)?.recovery_backed_up}
+              onConfirm={async () => {
+                await updatePref({ recovery_backed_up: true });
+                toast.success("Marked as backed up");
+              }}
+              onAttached={() => {
+                qc.invalidateQueries({ queryKey: ["wallet-recovery-flags", user.id] });
+              }}
+            />
+          </div>
         </div>
-      </div>
       </section>
 
       {/* Preferences */}
@@ -933,101 +931,103 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Preferences
         </h2>
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <SettingRow label="Theme" desc="Choose how OpenPay looks">
-            <div className="inline-flex rounded-full border border-border bg-card p-1">
-              {(["light", "dark"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => {
-                    setTheme(t);
-                    updatePref({ theme: t });
-                  }}
-                  className={`rounded-full px-3 py-1 text-xs capitalize ${theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </SettingRow>
-          <SettingRow label="Currency" desc="Display fiat values in">
-            <select
-              value={prefs?.currency ?? "USD"}
-              onChange={(e) => updatePref({ currency: e.target.value })}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option>USD</option>
-              <option>EUR</option>
-              <option>GBP</option>
-              <option>JPY</option>
-            </select>
-          </SettingRow>
-          <SettingRow label="Language" desc="Interface language">
-            <select
-              value={prefs?.language ?? "en"}
-              onChange={(e) => updatePref({ language: e.target.value })}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-            </select>
-          </SettingRow>
-          <SettingRow label="Price alerts" desc="Notify on big moves">
-            <Switch
-              checked={
-                (prefs?.notifications as Record<string, boolean> | null)?.price_alerts ?? true
-              }
-              onCheckedChange={(v) =>
-                updatePref({
-                  notifications: {
-                    ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
-                    price_alerts: v,
-                  },
-                })
-              }
-            />
-          </SettingRow>
-          <SettingRow label="Transaction alerts" desc="Notify on send, receive & top-ups">
-            <Switch
-              checked={(prefs?.notifications as Record<string, boolean> | null)?.tx_alerts ?? true}
-              onCheckedChange={(v) =>
-                updatePref({
-                  notifications: {
-                    ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
-                    tx_alerts: v,
-                  },
-                })
-              }
-            />
-          </SettingRow>
-          <SettingRow label="Browser push" desc="System notifications when tab is in background">
-            <Switch
-              checked={
-                (prefs?.notifications as Record<string, boolean> | null)?.browser_push ?? false
-              }
-              onCheckedChange={async (v) => {
-                if (v) {
-                  const { ensureBrowserPermission } = await import("@/lib/tx-notifications");
-                  const perm = await ensureBrowserPermission();
-                  if (perm !== "granted") {
-                    toast.error("Browser notification permission denied");
-                    return;
-                  }
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <SettingRow label="Theme" desc="Choose how OpenPay looks">
+              <div className="inline-flex rounded-full border border-border bg-card p-1">
+                {(["light", "dark"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      setTheme(t);
+                      updatePref({ theme: t });
+                    }}
+                    className={`rounded-full px-3 py-1 text-xs capitalize ${theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+            <SettingRow label="Currency" desc="Display fiat values in">
+              <select
+                value={prefs?.currency ?? "USD"}
+                onChange={(e) => updatePref({ currency: e.target.value })}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option>USD</option>
+                <option>EUR</option>
+                <option>GBP</option>
+                <option>JPY</option>
+              </select>
+            </SettingRow>
+            <SettingRow label="Language" desc="Interface language">
+              <select
+                value={prefs?.language ?? "en"}
+                onChange={(e) => updatePref({ language: e.target.value })}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </SettingRow>
+            <SettingRow label="Price alerts" desc="Notify on big moves">
+              <Switch
+                checked={
+                  (prefs?.notifications as Record<string, boolean> | null)?.price_alerts ?? true
                 }
-                updatePref({
-                  notifications: {
-                    ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
-                    browser_push: v,
-                  },
-                });
-              }}
-            />
-          </SettingRow>
+                onCheckedChange={(v) =>
+                  updatePref({
+                    notifications: {
+                      ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                      price_alerts: v,
+                    },
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Transaction alerts" desc="Notify on send, receive & top-ups">
+              <Switch
+                checked={
+                  (prefs?.notifications as Record<string, boolean> | null)?.tx_alerts ?? true
+                }
+                onCheckedChange={(v) =>
+                  updatePref({
+                    notifications: {
+                      ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                      tx_alerts: v,
+                    },
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Browser push" desc="System notifications when tab is in background">
+              <Switch
+                checked={
+                  (prefs?.notifications as Record<string, boolean> | null)?.browser_push ?? false
+                }
+                onCheckedChange={async (v) => {
+                  if (v) {
+                    const { ensureBrowserPermission } = await import("@/lib/tx-notifications");
+                    const perm = await ensureBrowserPermission();
+                    if (perm !== "granted") {
+                      toast.error("Browser notification permission denied");
+                      return;
+                    }
+                  }
+                  updatePref({
+                    notifications: {
+                      ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                      browser_push: v,
+                    },
+                  });
+                }}
+              />
+            </SettingRow>
+          </div>
         </div>
-      </div>
       </section>
 
       {/* Connected */}
@@ -1035,59 +1035,59 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Connected
         </h2>
-      <OpenPayIntegrationCard userId={user.id} />
+        <OpenPayIntegrationCard userId={user.id} />
 
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
-              <ScrollText className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-base font-semibold">Ledger API · OpenLedger</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Sync every OpenPay Pro transaction into OpenLedger or any external ledger via API
-                key.
-              </p>
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <ScrollText className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">Ledger API · OpenLedger</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Sync every OpenPay Pro transaction into OpenLedger or any external ledger via API
+                  key.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" className="rounded-full">
+                <a
+                  href="https://openledger.lovable.app/pro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on OpenLedger
+                </a>
+              </Button>
+              <Button asChild className="rounded-full">
+                <Link to="/ledger">Open Ledger API</Link>
+              </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" className="rounded-full">
-              <a
-                href="https://openledger.lovable.app/pro"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View on OpenLedger
+        </div>
+
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <BookOpen className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">OpenPay Connect &amp; Payments</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Docs for third-party apps: OAuth Connect, PayButton, and /pay/@username.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="rounded-full" variant="outline">
+              <a href="/docs/openpay" target="_blank" rel="noreferrer">
+                Open docs
               </a>
             </Button>
-            <Button asChild className="rounded-full">
-              <Link to="/ledger">Open Ledger API</Link>
-            </Button>
           </div>
         </div>
-      </div>
-
-      <div className="overflow-hidden rounded-2xl bg-card p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
-              <BookOpen className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-base font-semibold">OpenPay Connect &amp; Payments</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Docs for third-party apps: OAuth Connect, PayButton, and /pay/@username.
-              </p>
-            </div>
-          </div>
-          <Button asChild className="rounded-full" variant="outline">
-            <a href="/docs/openpay" target="_blank" rel="noreferrer">
-              Open docs
-            </a>
-          </Button>
-        </div>
-      </div>
       </section>
 
       {/* Legal */}
@@ -1105,7 +1105,9 @@ function SettingsPage() {
                 <FileText className="h-4.5 w-4.5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-foreground">Terms of Service</span>
+                <span className="block text-sm font-semibold text-foreground">
+                  Terms of Service
+                </span>
                 <span className="block text-xs text-muted-foreground">
                   Rules for using OpenPay Pro
                 </span>
@@ -1123,9 +1125,7 @@ function SettingsPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">Privacy Policy</span>
-                <span className="block text-xs text-muted-foreground">
-                  How we handle your data
-                </span>
+                <span className="block text-xs text-muted-foreground">How we handle your data</span>
               </span>
               <span className="text-muted-foreground">›</span>
             </Link>
@@ -1569,7 +1569,10 @@ function RecoveryCard({
               </div>
               <div className="grid grid-cols-3 gap-2 font-mono text-xs">
                 {phrase.map((w, i) => (
-                  <div key={`${w}-${i}`} className="rounded-md border border-border/60 bg-card px-2 py-1.5">
+                  <div
+                    key={`${w}-${i}`}
+                    className="rounded-md border border-border/60 bg-card px-2 py-1.5"
+                  >
                     {i + 1}. {w}
                   </div>
                 ))}

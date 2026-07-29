@@ -21,6 +21,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { OusdIcon } from "@/components/ousd-icon";
+import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
 import { readMajorBalance } from "@/lib/ledger-majors";
@@ -264,10 +265,12 @@ function CryptoWalletPage() {
                   {n.isOusd ? (
                     <OusdIcon className="h-9 w-9 shrink-0 rounded-full" />
                   ) : (
-                    <img
-                      src={n.logoUrl}
-                      alt=""
-                      className="h-9 w-9 shrink-0 rounded-full object-cover bg-muted"
+                    <TokenAvatar
+                      logoUrl={n.logoUrl}
+                      symbol={n.asset}
+                      name={n.label}
+                      size="sm"
+                      className="h-9 w-9"
                     />
                   )}
                   <span className="min-w-0">
@@ -325,12 +328,13 @@ function CryptoWalletPage() {
                     >
                       {a.isOusd ? (
                         <OusdIcon className="h-10 w-10 shrink-0 rounded-full" />
-                      ) : a.logoUrl ? (
-                        <img src={a.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
                       ) : (
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold">
-                          {a.symbol.slice(0, 2)}
-                        </span>
+                        <TokenAvatar
+                          logoUrl={a.logoUrl}
+                          symbol={a.symbol}
+                          name={a.name}
+                          size="sm"
+                        />
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="ph-row-title">{a.symbol}</div>

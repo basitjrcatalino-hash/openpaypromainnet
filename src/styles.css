@@ -73,7 +73,7 @@
 
 :root {
   --radius: 1.125rem;
-  --ph-tabbar-content: 3.85rem;
+  --ph-tabbar-content: 3.5rem;
 
   /* Phantom-like geometric sans — Plus Jakarta Sans (not Inter/system defaults) */
   --font-phantom:
@@ -286,10 +286,13 @@
     color: var(--muted-foreground);
   }
   .ph-tab-label {
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     line-height: 1;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.02em;
+  }
+  .ph-tab-icon-active {
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--primary-glow) 70%, transparent));
   }
   button, a, [role="button"], [data-slot="button"] {
     -webkit-tap-highlight-color: transparent;
@@ -455,8 +458,8 @@
 @utility ph-tabbar {
   background: var(--glass-bg);
   border-top: 0.5px solid var(--glass-border);
-  backdrop-filter: blur(48px) saturate(190%);
-  -webkit-backdrop-filter: blur(48px) saturate(190%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
@@ -472,9 +475,9 @@
 
 @utility ph-header {
   background: var(--glass-bg);
-  border-bottom: 0.5px solid transparent;
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-bottom: 0.5px solid var(--glass-border);
+  backdrop-filter: blur(48px) saturate(180%);
+  -webkit-backdrop-filter: blur(48px) saturate(180%);
 }
 
 @utility ph-page {

@@ -33,7 +33,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { BagsCashIcon } from "@/components/bags/BagsCashIcon";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -45,17 +44,24 @@ import {
   WalletAccountRow,
   WalletSwitcherDialog,
 } from "@/components/wallet/WalletSwitcherDialog";
+import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { fetchWalletPortfolioTotals } from "@/lib/wallet-portfolio";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
 
+/** Flip to true to show Bags Cash in nav and unlock /bags routes. */
+const BAGS_CASH_ENABLED = false;
+
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/authpi" });
+    if (!BAGS_CASH_ENABLED && location.pathname.startsWith("/bags")) {
+      throw redirect({ to: "/dashboard" });
+    }
     return { user: data.user };
   },
   component: AuthenticatedLayout,
@@ -66,7 +72,7 @@ const NAV = [
   { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "OpenToken", icon: BookOpen },
-  { to: "/bags", label: "Bags Cash", icon: BagsCashIcon },
+  // Bags Cash hidden for now — re-enable via BAGS_CASH_ENABLED above.
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -83,8 +89,7 @@ function navActive(pathname: string, to: string) {
       (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
-      !pathname.startsWith("/opentoken/create")) ||
-    (to === "/bags" && pathname.startsWith("/bags"))
+      !pathname.startsWith("/opentoken/create"))
   );
 }
 
@@ -155,7 +160,7 @@ function AuthenticatedLayout() {
           <>
             <header
               className={cn(
-                "ph-header safe-pt fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-border/40 px-4 py-3 transition-transform duration-300 ease-out md:hidden",
+                "ph-header safe-pt fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition-transform duration-300 ease-out md:hidden",
                 chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
               )}
             >
@@ -186,12 +191,16 @@ function AuthenticatedLayout() {
           {!hideChrome && (
             <aside
               className={cn(
-                "sticky top-0 hidden h-screen shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar md:flex md:flex-col transition-[width] duration-200 ease-in-out",
+                "sticky top-0 hidden h-screen shrink-0 overflow-y-auto border-r border-sidebar-border bg-background md:flex md:flex-col transition-[width] duration-200 ease-in-out",
                 sidebarCollapsed ? "w-16 p-2" : "w-80 p-4",
               )}
             >
               {sidebarCollapsed ? (
-                <CollapsedSidebar pathname={pathname} onExpand={toggleSidebar} />
+                <CollapsedSidebar
+                  pathname={pathname}
+                  onExpand={toggleSidebar}
+                  activeWallet={activeWallet}
+                />
               ) : (
                 <>
                   <SidebarInner
@@ -222,7 +231,7 @@ function AuthenticatedLayout() {
                 className="absolute inset-0 bg-background/70 backdrop-blur-sm"
                 onClick={() => setMobileOpen(false)}
               />
-              <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 shadow-2xl">
+              <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-background p-4 shadow-2xl">
                 <SidebarInner
                   wallets={wallets}
                   activeWallet={activeWallet}
@@ -259,35 +268,29 @@ function AuthenticatedLayout() {
             aria-label="Primary"
           >
             <div
-              className="mx-auto flex max-w-md items-center gap-0.5 overflow-x-auto overscroll-x-contain px-1 scrollbar-none [-webkit-overflow-scrolling:touch]"
+              className="mx-auto flex max-w-md items-center gap-0 overflow-x-auto overscroll-x-contain px-1.5 scrollbar-none [-webkit-overflow-scrolling:touch]"
               style={{ height: "var(--ph-tabbar-content)" }}
             >
               {FOOTER_NAV.map((item) => {
                 const Icon = item.icon;
                 const active = navActive(pathname, item.to);
-                const bags = item.to === "/bags";
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
                     preload="intent"
                     className={cn(
-                      "flex h-full min-w-17 flex-1 flex-col items-center justify-center gap-1 ph-tab-label press",
-                      active
-                        ? bags
-                          ? "text-emerald-400"
-                          : "text-primary"
-                        : "text-muted-foreground",
+                      "flex h-full min-w-14 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
+                      active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
-                    <span
+                    <Icon
                       className={cn(
-                        "grid h-8 w-12 place-items-center rounded-full transition-colors",
-                        active && (bags ? "bg-emerald-500/15" : "bg-primary/15"),
+                        "h-5 w-5 transition-[filter,opacity]",
+                        active && "ph-tab-icon-active",
                       )}
-                    >
-                      <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2 : 1.75} />
-                    </span>
+                      strokeWidth={active ? 2.25 : 1.75}
+                    />
                     <span className="px-0.5">{item.label}</span>
                   </Link>
                 );
@@ -311,35 +314,52 @@ function AuthenticatedLayout() {
   );
 }
 
-function CollapsedSidebar({ pathname, onExpand }: { pathname: string; onExpand: () => void }) {
+function CollapsedSidebar({
+  pathname,
+  onExpand,
+  activeWallet,
+}: {
+  pathname: string;
+  onExpand: () => void;
+  activeWallet?: { address: string; name: string } | null;
+}) {
   return (
-    <div className="flex h-full flex-col items-center gap-1 py-2">
+    <div className="flex h-full flex-col items-center gap-1.5 py-2">
+      {activeWallet ? (
+        <WalletAvatar
+          address={activeWallet.address}
+          name={activeWallet.name}
+          size="sm"
+          active
+          className="mb-2"
+        />
+      ) : null}
       <button
         type="button"
         onClick={onExpand}
-        className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+        className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
         title="Expand sidebar"
       >
-        <PanelLeftOpen className="h-4 w-4" />
+        <PanelLeftOpen className="h-5 w-5" />
       </button>
       {NAV.map((item) => {
         const active = navActive(pathname, item.to);
-        const bags = item.to === "/bags";
         return (
           <Link
             key={item.to}
             to={item.to}
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
               active
-                ? bags
-                  ? "bg-emerald-500/15 text-emerald-400"
-                  : "bg-primary/15 text-primary"
+                ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
             title={item.label}
           >
-            <item.icon className="h-4 w-4" />
+            <item.icon
+              className={cn("h-5 w-5", active && "ph-tab-icon-active")}
+              strokeWidth={active ? 2.25 : 1.75}
+            />
           </Link>
         );
       })}
@@ -455,7 +475,37 @@ function SidebarInner({
         onClick={() => setSwitchOpen(true)}
         className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2 text-sm font-semibold hover:bg-muted/50 press"
       >
-        <span className="flex min-w-0 items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2.5">
+          {activeWallet ? (
+            <WalletAvatar
+              address={activeWallet.address}
+              name={activeWallet.name}
+              size="sm"
+              active
+            />
+          ) : (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                setHideBalance((v) => !v);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  setHideBalance((v) => !v);
+                }
+              }}
+              className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Toggle balance"
+            >
+              {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </span>
+          )}
+          <span className="truncate">{activeWallet?.name ?? "My Wallet"}</span>
+        </span>
+        <span className="flex items-center gap-1">
           <span
             role="button"
             tabIndex={0}
@@ -472,11 +522,8 @@ function SidebarInner({
             className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Toggle balance"
           >
-            {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {hideBalance ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </span>
-          <span className="truncate">{activeWallet?.name ?? "My Wallet"}</span>
-        </span>
-        <span className="flex items-center gap-1">
           <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
           {onClose && (
             <span
@@ -510,11 +557,10 @@ function SidebarInner({
         className="py-2"
       />
 
-      <nav className="space-y-0.5">
+      <nav className="space-y-1">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = navActive(pathname, item.to);
-          const bags = item.to === "/bags";
           return (
             <Link
               key={item.to}
@@ -524,20 +570,21 @@ function SidebarInner({
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
                 active
-                  ? bags
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-primary/15 text-primary"
+                  ? "bg-primary/15 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon
+                className={cn("h-5 w-5", active && "ph-tab-icon-active")}
+                strokeWidth={active ? 2.25 : 1.75}
+              />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         {/* WC Pay + MetaMask hidden for now */}
         <Link
           to="/ledger"
@@ -550,7 +597,10 @@ function SidebarInner({
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
           )}
         >
-          <ScrollText className="h-5 w-5" />
+          <ScrollText
+            className={cn("h-5 w-5", pathname === "/ledger" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
+          />
           Ledger API
         </Link>
         <a
@@ -560,7 +610,7 @@ function SidebarInner({
           onClick={onClose}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
         >
-          <BookOpen className="h-5 w-5" />
+          <BookOpen className="h-5 w-5" strokeWidth={1.75} />
           OpenPay Docs
         </a>
       </div>

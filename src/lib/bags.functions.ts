@@ -214,17 +214,24 @@ export const bagsCreateTokenInfo = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const { getBagsSdk } = await import("./bags.server");
+    const { bagsApiFetch } = await import("./bags-config.server");
     try {
-      const sdk = await getBagsSdk();
-      const res = await sdk.tokenLaunch.createTokenInfoAndMetadata({
-        name: data.name,
-        symbol: data.symbol.toUpperCase(),
-        description: data.description,
-        imageUrl: data.imageUrl,
-        telegram: data.telegram || undefined,
-        twitter: data.twitter || undefined,
-        website: data.website || undefined,
+      // REST avoids BagsSDK CJS constructor failures on Nitro/Lovable.
+      const res = await bagsApiFetch<{
+        tokenMint: string;
+        tokenMetadata: string;
+        tokenLaunch?: { name?: string; symbol?: string; status?: string | null };
+      }>("/token-launch/create-token-info", {
+        method: "POST",
+        body: JSON.stringify({
+          name: data.name,
+          symbol: data.symbol.toUpperCase(),
+          description: data.description,
+          imageUrl: data.imageUrl,
+          telegram: data.telegram || undefined,
+          twitter: data.twitter || undefined,
+          website: data.website || undefined,
+        }),
       });
       return {
         ok: true as const,
@@ -252,33 +259,47 @@ export const bagsCreateFeeShareConfig = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const { getBagsSdk, pubkey, encodeVersionedTx, getBagsPartnerLaunchArgs } = await import(
-      "./bags.server"
+    const { bagsApiFetch, getBagsPartnerConfig, getBagsPartnerWallet } = await import(
+      "./bags-config.server"
     );
+    const { normalizeBagsEncodedTx } = await import("./bags.server");
     try {
-      const sdk = await getBagsSdk();
-      const partnerArgs = getBagsPartnerLaunchArgs();
-      const result = await sdk.config.createBagsFeeShareConfig({
-        payer: pubkey(data.payer, "payer"),
-        baseMint: pubkey(data.tokenMint, "token mint"),
-        feeClaimers: [
-          {
-            user: pubkey(data.claimerWallet, "claimer wallet"),
-            userBps: data.claimerBps,
-          },
-        ],
-        ...partnerArgs,
+      const partnerConfig = getBagsPartnerConfig();
+      const partnerWallet = getBagsPartnerWallet();
+      // OpenAPI requires claimersArray + basisPointsArray; launch.md also accepts feeClaimers.
+      const body: Record<string, unknown> = {
+        payer: data.payer,
+        baseMint: data.tokenMint,
+        claimersArray: [data.claimerWallet],
+        basisPointsArray: [data.claimerBps],
+        feeClaimers: [{ user: data.claimerWallet, userBps: data.claimerBps }],
+      };
+      if (partnerConfig && partnerWallet) {
+        body.partner = partnerWallet;
+        body.partnerConfig = partnerConfig;
+      }
+
+      const result = await bagsApiFetch<{
+        configKey?: string;
+        meteoraConfigKey?: string;
+        transactions?: unknown[];
+        bundles?: unknown[][];
+      }>("/fee-share/config", {
+        method: "POST",
+        body: JSON.stringify(body),
       });
 
-      const flatTxs = [
-        ...result.transactions,
-        ...result.bundles.flat(),
+      const configKey = String(result.configKey || result.meteoraConfigKey || "");
+      if (!configKey) throw new Error("Bags fee-share config missing configKey");
+
+      const flatTxs: unknown[] = [
+        ...(Array.isArray(result.transactions) ? result.transactions : []),
+        ...(Array.isArray(result.bundles) ? result.bundles.flat() : []),
       ];
-      // Deduplicate by serialized bytes
       const seen = new Set<string>();
       const encoded = [];
       for (const tx of flatTxs) {
-        const enc = await encodeVersionedTx(tx);
+        const enc = normalizeBagsEncodedTx(tx);
         if (seen.has(enc.txBase64)) continue;
         seen.add(enc.txBase64);
         encoded.push(enc);
@@ -286,10 +307,10 @@ export const bagsCreateFeeShareConfig = createServerFn({ method: "POST" })
 
       return {
         ok: true as const,
-        configKey: result.meteoraConfigKey.toBase58(),
+        configKey,
         transactions: encoded,
-        partnerAttached: Boolean(partnerArgs.partnerConfig),
-        partnerConfig: partnerArgs.partnerConfig?.toBase58() ?? null,
+        partnerAttached: Boolean(partnerConfig && partnerWallet),
+        partnerConfig: partnerConfig ?? null,
       };
     } catch (err) {
       bagsError(err);
@@ -310,19 +331,33 @@ export const bagsCreateLaunchTx = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const { getBagsSdk, pubkey, encodeVersionedTx } = await import("./bags.server");
+    const { bagsApiFetch } = await import("./bags-config.server");
+    const { normalizeBagsEncodedTx } = await import("./bags.server");
     try {
-      const sdk = await getBagsSdk();
-      const tx = await sdk.tokenLaunch.createLaunchTransaction({
-        metadataUrl: data.metadataUrl,
-        tokenMint: pubkey(data.tokenMint, "token mint"),
-        launchWallet: pubkey(data.launchWallet, "launch wallet"),
-        initialBuyLamports: data.initialBuyLamports,
-        configKey: pubkey(data.configKey, "config key"),
+      const res = await bagsApiFetch<{
+        transaction?: string | Record<string, unknown>;
+      } | string>("/token-launch/create-launch-transaction", {
+        method: "POST",
+        body: JSON.stringify({
+          metadataUrl: data.metadataUrl,
+          tokenMint: data.tokenMint,
+          wallet: data.launchWallet,
+          initialBuyLamports: data.initialBuyLamports,
+          configKey: data.configKey,
+        }),
       });
+
+      const rawTx =
+        typeof res === "string"
+          ? res
+          : res && typeof res === "object"
+            ? (res.transaction ?? res)
+            : null;
+      if (!rawTx) throw new Error("Bags launch transaction missing from API response");
+
       return {
         ok: true as const,
-        transaction: await encodeVersionedTx(tx),
+        transaction: normalizeBagsEncodedTx(rawTx),
       };
     } catch (err) {
       bagsError(err);

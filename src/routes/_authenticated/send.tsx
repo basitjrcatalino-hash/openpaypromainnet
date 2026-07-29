@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  Copy,
   Link2,
   Loader2,
   Send as SendIcon,
@@ -123,6 +124,22 @@ function SendPage() {
     queryFn: () => getOpenPayLink(),
   });
   const openPayLinked = !!openPayLink?.linked;
+  const linkedOpenPayChoices = useMemo(() => {
+    if (!openPayLinked || !openPayLink) return [] as Array<{ value: string; label: string }>;
+    const choices: Array<{ value: string; label: string }> = [];
+    const op = openPayLink.account_number?.trim();
+    const uname = openPayLink.username?.trim().replace(/^@+/, "");
+    if (op) choices.push({ value: op, label: `OP account · ${op}` });
+    if (uname) choices.push({ value: uname, label: `@${uname}` });
+    if (choices.length === 0 && openPayLink.identifier) {
+      choices.push({
+        value: openPayLink.identifier,
+        label: openPayLink.identifier,
+      });
+    }
+    return choices;
+  }, [openPayLinked, openPayLink]);
+  const preferredLinkedOpenPay = linkedOpenPayChoices[0]?.value ?? "";
 
   const { data: holdings = [], isLoading: holdingsLoading } = useQuery({
     queryKey: ["holdings", wallet?.id],
@@ -460,6 +477,43 @@ function SendPage() {
     }
   }
 
+  function selectLinkedOpenPayWallet(value?: string) {
+    const next = (value || preferredLinkedOpenPay).trim().replace(/^@+/, "");
+    if (!next) {
+      toast.error("No linked OpenPay wallet to select");
+      return;
+    }
+    setTo(next);
+    setOpError(null);
+    setOpPreview(null);
+    window.setTimeout(() => {
+      void (async () => {
+        try {
+          const r = await resolveOP({ data: { identifier: next } });
+          if (r.ok) setOpPreview(r.account);
+          else setOpError(r.error);
+        } catch (e) {
+          setOpError((e as Error).message);
+        }
+      })();
+    }, 0);
+    toast.success("OpenPay wallet selected");
+  }
+
+  async function copyLinkedOpenPayWallet() {
+    const next = (to.trim() || preferredLinkedOpenPay).trim();
+    if (!next) {
+      toast.error("Nothing to copy");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(next);
+      toast.success("OpenPay wallet copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
+
   async function verifyOpenPay() {
     if (!to.trim()) return;
     setOpError(null);
@@ -685,21 +739,40 @@ function SendPage() {
                     Checking OpenPay connection…
                   </div>
                 ) : openPayLinked ? (
-                  <div className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                    <div className="min-w-0 text-xs">
-                      <p className="font-semibold text-foreground">
-                        Linked via OpenPay OAuth
-                      </p>
-                      <p className="mt-0.5 text-muted-foreground">
-                        {openPayLink?.username
-                          ? `@${openPayLink.username.replace(/^@/, "")}`
-                          : openPayLink?.account_number || openPayLink?.name || "Connected"}
-                        {openPayLink?.account_number
-                          ? ` · ${openPayLink.account_number}`
-                          : ""}
-                        . Send with @username — no OP number needed when they’ve linked OpenPay.
-                      </p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <div className="min-w-0 flex-1 text-xs">
+                        <p className="font-semibold text-foreground">
+                          Linked via OpenPay OAuth
+                        </p>
+                        <p className="mt-0.5 text-muted-foreground">
+                          {openPayLink?.username
+                            ? `@${openPayLink.username.replace(/^@/, "")}`
+                            : openPayLink?.account_number || openPayLink?.name || "Connected"}
+                          {openPayLink?.account_number
+                            ? ` · ${openPayLink.account_number}`
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        className="rounded-full bg-[#0070BA] text-white hover:opacity-90"
+                        onClick={() => selectLinkedOpenPayWallet()}
+                      >
+                        Select
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="rounded-full"
+                        onClick={() => void copyLinkedOpenPayWallet()}
+                      >
+                        <Copy className="mr-1.5 h-3.5 w-3.5" />
+                        Copy
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -732,8 +805,32 @@ function SendPage() {
             )}
 
             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {rail === "openpay" ? "Recipient @username" : "Address or @username"}
+              {rail === "openpay" ? "OpenPay wallet" : "Address or @username"}
             </label>
+            {rail === "openpay" && openPayLinked && linkedOpenPayChoices.length > 0 && (
+              <div className="mb-2">
+                <select
+                  className="h-12 w-full rounded-2xl border border-border bg-background px-3 text-sm font-medium text-foreground"
+                  value={
+                    linkedOpenPayChoices.some((c) => c.value === to.trim() || c.value === to.trim().replace(/^@/, ""))
+                      ? to.trim().replace(/^@/, "")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v) selectLinkedOpenPayWallet(v);
+                  }}
+                  aria-label="Select linked OpenPay wallet"
+                >
+                  <option value="">Select OpenPay wallet…</option>
+                  {linkedOpenPayChoices.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex gap-2">
               <Input
                 value={to}
@@ -744,12 +841,24 @@ function SendPage() {
                 }}
                 onBlur={rail === "openpay" && openPayLinked ? verifyOpenPay : undefined}
                 placeholder={
-                  rail === "openpay" ? "@username" : "0x… or @username"
+                  rail === "openpay" ? "OP… or @username" : "0x… or @username"
                 }
                 className="h-12 rounded-2xl"
                 autoFocus={rail !== "openpay" || openPayLinked}
                 disabled={rail === "openpay" && !openPayLinked}
               />
+              {rail === "openpay" && openPayLinked ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 shrink-0 rounded-2xl"
+                  aria-label="Copy OpenPay wallet"
+                  onClick={() => void copyLinkedOpenPayWallet()}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              ) : null}
               <QrScannerButton
                 onResult={applyScan}
                 hint={
@@ -773,8 +882,9 @@ function SendPage() {
             </div>
             {rail === "openpay" && openPayLinked && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Enter their OpenPay Pro <span className="font-semibold text-foreground">@username</span>.
-                Their linked OpenPay account is resolved automatically.
+                Use <span className="font-semibold text-foreground">Select</span> or the dropdown to
+                fill your linked OpenPay wallet, or <span className="font-semibold text-foreground">Copy</span>{" "}
+                it. You can also type another @username / OP account.
               </p>
             )}
             {rail === "openpay" && opPreview && (

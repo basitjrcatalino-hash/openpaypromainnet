@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Link2, X } from "lucide-react";
+import { CreditCard, Loader2, Link2, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -15,6 +15,11 @@ import {
   createOpenPayTopupCharge,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
+import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
+import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
+import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
+import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
+import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
@@ -28,7 +33,7 @@ export type AssetBuyTarget = {
   status?: string | null;
 };
 
-type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout";
+type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout" | "moonpay" | "solana";
 
 const PRESETS = [10, 25, 50, 100, 250];
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
@@ -37,24 +42,43 @@ const PENDING_ASSET_BUY_KEY = "asset_pending_buy";
 
 const amountSchema = z.coerce.number().positive().min(1).max(50_000);
 
-const ALL_METHODS = [
+const ALL_METHODS: {
+  id: PaymentMethod;
+  label: string;
+  logoUrl?: string;
+  icon?: typeof CreditCard;
+  solanaMark?: boolean;
+  desc: string;
+}[] = [
   {
-    id: "wallet_ousd" as const,
+    id: "wallet_ousd",
     label: "Wallet OUSD",
     logoUrl: OUSD_LOGO_URL,
     desc: "Pay with your OpenPay Pro OUSD balance",
   },
   {
-    id: "pi" as const,
+    id: "openpay_checkout",
+    label: "OpenPay Balance",
+    logoUrl: OUSD_LOGO_URL,
+    desc: "Pay from your connected OpenPay account",
+  },
+  {
+    id: "moonpay",
+    label: "MoonPay",
+    icon: CreditCard,
+    desc: "Card / Apple Pay / Google Pay → OUSD",
+  },
+  {
+    id: "pi",
     label: "Pi Network (π)",
     logoUrl: PI_NETWORK_LOGO_URL,
     desc: "Pay with Pi · 1 π = 1 OUSD",
   },
   {
-    id: "openpay_checkout" as const,
-    label: "OpenPay Checkout",
-    logoUrl: OUSD_LOGO_URL,
-    desc: "Pay via OpenPay checkout link",
+    id: "solana",
+    label: "Solana Pay",
+    solanaMark: true,
+    desc: "Pay with SOL or USDC · 1 USD = 1 OUSD",
   },
 ];
 
@@ -89,12 +113,22 @@ export function AssetBuySheet({
     token.isOusd ? "pi" : "wallet_ousd",
   );
   const [busy, setBusy] = useState(false);
+  const [moonpayVisible, setMoonpayVisible] = useState(false);
+  const [moonpaySession, setMoonpaySession] = useState<{
+    amount: number;
+    externalTransactionId: string;
+  } | null>(null);
+  const creditMoonPay = useServerFn(creditMoonPayTopup);
+  const creditSolana = useServerFn(creditSolanaPayTopup);
 
   const isOusd = !!token.isOusd;
   const graduated = !isOusd && isOpenTokenGraduated(token);
-  const methods = isOusd
-    ? ALL_METHODS.filter((m) => m.id !== "wallet_ousd")
-    : ALL_METHODS;
+  const solanaReady = isSolanaMerchantConfigured();
+  const methods = ALL_METHODS.filter((m) => {
+    if (isOusd && m.id === "wallet_ousd") return false;
+    if (!solanaReady && m.id === "solana") return false;
+    return true;
+  });
 
   const { data: openpayLink } = useQuery({
     queryKey: ["openpay-link", userId],
@@ -211,7 +245,7 @@ export function AssetBuySheet({
       toast.error("Enter a valid amount (min $1)");
       return;
     }
-    const amt = parsed.data!.amount;
+    const amt = amtNum;
 
     setBusy(true);
     try {
@@ -221,6 +255,18 @@ export function AssetBuySheet({
           toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
           await invalidateAfterTopup();
           onClose();
+          return;
+        }
+        if (method === "moonpay") {
+          if (!walletId) { toast.error("Select an active wallet first"); return; }
+          const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
+          setMoonpaySession({ amount: amt, externalTransactionId });
+          setMoonpayVisible(true);
+          setBusy(false);
+          return;
+        }
+        if (method === "solana") {
+          setBusy(false);
           return;
         }
         await startOpenPayCheckout(amt);
@@ -266,6 +312,20 @@ export function AssetBuySheet({
         return;
       }
 
+      if (method === "moonpay") {
+        if (!walletId) { toast.error("Select an active wallet first"); return; }
+        const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
+        setMoonpaySession({ amount: amt, externalTransactionId });
+        setMoonpayVisible(true);
+        setBusy(false);
+        return;
+      }
+
+      if (method === "solana") {
+        setBusy(false);
+        return;
+      }
+
       await startOpenPayCheckout(amt);
     } catch (err) {
       toast.error((err as Error).message || "Purchase failed");
@@ -277,18 +337,30 @@ export function AssetBuySheet({
   const ctaLabel = isOusd
     ? method === "pi"
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
-      : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+      : method === "moonpay"
+        ? `Buy with Card`
+        : method === "solana"
+          ? `Pay with Solana`
+          : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
     : graduated
       ? method === "wallet_ousd"
         ? `Swap for $${token.symbol}`
         : method === "pi"
           ? `Top up & swap`
-          : `Pay with OpenPay`
+          : method === "moonpay"
+            ? `Buy with Card & Swap`
+            : method === "solana"
+              ? `Pay with Solana & Swap`
+              : `Pay with OpenPay`
       : method === "wallet_ousd"
         ? `Buy $${token.symbol}`
         : method === "pi"
           ? `Pay with Pi & Buy`
-          : `Pay with OpenPay & Buy`;
+          : method === "moonpay"
+            ? `Buy with Card`
+            : method === "solana"
+              ? `Pay with Solana & Buy`
+              : `Pay with OpenPay & Buy`;
 
   if (!open) return null;
 
@@ -362,14 +434,100 @@ export function AssetBuySheet({
           </p>
         )}
 
-        <Button
-          type="button"
-          className="h-12 w-full rounded-full text-base font-bold"
-          disabled={busy || !valid || (method === "openpay_checkout" && !openpayLink?.linked)}
-          onClick={() => void submit()}
-        >
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
-        </Button>
+        {method === "solana" && solanaReady ? (
+          <SolanaPaymentButton
+            mode="buyNow"
+            showQR
+            position="inline"
+            className="w-full"
+            paymentConfig={{
+              products: [
+                {
+                  id: `asset-buy-${token.id}-${amtNum}`,
+                  name: isOusd ? `OUSD top-up ${formatUSD(amtNum)}` : `Buy $${token.symbol}`,
+                  price: amtNum,
+                  quantity: 1,
+                },
+              ],
+            }}
+            onPaymentStart={() => setBusy(true)}
+            onPaymentSuccess={(signature) => {
+              void (async () => {
+                try {
+                  await creditSolana({ data: { signature, wallet_id: walletId! } });
+                  toast.success(`${formatUSD(amtNum)} OUSD credited from Solana`);
+                  if (!isOusd && !graduated) {
+                    await executeTokenBuy(amtNum);
+                  } else {
+                    await invalidateAfterTopup();
+                    onClose();
+                  }
+                } catch (err) {
+                  toast.error((err as Error).message || "Solana top-up failed");
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+            onPaymentError={() => setBusy(false)}
+            onCancel={() => setBusy(false)}
+          >
+            <button
+              type="button"
+              disabled={busy || !valid}
+              className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground press disabled:opacity-50"
+            >
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
+            </button>
+          </SolanaPaymentButton>
+        ) : (
+          <Button
+            type="button"
+            className="h-12 w-full rounded-full text-base font-bold"
+            disabled={busy || !valid || (method === "openpay_checkout" && !openpayLink?.linked)}
+            onClick={() => void submit()}
+          >
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
+          </Button>
+        )}
+
+        {moonpaySession ? (
+          <MoonPayBuyOverlay
+            visible={moonpayVisible}
+            amount={moonpaySession.amount}
+            externalCustomerId={userId}
+            externalTransactionId={moonpaySession.externalTransactionId}
+            onClose={() => {
+              setMoonpayVisible(false);
+              setMoonpaySession(null);
+              setBusy(false);
+            }}
+            onTransactionCompleted={async ({ id, baseCurrencyAmount, status }) => {
+              if (status && status !== "completed") {
+                toast.message(`MoonPay status: ${status}`);
+                setMoonpayVisible(false);
+                return;
+              }
+              const paid = Number(baseCurrencyAmount) || moonpaySession.amount;
+              setMoonpayVisible(false);
+              setBusy(true);
+              try {
+                await creditMoonPay({ data: { transaction_id: id, wallet_id: walletId! } });
+                toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
+                if (!isOusd && !graduated) {
+                  await executeTokenBuy(paid);
+                } else {
+                  await invalidateAfterTopup();
+                  onClose();
+                }
+              } catch (err) {
+                toast.error((err as Error).message || "MoonPay credit failed");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );

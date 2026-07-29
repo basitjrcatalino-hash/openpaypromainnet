@@ -1,8 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 export type WalletBalanceSource = {
   id: string;
   ousd_balance?: number | null;
+  pi_balance?: number | null;
+  btc_balance?: number | null;
+  eth_balance?: number | null;
+  sol_balance?: number | null;
 };
 
 /** Deterministic Phantom-style gradient pair from wallet address. */
@@ -48,9 +53,21 @@ export async function fetchWalletPortfolioTotals(
   }
 
   const totals: Record<string, number> = {};
+  let prices: Awaited<ReturnType<typeof fetchMajorUsdPrices>> | null = null;
+  try {
+    prices = await fetchMajorUsdPrices();
+  } catch {
+    prices = null;
+  }
+
   for (const wallet of wallets) {
-    totals[wallet.id] =
-      (holdingsByWallet[wallet.id] ?? 0) + Number(wallet.ousd_balance ?? 0);
+    const majorsUsd =
+      Number(wallet.ousd_balance ?? 0) +
+      Number(wallet.pi_balance ?? 0) * (prices?.pi ?? 0.079) +
+      Number(wallet.btc_balance ?? 0) * (prices?.btc ?? 65000) +
+      Number(wallet.eth_balance ?? 0) * (prices?.eth ?? 1920) +
+      Number(wallet.sol_balance ?? 0) * (prices?.sol ?? 74);
+    totals[wallet.id] = (holdingsByWallet[wallet.id] ?? 0) + majorsUsd;
   }
   return totals;
 }

@@ -20,6 +20,8 @@ import {
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
 import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
+import { buyMajorWithOusd } from "@/lib/buy-major.functions";
+import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
@@ -32,6 +34,8 @@ export type AssetBuyTarget = {
   name: string;
   price: number;
   isOusd?: boolean;
+  /** When set, buy converts OUSD → this major ledger balance at market price */
+  majorId?: "btc" | "eth" | "sol" | "pi";
   status?: string | null;
 };
 
@@ -70,7 +74,7 @@ const ALL_METHODS: {
     id: "wallet_ousd",
     label: "Wallet OUSD",
     logoUrl: OUSD_LOGO_URL,
-    desc: "Pay with your OpenPay Pro OUSD balance",
+    desc: "Pay with your OpenPay Pro OUSD · buy any token",
   },
   {
     id: "openpay_checkout",
@@ -145,12 +149,16 @@ export function AssetBuySheet({
   } | null>(null);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
   const creditSolana = useServerFn(creditSolanaPayTopup);
+  const buyMajorFn = useServerFn(buyMajorWithOusd);
+  const swapFn = useServerFn(executeOpenDexSwap);
 
   const isOusd = !!token.isOusd;
-  const graduated = !isOusd && isOpenTokenGraduated(token);
+  const isMajor = !!token.majorId;
+  const graduated = !isOusd && !isMajor && isOpenTokenGraduated(token);
   const solanaReady = isSolanaMerchantConfigured();
+  /** Wallet OUSD for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
   const methods = ALL_METHODS.filter((m) => {
-    if (isOusd && m.id === "wallet_ousd") return false;
+    if (m.id === "wallet_ousd") return !isOusd;
     if (!solanaReady && m.id === "solana") return false;
     return true;
   });
@@ -171,10 +179,11 @@ export function AssetBuySheet({
   useEffect(() => {
     if (!open) return;
     setAmount("25");
+    // Prefer Wallet OUSD whenever buying a token (not topping up OUSD)
     setMethod(isOusd ? "pi" : "wallet_ousd");
     setActionError(null);
     setBusy(false);
-  }, [open, isOusd]);
+  }, [open, isOusd, token.id]);
 
   const amtNum = parseBuyAmount(amount);
   const parsed = amountSchema.safeParse(amount.trim() === "" ? NaN : amtNum);
@@ -186,6 +195,44 @@ export function AssetBuySheet({
     opSpendable != null &&
     amtNum > 0 &&
     amtNum > opSpendable + 1e-9;
+
+  async function executeMajorBuy(usdAmount: number) {
+    if (!walletId || !token.majorId) throw new Error("Create a wallet first");
+    const res = await buyMajorFn({
+      data: {
+        wallet_id: walletId,
+        major_id: token.majorId,
+        usd_amount: usdAmount,
+      },
+    });
+    toast.success(
+      `Bought ${formatNumber(res.token_amount, 6)} ${res.symbol} for ${formatUSD(res.usd_spent)}`,
+    );
+    await invalidateAfterBuy();
+    onClose();
+  }
+
+  /** Graduated OpenTokens: spend OUSD on OpenDEX for the token. */
+  async function executeDexBuy(usdAmount: number) {
+    if (!walletId) throw new Error("Create a wallet first");
+    if (ousdBalance < usdAmount) {
+      throw new Error(`Need ${formatUSD(usdAmount)} OUSD (balance ${formatUSD(ousdBalance)})`);
+    }
+    const res = await swapFn({
+      data: {
+        wallet_id: walletId,
+        from_id: OUSD_SWAP_ID,
+        to_id: token.id,
+        amount: usdAmount,
+        slippage: 1,
+      },
+    });
+    toast.success(
+      `Bought ${formatNumber(res.amount_out, 4)} $${token.symbol} for ${formatUSD(res.amount_in)} OUSD`,
+    );
+    await invalidateAfterBuy();
+    onClose();
+  }
 
   async function executeTokenBuy(piAmount: number) {
     if (!walletId) throw new Error("Create a wallet first");
@@ -236,6 +283,7 @@ export function AssetBuySheet({
           tokenId: token.id,
           symbol: token.symbol,
           isOusd,
+          majorId: token.majorId,
           amount: amt,
           graduated,
         }),
@@ -335,21 +383,55 @@ export function AssetBuySheet({
         return;
       }
 
-      if (graduated) {
+      if (isMajor && token.majorId) {
         if (method === "wallet_ousd") {
           if (ousdBalance < amt) {
-            throw new Error(`Need ${formatUSD(amt)} OUSD — top up first`);
+            throw new Error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
           }
-          onClose();
-          onNavigateSwap?.();
+          await executeMajorBuy(amt);
           return;
         }
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited — opening swap`);
-          await invalidateAfterTopup();
-          onClose();
-          onNavigateSwap?.();
+          toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+          await executeMajorBuy(amt);
+          return;
+        }
+        if (method === "moonpay") {
+          if (!walletId) throw new Error("Select an active wallet first");
+          const externalTransactionId = `major_${token.majorId}_${walletId}_${Date.now()}`;
+          setMoonpaySession({ amount: amt, externalTransactionId });
+          setMoonpayVisible(true);
+          return;
+        }
+        if (method === "solana") return;
+        try {
+          sessionStorage.setItem(
+            PENDING_ASSET_BUY_KEY,
+            JSON.stringify({
+              tokenId: token.majorId,
+              symbol: token.symbol,
+              isOusd: false,
+              majorId: token.majorId,
+              amount: amt,
+            }),
+          );
+        } catch {
+          /* ignore */
+        }
+        await startOpenPayCheckout(amt);
+        return;
+      }
+
+      if (graduated) {
+        if (method === "wallet_ousd") {
+          await executeDexBuy(amt);
+          return;
+        }
+        if (method === "pi") {
+          await topUpWithPi(amt);
+          toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+          await executeDexBuy(amt);
           return;
         }
         if (method === "moonpay") {
@@ -412,18 +494,26 @@ export function AssetBuySheet({
           : openpayShort
             ? `Amount exceeds OpenPay balance`
             : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+    : isMajor
+      ? method === "wallet_ousd"
+        ? `Buy ${token.symbol} with OUSD`
+        : method === "moonpay"
+          ? `Buy ${token.symbol} with Card`
+          : method === "pi"
+            ? `Buy ${token.symbol} with Pi`
+            : `Buy ${token.symbol}`
     : graduated
       ? method === "wallet_ousd"
-        ? `Swap for $${token.symbol}`
+        ? `Buy $${token.symbol} with OUSD`
         : method === "pi"
-          ? `Top up & swap`
+          ? `Buy $${token.symbol} with Pi`
           : method === "moonpay"
-            ? `Buy with Card & Swap`
+            ? `Buy $${token.symbol} with Card`
             : method === "solana"
-              ? `Pay with Solana & Swap`
+              ? `Pay with Solana & Buy`
               : openpayShort
                 ? `Amount exceeds OpenPay balance`
-                : `Pay with OpenPay`
+                : `Buy $${token.symbol}`
       : method === "wallet_ousd"
         ? `Buy $${token.symbol}`
         : method === "pi"
@@ -609,12 +699,15 @@ export function AssetBuySheet({
                     },
                   });
                   toast.success(`${formatUSD(amtNum)} OUSD credited from Solana`);
-                  if (!isOusd && !graduated) {
+                  if (isMajor && token.majorId) {
+                    await executeMajorBuy(amtNum);
+                  } else if (graduated) {
+                    await executeDexBuy(amtNum);
+                  } else if (!isOusd) {
                     await executeTokenBuy(amtNum);
                   } else {
                     await invalidateAfterTopup();
                     onClose();
-                    if (graduated) onNavigateSwap?.();
                   }
                 } catch (err) {
                   const msg = (err as Error).message || "Solana top-up failed";
@@ -680,12 +773,15 @@ export function AssetBuySheet({
                   },
                 });
                 toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
-                if (!isOusd && !graduated) {
+                if (isMajor && token.majorId) {
+                  await executeMajorBuy(paid);
+                } else if (graduated) {
+                  await executeDexBuy(paid);
+                } else if (!isOusd) {
                   await executeTokenBuy(paid);
                 } else {
                   await invalidateAfterTopup();
                   onClose();
-                  if (graduated) onNavigateSwap?.();
                 }
               } catch (err) {
                 const msg = (err as Error).message || "MoonPay credit failed";
@@ -708,6 +804,18 @@ export async function runPendingAssetBuy(opts: {
     token_amount: number;
     graduated?: boolean;
   }>;
+  buyMajorFn?: (args: {
+    data: { wallet_id: string; major_id: "btc" | "eth" | "sol" | "pi"; usd_amount: number };
+  }) => Promise<{ token_amount: number; symbol: string }>;
+  swapFn?: (args: {
+    data: {
+      wallet_id: string;
+      from_id: string;
+      to_id: string;
+      amount: number;
+      slippage: number;
+    };
+  }) => Promise<{ amount_out: number }>;
   walletId: string;
   onGraduated?: (tokenId: string) => void;
 }) {
@@ -723,13 +831,55 @@ export async function runPendingAssetBuy(opts: {
     tokenId: string;
     symbol: string;
     isOusd?: boolean;
+    majorId?: "btc" | "eth" | "sol" | "pi";
     amount: number;
     graduated?: boolean;
   };
 
-  if (pending.isOusd || pending.graduated) {
+  if (pending.isOusd) {
     sessionStorage.removeItem(PENDING_ASSET_BUY_KEY);
     return { toppedUp: true, amount: pending.amount };
+  }
+
+  if (pending.majorId && opts.buyMajorFn) {
+    const res = await opts.buyMajorFn({
+      data: {
+        wallet_id: opts.walletId,
+        major_id: pending.majorId,
+        usd_amount: pending.amount,
+      },
+    });
+    sessionStorage.removeItem(PENDING_ASSET_BUY_KEY);
+    return {
+      bought: true,
+      symbol: res.symbol,
+      tokenAmount: res.token_amount,
+      amount: pending.amount,
+    };
+  }
+
+  if (pending.graduated && opts.swapFn) {
+    const res = await opts.swapFn({
+      data: {
+        wallet_id: opts.walletId,
+        from_id: OUSD_SWAP_ID,
+        to_id: pending.tokenId,
+        amount: pending.amount,
+        slippage: 1,
+      },
+    });
+    sessionStorage.removeItem(PENDING_ASSET_BUY_KEY);
+    return {
+      bought: true,
+      symbol: pending.symbol,
+      tokenAmount: res.amount_out,
+      amount: pending.amount,
+    };
+  }
+
+  if (pending.graduated) {
+    sessionStorage.removeItem(PENDING_ASSET_BUY_KEY);
+    return { toppedUp: true, amount: pending.amount, needsSwap: true as const };
   }
 
   const res = await opts.buyFn({

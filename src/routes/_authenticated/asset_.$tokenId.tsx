@@ -40,6 +40,8 @@ import {
 import { OPENPAY_NETWORK_BADGE_URL, OUSD_LOGO_URL } from "@/lib/token-logos";
 import { websiteHref } from "@/lib/opentoken/social";
 import { buyOpenToken } from "@/lib/opentoken.functions";
+import { buyMajorWithOusd } from "@/lib/buy-major.functions";
+import { executeOpenDexSwap } from "@/lib/opendex.functions";
 import {
   settleOpenPayCharge,
   settleOpenPayPayLinkTopup,
@@ -87,12 +89,18 @@ function PhantomAssetDetail() {
   const settleCharge = useServerFn(settleOpenPayCharge);
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const buyFn = useServerFn(buyOpenToken);
+  const buyMajorFn = useServerFn(buyMajorWithOusd);
+  const swapFn = useServerFn(executeOpenDexSwap);
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
   const isPiMajor = isMajor && majorDef?.id === "pi";
   /** OpenPay ledger asset for receive QR / send (majors except PI settle as OUSD). */
-  const ledgerAsset: "OUSD" | "PI" = isPiMajor ? "PI" : "OUSD";
+  const ledgerAsset: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" = isOusd
+    ? "OUSD"
+    : isMajor && majorDef
+      ? (majorDef.symbol as "PI" | "BTC" | "ETH" | "SOL")
+      : "OUSD";
 
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -110,8 +118,11 @@ function PhantomAssetDetail() {
         address: string;
         ousd_balance: number;
         pi_balance: number | null;
+        btc_balance: number | null;
+        eth_balance: number | null;
+        sol_balance: number | null;
         name: string | null;
-      }>(supabase, user.id, "id, address, ousd_balance, pi_balance, name"),
+      }>(supabase, user.id, "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, name"),
   });
 
   const { data: token, isLoading: tokenLoading } = useQuery({
@@ -255,14 +266,22 @@ function PhantomAssetDetail() {
 
   const balance = isOusd
     ? Number(wallet?.ousd_balance ?? 0)
-    : isPiMajor
-      ? Number(wallet?.pi_balance ?? 0)
-      : isMajor
-        ? Number(wallet?.ousd_balance ?? 0)
-        : Number(holding ?? 0);
-  /** Position unit on OpenPay ledger (BTC/ETH/SOL pages show OUSD holdings). */
-  const positionSymbol = isMajor && !isPiMajor ? "OUSD" : meta.symbol;
-  const positionPrice = isMajor && !isPiMajor ? 1 : meta.price;
+    : isMajor && majorDef
+      ? Number(
+          (wallet as Record<string, unknown> | null | undefined)?.[
+            majorDef.id === "btc"
+              ? "btc_balance"
+              : majorDef.id === "eth"
+                ? "eth_balance"
+                : majorDef.id === "sol"
+                  ? "sol_balance"
+                  : "pi_balance"
+          ] ?? 0,
+        )
+      : Number(holding ?? 0);
+  /** Position unit on OpenPay ledger */
+  const positionSymbol = meta.symbol;
+  const positionPrice = meta.price;
   const valueUsd = balance * positionPrice;
   const changeAbs = valueUsd * (meta.change / 100);
   const up = meta.change >= 0;
@@ -313,6 +332,8 @@ function PhantomAssetDetail() {
           if (r.credited && wallet?.id) {
             const pending = await runPendingAssetBuy({
               buyFn,
+              buyMajorFn,
+              swapFn,
               walletId: wallet.id,
               onGraduated: () => toast.success("Token graduated to OpenDEX!"),
             });
@@ -342,6 +363,8 @@ function PhantomAssetDetail() {
             if (r.credited && wallet?.id) {
               const pending = await runPendingAssetBuy({
                 buyFn,
+                buyMajorFn,
+                swapFn,
                 walletId: wallet.id,
               });
               if (pending?.bought) {
@@ -715,7 +738,7 @@ function PhantomAssetDetail() {
           {isMajor
             ? isPiMajor
               ? "Pricing via CoinGecko. PI balance and transfers use your OpenPay Pro wallet on this account."
-              : `Market data via CoinGecko. Receive, send, and buy on this page use your OpenPay Pro wallet (${ledgerAsset}). Native ${meta.symbol} is not custodied on the OpenPay ledger.`
+              : `Pricing via CoinGecko. ${meta.symbol} balance, buy, send, and receive use your OpenPay Pro wallet (custodial ledger at market price).`
             : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
         </p>
       </div>
@@ -755,9 +778,7 @@ function PhantomAssetDetail() {
               {isOusd
                 ? "Use this OpenPay Pro wallet address to receive OUSD."
                 : isMajor
-                  ? isPiMajor
-                    ? "Use this OpenPay Pro wallet address to receive PI."
-                    : `Use this OpenPay Pro wallet address to receive ${ledgerAsset}. Market price for ${meta.symbol} is shown for reference.`
+                  ? `Use this OpenPay Pro wallet address to receive ${meta.symbol} (credited to your Pro ledger balance).`
                   : `Share your OpenPay Pro wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
             </p>
             <Button className="w-full rounded-full" variant="secondary" onClick={() => setReceiveOpen(false)}>
@@ -851,11 +872,12 @@ function PhantomAssetDetail() {
         walletId={wallet?.id}
         ousdBalance={Number(wallet?.ousd_balance ?? 0)}
         token={{
-          id: isOusd || isMajor ? "ousd" : tokenId,
-          symbol: isOusd || isMajor ? "OUSD" : meta.symbol,
-          name: isOusd || isMajor ? "OpenUSD OUSD" : meta.name,
-          price: isOusd || isMajor ? 1 : meta.price,
-          isOusd: isOusd || isMajor,
+          id: isOusd ? "ousd" : isMajor && majorDef ? majorDef.id : tokenId,
+          symbol: meta.symbol,
+          name: meta.name,
+          price: meta.price,
+          isOusd,
+          majorId: isMajor && majorDef ? majorDef.id : undefined,
           status: isOusd || isMajor ? "stable" : meta.status,
         }}
         returnPath={returnPath}

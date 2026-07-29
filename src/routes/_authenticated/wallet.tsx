@@ -1,10 +1,12 @@
 /**
- * Crypto wallet dashboard — Phantom-style overview for Circle Programmable Wallets.
+ * Crypto wallet — Phantom-style OpenPay Pro balances + per-network receive.
  * Route: /wallet
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ComponentType } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -18,32 +20,169 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { useWallet } from "@/hooks/use-wallet";
+import { OusdIcon } from "@/components/ousd-icon";
+import { supabase } from "@/integrations/supabase/client";
+import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
-import { formatNumber, shortAddress, timeAgo } from "@/lib/wallet-utils";
+import { formatCurrency, useCurrency } from "@/lib/currency";
+import { formatNumber, shortAddress } from "@/lib/wallet-utils";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "Crypto Wallet — OpenPay Pro" }] }),
   component: CryptoWalletPage,
 });
 
+type AssetRow = {
+  key: string;
+  symbol: string;
+  name: string;
+  network: string;
+  balance: number;
+  priceUsd: number;
+  logoUrl: string | null;
+  receiveTo: string;
+  isOusd?: boolean;
+};
+
 function CryptoWalletPage() {
-  const { wallet, balance, transactions, loading, error, configured, refreshWallet } =
-    useWallet();
+  const { user } = Route.useRouteContext();
+  const { code: currency } = useCurrency();
+
+  const {
+    data: wallet,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ["active-wallet", user.id],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("wallets")
+          .select(
+            "id, name, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance",
+          )
+          .eq("user_id", user.id)
+          .order("is_active", { ascending: false })
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
+      ).data,
+  });
+
+  const { data: holdings = [] } = useQuery({
+    queryKey: ["holdings", wallet?.id],
+    enabled: !!wallet?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("token_holdings")
+        .select("balance, tokens:token_id(id, name, symbol, price_usd, logo_url)")
+        .eq("wallet_id", wallet!.id)
+        .gt("balance", 0);
+      return data ?? [];
+    },
+  });
+
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
+  const assets = useMemo((): AssetRow[] => {
+    const rows: AssetRow[] = [
+      {
+        key: "ousd",
+        symbol: "OUSD",
+        name: "OpenPay USD",
+        network: "OpenPay",
+        balance: Number(wallet?.ousd_balance ?? 0),
+        priceUsd: 1,
+        logoUrl: OUSD_LOGO_URL,
+        receiveTo: "/wallet/receive?network=openpay&asset=OUSD",
+        isOusd: true,
+      },
+      {
+        key: "btc",
+        symbol: "BTC",
+        name: MAJOR_TOKENS.btc.name,
+        network: "Bitcoin",
+        balance: Number(wallet?.btc_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "btc").price,
+        logoUrl: MAJOR_TOKENS.btc.logoUrl,
+        receiveTo: "/wallet/receive?network=bitcoin&asset=BTC",
+      },
+      {
+        key: "eth",
+        symbol: "ETH",
+        name: MAJOR_TOKENS.eth.name,
+        network: "Ethereum",
+        balance: Number(wallet?.eth_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "eth").price,
+        logoUrl: MAJOR_TOKENS.eth.logoUrl,
+        receiveTo: "/wallet/receive?network=ethereum&asset=ETH",
+      },
+      {
+        key: "sol",
+        symbol: "SOL",
+        name: MAJOR_TOKENS.sol.name,
+        network: "Solana",
+        balance: Number(wallet?.sol_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "sol").price,
+        logoUrl: MAJOR_TOKENS.sol.logoUrl,
+        receiveTo: "/wallet/receive?network=solana&asset=SOL",
+      },
+      {
+        key: "pi",
+        symbol: "PI",
+        name: MAJOR_TOKENS.pi.name,
+        network: "Pi Network",
+        balance: Number(wallet?.pi_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "pi").price,
+        logoUrl: MAJOR_TOKENS.pi.logoUrl,
+        receiveTo: "/wallet/receive?network=pi&asset=PI",
+      },
+    ];
+
+    for (const h of holdings) {
+      const t = h.tokens as {
+        id?: string;
+        name?: string;
+        symbol?: string;
+        price_usd?: number;
+        logo_url?: string | null;
+      } | null;
+      if (!t?.id || !t.symbol) continue;
+      rows.push({
+        key: t.id,
+        symbol: t.symbol,
+        name: t.name || t.symbol,
+        network: "OpenPay",
+        balance: Number(h.balance ?? 0),
+        priceUsd: Number(t.price_usd ?? 0),
+        logoUrl: t.logo_url ?? null,
+        receiveTo: `/receive?asset=OUSD`,
+      });
+    }
+
+    return rows;
+  }, [wallet, holdings, majorMarkets]);
+
+  const totalUsd = useMemo(
+    () => assets.reduce((sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0), 0),
+    [assets],
+  );
 
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
       await navigator.clipboard.writeText(wallet.address);
-      toast.success("Address copied");
+      toast.success("OpenPay Pro address copied");
     } catch {
       toast.error("Copy failed");
     }
   }
-
-  const totalHint = balance[0]
-    ? `${balance[0].amount} ${balance[0].symbol}`
-    : "0.00";
 
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in pb-10 md:max-w-xl">
@@ -54,9 +193,7 @@ function CryptoWalletPage() {
           </span>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight">Crypto Wallet</h1>
-            <p className="ph-caption">
-              {wallet ? wallet.blockchain : "Circle · multi-chain ready"}
-            </p>
+            <p className="ph-caption">OpenPay Pro · choose network to receive</p>
           </div>
         </div>
         <Button
@@ -64,38 +201,30 @@ function CryptoWalletPage() {
           variant="ghost"
           size="icon"
           className="rounded-full"
-          onClick={() => void refreshWallet()}
-          disabled={loading}
+          onClick={() => void refetch()}
+          disabled={isFetching}
         >
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
         </Button>
       </header>
 
-      {loading && !wallet ? (
+      {isLoading && !wallet ? (
         <div className="grid place-items-center py-24 text-sm text-muted-foreground">
           <Loader2 className="mb-3 h-8 w-8 animate-spin text-primary" />
-          Provisioning wallet…
+          Loading wallet…
         </div>
-      ) : error && !wallet ? (
+      ) : !wallet ? (
         <div className="rounded-3xl border border-border bg-card p-6 text-center">
-          <p className="text-sm text-destructive">{error}</p>
-          {!configured && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Set <code className="text-foreground">CIRCLE_API_KEY</code>,{" "}
-              <code className="text-foreground">CIRCLE_ENTITY_SECRET</code>, and{" "}
-              <code className="text-foreground">CIRCLE_WALLET_SET_ID</code> on the server.
-            </p>
-          )}
-          <Button className="mt-4 rounded-full" onClick={() => void refreshWallet()}>
-            Retry
+          <p className="text-sm text-muted-foreground">No OpenPay Pro wallet yet.</p>
+          <Button asChild className="mt-4 rounded-full">
+            <Link to="/dashboard">Go to Home</Link>
           </Button>
         </div>
-      ) : wallet ? (
+      ) : (
         <>
-          {/* Balance hero */}
           <section className="mb-6 rounded-3xl border border-border bg-card p-6 text-center">
-            <p className="ph-label">Balance</p>
-            <p className="ph-display mt-2">{totalHint}</p>
+            <p className="ph-label">Total balance</p>
+            <p className="ph-display mt-2">{formatCurrency(totalUsd, currency)}</p>
             <button
               type="button"
               onClick={() => void copyAddress()}
@@ -105,109 +234,107 @@ function CryptoWalletPage() {
               <Copy className="h-3.5 w-3.5" />
             </button>
             <p className="ph-label mt-3 opacity-80">
-              {wallet.blockchain} · {wallet.provider}
+              {wallet.name || "Main Wallet"} · OpenPay Pro
             </p>
           </section>
 
-          {/* Action cards */}
           <div className="mb-8 grid grid-cols-4 gap-2">
-            <ActionCard
-              to="/wallet/receive"
-              icon={QrCode}
-              label="Receive"
-              primary
-            />
+            <ActionCard to="/wallet/receive" icon={QrCode} label="Receive" primary />
             <ActionCard to="/send" icon={ArrowUpRight} label="Send" />
             <ActionCard to="/activity" icon={History} label="History" />
             <ActionCard to="/tokens" icon={ArrowDownLeft} label="Assets" />
           </div>
 
-          {/* Supported tokens / balances */}
-          <section className="mb-8">
-            <h2 className="ph-label mb-3">Assets</h2>
-            <ul className="overflow-hidden rounded-2xl border border-border bg-card">
-              {balance.length === 0 ? (
-                <li className="px-4 py-8 text-center">
-                  <p className="ph-callout">No tokens yet</p>
-                  <p className="ph-caption mt-1">Buy some tokens to get started</p>
-                </li>
-              ) : (
-                balance.map((b, i) => (
-                  <li
-                    key={`${b.symbol}-${i}`}
-                    className={cn(
-                      "flex items-center justify-between px-4 py-3",
-                      i > 0 && "border-t border-border",
-                    )}
-                  >
-                    <div>
-                      <div className="ph-row-title">{b.symbol}</div>
-                      <div className="ph-row-sub">{b.token}</div>
-                    </div>
-                    <div className="ph-amount text-[15px]">{b.amount}</div>
-                  </li>
-                ))
-              )}
-            </ul>
+          {/* Network receive shortcuts — Phantom style */}
+          <section className="mb-6">
+            <h2 className="ph-label mb-3">Receive by network</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {(
+                [
+                  { network: "openpay", label: "OpenPay", asset: "OUSD", accent: "bg-violet-500/15 text-violet-300" },
+                  { network: "bitcoin", label: "Bitcoin", asset: "BTC", accent: "bg-orange-500/15 text-orange-300" },
+                  { network: "ethereum", label: "Ethereum", asset: "ETH", accent: "bg-blue-500/15 text-blue-300" },
+                  { network: "solana", label: "Solana", asset: "SOL", accent: "bg-fuchsia-500/15 text-fuchsia-300" },
+                  { network: "pi", label: "Pi Network", asset: "PI", accent: "bg-indigo-500/15 text-indigo-300" },
+                ] as const
+              ).map((n) => (
+                <Link
+                  key={n.network}
+                  to="/wallet/receive"
+                  search={{ network: n.network, asset: n.asset }}
+                  className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 press hover:bg-muted/40"
+                >
+                  <span className={cn("grid h-9 w-9 place-items-center rounded-xl text-[10px] font-bold", n.accent)}>
+                    {n.asset}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{n.label}</span>
+                    <span className="block text-[11px] text-muted-foreground">Receive {n.asset}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
           </section>
 
-          {/* History */}
           <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="ph-label">Activity</h2>
-              <Link to="/wallet/receive" className="text-xs font-bold text-primary">
-                Receive
-              </Link>
-            </div>
+            <h2 className="ph-label mb-3">Tokens</h2>
             <ul className="overflow-hidden rounded-2xl border border-border bg-card">
-              {transactions.length === 0 ? (
-                <li className="px-4 py-8 text-center">
-                  <p className="ph-callout">No transactions yet</p>
-                </li>
-              ) : (
-                transactions.map((tx, i) => (
-                  <li
-                    key={tx.id}
-                    className={cn(
-                      "flex items-center justify-between gap-3 px-4 py-3",
-                      i > 0 && "border-t border-border",
-                    )}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "ph-row-title capitalize",
-                            tx.direction === "deposit"
-                              ? "text-emerald-500"
-                              : "text-amber-500",
-                          )}
-                        >
-                          {tx.direction}
-                        </span>
-                        <span className="ph-row-sub truncate">{tx.token}</span>
-                      </div>
-                      <div className="ph-row-sub">
-                        {timeAgo(tx.created_at)} · {tx.status}
-                        {tx.tx_hash ? ` · ${shortAddress(tx.tx_hash, 4, 4)}` : ""}
-                      </div>
-                    </div>
-                    <div
-                      className={cn(
-                        "shrink-0 text-[15px] font-bold tabular-nums tracking-tight",
-                        tx.direction === "deposit" ? "text-emerald-500" : "text-foreground",
-                      )}
+              {assets.map((a, i) => {
+                const usd = a.balance * (a.priceUsd > 0 ? a.priceUsd : 0);
+                return (
+                  <li key={a.key} className={cn(i > 0 && "border-t border-border")}>
+                    <Link
+                      to="/wallet/receive"
+                      search={
+                        a.key === "ousd" || a.key === "btc" || a.key === "eth" || a.key === "sol" || a.key === "pi"
+                          ? {
+                              network:
+                                a.key === "ousd"
+                                  ? "openpay"
+                                  : a.key === "btc"
+                                    ? "bitcoin"
+                                    : a.key === "eth"
+                                      ? "ethereum"
+                                      : a.key === "sol"
+                                        ? "solana"
+                                        : "pi",
+                              asset: a.symbol as "OUSD" | "BTC" | "ETH" | "SOL" | "PI",
+                            }
+                          : { network: "openpay", asset: "OUSD" }
+                      }
+                      className="flex items-center gap-3 px-4 py-3 press hover:bg-muted/30"
                     >
-                      {tx.direction === "deposit" ? "+" : "-"}
-                      {formatNumber(tx.amount, 4)}
-                    </div>
+                      {a.isOusd ? (
+                        <OusdIcon className="h-10 w-10 shrink-0 rounded-full" />
+                      ) : a.logoUrl ? (
+                        <img src={a.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold">
+                          {a.symbol.slice(0, 2)}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="ph-row-title">{a.symbol}</div>
+                        <div className="ph-row-sub">{a.network}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="ph-amount text-[15px]">
+                          {formatNumber(a.balance, a.balance > 0 && a.balance < 0.01 ? 6 : 4)}
+                        </div>
+                        <div className="ph-row-sub">{formatCurrency(usd, currency)}</div>
+                      </div>
+                    </Link>
                   </li>
-                ))
-              )}
+                );
+              })}
             </ul>
+            <p className="mt-3 px-1 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Tap a token to show its receive QR. Deposits credit your OpenPay Pro ledger balance for that
+              network asset.
+            </p>
           </section>
         </>
-      ) : null}
+      )}
     </div>
   );
 }

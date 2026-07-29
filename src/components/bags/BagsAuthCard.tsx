@@ -88,11 +88,11 @@ export function BagsAuthCard({ className }: Props) {
     return (
       <div
         className={cn(
-          "mb-4 flex items-center gap-3 rounded-2xl bg-muted/60 px-3 py-3 text-sm text-muted-foreground",
+          "mb-4 flex items-center gap-3 rounded-2xl border border-white/5 bg-[#121512] px-3 py-3 text-sm text-muted-foreground",
           className,
         )}
       >
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
         Checking Bags API auth…
       </div>
     );
@@ -102,12 +102,12 @@ export function BagsAuthCard({ className }: Props) {
     return (
       <div
         className={cn(
-          "mb-4 rounded-2xl bg-amber-500/15 px-3 py-3 text-sm text-amber-800 dark:text-amber-100",
+          "mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-3 py-3 text-sm text-amber-100",
           className,
         )}
       >
         <div className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
           <div className="min-w-0 flex-1">
             <div className="font-semibold">Bags API not authenticated</div>
             <p className="mt-0.5 text-xs opacity-90">
@@ -126,7 +126,7 @@ export function BagsAuthCard({ className }: Props) {
               <Button
                 type="button"
                 size="sm"
-                className="h-8 rounded-full"
+                className="h-8 rounded-full bg-emerald-500 text-black hover:bg-emerald-400"
                 disabled={busy}
                 onClick={() => void signInWithBags()}
               >
@@ -145,7 +145,7 @@ export function BagsAuthCard({ className }: Props) {
 
   return (
     <div className={cn("mb-4 space-y-2", className)}>
-      <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 px-3 py-3">
+      <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-3">
         {user.picture ? (
           <img
             src={user.picture}
@@ -153,18 +153,18 @@ export function BagsAuthCard({ className }: Props) {
             className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500/20 text-emerald-300">
             <BadgeCheck className="h-5 w-5" />
           </span>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
             <span>Bags · @{user.username || "unknown"}</span>
-            <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+            <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
               {user.status || "authed"}
             </span>
             {uuidMatch ? (
-              <span className="rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700 dark:text-violet-200">
+              <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
                 UUID match
               </span>
             ) : null}

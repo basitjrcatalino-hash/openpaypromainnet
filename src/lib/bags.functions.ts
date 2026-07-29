@@ -15,17 +15,21 @@ export const bagsPing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const {
-      bagsPingRemote,
       getBagsUserUuid,
       getBagsPartnerConfig,
       getBagsPartnerWallet,
       getBagsPartnerRef,
       getBagsPartnerRefUrl,
-    } = await import("./bags.server");
+      requireBagsApiKey,
+    } = await import("./bags-config.server");
     try {
-      const ping = await bagsPingRemote();
+      requireBagsApiKey();
+      const res = await fetch("https://public-api-v2.bags.fm/ping");
+      if (!res.ok) throw new Error(`Bags ping failed (${res.status})`);
+      const data = (await res.json()) as { message?: string };
       return {
-        ...ping,
+        ok: true as const,
+        message: data.message || "pong",
         configured: true as const,
         userUuid: getBagsUserUuid(),
         partnerConfig: getBagsPartnerConfig(),
@@ -41,28 +45,50 @@ export const bagsPing = createServerFn({ method: "GET" })
 export const bagsAuthMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { getBagsSdk, getBagsUserUuid, getBagsPartnerConfig, getBagsPartnerRefUrl } =
-      await import("./bags.server");
+    const {
+      bagsApiFetch,
+      getBagsUserUuid,
+      getBagsPartnerConfig,
+      getBagsPartnerRefUrl,
+    } = await import("./bags-config.server");
     try {
-      const sdk = getBagsSdk();
-      const me = await sdk.auth.me();
-      const raw = me.user as typeof me.user & {
+      const me = await bagsApiFetch<{
+        user?: {
+          uuid: string;
+          username: string;
+          status: string;
+          pref_name: string;
+          picture: string;
+          points: number;
+          rank: number;
+          primaryWallet?: string;
+          membershipPurchaseWallet?: string;
+        };
+        uuid?: string;
+        username?: string;
+        status?: string;
+        pref_name?: string;
+        picture?: string;
+        points?: number;
+        rank?: number;
         primaryWallet?: string;
         membershipPurchaseWallet?: string;
-      };
+      }>("/auth/me");
+      const raw = me.user ?? me;
+      if (!raw.uuid) throw new Error("Bags auth/me returned no user");
       return {
         ok: true as const,
         configuredUuid: getBagsUserUuid(),
         partnerConfig: getBagsPartnerConfig(),
         partnerRefUrl: getBagsPartnerRefUrl(),
         user: {
-          uuid: raw.uuid,
-          username: raw.username,
-          status: raw.status,
-          pref_name: raw.pref_name,
-          picture: raw.picture,
-          points: raw.points,
-          rank: raw.rank,
+          uuid: String(raw.uuid),
+          username: String(raw.username ?? ""),
+          status: String(raw.status ?? ""),
+          pref_name: String(raw.pref_name ?? ""),
+          picture: String(raw.picture ?? ""),
+          points: Number(raw.points ?? 0),
+          rank: Number(raw.rank ?? 0),
           primaryWallet: raw.primaryWallet || raw.membershipPurchaseWallet || null,
         },
       };
@@ -186,7 +212,7 @@ export const bagsCreateTokenInfo = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const res = await sdk.tokenLaunch.createTokenInfoAndMetadata({
         name: data.name,
         symbol: data.symbol.toUpperCase(),
@@ -226,7 +252,7 @@ export const bagsCreateFeeShareConfig = createServerFn({ method: "POST" })
       "./bags.server"
     );
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const partnerArgs = getBagsPartnerLaunchArgs();
       const result = await sdk.config.createBagsFeeShareConfig({
         payer: pubkey(data.payer, "payer"),
@@ -248,7 +274,7 @@ export const bagsCreateFeeShareConfig = createServerFn({ method: "POST" })
       const seen = new Set<string>();
       const encoded = [];
       for (const tx of flatTxs) {
-        const enc = encodeVersionedTx(tx);
+        const enc = await encodeVersionedTx(tx);
         if (seen.has(enc.txBase64)) continue;
         seen.add(enc.txBase64);
         encoded.push(enc);
@@ -282,7 +308,7 @@ export const bagsCreateLaunchTx = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey, encodeVersionedTx } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const tx = await sdk.tokenLaunch.createLaunchTransaction({
         metadataUrl: data.metadataUrl,
         tokenMint: pubkey(data.tokenMint, "token mint"),
@@ -292,7 +318,7 @@ export const bagsCreateLaunchTx = createServerFn({ method: "POST" })
       });
       return {
         ok: true as const,
-        transaction: encodeVersionedTx(tx),
+        transaction: await encodeVersionedTx(tx),
       };
     } catch (err) {
       bagsError(err);
@@ -315,7 +341,7 @@ export const bagsGetQuote = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const quote = await sdk.trade.getQuote({
         inputMint: pubkey(data.inputMint, "input mint"),
         outputMint: pubkey(data.outputMint, "output mint"),
@@ -342,14 +368,14 @@ export const bagsCreateSwapTx = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey, encodeVersionedTx } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const swap = await sdk.trade.createSwapTransaction({
         quoteResponse: data.quote as never,
         userPublicKey: pubkey(data.userPublicKey, "wallet"),
       });
       return {
         ok: true as const,
-        transaction: encodeVersionedTx(swap.transaction),
+        transaction: await encodeVersionedTx(swap.transaction),
         computeUnitLimit: swap.computeUnitLimit,
         lastValidBlockHeight: swap.lastValidBlockHeight,
         prioritizationFeeLamports: swap.prioritizationFeeLamports,
@@ -372,14 +398,14 @@ export const bagsGetClaimTxs = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey, encodeAnyTx } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const txs = await sdk.fee.getClaimTransactions(
         pubkey(data.wallet, "wallet"),
         pubkey(data.tokenMint, "token mint"),
       );
       return {
         ok: true as const,
-        transactions: (txs ?? []).map((tx) => encodeAnyTx(tx)),
+        transactions: await Promise.all((txs ?? []).map((tx) => encodeAnyTx(tx))),
       };
     } catch (err) {
       bagsError(err);
@@ -392,7 +418,7 @@ export const bagsGetClaimablePositions = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const positions = await sdk.fee.getAllClaimablePositions(pubkey(data.wallet, "wallet"));
       return {
         ok: true as const,
@@ -421,7 +447,7 @@ export const bagsTokenFees = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const mint = pubkey(data.tokenMint, "token mint");
       const [lifetimeFees, creators, claimStats] = await Promise.all([
         sdk.state.getTokenLifetimeFees(mint),
@@ -454,7 +480,7 @@ export const bagsTokenCreators = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const creators = await sdk.state.getTokenCreators(pubkey(data.tokenMint, "token mint"));
       return {
         ok: true as const,
@@ -472,22 +498,26 @@ export const bagsTokenCreators = createServerFn({ method: "POST" })
 export const bagsTopTokens = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { getBagsSdk } = await import("./bags.server");
+    const { bagsApiFetch } = await import("./bags-config.server");
     try {
-      const sdk = getBagsSdk();
-      const tokens = await sdk.state.getTopTokensByLifetimeFees();
+      const feed = await bagsApiFetch<
+        Array<{
+          tokenMint: string;
+          name: string;
+          symbol: string;
+          image: string;
+          status?: string;
+        }>
+      >("/token-launch/feed");
       return {
         ok: true as const,
-        tokens: tokens.map((t) => {
-          const row = t as Record<string, unknown>;
-          return {
-            tokenMint: String(row.tokenMint ?? row.mint ?? ""),
-            name: row.name != null ? String(row.name) : "",
-            symbol: row.symbol != null ? String(row.symbol) : "",
-            lifetimeFees: String(row.lifetimeFees ?? row.totalFees ?? ""),
-            image: row.image != null ? String(row.image) : "",
-          };
-        }),
+        tokens: (feed ?? []).slice(0, 24).map((t) => ({
+          tokenMint: String(t.tokenMint ?? ""),
+          name: t.name != null ? String(t.name) : "",
+          symbol: t.symbol != null ? String(t.symbol) : "",
+          lifetimeFees: t.status != null ? String(t.status) : "",
+          image: t.image != null ? String(t.image) : "",
+        })),
       };
     } catch (err) {
       bagsError(err);
@@ -501,38 +531,51 @@ export const bagsPartnerStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const {
-      getBagsSdk,
+      bagsApiFetch,
       getBagsUserUuid,
       getBagsPartnerConfig,
       getBagsPartnerWallet,
       getBagsPartnerRef,
       getBagsPartnerRefUrl,
-      pubkey,
-    } = await import("./bags.server");
+    } = await import("./bags-config.server");
     try {
-      const sdk = getBagsSdk();
-      const me = await sdk.auth.me().catch(() => null);
+      const me = await bagsApiFetch<{
+        user: {
+          uuid: string;
+          username: string;
+          status: string;
+          pref_name: string;
+          primaryWallet?: string;
+          membershipPurchaseWallet?: string;
+        };
+      }>("/auth/me").catch(() => null);
+
       const configuredWallet = getBagsPartnerWallet();
       const partnerWallet =
         data.partnerWallet?.trim() ||
         configuredWallet ||
-        (me?.user as { primaryWallet?: string } | undefined)?.primaryWallet ||
+        me?.user?.primaryWallet ||
+        me?.user?.membershipPurchaseWallet ||
         null;
 
-      let hasPartnerConfig = false;
+      let hasPartnerConfig = Boolean(getBagsPartnerConfig());
       let partnerBps: number | null = null;
       let claimStats: { claimedFees: string; unclaimedFees: string } | null = null;
       if (partnerWallet) {
-        const partner = pubkey(partnerWallet, "partner wallet");
-        const partnerConfig = await sdk.partner.getPartnerConfig(partner).catch(() => null);
-        hasPartnerConfig = Boolean(partnerConfig);
-        if (partnerConfig) partnerBps = partnerConfig.bps;
-        const stats = await sdk.partner.getPartnerConfigClaimStats(partner).catch(() => null);
-        if (stats) {
+        try {
+          const stats = await bagsApiFetch<{
+            claimedFees: string;
+            unclaimedFees: string;
+          }>(
+            `/fee-share/partner-config/stats?partner=${encodeURIComponent(partnerWallet)}`,
+          );
+          hasPartnerConfig = true;
           claimStats = {
             claimedFees: String(stats.claimedFees),
             unclaimedFees: String(stats.unclaimedFees),
           };
+        } catch {
+          // Partner config may not exist yet for this wallet
         }
       }
       return {
@@ -565,13 +608,15 @@ export const bagsClaimPartnerFees = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey, encodeVersionedTx } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const txs = await sdk.partner.getPartnerConfigClaimTransactions(
         pubkey(data.partnerWallet, "partner wallet"),
       );
       return {
         ok: true as const,
-        transactions: (txs ?? []).map((item) => encodeVersionedTx(item.transaction)),
+        transactions: await Promise.all(
+          (txs ?? []).map((item) => encodeVersionedTx(item.transaction)),
+        ),
       };
     } catch (err) {
       bagsError(err);
@@ -584,13 +629,13 @@ export const bagsCreatePartnerConfigTx = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getBagsSdk, pubkey, encodeVersionedTx } = await import("./bags.server");
     try {
-      const sdk = getBagsSdk();
+      const sdk = await getBagsSdk();
       const res = await sdk.partner.getPartnerConfigCreationTransaction(
         pubkey(data.partnerWallet, "partner wallet"),
       );
       return {
         ok: true as const,
-        transaction: encodeVersionedTx(res.transaction),
+        transaction: await encodeVersionedTx(res.transaction),
       };
     } catch (err) {
       bagsError(err);

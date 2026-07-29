@@ -28,7 +28,14 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
-import { executeOpenDexSwap, OUSD_SWAP_ID, PI_SWAP_ID } from "@/lib/opendex.functions";
+import {
+  executeOpenDexSwap,
+  OUSD_SWAP_ID,
+  PI_SWAP_ID,
+  BTC_SWAP_ID,
+  ETH_SWAP_ID,
+  SOL_SWAP_ID,
+} from "@/lib/opendex.functions";
 import {
   applyOpenDexFee,
   OPENDEX_SWAP_FEE_BPS,
@@ -39,14 +46,23 @@ import {
   SWAP_NETWORKS,
   type SwapNetworkId,
 } from "@/lib/swap-networks";
-import { fetchMajorMarkets, getMajorToken, majorMarketById } from "@/lib/major-tokens";
+import {
+  fetchMajorMarkets,
+  majorMarketById,
+  MAJOR_TOKEN_IDS,
+  MAJOR_TOKENS,
+} from "@/lib/major-tokens";
+import {
+  majorForNetwork,
+  type LedgerMajorId,
+} from "@/lib/ledger-majors";
 
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
 const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
-  asset: z.enum(["OUSD", "PI"]).optional(),
+  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL"]).optional(),
 });
 
 type SwapToken = {
@@ -59,6 +75,8 @@ type SwapToken = {
   is_verified?: boolean | null;
   isOusd?: boolean;
   isPi?: boolean;
+  majorId?: LedgerMajorId;
+  network?: SwapNetworkId;
 };
 
 const OUSD_TOKEN: SwapToken = {
@@ -70,9 +88,15 @@ const OUSD_TOKEN: SwapToken = {
   status: "quote",
   is_verified: true,
   isOusd: true,
+  network: "openpay",
 };
 
-const PI_DEF = getMajorToken("pi")!;
+const MAJOR_SWAP_IDS = {
+  btc: BTC_SWAP_ID,
+  eth: ETH_SWAP_ID,
+  sol: SOL_SWAP_ID,
+  pi: PI_SWAP_ID,
+} as const;
 
 export const Route = createFileRoute("/_authenticated/swap")({
   head: () => ({ meta: [{ title: "OpenDEX — OpenPay Pro" }] }),
@@ -106,7 +130,12 @@ function OpenDexPage() {
         .order("market_cap", { ascending: false });
       if (error) throw error;
       return (data ?? []).filter(
-        (t) => t.symbol !== "OUSD" && t.symbol !== "PI",
+        (t) =>
+          t.symbol !== "OUSD" &&
+          t.symbol !== "PI" &&
+          t.symbol !== "BTC" &&
+          t.symbol !== "ETH" &&
+          t.symbol !== "SOL",
       ) as SwapToken[];
     },
   });
@@ -117,19 +146,33 @@ function OpenDexPage() {
     queryFn: fetchMajorMarkets,
   });
 
-  const piToken: SwapToken = useMemo(() => {
-    const m = majorMarketById(majorMarkets, "pi");
-    return {
-      id: PI_SWAP_ID,
-      name: PI_DEF.name,
-      symbol: "PI",
-      price_usd: m.price > 0 ? m.price : 0.079,
-      logo_url: PI_DEF.logoUrl,
-      status: "quote",
-      is_verified: true,
-      isPi: true,
-    };
+  const majorTokens: SwapToken[] = useMemo(() => {
+    return MAJOR_TOKEN_IDS.map((id) => {
+      const def = MAJOR_TOKENS[id];
+      const m = majorMarketById(majorMarkets, id);
+      return {
+        id: MAJOR_SWAP_IDS[id],
+        name: def.name,
+        symbol: def.symbol,
+        price_usd: m.price > 0 ? m.price : 0,
+        logo_url: def.logoUrl,
+        status: "quote",
+        is_verified: true,
+        isPi: id === "pi",
+        majorId: id,
+        network:
+          id === "btc"
+            ? "bitcoin"
+            : id === "eth"
+              ? "ethereum"
+              : id === "sol"
+                ? "solana"
+                : "pi",
+      } satisfies SwapToken;
+    });
   }, [majorMarkets]);
+
+  const piToken = majorTokens.find((t) => t.majorId === "pi")!;
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -137,7 +180,7 @@ function OpenDexPage() {
       (
         await supabase
           .from("wallets")
-          .select("id, ousd_balance, pi_balance")
+          .select("id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance")
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
@@ -163,87 +206,89 @@ function OpenDexPage() {
     const map = new Map<string, number>();
     map.set(OUSD_SWAP_ID, Number(wallet?.ousd_balance ?? 0));
     map.set(PI_SWAP_ID, Number(wallet?.pi_balance ?? 0));
+    map.set(BTC_SWAP_ID, Number(wallet?.btc_balance ?? 0));
+    map.set(ETH_SWAP_ID, Number(wallet?.eth_balance ?? 0));
+    map.set(SOL_SWAP_ID, Number(wallet?.sol_balance ?? 0));
     for (const h of holdings) map.set(h.token_id, Number(h.balance ?? 0));
     return map;
   }, [wallet, holdings]);
 
-  const fromTokens = useMemo(() => {
-    const held = dbTokens.filter((t) => (balanceMap.get(t.id) ?? 0) > 0);
-    const list: SwapToken[] = [OUSD_TOKEN, piToken, ...held];
-    return list;
-  }, [dbTokens, balanceMap, piToken]);
+  const tokensForNetwork = useMemo(() => {
+    const majorOnNet = majorForNetwork(network);
+    if (network === "openpay") {
+      return [OUSD_TOKEN, ...majorTokens, ...dbTokens];
+    }
+    const majorTok = majorTokens.find((t) => t.majorId === majorOnNet);
+    return majorTok ? [OUSD_TOKEN, majorTok] : [OUSD_TOKEN];
+  }, [network, majorTokens, dbTokens]);
 
-  const toTokens = useMemo(() => {
-    const sorted = [...dbTokens].sort((a, b) => {
-      const ah = (balanceMap.get(a.id) ?? 0) > 0 ? 1 : 0;
-      const bh = (balanceMap.get(b.id) ?? 0) > 0 ? 1 : 0;
-      if (ah !== bh) return bh - ah;
-      const ag = a.status === "graduated" ? 1 : 0;
-      const bg = b.status === "graduated" ? 1 : 0;
-      return bg - ag;
-    });
-    return [OUSD_TOKEN, piToken, ...sorted];
-  }, [dbTokens, balanceMap, piToken]);
+  const fromTokens = useMemo(() => {
+    return tokensForNetwork.filter(
+      (t) => t.isOusd || (balanceMap.get(t.id) ?? 0) > 0 || t.majorId,
+    );
+  }, [tokensForNetwork, balanceMap]);
+
+  const toTokens = useMemo(() => tokensForNetwork, [tokensForNetwork]);
 
   const allTokens = useMemo(() => {
     const map = new Map<string, SwapToken>();
     map.set(OUSD_SWAP_ID, OUSD_TOKEN);
-    map.set(PI_SWAP_ID, piToken);
+    for (const t of majorTokens) map.set(t.id, t);
     for (const t of dbTokens) map.set(t.id, t);
     return map;
-  }, [dbTokens, piToken]);
+  }, [dbTokens, majorTokens]);
 
   useEffect(() => {
     if (initialized) return;
-    // Wait for wallet query at least; tokens can be empty on fresh installs
     if (wallet === undefined) return;
 
+    const assetToId: Record<string, string> = {
+      OUSD: OUSD_SWAP_ID,
+      PI: PI_SWAP_ID,
+      BTC: BTC_SWAP_ID,
+      ETH: ETH_SWAP_ID,
+      SOL: SOL_SWAP_ID,
+    };
+
     const prefFromAsset =
-      assetParam === "PI"
-        ? piToken
-        : assetParam === "OUSD"
-          ? OUSD_TOKEN
-          : null;
+      assetParam && assetToId[assetParam]
+        ? allTokens.get(assetToId[assetParam]) ?? null
+        : null;
+
     const prefFromToken = tokenParam
-      ? tokenParam === PI_SWAP_ID || tokenParam === "pi"
-        ? piToken
-        : tokenParam === OUSD_SWAP_ID || tokenParam === "ousd"
-          ? OUSD_TOKEN
-          : dbTokens.find((t) => t.id === tokenParam)
+      ? tokenParam === "ousd" || tokenParam === OUSD_SWAP_ID
+        ? OUSD_TOKEN
+        : tokenParam === "btc" || tokenParam === BTC_SWAP_ID
+          ? allTokens.get(BTC_SWAP_ID)
+          : tokenParam === "eth" || tokenParam === ETH_SWAP_ID
+            ? allTokens.get(ETH_SWAP_ID)
+            : tokenParam === "sol" || tokenParam === SOL_SWAP_ID
+              ? allTokens.get(SOL_SWAP_ID)
+              : tokenParam === "pi" || tokenParam === PI_SWAP_ID
+                ? allTokens.get(PI_SWAP_ID)
+                : dbTokens.find((t) => t.id === tokenParam)
       : null;
+
     const pref =
       prefFromAsset ||
       prefFromToken ||
       fromTokens.find((t) => t.id !== OUSD_SWAP_ID && (balanceMap.get(t.id) ?? 0) > 0) ||
-      dbTokens.find((t) => t.status === "graduated") ||
-      dbTokens[0] ||
+      majorTokens.find((t) => t.majorId === "btc") ||
       piToken;
 
     const ousdBal = Number(wallet?.ousd_balance ?? 0);
-    const wantPi = assetParam === "PI" || tokenParam === "pi" || tokenParam === PI_SWAP_ID;
+    const targetId = pref?.id && pref.id !== OUSD_SWAP_ID ? pref.id : BTC_SWAP_ID;
+    const targetBal = balanceMap.get(targetId) ?? 0;
 
-    if (wantPi) {
-      const piBal = Number(wallet?.pi_balance ?? 0);
-      if (piBal > 0) {
-        setFrom(PI_SWAP_ID);
-        setTo(OUSD_SWAP_ID);
-      } else {
-        setFrom(OUSD_SWAP_ID);
-        setTo(PI_SWAP_ID);
-      }
-    } else if (ousdBal > 0) {
-      setFrom(OUSD_SWAP_ID);
-      setTo(
-        pref?.id && pref.id !== OUSD_SWAP_ID
-          ? pref.id
-          : PI_SWAP_ID,
-      );
-    } else if (pref && (balanceMap.get(pref.id) ?? 0) > 0) {
-      setFrom(pref.id);
+    if (targetBal > 0 && ousdBal <= 0) {
+      setFrom(targetId);
       setTo(OUSD_SWAP_ID);
     } else {
       setFrom(OUSD_SWAP_ID);
-      setTo(pref?.id && pref.id !== OUSD_SWAP_ID ? pref.id : PI_SWAP_ID);
+      setTo(targetId);
+    }
+    if (pref?.network && pref.network !== "openpay") {
+      setNetwork(pref.network);
     }
     setInitialized(true);
   }, [
@@ -255,6 +300,8 @@ function OpenDexPage() {
     fromTokens,
     balanceMap,
     piToken,
+    allTokens,
+    majorTokens,
   ]);
 
   const fromToken = allTokens.get(from);
@@ -277,7 +324,7 @@ function OpenDexPage() {
   const minOut = netOutput * (1 - slippage / 100);
   const feeUsd = feeOut * (Number(toToken?.price_usd) || 0);
   const samePair = !!from && !!to && from === to;
-  const needsOusd = from !== OUSD_SWAP_ID && to !== OUSD_SWAP_ID;
+  const needsOusd = false;
 
   function pickFrom(id: string) {
     setFrom(id);
@@ -343,10 +390,6 @@ function OpenDexPage() {
       toast.error("Select two different tokens");
       return;
     }
-    if (needsOusd) {
-      toast.error("OpenDEX pairs must include OUSD");
-      return;
-    }
     if (amt <= 0) {
       toast.error("Enter a valid amount");
       return;
@@ -386,7 +429,6 @@ function OpenDexPage() {
     !!fromToken &&
     !!toToken &&
     !samePair &&
-    !needsOusd &&
     amt <= fromBal + 1e-12 &&
     !!wallet?.id;
 
@@ -481,10 +523,8 @@ function OpenDexPage() {
         </div>
       </div>
 
-      {(samePair || needsOusd) && (
-        <p className="text-center text-xs text-destructive">
-          {samePair ? "Choose different tokens" : "One side must be OUSD"}
-        </p>
+      {samePair && (
+        <p className="text-center text-xs text-destructive">Choose different tokens</p>
       )}
 
       <Button
@@ -497,7 +537,7 @@ function OpenDexPage() {
           ? "Create a wallet first"
           : !fromToken || !toToken
             ? "Select tokens"
-            : samePair || needsOusd
+            : samePair
               ? "Invalid pair"
               : amt > fromBal
                 ? `Insufficient ${fromToken.symbol}`
@@ -712,16 +752,14 @@ function TokenPickerDialog({
   balances: Map<string, number>;
 }) {
   const [q, setQ] = useState("");
-  const live = network === "openpay";
 
   const filtered = useMemo(() => {
-    if (!live) return [];
     const qq = q.trim().toLowerCase();
     if (!qq) return tokens;
     return tokens.filter(
       (t) => t.symbol.toLowerCase().includes(qq) || t.name.toLowerCase().includes(qq),
     );
-  }, [tokens, q, live]);
+  }, [tokens, q]);
 
   return (
     <Dialog
@@ -755,14 +793,7 @@ function TokenPickerDialog({
                 <button
                   key={n.id}
                   type="button"
-                  onClick={() => {
-                    onNetworkChange(n.id);
-                    if (n.status === "soon") {
-                      toast.message(`${n.label} coming soon`, {
-                        description: "OpenDEX will support this network in a future update.",
-                      });
-                    }
-                  }}
+                  onClick={() => onNetworkChange(n.id)}
                   className={cn(
                     "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold press",
                     active
@@ -771,7 +802,6 @@ function TokenPickerDialog({
                   )}
                 >
                   {n.label}
-                  {n.status === "soon" ? " · Soon" : ""}
                 </button>
               );
             })}
@@ -779,24 +809,7 @@ function TokenPickerDialog({
         </div>
 
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
-          {!live ? (
-            <div className="rounded-2xl bg-muted/60 px-4 py-10 text-center">
-              <p className="text-sm font-medium text-foreground">
-                {SWAP_NETWORKS.find((n) => n.id === network)?.label} not live yet
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Switch back to OpenPay to swap with your wallet balances.
-              </p>
-              <Button
-                type="button"
-                variant="secondary"
-                className="mt-4 rounded-full"
-                onClick={() => onNetworkChange("openpay")}
-              >
-                Use OpenPay
-              </Button>
-            </div>
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               {emptyHint ?? "No tokens found"}
             </div>

@@ -1,12 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  fetchMajorUsdPrices,
+  majorIdFromAssetCode,
+  type LedgerMajorId,
+} from "@/lib/ledger-majors";
 
 const SendSchema = z
   .object({
     to: z.string().trim().min(2).max(120),
     amount: z.number().positive().max(1e15),
-    asset: z.enum(["OUSD", "PI", "TOKEN"]),
+    asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "TOKEN"]),
     tokenId: z.string().uuid().optional().nullable(),
     memo: z.string().max(140).optional().nullable(),
   })
@@ -26,6 +31,9 @@ function isWalletAddress(to: string): boolean {
 
 function round8(n: number) {
   return Math.round(n * 1e8) / 1e8;
+}
+function round12(n: number) {
+  return Math.round(n * 1e12) / 1e12;
 }
 
 async function trySupabaseAdmin() {
@@ -62,9 +70,11 @@ async function resolveRecipientAddress(
     if (resolved) return resolved;
   }
 
-  // Fall through: treat as raw counterparty (external / OP username string)
   return trimmed.replace(/^@+/, "");
 }
+
+const WALLET_SELECT =
+  "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance";
 
 export const sendAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -72,19 +82,18 @@ export const sendAsset = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { to: toInput, amount, asset, tokenId, memo } = data;
-    const amt = round8(amount);
+    const amt = asset === "OUSD" || asset === "TOKEN" ? round8(amount) : round12(amount);
 
     const toAddress = await resolveRecipientAddress(supabase, toInput);
 
     const { fetchActiveWallet } = await import("./wallet-utils");
-    const wallet = await fetchActiveWallet<{
-      id: string;
-      address: string;
-      ousd_balance?: number | null;
-      pi_balance?: number | null;
-    }>(supabase, userId);
+    const wallet = await fetchActiveWallet<Record<string, unknown> & { id: string; address: string }>(
+      supabase,
+      userId,
+      WALLET_SELECT,
+    );
     if (!wallet) throw new Error("Active wallet not found");
-    if (toAddress.toLowerCase() === wallet.address.toLowerCase()) {
+    if (toAddress.toLowerCase() === String(wallet.address).toLowerCase()) {
       throw new Error("Cannot send to your own address");
     }
 
@@ -92,7 +101,7 @@ export const sendAsset = createServerFn({ method: "POST" })
       return sendOpenToken({
         supabase,
         admin: await trySupabaseAdmin(),
-        wallet,
+        wallet: { id: wallet.id, address: String(wallet.address) },
         toAddress,
         tokenId: tokenId!,
         amount: amt,
@@ -100,71 +109,147 @@ export const sendAsset = createServerFn({ method: "POST" })
       });
     }
 
-    const curO = Number(wallet.ousd_balance ?? 0);
-    const curP = Number(wallet.pi_balance ?? 0);
-    const cur = asset === "OUSD" ? curO : curP;
-    if (cur + 1e-12 < amt) throw new Error(`Insufficient ${asset} balance`);
-
-    const senderPatch =
-      asset === "OUSD"
-        ? { ousd_balance: round8(curO - amt) }
-        : { pi_balance: round8(curP - amt) };
-    const { error: updErr } = await supabase
-      .from("wallets")
-      .update(senderPatch)
-      .eq("id", wallet.id);
-    if (updErr) throw updErr;
-
-    const usd = asset === "OUSD" ? amt : amt * 32.5;
-
-    let credited = false;
-    const admin = await trySupabaseAdmin();
-    if (admin && isWalletAddress(toAddress)) {
-      try {
-        const { data: rcpt } = await admin
-          .from("wallets")
-          .select("*")
-          .eq("address", toAddress)
-          .maybeSingle();
-        if (rcpt) {
-          const rO = Number(rcpt.ousd_balance ?? 0);
-          const rP = Number(rcpt.pi_balance ?? 0);
-          const rcptPatch =
-            asset === "OUSD"
-              ? { ousd_balance: round8(rO + amt) }
-              : { pi_balance: round8(rP + amt) };
-          await admin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
-          await admin.from("transactions").insert({
-            wallet_id: rcpt.id,
-            type: "receive",
-            status: "confirmed",
-            token_symbol: asset,
-            counterparty: wallet.address,
-            amount: amt,
-            usd_value: usd,
-            memo: memo ?? null,
-          });
-          credited = true;
-        }
-      } catch (e) {
-        console.error("recipient credit failed", e);
-      }
+    if (asset === "OUSD") {
+      return sendLedgerNative({
+        supabase,
+        admin: await trySupabaseAdmin(),
+        wallet,
+        toAddress,
+        asset: "OUSD",
+        major: null,
+        amount: amt,
+        memo: memo ?? null,
+        userId,
+      });
     }
 
-    const { error: txErr } = await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "send",
-      status: "confirmed",
-      token_symbol: asset,
-      counterparty: toAddress,
+    const major = majorIdFromAssetCode(asset);
+    if (!major) throw new Error("Unsupported asset");
+    return sendLedgerNative({
+      supabase,
+      admin: await trySupabaseAdmin(),
+      wallet,
+      toAddress,
+      asset,
+      major,
       amount: amt,
-      usd_value: usd,
       memo: memo ?? null,
+      userId,
     });
-    if (txErr) throw txErr;
-
-    return { ok: true, credited, resolvedTo: toAddress, symbol: asset };
   });
+
+async function sendLedgerNative(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any;
+  wallet: Record<string, unknown> & { id: string; address: string };
+  toAddress: string;
+  asset: string;
+  major: LedgerMajorId | null;
+  amount: number;
+  memo: string | null;
+  userId: string;
+}) {
+  const { supabase, admin, wallet, toAddress, asset, major, amount, memo, userId } = opts;
+  const cur = major
+    ? Number(
+        major === "btc"
+          ? wallet.btc_balance
+          : major === "eth"
+            ? wallet.eth_balance
+            : major === "sol"
+              ? wallet.sol_balance
+              : wallet.pi_balance,
+      )
+    : Number(wallet.ousd_balance ?? 0);
+  if (cur + 1e-12 < amount) throw new Error(`Insufficient ${asset} balance`);
+
+  const next = major ? round12(cur - amount) : round8(cur - amount);
+  const senderPatch = major
+    ? major === "btc"
+      ? { btc_balance: next }
+      : major === "eth"
+        ? { eth_balance: next }
+        : major === "sol"
+          ? { sol_balance: next }
+          : { pi_balance: next }
+    : { ousd_balance: next };
+  const { error: updErr } = await supabase
+    .from("wallets")
+    .update(senderPatch)
+    .eq("id", wallet.id)
+    .eq("user_id", userId);
+  if (updErr) throw updErr;
+
+  let usd = amount;
+  if (major) {
+    const prices = await fetchMajorUsdPrices([major]);
+    usd = round8(amount * (prices[major] || 0));
+  }
+
+  let credited = false;
+  if (admin && isWalletAddress(toAddress)) {
+    try {
+      const { data: rcpt } = await admin
+        .from("wallets")
+        .select(WALLET_SELECT)
+        .eq("address", toAddress)
+        .maybeSingle();
+      if (rcpt) {
+        const rCur = major
+          ? Number(
+              major === "btc"
+                ? rcpt.btc_balance
+                : major === "eth"
+                  ? rcpt.eth_balance
+                  : major === "sol"
+                    ? rcpt.sol_balance
+                    : rcpt.pi_balance,
+            )
+          : Number(rcpt.ousd_balance ?? 0);
+        const rNext = major ? round12(rCur + amount) : round8(rCur + amount);
+        const rcptPatch = major
+          ? major === "btc"
+            ? { btc_balance: rNext }
+            : major === "eth"
+              ? { eth_balance: rNext }
+              : major === "sol"
+                ? { sol_balance: rNext }
+                : { pi_balance: rNext }
+          : { ousd_balance: rNext };
+        await admin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
+        await admin.from("transactions").insert({
+          wallet_id: rcpt.id,
+          type: "receive",
+          status: "confirmed",
+          token_symbol: asset,
+          counterparty: wallet.address,
+          amount,
+          usd_value: usd,
+          memo,
+        });
+        credited = true;
+      }
+    } catch (e) {
+      console.error("recipient credit failed", e);
+    }
+  }
+
+  const { error: txErr } = await supabase.from("transactions").insert({
+    wallet_id: wallet.id,
+    type: "send",
+    status: "confirmed",
+    token_symbol: asset,
+    counterparty: toAddress,
+    amount,
+    usd_value: usd,
+    memo,
+  });
+  if (txErr) throw txErr;
+
+  return { ok: true, credited, resolvedTo: toAddress, symbol: asset };
+}
 
 async function sendOpenToken(opts: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,7 +309,6 @@ async function sendOpenToken(opts: {
     .maybeSingle();
   if (rcptErr) throw new Error(rcptErr.message);
   if (!rcpt) {
-    // Roll back sender debit — recipient must be on-app for token transfers
     await supabase
       .from("token_holdings")
       .update({ balance: bal, updated_at: new Date().toISOString() })
@@ -283,46 +367,5 @@ async function sendOpenToken(opts: {
   });
   if (txErr) throw new Error(txErr.message);
 
-  return { ok: true as const, credited: true, resolvedTo: toAddress, symbol };
+  return { ok: true, credited: true, resolvedTo: toAddress, symbol };
 }
-
-const TopUpSchema = z.object({
-  amount: z.number().positive().max(1_000_000),
-  method: z.enum(["openpay", "card", "bank"]),
-  reference: z.string().max(80).optional().nullable(),
-});
-
-export const topUpOUSD = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => TopUpSchema.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { amount, method, reference } = data;
-
-    const { fetchActiveWallet } = await import("./wallet-utils");
-    const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
-      supabase,
-      userId,
-    );
-    if (!wallet) throw new Error("Active wallet not found");
-
-    const nb = Number(wallet.ousd_balance ?? 0) + amount;
-    const { error: uErr } = await supabase
-      .from("wallets")
-      .update({ ousd_balance: nb })
-      .eq("id", wallet.id);
-    if (uErr) throw uErr;
-
-    await supabase.from("transactions").insert({
-      wallet_id: wallet.id,
-      type: "buy",
-      status: "confirmed",
-      token_symbol: "OUSD",
-      counterparty: `${method}:${reference ?? "openpay"}`,
-      amount,
-      usd_value: amount,
-      memo: `Top-up via ${method}`,
-    });
-
-    return { ok: true, balance: nb };
-  });

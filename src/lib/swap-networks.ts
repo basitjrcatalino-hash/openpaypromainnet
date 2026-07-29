@@ -1,11 +1,11 @@
-/** Networks available in OpenDEX token pickers. Only OpenPay is live today. */
+/** Networks available in OpenDEX token pickers. */
 export type SwapNetworkId = "openpay" | "solana" | "ethereum" | "bitcoin" | "pi";
 
 export type SwapNetwork = {
   id: SwapNetworkId;
   label: string;
   short: string;
-  /** Live = tokens selectable; soon = UI only until chain rails ship. */
+  /** Live = tokens selectable. */
   status: "live" | "soon";
   accent: string;
 };
@@ -22,28 +22,28 @@ export const SWAP_NETWORKS: SwapNetwork[] = [
     id: "solana",
     label: "Solana",
     short: "SOL",
-    status: "soon",
+    status: "live",
     accent: "#9945FF",
   },
   {
     id: "ethereum",
     label: "Ethereum",
     short: "ETH",
-    status: "soon",
+    status: "live",
     accent: "#627EEA",
   },
   {
     id: "bitcoin",
     label: "Bitcoin",
     short: "BTC",
-    status: "soon",
+    status: "live",
     accent: "#F7931A",
   },
   {
     id: "pi",
     label: "Pi Network",
     short: "PI",
-    status: "soon",
+    status: "live",
     accent: "#6B4EFF",
   },
 ];

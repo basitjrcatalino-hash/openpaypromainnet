@@ -26,7 +26,6 @@ import {
   CircleDollarSign,
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -34,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import { BagsCashIcon } from "@/components/bags/BagsCashIcon";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -66,7 +66,7 @@ const NAV = [
   { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "OpenToken", icon: BookOpen },
-  { to: "/bags", label: "Bags", icon: Sparkles },
+  { to: "/bags", label: "Bags Cash", icon: BagsCashIcon },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -262,6 +262,7 @@ function AuthenticatedLayout() {
               {NAV.map((item) => {
                 const Icon = item.icon;
                 const active = navActive(pathname, item.to);
+                const bags = item.to === "/bags";
                 return (
                   <Link
                     key={item.to}
@@ -269,13 +270,17 @@ function AuthenticatedLayout() {
                     preload="intent"
                     className={cn(
                       "flex h-full min-w-17 flex-1 flex-col items-center justify-center gap-1 ph-tab-label press",
-                      active ? "text-primary" : "text-muted-foreground",
+                      active
+                        ? bags
+                          ? "text-emerald-400"
+                          : "text-primary"
+                        : "text-muted-foreground",
                     )}
                   >
                     <span
                       className={cn(
                         "grid h-8 w-12 place-items-center rounded-full transition-colors",
-                        active && "bg-primary/15",
+                        active && (bags ? "bg-emerald-500/15" : "bg-primary/15"),
                       )}
                     >
                       <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2 : 1.75} />
@@ -316,6 +321,7 @@ function CollapsedSidebar({ pathname, onExpand }: { pathname: string; onExpand: 
       </button>
       {NAV.map((item) => {
         const active = navActive(pathname, item.to);
+        const bags = item.to === "/bags";
         return (
           <Link
             key={item.to}
@@ -323,7 +329,9 @@ function CollapsedSidebar({ pathname, onExpand }: { pathname: string; onExpand: 
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
               active
-                ? "bg-primary/15 text-primary"
+                ? bags
+                  ? "bg-emerald-500/15 text-emerald-400"
+                  : "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
             title={item.label}
@@ -503,6 +511,7 @@ function SidebarInner({
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = navActive(pathname, item.to);
+          const bags = item.to === "/bags";
           return (
             <Link
               key={item.to}
@@ -512,7 +521,9 @@ function SidebarInner({
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
                 active
-                  ? "bg-primary/15 text-primary"
+                  ? bags
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-primary/15 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
             >

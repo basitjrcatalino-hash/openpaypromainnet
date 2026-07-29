@@ -26,6 +26,8 @@ import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
+import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
 import {
   isSystemCounterparty,
   loadRecentRecipients,
@@ -36,7 +38,7 @@ import {
 const sendSearchSchema = z.object({
   to: z.string().optional(),
   amount: z.string().optional(),
-  asset: z.enum(["OUSD", "PI"]).optional(),
+  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL"]).optional(),
   token: z.string().uuid().optional(),
   rail: z.enum(["wallet", "openpay"]).optional(),
 });
@@ -52,7 +54,7 @@ type Step = "asset" | "recipient" | "amount" | "review";
 
 type SendableAsset = {
   key: string;
-  kind: "OUSD" | "PI" | "TOKEN";
+  kind: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "TOKEN";
   tokenId?: string;
   name: string;
   symbol: string;
@@ -178,17 +180,59 @@ function SendPage() {
         logoUrl: null,
       },
     ];
-    const piBal = Number(wallet?.pi_balance ?? 0);
-    if (piBal > 0) {
-      list.push({
+    const majors: Array<{
+      key: "BTC" | "ETH" | "SOL" | "PI";
+      kind: "BTC" | "ETH" | "SOL" | "PI";
+      name: string;
+      bal: number;
+      price: number;
+      logo: string;
+    }> = [
+      {
+        key: "BTC",
+        kind: "BTC",
+        name: MAJOR_TOKENS.btc.name,
+        bal: Number(wallet?.btc_balance ?? 0),
+        price: 65000,
+        logo: MAJOR_TOKENS.btc.logoUrl,
+      },
+      {
+        key: "ETH",
+        kind: "ETH",
+        name: MAJOR_TOKENS.eth.name,
+        bal: Number(wallet?.eth_balance ?? 0),
+        price: 1920,
+        logo: MAJOR_TOKENS.eth.logoUrl,
+      },
+      {
+        key: "SOL",
+        kind: "SOL",
+        name: MAJOR_TOKENS.sol.name,
+        bal: Number(wallet?.sol_balance ?? 0),
+        price: 74,
+        logo: MAJOR_TOKENS.sol.logoUrl,
+      },
+      {
         key: "PI",
         kind: "PI",
-        name: "Pi",
-        symbol: "PI",
-        balance: piBal,
-        priceUsd: 32.5,
-        logoUrl: null,
-      });
+        name: MAJOR_TOKENS.pi.name,
+        bal: Number(wallet?.pi_balance ?? 0),
+        price: 0.079,
+        logo: PI_NETWORK_LOGO_URL,
+      },
+    ];
+    for (const m of majors) {
+      if (m.bal > 0 || search.asset === m.key) {
+        list.push({
+          key: m.key,
+          kind: m.kind,
+          name: m.name,
+          symbol: m.key,
+          balance: m.bal,
+          priceUsd: m.price,
+          logoUrl: m.logo,
+        });
+      }
     }
     const seen = new Set<string>();
     for (const h of holdings) {
@@ -222,7 +266,16 @@ function SendPage() {
       });
     }
     return list;
-  }, [wallet?.ousd_balance, wallet?.pi_balance, holdings, deepToken]);
+  }, [
+    wallet?.ousd_balance,
+    wallet?.pi_balance,
+    wallet?.btc_balance,
+    wallet?.eth_balance,
+    wallet?.sol_balance,
+    holdings,
+    deepToken,
+    search.asset,
+  ]);
 
   const selected = assets.find((a) => a.key === selectedKey) ?? null;
   const amountNum = Number(amount);
@@ -302,7 +355,7 @@ function SendPage() {
     setOpPreview(null);
     setOpError(null);
     if (p.amount) setAmount(p.amount);
-    if (p.asset && (p.asset === "OUSD" || p.asset === "PI")) {
+    if (p.asset && (p.asset === "OUSD" || p.asset === "PI" || p.asset === "BTC" || p.asset === "ETH" || p.asset === "SOL")) {
       setSelectedKey(p.asset);
     }
     // Auto-select rail from QR type (Pro wallet vs OpenPay)
@@ -811,15 +864,28 @@ function AssetAvatar({
   if (asset.kind === "OUSD") {
     return <OusdIcon className={cn("h-10 w-10", className)} />;
   }
-  if (asset.logoUrl) {
+
+  const src =
+    asset.kind === "PI"
+      ? PI_NETWORK_LOGO_URL
+      : asset.kind === "BTC"
+        ? asset.logoUrl || MAJOR_TOKENS.btc.logoUrl
+        : asset.kind === "ETH"
+          ? asset.logoUrl || MAJOR_TOKENS.eth.logoUrl
+          : asset.kind === "SOL"
+            ? asset.logoUrl || MAJOR_TOKENS.sol.logoUrl
+            : asset.logoUrl;
+
+  if (src) {
     return (
       <img
-        src={asset.logoUrl}
+        src={src}
         alt=""
-        className={cn("h-10 w-10 shrink-0 rounded-full object-cover", className)}
+        className={cn("h-10 w-10 shrink-0 rounded-full object-cover bg-muted", className)}
       />
     );
   }
+
   return (
     <div
       className={cn(

@@ -1,7 +1,7 @@
 export type ParsedPaymentQr = {
   to: string;
   amount?: string;
-  asset?: "OUSD" | "PI";
+  asset?: "OUSD" | "PI" | "BTC" | "ETH" | "SOL";
   /** Which send rail this QR should use. */
   rail: "wallet" | "openpay";
   kind: "pro_wallet" | "openpay_account" | "unknown";
@@ -25,8 +25,8 @@ function classifyRecipient(to: string): Pick<ParsedPaymentQr, "rail" | "kind"> {
   return { rail: "wallet", kind: "unknown" };
 }
 
-function parseAsset(raw: string | null): "OUSD" | "PI" | undefined {
-  if (raw === "OUSD" || raw === "PI") return raw;
+function parseAsset(raw: string | null): "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | undefined {
+  if (raw === "OUSD" || raw === "PI" || raw === "BTC" || raw === "ETH" || raw === "SOL") return raw;
   return undefined;
 }
 

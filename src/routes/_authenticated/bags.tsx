@@ -8,18 +8,18 @@ import {
   ExternalLink,
   Loader2,
   Rocket,
-  Sparkles,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsAuthCard } from "@/components/bags/BagsAuthCard";
+import { BagsCashIcon } from "@/components/bags/BagsCashIcon";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
 import { Button } from "@/components/ui/button";
 import { bagsPing, bagsTopTokens } from "@/lib/bags.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/bags")({
-  head: () => ({ meta: [{ title: "Bags — OpenPay Pro" }] }),
+  head: () => ({ meta: [{ title: "Bags Cash — OpenPay Pro" }] }),
   component: BagsHubPage,
 });
 
@@ -72,39 +72,39 @@ function BagsHubPage() {
 
   return (
     <div className="mx-auto w-full max-w-lg pb-8">
-      <PageHeader title="Bags" backTo="/dashboard" />
+      <PageHeader title="Bags Cash" backTo="/dashboard" />
 
-      <div className="mb-4 rounded-3xl bg-linear-to-br from-violet-600/20 via-background to-emerald-500/10 p-4">
-        <div className="mb-1 flex items-center gap-2 text-lg font-bold">
-          <Sparkles className="h-5 w-5 text-violet-400" />
+      <div className="mb-4 overflow-hidden rounded-2xl border border-emerald-500/20 bg-[#0c0f0d] p-4 text-white shadow-[inset_0_1px_0_rgba(52,211,153,0.12)]">
+        <div className="mb-1 flex items-center gap-2 text-lg font-bold tracking-tight">
+          <BagsCashIcon className="h-6 w-6" />
           Bags on Solana
         </div>
-        <p className="text-sm text-muted-foreground">
-          Launch, trade, and claim fees with the{" "}
+        <p className="text-sm text-white/55">
+          Launch, trade, and claim fees via the{" "}
           <a
             href="https://docs.bags.fm/"
             target="_blank"
             rel="noreferrer"
-            className="font-semibold text-primary underline-offset-2 hover:underline"
+            className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
           >
             Bags API
           </a>
-          . Platform auth uses your server API key; trades are signed in Phantom.
+          . Trades are signed in Phantom.
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           {pingLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-white/50" />
           ) : ping?.ok ? (
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-600 dark:text-emerald-300">
+            <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-300">
               API {ping.message}
             </span>
           ) : (
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-700 dark:text-amber-200">
+            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-200">
               API not reachable — check BAGS_API_KEY
             </span>
           )}
           {ping?.partnerConfig ? (
-            <span className="rounded-full bg-violet-500/15 px-2 py-0.5 font-semibold text-violet-700 dark:text-violet-200">
+            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-200/90">
               Partner key linked
             </span>
           ) : null}
@@ -113,7 +113,7 @@ function BagsHubPage() {
               href={ping.partnerRefUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+              className="inline-flex items-center gap-1 font-semibold text-emerald-400 underline-offset-2 hover:underline"
             >
               bags.fm/?ref={ping.partnerRef || "mrwain"}
               <ExternalLink className="h-3 w-3" />
@@ -123,7 +123,7 @@ function BagsHubPage() {
       </div>
 
       <BagsAuthCard />
-      <BagsWalletBar className="mb-4" />
+      <BagsWalletBar className="mb-4 border border-white/5 bg-[#121512]" />
 
       <div className="mb-6 grid gap-2">
         {ACTIONS.map((action) => {
@@ -132,9 +132,9 @@ function BagsHubPage() {
             <Link
               key={action.to}
               to={action.to}
-              className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3 press shadow-sm ring-1 ring-border/60"
+              className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#121512] px-4 py-3 press transition-colors hover:border-emerald-500/30"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400">
                 <Icon className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
@@ -147,8 +147,8 @@ function BagsHubPage() {
       </div>
 
       <div className="mb-2 flex items-center gap-2">
-        <ChartNoAxesCombined className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-bold">Top by lifetime fees</h2>
+        <ChartNoAxesCombined className="h-4 w-4 text-emerald-400" />
+        <h2 className="text-sm font-bold uppercase tracking-wide">Launch feed</h2>
       </div>
 
       {topLoading ? (
@@ -156,8 +156,8 @@ function BagsHubPage() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : !top?.tokens?.length ? (
-        <p className="rounded-2xl bg-muted/50 px-3 py-4 text-center text-sm text-muted-foreground">
-          No leaderboard data yet.
+        <p className="rounded-2xl border border-white/5 bg-[#121512] px-3 py-4 text-center text-sm text-muted-foreground">
+          No launch feed data yet.
         </p>
       ) : (
         <ul className="space-y-2">
@@ -170,12 +170,20 @@ function BagsHubPage() {
                   to="/bags/token/$mint"
                   params={{ mint }}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl bg-muted/40 px-3 py-2.5 press",
+                    "flex items-center gap-3 rounded-2xl border border-white/5 bg-[#121512] px-3 py-2.5 press hover:border-emerald-500/25",
                   )}
                 >
-                  <span className="w-6 text-center text-xs font-bold text-muted-foreground">
-                    {i + 1}
-                  </span>
+                  {token.image ? (
+                    <img
+                      src={token.image}
+                      alt=""
+                      className="h-9 w-9 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="w-6 text-center text-xs font-bold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">
                       {token.name || token.symbol || mint.slice(0, 8)}
@@ -184,7 +192,7 @@ function BagsHubPage() {
                       ) : null}
                     </span>
                     <span className="block truncate text-[11px] text-muted-foreground tabular-nums">
-                      Fees: {token.lifetimeFees || "—"}
+                      {token.lifetimeFees || "—"}
                     </span>
                   </span>
                 </Link>
@@ -195,7 +203,12 @@ function BagsHubPage() {
       )}
 
       <div className="mt-6 flex justify-center">
-        <Button asChild variant="ghost" size="sm" className="rounded-full">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="rounded-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+        >
           <a href="https://bags.fm" target="_blank" rel="noreferrer">
             Open bags.fm
             <ExternalLink className="ml-1.5 h-3.5 w-3.5" />

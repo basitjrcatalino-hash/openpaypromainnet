@@ -1024,6 +1024,9 @@ export type Database = {
           name: string
           ousd_balance: number
           pi_balance: number
+          btc_balance: number
+          eth_balance: number
+          sol_balance: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1036,6 +1039,9 @@ export type Database = {
           name: string
           ousd_balance?: number
           pi_balance?: number
+          btc_balance?: number
+          eth_balance?: number
+          sol_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1048,6 +1054,9 @@ export type Database = {
           name?: string
           ousd_balance?: number
           pi_balance?: number
+          btc_balance?: number
+          eth_balance?: number
+          sol_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id?: string

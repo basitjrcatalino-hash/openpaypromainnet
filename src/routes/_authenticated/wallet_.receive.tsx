@@ -1,37 +1,199 @@
 /**
- * Receive crypto — Phantom-style QR + address for Circle wallet.
+ * Receive — Phantom-style network picker + QR for OpenPay Pro ledger assets.
  * Route: /wallet/receive
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Copy, Loader2, QrCode } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Check, Copy, QrCode, Share2 } from "lucide-react";
+import QRCode from "qrcode";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { useWallet } from "@/hooks/use-wallet";
+import { OusdIcon } from "@/components/ousd-icon";
+import { supabase } from "@/integrations/supabase/client";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { cn } from "@/lib/utils";
 import { shortAddress } from "@/lib/wallet-utils";
+
+const searchSchema = z.object({
+  network: z.enum(["openpay", "bitcoin", "ethereum", "solana", "pi"]).optional(),
+  asset: z.enum(["OUSD", "BTC", "ETH", "SOL", "PI"]).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/wallet_/receive")({
   head: () => ({ meta: [{ title: "Receive — OpenPay Pro" }] }),
+  validateSearch: (s: Record<string, unknown>) => searchSchema.parse(s),
   component: WalletReceivePage,
 });
 
+type NetworkId = "openpay" | "bitcoin" | "ethereum" | "solana" | "pi";
+type AssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "PI";
+
+const NETWORKS: Array<{
+  id: NetworkId;
+  label: string;
+  asset: AssetCode;
+  accent: string;
+  logoUrl: string | null;
+  isOusd?: boolean;
+}> = [
+  {
+    id: "openpay",
+    label: "OpenPay",
+    asset: "OUSD",
+    accent: "#8B5CF6",
+    logoUrl: OUSD_LOGO_URL,
+    isOusd: true,
+  },
+  {
+    id: "bitcoin",
+    label: "Bitcoin",
+    asset: "BTC",
+    accent: "#F7931A",
+    logoUrl: MAJOR_TOKENS.btc.logoUrl,
+  },
+  {
+    id: "ethereum",
+    label: "Ethereum",
+    asset: "ETH",
+    accent: "#627EEA",
+    logoUrl: MAJOR_TOKENS.eth.logoUrl,
+  },
+  {
+    id: "solana",
+    label: "Solana",
+    asset: "SOL",
+    accent: "#9945FF",
+    logoUrl: MAJOR_TOKENS.sol.logoUrl,
+  },
+  {
+    id: "pi",
+    label: "Pi Network",
+    asset: "PI",
+    accent: "#6B4EFF",
+    logoUrl: MAJOR_TOKENS.pi.logoUrl,
+  },
+];
+
+function networkFromAsset(asset: AssetCode): NetworkId {
+  if (asset === "BTC") return "bitcoin";
+  if (asset === "ETH") return "ethereum";
+  if (asset === "SOL") return "solana";
+  if (asset === "PI") return "pi";
+  return "openpay";
+}
+
 function WalletReceivePage() {
-  const { wallet, loading, error, refreshWallet } = useWallet();
+  const { user } = Route.useRouteContext();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  const initialNetwork =
+    search.network ?? (search.asset ? networkFromAsset(search.asset) : "openpay");
+  const [network, setNetwork] = useState<NetworkId>(initialNetwork);
+  const [qrUrl, setQrUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const selected = NETWORKS.find((n) => n.id === network) ?? NETWORKS[0]!;
+
+  const { data: wallet, isLoading } = useQuery({
+    queryKey: ["active-wallet", user.id],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("wallets")
+          .select("id, name, address")
+          .eq("user_id", user.id)
+          .order("is_active", { ascending: false })
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
+      ).data,
+  });
+
+  const payUri = useMemo(() => {
+    if (!wallet?.address) return "";
+    return `openpay:${wallet.address}?asset=${selected.asset}`;
+  }, [wallet?.address, selected.asset]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!payUri) {
+      setQrUrl("");
+      return;
+    }
+    void QRCode.toDataURL(payUri, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#111111", light: "#ffffff" },
+      errorCorrectionLevel: "M",
+    })
+      .then((url) => {
+        if (!cancelled) setQrUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [payUri]);
+
+  function selectNetwork(id: NetworkId) {
+    const net = NETWORKS.find((n) => n.id === id)!;
+    setNetwork(id);
+    void navigate({
+      search: { network: id, asset: net.asset },
+      replace: true,
+    });
+  }
 
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
       await navigator.clipboard.writeText(wallet.address);
-      toast.success("Address copied");
+      setCopied(true);
+      toast.success(`${selected.asset} receive address copied`);
+      window.setTimeout(() => setCopied(false), 1600);
     } catch {
       toast.error("Copy failed");
     }
   }
 
+  async function copyPayUri() {
+    if (!payUri) return;
+    try {
+      await navigator.clipboard.writeText(payUri);
+      toast.success("Receive link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
+
+  async function share() {
+    if (!payUri) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Receive ${selected.asset}`,
+          text: `Send ${selected.asset} to my OpenPay Pro wallet`,
+          url: payUri,
+        });
+      } else {
+        await copyPayUri();
+      }
+    } catch {
+      /* user cancelled */
+    }
+  }
+
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in pb-10">
-      <header className="mb-6 flex items-center gap-2">
+      <header className="mb-5 flex items-center gap-2">
         <Button asChild variant="ghost" size="icon" className="rounded-full">
           <Link to="/wallet">
             <ArrowLeft className="h-5 w-5" />
@@ -39,63 +201,160 @@ function WalletReceivePage() {
         </Button>
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Receive</h1>
-          <p className="ph-caption">
-            {wallet?.blockchain ?? "Network"}
-          </p>
+          <p className="ph-caption">Pick a network · OpenPay Pro wallet</p>
         </div>
       </header>
 
-      {loading && !wallet ? (
-        <div className="grid place-items-center py-24 text-sm text-muted-foreground">
-          <Loader2 className="mb-3 h-8 w-8 animate-spin text-primary" />
+      {/* Network chips — Phantom style */}
+      <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {NETWORKS.map((n) => {
+          const active = network === n.id;
+          return (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => selectNetwork(n.id)}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-bold press",
+                active
+                  ? "text-white"
+                  : "bg-muted text-muted-foreground hover:text-foreground",
+              )}
+              style={active ? { backgroundColor: n.accent } : undefined}
+            >
+              {n.isOusd ? (
+                <OusdIcon className="h-5 w-5 rounded-full" />
+              ) : n.logoUrl ? (
+                <img src={n.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
+              ) : null}
+              {n.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {isLoading ? (
+        <div className="rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Loading wallet…
         </div>
-      ) : error && !wallet ? (
+      ) : !wallet?.address ? (
         <div className="rounded-3xl border border-border bg-card p-6 text-center">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button className="mt-4 rounded-full" onClick={() => void refreshWallet()}>
-            Retry
+          <p className="text-sm text-muted-foreground">No OpenPay Pro wallet found.</p>
+          <Button asChild className="mt-4 rounded-full">
+            <Link to="/dashboard">Go to Home</Link>
           </Button>
         </div>
-      ) : wallet ? (
-        <div className="space-y-5">
+      ) : (
+        <div className="space-y-4">
           <div className="rounded-3xl border border-border bg-card p-6 text-center">
-            <p className="ph-label">Current network</p>
-            <p className="mt-1 text-lg font-extrabold tracking-tight">{wallet.blockchain}</p>
+            <div className="mb-1 flex items-center justify-center gap-2">
+              {selected.isOusd ? (
+                <OusdIcon className="h-8 w-8 rounded-full" />
+              ) : selected.logoUrl ? (
+                <img
+                  src={selected.logoUrl}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : null}
+              <p className="text-lg font-extrabold tracking-tight">{selected.asset}</p>
+            </div>
+            <p className="ph-caption">
+              {selected.label} · credits your OpenPay Pro balance
+            </p>
 
             <div className="mx-auto mt-5 grid h-52 w-52 place-items-center rounded-2xl border border-border bg-white p-3">
-              {wallet.address ? (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(wallet.address)}`}
-                  alt="Receive QR"
-                  className="h-full w-full"
-                />
+              {qrUrl ? (
+                <img src={qrUrl} alt={`Receive ${selected.asset} QR`} className="h-full w-full" />
               ) : (
                 <QrCode className="h-16 w-16 text-muted-foreground" />
               )}
             </div>
 
-            <p className="mt-5 break-all font-mono text-sm font-semibold tracking-tight text-foreground">{wallet.address}</p>
+            <p className="mt-5 break-all font-mono text-sm font-semibold tracking-tight text-foreground">
+              {wallet.address}
+            </p>
             <p className="ph-caption mt-1">
-              ({shortAddress(wallet.address, 8, 8)})
+              ({shortAddress(wallet.address, 8, 8)}) · {wallet.name || "Main Wallet"}
             </p>
 
-            <Button
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button type="button" className="rounded-full" onClick={() => void copyAddress()}>
+                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                {copied ? "Copied" : "Copy address"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full"
+                onClick={() => void share()}
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+            </div>
+
+            <button
               type="button"
-              className="mt-4 w-full rounded-full"
-              onClick={() => void copyAddress()}
+              className="mt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+              onClick={() => void copyPayUri()}
             >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy address
-            </Button>
+              Copy openpay: receive link
+            </button>
           </div>
 
-          <p className="px-2 text-center text-[11px] leading-relaxed text-muted-foreground">
-            Only send assets on <strong className="text-foreground">{wallet.blockchain}</strong> to
-            this address. Sending from the wrong network may result in permanent loss.
-          </p>
+          <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-center text-[11px] leading-relaxed text-muted-foreground">
+            Send <strong className="text-foreground">{selected.asset}</strong> to this OpenPay Pro
+            address. Your <strong className="text-foreground">{selected.label}</strong> balance
+            updates when another OpenPay user sends you {selected.asset}. Use the matching network
+            tab for each token.
+          </div>
+
+          {/* All networks list */}
+          <section>
+            <h2 className="ph-label mb-2 px-1">All receive addresses</h2>
+            <ul className="overflow-hidden rounded-2xl border border-border bg-card">
+              {NETWORKS.map((n, i) => (
+                <li key={n.id} className={cn(i > 0 && "border-t border-border")}>
+                  <button
+                    type="button"
+                    onClick={() => selectNetwork(n.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3 text-left press hover:bg-muted/30",
+                      network === n.id && "bg-primary/5",
+                    )}
+                  >
+                    {n.isOusd ? (
+                      <OusdIcon className="h-9 w-9 shrink-0 rounded-full" />
+                    ) : n.logoUrl ? (
+                      <img
+                        src={n.logoUrl}
+                        alt=""
+                        className="h-9 w-9 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-muted text-[10px] font-bold">
+                        {n.asset}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">{n.label}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                        {shortAddress(wallet.address, 6, 6)} · {n.asset}
+                      </span>
+                    </span>
+                    {network === n.id ? (
+                      <Check className="h-4 w-4 text-primary" />
+                    ) : (
+                      <QrCode className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

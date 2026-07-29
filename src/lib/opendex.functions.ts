@@ -6,9 +6,26 @@ import {
   applyOpenDexFee,
   opendexFeePct,
 } from "@/lib/opendex-fee";
+import {
+  BTC_SWAP_ID,
+  ETH_SWAP_ID,
+  OUSD_SWAP_ID,
+  PI_SWAP_ID,
+  SOL_SWAP_ID,
+  fetchMajorUsdPrices,
+  isLedgerSwapId,
+  majorIdFromSwapId,
+  type LedgerMajorId,
+} from "@/lib/ledger-majors";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
 
-export const OUSD_SWAP_ID = "__ousd__";
-export const PI_SWAP_ID = "__pi__";
+export {
+  OUSD_SWAP_ID,
+  PI_SWAP_ID,
+  BTC_SWAP_ID,
+  ETH_SWAP_ID,
+  SOL_SWAP_ID,
+} from "@/lib/ledger-majors";
 export { OPENDEX_SWAP_FEE_BPS, applyOpenDexFee, opendexFeePct } from "@/lib/opendex-fee";
 
 const SwapSchema = z.object({
@@ -17,7 +34,6 @@ const SwapSchema = z.object({
   to_id: z.string().min(1),
   amount: z.number().positive().max(1e15),
   slippage: z.number().min(0).max(50).default(0.5),
-  /** Client-quoted net output (after fee) for slippage check. */
   expected_out: z.number().positive().optional(),
 });
 
@@ -25,33 +41,20 @@ function round8(n: number) {
   return Math.round(n * 1e8) / 1e8;
 }
 
+function round12(n: number) {
+  return Math.round(n * 1e12) / 1e12;
+}
+
 type QuoteToken = {
   id: string;
   symbol: string;
   name: string;
   price_usd: number;
+  major?: LedgerMajorId;
 };
 
-async function fetchPiUsdPrice(): Promise<number> {
-  try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd",
-      { headers: { accept: "application/json" } },
-    );
-    if (res.ok) {
-      const j = (await res.json()) as { "pi-network"?: { usd?: number } };
-      const p = Number(j?.["pi-network"]?.usd);
-      if (p > 0) return p;
-    }
-  } catch {
-    /* fallback below */
-  }
-  return 0.079;
-}
-
-function isLedgerSwapId(id: string) {
-  return id === OUSD_SWAP_ID || id === PI_SWAP_ID;
-}
+const WALLET_COLS =
+  "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance";
 
 export const executeOpenDexSwap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -64,7 +67,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
 
     const { data: wallet, error: walErr } = await supabase
       .from("wallets")
-      .select("id, user_id, ousd_balance, pi_balance")
+      .select(WALLET_COLS)
       .eq("id", wallet_id)
       .eq("user_id", userId)
       .maybeSingle();
@@ -73,12 +76,8 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
 
     const fromIsOusd = from_id === OUSD_SWAP_ID;
     const toIsOusd = to_id === OUSD_SWAP_ID;
-    const fromIsPi = from_id === PI_SWAP_ID;
-    const toIsPi = to_id === PI_SWAP_ID;
-
-    if (!fromIsOusd && !toIsOusd) {
-      throw new Error("OpenDEX pairs must include OUSD");
-    }
+    const fromMajor = majorIdFromSwapId(from_id);
+    const toMajor = majorIdFromSwapId(to_id);
 
     const dbTokenIds = [from_id, to_id].filter((id) => !isLedgerSwapId(id));
     const byId = new Map<string, QuoteToken>();
@@ -98,56 +97,87 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       }
     }
 
-    let piPrice = 0;
-    if (fromIsPi || toIsPi) {
-      piPrice = await fetchPiUsdPrice();
-    }
+    const needMajors = [fromMajor, toMajor].filter(Boolean) as LedgerMajorId[];
+    const prices =
+      needMajors.length > 0
+        ? await fetchMajorUsdPrices(["btc", "eth", "sol", "pi"])
+        : ({} as Record<LedgerMajorId, number>);
 
-    const resolve = (id: string, isOusd: boolean, isPi: boolean): QuoteToken | undefined => {
-      if (isOusd) {
+    const resolve = (id: string): QuoteToken | undefined => {
+      if (id === OUSD_SWAP_ID) {
         return { id: OUSD_SWAP_ID, symbol: "OUSD", name: "OpenPay USD", price_usd: 1 };
       }
-      if (isPi) {
+      const major = majorIdFromSwapId(id);
+      if (major) {
+        const def = MAJOR_TOKENS[major];
         return {
-          id: PI_SWAP_ID,
-          symbol: "PI",
-          name: "Pi Network",
-          price_usd: piPrice,
+          id,
+          symbol: def.symbol,
+          name: def.name,
+          price_usd: prices[major] ?? 0,
+          major,
         };
       }
       return byId.get(id);
     };
 
-    const fromToken = resolve(from_id, fromIsOusd, fromIsPi);
-    const toToken = resolve(to_id, toIsOusd, toIsPi);
+    // Normalize major ids to canonical swap ids for balance ops
+    const fromCanon = fromMajor
+      ? fromMajor === "btc"
+        ? BTC_SWAP_ID
+        : fromMajor === "eth"
+          ? ETH_SWAP_ID
+          : fromMajor === "sol"
+            ? SOL_SWAP_ID
+            : PI_SWAP_ID
+      : from_id;
+    const toCanon = toMajor
+      ? toMajor === "btc"
+        ? BTC_SWAP_ID
+        : toMajor === "eth"
+          ? ETH_SWAP_ID
+          : toMajor === "sol"
+            ? SOL_SWAP_ID
+            : PI_SWAP_ID
+      : to_id;
 
+    const fromToken = resolve(fromCanon);
+    const toToken = resolve(toCanon);
     if (!fromToken || !toToken) throw new Error("Token not found");
 
+    // OpenDEX: any priced pair (OUSD, majors, OpenTokens)
     const fromPrice = Number(fromToken.price_usd) || 0;
     const toPrice = Number(toToken.price_usd) || 0;
     if (fromPrice <= 0 || toPrice <= 0) throw new Error("Invalid token price");
 
-    const amtIn = round8(amount);
-    const rawOut = round8((amtIn * fromPrice) / toPrice);
-    if (rawOut <= 0) throw new Error("Swap amount too small");
+    const amtIn = fromMajor ? round12(amount) : round8(amount);
+    const rawOut = (amtIn * fromPrice) / toPrice;
+    const amountOutRounded = toMajor ? round12(rawOut) : round8(rawOut);
+    if (amountOutRounded <= 0) throw new Error("Swap amount too small");
 
-    const { fee: feeOut, net: amountOut } = applyOpenDexFee(rawOut);
-    if (amountOut <= 0) throw new Error("Swap amount too small after fee");
+    const { fee: feeOutRaw, net: amountOut } = applyOpenDexFee(amountOutRounded);
+    const feeOut = toMajor ? round12(feeOutRaw) : round8(feeOutRaw);
+    const netOut = toMajor ? round12(amountOut) : round8(amountOut);
+    if (netOut <= 0) throw new Error("Swap amount too small after fee");
 
     if (expected_out != null && expected_out > 0) {
       const minAcceptable = expected_out * (1 - slippage / 100);
-      if (amountOut + 1e-12 < minAcceptable) {
+      if (netOut + 1e-12 < minAcceptable) {
         throw new Error("Price moved beyond slippage tolerance");
       }
     }
 
-    // ── balances ──────────────────────────────────────────────
-    let fromBal = 0;
-    if (fromIsOusd) {
-      fromBal = Number(wallet.ousd_balance ?? 0);
-    } else if (fromIsPi) {
-      fromBal = Number(wallet.pi_balance ?? 0);
-    } else {
+    const readBal = (major: LedgerMajorId | null, isOusd: boolean) => {
+      if (isOusd) return Number(wallet.ousd_balance ?? 0);
+      if (major === "btc") return Number(wallet.btc_balance ?? 0);
+      if (major === "eth") return Number(wallet.eth_balance ?? 0);
+      if (major === "sol") return Number(wallet.sol_balance ?? 0);
+      if (major === "pi") return Number(wallet.pi_balance ?? 0);
+      return null;
+    };
+
+    let fromBal = readBal(fromMajor, fromIsOusd);
+    if (fromBal == null) {
       const { data: hold } = await supabase
         .from("token_holdings")
         .select("id, balance")
@@ -169,10 +199,19 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
-    } else if (fromIsPi) {
+    } else if (fromMajor) {
+      const next = round12(fromBal - amtIn);
+      const patch =
+        fromMajor === "btc"
+          ? { btc_balance: next }
+          : fromMajor === "eth"
+            ? { eth_balance: next }
+            : fromMajor === "sol"
+              ? { sol_balance: next }
+              : { pi_balance: next };
       const { error } = await supabase
         .from("wallets")
-        .update({ pi_balance: round8(fromBal - amtIn) })
+        .update(patch)
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
@@ -193,7 +232,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
-    // Credit to (net of OpenDEX fee)
+    // Credit to
     if (toIsOusd) {
       const { data: fresh } = await supabase
         .from("wallets")
@@ -203,20 +242,36 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       const cur = Number(fresh?.ousd_balance ?? 0);
       const { error } = await supabase
         .from("wallets")
-        .update({ ousd_balance: round8(cur + amountOut) })
+        .update({ ousd_balance: round8(cur + netOut) })
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
-    } else if (toIsPi) {
+    } else if (toMajor) {
       const { data: fresh } = await supabase
         .from("wallets")
-        .select("pi_balance")
+        .select("pi_balance, btc_balance, eth_balance, sol_balance")
         .eq("id", wallet_id)
         .maybeSingle();
-      const cur = Number(fresh?.pi_balance ?? 0);
+      const cur =
+        toMajor === "btc"
+          ? Number(fresh?.btc_balance ?? 0)
+          : toMajor === "eth"
+            ? Number(fresh?.eth_balance ?? 0)
+            : toMajor === "sol"
+              ? Number(fresh?.sol_balance ?? 0)
+              : Number(fresh?.pi_balance ?? 0);
+      const next = round12(cur + netOut);
+      const patch =
+        toMajor === "btc"
+          ? { btc_balance: next }
+          : toMajor === "eth"
+            ? { eth_balance: next }
+            : toMajor === "sol"
+              ? { sol_balance: next }
+              : { pi_balance: next };
       const { error } = await supabase
         .from("wallets")
-        .update({ pi_balance: round8(cur + amountOut) })
+        .update(patch)
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
@@ -231,7 +286,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
         const { error } = await supabase
           .from("token_holdings")
           .update({
-            balance: round8(Number(hold.balance) + amountOut),
+            balance: round8(Number(hold.balance) + netOut),
             updated_at: new Date().toISOString(),
           })
           .eq("id", hold.id);
@@ -240,7 +295,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
         const { error } = await supabase.from("token_holdings").insert({
           wallet_id,
           token_id: to_id,
-          balance: amountOut,
+          balance: netOut,
           updated_at: new Date().toISOString(),
         });
         if (error) throw new Error(error.message);
@@ -249,7 +304,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
 
     const usdValue = round8(amtIn * fromPrice);
     const feeUsd = round8(feeOut * toPrice);
-    const nonOusdId = fromIsOusd ? to_id : from_id;
+    const nonOusdId = fromIsOusd ? toCanon : fromCanon;
     const txRef = `odx_${globalThis.crypto?.randomUUID?.()?.replace(/-/g, "") ?? `${Date.now()}${Math.random().toString(16).slice(2)}`}`;
 
     const { error: txErr } = await supabase.from("transactions").insert({
@@ -261,32 +316,23 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       counterparty: "OpenDEX",
       amount: amtIn,
       usd_value: usdValue,
-      memo: `OpenDEX swap ${amtIn} ${fromToken.symbol} → ${amountOut} ${toToken.symbol} · fee ${feeOut} ${toToken.symbol} (${opendexFeePct()}%)`,
+      memo: `OpenDEX swap ${amtIn} ${fromToken.symbol} → ${netOut} ${toToken.symbol} · fee ${feeOut} ${toToken.symbol} (${opendexFeePct()}%)`,
       tx_hash: txRef,
     });
     if (txErr) throw new Error(txErr.message);
 
-    // Platform swap fee → @openpay treasury
     if (feeOut > 0) {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { creditPlatformFeeOusd, creditPlatformFeeToken } = await import(
           "@/lib/platform-treasury"
         );
-        if (toIsOusd) {
-          await creditPlatformFeeOusd(supabaseAdmin, {
-            amount: feeOut,
-            sourceWalletId: wallet_id,
-            counterparty: `opendex:${txRef}`,
-            memo: `OpenDEX swap fee · ${feeOut} OUSD → @openpay`,
-          });
-        } else if (toIsPi) {
-          // PI fee collected as OUSD-equivalent credit to treasury
+        if (toIsOusd || toMajor) {
           await creditPlatformFeeOusd(supabaseAdmin, {
             amount: feeUsd,
             sourceWalletId: wallet_id,
             counterparty: `opendex:${txRef}`,
-            memo: `OpenDEX swap fee · ${feeOut} PI (~${feeUsd} OUSD) → @openpay`,
+            memo: `OpenDEX swap fee · ${feeOut} ${toToken.symbol} (~${feeUsd} OUSD) → @openpay`,
           });
         } else {
           await creditPlatformFeeToken(supabaseAdmin, {
@@ -306,7 +352,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     return {
       ok: true as const,
       amount_in: amtIn,
-      amount_out: amountOut,
+      amount_out: netOut,
       fee_out: feeOut,
       fee_bps: OPENDEX_SWAP_FEE_BPS,
       fee_usd: feeUsd,

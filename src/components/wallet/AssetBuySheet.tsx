@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
 import { buyOpenToken } from "@/lib/opentoken.functions";
 import { isOpenTokenGraduated } from "@/lib/opentoken/bonding-curve";
@@ -14,6 +15,7 @@ import { topUpWithPi } from "@/lib/pi-network";
 import {
   createOpenPayTopupCharge,
   getOpenPayLinkStatus,
+  getOpenPayLinkedBalance,
 } from "@/lib/openpay-pro.functions";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
@@ -60,7 +62,7 @@ const ALL_METHODS: {
     id: "openpay_checkout",
     label: "OpenPay Balance",
     logoUrl: OUSD_LOGO_URL,
-    desc: "Pay from your connected OpenPay account",
+    desc: "Pay from your connected OpenPay account → credit Pro",
   },
   {
     id: "moonpay",
@@ -93,6 +95,13 @@ type Props = {
   onNavigateSwap?: () => void;
 };
 
+function sanitizeAmountInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const parts = cleaned.split(".");
+  if (parts.length <= 1) return cleaned;
+  return `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
+}
+
 export function AssetBuySheet({
   open,
   onClose,
@@ -107,6 +116,7 @@ export function AssetBuySheet({
   const buyFn = useServerFn(buyOpenToken);
   const createCharge = useServerFn(createOpenPayTopupCharge);
   const getLink = useServerFn(getOpenPayLinkStatus);
+  const getOpBalance = useServerFn(getOpenPayLinkedBalance);
 
   const [amount, setAmount] = useState("25");
   const [method, setMethod] = useState<PaymentMethod>(
@@ -136,6 +146,13 @@ export function AssetBuySheet({
     enabled: open,
   });
 
+  const { data: openpayBal } = useQuery({
+    queryKey: ["openpay-linked-balance", userId],
+    queryFn: () => getOpBalance(),
+    enabled: open && !!openpayLink?.linked,
+    staleTime: 30_000,
+  });
+
   useEffect(() => {
     if (!open) return;
     setAmount("25");
@@ -145,6 +162,13 @@ export function AssetBuySheet({
   const amtNum = Number(amount) || 0;
   const parsed = amountSchema.safeParse({ amount: amtNum });
   const valid = parsed.success;
+  const opSpendable =
+    openpayBal?.linked && typeof openpayBal.balance === "number" ? openpayBal.balance : null;
+  const openpayShort =
+    method === "openpay_checkout" &&
+    opSpendable != null &&
+    amtNum > 0 &&
+    amtNum > opSpendable + 1e-9;
 
   async function executeTokenBuy(piAmount: number) {
     if (!walletId) throw new Error("Create a wallet first");
@@ -175,6 +199,7 @@ export function AssetBuySheet({
       qc.invalidateQueries({ queryKey: ["wallets"] }),
       qc.invalidateQueries({ queryKey: ["holdings"] }),
       qc.invalidateQueries({ queryKey: ["recent-txs"] }),
+      qc.invalidateQueries({ queryKey: ["openpay-linked-balance", userId] }),
     ]);
   }
 
@@ -247,6 +272,13 @@ export function AssetBuySheet({
     }
     const amt = amtNum;
 
+    if (method === "openpay_checkout" && openpayShort && opSpendable != null) {
+      toast.error(
+        `OpenPay account has ${formatUSD(opSpendable)} — lower the amount, or use MoonPay / Pi.`,
+      );
+      return;
+    }
+
     setBusy(true);
     try {
       if (isOusd) {
@@ -258,7 +290,10 @@ export function AssetBuySheet({
           return;
         }
         if (method === "moonpay") {
-          if (!walletId) { toast.error("Select an active wallet first"); return; }
+          if (!walletId) {
+            toast.error("Select an active wallet first");
+            return;
+          }
           const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
           setMoonpaySession({ amount: amt, externalTransactionId });
           setMoonpayVisible(true);
@@ -313,7 +348,10 @@ export function AssetBuySheet({
       }
 
       if (method === "moonpay") {
-        if (!walletId) { toast.error("Select an active wallet first"); return; }
+        if (!walletId) {
+          toast.error("Select an active wallet first");
+          return;
+        }
         const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
         setMoonpaySession({ amount: amt, externalTransactionId });
         setMoonpayVisible(true);
@@ -341,7 +379,9 @@ export function AssetBuySheet({
         ? `Buy with Card`
         : method === "solana"
           ? `Pay with Solana`
-          : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+          : openpayShort
+            ? `Amount exceeds OpenPay balance`
+            : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
     : graduated
       ? method === "wallet_ousd"
         ? `Swap for $${token.symbol}`
@@ -351,7 +391,9 @@ export function AssetBuySheet({
             ? `Buy with Card & Swap`
             : method === "solana"
               ? `Pay with Solana & Swap`
-              : `Pay with OpenPay`
+              : openpayShort
+                ? `Amount exceeds OpenPay balance`
+                : `Pay with OpenPay`
       : method === "wallet_ousd"
         ? `Buy $${token.symbol}`
         : method === "pi"
@@ -360,7 +402,9 @@ export function AssetBuySheet({
             ? `Buy with Card`
             : method === "solana"
               ? `Pay with Solana & Buy`
-              : `Pay with OpenPay & Buy`;
+              : openpayShort
+                ? `Amount exceeds OpenPay balance`
+                : `Pay with OpenPay & Buy`;
 
   if (!open) return null;
 
@@ -391,16 +435,25 @@ export function AssetBuySheet({
           </button>
         </div>
 
-        <div className="flex flex-col items-center gap-1 py-4">
-          <span className="text-5xl font-bold tabular-nums tracking-tight">
-            {amount || "0"}
-          </span>
+        <div className="flex flex-col items-center gap-1 py-2">
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-3xl font-bold text-muted-foreground">$</span>
+            <Input
+              value={amount}
+              onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]*[.]?[0-9]*"
+              aria-label={isOusd ? "Amount in USD" : "Amount in OUSD"}
+              className="h-auto w-full max-w-52 border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
+            />
+          </div>
           <span className="text-sm font-medium text-muted-foreground">
-            {isOusd ? "USD" : "OUSD"}
+            {isOusd ? "USD → OUSD" : "OUSD"}
           </span>
         </div>
 
-        <div className="mb-4 flex flex-wrap justify-center gap-2">
+        <div className="mb-3 flex flex-wrap justify-center gap-2">
           {PRESETS.map((p) => (
             <button
               key={p}
@@ -414,6 +467,20 @@ export function AssetBuySheet({
               ${p}
             </button>
           ))}
+          {opSpendable != null && opSpendable >= 1 && (
+            <button
+              type="button"
+              onClick={() => setAmount(String(Math.floor(opSpendable * 100) / 100))}
+              className={cn(
+                "rounded-full px-4 py-2 text-sm font-semibold press",
+                Math.abs(amtNum - opSpendable) < 0.01
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted",
+              )}
+            >
+              Max
+            </button>
+          )}
         </div>
 
         <PaymentMethodPicker methods={methods} value={method} onChange={setMethod} className="mb-4" />
@@ -425,6 +492,33 @@ export function AssetBuySheet({
               <Link2 className="h-3.5 w-3.5" />
               Settings
             </Link>
+          </div>
+        )}
+
+        {method === "openpay_checkout" && openpayLink?.linked && (
+          <div
+            className={cn(
+              "mb-4 rounded-2xl px-3 py-2.5 text-xs",
+              openpayShort
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-200"
+                : "bg-muted/60 text-muted-foreground",
+            )}
+          >
+            {opSpendable != null ? (
+              <>
+                OpenPay account
+                {openpayBal?.username ? ` @${openpayBal.username}` : ""}:{" "}
+                <span className="font-semibold tabular-nums">{formatUSD(opSpendable)}</span>
+                {openpayShort
+                  ? " — lower the amount, tap Max, or switch to MoonPay / Pi."
+                  : " · pays into your OpenPay Pro wallet."}
+              </>
+            ) : (
+              <>Pays from your connected OpenPay account into this Pro wallet.</>
+            )}
+            <div className="mt-1 text-[11px] opacity-80">
+              Pro wallet balance: {formatUSD(ousdBalance)} OUSD
+            </div>
           </div>
         )}
 
@@ -484,7 +578,12 @@ export function AssetBuySheet({
           <Button
             type="button"
             className="h-12 w-full rounded-full text-base font-bold"
-            disabled={busy || !valid || (method === "openpay_checkout" && !openpayLink?.linked)}
+            disabled={
+              busy ||
+              !valid ||
+              openpayShort ||
+              (method === "openpay_checkout" && !openpayLink?.linked)
+            }
             onClick={() => void submit()}
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}

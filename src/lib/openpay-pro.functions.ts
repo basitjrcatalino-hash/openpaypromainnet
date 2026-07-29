@@ -179,11 +179,11 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         const bal = await fetchOAuthUserBalance(link.access_token);
         if (Number(bal.balance) < data.amount) {
           throw new Error(
-            `Insufficient OpenPay balance (${Number(bal.balance).toFixed(2)} OUSD). Top up OpenPay first, then retry.`,
+            `Your OpenPay account has ${Number(bal.balance).toFixed(2)} OUSD — enter that amount or less, or use MoonPay / Pi to add funds.`,
           );
         }
       } catch (e) {
-        if (/Insufficient OpenPay balance/i.test((e as Error).message)) throw e;
+        if (/Insufficient OpenPay balance|OpenPay account has/i.test((e as Error).message)) throw e;
         /* ignore balance check failures */
       }
     }
@@ -642,6 +642,42 @@ export const getOpenPayLinkStatus = createServerFn({ method: "GET" })
     // Persist linked status across sessions; expired tokens do not auto-unlink
     const { access_token: _t, ...safe } = link;
     return safe as OpenPayLinkRecord;
+  });
+
+/** Linked OpenPay account spendable balance (for Buy / Top Up UI). */
+export const getOpenPayLinkedBalance = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const link = readOpenPayLink(prefs?.notifications);
+    if (!link.linked) {
+      return { linked: false as const, balance: null as number | null };
+    }
+
+    if (link.access_token) {
+      try {
+        const { fetchOAuthUserBalance } = await import("./openpay-connect.server");
+        const bal = await fetchOAuthUserBalance(link.access_token);
+        return {
+          linked: true as const,
+          balance: Number(bal.balance ?? 0),
+          username: link.username ?? null,
+        };
+      } catch {
+        /* fall through */
+      }
+    }
+
+    return {
+      linked: true as const,
+      balance: null as number | null,
+      username: link.username ?? null,
+    };
   });
 
 export const linkOpenPayAccount = createServerFn({ method: "POST" })

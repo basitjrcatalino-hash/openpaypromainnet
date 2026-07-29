@@ -15,7 +15,6 @@ import {
   QrCode,
   Send,
 } from "lucide-react";
-import QRCode from "qrcode";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
@@ -109,10 +107,8 @@ function PhantomAssetDetail() {
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [receiveOpen, setReceiveOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
   const [moonpayOpen, setMoonpayOpen] = useState(false);
-  const [receiveQrUrl, setReceiveQrUrl] = useState("");
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -291,34 +287,35 @@ function PhantomAssetDetail() {
   const up = meta.change >= 0;
   const returnPath = `/asset/${tokenId}`;
 
-  const receivePayUri = wallet?.address
-    ? isOusd || isMajor
-      ? `openpay:${wallet.address}?asset=${ledgerAsset}`
-      : `openpay:${wallet.address}?asset=${encodeURIComponent(meta.symbol)}&token=${tokenId}`
-    : "";
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!receiveOpen || !receivePayUri) {
-      setReceiveQrUrl("");
+  function goReceive() {
+    if (isOusd) {
+      navigate({ to: "/wallet/receive", search: { network: "openpay", asset: "OUSD" } });
       return;
     }
-    void QRCode.toDataURL(receivePayUri, {
-      width: 180,
-      margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
-      errorCorrectionLevel: "M",
-    })
-      .then((url) => {
-        if (!cancelled) setReceiveQrUrl(url);
-      })
-      .catch(() => {
-        if (!cancelled) setReceiveQrUrl("");
+    if (isMajor && majorDef) {
+      const network =
+        majorDef.id === "btc"
+          ? "bitcoin"
+          : majorDef.id === "eth"
+            ? "ethereum"
+            : majorDef.id === "sol"
+              ? "solana"
+              : majorDef.id === "usdc"
+                ? "usdc"
+                : majorDef.id === "usdt"
+                  ? "usdt"
+                  : "pi";
+      navigate({
+        to: "/wallet/receive",
+        search: {
+          network,
+          asset: majorDef.symbol as "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI",
+        },
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [receiveOpen, receivePayUri]);
+      return;
+    }
+    navigate({ to: "/wallet/receive", search: { network: "openpay", token: tokenId } });
+  }
 
   useEffect(() => {
     if (search.openpay_cancel) {
@@ -573,7 +570,7 @@ function PhantomAssetDetail() {
               });
             }}
           />
-          <ActionTile icon={QrCode} label="Receive" onClick={() => setReceiveOpen(true)} />
+          <ActionTile icon={QrCode} label="Receive" onClick={goReceive} />
           <ActionTile icon={MoreHorizontal} label="More" onClick={() => setMoreOpen(true)} />
         </div>
 
@@ -748,51 +745,6 @@ function PhantomAssetDetail() {
             : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
         </p>
       </div>
-
-      {/* Receive sheet — same OpenPay Pro address flow as OUSD */}
-      <Dialog open={receiveOpen} onOpenChange={setReceiveOpen}>
-        <DialogContent className="max-w-sm rounded-3xl border-border bg-card">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl">Receive {meta.symbol}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="mx-auto grid h-48 w-48 place-items-center rounded-2xl border border-border bg-white p-3">
-              {receiveQrUrl ? (
-                <img src={receiveQrUrl} alt="Receive QR" className="h-full w-full" />
-              ) : (
-                <QrCode className="h-16 w-16 text-muted-foreground" />
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-muted/50 px-3 py-3">
-              <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">
-                  {wallet?.name ?? "Main Wallet"} · OpenPay Pro
-                </div>
-                <div className="truncate font-mono text-sm">
-                  ({shortAddress(wallet?.address, 4, 4)})
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className="rounded-full"
-                onClick={() => wallet?.address && copy(wallet.address, "Wallet address copied")}
-              >
-                Copy
-              </Button>
-            </div>
-            <p className="text-center text-xs text-muted-foreground">
-              {isOusd
-                ? "Use this OpenPay Pro wallet address to receive OUSD."
-                : isMajor
-                  ? `Use this OpenPay Pro wallet address to receive ${meta.symbol} (credited to your Pro ledger balance).`
-                  : `Share your OpenPay Pro wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
-            </p>
-            <Button className="w-full rounded-full" variant="secondary" onClick={() => setReceiveOpen(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* More menu */}
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>

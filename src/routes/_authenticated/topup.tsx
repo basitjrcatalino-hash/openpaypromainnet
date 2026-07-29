@@ -77,7 +77,7 @@ const methods: {
 ];
 const presets = [25, 50, 100, 250, 500, 1000];
 const schema = z.object({
-  amount: z.coerce.number().positive().min(1, "Minimum $1").max(50000),
+  amount: z.coerce.number().positive().min(0.01, "Minimum $0.01").max(50000),
 });
 
 const PENDING_CHARGE_KEY = "openpay_pending_charge";

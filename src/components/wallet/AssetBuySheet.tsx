@@ -41,8 +41,22 @@ const PRESETS = [10, 25, 50, 100, 250];
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
 const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
 const PENDING_ASSET_BUY_KEY = "asset_pending_buy";
+const MIN_BUY_AMOUNT = 0.01;
+const MAX_BUY_AMOUNT = 50_000;
 
-const amountSchema = z.coerce.number().positive().min(1).max(50_000);
+/** Any custom amount from $0.01–$50,000 (presets are shortcuts only). */
+const amountSchema = z.coerce
+  .number()
+  .finite()
+  .positive()
+  .min(MIN_BUY_AMOUNT, `Minimum $${MIN_BUY_AMOUNT}`)
+  .max(MAX_BUY_AMOUNT);
+
+function parseBuyAmount(raw: string): number {
+  const n = Number(String(raw).trim());
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100) / 100;
+}
 
 const ALL_METHODS: {
   id: PaymentMethod;
@@ -123,6 +137,7 @@ export function AssetBuySheet({
     token.isOusd ? "pi" : "wallet_ousd",
   );
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [moonpayVisible, setMoonpayVisible] = useState(false);
   const [moonpaySession, setMoonpaySession] = useState<{
     amount: number;
@@ -157,10 +172,12 @@ export function AssetBuySheet({
     if (!open) return;
     setAmount("25");
     setMethod(isOusd ? "pi" : "wallet_ousd");
+    setActionError(null);
+    setBusy(false);
   }, [open, isOusd]);
 
-  const amtNum = Number(amount) || 0;
-  const parsed = amountSchema.safeParse({ amount: amtNum });
+  const amtNum = parseBuyAmount(amount);
+  const parsed = amountSchema.safeParse(amount.trim() === "" ? NaN : amtNum);
   const valid = parsed.success;
   const opSpendable =
     openpayBal?.linked && typeof openpayBal.balance === "number" ? openpayBal.balance : null;
@@ -206,12 +223,10 @@ export function AssetBuySheet({
   async function startOpenPayCheckout(amt: number) {
     const link = await getLink();
     if (!link?.linked) {
-      toast.error("Connect OpenPay in Settings first");
-      return;
+      throw new Error("Connect OpenPay in Settings first");
     }
     if (!walletId) {
-      toast.error("Select an active wallet first");
-      return;
+      throw new Error("Select an active wallet first");
     }
 
     try {
@@ -266,16 +281,31 @@ export function AssetBuySheet({
   }
 
   async function submit() {
+    setActionError(null);
     if (!valid) {
-      toast.error("Enter a valid amount (min $1)");
+      const msg =
+        amtNum > 0 && amtNum < MIN_BUY_AMOUNT
+          ? `Minimum amount is $${MIN_BUY_AMOUNT}`
+          : amtNum > MAX_BUY_AMOUNT
+            ? `Maximum amount is $${MAX_BUY_AMOUNT.toLocaleString()}`
+            : `Enter an amount between $${MIN_BUY_AMOUNT} and $${MAX_BUY_AMOUNT.toLocaleString()}`;
+      setActionError(msg);
+      toast.error(msg);
       return;
     }
     const amt = amtNum;
 
     if (method === "openpay_checkout" && openpayShort && opSpendable != null) {
-      toast.error(
-        `OpenPay account has ${formatUSD(opSpendable)} — lower the amount, or use MoonPay / Pi.`,
-      );
+      const msg = `OpenPay account has ${formatUSD(opSpendable)} — lower the amount, or use MoonPay / Pi.`;
+      setActionError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (method === "openpay_checkout" && !walletId) {
+      const msg = "Select an active wallet first";
+      setActionError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -291,17 +321,14 @@ export function AssetBuySheet({
         }
         if (method === "moonpay") {
           if (!walletId) {
-            toast.error("Select an active wallet first");
-            return;
+            throw new Error("Select an active wallet first");
           }
           const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
           setMoonpaySession({ amount: amt, externalTransactionId });
           setMoonpayVisible(true);
-          setBusy(false);
           return;
         }
         if (method === "solana") {
-          setBusy(false);
           return;
         }
         await startOpenPayCheckout(amt);
@@ -311,8 +338,7 @@ export function AssetBuySheet({
       if (graduated) {
         if (method === "wallet_ousd") {
           if (ousdBalance < amt) {
-            toast.error(`Need ${formatUSD(amt)} OUSD — top up first`);
-            return;
+            throw new Error(`Need ${formatUSD(amt)} OUSD — top up first`);
           }
           onClose();
           onNavigateSwap?.();
@@ -326,6 +352,14 @@ export function AssetBuySheet({
           onNavigateSwap?.();
           return;
         }
+        if (method === "moonpay") {
+          if (!walletId) throw new Error("Select an active wallet first");
+          const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
+          setMoonpaySession({ amount: amt, externalTransactionId });
+          setMoonpayVisible(true);
+          return;
+        }
+        if (method === "solana") return;
         await startOpenPayCheckout(amt);
         return;
       }
@@ -333,8 +367,7 @@ export function AssetBuySheet({
       // Bonding curve token buy
       if (method === "wallet_ousd") {
         if (ousdBalance < amt) {
-          toast.error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
-          return;
+          throw new Error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
         }
         await executeTokenBuy(amt);
         return;
@@ -348,25 +381,22 @@ export function AssetBuySheet({
       }
 
       if (method === "moonpay") {
-        if (!walletId) {
-          toast.error("Select an active wallet first");
-          return;
-        }
+        if (!walletId) throw new Error("Select an active wallet first");
         const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
         setMoonpaySession({ amount: amt, externalTransactionId });
         setMoonpayVisible(true);
-        setBusy(false);
         return;
       }
 
       if (method === "solana") {
-        setBusy(false);
         return;
       }
 
       await startOpenPayCheckout(amt);
     } catch (err) {
-      toast.error((err as Error).message || "Purchase failed");
+      const msg = (err as Error).message || "Purchase failed";
+      setActionError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }
@@ -440,7 +470,10 @@ export function AssetBuySheet({
             <span className="text-3xl font-bold text-muted-foreground">$</span>
             <Input
               value={amount}
-              onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
+              onChange={(e) => {
+                setActionError(null);
+                setAmount(sanitizeAmountInput(e.target.value));
+              }}
               type="text"
               inputMode="decimal"
               pattern="[0-9]*[.]?[0-9]*"
@@ -458,7 +491,10 @@ export function AssetBuySheet({
             <button
               key={p}
               type="button"
-              onClick={() => setAmount(String(p))}
+              onClick={() => {
+                setActionError(null);
+                setAmount(String(p));
+              }}
               className={cn(
                 "rounded-full px-4 py-2 text-sm font-semibold press",
                 amount === String(p) ? "bg-primary text-primary-foreground" : "bg-muted",
@@ -470,7 +506,10 @@ export function AssetBuySheet({
           {opSpendable != null && opSpendable >= 1 && (
             <button
               type="button"
-              onClick={() => setAmount(String(Math.floor(opSpendable * 100) / 100))}
+              onClick={() => {
+                setActionError(null);
+                setAmount(String(Math.floor(opSpendable * 100) / 100));
+              }}
               className={cn(
                 "rounded-full px-4 py-2 text-sm font-semibold press",
                 Math.abs(amtNum - opSpendable) < 0.01
@@ -483,7 +522,15 @@ export function AssetBuySheet({
           )}
         </div>
 
-        <PaymentMethodPicker methods={methods} value={method} onChange={setMethod} className="mb-4" />
+        <PaymentMethodPicker
+          methods={methods}
+          value={method}
+          onChange={(m) => {
+            setActionError(null);
+            setMethod(m);
+          }}
+          className="mb-4"
+        />
 
         {method === "openpay_checkout" && !openpayLink?.linked && (
           <div className="mb-4 rounded-2xl bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
@@ -528,6 +575,12 @@ export function AssetBuySheet({
           </p>
         )}
 
+        {actionError ? (
+          <div className="mb-3 rounded-2xl bg-destructive/15 px-3 py-2.5 text-xs text-destructive">
+            {actionError}
+          </div>
+        ) : null}
+
         {method === "solana" && solanaReady ? (
           <SolanaPaymentButton
             mode="buyNow"
@@ -548,16 +601,25 @@ export function AssetBuySheet({
             onPaymentSuccess={(signature) => {
               void (async () => {
                 try {
-                  await creditSolana({ data: { signature, wallet_id: walletId! } });
+                  await creditSolana({
+                    data: {
+                      amount: amtNum,
+                      signature,
+                      walletId: walletId!,
+                    },
+                  });
                   toast.success(`${formatUSD(amtNum)} OUSD credited from Solana`);
                   if (!isOusd && !graduated) {
                     await executeTokenBuy(amtNum);
                   } else {
                     await invalidateAfterTopup();
                     onClose();
+                    if (graduated) onNavigateSwap?.();
                   }
                 } catch (err) {
-                  toast.error((err as Error).message || "Solana top-up failed");
+                  const msg = (err as Error).message || "Solana top-up failed";
+                  setActionError(msg);
+                  toast.error(msg);
                 } finally {
                   setBusy(false);
                 }
@@ -568,7 +630,7 @@ export function AssetBuySheet({
           >
             <button
               type="button"
-              disabled={busy || !valid}
+              disabled={busy || !valid || amtNum < MIN_BUY_AMOUNT}
               className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground press disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
@@ -581,7 +643,6 @@ export function AssetBuySheet({
             disabled={
               busy ||
               !valid ||
-              openpayShort ||
               (method === "openpay_checkout" && !openpayLink?.linked)
             }
             onClick={() => void submit()}
@@ -611,16 +672,25 @@ export function AssetBuySheet({
               setMoonpayVisible(false);
               setBusy(true);
               try {
-                await creditMoonPay({ data: { transaction_id: id, wallet_id: walletId! } });
+                await creditMoonPay({
+                  data: {
+                    amount: paid,
+                    moonpayTransactionId: id,
+                    walletId: walletId!,
+                  },
+                });
                 toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
                 if (!isOusd && !graduated) {
                   await executeTokenBuy(paid);
                 } else {
                   await invalidateAfterTopup();
                   onClose();
+                  if (graduated) onNavigateSwap?.();
                 }
               } catch (err) {
-                toast.error((err as Error).message || "MoonPay credit failed");
+                const msg = (err as Error).message || "MoonPay credit failed";
+                setActionError(msg);
+                toast.error(msg);
               } finally {
                 setBusy(false);
               }

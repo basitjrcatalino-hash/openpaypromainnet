@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const CreditSchema = z.object({
-  amount: z.number().positive().min(1).max(50_000),
+  amount: z.number().positive().min(0.01).max(50_000),
   signature: z.string().trim().min(32).max(128),
   walletId: z.string().uuid().optional(),
 });

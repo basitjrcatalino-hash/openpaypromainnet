@@ -145,20 +145,20 @@ function BagsLaunchPage() {
   }
 
   const fieldClass =
-    "mt-1.5 h-11 rounded-xl border-white/10 bg-[#0c0f0d] text-white placeholder:text-white/30 focus-visible:ring-emerald-500/40";
+    "mt-1.5 h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-emerald-500/40";
 
   return (
     <div className="mx-auto w-full max-w-lg pb-10">
       <PageHeader title="Launch" backTo="/bags" />
-      <BagsWalletBar className="mb-4 border border-white/5 bg-[#121512]" onAddress={setWallet} />
+      <BagsWalletBar className="mb-4 border border-border bg-card" onAddress={setWallet} />
 
-      <p className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-100/90">
+      <p className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-950 dark:text-emerald-100/90">
         Launches attach OpenPay’s Bags partner key so platform fees route via{" "}
         <a
           href="https://bags.fm/?ref=mrwain"
           target="_blank"
           rel="noreferrer"
-          className="font-semibold text-emerald-300 underline-offset-2 hover:underline"
+          className="font-semibold text-emerald-800 dark:text-emerald-300 underline-offset-2 hover:underline"
         >
           bags.fm/?ref=mrwain
         </a>
@@ -166,16 +166,16 @@ function BagsLaunchPage() {
       </p>
 
       {/* COIN DETAILS */}
-      <section className="mb-3 rounded-2xl border border-white/5 bg-[#121512] p-4">
-        <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">
+      <section className="mb-3 rounded-2xl border border-border bg-card p-4">
+        <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Coin details
         </h2>
 
         <div className="mb-3">
-          <label className="mb-1.5 block text-xs text-white/50">Image URL</label>
+          <label className="mb-1.5 block text-xs text-muted-foreground">Image URL</label>
           <div
             className={cn(
-              "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-[#0c0f0d] px-3 py-5",
+              "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-3 py-5",
               imageUrl.trim() && "border-emerald-500/30",
             )}
           >
@@ -189,9 +189,9 @@ function BagsLaunchPage() {
                 }}
               />
             ) : (
-              <ImageIcon className="h-8 w-8 text-white/25" />
+              <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
             )}
-            <span className="text-[11px] font-bold uppercase tracking-wide text-white/40">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               Upload image
             </span>
             <Input
@@ -205,7 +205,7 @@ function BagsLaunchPage() {
 
         <div className="mb-3 grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="bags-name" className="text-xs text-white/50">
+            <label htmlFor="bags-name" className="text-xs text-muted-foreground">
               Name
             </label>
             <Input
@@ -218,7 +218,7 @@ function BagsLaunchPage() {
             />
           </div>
           <div>
-            <label htmlFor="bags-symbol" className="text-xs text-white/50">
+            <label htmlFor="bags-symbol" className="text-xs text-muted-foreground">
               Ticker
             </label>
             <Input
@@ -233,14 +233,14 @@ function BagsLaunchPage() {
         </div>
 
         <div className="mb-2">
-          <label htmlFor="bags-desc" className="text-xs text-white/50">
+          <label htmlFor="bags-desc" className="text-xs text-muted-foreground">
             Description
           </label>
           <Textarea
             id="bags-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1.5 min-h-24 rounded-xl border-white/10 bg-[#0c0f0d] text-white placeholder:text-white/30 focus-visible:ring-emerald-500/40"
+            className="mt-1.5 min-h-24 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-emerald-500/40"
             maxLength={500}
             placeholder="Description"
           />
@@ -248,7 +248,7 @@ function BagsLaunchPage() {
 
         <button
           type="button"
-          className="mt-2 flex w-full items-center justify-between py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/45"
+          className="mt-2 flex w-full items-center justify-between py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground"
           onClick={() => setSocialsOpen((v) => !v)}
         >
           Social links (optional)
@@ -281,13 +281,13 @@ function BagsLaunchPage() {
       </section>
 
       {/* FEE SHARING */}
-      <section className="mb-3 rounded-2xl border border-white/5 bg-[#121512] p-4">
+      <section className="mb-3 rounded-2xl border border-border bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Fee sharing
             </h2>
-            <p className="mt-1 text-xs text-white/45">
+            <p className="mt-1 text-xs text-muted-foreground">
               Creator fees go to your Phantom wallet (100%). Partner fees route via OpenPay’s Bags
               key.
             </p>
@@ -299,7 +299,7 @@ function BagsLaunchPage() {
             onClick={() => setFeeSharing((v) => !v)}
             className={cn(
               "relative h-7 w-12 shrink-0 rounded-full transition-colors",
-              feeSharing ? "bg-emerald-500" : "bg-white/15",
+              feeSharing ? "bg-emerald-500" : "bg-muted-foreground/30",
             )}
           >
             <span
@@ -311,18 +311,18 @@ function BagsLaunchPage() {
           </button>
         </div>
         {!feeSharing ? (
-          <p className="mt-2 text-xs text-amber-300/90">
+          <p className="mt-2 text-xs text-amber-800 dark:text-amber-300/90">
             Fee sharing is required for Bags launches — it will still be applied on-chain.
           </p>
         ) : null}
       </section>
 
       {/* OWNERSHIP */}
-      <section className="mb-4 rounded-2xl border border-white/5 bg-[#121512] p-4">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">
+      <section className="mb-4 rounded-2xl border border-border bg-card p-4">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Ownership
         </h2>
-        <p className="mt-1 text-xs text-white/45">Buy shares before anyone else.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Buy shares before anyone else.</p>
 
         <div className="relative mt-3">
           <BagsCashIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" />
@@ -333,7 +333,7 @@ function BagsLaunchPage() {
             inputMode="decimal"
             placeholder="0.00"
           />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white/40">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
             SOL
           </span>
         </div>
@@ -347,8 +347,8 @@ function BagsLaunchPage() {
               className={cn(
                 "rounded-lg border px-1 py-2 text-center text-[11px] font-bold tabular-nums transition-colors",
                 initialBuySol === p.sol
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                  : "border-white/10 bg-[#0c0f0d] text-white/55 hover:border-white/20",
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
+                  : "border-border bg-background text-muted-foreground hover:border-emerald-500/30",
               )}
             >
               {p.label}
@@ -359,7 +359,7 @@ function BagsLaunchPage() {
 
       <Button
         type="button"
-        className="h-12 w-full rounded-full bg-white text-base font-bold text-black hover:bg-white/90"
+        className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-black hover:bg-emerald-400"
         disabled={busy}
         onClick={() => void launch()}
       >
@@ -368,7 +368,7 @@ function BagsLaunchPage() {
 
       <button
         type="button"
-        className="mt-3 flex w-full items-center justify-center gap-1.5 text-xs text-white/40 hover:text-white/70"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-muted-foreground"
         onClick={() => {
           const params = new URLSearchParams();
           if (name) params.set("name", name);
@@ -387,8 +387,8 @@ function BagsLaunchPage() {
 
       {resultMint ? (
         <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-3 text-sm">
-          <div className="font-semibold text-emerald-200">Launched</div>
-          <div className="mt-1 break-all font-mono text-xs text-white/70">{resultMint}</div>
+          <div className="font-semibold text-emerald-800 dark:text-emerald-200">Launched</div>
+          <div className="mt-1 break-all font-mono text-xs text-muted-foreground">{resultMint}</div>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button asChild size="sm" variant="secondary" className="rounded-full">
               <a href={bagsTokenUrl(resultMint)} target="_blank" rel="noreferrer">

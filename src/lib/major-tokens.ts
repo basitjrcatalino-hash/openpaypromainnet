@@ -224,7 +224,7 @@ export async function fetchMajorMarkets(): Promise<MajorMarketSnapshot[]> {
     const rows = (await res.json()) as CoinGeckoMarketRow[];
     const byCg = new Map(rows.map((r) => [r.id, r]));
 
-    return MAJOR_TOKEN_IDS.map((id) => {
+    const markets = MAJOR_TOKEN_IDS.map((id) => {
       const def = MAJOR_TOKENS[id];
       const row = byCg.get(def.coingeckoId);
       const fb = FALLBACK_MARKET[id];
@@ -246,6 +246,13 @@ export async function fetchMajorMarkets(): Promise<MajorMarketSnapshot[]> {
         sparkline: Array.isArray(row.sparkline_in_7d?.price) ? row.sparkline_in_7d!.price! : [],
       };
     });
+
+    const pi = markets.find((m) => m.id === "pi");
+    if (pi && pi.price > 0) {
+      void import("@/lib/ledger-majors").then((m) => m.setCachedPiUsdPrice(pi.price));
+    }
+
+    return markets;
   } catch {
     return MAJOR_TOKEN_IDS.map((id) => ({ id, ...FALLBACK_MARKET[id], sparkline: [] }));
   }

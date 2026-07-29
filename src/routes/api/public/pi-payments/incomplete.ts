@@ -31,7 +31,10 @@ export const Route = createFileRoute("/api/public/pi-payments/incomplete")({
             await completePiPayment(paymentId, useTxid);
 
             const admin = await getAdmin();
-            const ousdAmount = Number(payment.amount);
+            const { fetchMajorUsdPrices, ousdFromPiAmount } = await import("@/lib/ledger-majors");
+            const piAmount = Number(payment.amount);
+            const prices = await fetchMajorUsdPrices(["pi"]);
+            const ousdAmount = ousdFromPiAmount(piAmount, prices.pi);
             const { data: existing } = await admin
               .from("pi_payments").select("status").eq("payment_id", paymentId).maybeSingle();
 
@@ -50,17 +53,21 @@ export const Route = createFileRoute("/api/public/pi-payments/incomplete")({
                   grossAmount: ousdAmount,
                   counterparty: `pi:${paymentId}`,
                   txHash: useTxid,
-                  memo: `Pi Network top-up (recovered) · ${payment.memo ?? paymentId}`,
+                  memo: `Pi Network top-up (recovered) · ${piAmount} π @ $${prices.pi} → ${ousdAmount} OUSD · ${payment.memo ?? paymentId}`,
                 });
                 await admin.from("pi_payments").upsert(
                   {
                     user_id: userId,
                     payment_id: paymentId,
                     txid: useTxid,
-                    pi_amount: payment.amount,
+                    pi_amount: piAmount,
                     ousd_credited: credited.netAmount,
                     memo: payment.memo,
-                    metadata: payment.metadata as Record<string, unknown>,
+                    metadata: {
+                      ...(payment.metadata as Record<string, unknown>),
+                      piUsdPrice: prices.pi,
+                      ousdGross: ousdAmount,
+                    },
                     status: "completed",
                     completed_at: new Date().toISOString(),
                   },

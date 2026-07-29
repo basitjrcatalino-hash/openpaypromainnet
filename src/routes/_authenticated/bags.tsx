@@ -74,18 +74,18 @@ function BagsHubPage() {
     <div className="mx-auto w-full max-w-lg pb-8">
       <PageHeader title="Bags Cash" backTo="/dashboard" />
 
-      <div className="mb-4 overflow-hidden rounded-2xl border border-emerald-500/20 bg-[#0c0f0d] p-4 text-white shadow-[inset_0_1px_0_rgba(52,211,153,0.12)]">
-        <div className="mb-1 flex items-center gap-2 text-lg font-bold tracking-tight">
+      <div className="mb-4 overflow-hidden rounded-2xl border border-emerald-500/25 bg-card p-4 shadow-sm ring-1 ring-emerald-500/10">
+        <div className="mb-1 flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
           <BagsCashIcon className="h-6 w-6" />
           Bags on Solana
         </div>
-        <p className="text-sm text-white/55">
+        <p className="text-sm text-muted-foreground">
           Launch, trade, and claim fees via the{" "}
           <a
             href="https://docs.bags.fm/"
             target="_blank"
             rel="noreferrer"
-            className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
+            className="font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
           >
             Bags API
           </a>
@@ -93,18 +93,18 @@ function BagsHubPage() {
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           {pingLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-white/50" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           ) : ping?.ok ? (
-            <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-300">
+            <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-800 dark:text-emerald-300">
               API {ping.message}
             </span>
           ) : (
-            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-200">
+            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-900 dark:text-amber-200">
               API not reachable — check BAGS_API_KEY
             </span>
           )}
           {ping?.partnerConfig ? (
-            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-200/90">
+            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-800 dark:text-emerald-200">
               Partner key linked
             </span>
           ) : null}
@@ -113,7 +113,7 @@ function BagsHubPage() {
               href={ping.partnerRefUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-semibold text-emerald-400 underline-offset-2 hover:underline"
+              className="inline-flex items-center gap-1 font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
             >
               bags.fm/?ref={ping.partnerRef || "mrwain"}
               <ExternalLink className="h-3 w-3" />
@@ -123,7 +123,7 @@ function BagsHubPage() {
       </div>
 
       <BagsAuthCard />
-      <BagsWalletBar className="mb-4 border border-white/5 bg-[#121512]" />
+      <BagsWalletBar className="mb-4 border border-border bg-card" />
 
       <div className="mb-6 grid gap-2">
         {ACTIONS.map((action) => {
@@ -132,13 +132,13 @@ function BagsHubPage() {
             <Link
               key={action.to}
               to={action.to}
-              className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#121512] px-4 py-3 press transition-colors hover:border-emerald-500/30"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 press transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/5"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
                 <Icon className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold">{action.label}</span>
+                <span className="block text-sm font-bold text-foreground">{action.label}</span>
                 <span className="block text-xs text-muted-foreground">{action.desc}</span>
               </span>
             </Link>
@@ -147,8 +147,8 @@ function BagsHubPage() {
       </div>
 
       <div className="mb-2 flex items-center gap-2">
-        <ChartNoAxesCombined className="h-4 w-4 text-emerald-400" />
-        <h2 className="text-sm font-bold uppercase tracking-wide">Launch feed</h2>
+        <ChartNoAxesCombined className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+        <h2 className="text-sm font-bold uppercase tracking-wide text-foreground">Launch feed</h2>
       </div>
 
       {topLoading ? (
@@ -156,7 +156,7 @@ function BagsHubPage() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : !top?.tokens?.length ? (
-        <p className="rounded-2xl border border-white/5 bg-[#121512] px-3 py-4 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border bg-card px-3 py-4 text-center text-sm text-muted-foreground">
           No launch feed data yet.
         </p>
       ) : (
@@ -170,7 +170,7 @@ function BagsHubPage() {
                   to="/bags/token/$mint"
                   params={{ mint }}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border border-white/5 bg-[#121512] px-3 py-2.5 press hover:border-emerald-500/25",
+                    "flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 press hover:border-emerald-500/30 hover:bg-emerald-500/5",
                   )}
                 >
                   {token.image ? (
@@ -185,7 +185,7 @@ function BagsHubPage() {
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
+                    <span className="block truncate text-sm font-semibold text-foreground">
                       {token.name || token.symbol || mint.slice(0, 8)}
                       {token.symbol ? (
                         <span className="ml-1 text-muted-foreground">${token.symbol}</span>
@@ -207,7 +207,7 @@ function BagsHubPage() {
           asChild
           variant="ghost"
           size="sm"
-          className="rounded-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+          className="rounded-full text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
           <a href="https://bags.fm" target="_blank" rel="noreferrer">
             Open bags.fm

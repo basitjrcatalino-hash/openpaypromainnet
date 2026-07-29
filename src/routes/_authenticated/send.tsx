@@ -27,7 +27,7 @@ import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functio
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
 import {
   isSystemCounterparty,
   loadRecentRecipients,
@@ -125,6 +125,12 @@ function SendPage() {
     },
   });
 
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
   const { data: deepToken } = useQuery({
     queryKey: ["send-deep-token", search.token],
     enabled: !!search.token,
@@ -193,7 +199,7 @@ function SendPage() {
         kind: "BTC",
         name: MAJOR_TOKENS.btc.name,
         bal: Number(wallet?.btc_balance ?? 0),
-        price: 65000,
+        price: majorMarketById(majorMarkets, "btc").price,
         logo: MAJOR_TOKENS.btc.logoUrl,
       },
       {
@@ -201,7 +207,7 @@ function SendPage() {
         kind: "ETH",
         name: MAJOR_TOKENS.eth.name,
         bal: Number(wallet?.eth_balance ?? 0),
-        price: 1920,
+        price: majorMarketById(majorMarkets, "eth").price,
         logo: MAJOR_TOKENS.eth.logoUrl,
       },
       {
@@ -209,7 +215,7 @@ function SendPage() {
         kind: "SOL",
         name: MAJOR_TOKENS.sol.name,
         bal: Number(wallet?.sol_balance ?? 0),
-        price: 74,
+        price: majorMarketById(majorMarkets, "sol").price,
         logo: MAJOR_TOKENS.sol.logoUrl,
       },
       {
@@ -217,7 +223,7 @@ function SendPage() {
         kind: "PI",
         name: MAJOR_TOKENS.pi.name,
         bal: Number(wallet?.pi_balance ?? 0),
-        price: 0.079,
+        price: majorMarketById(majorMarkets, "pi").price,
         logo: PI_NETWORK_LOGO_URL,
       },
     ];
@@ -275,6 +281,7 @@ function SendPage() {
     holdings,
     deepToken,
     search.asset,
+    majorMarkets,
   ]);
 
   const selected = assets.find((a) => a.key === selectedKey) ?? null;

@@ -66,7 +66,7 @@ const methods: {
     id: "pi",
     label: "Pi Network (π)",
     logoUrl: PI_NETWORK_LOGO_URL,
-    desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
+    desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
   },
   {
     id: "solana",
@@ -425,7 +425,7 @@ function TopUpPage() {
       // pi
       const { paymentId } = await topUpWithPi(parsed.data.amount);
       toast.success(
-        `Pi payment complete · ${parsed.data.amount} OUSD credited (${paymentId.slice(0, 8)}…)`,
+        `Pi payment complete · ${parsed.data.amount} OUSD at live π price (${paymentId.slice(0, 8)}…)`,
       );
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["wallets", user.id] });

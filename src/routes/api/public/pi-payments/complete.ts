@@ -36,9 +36,12 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
           // Call Pi complete first; Pi verifies the on-chain txid.
           await completePiPayment(paymentId, txid);
 
-          // Credit OUSD 1:1 with Pi to the user's activated wallet.
+          // Credit OUSD from paid π × live CoinGecko PI/USD (1 OUSD = $1).
           const { fetchActiveWallet } = await import("@/lib/wallet-utils");
-          const ousdAmount = Number(payment.amount);
+          const { fetchMajorUsdPrices, ousdFromPiAmount } = await import("@/lib/ledger-majors");
+          const piAmount = Number(payment.amount);
+          const prices = await fetchMajorUsdPrices(["pi"]);
+          const ousdAmount = ousdFromPiAmount(piAmount, prices.pi);
           const wallet = await fetchActiveWallet<{ id: string; ousd_balance?: number | null }>(
             admin,
             userId,
@@ -53,7 +56,7 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
             grossAmount: ousdAmount,
             counterparty: `pi:${paymentId}`,
             txHash: txid,
-            memo: `Pi Network top-up · ${payment.memo ?? paymentId}`,
+            memo: `Pi Network top-up · ${piAmount} π @ $${prices.pi} → ${ousdAmount} OUSD · ${payment.memo ?? paymentId}`,
           });
 
           await admin.from("pi_payments").upsert(
@@ -61,10 +64,14 @@ export const Route = createFileRoute("/api/public/pi-payments/complete")({
               user_id: userId,
               payment_id: paymentId,
               txid,
-              pi_amount: payment.amount,
+              pi_amount: piAmount,
               ousd_credited: credited.netAmount,
               memo: payment.memo,
-              metadata: payment.metadata as Record<string, unknown>,
+              metadata: {
+                ...(payment.metadata as Record<string, unknown>),
+                piUsdPrice: prices.pi,
+                ousdGross: ousdAmount,
+              },
               status: "completed",
               completed_at: new Date().toISOString(),
             },

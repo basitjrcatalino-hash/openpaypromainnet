@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getCachedPiUsdPrice, fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 export type CurrencyCode = "USD" | "EUR" | "GBP" | "PI";
 
@@ -6,10 +7,16 @@ export const CURRENCIES: { code: CurrencyCode; symbol: string; rate: number; lab
   { code: "USD", symbol: "$", rate: 1, label: "US Dollar" },
   { code: "EUR", symbol: "€", rate: 0.92, label: "Euro" },
   { code: "GBP", symbol: "£", rate: 0.78, label: "British Pound" },
-  { code: "PI", symbol: "π", rate: 1 / 0.65, label: "Pi" },
+  /** rate = π per $1 — refreshed from live CoinGecko PI/USD */
+  { code: "PI", symbol: "π", rate: 1 / 0.079, label: "Pi" },
 ];
 
 const STORAGE_KEY = "op:currency";
+
+function piPerUsd(): number {
+  const usd = getCachedPiUsdPrice();
+  return usd > 0 ? 1 / usd : CURRENCIES.find((c) => c.code === "PI")!.rate;
+}
 
 export function formatCurrency(
   usd: number,
@@ -17,7 +24,8 @@ export function formatCurrency(
   opts: { compact?: boolean } = {},
 ): string {
   const c = CURRENCIES.find((x) => x.code === code) ?? CURRENCIES[0];
-  const value = Number(usd || 0) * c.rate;
+  const rate = code === "PI" ? piPerUsd() : c.rate;
+  const value = Number(usd || 0) * rate;
   if (!Number.isFinite(value)) return code === "PI" ? `${c.symbol}0.00` : "$0.00";
 
   const abs = Math.abs(value);
@@ -58,7 +66,8 @@ export function formatTokenPrice(
   opts: { maxLen?: number } = {},
 ): string {
   const c = CURRENCIES.find((x) => x.code === code) ?? CURRENCIES[0];
-  const value = Number(usd || 0) * c.rate;
+  const rate = code === "PI" ? piPerUsd() : c.rate;
+  const value = Number(usd || 0) * rate;
   if (!Number.isFinite(value) || value === 0) return `${c.symbol}0.00`;
 
   const abs = Math.abs(value);
@@ -83,13 +92,24 @@ export function formatTokenPrice(
 
 export function useCurrency() {
   const [code, setCode] = useState<CurrencyCode>("USD");
+  const [, setPiTick] = useState(0);
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? (localStorage.getItem(STORAGE_KEY) as CurrencyCode | null) : null;
+    const saved =
+      typeof window !== "undefined"
+        ? (localStorage.getItem(STORAGE_KEY) as CurrencyCode | null)
+        : null;
     if (saved && CURRENCIES.some((c) => c.code === saved)) setCode(saved);
+  }, []);
+  useEffect(() => {
+    void fetchMajorUsdPrices(["pi"]).then(() => setPiTick((n) => n + 1));
   }, []);
   const update = (next: CurrencyCode) => {
     setCode(next);
-    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
     window.dispatchEvent(new CustomEvent("op:currency-change", { detail: next }));
   };
   useEffect(() => {

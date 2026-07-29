@@ -116,32 +116,43 @@ export async function signInWithPi(): Promise<{ username: string }> {
 
 /**
  * Create a Pi U2A payment that tops up the user's OUSD balance.
- * 1 π = 1 OUSD.
+ * Charges live market PI for the requested OUSD amount (1 OUSD = $1).
  */
-export async function topUpWithPi(amountPi: number): Promise<{ paymentId: string; txid: string }> {
+export async function topUpWithPi(ousdAmount: number): Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }> {
   await ensureInit();
   if (!window.Pi) throw new Error("Pi SDK unavailable");
 
   const { data: sess } = await supabase.auth.getSession();
   if (!sess.session) throw new Error("Sign in first to top up with Pi");
 
+  if (!(ousdAmount > 0)) throw new Error("Enter a valid OUSD amount");
+
+  const { fetchMajorUsdPrices, piAmountForOusd } = await import("@/lib/ledger-majors");
+  const prices = await fetchMajorUsdPrices(["pi"]);
+  const piUsdPrice = prices.pi;
+  if (!(piUsdPrice > 0)) throw new Error("Could not fetch live Pi price");
+
+  const piAmount = piAmountForOusd(ousdAmount, piUsdPrice);
+  if (!(piAmount > 0)) throw new Error("Amount too small for current Pi price");
+
   // Ensure auth scope includes "payments" (re-auth is cheap and idempotent for already-signed-in Pi users).
   await window.Pi.authenticate(SCOPES, (payment) => {
     void completeIncomplete(payment);
   });
 
-  return await new Promise<{ paymentId: string; txid: string }>((resolve, reject) => {
+  return await new Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }>((resolve, reject) => {
     const metadata = {
       product: "ousd_topup",
-      ousdAmount: amountPi, // 1π = 1 OUSD
+      ousdAmount,
+      piUsdPrice,
       supabaseUserId: sess.session!.user.id,
     };
     let lastPaymentId = "";
 
     window.Pi!.createPayment(
       {
-        amount: amountPi,
-        memo: `OpenPay Pro: top up ${amountPi} OUSD`,
+        amount: piAmount,
+        memo: `OpenPay Pro: ${ousdAmount} OUSD (~${piAmount} π @ $${piUsdPrice})`,
         metadata,
       },
       {
@@ -168,7 +179,7 @@ export async function topUpWithPi(amountPi: number): Promise<{ paymentId: string
             reject(new Error(`Completion failed: ${t}`));
             return;
           }
-          resolve({ paymentId, txid });
+          resolve({ paymentId, txid, piAmount, piUsdPrice });
         },
         onCancel: (paymentId) => {
           reject(new Error(`Payment cancelled (${paymentId || lastPaymentId})`));

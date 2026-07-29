@@ -92,7 +92,7 @@ const ALL_METHODS: {
     id: "pi",
     label: "Pi Network (π)",
     logoUrl: PI_NETWORK_LOGO_URL,
-    desc: "Pay with Pi · 1 π = 1 OUSD",
+    desc: "Pay with Pi · live π price → OUSD ($1)",
   },
   {
     id: "solana",
@@ -362,7 +362,7 @@ export function AssetBuySheet({
       if (isOusd) {
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
           await invalidateAfterTopup();
           onClose();
           return;
@@ -393,7 +393,7 @@ export function AssetBuySheet({
         }
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
           await executeMajorBuy(amt);
           return;
         }
@@ -430,7 +430,7 @@ export function AssetBuySheet({
         }
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
           await executeDexBuy(amt);
           return;
         }
@@ -457,7 +457,7 @@ export function AssetBuySheet({
 
       if (method === "pi") {
         await topUpWithPi(amt);
-        toast.success(`${formatUSD(amt)} OUSD credited from Pi`);
+        toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
         await executeTokenBuy(amt);
         return;
       }

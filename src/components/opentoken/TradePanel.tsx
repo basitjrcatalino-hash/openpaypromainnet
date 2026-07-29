@@ -38,7 +38,7 @@ const BUY_METHODS = [
     id: "pi" as const,
     label: "Pi Network (π)",
     logoUrl: PI_NETWORK_LOGO_URL,
-    desc: "Pay with Pi · 1 π = 1 OUSD credited instantly",
+    desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
   },
 ];
 const BUY_PRESETS = [
@@ -524,7 +524,7 @@ export function TradePanel({
 
           {payMethod === "pi" && (
             <div className="rounded-2xl bg-muted/60 p-3 text-xs text-muted-foreground">
-              Pay with Pi Network. 1 π = 1 OUSD credited instantly, then your buy executes.
+              Pay with Pi Network. Live π market price converts to OUSD ($1), then your buy executes.
             </div>
           )}
         </>

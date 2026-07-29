@@ -90,6 +90,17 @@ const FALLBACK_USD: Record<LedgerMajorId, number> = {
 
 const CG_IDS = MAJOR_TOKENS.btc.coingeckoId; // unused placeholder
 
+/** Live PI/USD used by display currency (π) — refreshed by fetchMajorUsdPrices. */
+let cachedPiUsd = FALLBACK_USD.pi;
+
+export function getCachedPiUsdPrice(): number {
+  return cachedPiUsd > 0 ? cachedPiUsd : FALLBACK_USD.pi;
+}
+
+export function setCachedPiUsdPrice(price: number): void {
+  if (price > 0) cachedPiUsd = price;
+}
+
 export async function fetchMajorUsdPrices(
   ids: LedgerMajorId[] = ["btc", "eth", "sol", "pi"],
 ): Promise<Record<LedgerMajorId, number>> {
@@ -109,7 +120,20 @@ export async function fetchMajorUsdPrices(
   } catch {
     /* keep fallbacks */
   }
+  if (out.pi > 0) cachedPiUsd = out.pi;
   return out;
+}
+
+/** PI amount required to cover an OUSD/$ amount (1 OUSD = $1). */
+export function piAmountForOusd(ousdAmount: number, piUsdPrice = getCachedPiUsdPrice()): number {
+  const price = piUsdPrice > 0 ? piUsdPrice : FALLBACK_USD.pi;
+  return Math.round((ousdAmount / price) * 1e6) / 1e6;
+}
+
+/** OUSD/$ credited for a paid PI amount at live price. */
+export function ousdFromPiAmount(piAmount: number, piUsdPrice = getCachedPiUsdPrice()): number {
+  const price = piUsdPrice > 0 ? piUsdPrice : FALLBACK_USD.pi;
+  return Math.round(piAmount * price * 1e8) / 1e8;
 }
 
 export function walletMajorSelect(): string {

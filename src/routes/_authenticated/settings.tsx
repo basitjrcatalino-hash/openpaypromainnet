@@ -66,6 +66,7 @@ import {
   startOpenPayConnect,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
+import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — OpenPay Pro Wallet" }] }),
@@ -1206,6 +1207,7 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
     }
     setBusy(true);
     try {
+      stashOpenPayConnectReturn("/settings");
       const { authorize_url } = await startConnect({
         data: { origin: window.location.origin },
       });

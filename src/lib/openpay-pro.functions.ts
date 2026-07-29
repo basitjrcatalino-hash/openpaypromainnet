@@ -20,6 +20,32 @@ export const resolveOpenPayAccount = createServerFn({ method: "POST" })
     try {
       const local = await findLocalProfileByHandle(context.supabase as any, identifier);
       if (local) {
+        // If they linked OpenPay via OAuth, surface OP account so Send need not type OP…
+        try {
+          const { hasSupabaseAdminEnv } = await import("@/integrations/supabase/env.server");
+          if (hasSupabaseAdminEnv() && local.id) {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            const { data: prefs } = await supabaseAdmin
+              .from("user_preferences")
+              .select("notifications")
+              .eq("user_id", local.id)
+              .maybeSingle();
+            const link = readOpenPayLink(prefs?.notifications);
+            if (link.linked && (link.account_number || link.username)) {
+              return {
+                ok: true as const,
+                account: {
+                  name: link.name ?? local.display_name ?? undefined,
+                  username: link.username ?? local.username ?? local.pi_username ?? identifier,
+                  account_number: link.account_number,
+                },
+                source: "linked" as const,
+              };
+            }
+          }
+        } catch {
+          /* fall through to local profile */
+        }
         return {
           ok: true as const,
           account: {
@@ -548,18 +574,36 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
       };
     }
 
+    // Pro @handle with linked OpenPay (OAuth) but no local wallet settle → partner OP…
+    let partnerTo = to;
+    if (localProfile?.id && supabaseAdmin) {
+      try {
+        const { data: prefs } = await supabaseAdmin
+          .from("user_preferences")
+          .select("notifications")
+          .eq("user_id", localProfile.id)
+          .maybeSingle();
+        const link = readOpenPayLink(prefs?.notifications);
+        if (link.linked && (link.account_number || link.username || link.identifier)) {
+          partnerTo = link.account_number || link.username || link.identifier || to;
+        }
+      } catch {
+        /* keep original to */
+      }
+    }
+
     const idem = `${wallet.id}-${Date.now()}`;
     let result;
     try {
       result = await openpayPro.sendTransfer(
-        { to, amount: data.amount, note: data.note ?? undefined },
+        { to: partnerTo, amount: data.amount, note: data.note ?? undefined },
         idem,
       );
     } catch (e) {
       const message = (e as Error).message || "Transfer failed";
       if (isAmbiguousUsernameError(message)) {
         throw new Error(
-          `Could not send to @${to} via OpenPay. Try their email or OP account number, or use OpenPay Pro wallet.`,
+          `Could not send to @${to} via OpenPay. Ask them to Connect OpenPay in Settings, or use their OP account number / OpenPay Pro wallet.`,
         );
       }
       throw new Error(message);

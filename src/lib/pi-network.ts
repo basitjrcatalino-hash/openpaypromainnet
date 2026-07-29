@@ -13,7 +13,10 @@ declare global {
       authenticate: (
         scopes: string[],
         onIncompletePaymentFound: (payment: PiPayment) => void,
-      ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
+      ) => Promise<{
+        accessToken: string;
+        user: { uid: string; username: string; wallet_address?: string };
+      }>;
       createPayment: (
         payment: {
           amount: number;
@@ -33,6 +36,7 @@ declare global {
 
 const SDK_URL = "https://sdk.minepi.com/pi-sdk.js";
 const SCOPES = ["username", "payments"];
+const LINK_SCOPES = ["username", "payments", "wallet_address"];
 let sdkPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;
 
@@ -100,7 +104,10 @@ export async function signInWithPi(): Promise<{ username: string }> {
   const res = await fetch("/api/public/pi-auth", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ accessToken: auth.accessToken }),
+    body: JSON.stringify({
+      accessToken: auth.accessToken,
+      walletAddress: auth.user.wallet_address,
+    }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -113,6 +120,50 @@ export async function signInWithPi(): Promise<{ username: string }> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return { username };
+}
+
+/**
+ * Link the current OpenPay Pro user's Pi Network wallet via Pi Auth (wallet_address scope).
+ * Must run in Pi Browser. Stores profiles.pi_wallet_address — no manual paste.
+ */
+export async function linkPiWallet(): Promise<{
+  pi_username: string;
+  pi_wallet_address: string;
+}> {
+  await ensureInit();
+  if (!window.Pi) throw new Error("Pi SDK unavailable — open this page in the Pi Browser");
+
+  const auth = await window.Pi.authenticate(LINK_SCOPES, (payment) => {
+    void completeIncomplete(payment);
+  });
+
+  const walletAddress = auth.user.wallet_address?.trim();
+  if (!walletAddress) {
+    throw new Error(
+      "Pi did not share a wallet address. Allow the wallet_address permission in Pi Browser and try again.",
+    );
+  }
+
+  const res = await fetch("/api/public/pi-link-wallet", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(await getAuthHeader()),
+    },
+    body: JSON.stringify({
+      accessToken: auth.accessToken,
+      walletAddress,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error || "Failed to link Pi wallet");
+  }
+  const data = (await res.json()) as {
+    pi_username: string;
+    pi_wallet_address: string;
+  };
+  return data;
 }
 
 /**

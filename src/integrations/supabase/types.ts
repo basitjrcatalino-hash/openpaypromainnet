@@ -411,6 +411,7 @@ export type Database = {
           kyc_verified_at: string | null
           pi_uid: string | null
           pi_username: string | null
+          pi_wallet_address: string | null
           updated_at: string
           username: string | null
         }
@@ -426,6 +427,7 @@ export type Database = {
           kyc_verified_at?: string | null
           pi_uid?: string | null
           pi_username?: string | null
+          pi_wallet_address?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -441,6 +443,7 @@ export type Database = {
           kyc_verified_at?: string | null
           pi_uid?: string | null
           pi_username?: string | null
+          pi_wallet_address?: string | null
           updated_at?: string
           username?: string | null
         }

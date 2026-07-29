@@ -5,8 +5,8 @@
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Check, Copy, QrCode, Share2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, ArrowLeft, Check, Copy, Link2, Loader2, QrCode, Share2 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -23,6 +23,7 @@ import {
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { linkPiWallet } from "@/lib/pi-network";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { shortAddress } from "@/lib/wallet-utils";
@@ -127,6 +128,7 @@ function WalletReceivePage() {
   const { user } = Route.useRouteContext();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const qc = useQueryClient();
 
   const tokenId = search.token;
   const initialNetwork =
@@ -137,6 +139,7 @@ function WalletReceivePage() {
   const [qrUrl, setQrUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [piLinkBusy, setPiLinkBusy] = useState(false);
 
   useEffect(() => {
     try {
@@ -186,6 +189,20 @@ function WalletReceivePage() {
       return data as ReceiveToken | null;
     },
   });
+
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile-pi-link", user.id],
+    enabled: network === "pi" || search.asset === "PI",
+    queryFn: async () =>
+      (
+        await supabase
+          .from("profiles")
+          .select("pi_uid, pi_username, pi_wallet_address")
+          .eq("id", user.id)
+          .maybeSingle()
+      ).data,
+  });
+  const piLinked = !!(profile?.pi_wallet_address || profile?.pi_username);
 
   const displayAsset = openToken?.symbol ?? selected.asset;
   const displayLabel = openToken
@@ -274,6 +291,21 @@ function WalletReceivePage() {
       }
     } catch {
       /* user cancelled */
+    }
+  }
+
+  async function connectPiWallet() {
+    setPiLinkBusy(true);
+    try {
+      const linked = await linkPiWallet();
+      toast.success(
+        `Pi linked @${linked.pi_username} · ${shortAddress(linked.pi_wallet_address, 6, 6)}`,
+      );
+      await qc.invalidateQueries({ queryKey: ["profile-pi-link", user.id] });
+    } catch (e) {
+      toast.error((e as Error).message || "Pi Auth failed");
+    } finally {
+      setPiLinkBusy(false);
     }
   }
 
@@ -415,6 +447,72 @@ function WalletReceivePage() {
             <p className="ph-caption">
               {displayLabel} · credits your OpenPay Pro balance
             </p>
+
+            {network === "pi" && (
+              <div className="mt-4 rounded-2xl border border-[#6B4EFF]/30 bg-[#6B4EFF]/10 px-3 py-3 text-left">
+                {profileLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Checking Pi link…
+                  </div>
+                ) : piLinked ? (
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div className="min-w-0 flex-1 text-xs">
+                      <p className="font-semibold text-foreground">
+                        Pi linked
+                        {profile?.pi_username ? ` · @${profile.pi_username}` : ""}
+                      </p>
+                      {profile?.pi_wallet_address ? (
+                        <button
+                          type="button"
+                          className="mt-1 break-all font-mono text-[11px] text-[#6B4EFF]"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(profile.pi_wallet_address!);
+                            toast.success("Pi wallet address copied");
+                          }}
+                        >
+                          {profile.pi_wallet_address}
+                        </button>
+                      ) : null}
+                      <p className="mt-1 text-muted-foreground">
+                        Linked via Pi Auth — no manual address. Pro PI QR below is OpenPay → OpenPay.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="shrink-0 rounded-full"
+                      disabled={piLinkBusy}
+                      onClick={() => void connectPiWallet()}
+                    >
+                      {piLinkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Refresh"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Link Pi wallet with Pi Auth</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Open in Pi Browser — we fetch your wallet address automatically.
+                    </p>
+                    <Button
+                      type="button"
+                      className="w-full rounded-full bg-[#6B4EFF] text-white hover:opacity-90"
+                      disabled={piLinkBusy}
+                      onClick={() => void connectPiWallet()}
+                    >
+                      {piLinkBusy ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link2 className="mr-2 h-4 w-4" />
+                      )}
+                      Link with Pi Auth
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mx-auto mt-5 grid h-52 w-52 place-items-center rounded-2xl border border-border bg-white p-3">
               {qrUrl ? (

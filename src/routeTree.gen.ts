@@ -57,6 +57,7 @@ import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public
 import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/pi-link-wallet'
 import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
 import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
@@ -327,6 +328,11 @@ const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
   path: '/api/public/pi-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPiLinkWalletRoute = ApiPublicPiLinkWalletRouteImport.update({
+  id: '/api/public/pi-link-wallet',
+  path: '/api/public/pi-link-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
   id: '/api/public/solana-auth',
   path: '/api/public/solana-auth',
@@ -496,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-link-wallet': typeof ApiPublicPiLinkWalletRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
@@ -567,6 +574,7 @@ export interface FileRoutesByTo {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-link-wallet': typeof ApiPublicPiLinkWalletRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
@@ -640,6 +648,7 @@ export interface FileRoutesById {
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
+  '/api/public/pi-link-wallet': typeof ApiPublicPiLinkWalletRoute
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
@@ -713,6 +722,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/pi-link-wallet'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
@@ -784,6 +794,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/pi-link-wallet'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
@@ -856,6 +867,7 @@ export interface FileRouteTypes {
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
+    | '/api/public/pi-link-wallet'
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
@@ -897,6 +909,7 @@ export interface RootRouteChildren {
   ApiPublicOpenpayAuthRoute: typeof ApiPublicOpenpayAuthRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
+  ApiPublicPiLinkWalletRoute: typeof ApiPublicPiLinkWalletRoute
   ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
   ApiPublicTelegramAuthRoute: typeof ApiPublicTelegramAuthRoute
@@ -1252,6 +1265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pi-link-wallet': {
+      id: '/api/public/pi-link-wallet'
+      path: '/api/public/pi-link-wallet'
+      fullPath: '/api/public/pi-link-wallet'
+      preLoaderRoute: typeof ApiPublicPiLinkWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/solana-auth': {
       id: '/api/public/solana-auth'
       path: '/api/public/solana-auth'
@@ -1553,6 +1573,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicOpenpayAuthRoute: ApiPublicOpenpayAuthRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,
+  ApiPublicPiLinkWalletRoute: ApiPublicPiLinkWalletRoute,
   ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
   ApiPublicTelegramAuthRoute: ApiPublicTelegramAuthRoute,

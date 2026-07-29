@@ -11,6 +11,7 @@ import {
   Wallet as WalletIcon,
   Loader2,
   ExternalLink,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -26,6 +27,8 @@ import {
   settleOpenPayInboundReceive,
 } from "@/lib/openpay-pro.functions";
 import { formatUSD, shortAddress } from "@/lib/wallet-utils";
+import { linkPiWallet } from "@/lib/pi-network";
+import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/receive")({
   head: () => ({ meta: [{ title: "Receive — OpenPay Pro Wallet" }] }),
@@ -72,6 +75,7 @@ function ReceivePage() {
     partner_username?: string;
     address?: string | null;
   } | null>(null);
+  const [piLinkBusy, setPiLinkBusy] = useState(false);
 
   const createReceive = useServerFn(createOpenPayReceiveLink);
   const settleInbound = useServerFn(settleOpenPayInboundReceive);
@@ -92,9 +96,37 @@ function ReceivePage() {
       ).data,
   });
 
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile-pi-link", user.id],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("profiles")
+          .select("pi_uid, pi_username, pi_wallet_address")
+          .eq("id", user.id)
+          .maybeSingle()
+      ).data,
+  });
+  const piLinked = !!(profile?.pi_wallet_address || profile?.pi_username);
+
   const payUri = wallet?.address
     ? `openpay:${wallet.address}?asset=${asset}${amount ? `&amount=${encodeURIComponent(amount)}` : ""}`
     : "";
+
+  async function connectPiWallet() {
+    setPiLinkBusy(true);
+    try {
+      const linked = await linkPiWallet();
+      toast.success(
+        `Pi linked @${linked.pi_username} · ${shortAddress(linked.pi_wallet_address, 6, 6)}`,
+      );
+      await qc.invalidateQueries({ queryKey: ["profile-pi-link", user.id] });
+    } catch (e) {
+      toast.error((e as Error).message || "Pi Auth failed");
+    } finally {
+      setPiLinkBusy(false);
+    }
+  }
 
   function clearReturnParams() {
     void navigate({
@@ -351,6 +383,89 @@ function ReceivePage() {
             <p className="text-sm text-muted-foreground">{wallet?.name ?? "Main Wallet"}</p>
             <p className="mt-1 text-lg font-semibold text-foreground">Scan to receive {asset}</p>
           </div>
+
+          {asset === "PI" && (
+            <div className="rounded-2xl border border-[#6B4EFF]/30 bg-[#6B4EFF]/10 px-4 py-3 text-left">
+              {profileLoading ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Checking Pi link…
+                </div>
+              ) : piLinked ? (
+                <div className="flex items-start gap-3">
+                  <img
+                    src={PI_NETWORK_LOGO_URL}
+                    alt=""
+                    className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">Pi wallet linked</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {profile?.pi_username ? `@${profile.pi_username}` : "Pi Network"}
+                      {profile?.pi_wallet_address
+                        ? ` · ${shortAddress(profile.pi_wallet_address, 6, 6)}`
+                        : ""}
+                    </p>
+                    {profile?.pi_wallet_address && (
+                      <button
+                        type="button"
+                        className="mt-2 font-mono text-[11px] font-semibold text-[#6B4EFF] underline-offset-2 hover:underline"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(profile.pi_wallet_address!);
+                          toast.success("Pi wallet address copied");
+                        }}
+                      >
+                        {profile.pi_wallet_address}
+                      </button>
+                    )}
+                    <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                      Linked via Pi Auth — no manual address. OpenPay Pro PI deposits still use the
+                      QR below (OpenPay → OpenPay).
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="shrink-0 rounded-full"
+                    disabled={piLinkBusy}
+                    onClick={() => void connectPiWallet()}
+                  >
+                    {piLinkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Refresh"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={PI_NETWORK_LOGO_URL}
+                      alt=""
+                      className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Link Pi wallet with Pi Auth</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Open in Pi Browser — we fetch your Pi wallet address automatically. No paste.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    className="w-full rounded-full bg-[#6B4EFF] text-white hover:opacity-90"
+                    disabled={piLinkBusy}
+                    onClick={() => void connectPiWallet()}
+                  >
+                    {piLinkBusy ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Link2 className="mr-2 h-4 w-4" />
+                    )}
+                    Link with Pi Auth
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mx-auto grid w-fit place-items-center rounded-3xl bg-white p-5 shadow-sm">
             {walletQrUrl ? (

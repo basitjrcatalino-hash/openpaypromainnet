@@ -1,12 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
+function cleanWalletAddress(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  if (v.length < 8 || v.length > 120) return null;
+  return v;
+}
+
 export const Route = createFileRoute("/api/public/pi-auth")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { accessToken } = (await request.json()) as { accessToken?: string };
+          const body = (await request.json()) as {
+            accessToken?: string;
+            walletAddress?: string;
+          };
+          const { accessToken } = body;
+          const walletAddress = cleanWalletAddress(body.walletAddress);
           if (!accessToken || typeof accessToken !== "string") {
             return Response.json({ error: "Missing accessToken" }, { status: 400 });
           }
@@ -63,8 +75,9 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { provisionPasswordUser } = await import("@/lib/auth-provision.server");
 
+          let userId: string;
           try {
-            await provisionPasswordUser(supabaseAdmin, {
+            const user = await provisionPasswordUser(supabaseAdmin, {
               email,
               password,
               metadata: {
@@ -72,8 +85,10 @@ export const Route = createFileRoute("/api/public/pi-auth")({
                 pi_username: me.username,
                 display_name: me.username,
                 provider: "pi-network",
+                ...(walletAddress ? { pi_wallet_address: walletAddress } : {}),
               },
             });
+            userId = user.id;
           } catch (err) {
             console.error("[pi-auth] provision failed", err);
             return Response.json(
@@ -86,7 +101,28 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             );
           }
 
-          return Response.json({ email, password, username: me.username, uid: me.uid });
+          // Always sync Pi identity onto profiles (including wallet when Auth returns it)
+          const profilePatch: Record<string, unknown> = {
+            pi_uid: me.uid,
+            pi_username: me.username,
+            updated_at: new Date().toISOString(),
+          };
+          if (walletAddress) profilePatch.pi_wallet_address = walletAddress;
+
+          const { error: profErr } = await supabaseAdmin
+            .from("profiles")
+            .upsert({ id: userId, ...profilePatch }, { onConflict: "id" });
+          if (profErr) {
+            console.warn("[pi-auth] profile sync", profErr.message);
+          }
+
+          return Response.json({
+            email,
+            password,
+            username: me.username,
+            uid: me.uid,
+            walletAddress: walletAddress ?? null,
+          });
         } catch (err) {
           console.error("[pi-auth]", err);
           return Response.json(

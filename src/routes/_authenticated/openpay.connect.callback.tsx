@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { takeOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 
 export const Route = createFileRoute("/_authenticated/openpay/connect/callback")({
   head: () => ({ meta: [{ title: "Connecting OpenPay…" }] }),
@@ -56,8 +57,8 @@ function OpenPayConnectCallback() {
         void qc.invalidateQueries({ queryKey: ["prefs"] });
         void qc.invalidateQueries({ queryKey: ["user-prefs"] });
         void qc.invalidateQueries({ queryKey: ["openpay-link"] });
-        // Hard redirect to settings so the authenticated layout re-renders cleanly
-        window.location.replace("/settings");
+        const next = takeOpenPayConnectReturn("/settings");
+        window.location.replace(next);
       } catch (e) {
         const msg = (e as Error).message || "Connect failed";
         setError(msg);

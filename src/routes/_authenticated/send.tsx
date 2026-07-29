@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  Link2,
   Loader2,
   Send as SendIcon,
 } from "lucide-react";
@@ -23,7 +24,8 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { sendAsset } from "@/lib/transfer.functions";
-import { sendViaOpenPay, resolveOpenPayAccount } from "@/lib/openpay-pro.functions";
+import { sendViaOpenPay, resolveOpenPayAccount, getOpenPayLinkStatus, startOpenPayConnect } from "@/lib/openpay-pro.functions";
+import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
@@ -82,9 +84,12 @@ function SendPage() {
   const send = useServerFn(sendAsset);
   const sendOpenPay = useServerFn(sendViaOpenPay);
   const resolveOP = useServerFn(resolveOpenPayAccount);
+  const getOpenPayLink = useServerFn(getOpenPayLinkStatus);
+  const startOpenPayOAuth = useServerFn(startOpenPayConnect);
 
   const [step, setStep] = useState<Step>("asset");
   const [busy, setBusy] = useState(false);
+  const [connectBusy, setConnectBusy] = useState(false);
   const [rail, setRail] = useState<Rail>(search.rail === "openpay" ? "openpay" : "wallet");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [to, setTo] = useState(search.to ?? "");
@@ -112,6 +117,12 @@ function SendPage() {
           .maybeSingle()
       ).data,
   });
+
+  const { data: openPayLink, isLoading: openPayLinkLoading } = useQuery({
+    queryKey: ["openpay-link", user.id],
+    queryFn: () => getOpenPayLink(),
+  });
+  const openPayLinked = !!openPayLink?.linked;
 
   const { data: holdings = [], isLoading: holdingsLoading } = useQuery({
     queryKey: ["holdings", wallet?.id],
@@ -435,6 +446,20 @@ function SendPage() {
     }
   }
 
+  async function connectOpenPayOAuth() {
+    setConnectBusy(true);
+    try {
+      stashOpenPayConnectReturn("/send?rail=openpay");
+      const { authorize_url } = await startOpenPayOAuth({
+        data: { origin: window.location.origin },
+      });
+      window.location.href = authorize_url;
+    } catch (err) {
+      toast.error((err as Error).message || "Could not start OpenPay connect");
+      setConnectBusy(false);
+    }
+  }
+
   async function verifyOpenPay() {
     if (!to.trim()) return;
     setOpError(null);
@@ -468,8 +493,12 @@ function SendPage() {
   }
 
   function continueFromRecipient() {
+    if (rail === "openpay" && !openPayLinked) {
+      toast.error("Connect OpenPay with OAuth first");
+      return;
+    }
     if (!to.trim()) {
-      toast.error(rail === "openpay" ? "Enter OpenPay account" : "Enter recipient");
+      toast.error(rail === "openpay" ? "Enter @username" : "Enter recipient");
       return;
     }
     if (rail === "openpay" && !opPreview && !opError) {
@@ -648,8 +677,62 @@ function SendPage() {
           )}
 
           <div className="rounded-3xl border border-border bg-card p-4">
+            {rail === "openpay" && (
+              <div className="mb-4 rounded-2xl border border-[#0070BA]/30 bg-[#0070BA]/10 px-3 py-3">
+                {openPayLinkLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Checking OpenPay connection…
+                  </div>
+                ) : openPayLinked ? (
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div className="min-w-0 text-xs">
+                      <p className="font-semibold text-foreground">
+                        Linked via OpenPay OAuth
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        {openPayLink?.username
+                          ? `@${openPayLink.username.replace(/^@/, "")}`
+                          : openPayLink?.account_number || openPayLink?.name || "Connected"}
+                        {openPayLink?.account_number
+                          ? ` · ${openPayLink.account_number}`
+                          : ""}
+                        . Send with @username — no OP number needed when they’ve linked OpenPay.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0070BA]" />
+                      <div className="min-w-0 text-xs">
+                        <p className="font-semibold text-foreground">Connect OpenPay with OAuth</p>
+                        <p className="mt-0.5 text-muted-foreground">
+                          Link once on OpenPay — no manual OP address. Then send to @username.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      className="w-full rounded-full bg-[#0070BA] text-white hover:opacity-90"
+                      disabled={connectBusy}
+                      onClick={() => void connectOpenPayOAuth()}
+                    >
+                      {connectBusy ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link2 className="mr-2 h-4 w-4" />
+                      )}
+                      Connect with OpenPay
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {rail === "openpay" ? "OpenPay account (OP…)" : "Address or @username"}
+              {rail === "openpay" ? "Recipient @username" : "Address or @username"}
             </label>
             <div className="flex gap-2">
               <Input
@@ -659,16 +742,19 @@ function SendPage() {
                   setOpPreview(null);
                   setOpError(null);
                 }}
-                onBlur={rail === "openpay" ? verifyOpenPay : undefined}
-                placeholder={rail === "openpay" ? "OP… or @username" : "0x… or @username"}
+                onBlur={rail === "openpay" && openPayLinked ? verifyOpenPay : undefined}
+                placeholder={
+                  rail === "openpay" ? "@username" : "0x… or @username"
+                }
                 className="h-12 rounded-2xl"
-                autoFocus
+                autoFocus={rail !== "openpay" || openPayLinked}
+                disabled={rail === "openpay" && !openPayLinked}
               />
               <QrScannerButton
                 onResult={applyScan}
                 hint={
                   rail === "openpay"
-                    ? "Scan OpenPay OP account, @username, or pay link"
+                    ? "Scan OpenPay @username, OP account, or pay link"
                     : "Scan OpenPay Pro wallet address or payment QR"
                 }
                 trigger={
@@ -678,16 +764,17 @@ function SendPage() {
                     size="icon"
                     className="h-12 w-12 shrink-0 rounded-2xl"
                     aria-label="Scan QR"
+                    disabled={rail === "openpay" && !openPayLinked}
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
                 }
               />
             </div>
-            {rail === "openpay" && (
+            {rail === "openpay" && openPayLinked && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Enter the recipient’s OpenPay account number starting with{" "}
-                <span className="font-semibold text-foreground">OP</span>.
+                Enter their OpenPay Pro <span className="font-semibold text-foreground">@username</span>.
+                Their linked OpenPay account is resolved automatically.
               </p>
             )}
             {rail === "openpay" && opPreview && (
@@ -760,7 +847,11 @@ function SendPage() {
           <Button
             type="button"
             className="h-12 w-full rounded-full text-base font-semibold"
-            disabled={!to.trim()}
+            disabled={
+              rail === "openpay"
+                ? !openPayLinked || !to.trim()
+                : !to.trim()
+            }
             onClick={continueFromRecipient}
           >
             Continue

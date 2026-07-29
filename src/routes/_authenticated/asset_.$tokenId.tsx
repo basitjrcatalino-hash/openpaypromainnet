@@ -48,11 +48,25 @@ import {
   PENDING_CHARGE_KEY,
   runPendingAssetBuy,
 } from "@/components/wallet/AssetBuySheet";
+import {
+  getMajorToken,
+  isMajorTokenId,
+  fetchMajorMarkets,
+  majorMarketById,
+} from "@/lib/major-tokens";
+import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
-  head: ({ params }) => ({
-    meta: [{ title: `${params.tokenId === "ousd" ? "OUSD" : "Token"} — OpenPay Pro` }],
-  }),
+  head: ({ params }) => {
+    const major = getMajorToken(params.tokenId);
+    const title =
+      params.tokenId === "ousd"
+        ? "OUSD"
+        : major
+          ? major.symbol
+          : "Token";
+    return { meta: [{ title: `${title} — OpenPay Pro` }] };
+  },
   validateSearch: (s: Record<string, unknown>) => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
     openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
@@ -73,12 +87,15 @@ function PhantomAssetDetail() {
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const buyFn = useServerFn(buyOpenToken);
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
+  const isMajor = isMajorTokenId(tokenId);
+  const majorDef = isMajor ? getMajorToken(tokenId) : null;
 
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
+  const [moonpayOpen, setMoonpayOpen] = useState(false);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -92,7 +109,7 @@ function PhantomAssetDetail() {
 
   const { data: token, isLoading: tokenLoading } = useQuery({
     queryKey: ["asset-token", tokenId],
-    enabled: !isOusd,
+    enabled: !isOusd && !isMajor,
     queryFn: async () => {
       const { data, error } = await supabase.from("tokens").select("*").eq("id", tokenId).maybeSingle();
       if (error) throw error;
@@ -100,9 +117,16 @@ function PhantomAssetDetail() {
     },
   });
 
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    enabled: isMajor,
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
   const { data: holding } = useQuery({
     queryKey: ["ot-holding", tokenId, wallet?.id],
-    enabled: !isOusd && !!wallet?.id,
+    enabled: !isOusd && !isMajor && !!wallet?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("token_holdings")
@@ -116,7 +140,7 @@ function PhantomAssetDetail() {
 
   const { data: ticks = [] } = useQuery({
     queryKey: ["ot-ticks", tokenId, period],
-    enabled: !isOusd,
+    enabled: !isOusd && !isMajor,
     queryFn: async () => {
       const { data } = await supabase
         .from("ot_price_ticks")
@@ -127,6 +151,19 @@ function PhantomAssetDetail() {
       return data ?? [];
     },
   });
+
+  const majorMarket = isMajor && majorDef ? majorMarketById(majorMarkets, majorDef.id) : null;
+
+  const majorTicks = useMemo(() => {
+    if (!majorMarket?.sparkline?.length) return [];
+    const now = Date.now();
+    const n = majorMarket.sparkline.length;
+    const step = (7 * 24 * 60 * 60 * 1000) / Math.max(n - 1, 1);
+    return majorMarket.sparkline.map((price, i) => ({
+      created_at: new Date(now - (n - 1 - i) * step).toISOString(),
+      price,
+    }));
+  }, [majorMarket]);
 
   const meta = useMemo(() => {
     if (isOusd) {
@@ -143,9 +180,44 @@ function PhantomAssetDetail() {
         network: "OpenPay",
         marketCap: null as number | null,
         totalSupply: null as number | null,
+        circulatingSupply: null as number | null,
+        ath: null as number | null,
+        atl: null as number | null,
+        athDate: null as string | null,
+        atlDate: null as string | null,
+        category: null as string | null,
+        volume24h: null as number | null,
         createdAt: null as string | null,
         contract: wallet?.address ?? null,
         status: "stable",
+        nativeMajor: false,
+      };
+    }
+    if (isMajor && majorDef) {
+      const m = majorMarket ?? majorMarketById(undefined, majorDef.id);
+      return {
+        name: majorDef.name,
+        symbol: majorDef.symbol,
+        logo: majorDef.logoUrl,
+        price: m.price,
+        change: m.change24h,
+        verified: true,
+        description: majorDef.about,
+        website: majorDef.website,
+        network: majorDef.network,
+        marketCap: m.marketCap,
+        totalSupply: m.totalSupply,
+        circulatingSupply: m.circulatingSupply,
+        ath: m.ath,
+        atl: m.atl,
+        athDate: m.athDate,
+        atlDate: m.atlDate,
+        category: majorDef.category,
+        volume24h: m.volume24h,
+        createdAt: majorDef.createdAt,
+        contract: null as string | null,
+        status: "native",
+        nativeMajor: true,
       };
     }
     return {
@@ -160,13 +232,25 @@ function PhantomAssetDetail() {
       network: "OpenPay",
       marketCap: Number(token?.market_cap ?? 0),
       totalSupply: Number(token?.total_supply ?? 0),
+      circulatingSupply: null as number | null,
+      ath: null as number | null,
+      atl: null as number | null,
+      athDate: null as string | null,
+      atlDate: null as string | null,
+      category: (token?.category as string | null) ?? null,
+      volume24h: Number(token?.volume_24h ?? 0),
       createdAt: token?.created_at ?? null,
       contract: token?.contract_address ?? token?.id ?? null,
       status: token?.status ?? "curve",
+      nativeMajor: false,
     };
-  }, [isOusd, token, wallet?.address]);
+  }, [isOusd, isMajor, majorDef, majorMarket, token, wallet?.address]);
 
-  const balance = isOusd ? Number(wallet?.ousd_balance ?? 0) : Number(holding ?? 0);
+  const balance = isOusd
+    ? Number(wallet?.ousd_balance ?? 0)
+    : isMajor
+      ? 0
+      : Number(holding ?? 0);
   const valueUsd = balance * meta.price;
   const changeAbs = valueUsd * (meta.change / 100);
   const up = meta.change >= 0;
@@ -269,7 +353,7 @@ function PhantomAssetDetail() {
     }
   }
 
-  if (!isOusd && tokenLoading) {
+  if (!isOusd && !isMajor && tokenLoading) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">
         Loading token…
@@ -277,7 +361,7 @@ function PhantomAssetDetail() {
     );
   }
 
-  if (!isOusd && !token) {
+  if (!isOusd && !isMajor && !token) {
     return (
       <div className="mx-auto max-w-lg space-y-4 px-4 py-16 text-center">
         <p className="text-sm text-muted-foreground">Token not found</p>
@@ -331,8 +415,12 @@ function PhantomAssetDetail() {
             )}
           </div>
           <div className="text-4xl font-bold tabular-nums text-foreground">
-            {isOusd ? formatUSD(meta.price) : formatOUSD(meta.price, { price: true, suffix: false })}
-            {!isOusd && <span className="ml-1 text-lg font-medium text-muted-foreground">OUSD</span>}
+            {isOusd || isMajor
+              ? formatUSD(meta.price)
+              : formatOUSD(meta.price, { price: true, suffix: false })}
+            {!isOusd && !isMajor && (
+              <span className="ml-1 text-lg font-medium text-muted-foreground">OUSD</span>
+            )}
           </div>
           <div className="mt-2 flex items-center justify-center gap-2 text-sm">
             <span
@@ -361,36 +449,61 @@ function PhantomAssetDetail() {
         <PhantomSparkline
           period={period}
           onPeriodChange={setPeriod}
-          ticks={isOusd ? null : ticks}
+          ticks={isOusd ? null : isMajor ? majorTicks : ticks}
           price={meta.price}
           changePct={meta.change}
           tokenKey={isOusd ? "ousd" : tokenId}
           peg={isOusd}
-          footnote={isOusd ? "Pegged at $1.00 · stablecoin" : undefined}
+          footnote={
+            isOusd
+              ? "Pegged at $1.00 · stablecoin"
+              : isMajor
+                ? `Native ${meta.network} · market data via CoinGecko`
+                : undefined
+          }
         />
 
         {/* Actions — Phantom-style with Buy */}
         <div className="grid grid-cols-5 gap-2">
-          <ActionTile icon={Plus} label="Buy" primary onClick={() => setBuyOpen(true)} />
+          <ActionTile
+            icon={Plus}
+            label="Buy"
+            primary
+            onClick={() => {
+              if (isMajor) {
+                setMoonpayOpen(true);
+              } else {
+                setBuyOpen(true);
+              }
+            }}
+          />
           <ActionTile
             icon={Send}
             label="Send"
-            onClick={() =>
+            onClick={() => {
+              if (isMajor) {
+                toast.info(`${meta.symbol} send uses your ${meta.network} wallet — coming soon in OpenPay.`);
+                return;
+              }
               navigate({
                 to: "/send",
                 search: isOusd ? { asset: "OUSD" } : { token: tokenId },
-              })
-            }
+              });
+            }}
           />
           <ActionTile
             icon={ArrowLeftRight}
             label="Swap"
-            onClick={() =>
+            onClick={() => {
+              if (isMajor) {
+                navigate({ to: "/swap" });
+                return;
+              }
               navigate({
                 to: "/swap",
                 search: isOusd ? {} : { token: tokenId },
-              })
-            }
+              });
+            }}
           />
           <ActionTile icon={QrCode} label="Receive" onClick={() => setReceiveOpen(true)} />
           <ActionTile icon={MoreHorizontal} label="More" onClick={() => setMoreOpen(true)} />
@@ -425,21 +538,30 @@ function PhantomAssetDetail() {
         {/* Token address */}
         <section>
           <h2 className="mb-2 text-sm text-muted-foreground">Address</h2>
-          <button
-            type="button"
-            onClick={() => meta.contract && copy(meta.contract, "Address copied")}
-            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition hover:bg-muted/50"
-          >
-            <div className="min-w-0">
-              <div className="text-xs text-muted-foreground">
-                {isOusd ? "Wallet address" : "Token / contract"}
-              </div>
-              <div className="mt-0.5 font-mono text-sm text-foreground">
-                {shortAddress(meta.contract, 8, 8)}
+          {isMajor ? (
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="text-xs text-muted-foreground">Native asset</div>
+              <div className="mt-0.5 text-sm text-foreground">
+                {meta.symbol} has no contract address — it is native to the {meta.network} network.
               </div>
             </div>
-            <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => meta.contract && copy(meta.contract, "Address copied")}
+              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition hover:bg-muted/50"
+            >
+              <div className="min-w-0">
+                <div className="text-xs text-muted-foreground">
+                  {isOusd ? "Wallet address" : "Token / contract"}
+                </div>
+                <div className="mt-0.5 font-mono text-sm text-foreground">
+                  {shortAddress(meta.contract, 8, 8)}
+                </div>
+              </div>
+              <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+          )}
         </section>
 
         {/* Info */}
@@ -449,11 +571,24 @@ function PhantomAssetDetail() {
             <InfoRow label="Name" value={meta.name} />
             <InfoRow label="Symbol" value={meta.symbol} />
             <InfoRow label="Network" value={meta.network} />
+            {meta.category && <InfoRow label="Category" value={meta.category} />}
             {meta.marketCap != null && meta.marketCap > 0 && (
-              <InfoRow label="Market Cap" value={formatOUSD(meta.marketCap, { compact: true })} />
+              <InfoRow
+                label="Market Cap"
+                value={isMajor ? formatUSD(meta.marketCap) : formatOUSD(meta.marketCap, { compact: true })}
+              />
+            )}
+            {meta.circulatingSupply != null && meta.circulatingSupply > 0 && (
+              <InfoRow label="Circulating Supply" value={formatNumber(meta.circulatingSupply, 0, { compact: true })} />
             )}
             {meta.totalSupply != null && meta.totalSupply > 0 && (
-              <InfoRow label="Total Supply" value={formatNumber(meta.totalSupply, 0)} />
+              <InfoRow label="Total Supply" value={formatNumber(meta.totalSupply, 0, { compact: true })} />
+            )}
+            {meta.ath != null && meta.ath > 0 && (
+              <InfoRow label="All-Time High" value={formatUSD(meta.ath)} />
+            )}
+            {meta.atl != null && meta.atl > 0 && (
+              <InfoRow label="All-Time Low" value={formatUSD(meta.atl)} />
             )}
             {meta.createdAt && (
               <InfoRow
@@ -465,8 +600,9 @@ function PhantomAssetDetail() {
                 })}
               />
             )}
-            {!isOusd && <InfoRow label="Status" value={String(meta.status)} last />}
             {isOusd && <InfoRow label="Peg" value="$1.00 USD" last />}
+            {isMajor && <InfoRow label="Type" value="Native L1" last />}
+            {!isOusd && !isMajor && <InfoRow label="Status" value={String(meta.status)} last />}
           </div>
         </section>
 
@@ -503,26 +639,42 @@ function PhantomAssetDetail() {
                 <span className="text-sm text-muted-foreground">Volume</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold tabular-nums text-foreground">
-                    {formatOUSD(Number(token?.volume_24h ?? 0), { compact: true })}
+                    {isMajor
+                      ? formatUSD(meta.volume24h ?? 0)
+                      : formatOUSD(Number(token?.volume_24h ?? 0), { compact: true })}
                   </span>
                   <span className={cn("text-sm font-medium", up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
                     {formatPct(meta.change)}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between border-t border-border px-4 py-3">
-                <span className="text-sm text-muted-foreground">Holders</span>
-                <span className="text-sm font-semibold tabular-nums text-foreground">
-                  {formatNumber(token?.holder_count ?? 0, 0)}
-                </span>
-              </div>
+              {!isMajor && (
+                <div className="flex items-center justify-between border-t border-border px-4 py-3">
+                  <span className="text-sm text-muted-foreground">Holders</span>
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
+                    {formatNumber(token?.holder_count ?? 0, 0)}
+                  </span>
+                </div>
+              )}
+              {isMajor && meta.athDate && (
+                <div className="flex items-center justify-between border-t border-border px-4 py-3">
+                  <span className="text-sm text-muted-foreground">ATH date</span>
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
+                    {new Date(meta.athDate).toLocaleDateString(undefined, {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
           </section>
         )}
 
         <p className="pb-4 text-center text-[11px] leading-relaxed text-muted-foreground">
-          Past performance is not an indicator of future performance. OpenPay Pro wallet balances
-          reflect your OUSD and OpenToken holdings on this account.
+          {isMajor
+            ? "Pricing is informational only and not financial advice. Market data via CoinGecko. OpenPay Pro does not custody native BTC, ETH, or SOL on this ledger."
+            : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
         </p>
       </div>
 
@@ -561,7 +713,9 @@ function PhantomAssetDetail() {
             <p className="text-center text-xs text-muted-foreground">
               {isOusd
                 ? "Use this address to receive OUSD on OpenPay."
-                : `Share your wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
+                : isMajor
+                  ? `${meta.symbol} is native to ${meta.network}. Buy via MoonPay, or use a ${meta.network} wallet to self-custody.`
+                  : `Share your wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
             </p>
             <Button className="w-full rounded-full" variant="secondary" onClick={() => setReceiveOpen(false)}>
               Close
@@ -584,6 +738,15 @@ function PhantomAssetDetail() {
                   navigate({ to: "/ousd" });
                 }}
               />
+            ) : isMajor && majorDef ? (
+              <MoreRow
+                logoUrl={majorDef.logoUrl}
+                label={`${majorDef.name} website`}
+                onClick={() => {
+                  setMoreOpen(false);
+                  window.open(majorDef.website, "_blank", "noopener,noreferrer");
+                }}
+              />
             ) : (
               <MoreRow
                 logoUrl={OPENPAY_NETWORK_BADGE_URL}
@@ -599,7 +762,7 @@ function PhantomAssetDetail() {
               label="OpenDEX Swap"
               onClick={() => {
                 setMoreOpen(false);
-                navigate({ to: "/swap", search: isOusd ? {} : { token: tokenId } });
+                navigate({ to: "/swap", search: isOusd || isMajor ? {} : { token: tokenId } });
               }}
             />
             {meta.contract && (
@@ -621,25 +784,42 @@ function PhantomAssetDetail() {
         </DialogContent>
       </Dialog>
 
-      <AssetBuySheet
-        open={buyOpen}
-        onClose={() => setBuyOpen(false)}
-        userId={user.id}
-        walletId={wallet?.id}
-        ousdBalance={Number(wallet?.ousd_balance ?? 0)}
-        token={{
-          id: isOusd ? "ousd" : tokenId,
-          symbol: meta.symbol,
-          name: meta.name,
-          price: meta.price,
-          isOusd,
-          status: meta.status,
-        }}
-        returnPath={returnPath}
-        onNavigateSwap={() =>
-          navigate({ to: "/swap", search: isOusd ? {} : { token: tokenId } })
-        }
-      />
+      {!isMajor && (
+        <AssetBuySheet
+          open={buyOpen}
+          onClose={() => setBuyOpen(false)}
+          userId={user.id}
+          walletId={wallet?.id}
+          ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+          token={{
+            id: isOusd ? "ousd" : tokenId,
+            symbol: meta.symbol,
+            name: meta.name,
+            price: meta.price,
+            isOusd,
+            status: meta.status,
+          }}
+          returnPath={returnPath}
+          onNavigateSwap={() =>
+            navigate({ to: "/swap", search: isOusd ? {} : { token: tokenId } })
+          }
+        />
+      )}
+
+      {isMajor && majorDef && (
+        <MoonPayBuyOverlay
+          visible={moonpayOpen}
+          amount={50}
+          externalCustomerId={user.id}
+          externalTransactionId={`major-${majorDef.id}-${Date.now()}`}
+          defaultCurrencyCode={majorDef.moonpayCode}
+          onClose={() => setMoonpayOpen(false)}
+          onTransactionCompleted={async () => {
+            toast.success(`${meta.symbol} purchase submitted via MoonPay`);
+            setMoonpayOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

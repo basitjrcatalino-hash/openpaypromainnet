@@ -10,6 +10,14 @@ import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { OusdIcon } from "@/components/ousd-icon";
 import { useCurrency, type CurrencyCode } from "@/lib/currency";
 import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
+import {
+  MAJOR_TOKEN_IDS,
+  MAJOR_TOKENS,
+  MAJOR_SYMBOLS,
+  fetchMajorMarkets,
+  majorMarketById,
+  type MajorTokenId,
+} from "@/lib/major-tokens";
 
 export const Route = createFileRoute("/_authenticated/tokens")({
   head: () => ({ meta: [{ title: "Tokens — OpenPay Pro" }] }),
@@ -42,8 +50,21 @@ function TokensPage() {
     },
   });
 
+  const { data: majorMarkets = [] } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
   const filtered = useMemo(() => {
     let list = tokens as any[];
+    // Hide DB seed duplicates of BTC/ETH/SOL — majors are pinned above
+    list = list.filter((t) => {
+      const sym = String(t.symbol ?? "").toUpperCase();
+      const name = String(t.name ?? "").toUpperCase();
+      if (MAJOR_SYMBOLS.has(sym) || MAJOR_SYMBOLS.has(name)) return false;
+      return true;
+    });
     if (q.trim()) {
       const qq = q.trim().toLowerCase();
       list = list.filter(
@@ -62,6 +83,20 @@ function TokensPage() {
     q.trim().toLowerCase().includes("ousd") ||
     q.trim().toLowerCase().includes("openusd");
 
+  const visibleMajors = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    if (!qq) return MAJOR_TOKEN_IDS;
+    return MAJOR_TOKEN_IDS.filter((id) => {
+      const m = MAJOR_TOKENS[id];
+      return (
+        m.name.toLowerCase().includes(qq) ||
+        m.symbol.toLowerCase().includes(qq) ||
+        m.network.toLowerCase().includes(qq) ||
+        id.includes(qq)
+      );
+    });
+  }, [q]);
+
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in md:max-w-2xl">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -70,8 +105,8 @@ function TokensPage() {
             <CircleDollarSign className="h-4 w-4" />
           </span>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Tokens</h1>
-            <p className="text-xs text-muted-foreground">All OpenPay Pro tokens</p>
+            <h1 className="text-xl font-extrabold tracking-tight">Tokens</h1>
+            <p className="ph-caption">Majors · OpenPay Pro tokens</p>
           </div>
         </div>
         <Button asChild size="sm" className="rounded-full">
@@ -89,14 +124,18 @@ function TokensPage() {
               <div className="flex min-w-0 items-center gap-3">
                 <OusdIcon className="h-11 w-11 shrink-0" />
                 <div className="min-w-0">
-                  <div className="truncate text-[15px] font-semibold">OpenUSD OUSD</div>
-                  <div className="text-xs text-muted-foreground">OUSD · Stablecoin</div>
+                  <div className="ph-row-title truncate">OpenUSD OUSD</div>
+                  <div className="ph-row-sub">OUSD · Stablecoin</div>
                 </div>
               </div>
               <TokenPriceRate price={1} change={0} currency={currency} />
             </Link>
           </li>
         )}
+
+        {visibleMajors.map((id) => (
+          <MajorTokenRow key={id} id={id} currency={currency} markets={majorMarkets} />
+        ))}
 
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
@@ -108,7 +147,7 @@ function TokensPage() {
               </div>
             </li>
           ))
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 && visibleMajors.length === 0 && !showOusd ? (
           <li className="py-16 text-center text-sm text-muted-foreground">No tokens found</li>
         ) : (
           filtered
@@ -122,9 +161,41 @@ function TokensPage() {
         onQueryChange={setQ}
         searchOpen={searchOpen}
         onSearchOpenChange={setSearchOpen}
-        placeholder="Search tokens"
+        placeholder="Search Bitcoin, Solana, tokens…"
       />
     </div>
+  );
+}
+
+function MajorTokenRow({
+  id,
+  currency,
+  markets,
+}: {
+  id: MajorTokenId;
+  currency: CurrencyCode;
+  markets: Awaited<ReturnType<typeof fetchMajorMarkets>>;
+}) {
+  const def = MAJOR_TOKENS[id];
+  const m = majorMarketById(markets, id);
+  return (
+    <li>
+      <Link to="/asset/$tokenId" params={{ tokenId: id }} className="ph-row press">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
+            <img src={def.logoUrl} alt="" className="h-full w-full object-cover" />
+            <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+          </div>
+          <div className="min-w-0">
+            <div className="ph-row-title truncate">{def.name}</div>
+            <div className="ph-row-sub">
+              {def.symbol} · {def.network}
+            </div>
+          </div>
+        </div>
+        <TokenPriceRate price={m.price} change={m.change24h} currency={currency} />
+      </Link>
+    </li>
   );
 }
 
@@ -136,23 +207,25 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
       <Link
         to="/asset/$tokenId"
         params={{ tokenId: t.id }}
-        className="flex items-center gap-3 py-3 press"
+        className="ph-row press"
       >
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
-          {t.logo_url ? (
-            <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="grid h-full w-full place-items-center bg-primary/20 text-xs font-bold text-primary">
-              {t.symbol?.slice(0, 2)}
-            </div>
-          )}
-          {t.is_verified && (
-            <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-semibold">{t.name}</div>
-          <div className="text-xs text-muted-foreground">{t.symbol}</div>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
+            {t.logo_url ? (
+              <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-primary/20 text-xs font-bold text-primary">
+                {t.symbol?.slice(0, 2)}
+              </div>
+            )}
+            {t.is_verified && (
+              <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="ph-row-title truncate">{t.name}</div>
+            <div className="ph-row-sub">{t.symbol}</div>
+          </div>
         </div>
         <TokenPriceRate price={price} change={change} currency={currency} />
       </Link>

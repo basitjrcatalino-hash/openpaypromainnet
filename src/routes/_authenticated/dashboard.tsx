@@ -352,8 +352,8 @@ function Dashboard() {
             <Shield className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block text-sm font-semibold">Back up your recovery phrase</span>
-            <span className="block text-xs text-muted-foreground">
+            <span className="ph-callout block">Back up your recovery phrase</span>
+            <span className="ph-caption block">
               Protect your wallet — confirm backup in Settings
             </span>
           </span>
@@ -364,8 +364,8 @@ function Dashboard() {
         <div className="mb-4 rounded-2xl bg-card px-4 py-4">
           <div className="mb-3 flex items-start justify-between gap-2">
             <div>
-              <div className="text-sm font-bold">Get started</div>
-              <p className="text-xs text-muted-foreground">Fund your wallet in a few taps</p>
+              <div className="ph-callout">Get started</div>
+              <p className="ph-caption">Fund your wallet in a few taps</p>
             </div>
             <button
               type="button"
@@ -433,7 +433,7 @@ function Dashboard() {
       {/* Tokens | Collectibles */}
       <SegmentedTabs
         tabs={[
-          { id: "tokens", label: "Tokens" },
+          { id: "tokens", label: "Holdings" },
           { id: "collectibles", label: "Collectibles" },
         ]}
         value={tab}
@@ -456,9 +456,9 @@ function Dashboard() {
               <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-primary">
                 <Plus className="h-6 w-6" />
               </div>
-              <div className="text-sm font-semibold">No tokens yet</div>
-              <p className="max-w-xs text-xs text-muted-foreground">
-                Buy OUSD or share your address to receive funds.
+              <div className="ph-callout">No tokens yet</div>
+              <p className="ph-caption max-w-xs">
+                Buy some tokens to get started
               </p>
               <div className="mt-1 flex gap-2">
                 <Link
@@ -507,26 +507,26 @@ function Dashboard() {
                         <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 text-[15px] font-semibold">
+                        <div className="ph-row-title flex items-center gap-2">
                           OpenUSD OUSD
-                          <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
+                          <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
                             Earn
                           </span>
                         </div>
-          <div className="text-xs text-muted-foreground tabular-nums">
+                        <div className="ph-row-sub tabular-nums">
                           {formatTokenPrice(1, currency)}{" "}
                           <span className="text-success">0.00%</span>
                         </div>
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-[15px] font-semibold tabular-nums">
+                      <div className="text-[15px] font-bold tabular-nums tracking-tight">
                         {hideBalance ? "••••" : formatNumber(ousdBalance, 2)}
                       </div>
-                      <div className="text-xs text-muted-foreground tabular-nums">
+                      <div className="ph-row-sub tabular-nums">
                         {hideBalance ? "••••" : formatCurrency(ousdBalance, currency)}
                         {!hideBalance && totalUsd > 0 && (
-                          <span className="ml-1 text-muted-foreground/80">
+                          <span className="ml-1 opacity-80">
                             · {((ousdBalance / totalUsd) * 100).toFixed(1)}%
                           </span>
                         )}
@@ -561,8 +561,8 @@ function Dashboard() {
                           verified={h.tokens?.is_verified}
                         />
                         <div className="min-w-0">
-                          <div className="truncate text-[15px] font-semibold">{h.tokens?.name}</div>
-                          <div className="text-xs text-muted-foreground tabular-nums">
+                          <div className="ph-row-title truncate">{h.tokens?.name}</div>
+                          <div className="ph-row-sub tabular-nums">
                             {formatTokenPrice(Number(h.tokens?.price_usd ?? 0), currency)}{" "}
                             <span className={cn(pct >= 0 ? "text-success" : "text-destructive")}>
                               {formatPct(pct)}
@@ -571,15 +571,15 @@ function Dashboard() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className="text-[15px] font-semibold tabular-nums">
+                        <div className="text-[15px] font-bold tabular-nums tracking-tight">
                           {hideBalance
                             ? "••••"
                             : `${formatNumber(h.balance, 4)} ${h.tokens?.symbol ?? ""}`}
                         </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
+                        <div className="ph-row-sub tabular-nums">
                           {hideBalance ? "••••" : formatCurrency(usd, currency)}
                           {!hideBalance && (
-                            <span className="ml-1 text-muted-foreground/80">
+                            <span className="ml-1 opacity-80">
                               · {share.toFixed(1)}%
                             </span>
                           )}

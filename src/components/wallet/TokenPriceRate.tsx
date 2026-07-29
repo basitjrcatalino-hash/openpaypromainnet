@@ -20,16 +20,16 @@ export function TokenPriceRate({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-baseline justify-end gap-2 tabular-nums",
+        "flex shrink-0 items-baseline justify-end gap-1.5 tabular-nums tracking-tight",
         className,
       )}
     >
-      <span className="text-[15px] font-semibold text-foreground">
+      <span className="text-[15px] font-bold text-foreground">
         {formatTokenPrice(price, currency)}
       </span>
       <span
         className={cn(
-          "text-[13px] font-semibold",
+          "text-[12px] font-bold",
           up ? "text-success" : "text-destructive",
         )}
       >

@@ -8,6 +8,7 @@ type Props = {
   amount: string | number;
   externalCustomerId: string;
   externalTransactionId: string;
+  defaultCurrencyCode?: string;
   onClose: () => void;
   onTransactionCompleted: (props: {
     id: string;
@@ -17,7 +18,7 @@ type Props = {
 };
 
 /**
- * MoonPay Buy overlay for OUSD top-up.
+ * MoonPay Buy overlay for OUSD top-up / major crypto buys.
  * Signs the widget URL via onUrlSignatureRequested (never sends signature:"").
  */
 export function MoonPayBuyOverlay({
@@ -25,6 +26,7 @@ export function MoonPayBuyOverlay({
   amount,
   externalCustomerId,
   externalTransactionId,
+  defaultCurrencyCode = "eth",
   onClose,
   onTransactionCompleted,
 }: Props) {
@@ -36,7 +38,7 @@ export function MoonPayBuyOverlay({
       visible={visible}
       baseCurrencyCode="usd"
       baseCurrencyAmount={baseCurrencyAmount}
-      defaultCurrencyCode="eth"
+      defaultCurrencyCode={defaultCurrencyCode}
       lockAmount="true"
       externalCustomerId={externalCustomerId}
       externalTransactionId={externalTransactionId}

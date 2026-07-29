@@ -61,9 +61,10 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Wallet", icon: Wallet },
+  { to: "/dashboard", label: "Home", icon: Compass },
+  { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
-  { to: "/opentoken", label: "Home", icon: Compass },
+  { to: "/opentoken", label: "OpenToken", icon: BookOpen },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -72,6 +73,7 @@ function navActive(pathname: string, to: string) {
   return (
     pathname === to ||
     (to === "/dashboard" && pathname === "/") ||
+    (to === "/wallet" && pathname.startsWith("/wallet")) ||
     (to === "/tokens" &&
       (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&

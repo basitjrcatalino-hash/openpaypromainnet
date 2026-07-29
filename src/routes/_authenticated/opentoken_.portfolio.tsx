@@ -136,10 +136,8 @@ function OpenTokenPortfolio() {
 
       {/* Portfolio hero */}
       <div className="flex flex-col items-center gap-2 py-6 text-center">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          OpenToken value
-        </p>
-        <div className="ph-display tabular-nums tracking-tight">
+        <p className="ph-label">OpenToken value</p>
+        <div className="ph-display">
           {isLoading ? (
             <span className="inline-block h-10 w-36 animate-pulse rounded-lg bg-muted" />
           ) : (
@@ -232,16 +230,16 @@ function OpenTokenPortfolio() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="truncate text-[15px] font-semibold">{t.name}</span>
+                          <span className="ph-row-title truncate">{t.name}</span>
                           {cat && (
                             <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                               {OT_CATEGORY_LABELS[cat] ?? cat}
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
+                        <div className="ph-row-sub tabular-nums">
                           {formatNumber(bal, bal >= 1_000_000 ? 2 : 4)} ${t.symbol}
-                          <span className="mx-1 text-muted-foreground/50">·</span>
+                          <span className="mx-1 opacity-50">·</span>
                           <span
                             className={cn(
                               change >= 0 ? "text-success" : "text-destructive",
@@ -253,12 +251,12 @@ function OpenTokenPortfolio() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-[15px] font-semibold tabular-nums">
+                      <div className="text-[15px] font-bold tabular-nums tracking-tight">
                         {formatOUSD(value, { compact: true })}
                       </div>
-                      <div className="text-xs text-muted-foreground tabular-nums">
+                      <div className="ph-row-sub tabular-nums">
                         {formatOUSD(price, { price: true, suffix: false })}
-                        <span className="ml-1 text-muted-foreground/80">
+                        <span className="ml-1 opacity-80">
                           · {share.toFixed(0)}%
                         </span>
                       </div>

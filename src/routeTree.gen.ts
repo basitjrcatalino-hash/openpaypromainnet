@@ -31,6 +31,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -44,6 +45,7 @@ import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
@@ -56,6 +58,7 @@ import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public
 import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
+import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
@@ -181,6 +184,11 @@ const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
   path: '/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
   id: '/wc-pay',
   path: '/wc-pay',
@@ -253,6 +261,12 @@ const AuthenticatedTokensCreateRoute =
     path: '/create',
     getParentRoute: () => AuthenticatedTokensRoute,
   } as any)
+const AuthenticatedWalletReceiveRoute =
+  AuthenticatedWalletReceiveRouteImport.update({
+    id: '/wallet_/receive',
+    path: '/wallet/receive',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
@@ -312,6 +326,11 @@ const ApiPublicWalletconnectAuthRoute =
 const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
   id: '/api/public/web3auth-auth',
   path: '/api/public/web3auth-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
+  id: '/api/webhooks/circle',
+  path: '/api/webhooks/circle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
@@ -420,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -433,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
@@ -445,6 +466,7 @@ export interface FileRoutesByFullPath {
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
+  '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -483,6 +505,7 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -496,6 +519,7 @@ export interface FileRoutesByTo {
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
@@ -508,6 +532,7 @@ export interface FileRoutesByTo {
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
+  '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -548,6 +573,7 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
+  '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -561,6 +587,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
@@ -573,6 +600,7 @@ export interface FileRoutesById {
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
+  '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -613,6 +641,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/wallet'
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
@@ -626,6 +655,7 @@ export interface FileRouteTypes {
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
     | '/tokens/create'
+    | '/wallet/receive'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
@@ -638,6 +668,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
+    | '/api/webhooks/circle'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -676,6 +707,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/wallet'
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
@@ -689,6 +721,7 @@ export interface FileRouteTypes {
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
     | '/tokens/create'
+    | '/wallet/receive'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
@@ -701,6 +734,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
+    | '/api/webhooks/circle'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -740,6 +774,7 @@ export interface FileRouteTypes {
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
+    | '/_authenticated/wallet'
     | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
@@ -753,6 +788,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/portfolio'
     | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/tokens/create'
+    | '/_authenticated/wallet_/receive'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
@@ -765,6 +801,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram-auth'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
+    | '/api/webhooks/circle'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -804,6 +841,7 @@ export interface RootRouteChildren {
   ApiPublicTelegramAuthRoute: typeof ApiPublicTelegramAuthRoute
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
+  ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -971,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/wc-pay': {
       id: '/_authenticated/wc-pay'
       path: '/wc-pay'
@@ -1062,6 +1107,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
       parentRoute: typeof AuthenticatedTokensRoute
     }
+    '/_authenticated/wallet_/receive': {
+      id: '/_authenticated/wallet_/receive'
+      path: '/wallet/receive'
+      fullPath: '/wallet/receive'
+      preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/health': {
       id: '/api/public/health'
       path: '/api/public/health'
@@ -1144,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/web3auth-auth'
       fullPath: '/api/public/web3auth-auth'
       preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/circle': {
+      id: '/api/webhooks/circle'
+      path: '/api/webhooks/circle'
+      fullPath: '/api/webhooks/circle'
+      preLoaderRoute: typeof ApiWebhooksCircleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/openpay/callback': {
@@ -1292,6 +1351,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
+  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
@@ -1300,6 +1360,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
   AuthenticatedOpentokenTerminalRoute: typeof AuthenticatedOpentokenTerminalRoute
+  AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
 }
@@ -1320,6 +1381,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
+  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
@@ -1328,6 +1390,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
   AuthenticatedOpentokenTerminalRoute: AuthenticatedOpentokenTerminalRoute,
+  AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,
   AuthenticatedOpenpayConnectCallbackRoute:
     AuthenticatedOpenpayConnectCallbackRoute,
   AuthenticatedOpentokenCreatorUserIdRoute:
@@ -1389,6 +1452,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicTelegramAuthRoute: ApiPublicTelegramAuthRoute,
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
+  ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,

@@ -42,6 +42,7 @@ import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
 import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
 import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
+import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
@@ -240,6 +241,12 @@ const AuthenticatedOpentokenPortfolioRoute =
     path: '/opentoken/portfolio',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpentokenTerminalRoute =
+  AuthenticatedOpentokenTerminalRouteImport.update({
+    id: '/opentoken_/terminal',
+    path: '/opentoken/terminal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
     id: '/create',
@@ -424,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
+  '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -486,6 +494,7 @@ export interface FileRoutesByTo {
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
+  '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -550,6 +559,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
   '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
+  '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -614,6 +624,7 @@ export interface FileRouteTypes {
     | '/opentoken/admin'
     | '/opentoken/create'
     | '/opentoken/portfolio'
+    | '/opentoken/terminal'
     | '/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/opentoken/admin'
     | '/opentoken/create'
     | '/opentoken/portfolio'
+    | '/opentoken/terminal'
     | '/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
@@ -739,6 +751,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/admin'
     | '/_authenticated/opentoken_/create'
     | '/_authenticated/opentoken_/portfolio'
+    | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/tokens/create'
     | '/api/public/health'
     | '/api/public/kyc-webhook'
@@ -1035,6 +1048,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/opentoken_/terminal': {
+      id: '/_authenticated/opentoken_/terminal'
+      path: '/opentoken/terminal'
+      fullPath: '/opentoken/terminal'
+      preLoaderRoute: typeof AuthenticatedOpentokenTerminalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tokens/create': {
       id: '/_authenticated/tokens/create'
       path: '/create'
@@ -1279,6 +1299,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
+  AuthenticatedOpentokenTerminalRoute: typeof AuthenticatedOpentokenTerminalRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
 }
@@ -1306,6 +1327,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
+  AuthenticatedOpentokenTerminalRoute: AuthenticatedOpentokenTerminalRoute,
   AuthenticatedOpenpayConnectCallbackRoute:
     AuthenticatedOpenpayConnectCallbackRoute,
   AuthenticatedOpentokenCreatorUserIdRoute:

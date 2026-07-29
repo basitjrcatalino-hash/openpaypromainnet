@@ -159,6 +159,13 @@ function OpenTokenHome() {
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
             <Link
+              to="/opentoken/terminal"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground press"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              Terminal
+            </Link>
+            <Link
               to="/opentoken/portfolio"
               className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
               aria-label="Portfolio"

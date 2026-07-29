@@ -21,7 +21,6 @@ import {
   Moon,
   Sun,
   History,
-  CheckCircle2,
   ScrollText,
   BookOpen,
   CircleDollarSign,
@@ -29,23 +28,21 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
+import {
+  WalletAccountRow,
+  WalletSwitcherDialog,
+} from "@/components/wallet/WalletSwitcherDialog";
+import { fetchWalletPortfolioTotals } from "@/lib/wallet-portfolio";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
@@ -97,7 +94,7 @@ function AuthenticatedLayout() {
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["wallets", user.id],
-    queryFn: () => listUserWallets(supabase, user.id, "*"),
+    queryFn: () => listUserWallets<Tables<"wallets">>(supabase, user.id, "*"),
   });
 
   const activeWallet = wallets[0];
@@ -331,6 +328,14 @@ function SidebarInner({
   const ousdUsd = Number(activeWallet?.ousd_balance ?? 0);
   const totalUsd = holdingsUsd + ousdUsd;
 
+  const walletIds = wallets.map((w) => w.id).join(",");
+  const { data: portfolioTotals = {} } = useQuery({
+    queryKey: ["wallet-portfolio-totals", walletIds],
+    enabled: wallets.length > 0,
+    staleTime: 30_000,
+    queryFn: () => fetchWalletPortfolioTotals(supabase, wallets),
+  });
+
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
@@ -476,50 +481,32 @@ function SidebarInner({
         </a>
       </div>
 
-      <div className="ph-group p-1.5">
+      <div className="ph-group overflow-hidden">
         {wallets.map((w) => (
-          <button
+          <WalletAccountRow
             key={w.id}
-            type="button"
+            wallet={w}
+            active={w.id === activeWallet?.id}
+            balance={
+              portfolioTotals[w.id] ??
+              (w.id === activeWallet?.id
+                ? totalUsd
+                : Number(w.ousd_balance ?? 0))
+            }
+            currency={currency}
+            hideBalance={hideBalance}
             disabled={switching}
+            compact
             onClick={() => handleSwitch(w.id)}
-            className={cn(
-              "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left press",
-              w.id === activeWallet?.id ? "bg-primary/10" : "hover:bg-muted/50",
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-3">
-              <Avatar className="h-9 w-9">
-                {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
-                <AvatarFallback className="bg-primary/20 text-xs font-bold text-primary">
-                  {(w.name?.[0] ?? "W").toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">{w.name}</span>
-                <span className="block truncate font-mono text-[10px] text-muted-foreground">
-                  {shortAddress(w.address, 4, 4)}
-                </span>
-              </span>
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-sm font-semibold tabular-nums">
-                {formatCurrency(
-                  w.id === activeWallet?.id ? totalUsd : Number(w.ousd_balance ?? 0),
-                  currency,
-                )}
-              </span>
-              {w.id === activeWallet?.id && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
-            </span>
-          </button>
+          />
         ))}
-        <Link
-          to="/settings"
-          onClick={onClose}
-          className="mt-0.5 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
+        <button
+          type="button"
+          onClick={() => setSwitchOpen(true)}
+          className="flex w-full items-center justify-center gap-2 border-t border-border/40 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 press"
         >
-          <Plus className="h-4 w-4" /> Add Wallet
-        </Link>
+          <Plus className="h-4 w-4" /> Switch wallet
+        </button>
       </div>
 
       <div className="mt-auto space-y-2 pt-2">
@@ -553,42 +540,17 @@ function SidebarInner({
         </Button>
       </div>
 
-      <Dialog open={switchOpen} onOpenChange={setSwitchOpen}>
-        <DialogContent className="max-w-sm rounded-3xl border-border/60 bg-card">
-          <DialogHeader>
-            <DialogTitle>Switch wallet</DialogTitle>
-            <DialogDescription>Choose which wallet to use</DialogDescription>
-          </DialogHeader>
-          <ul className="space-y-1">
-            {wallets.map((w) => (
-              <li key={w.id}>
-                <button
-                  type="button"
-                  disabled={switching}
-                  onClick={() => handleSwitch(w.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left press",
-                    w.id === activeWallet?.id ? "bg-primary/15" : "hover:bg-muted/60",
-                  )}
-                >
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/20 text-sm font-bold text-primary">
-                      {(w.name?.[0] ?? "W").toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{w.name}</span>
-                    <span className="block truncate font-mono text-[11px] text-muted-foreground">
-                      {shortAddress(w.address, 6, 4)}
-                    </span>
-                  </span>
-                  {w.id === activeWallet?.id && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </DialogContent>
-      </Dialog>
+      <WalletSwitcherDialog
+        open={switchOpen}
+        onOpenChange={setSwitchOpen}
+        wallets={wallets}
+        activeWalletId={activeWallet?.id}
+        onSelect={handleSwitch}
+        switching={switching}
+        currency={currency}
+        hideBalance={hideBalance}
+        onNavigateAway={onClose}
+      />
     </div>
   );
 }

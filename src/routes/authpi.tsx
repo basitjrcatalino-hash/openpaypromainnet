@@ -312,15 +312,17 @@ function AuthPiPageInner() {
   const gridOptions = inPiBrowser ? [] : visibleOptions.filter((o) => !o.featured);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-background px-4 py-8 sm:py-10">
-      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div className="auth-orb absolute -top-28 left-[12%] h-80 w-80 rounded-full bg-primary/25 blur-3xl opacity-50" />
-        <div className="auth-orb auth-orb-delay absolute -bottom-36 right-[8%] h-96 w-96 rounded-full bg-primary-glow/30 blur-3xl opacity-40" />
-        <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/40 to-background" />
+    <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0c0a1a] px-4 py-8 text-white sm:py-10">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="auth-bg-mesh absolute inset-0" />
+        <div className="auth-orb absolute -top-20 left-[10%] h-[28rem] w-[28rem] rounded-full bg-[#7c3aed]/30 blur-[100px] animate-[auth-float_8s_ease-in-out_infinite]" />
+        <div className="auth-orb auth-orb-delay absolute -bottom-24 right-[5%] h-[32rem] w-[32rem] rounded-full bg-[#6366f1]/25 blur-[120px] animate-[auth-float_10s_ease-in-out_infinite_reverse]" />
+        <div className="absolute top-[30%] left-[55%] h-60 w-60 rounded-full bg-[#a78bfa]/20 blur-[80px] animate-[auth-float_12s_ease-in-out_2s_infinite]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0c0a1a]/50 to-[#0c0a1a]" />
       </div>
 
       <div className="auth-select-enter w-full max-w-sm py-2">
-        <div className="rounded-[1.75rem] border border-border/40 bg-card/95 p-6 shadow-card backdrop-blur-xl sm:p-7">
+        <div className="rounded-[1.75rem] border border-white/[0.08] bg-white/[0.05] p-6 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-7">
           <div className="mb-6 text-center">
             <div className="auth-badge-float mb-3 inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
               Premium Web3 wallet

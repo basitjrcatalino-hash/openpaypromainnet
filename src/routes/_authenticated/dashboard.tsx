@@ -12,7 +12,6 @@ import {
   Eye,
   EyeOff,
   ScanLine,
-  CheckCircle2,
   Blocks,
   Ellipsis,
   Shield,
@@ -34,7 +33,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/transaction-detail";
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
@@ -45,6 +43,7 @@ import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
+import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -690,56 +689,16 @@ function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Wallet switcher */}
-      <Dialog open={switchOpen} onOpenChange={setSwitchOpen}>
-        <DialogContent className="max-w-sm rounded-3xl border-border/60 bg-card">
-          <DialogHeader>
-            <DialogTitle>Switch wallet</DialogTitle>
-            <DialogDescription>Choose which wallet to use</DialogDescription>
-          </DialogHeader>
-          <ul className="space-y-1">
-            {wallets.map((w) => {
-              const active = w.id === wallet?.id;
-              return (
-                <li key={w.id}>
-                  <button
-                    type="button"
-                    disabled={switching}
-                    onClick={() => switchWallet(w.id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left press",
-                      active ? "bg-primary/15" : "hover:bg-muted/60",
-                    )}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary/20 text-sm font-bold text-primary">
-                        {(w.name?.[0] ?? "W").toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{w.name}</span>
-                      <span className="block truncate font-mono text-[11px] text-muted-foreground">
-                        {shortAddress(w.address, 6, 4)}
-                      </span>
-                    </span>
-                    <span className="text-right text-sm font-semibold tabular-nums">
-                      {formatCurrency(Number(w.ousd_balance ?? 0), currency)}
-                    </span>
-                    {active && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <Link
-            to="/settings"
-            onClick={() => setSwitchOpen(false)}
-            className="flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold text-primary hover:bg-primary/10"
-          >
-            <Plus className="h-4 w-4" /> Add wallet
-          </Link>
-        </DialogContent>
-      </Dialog>
+      <WalletSwitcherDialog
+        open={switchOpen}
+        onOpenChange={setSwitchOpen}
+        wallets={wallets}
+        activeWalletId={wallet?.id}
+        onSelect={switchWallet}
+        switching={switching}
+        currency={currency}
+        hideBalance={hideBalance}
+      />
 
       <ExploreDock
         query={tokenQuery}

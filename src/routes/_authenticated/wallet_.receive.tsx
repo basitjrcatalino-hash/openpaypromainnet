@@ -372,16 +372,16 @@ function WalletReceivePage() {
             </button>
           </div>
 
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[12px] leading-relaxed text-amber-100/90">
-            <p className="font-semibold text-amber-200">OpenPay → OpenPay only</p>
-            <p className="mt-1 text-amber-100/80">
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-[12px] leading-relaxed text-amber-950 dark:border-amber-500/30 dark:text-amber-100/90">
+            <p className="font-semibold text-amber-900 dark:text-amber-200">OpenPay → OpenPay only</p>
+            <p className="mt-1 text-amber-800/90 dark:text-amber-100/80">
               Receive from OpenPay Pro / OpenPay wallets only. Do not send from MetaMask, Phantom,
               exchanges, or other external wallets — those deposits will not credit your balance and
               funds may be lost. External support is coming soon.
             </p>
             <button
               type="button"
-              className="mt-2 text-xs font-bold text-amber-200 underline-offset-2 hover:underline"
+              className="mt-2 text-xs font-bold text-amber-900 underline-offset-2 hover:underline dark:text-amber-200"
               onClick={() => setNoteOpen(true)}
             >
               Read full notice

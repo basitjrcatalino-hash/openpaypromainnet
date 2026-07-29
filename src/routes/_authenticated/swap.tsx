@@ -26,7 +26,7 @@ import {
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
-import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
 import {
   executeOpenDexSwap,
@@ -908,7 +908,7 @@ function TokenLogo({
     <span className="relative inline-flex shrink-0">
       {logo}
       <img
-        src={OPENPAY_NETWORK_BADGE_URL}
+        src={OUSD_LOGO_URL}
         alt=""
         title="OpenPay"
         aria-hidden

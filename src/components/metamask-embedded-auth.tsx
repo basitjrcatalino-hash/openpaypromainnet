@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthTokenInfo, useWeb3AuthConnect } from "@web3auth/modal/react";
+import { useWeb3Auth, useAuthTokenInfo, useWeb3AuthConnect } from "@web3auth/modal/react";
 import { AUTH_CONNECTION, WALLET_CONNECTORS } from "@web3auth/modal";
 
 import { Button } from "@/components/ui/button";
@@ -39,10 +39,12 @@ export function MetaMaskEmbeddedAuthPanel({
   accent?: string;
   accentFg?: string;
 }) {
+  const { isInitialized, initError } = useWeb3Auth();
   const { connect, connectTo, loading, isConnected, error } = useWeb3AuthConnect();
   const { getAuthTokenInfo } = useAuthTokenInfo();
   const [localBusy, setLocalBusy] = useState(false);
-  const blocked = busy || localBusy || loading;
+  const sdkReady = isInitialized && !initError;
+  const blocked = busy || localBusy || loading || !sdkReady;
 
   async function finishSession() {
     const idToken = await getAuthTokenInfo();
@@ -87,7 +89,7 @@ export function MetaMaskEmbeddedAuthPanel({
         {blocked ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : null}
-        {isConnected ? "Continue to OpenPay Pro" : "Continue with MetaMask"}
+        {!sdkReady ? "Initializing…" : isConnected ? "Continue to OpenPay Pro" : "Continue with MetaMask"}
       </Button>
 
       <div className="grid grid-cols-3 gap-1.5">
@@ -113,11 +115,17 @@ export function MetaMaskEmbeddedAuthPanel({
         ))}
       </div>
 
-      {(error || !WEB3AUTH_CLIENT_ID) && (
+      {!sdkReady && !initError && (
+        <p className="text-center text-[11px] text-muted-foreground">
+          <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
+          Initializing MetaMask Embedded…
+        </p>
+      )}
+      {(error || initError || !WEB3AUTH_CLIENT_ID) && (
         <p className="text-center text-[11px] text-destructive">
           {!WEB3AUTH_CLIENT_ID
             ? "Missing VITE_WEB3AUTH_CLIENT_ID"
-            : error?.message || "Connection error"}
+            : initError?.message || error?.message || "Connection error"}
         </p>
       )}
       <p className="text-center text-[10px] text-muted-foreground">

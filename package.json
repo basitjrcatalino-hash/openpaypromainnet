@@ -18,6 +18,7 @@
     "@moonpay/moonpay-js": "^0.7.6",
     "@moonpay/moonpay-react": "^1.10.6",
     "@phantom/react-sdk": "^2.0.2",
+    "@privy-io/react-auth": "^3.35.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",

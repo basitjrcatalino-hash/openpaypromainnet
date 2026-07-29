@@ -24,6 +24,8 @@ import {
   ScrollText,
   BookOpen,
   CircleDollarSign,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -81,6 +83,14 @@ function navActive(pathname: string, to: string) {
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("sidebar-collapsed") === "1"; } catch { return false; }
+  });
+  const toggleSidebar = () => setSidebarCollapsed((v) => {
+    const next = !v;
+    try { localStorage.setItem("sidebar-collapsed", next ? "1" : "0"); } catch {}
+    return next;
+  });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const qc = useQueryClient();
   const hideChrome = pathname === "/scan";
@@ -163,16 +173,35 @@ function AuthenticatedLayout() {
 
         <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
           {!hideChrome && (
-            <aside className="sticky top-0 hidden h-screen w-80 shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 md:flex md:flex-col">
-              <SidebarInner
-                wallets={wallets}
-                activeWallet={activeWallet}
-                profile={profile}
-                pathname={pathname}
-                onSwitchWallet={switchWallet}
-                unread={txNotes.unread}
-                onOpenNotifications={() => setNotifOpen(true)}
-              />
+            <aside
+              className={cn(
+                "sticky top-0 hidden h-screen shrink-0 overflow-y-auto border-r border-sidebar-border bg-sidebar md:flex md:flex-col transition-[width] duration-200 ease-in-out",
+                sidebarCollapsed ? "w-16 p-2" : "w-80 p-4",
+              )}
+            >
+              {sidebarCollapsed ? (
+                <CollapsedSidebar pathname={pathname} onExpand={toggleSidebar} />
+              ) : (
+                <>
+                  <SidebarInner
+                    wallets={wallets}
+                    activeWallet={activeWallet}
+                    profile={profile}
+                    pathname={pathname}
+                    onSwitchWallet={switchWallet}
+                    unread={txNotes.unread}
+                    onOpenNotifications={() => setNotifOpen(true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    className="mt-auto flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                    title="Collapse sidebar"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </button>
+                </>
+              )}
             </aside>
           )}
 
@@ -263,6 +292,39 @@ function AuthenticatedLayout() {
     </ChromeVisibleProvider>
       </AppPhantomProvider>
     </AppMoonPayProvider>
+  );
+}
+
+function CollapsedSidebar({ pathname, onExpand }: { pathname: string; onExpand: () => void }) {
+  return (
+    <div className="flex h-full flex-col items-center gap-1 py-2">
+      <button
+        type="button"
+        onClick={onExpand}
+        className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+        title="Expand sidebar"
+      >
+        <PanelLeftOpen className="h-4 w-4" />
+      </button>
+      {NAV.map((item) => {
+        const active = navActive(pathname, item.to);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              active
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+            )}
+            title={item.label}
+          >
+            <item.icon className="h-4 w-4" />
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 

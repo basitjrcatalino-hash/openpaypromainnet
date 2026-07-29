@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
@@ -21,6 +21,8 @@ import {
 import { PhantomContinueButton, PhantomGoogleAppleLink } from "@/components/phantom-auth-lazy";
 import { AppPhantomProvider, usePhantomClient } from "@/components/phantom-provider";
 import { AppWeb3AuthProvider } from "@/components/web3auth-provider";
+import { AppPrivyProvider } from "@/components/privy-provider";
+import { PRIVY_APP_ID, PRIVY_BRAND_COLOR, completePrivySupabaseSession } from "@/lib/privy-auth";
 import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +49,8 @@ type AuthMethod =
   | "pi"
   | "phantom"
   | "walletconnect"
-  | "metamask";
+  | "metamask"
+  | "privy";
 
 const AUTH_OPTIONS: {
   id: AuthMethod;
@@ -121,7 +124,90 @@ const AUTH_OPTIONS: {
     logoUrl: METAMASK_WALLET_LOGO,
     logoFit: "cover",
   },
+  {
+    id: "privy",
+    label: "Privy",
+    desc: "Google · Apple · Email · SMS",
+    accent: PRIVY_BRAND_COLOR,
+    accentFg: "#ffffff",
+    logoFit: "contain",
+  },
 ];
+
+function PrivyLoginButton({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
+  if (!PRIVY_APP_ID) {
+    return (
+      <div className="space-y-2">
+        <Button type="button" disabled className="h-12 w-full rounded-full" style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}>
+          Privy not configured
+        </Button>
+        <p className="text-center text-[11px] text-destructive">Set VITE_PRIVY_APP_ID to enable</p>
+      </div>
+    );
+  }
+
+  return (
+    <AppPrivyProvider>
+      <PrivyLoginInner busy={busy} setBusy={setBusy} />
+    </AppPrivyProvider>
+  );
+}
+
+function PrivyLoginInner({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
+  const [mod, setMod] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const m = await import("@privy-io/react-auth");
+      if (!cancelled) setMod(m);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!mod) {
+    return (
+      <Button type="button" disabled className="h-12 w-full rounded-full" style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Privy…
+      </Button>
+    );
+  }
+
+  const PrivyHookConsumer = mod.__PrivyHookConsumer ?? (() => {
+    const { login, ready, authenticated, user } = mod.usePrivy();
+
+    useEffect(() => {
+      if (authenticated && user) {
+        void (async () => {
+          setBusy(true);
+          try {
+            await completePrivySupabaseSession({ id: user.id, email: user.email, wallet: user.wallet });
+            navigate({ to: "/dashboard" });
+          } catch (err) {
+            toast.error((err as Error).message || "Privy sign-in failed");
+            setBusy(false);
+          }
+        })();
+      }
+    }, [authenticated, user]);
+
+    return (
+      <Button
+        type="button"
+        disabled={busy || !ready}
+        onClick={() => login()}
+        className="h-12 w-full rounded-full text-base font-semibold"
+        style={{ backgroundColor: PRIVY_BRAND_COLOR, color: "#fff" }}
+      >
+        {!ready ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {ready ? "Continue with Privy" : "Initializing…"}
+      </Button>
+    );
+  });
+
+  return <PrivyHookConsumer />;
+}
 
 function WalletConnectMark({ className }: { className?: string }) {
   return (
@@ -267,7 +353,7 @@ function AuthPiPageInner() {
   async function continueWith(method: AuthMethod) {
     if (busy) return;
     if (!visibleOptions.some((o) => o.id === method)) return;
-    if (method === "metamask" || method === "phantom") return;
+    if (method === "metamask" || method === "phantom" || method === "privy") return;
     setBusy(true);
     try {
       if (method === "openpay") {
@@ -522,6 +608,10 @@ function AuthPiPageInner() {
                     </p>
                   </div>
                 )}
+              </div>
+            ) : selected === "privy" ? (
+              <div key="privy-panel" className="auth-cta-swap">
+                <PrivyLoginButton busy={busy} setBusy={setBusy} />
               </div>
             ) : (
               <Button

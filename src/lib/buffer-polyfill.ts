@@ -293,16 +293,19 @@ export async function ensureBuffer(): Promise<void> {
     return;
   }
 
-  const fromNpm = await tryLoadNpmBuffer();
-  const Buf = fromNpm || createFallbackBuffer();
+  let Buf: BufferLike | null = null;
+  try {
+    Buf = await tryLoadNpmBuffer();
+  } catch {
+    /* swallow — fallback below */
+  }
+  if (!Buf) {
+    Buf = createFallbackBuffer();
+  }
   installGlobals(Buf);
 
   const installed = (globalThis as { Buffer?: BufferLike }).Buffer;
-  if (typeof installed?.from !== "function") {
-    throw new Error("Buffer.from is unavailable after polyfill install");
-  }
-  if (installed.__openpayStub) {
-    // Last resort: replace stub in place
+  if (typeof installed?.from !== "function" || installed.__openpayStub) {
     installGlobals(createFallbackBuffer());
   }
 }

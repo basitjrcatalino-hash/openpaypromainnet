@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
+import { fetchMajorUsdPrices, type LedgerMajorId } from "@/lib/ledger-majors";
 
 export type WalletBalanceSource = {
   id: string;
@@ -11,6 +11,44 @@ export type WalletBalanceSource = {
   usdc_balance?: number | null;
   usdt_balance?: number | null;
 };
+
+export type MajorUsdPriceMap = Partial<Record<LedgerMajorId, number>> & {
+  pi?: number;
+  btc?: number;
+  eth?: number;
+  sol?: number;
+  usdc?: number;
+  usdt?: number;
+};
+
+const FALLBACK_MAJOR_USD: Required<
+  Pick<MajorUsdPriceMap, "pi" | "btc" | "eth" | "sol" | "usdc" | "usdt">
+> = {
+  pi: 0.079,
+  btc: 65000,
+  eth: 1920,
+  sol: 74,
+  usdc: 1,
+  usdt: 1,
+};
+
+/** Ledger majors (OUSD + PI/BTC/ETH/SOL/USDC/USDT) in USD — shared by dashboard & sidebar. */
+export function walletLedgerUsd(
+  wallet: WalletBalanceSource | null | undefined,
+  prices?: MajorUsdPriceMap | null,
+): number {
+  if (!wallet) return 0;
+  const p = { ...FALLBACK_MAJOR_USD, ...prices };
+  return (
+    Number(wallet.ousd_balance ?? 0) +
+    Number(wallet.pi_balance ?? 0) * (p.pi ?? FALLBACK_MAJOR_USD.pi) +
+    Number(wallet.btc_balance ?? 0) * (p.btc ?? FALLBACK_MAJOR_USD.btc) +
+    Number(wallet.eth_balance ?? 0) * (p.eth ?? FALLBACK_MAJOR_USD.eth) +
+    Number(wallet.sol_balance ?? 0) * (p.sol ?? FALLBACK_MAJOR_USD.sol) +
+    Number(wallet.usdc_balance ?? 0) * (p.usdc ?? FALLBACK_MAJOR_USD.usdc) +
+    Number(wallet.usdt_balance ?? 0) * (p.usdt ?? FALLBACK_MAJOR_USD.usdt)
+  );
+}
 
 /** Deterministic Phantom-style gradient pair from wallet address. */
 const WALLET_GRADIENTS: Array<[string, string]> = [
@@ -63,15 +101,8 @@ export async function fetchWalletPortfolioTotals(
   }
 
   for (const wallet of wallets) {
-    const majorsUsd =
-      Number(wallet.ousd_balance ?? 0) +
-      Number(wallet.pi_balance ?? 0) * (prices?.pi ?? 0.079) +
-      Number(wallet.btc_balance ?? 0) * (prices?.btc ?? 65000) +
-      Number(wallet.eth_balance ?? 0) * (prices?.eth ?? 1920) +
-      Number(wallet.sol_balance ?? 0) * (prices?.sol ?? 74) +
-      Number(wallet.usdc_balance ?? 0) * (prices?.usdc ?? 1) +
-      Number(wallet.usdt_balance ?? 0) * (prices?.usdt ?? 1);
-    totals[wallet.id] = (holdingsByWallet[wallet.id] ?? 0) + majorsUsd;
+    totals[wallet.id] =
+      (holdingsByWallet[wallet.id] ?? 0) + walletLedgerUsd(wallet, prices);
   }
   return totals;
 }

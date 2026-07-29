@@ -59,12 +59,36 @@ export function clearTopupFeeSettingsCache() {
 
 async function resolveFeeWallet(
   admin: DbClient,
-  address: string,
+  addressOrUser: string,
 ): Promise<{ id: string; ousd_balance?: number | null } | null> {
+  const raw = addressOrUser.trim();
+  if (!raw) return null;
+
+  if (/^0x/i.test(raw)) {
+    const { data } = await admin
+      .from("wallets")
+      .select("id, ousd_balance")
+      .ilike("address", raw.toLowerCase())
+      .limit(1)
+      .maybeSingle();
+    return data ?? null;
+  }
+
+  const handle = raw.replace(/^@+/, "").toLowerCase();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .ilike("username", handle)
+    .limit(1)
+    .maybeSingle();
+  if (!profile?.id) return null;
+
   const { data } = await admin
     .from("wallets")
     .select("id, ousd_balance")
-    .ilike("address", address.trim().toLowerCase())
+    .eq("user_id", profile.id)
+    .order("is_active", { ascending: false })
+    .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   return data ?? null;

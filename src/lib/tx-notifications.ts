@@ -1,5 +1,4 @@
 import type { Tables } from "@/integrations/supabase/types";
-import { formatNumber } from "@/lib/wallet-utils";
 
 export type TxRow = Tables<"transactions">;
 
@@ -51,17 +50,19 @@ export function saveSeenTxIds(userId: string, ids: Set<string>) {
 }
 
 export function formatTxNotification(tx: TxRow): Omit<AppNotification, "id" | "read"> {
-  const symbol = tx.token_symbol ?? "token";
-  const amount = formatNumber(tx.amount, 4);
+  const symbol = (tx.token_symbol ?? "token").replace(/^\$/, "");
   const type = tx.type;
+  // Phantom-style: action + asset in the title; amount shown separately in the UI.
   const title =
-    type === "receive" || type === "buy"
-      ? `Received ${amount} ${symbol}`
+    type === "receive" || type === "buy" || type === "reward"
+      ? `Received ${symbol}`
       : type === "send" || type === "sell"
-        ? `Sent ${amount} ${symbol}`
+        ? `Sent ${symbol}`
         : type === "swap"
-          ? `Swapped ${amount} ${symbol}`
-          : `${type} · ${amount} ${symbol}`;
+          ? `Swapped ${symbol}`
+          : type === "mint"
+            ? `Minted ${symbol}`
+            : `${type} · ${symbol}`;
 
   const body =
     tx.memo?.trim() ||

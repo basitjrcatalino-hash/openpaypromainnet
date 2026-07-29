@@ -8,11 +8,16 @@ import {
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 import { MAJOR_TOKENS, isMajorTokenId } from "@/lib/major-tokens";
+import {
+  applyPlatformTradeFee,
+  creditPlatformFeeOusd,
+  PLATFORM_TRADE_FEE_BPS,
+} from "@/lib/platform-treasury";
 
 const BuyMajorSchema = z.object({
   wallet_id: z.string().uuid(),
   major_id: z.string().refine(isMajorTokenId, "Invalid major"),
-  /** USD / OUSD to spend */
+  /** USD / OUSD to spend (gross — includes platform fee) */
   usd_amount: z.number().positive().min(0.01).max(50_000),
 });
 
@@ -25,6 +30,7 @@ function round12(n: number) {
 
 /**
  * Spend OUSD from the Pro wallet and credit a major ledger balance at live CoinGecko price.
+ * Deducts PLATFORM_TRADE_FEE_BPS from spend and credits the configured fee wallet (@openpay).
  */
 export const buyMajorWithOusd = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -32,8 +38,10 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const major = data.major_id as LedgerMajorId;
-    const usd = round8(data.usd_amount);
+    const gross = round8(data.usd_amount);
     const def = MAJOR_TOKENS[major];
+    const { fee, net, feeBps } = applyPlatformTradeFee(gross, PLATFORM_TRADE_FEE_BPS);
+    if (!(net > 0)) throw new Error("Amount too small after fee");
 
     const { data: wallet, error: walErr } = await supabase
       .from("wallets")
@@ -47,20 +55,20 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Wallet not found");
 
     const ousd = Number(wallet.ousd_balance ?? 0);
-    if (ousd + 1e-12 < usd) {
-      throw new Error(`Need ${usd} OUSD — top up first (have ${round8(ousd)})`);
+    if (ousd + 1e-12 < gross) {
+      throw new Error(`Need ${gross} OUSD — top up first (have ${round8(ousd)})`);
     }
 
     const prices = await fetchMajorUsdPrices([major]);
     const price = prices[major];
     if (!(price > 0)) throw new Error(`Could not price ${def.symbol}`);
 
-    const tokenAmt = round12(usd / price);
+    const tokenAmt = round12(net / price);
     if (tokenAmt <= 0) throw new Error("Amount too small");
 
     const curMajor = readMajorBalance(wallet as unknown as Record<string, unknown>, major);
     const patch = {
-      ousd_balance: round8(ousd - usd),
+      ousd_balance: round8(ousd - gross),
       ...majorBalancePatch(major, round12(curMajor + tokenAmt)),
     };
 
@@ -79,18 +87,35 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
       token_symbol: def.symbol,
       counterparty: "OpenPay Buy",
       amount: tokenAmt,
-      usd_value: usd,
-      memo: `Bought ${tokenAmt} ${def.symbol} for ${usd} OUSD @ $${price}`,
+      usd_value: net,
+      memo: `Bought ${tokenAmt} ${def.symbol} for ${net} OUSD @ $${price} (fee ${fee} OUSD · ${feeBps / 100}%)`,
       tx_hash: txRef,
     });
     if (txErr) throw new Error(txErr.message);
+
+    if (fee > 0) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await creditPlatformFeeOusd(supabaseAdmin, {
+          amount: fee,
+          sourceWalletId: data.wallet_id,
+          counterparty: `buy_major:${major}`,
+          memo: `Major buy fee · ${def.symbol} · ${fee} OUSD → fee wallet`,
+        });
+      } catch (e) {
+        console.error("[buy-major] fee treasury credit failed", (e as Error).message);
+      }
+    }
 
     return {
       ok: true as const,
       major_id: major,
       symbol: def.symbol,
       token_amount: tokenAmt,
-      usd_spent: usd,
+      usd_spent: gross,
+      net_spent: net,
+      fee_ousd: fee,
+      fee_bps: feeBps,
       price_usd: price,
       balance: round12(curMajor + tokenAmt),
     };

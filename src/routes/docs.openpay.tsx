@@ -275,7 +275,12 @@ function OpenPayDocsPage() {
             ["#pay", "4. Accept payments"],
             ["#openpay-to-pro", "5. OpenPay → Pro"],
             ["#api", "6. API cheat sheet"],
-            ["#errors", "7. Errors & checklist"],
+            ["#ledger", "7. Ledger API"],
+            ["#wc-pay", "8. WalletConnect Pay"],
+            ["#charges", "9. Charges & webhooks"],
+            ["#nft", "10. NFT mint"],
+            ["#errors", "11. Errors & checklist"],
+            ["#faq", "12. FAQ"],
           ].map(([href, label]) => (
             <a
               key={href}
@@ -712,10 +717,108 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
             >
               {PARTNER_PORTAL}
             </a>
+            <br />
+            Full Partner Transfer notes:{" "}
+            <code className="text-foreground">docs/PARTNER_TRANSFER_API.md</code>
           </p>
         </Section>
 
-        <Section id="errors" eyebrow="Step 7" title="Errors & launch checklist">
+        <Section id="ledger" eyebrow="Step 7" title="Public Ledger API">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <p className="text-foreground">
+              Append-only public ledger of OpenPay Pro transactions for analytics / OpenLedger
+              pipelines. Authenticate with{" "}
+              <code className="rounded bg-muted px-1 text-foreground">x-api-key</code> or{" "}
+              <code className="rounded bg-muted px-1 text-foreground">Authorization: Bearer</code>.
+            </p>
+            <Code>{`GET https://openpaypromainnet.lovable.app/api/public/ledger/entries?limit=50
+x-api-key: YOUR_LEDGER_KEY`}</Code>
+            <p>
+              Covered types: <code className="text-foreground">send</code>,{" "}
+              <code className="text-foreground">receive</code>,{" "}
+              <code className="text-foreground">buy</code>,{" "}
+              <code className="text-foreground">sell</code>,{" "}
+              <code className="text-foreground">swap</code>,{" "}
+              <code className="text-foreground">mint</code>,{" "}
+              <code className="text-foreground">reward</code>. Full reference:{" "}
+              <code className="text-foreground">docs/LEDGER_API.md</code> · in-app{" "}
+              <Link to="/ledger" className="font-medium text-primary underline-offset-2 hover:underline">
+                /ledger
+              </Link>
+              .
+            </p>
+          </Card>
+        </Section>
+
+        <Section id="wc-pay" eyebrow="Step 8" title="WalletConnect Pay">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <p className="text-foreground">
+              OpenPay Pro can pay WalletConnect Pay merchant links from the in-app scanner (
+              <code className="rounded bg-muted px-1">/scan</code> →{" "}
+              <code className="rounded bg-muted px-1">/wc-pay</code>).
+            </p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>Merchant creates a WC Pay link via WalletConnect Pay Merchant API</li>
+              <li>User scans QR or opens the link in Pro</li>
+              <li>User selects a payment option and confirms in their EVM wallet</li>
+              <li>
+                Requires server env{" "}
+                <code className="rounded bg-muted px-1 text-foreground">WALLETCONNECT_PAY_API_KEY</code>
+              </li>
+            </ul>
+            <p>
+              This is a <strong className="text-foreground">payer</strong> integration inside Pro —
+              not a partner webhook. Merchants should use WalletConnect Pay docs for link creation.
+            </p>
+          </Card>
+        </Section>
+
+        <Section id="charges" eyebrow="Step 9" title="Charges polling (no partner webhooks)">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <p className="text-foreground">
+              Partner payments are confirmed by <strong>polling</strong>{" "}
+              <code className="rounded bg-muted px-1">GET /charges/:id</code> (or success URL
+              return). There is no partner-facing payment webhook today.
+            </p>
+            <Code>{`# After creating a charge
+GET ${API}/charges/CHARGE_ID
+Authorization: Bearer opk_live_YOUR_KEY
+
+# Fulfill only when status is paid / confirmed`}</Code>
+            <p>
+              Internal webhooks (MoonPay, KYC, Circle) power Pro itself and are{" "}
+              <strong className="text-foreground">not</strong> exposed to third-party apps.
+            </p>
+          </Card>
+        </Section>
+
+        <Section id="nft" eyebrow="Step 10" title="OpenNFT mint (high level)">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <p className="text-foreground">
+              Pro users mint collectibles on OpenPay OpenNFT via a connected OpenPay account (
+              Settings → Connect OpenPay). Marketplace:{" "}
+              <a
+                href="https://openpy.space/web3/nft"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                openpy.space/web3/nft
+              </a>
+              .
+            </p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>User must link OpenPay OAuth in Pro first</li>
+              <li>Mint calls OpenPay partner NFT APIs server-side</li>
+              <li>
+                Ledger type <code className="rounded bg-muted px-1 text-foreground">mint</code> is
+                recorded on the Pro Ledger API
+              </li>
+            </ul>
+          </Card>
+        </Section>
+
+        <Section id="errors" eyebrow="Step 11" title="Errors & launch checklist">
           <Card className="space-y-2 rounded-3xl border-border bg-card p-5 text-sm shadow-none">
             <p>
               <strong>401 / invalid_client</strong> — bad or quoted{" "}
@@ -726,6 +829,10 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
             </p>
             <p>
               <strong>400</strong> — validation, insufficient balance, or temporary API SQL bugs
+            </p>
+            <p>
+              <strong>Scopes</strong> — Connect uses <code className="rounded bg-muted px-1">profile</code>{" "}
+              and <code className="rounded bg-muted px-1">balance</code>
             </p>
           </Card>
           <ul className="space-y-2 text-sm">
@@ -744,6 +851,40 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
           </ul>
         </Section>
 
+        <Section id="faq" eyebrow="FAQ" title="OpenPay Pro FAQ">
+          <Card className="space-y-4 rounded-3xl border-border bg-card p-5 text-sm shadow-none">
+            <div>
+              <p className="font-semibold text-foreground">How do I connect OpenPay to Pro?</p>
+              <p className="mt-1 text-muted-foreground">
+                Settings → Connected → Connect OpenPay (OAuth). You can then send/receive via OpenPay
+                balance and mint OpenNFTs.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Where do trade fees go?</p>
+              <p className="mt-1 text-muted-foreground">
+                Platform fees (0.30% on OpenToken buys/sells, OpenDEX swaps, and major buys) credit
+                the admin fee wallet — typically{" "}
+                <code className="rounded bg-muted px-1">@openpay</code> or the 0x address set under
+                Admin → Top-up fee.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Is there a partner webhook?</p>
+              <p className="mt-1 text-muted-foreground">
+                Not yet — poll <code className="rounded bg-muted px-1">GET /charges/:id</code> after
+                payment return.
+              </p>
+            </div>
+            <p className="text-muted-foreground">
+              Full FAQ:{" "}
+              <Link to="/docs/faq" className="font-medium text-primary underline-offset-2 hover:underline">
+                /docs/faq
+              </Link>
+            </p>
+          </Card>
+        </Section>
+
         <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
           <p>
             Integration markdown:{" "}
@@ -758,7 +899,11 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
               openpy.space/partner-api
             </a>{" "}
             · Also see <code className="text-foreground">docs/PARTNER_TRANSFER_API.md</code> and{" "}
-            <code className="text-foreground">docs/LEDGER_API.md</code>.
+            <code className="text-foreground">docs/LEDGER_API.md</code> ·{" "}
+            <Link to="/docs/faq" className="text-primary underline-offset-2 hover:underline">
+              FAQ
+            </Link>
+            .
           </p>
         </footer>
       </main>

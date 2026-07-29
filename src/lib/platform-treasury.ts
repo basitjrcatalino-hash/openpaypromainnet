@@ -1,10 +1,17 @@
 /**
- * Platform fee treasury — all OpenToken / OpenDEX fees credit this account.
- * Prefer matching wallet address; fall back to profile username @openpay.
+ * Platform fee treasury — all OpenToken / OpenDEX / major-buy fees credit this account.
+ *
+ * Resolution order:
+ * 1. Admin Top-up Settings `fee_wallet_address` (0x… or @username / username)
+ * 2. Hardcoded PLATFORM_FEE_TREASURY_ADDRESS
+ * 3. Profile username @openpay
  */
 export const PLATFORM_FEE_TREASURY_USERNAME = "openpay";
 export const PLATFORM_FEE_TREASURY_ADDRESS =
   "0xc847682465ea537c3957cd46eff2c7229faefde1";
+
+/** Platform trade fee (buy majors / OpenToken / OpenDEX) — 30 bps = 0.30%. */
+export const PLATFORM_TRADE_FEE_BPS = 30;
 
 function round8(n: number) {
   return Math.round(n * 1e8) / 1e8;
@@ -22,24 +29,36 @@ export type TreasuryWallet = {
   ousd_balance?: number | null;
 };
 
-/** Resolve the platform treasury wallet (address first, then @openpay). */
-export async function resolvePlatformTreasuryWallet(
-  admin: AdminClient,
-): Promise<TreasuryWallet | null> {
-  const addr = PLATFORM_FEE_TREASURY_ADDRESS.toLowerCase();
+function normalizeFeeRef(raw: string | null | undefined): string | null {
+  const s = raw?.trim();
+  if (!s) return null;
+  return s.replace(/^@+/, "").toLowerCase();
+}
 
-  const { data: byAddr } = await admin
+async function resolveWalletByAddress(
+  admin: AdminClient,
+  address: string,
+): Promise<TreasuryWallet | null> {
+  const { data } = await admin
     .from("wallets")
     .select("id, user_id, address, ousd_balance")
-    .ilike("address", addr)
+    .ilike("address", address.toLowerCase())
     .limit(1)
     .maybeSingle();
-  if (byAddr?.id) return byAddr as TreasuryWallet;
+  return (data as TreasuryWallet | null) ?? null;
+}
+
+async function resolveWalletByUsername(
+  admin: AdminClient,
+  username: string,
+): Promise<TreasuryWallet | null> {
+  const handle = normalizeFeeRef(username);
+  if (!handle) return null;
 
   const { data: profile } = await admin
     .from("profiles")
     .select("id")
-    .ilike("username", PLATFORM_FEE_TREASURY_USERNAME)
+    .ilike("username", handle)
     .limit(1)
     .maybeSingle();
   if (!profile?.id) return null;
@@ -54,6 +73,51 @@ export async function resolvePlatformTreasuryWallet(
     .maybeSingle();
 
   return (byUser as TreasuryWallet | null) ?? null;
+}
+
+async function resolveConfiguredFeeWallet(admin: AdminClient): Promise<TreasuryWallet | null> {
+  try {
+    const { data } = await admin
+      .from("topup_settings")
+      .select("fee_wallet_address")
+      .eq("id", 1)
+      .maybeSingle();
+    const raw = (data?.fee_wallet_address as string | null | undefined)?.trim();
+    if (!raw) return null;
+
+    if (raw.startsWith("0x") || raw.startsWith("0X")) {
+      return resolveWalletByAddress(admin, raw);
+    }
+    // @openpay / openpay / username
+    return resolveWalletByUsername(admin, raw);
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve the platform treasury wallet (admin setting → address → @openpay). */
+export async function resolvePlatformTreasuryWallet(
+  admin: AdminClient,
+): Promise<TreasuryWallet | null> {
+  const configured = await resolveConfiguredFeeWallet(admin);
+  if (configured) return configured;
+
+  const byAddr = await resolveWalletByAddress(admin, PLATFORM_FEE_TREASURY_ADDRESS);
+  if (byAddr) return byAddr;
+
+  return resolveWalletByUsername(admin, PLATFORM_FEE_TREASURY_USERNAME);
+}
+
+export function applyPlatformTradeFee(
+  amount: number,
+  feeBps = PLATFORM_TRADE_FEE_BPS,
+): { fee: number; net: number; feeBps: number } {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { fee: 0, net: 0, feeBps };
+  }
+  const fee = round8((amount * feeBps) / 10_000);
+  const net = round8(Math.max(0, amount - fee));
+  return { fee, net, feeBps };
 }
 
 /** Credit OUSD platform fee to the treasury wallet. */
@@ -72,7 +136,7 @@ export async function creditPlatformFeeOusd(
   const treasury = await resolvePlatformTreasuryWallet(admin);
   if (!treasury) {
     console.error(
-      "[platform-fee] treasury wallet not found for",
+      "[platform-fee] treasury wallet not found for configured fee wallet /",
       PLATFORM_FEE_TREASURY_ADDRESS,
       `@${PLATFORM_FEE_TREASURY_USERNAME}`,
     );

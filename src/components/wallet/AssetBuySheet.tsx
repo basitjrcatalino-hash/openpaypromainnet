@@ -28,6 +28,7 @@ import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
+import { useCurrency } from "@/lib/currency";
 
 export type AssetBuyTarget = {
   id: string;
@@ -132,6 +133,8 @@ export function AssetBuySheet({
   onNavigateSwap,
 }: Props) {
   const qc = useQueryClient();
+  // Subscribe so fiat labels refresh when display currency changes
+  useCurrency();
   const buyFn = useServerFn(buyOpenToken);
   const createCharge = useServerFn(createOpenPayTopupCharge);
   const getLink = useServerFn(getOpenPayLinkStatus);

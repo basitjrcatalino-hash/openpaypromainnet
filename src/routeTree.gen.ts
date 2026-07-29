@@ -25,6 +25,7 @@ import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
 import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
@@ -33,9 +34,11 @@ import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
@@ -160,6 +163,11 @@ const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
   path: '/ousd',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
   id: '/receive',
   path: '/receive',
@@ -200,6 +208,11 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
   id: '/wc-pay',
   path: '/wc-pay',
@@ -214,6 +227,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
+} as any)
+const DocsFaqRoute = DocsFaqRouteImport.update({
+  id: '/docs/faq',
+  path: '/docs/faq',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
   id: '/docs/openpay',
@@ -470,6 +488,7 @@ export interface FileRoutesByFullPath {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
@@ -478,9 +497,11 @@ export interface FileRoutesByFullPath {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -542,6 +563,7 @@ export interface FileRoutesByTo {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
@@ -550,9 +572,11 @@ export interface FileRoutesByTo {
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -616,6 +640,7 @@ export interface FileRoutesById {
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
@@ -624,9 +649,11 @@ export interface FileRoutesById {
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
+  '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -690,6 +717,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/opentoken'
     | '/ousd'
+    | '/profile'
     | '/receive'
     | '/scan'
     | '/send'
@@ -698,9 +726,11 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/wallet'
+    | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
+    | '/docs/faq'
     | '/docs/openpay'
     | '/admin/topup'
     | '/asset/$tokenId'
@@ -762,6 +792,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/opentoken'
     | '/ousd'
+    | '/profile'
     | '/receive'
     | '/scan'
     | '/send'
@@ -770,9 +801,11 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/topup'
     | '/wallet'
+    | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
+    | '/docs/faq'
     | '/docs/openpay'
     | '/admin/topup'
     | '/asset/$tokenId'
@@ -835,6 +868,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nfts'
     | '/_authenticated/opentoken'
     | '/_authenticated/ousd'
+    | '/_authenticated/profile'
     | '/_authenticated/receive'
     | '/_authenticated/scan'
     | '/_authenticated/send'
@@ -843,9 +877,11 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
     | '/_authenticated/wallet'
+    | '/_authenticated/watchlist'
     | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
     | '/auth/callback'
+    | '/docs/faq'
     | '/docs/openpay'
     | '/_authenticated/admin/topup'
     | '/_authenticated/asset_/$tokenId'
@@ -901,6 +937,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -1041,6 +1078,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOusdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/receive': {
       id: '/_authenticated/receive'
       path: '/receive'
@@ -1097,6 +1141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/watchlist': {
+      id: '/_authenticated/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/wc-pay': {
       id: '/_authenticated/wc-pay'
       path: '/wc-pay'
@@ -1117,6 +1168,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/docs/faq': {
+      id: '/docs/faq'
+      path: '/docs/faq'
+      fullPath: '/docs/faq'
+      preLoaderRoute: typeof DocsFaqRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/docs/openpay': {
       id: '/docs/openpay'
@@ -1461,6 +1519,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
@@ -1469,6 +1528,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
@@ -1496,6 +1556,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
@@ -1504,6 +1565,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
@@ -1565,6 +1627,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,

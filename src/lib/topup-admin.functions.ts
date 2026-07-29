@@ -54,10 +54,17 @@ const SettingsSchema = z.object({
   fee_bps: z.number().int().min(0).max(10_000).optional(),
   fee_wallet_address: z
     .string()
-    .max(42)
+    .max(128)
     .nullable()
     .optional()
-    .refine((v) => !v || /^0x[a-fA-F0-9]{40}$/i.test(v), "Invalid wallet address"),
+    .refine((v) => {
+      if (!v) return true;
+      const t = v.trim();
+      if (/^0x[a-fA-F0-9]{40}$/i.test(t)) return true;
+      // @username or username
+      const handle = t.replace(/^@+/, "");
+      return /^[a-zA-Z0-9_]{2,32}$/.test(handle);
+    }, "Use a 0x wallet address or @username (e.g. @openpay)"),
 });
 
 export const updateTopupSettings = createServerFn({ method: "POST" })
@@ -71,7 +78,13 @@ export const updateTopupSettings = createServerFn({ method: "POST" })
         openpay_payment_url: data.openpay_payment_url ?? null,
         instructions: data.instructions ?? null,
         fee_bps: data.fee_bps ?? 0,
-        fee_wallet_address: data.fee_wallet_address?.trim().toLowerCase() ?? null,
+        fee_wallet_address: (() => {
+          const raw = data.fee_wallet_address?.trim();
+          if (!raw) return null;
+          if (/^0x/i.test(raw)) return raw.toLowerCase();
+          const handle = raw.replace(/^@+/, "").toLowerCase();
+          return handle ? `@${handle}` : null;
+        })(),
         updated_at: new Date().toISOString(),
         updated_by: context.userId,
       })

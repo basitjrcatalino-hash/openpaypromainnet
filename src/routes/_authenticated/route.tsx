@@ -26,6 +26,8 @@ import {
   CircleDollarSign,
   PanelLeftClose,
   PanelLeftOpen,
+  Star,
+  HelpCircle,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -36,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
+import { CurrencyProvider } from "@/components/currency-provider";
 import { toast } from "sonner";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
@@ -46,7 +49,7 @@ import {
 } from "@/components/wallet/WalletSwitcherDialog";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
-import { fetchWalletPortfolioTotals } from "@/lib/wallet-portfolio";
+import { fetchWalletPortfolioTotals, walletLedgerUsd } from "@/lib/wallet-portfolio";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
@@ -96,6 +99,8 @@ function navActive(pathname: string, to: string) {
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
+  // Re-render the whole shell (Outlet, sidebar, sheets) when display currency changes
+  useCurrency();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebar-collapsed") === "1"; } catch { return false; }
@@ -146,6 +151,7 @@ function AuthenticatedLayout() {
       qc.invalidateQueries({ queryKey: ["wallets", user.id] }),
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
       qc.invalidateQueries({ queryKey: ["holdings"] }),
+      qc.invalidateQueries({ queryKey: ["wallet-portfolio-totals"] }),
       qc.invalidateQueries({ queryKey: ["recent-txs"] }),
       qc.invalidateQueries({ queryKey: ["my-nfts"] }),
     ]);
@@ -155,6 +161,7 @@ function AuthenticatedLayout() {
   return (
     <AppMoonPayProvider>
       <AppPhantomProvider>
+        <CurrencyProvider>
         <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
       <div className="relative min-h-screen bg-background text-foreground">
         {!hideChrome && (
@@ -310,6 +317,7 @@ function AuthenticatedLayout() {
         />
       </div>
     </ChromeVisibleProvider>
+        </CurrencyProvider>
       </AppPhantomProvider>
     </AppMoonPayProvider>
   );
@@ -428,17 +436,27 @@ function SidebarInner({
   const holdingsUsd = (
     activeHoldings as Array<{ balance?: number; tokens?: { price_usd?: number } | null }>
   ).reduce((sum, h) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0), 0);
-  const ousdUsd = Number(activeWallet?.ousd_balance ?? 0);
-  const totalUsd = holdingsUsd + ousdUsd;
 
   const walletIds = wallets.map((w) => w.id).join(",");
+  const balanceFingerprint = wallets
+    .map(
+      (w) =>
+        `${w.id}:${w.ousd_balance ?? 0}:${w.pi_balance ?? 0}:${w.btc_balance ?? 0}:${w.eth_balance ?? 0}:${w.sol_balance ?? 0}:${(w as { usdc_balance?: number }).usdc_balance ?? 0}:${(w as { usdt_balance?: number }).usdt_balance ?? 0}`,
+    )
+    .join("|");
   const { data: portfolioTotals = {} } = useQuery({
-    queryKey: ["wallet-portfolio-totals", walletIds],
+    queryKey: ["wallet-portfolio-totals", walletIds, balanceFingerprint],
     enabled: wallets.length > 0,
-    staleTime: 30_000,
+    staleTime: 15_000,
     queryFn: () => fetchWalletPortfolioTotals(supabase, wallets),
   });
 
+  // Same formula as dashboard: all ledger majors + OpenToken holdings
+  const totalUsd =
+    (activeWallet?.id && portfolioTotals[activeWallet.id] != null
+      ? portfolioTotals[activeWallet.id]
+      : undefined) ??
+    holdingsUsd + walletLedgerUsd(activeWallet);
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
@@ -472,12 +490,12 @@ function SidebarInner({
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      <button
-        type="button"
-        onClick={() => setSwitchOpen(true)}
-        className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2 text-sm font-semibold hover:bg-muted/50 press"
-      >
-        <span className="flex min-w-0 items-center gap-2.5">
+      <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2">
+        <Link
+          to="/profile"
+          onClick={onClose}
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-sm font-semibold press hover:opacity-90"
+        >
           {activeWallet ? (
             <WalletAvatar
               address={activeWallet.address}
@@ -486,68 +504,41 @@ function SidebarInner({
               active
             />
           ) : (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                setHideBalance((v) => !v);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.stopPropagation();
-                  setHideBalance((v) => !v);
-                }
-              }}
-              className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Toggle balance"
-            >
-              {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-muted">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
             </span>
           )}
           <span className="truncate">{activeWallet?.name ?? "My Wallet"}</span>
-        </span>
+        </Link>
         <span className="flex items-center gap-1">
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              setHideBalance((v) => !v);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.stopPropagation();
-                setHideBalance((v) => !v);
-              }
-            }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          <button
+            type="button"
+            onClick={() => setHideBalance((v) => !v)}
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
             aria-label="Toggle balance"
           >
             {hideBalance ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          </span>
-          <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setSwitchOpen(true)}
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
+            aria-label="Switch wallet"
+          >
+            <ChevronsUpDown className="h-4 w-4" />
+          </button>
           {onClose && (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.stopPropagation();
-                  onClose();
-                }
-              }}
+            <button
+              type="button"
+              onClick={onClose}
               className="ml-1 grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+              aria-label="Close menu"
             >
               <X className="h-4 w-4" />
-            </span>
+            </button>
           )}
         </span>
-      </button>
+      </div>
 
       <WalletBalanceHero
         balanceLabel={formatCurrency(totalUsd, currency)}
@@ -587,7 +578,29 @@ function SidebarInner({
       </nav>
 
       <div className="space-y-1">
-        {/* WC Pay + MetaMask hidden for now */}
+        <Link
+          to="/watchlist"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/watchlist" || pathname.startsWith("/watchlist/")
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <Star
+            className={cn(
+              "h-5 w-5",
+              (pathname === "/watchlist" || pathname.startsWith("/watchlist/")) &&
+                "ph-tab-icon-active",
+            )}
+            strokeWidth={
+              pathname === "/watchlist" || pathname.startsWith("/watchlist/") ? 2.25 : 1.75
+            }
+          />
+          Watchlist
+        </Link>
         <Link
           to="/ledger"
           onClick={onClose}
@@ -615,6 +628,16 @@ function SidebarInner({
           <BookOpen className="h-5 w-5" strokeWidth={1.75} />
           OpenPay Docs
         </a>
+        <a
+          href="/docs/faq"
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+        >
+          <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
+          FAQ
+        </a>
       </div>
 
       <div className="ph-group overflow-hidden">
@@ -625,9 +648,7 @@ function SidebarInner({
             active={w.id === activeWallet?.id}
             balance={
               portfolioTotals[w.id] ??
-              (w.id === activeWallet?.id
-                ? totalUsd
-                : Number(w.ousd_balance ?? 0))
+              (w.id === activeWallet?.id ? totalUsd : walletLedgerUsd(w))
             }
             currency={currency}
             hideBalance={hideBalance}

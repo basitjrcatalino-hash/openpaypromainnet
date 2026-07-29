@@ -4,6 +4,8 @@
  * ledger row (address + balances). Not BIP39 / chain keypairs.
  */
 
+import { formatCurrency, getDisplayCurrencyCode } from "@/lib/currency";
+
 const WORDS = [
   "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
   "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
@@ -122,21 +124,18 @@ export function shortAddress(addr?: string | null, head = 6, tail = 4): string {
   return `${addr.slice(0, head)}…${addr.slice(-tail)}`;
 }
 
+/** Format a USD-denominated value in the user's Phantom-style display currency. */
 export function formatUSD(n: number | string | null | undefined, opts: { compact?: boolean } = {}): string {
   const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
-  if (!isFinite(v)) return "$0.00";
-  const abs = Math.abs(v);
-  const useCompact = opts.compact === true || (opts.compact !== false && abs >= 1_000_000);
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: useCompact ? "compact" : "standard",
-    minimumFractionDigits: useCompact ? 0 : 2,
-    maximumFractionDigits: v < 1 && !useCompact ? 4 : 2,
-  }).format(v);
+  if (!isFinite(v)) return formatCurrency(0, getDisplayCurrencyCode(), opts);
+  return formatCurrency(v, getDisplayCurrencyCode(), opts);
 }
 
-/** Format amounts denominated in OUSD (1 OUSD ≈ $1). Tiny prices use plain decimals. */
+/**
+ * Format amounts denominated in OUSD (1 OUSD ≈ $1).
+ * Token units stay in OUSD — they do not convert with display currency.
+ * Use formatUSD for fiat equivalents of those balances.
+ */
 export function formatOUSD(
   n: number | string | null | undefined,
   opts: { compact?: boolean; price?: boolean; suffix?: boolean } = {},
@@ -148,7 +147,7 @@ export function formatOUSD(
   const asPrice = opts.price === true || (abs > 0 && abs < 0.01 && opts.compact !== true);
   const body = asPrice
     ? formatNumber(v, abs < 0.01 ? 8 : 4)
-    : formatUSD(v, { compact: opts.compact });
+    : formatNumber(v, 2, { compact: opts.compact });
   return withSuffix ? `${body} OUSD` : body;
 }
 

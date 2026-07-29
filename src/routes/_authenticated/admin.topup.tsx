@@ -159,8 +159,8 @@ function AdminTopupPage() {
       <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
         <h2 className="text-lg font-semibold">Top-up fee</h2>
         <p className="text-sm text-muted-foreground">
-          Fee is deducted from each top-up before crediting the user. All fees are sent to your fee
-          wallet address.
+          Fee is deducted from each top-up before crediting the user. The same fee wallet
+          also receives OpenToken / OpenDEX / major-buy platform fees (0.30%).
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
@@ -181,11 +181,13 @@ function AdminTopupPage() {
             <Input
               value={feeWallet}
               onChange={(e) => setFeeWallet(e.target.value)}
-              placeholder="0x…"
+              placeholder="0x… or @openpay"
               className="font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              Must match an existing wallet in OpenPay Pro (e.g. your Platform fees wallet).
+              Must match an existing OpenPay Pro wallet address, or a profile username like{" "}
+              <code className="rounded bg-muted px-1">@openpay</code>. Used for top-up fees and
+              platform trade fees (OpenToken buy/sell, OpenDEX, major buys).
             </p>
           </div>
         </div>

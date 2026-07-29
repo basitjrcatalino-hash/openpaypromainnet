@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { getCachedPiUsdPrice, fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 /**
@@ -151,6 +151,7 @@ export async function fetchFxRates(): Promise<Record<string, number>> {
         liveRates = usd;
         ratesFetchedAt = Date.now();
         if (typeof window !== "undefined") saveCachedRates(usd);
+        emitFxTick();
         return usd;
       } catch {
         /* try next */
@@ -241,46 +242,128 @@ export function formatTokenPrice(
   return full;
 }
 
-export function useCurrency() {
-  const [code, setCode] = useState<CurrencyCode>("USD");
-  const [, setTick] = useState(0);
+/** Module store so formatUSD / every screen share one Phantom-style display currency. */
+let displayCurrencyCode: CurrencyCode = "USD";
+let displayHydrated = false;
+const displayListeners = new Set<() => void>();
+let fxTick = 0;
+const fxListeners = new Set<() => void>();
 
-  useEffect(() => {
-    const saved =
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (saved && isKnownCurrency(saved)) setCode(saved);
-  }, []);
+function readStoredCurrency(): CurrencyCode {
+  if (typeof window === "undefined") return "USD";
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && isKnownCurrency(saved)) return saved;
+  } catch {
+    /* ignore */
+  }
+  return "USD";
+}
 
-  useEffect(() => {
-    void Promise.all([fetchFxRates(), fetchMajorUsdPrices(["pi"])]).then(() =>
-      setTick((n) => n + 1),
-    );
-  }, []);
+function ensureDisplayHydrated() {
+  if (displayHydrated || typeof window === "undefined") return;
+  displayCurrencyCode = readStoredCurrency();
+  displayHydrated = true;
+}
 
-  const update = (next: CurrencyCode) => {
-    if (!isKnownCurrency(next)) return;
-    setCode(next);
+function emitDisplayCurrency() {
+  for (const listener of displayListeners) listener();
+}
+
+function emitFxTick() {
+  fxTick += 1;
+  for (const listener of fxListeners) listener();
+}
+
+/** Current display currency (sync — safe during render). */
+export function getDisplayCurrencyCode(): CurrencyCode {
+  ensureDisplayHydrated();
+  return displayCurrencyCode;
+}
+
+export function setDisplayCurrency(next: CurrencyCode) {
+  if (!isKnownCurrency(next)) return;
+  ensureDisplayHydrated();
+  if (displayCurrencyCode === next) {
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
       /* ignore */
     }
+    return;
+  }
+  displayCurrencyCode = next;
+  try {
+    localStorage.setItem(STORAGE_KEY, next);
+  } catch {
+    /* ignore */
+  }
+  if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("op:currency-change", { detail: next }));
+  }
+  emitDisplayCurrency();
+  void persistCurrencyPreference(next);
+}
+
+async function persistCurrencyPreference(code: CurrencyCode) {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase.auth.getUser();
+    const userId = data.user?.id;
+    if (!userId) return;
+    await supabase.from("user_preferences").upsert(
+      {
+        user_id: userId,
+        currency: code,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+  } catch {
+    /* best-effort — localStorage already updated */
+  }
+}
+
+export function subscribeDisplayCurrency(onStoreChange: () => void) {
+  displayListeners.add(onStoreChange);
+  return () => {
+    displayListeners.delete(onStoreChange);
   };
+}
+
+export function subscribeFxRates(onStoreChange: () => void) {
+  fxListeners.add(onStoreChange);
+  return () => {
+    fxListeners.delete(onStoreChange);
+  };
+}
+
+export function getFxTick() {
+  return fxTick;
+}
+
+export function useCurrency() {
+  const code = useSyncExternalStore(
+    subscribeDisplayCurrency,
+    getDisplayCurrencyCode,
+    () => "USD",
+  );
+
+  useSyncExternalStore(subscribeFxRates, getFxTick, () => 0);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as CurrencyCode;
-      if (detail && detail !== code && isKnownCurrency(detail)) setCode(detail);
-    };
-    window.addEventListener("op:currency-change", handler);
-    return () => window.removeEventListener("op:currency-change", handler);
-  }, [code]);
+    void Promise.all([fetchFxRates(), fetchMajorUsdPrices(["pi"])]).then(() => emitFxTick());
+  }, []);
 
-  const cycle = () => {
-    const idx = CURRENCIES.findIndex((c) => c.code === code);
+  const update = useCallback((next: CurrencyCode) => {
+    setDisplayCurrency(next);
+  }, []);
+
+  const cycle = useCallback(() => {
+    const current = getDisplayCurrencyCode();
+    const idx = CURRENCIES.findIndex((c) => c.code === current);
     update(CURRENCIES[(idx + 1) % CURRENCIES.length]!.code);
-  };
+  }, [update]);
 
   return { code, setCode: update, cycle, meta: getCurrencyMeta(code) };
 }

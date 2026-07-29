@@ -14,6 +14,7 @@ import {
   Plus,
   QrCode,
   Send,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,11 +31,11 @@ import { cn } from "@/lib/utils";
 import {
   fetchActiveWallet,
   formatNumber,
-  formatOUSD,
   formatPct,
   formatUSD,
   shortAddress,
 } from "@/lib/wallet-utils";
+import { formatTokenPrice, useCurrency } from "@/lib/currency";
 import { OPENPAY_NETWORK_BADGE_URL, OUSD_LOGO_URL } from "@/lib/token-logos";
 import { websiteHref } from "@/lib/opentoken/social";
 import { buyOpenToken } from "@/lib/opentoken.functions";
@@ -49,6 +50,12 @@ import {
   PENDING_CHARGE_KEY,
   runPendingAssetBuy,
 } from "@/components/wallet/AssetBuySheet";
+import {
+  majorWatchKey,
+  ousdWatchKey,
+  tokenWatchKey,
+  useWatchlist,
+} from "@/lib/watchlist";
 import {
   getMajorToken,
   isMajorTokenId,
@@ -88,6 +95,7 @@ function PhantomAssetDetail() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/_authenticated/asset_/$tokenId" });
   const qc = useQueryClient();
+  const { code: currency } = useCurrency();
   const settleCharge = useServerFn(settleOpenPayCharge);
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const buyFn = useServerFn(buyOpenToken);
@@ -109,6 +117,13 @@ function PhantomAssetDetail() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
   const [moonpayOpen, setMoonpayOpen] = useState(false);
+  const watch = useWatchlist(user.id);
+  const watchKey = isOusd
+    ? ousdWatchKey()
+    : isMajor
+      ? majorWatchKey(tokenId)
+      : tokenWatchKey(tokenId);
+  const watched = watch.isWatched(watchKey);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -462,7 +477,19 @@ function PhantomAssetDetail() {
             </span>
           )}
         </div>
-        <div className="w-9" />
+        <button
+          type="button"
+          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
+          aria-label={watched ? "Remove from watchlist" : "Add to watchlist"}
+          onClick={() => {
+            void watch.toggleWatch(watchKey).then(
+              (next) => toast.success(next ? "Added to watchlist" : "Removed from watchlist"),
+              (e) => toast.error((e as Error).message || "Watchlist update failed"),
+            );
+          }}
+        >
+          <Star className={cn("h-4 w-4", watched && "fill-amber-400 text-amber-400")} />
+        </button>
       </div>
 
       <div className="space-y-6 px-4 pt-2">
@@ -480,12 +507,7 @@ function PhantomAssetDetail() {
             )}
           </div>
           <div className="text-4xl font-bold tabular-nums text-foreground">
-            {isOusd || isMajor
-              ? formatUSD(meta.price)
-              : formatOUSD(meta.price, { price: true, suffix: false })}
-            {!isOusd && !isMajor && (
-              <span className="ml-1 text-lg font-medium text-muted-foreground">OUSD</span>
-            )}
+            {formatTokenPrice(meta.price, currency, { maxLen: 14 })}
           </div>
           <div className="mt-2 flex items-center justify-center gap-2 text-sm">
             <span
@@ -637,7 +659,7 @@ function PhantomAssetDetail() {
             {meta.marketCap != null && meta.marketCap > 0 && (
               <InfoRow
                 label="Market Cap"
-                value={isMajor ? formatUSD(meta.marketCap) : formatOUSD(meta.marketCap, { compact: true })}
+                value={formatUSD(meta.marketCap)}
               />
             )}
             {meta.circulatingSupply != null && meta.circulatingSupply > 0 && (
@@ -705,9 +727,7 @@ function PhantomAssetDetail() {
                 <span className="text-sm text-muted-foreground">Volume</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold tabular-nums text-foreground">
-                    {isMajor
-                      ? formatUSD(meta.volume24h ?? 0)
-                      : formatOUSD(Number(token?.volume_24h ?? 0), { compact: true })}
+                    {formatUSD(meta.volume24h ?? Number(token?.volume_24h ?? 0))}
                   </span>
                   <span className={cn("text-sm font-medium", up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
                     {formatPct(meta.change)}

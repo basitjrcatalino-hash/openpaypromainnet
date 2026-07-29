@@ -15,6 +15,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { ActivityItem } from "@/lib/activity";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNumber, formatUSD, shortAddress, timeAgo } from "@/lib/wallet-utils";
+import { useCurrency } from "@/lib/currency";
 import { resolveTokenLogoUrl } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import {
@@ -94,6 +95,7 @@ function resolveLogo(tx: TxRow): string | null {
 
 /** Phantom-style activity row — compact title, soft amount colors, direction badge. */
 export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => void }) {
+  useCurrency();
   const Icon = txIcon(tx.type);
   const logo = resolveLogo(tx);
   const incoming = isIncoming(tx.type);
@@ -162,9 +164,7 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
           {formatNumber(tx.amount, tx.amount >= 1_000_000 ? 2 : 4)}
         </div>
         <div className="mt-0.5 text-xs text-muted-foreground">
-          {ot || isOpenDexTx(tx)
-            ? `${formatNumber(tx.usd_value, 2)} OUSD`
-            : formatUSD(tx.usd_value)}
+          {formatUSD(tx.usd_value)}
         </div>
       </div>
     </button>

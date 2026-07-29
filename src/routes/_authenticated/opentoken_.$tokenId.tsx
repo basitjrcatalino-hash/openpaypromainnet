@@ -237,12 +237,24 @@ function OpenTokenDetail() {
 
   async function toggleFav() {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
       if (favorited) {
         await supabase.from("ot_favorites").delete().eq("token_id", tokenId).eq("user_id", user.id);
+        await db
+          .from("watchlist_items")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("asset_key", `token:${tokenId}`);
       } else {
         await supabase.from("ot_favorites").insert({ token_id: tokenId, user_id: user.id });
+        await db.from("watchlist_items").upsert({
+          user_id: user.id,
+          asset_key: `token:${tokenId}`,
+        });
       }
       await qc.invalidateQueries({ queryKey: ["ot-fav", tokenId, user.id] });
+      await qc.invalidateQueries({ queryKey: ["watchlist", user.id] });
     } catch (err) {
       toast.error((err as Error).message);
     }

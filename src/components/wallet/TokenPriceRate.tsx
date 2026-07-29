@@ -1,4 +1,4 @@
-import { formatTokenPrice, type CurrencyCode } from "@/lib/currency";
+import { formatTokenPrice, getDisplayCurrencyCode, type CurrencyCode } from "@/lib/currency";
 import { formatPct } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -13,9 +13,10 @@ type TokenPriceRateProps = {
 export function TokenPriceRate({
   price,
   change,
-  currency = "USD",
+  currency,
   className,
 }: TokenPriceRateProps) {
+  const code = currency ?? getDisplayCurrencyCode();
   const up = change >= 0;
   return (
     <div
@@ -25,7 +26,7 @@ export function TokenPriceRate({
       )}
     >
       <span className="text-[15px] font-bold text-foreground">
-        {formatTokenPrice(price, currency)}
+        {formatTokenPrice(price, code)}
       </span>
       <span
         className={cn(

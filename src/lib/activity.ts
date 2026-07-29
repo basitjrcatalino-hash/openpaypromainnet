@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { resolveTokenLogoUrl } from "@/lib/token-logos";
 
 export type ActivityItem = Tables<"transactions"> & {
   logo_url?: string | null;
@@ -35,24 +35,15 @@ type OtTradeRow = {
 };
 
 function mapWalletTx(tx: Tables<"transactions">): ActivityItem {
-  const symbol = (tx.token_symbol ?? "").toUpperCase();
   const counterparty = (tx.counterparty ?? "").toLowerCase();
   const memo = (tx.memo ?? "").toLowerCase();
-  const looksOusd =
-    symbol === "OUSD" ||
-    symbol.includes("OUSD") ||
-    symbol.includes("→OUSD") ||
-    symbol.includes("OUSD→");
   const looksOpenToken = counterparty === "opentoken" || memo.includes("opentoken");
   const looksOpenDex = counterparty === "opendex" || memo.includes("opendex") || tx.type === "swap";
-
-  let logo: string | null = null;
-  if (looksOusd && !looksOpenToken) logo = OUSD_LOGO_URL;
 
   return {
     ...tx,
     source: looksOpenToken ? "opentoken" : looksOpenDex ? "wallet" : "wallet",
-    logo_url: logo,
+    logo_url: resolveTokenLogoUrl(null, tx.token_symbol),
     token_name: looksOpenDex ? "OpenDEX" : looksOpenToken ? "OpenToken" : null,
   };
 }
@@ -80,9 +71,19 @@ function mapOpenTokenTrade(t: OtTradeRow): ActivityItem {
         : `OpenToken sell ${tokenAmt} $${symbol} for ${ousd} OUSD`,
     tx_hash: t.tx_ref,
     created_at: t.created_at,
-    logo_url: tok?.logo_url ?? null,
+    logo_url: resolveTokenLogoUrl(tok?.logo_url ?? null, symbol),
     source: "opentoken",
   };
+}
+
+function symbolLookupKey(symbol: string | null | undefined): string | null {
+  if (!symbol) return null;
+  const part = symbol
+    .split(/→|->|\//)[0]
+    ?.replace(/^\$/, "")
+    .trim()
+    .toUpperCase();
+  return part || null;
 }
 
 /** Wallet txs + OpenToken bonding-curve trades, newest first. */
@@ -139,32 +140,68 @@ export async function fetchWalletActivity(
     }
   }
 
-  // Enrich OpenToken-mirrored wallet txs (and any row with token_id) with logos
+  // Enrich any row missing a logo via token_id, then by ticker symbol
+  const allItems = [...walletItems, ...otItems];
   const needLogoIds = [
     ...new Set(
-      [...walletItems, ...otItems]
-        .filter((t) => t.token_id && !t.logo_url)
-        .map((t) => t.token_id as string),
+      allItems.filter((t) => t.token_id && !t.logo_url).map((t) => t.token_id as string),
     ),
   ];
-  let logoByToken = new Map<string, { logo_url: string | null; name: string }>();
+  let logoByToken = new Map<string, { logo_url: string | null; name: string; symbol?: string }>();
   if (needLogoIds.length) {
     const { data: toks } = await supabase
       .from("tokens")
-      .select("id, name, logo_url")
+      .select("id, name, symbol, logo_url")
       .in("id", needLogoIds);
-    logoByToken = new Map((toks ?? []).map((t) => [t.id, { logo_url: t.logo_url, name: t.name }]));
+    logoByToken = new Map(
+      (toks ?? []).map((t) => [t.id, { logo_url: t.logo_url, name: t.name, symbol: t.symbol }]),
+    );
+  }
+
+  const knownBuiltIn = new Set(["OUSD", "BTC", "ETH", "SOL", "PI", "BITCOIN", "ETHEREUM", "SOLANA"]);
+  const needSymbolLookup = [
+    ...new Set(
+      allItems
+        .filter((t) => !t.logo_url)
+        .map((t) => symbolLookupKey(t.token_symbol))
+        .filter((s): s is string => !!s && !knownBuiltIn.has(s)),
+    ),
+  ];
+  let logoBySymbol = new Map<string, string>();
+  if (needSymbolLookup.length) {
+    const { data: toks } = await supabase
+      .from("tokens")
+      .select("symbol, logo_url")
+      .in("symbol", needSymbolLookup)
+      .not("logo_url", "is", null);
+    for (const t of toks ?? []) {
+      if (t.logo_url && t.symbol) logoBySymbol.set(t.symbol.toUpperCase(), t.logo_url);
+    }
   }
 
   const withLogos = (items: ActivityItem[]) =>
     items.map((t) => {
-      if (t.logo_url || !t.token_id) return t;
-      const meta = logoByToken.get(t.token_id);
-      if (!meta) return t;
+      let logo = t.logo_url ?? null;
+      let tokenName = t.token_name ?? null;
+
+      if (!logo && t.token_id) {
+        const meta = logoByToken.get(t.token_id);
+        if (meta) {
+          logo = resolveTokenLogoUrl(meta.logo_url, meta.symbol ?? t.token_symbol);
+          tokenName = tokenName ?? meta.name;
+        }
+      }
+
+      if (!logo && t.token_symbol) {
+        const sym = symbolLookupKey(t.token_symbol);
+        if (sym && logoBySymbol.has(sym)) logo = logoBySymbol.get(sym)!;
+        else logo = resolveTokenLogoUrl(null, t.token_symbol);
+      }
+
       return {
         ...t,
-        logo_url: meta.logo_url,
-        token_name: t.token_name ?? meta.name,
+        logo_url: logo,
+        token_name: tokenName,
         source: t.source === "opentoken" || t.counterparty === "OpenToken" ? "opentoken" : t.source,
       };
     });

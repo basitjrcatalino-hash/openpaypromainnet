@@ -6,18 +6,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Check, Copy, QrCode, Share2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Copy, QrCode, Share2 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { shortAddress } from "@/lib/wallet-utils";
+
+const RECEIVE_NOTE_KEY = "openpay-receive-wallet-note-v1";
 
 const searchSchema = z.object({
   network: z.enum(["openpay", "bitcoin", "ethereum", "solana", "pi"]).optional(),
@@ -75,7 +85,7 @@ const NETWORKS: Array<{
     label: "Pi Network",
     asset: "PI",
     accent: "#6B4EFF",
-    logoUrl: MAJOR_TOKENS.pi.logoUrl,
+    logoUrl: PI_NETWORK_LOGO_URL,
   },
 ];
 
@@ -97,6 +107,25 @@ function WalletReceivePage() {
   const [network, setNetwork] = useState<NetworkId>(initialNetwork);
   const [qrUrl, setQrUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(RECEIVE_NOTE_KEY) === "1") return;
+    } catch {
+      /* ignore */
+    }
+    setNoteOpen(true);
+  }, []);
+
+  function dismissNote() {
+    setNoteOpen(false);
+    try {
+      sessionStorage.setItem(RECEIVE_NOTE_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
 
   const selected = NETWORKS.find((n) => n.id === network) ?? NETWORKS[0]!;
 
@@ -193,16 +222,56 @@ function WalletReceivePage() {
 
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in pb-10">
+      <Dialog open={noteOpen} onOpenChange={(open) => (open ? setNoteOpen(true) : dismissNote())}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <div className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/15 text-amber-500">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <DialogTitle>OpenPay wallet transfers only</DialogTitle>
+            <DialogDescription className="space-y-3 text-left text-sm leading-relaxed text-muted-foreground">
+              <span className="block">
+                Right now you can only receive from <strong className="text-foreground">OpenPay Pro</strong>{" "}
+                and other <strong className="text-foreground">OpenPay wallets</strong> (wallet → wallet
+                inside OpenPay).
+              </span>
+              <span className="block">
+                <strong className="text-foreground">External wallets are not supported yet</strong>{" "}
+                (MetaMask, Phantom, exchanges, etc.). Sending crypto from an external wallet to this
+                address will <strong className="text-destructive">not credit your balance</strong> and
+                those funds may be lost.
+              </span>
+              <span className="block">External wallet deposits are coming soon.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-stretch">
+            <Button type="button" className="w-full rounded-full" onClick={dismissNote}>
+              I understand
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <header className="mb-5 flex items-center gap-2">
         <Button asChild variant="ghost" size="icon" className="rounded-full">
           <Link to="/wallet">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-extrabold tracking-tight">Receive</h1>
           <p className="ph-caption">Pick a network · OpenPay Pro wallet</p>
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-amber-500"
+          aria-label="Receive important notice"
+          onClick={() => setNoteOpen(true)}
+        >
+          <AlertTriangle className="h-5 w-5" />
+        </Button>
       </header>
 
       {/* Network chips — Phantom style */}
@@ -300,6 +369,22 @@ function WalletReceivePage() {
               onClick={() => void copyPayUri()}
             >
               Copy openpay: receive link
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[12px] leading-relaxed text-amber-100/90">
+            <p className="font-semibold text-amber-200">OpenPay → OpenPay only</p>
+            <p className="mt-1 text-amber-100/80">
+              Receive from OpenPay Pro / OpenPay wallets only. Do not send from MetaMask, Phantom,
+              exchanges, or other external wallets — those deposits will not credit your balance and
+              funds may be lost. External support is coming soon.
+            </p>
+            <button
+              type="button"
+              className="mt-2 text-xs font-bold text-amber-200 underline-offset-2 hover:underline"
+              onClick={() => setNoteOpen(true)}
+            >
+              Read full notice
             </button>
           </div>
 

@@ -37,7 +37,7 @@ import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/tr
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 import { fetchWalletActivity } from "@/lib/activity";
-import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
+import { OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
@@ -45,6 +45,7 @@ import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -145,12 +146,87 @@ function Dashboard() {
     queryFn: () => fetchWalletActivity(supabase, wallet!.id, 12),
   });
 
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
   /** Skeletons on first load and while switching wallets (fetching with no rows yet). */
   const showTokenSkeletons =
     walletLoading || (!!wallet?.id && (holdingsPending || (holdingsFetching && holdings == null)));
   const showActivitySkeletons = walletLoading || (!!wallet?.id && (recentLoading || recentPending));
   const holdingsList = holdings ?? [];
   const tokensRefreshing = holdingsFetching && !showTokenSkeletons;
+
+  type LedgerAsset = {
+    id: string;
+    name: string;
+    symbol: string;
+    balance: number;
+    priceUsd: number;
+    change24h: number;
+    logoUrl: string | null;
+    isOusd?: boolean;
+    badge?: string;
+  };
+
+  const ledgerAssets = useMemo((): LedgerAsset[] => {
+    if (!wallet) return [];
+    const btcM = majorMarketById(majorMarkets, "btc");
+    const ethM = majorMarketById(majorMarkets, "eth");
+    const solM = majorMarketById(majorMarkets, "sol");
+    const piM = majorMarketById(majorMarkets, "pi");
+    return [
+      {
+        id: "ousd",
+        name: "OpenUSD OUSD",
+        symbol: "OUSD",
+        balance: Number(wallet.ousd_balance ?? 0),
+        priceUsd: 1,
+        change24h: 0,
+        logoUrl: null,
+        isOusd: true,
+        badge: "Earn",
+      },
+      {
+        id: "btc",
+        name: MAJOR_TOKENS.btc.name,
+        symbol: "BTC",
+        balance: Number(wallet.btc_balance ?? 0),
+        priceUsd: btcM.price,
+        change24h: btcM.change24h,
+        logoUrl: MAJOR_TOKENS.btc.logoUrl,
+      },
+      {
+        id: "eth",
+        name: MAJOR_TOKENS.eth.name,
+        symbol: "ETH",
+        balance: Number(wallet.eth_balance ?? 0),
+        priceUsd: ethM.price,
+        change24h: ethM.change24h,
+        logoUrl: MAJOR_TOKENS.eth.logoUrl,
+      },
+      {
+        id: "sol",
+        name: MAJOR_TOKENS.sol.name,
+        symbol: "SOL",
+        balance: Number(wallet.sol_balance ?? 0),
+        priceUsd: solM.price,
+        change24h: solM.change24h,
+        logoUrl: MAJOR_TOKENS.sol.logoUrl,
+      },
+      {
+        id: "pi",
+        name: MAJOR_TOKENS.pi.name,
+        symbol: "PI",
+        balance: Number(wallet.pi_balance ?? 0),
+        priceUsd: piM.price,
+        change24h: piM.change24h,
+        logoUrl: PI_NETWORK_LOGO_URL,
+      },
+    ];
+  }, [wallet, majorMarkets]);
 
   useEffect(() => {
     if (walletLoading || wallet) return;
@@ -201,14 +277,30 @@ function Dashboard() {
   const { code: currency, cycle: cycleCurrency } = useCurrency();
   const [copied, setCopied] = useState(false);
 
-  const ousdBalance = Number(wallet?.ousd_balance ?? 0);
+  const ledgerUsd = ledgerAssets.reduce(
+    (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0),
+    0,
+  );
   const holdingsUsd = holdingsList.reduce(
     (sum, h) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0),
     0,
   );
-  const totalUsd = holdingsUsd + ousdBalance;
-  const hasAssets = holdingsList.length > 0 || ousdBalance > 0;
-  const assetCount = holdingsList.length + (ousdBalance > 0 ? 1 : 0);
+  const totalUsd = ledgerUsd + holdingsUsd;
+  const visibleLedger = useMemo(() => {
+    const qq = tokenQuery.trim().toLowerCase();
+    const withBalance = ledgerAssets.filter((a) => a.balance > 0);
+    if (!qq) return withBalance;
+    return withBalance.filter(
+      (a) =>
+        a.name.toLowerCase().includes(qq) ||
+        a.symbol.toLowerCase().includes(qq) ||
+        (a.isOusd &&
+          (qq.includes("ousd") ||
+            qq.includes("openusd") ||
+            qq.includes("openpay") ||
+            "openusd ousd".includes(qq))),
+    );
+  }, [ledgerAssets, tokenQuery]);
 
   const filteredHoldings = useMemo(() => {
     const qq = tokenQuery.trim().toLowerCase();
@@ -220,19 +312,8 @@ function Dashboard() {
     });
   }, [holdingsList, tokenQuery]);
 
-  const showOusdRow =
-    ousdBalance > 0 &&
-    (!tokenQuery.trim() ||
-      (() => {
-        const qq = tokenQuery.trim().toLowerCase();
-        return (
-          "openusd ousd".includes(qq) ||
-          "openpay ousd".includes(qq) ||
-          "ousd".includes(qq) ||
-          qq.includes("ousd") ||
-          qq.includes("openusd")
-        );
-      })());
+  const hasAssets = ledgerAssets.some((a) => a.balance > 0) || holdingsList.length > 0;
+  const assetCount = ledgerAssets.filter((a) => a.balance > 0).length + holdingsList.length;
 
   async function copyAddress() {
     if (!wallet?.address) return;
@@ -482,7 +563,7 @@ function Dashboard() {
                 </Link>
               </div>
             </div>
-          ) : !showOusdRow && filteredHoldings.length === 0 ? (
+          ) : visibleLedger.length === 0 && filteredHoldings.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No matching tokens</p>
           ) : (
             <ul
@@ -492,49 +573,72 @@ function Dashboard() {
               )}
               aria-busy={tokensRefreshing || undefined}
             >
-              {showOusdRow && (
-                <li>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate({ to: "/asset/$tokenId", params: { tokenId: "ousd" } })
-                    }
-                    className="ph-row press"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="relative h-11 w-11 shrink-0">
-                        <OusdIcon className="h-11 w-11" />
-                        <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+              {visibleLedger.map((a) => {
+                const usd = a.balance * (a.priceUsd > 0 ? a.priceUsd : 0);
+                const share = totalUsd > 0 ? (usd / totalUsd) * 100 : 0;
+                return (
+                  <li key={a.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({ to: "/asset/$tokenId", params: { tokenId: a.id } })
+                      }
+                      className="ph-row press"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        {a.isOusd ? (
+                          <div className="relative h-11 w-11 shrink-0">
+                            <OusdIcon className="h-11 w-11" />
+                            <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
+                          </div>
+                        ) : (
+                          <TokenAvatar
+                            logoUrl={a.logoUrl}
+                            name={a.name}
+                            symbol={a.symbol}
+                            verified
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <div className="ph-row-title flex items-center gap-2 truncate">
+                            {a.name}
+                            {a.badge ? (
+                              <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
+                                {a.badge}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="ph-row-sub tabular-nums">
+                            {formatTokenPrice(a.priceUsd, currency)}{" "}
+                            <span
+                              className={cn(
+                                a.change24h >= 0 ? "text-success" : "text-destructive",
+                              )}
+                            >
+                              {formatPct(a.change24h)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <div className="ph-row-title flex items-center gap-2">
-                          OpenUSD OUSD
-                          <span className="rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
-                            Earn
-                          </span>
+                      <div className="shrink-0 text-right">
+                        <div className="text-[15px] font-bold tabular-nums tracking-tight">
+                          {hideBalance
+                            ? "••••"
+                            : a.isOusd
+                              ? formatNumber(a.balance, 2)
+                              : `${formatNumber(a.balance, a.balance > 0 && a.balance < 0.01 ? 6 : 4)} ${a.symbol}`}
                         </div>
                         <div className="ph-row-sub tabular-nums">
-                          {formatTokenPrice(1, currency)}{" "}
-                          <span className="text-success">0.00%</span>
+                          {hideBalance ? "••••" : formatCurrency(usd, currency)}
+                          {!hideBalance && (
+                            <span className="ml-1 opacity-80">· {share.toFixed(1)}%</span>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="text-[15px] font-bold tabular-nums tracking-tight">
-                        {hideBalance ? "••••" : formatNumber(ousdBalance, 2)}
-                      </div>
-                      <div className="ph-row-sub tabular-nums">
-                        {hideBalance ? "••••" : formatCurrency(ousdBalance, currency)}
-                        {!hideBalance && totalUsd > 0 && (
-                          <span className="ml-1 opacity-80">
-                            · {((ousdBalance / totalUsd) * 100).toFixed(1)}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                </li>
-              )}
+                    </button>
+                  </li>
+                );
+              })}
               {filteredHoldings.map((h) => {
                 const usd = Number(h.balance) * Number(h.tokens?.price_usd ?? 0);
                 const pct = Number(h.tokens?.change_24h ?? 0);

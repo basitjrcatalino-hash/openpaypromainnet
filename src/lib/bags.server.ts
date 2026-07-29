@@ -39,14 +39,39 @@ export type BagsEncodedTx = {
 
 let cached: { sdk: BagsSDK; rpc: string; key: string } | null = null;
 
+/** Nitro/Vite CJS interop sometimes exposes BagsSDK on default / module.exports. */
+function resolveBagsSdkClass(mod: Record<string, unknown>): new (
+  apiKey: string,
+  connection: Connection,
+  commitment?: Commitment,
+) => BagsSDK {
+  const candidates = [
+    mod.BagsSDK,
+    (mod.default as { BagsSDK?: unknown } | undefined)?.BagsSDK,
+    (mod["module.exports"] as { BagsSDK?: unknown } | undefined)?.BagsSDK,
+    mod.default,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "function") {
+      return c as new (
+        apiKey: string,
+        connection: Connection,
+        commitment?: Commitment,
+      ) => BagsSDK;
+    }
+  }
+  throw new Error("BagsSDK is not a constructor (SDK module interop failed)");
+}
+
 export async function getBagsSdk(): Promise<BagsSDK> {
   const key = requireBagsApiKey();
   const rpc = getBagsRpcUrl();
   if (cached && cached.key === key && cached.rpc === rpc) return cached.sdk;
   // Dynamic import keeps CJS BagsSDK off the critical path for /auth/me etc.
-  const { BagsSDK } = await import("@bagsfm/bags-sdk");
+  const mod = (await import("@bagsfm/bags-sdk")) as Record<string, unknown>;
+  const BagsSDKCtor = resolveBagsSdkClass(mod);
   const connection = new Connection(rpc, COMMITMENT);
-  const sdk = new BagsSDK(key, connection, COMMITMENT);
+  const sdk = new BagsSDKCtor(key, connection, COMMITMENT);
   cached = { sdk, rpc, key };
   return sdk;
 }
@@ -73,9 +98,18 @@ export function getBagsPartnerLaunchArgs(): {
 }
 
 export async function encodeVersionedTx(tx: VersionedTransaction): Promise<BagsEncodedTx> {
-  const { serializeVersionedTransaction } = await import("@bagsfm/bags-sdk");
+  const mod = (await import("@bagsfm/bags-sdk")) as Record<string, unknown>;
+  const serialize =
+    (typeof mod.serializeVersionedTransaction === "function"
+      ? mod.serializeVersionedTransaction
+      : typeof (mod.default as { serializeVersionedTransaction?: unknown } | undefined)
+            ?.serializeVersionedTransaction === "function"
+        ? (mod.default as { serializeVersionedTransaction: (tx: VersionedTransaction) => string })
+            .serializeVersionedTransaction
+        : null) as ((tx: VersionedTransaction) => string) | null;
+  if (!serialize) throw new Error("serializeVersionedTransaction unavailable");
   return {
-    txBase64: serializeVersionedTransaction(tx),
+    txBase64: serialize(tx),
     kind: "versioned",
   };
 }

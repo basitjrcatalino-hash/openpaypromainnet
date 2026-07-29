@@ -445,28 +445,36 @@ export const bagsTokenFees = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ tokenMint: mintSchema }).parse(d))
   .handler(async ({ data }) => {
-    const { getBagsSdk, pubkey } = await import("./bags.server");
+    // Prefer REST — avoids BagsSDK CJS constructor issues on Nitro/Lovable.
+    const { bagsApiFetch } = await import("./bags-config.server");
     try {
-      const sdk = await getBagsSdk();
-      const mint = pubkey(data.tokenMint, "token mint");
-      const [lifetimeFees, creators, claimStats] = await Promise.all([
-        sdk.state.getTokenLifetimeFees(mint),
-        sdk.state.getTokenCreators(mint),
-        sdk.state.getTokenClaimStats(mint).catch(() => []),
+      const mint = data.tokenMint.trim();
+      const q = `tokenMint=${encodeURIComponent(mint)}`;
+      const [lifetimeRaw, creatorsRaw, claimStatsRaw] = await Promise.all([
+        bagsApiFetch<string | number>(`/token-launch/lifetime-fees?${q}`),
+        bagsApiFetch<unknown[]>(`/token-launch/creator/v3?${q}`),
+        bagsApiFetch<
+          Array<{ tokenMint?: string; wallet?: string; totalClaimed?: string | number }>
+        >(`/token-launch/claim-stats?${q}`).catch(() => []),
       ]);
+      const creators = Array.isArray(creatorsRaw) ? creatorsRaw : [];
+      const claimStats = Array.isArray(claimStatsRaw) ? claimStatsRaw : [];
       return {
         ok: true as const,
-        lifetimeFees,
-        creators: creators.map((c) => ({
-          username: "username" in c ? String((c as { username?: string }).username ?? "") : "",
-          provider: "provider" in c ? String((c as { provider?: string }).provider ?? "") : "",
-          wallet: String((c as { wallet?: string }).wallet ?? ""),
-          bps: "bps" in c ? Number((c as { bps?: number }).bps ?? 0) : 0,
-        })),
+        lifetimeFees: Number.parseInt(String(lifetimeRaw ?? "0"), 10) || 0,
+        creators: creators.map((c) => {
+          const row = (c && typeof c === "object" ? c : {}) as Record<string, unknown>;
+          return {
+            username: String(row.username ?? ""),
+            provider: String(row.provider ?? ""),
+            wallet: String(row.wallet ?? ""),
+            bps: Number(row.bps ?? 0),
+          };
+        }),
         claimStats: claimStats.map((s) => ({
-          tokenMint: s.tokenMint,
-          wallet: s.wallet,
-          totalClaimed: s.totalClaimed,
+          tokenMint: String(s.tokenMint ?? mint),
+          wallet: String(s.wallet ?? ""),
+          totalClaimed: String(s.totalClaimed ?? "0"),
         })),
       };
     } catch (err) {
@@ -478,17 +486,23 @@ export const bagsTokenCreators = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ tokenMint: mintSchema }).parse(d))
   .handler(async ({ data }) => {
-    const { getBagsSdk, pubkey } = await import("./bags.server");
+    const { bagsApiFetch } = await import("./bags-config.server");
     try {
-      const sdk = await getBagsSdk();
-      const creators = await sdk.state.getTokenCreators(pubkey(data.tokenMint, "token mint"));
+      const mint = data.tokenMint.trim();
+      const creatorsRaw = await bagsApiFetch<unknown[]>(
+        `/token-launch/creator/v3?tokenMint=${encodeURIComponent(mint)}`,
+      );
+      const creators = Array.isArray(creatorsRaw) ? creatorsRaw : [];
       return {
         ok: true as const,
-        creators: creators.map((c) => ({
-          username: "username" in c ? String((c as { username?: string }).username ?? "") : "",
-          provider: "provider" in c ? String((c as { provider?: string }).provider ?? "") : "",
-          wallet: String((c as { wallet?: string }).wallet ?? ""),
-        })),
+        creators: creators.map((c) => {
+          const row = (c && typeof c === "object" ? c : {}) as Record<string, unknown>;
+          return {
+            username: String(row.username ?? ""),
+            provider: String(row.provider ?? ""),
+            wallet: String(row.wallet ?? ""),
+          };
+        }),
       };
     } catch (err) {
       bagsError(err);

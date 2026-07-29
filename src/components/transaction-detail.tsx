@@ -15,7 +15,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { ActivityItem } from "@/lib/activity";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNumber, formatUSD, shortAddress, timeAgo } from "@/lib/wallet-utils";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { resolveTokenLogoUrl } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { OpenLedgerLink, OPENLEDGER_BASE } from "@/components/openledger-link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 
 export type TxRow = Tables<"transactions"> | ActivityItem;
 
@@ -89,10 +89,7 @@ function activitySubtitle(tx: TxRow) {
 
 function resolveLogo(tx: TxRow): string | null {
   const item = tx as ActivityItem;
-  if (item.logo_url) return item.logo_url;
-  const symbol = (tx.token_symbol ?? "").toUpperCase();
-  if (symbol === "OUSD" || symbol.includes("OUSD")) return OUSD_LOGO_URL;
-  return null;
+  return resolveTokenLogoUrl(item.logo_url, tx.token_symbol);
 }
 
 /** Phantom-style activity row — compact title, soft amount colors, direction badge. */
@@ -111,21 +108,15 @@ export function TxRowButton({ tx, onOpen }: { tx: TxRow; onOpen: (tx: TxRow) => 
       className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/50"
     >
       <span className="relative shrink-0">
-        {logo ? (
-          <Avatar className="h-11 w-11">
-            <AvatarImage src={logo} alt={tx.token_symbol ?? ""} />
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              <Icon className="h-4 w-4" />
-            </AvatarFallback>
-          </Avatar>
-        ) : (
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground">
-            <Icon className="h-4 w-4" />
-          </span>
-        )}
+        <TokenAvatar
+          logoUrl={logo}
+          name={(tx as ActivityItem).token_name}
+          symbol={tx.token_symbol}
+          size="md"
+        />
         <span
           className={cn(
-            "absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-card",
+            "absolute -bottom-0.5 -right-0.5 z-10 grid h-5 w-5 place-items-center rounded-full border-2 border-card",
             failed
               ? "bg-destructive text-destructive-foreground"
               : incoming
@@ -268,26 +259,16 @@ export function TransactionDetailSheet({
         <SheetHeader className="space-y-1 text-left">
           <div className="mb-2 flex items-center gap-3">
             <span className="relative shrink-0">
-              {logo ? (
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={logo} alt="" />
-                  <AvatarFallback className="bg-muted">
-                    <Icon className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <span
-                  className={cn(
-                    "grid h-12 w-12 place-items-center rounded-full",
-                    incoming ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-foreground",
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-              )}
+              <TokenAvatar
+                logoUrl={logo}
+                name={(tx as ActivityItem).token_name}
+                symbol={tx.token_symbol}
+                size="md"
+                className="h-12 w-12"
+              />
               <span
                 className={cn(
-                  "absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border-2 border-background",
+                  "absolute -bottom-0.5 -right-0.5 z-10 grid h-5 w-5 place-items-center rounded-full border-2 border-background",
                   incoming ? "bg-emerald-500 text-white" : "bg-foreground text-background",
                 )}
               >

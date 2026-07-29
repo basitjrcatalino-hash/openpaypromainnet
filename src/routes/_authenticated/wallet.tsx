@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { formatNumber, shortAddress } from "@/lib/wallet-utils";
@@ -140,7 +140,7 @@ function CryptoWalletPage() {
         network: "Pi Network",
         balance: Number(wallet?.pi_balance ?? 0),
         priceUsd: majorMarketById(majorMarkets, "pi").price,
-        logoUrl: MAJOR_TOKENS.pi.logoUrl,
+        logoUrl: PI_NETWORK_LOGO_URL,
         receiveTo: "/wallet/receive?network=pi&asset=PI",
       },
     ];
@@ -251,12 +251,38 @@ function CryptoWalletPage() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {(
                 [
-                  { network: "openpay", label: "OpenPay", asset: "OUSD", accent: "bg-violet-500/15 text-violet-300" },
-                  { network: "bitcoin", label: "Bitcoin", asset: "BTC", accent: "bg-orange-500/15 text-orange-300" },
-                  { network: "ethereum", label: "Ethereum", asset: "ETH", accent: "bg-blue-500/15 text-blue-300" },
-                  { network: "solana", label: "Solana", asset: "SOL", accent: "bg-fuchsia-500/15 text-fuchsia-300" },
-                  { network: "pi", label: "Pi Network", asset: "PI", accent: "bg-indigo-500/15 text-indigo-300" },
-                ] as const
+                  {
+                    network: "openpay" as const,
+                    label: "OpenPay",
+                    asset: "OUSD" as const,
+                    isOusd: true,
+                    logoUrl: OUSD_LOGO_URL,
+                  },
+                  {
+                    network: "bitcoin" as const,
+                    label: "Bitcoin",
+                    asset: "BTC" as const,
+                    logoUrl: MAJOR_TOKENS.btc.logoUrl,
+                  },
+                  {
+                    network: "ethereum" as const,
+                    label: "Ethereum",
+                    asset: "ETH" as const,
+                    logoUrl: MAJOR_TOKENS.eth.logoUrl,
+                  },
+                  {
+                    network: "solana" as const,
+                    label: "Solana",
+                    asset: "SOL" as const,
+                    logoUrl: MAJOR_TOKENS.sol.logoUrl,
+                  },
+                  {
+                    network: "pi" as const,
+                    label: "Pi Network",
+                    asset: "PI" as const,
+                    logoUrl: PI_NETWORK_LOGO_URL,
+                  },
+                ]
               ).map((n) => (
                 <Link
                   key={n.network}
@@ -264,9 +290,15 @@ function CryptoWalletPage() {
                   search={{ network: n.network, asset: n.asset }}
                   className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 press hover:bg-muted/40"
                 >
-                  <span className={cn("grid h-9 w-9 place-items-center rounded-xl text-[10px] font-bold", n.accent)}>
-                    {n.asset}
-                  </span>
+                  {n.isOusd ? (
+                    <OusdIcon className="h-9 w-9 shrink-0 rounded-full" />
+                  ) : (
+                    <img
+                      src={n.logoUrl}
+                      alt=""
+                      className="h-9 w-9 shrink-0 rounded-full object-cover bg-muted"
+                    />
+                  )}
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold">{n.label}</span>
                     <span className="block text-[11px] text-muted-foreground">Receive {n.asset}</span>

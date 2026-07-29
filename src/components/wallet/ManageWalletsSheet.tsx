@@ -60,7 +60,7 @@ export function ManageWalletsSheet({
   open,
   onOpenChange,
   wallets: walletsProp,
-  recoveryFlags = {},
+  recoveryFlags: recoveryFlagsProp = {},
   switching = false,
   onSelect,
   onAdd,
@@ -72,6 +72,8 @@ export function ManageWalletsSheet({
   const [query, setQuery] = useState("");
   const [actionsWallet, setActionsWallet] = useState<ManageWallet | null>(null);
   const wallets = Array.isArray(walletsProp) ? walletsProp : [];
+  const recoveryFlags =
+    recoveryFlagsProp && typeof recoveryFlagsProp === "object" ? recoveryFlagsProp : {};
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -85,7 +87,8 @@ export function ManageWalletsSheet({
 
   const active = wallets.find((w) => w.is_active) ?? wallets[0];
 
-  const body = (
+  // Only build sheet body when open — avoids evaluating wallet fields while closed.
+  const body = !open ? null : (
     <div className="flex min-h-0 flex-col">
       {wallets.length > 4 && (
         <div className="relative mb-3">
@@ -116,7 +119,7 @@ export function ManageWalletsSheet({
           <div className="mt-2 flex items-center gap-3">
             <WalletAvatar address={active.address} name={active.name} size="md" active />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold">{active.name}</p>
+              <p className="truncate text-sm font-bold">{active.name || "Wallet"}</p>
               <p className="font-mono text-[11px] text-muted-foreground">
                 {shortAddress(active.address, 6, 4)}
               </p>
@@ -139,7 +142,7 @@ export function ManageWalletsSheet({
               const ousd = Number(wallet.ousd_balance ?? 0);
               const pi = Number(wallet.pi_balance ?? 0);
               const needsBackup = !recoveryFlags[wallet.id];
-              const isActive = wallet.is_active;
+              const isActive = !!wallet.is_active;
               return (
                 <li
                   key={wallet.id}
@@ -166,7 +169,9 @@ export function ManageWalletsSheet({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold">{wallet.name}</span>
+                        <span className="truncate text-sm font-semibold">
+                          {wallet.name || "Wallet"}
+                        </span>
                         {isActive ? (
                           <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
                             Active
@@ -193,7 +198,7 @@ export function ManageWalletsSheet({
                   <button
                     type="button"
                     className="grid w-11 shrink-0 place-items-center text-muted-foreground hover:bg-muted/50 hover:text-foreground press"
-                    aria-label={`Manage ${wallet.name}`}
+                    aria-label={`Manage ${wallet.name || "wallet"}`}
                     onClick={() => setActionsWallet(wallet)}
                   >
                     <MoreHorizontal className="h-4 w-4" />

@@ -115,7 +115,7 @@ function SettingsPage() {
   });
   const wallets = Array.isArray(walletsData) ? walletsData : [];
 
-  const { data: recoveryFlags = {} } = useQuery({
+  const { data: recoveryFlagsData } = useQuery({
     queryKey: ["wallet-recovery-flags", user.id, wallets.map((w) => w.id).join(",")],
     enabled: wallets.length > 0,
     queryFn: async () => {
@@ -135,6 +135,8 @@ function SettingsPage() {
       return Object.fromEntries(entries) as Record<string, boolean>;
     },
   });
+  const recoveryFlags =
+    recoveryFlagsData && typeof recoveryFlagsData === "object" ? recoveryFlagsData : {};
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
@@ -370,7 +372,9 @@ function SettingsPage() {
       toast.error("Paste an OpenPay Pro wallet address");
       return;
     }
-    const match = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
+    const match = wallets.find(
+      (w) => (w.address ?? "").toLowerCase() === addr.toLowerCase(),
+    );
     if (!match) {
       toast.error("Address not in your account — import with the recovery phrase to restore it");
       return;

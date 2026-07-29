@@ -6,7 +6,7 @@ import { ExternalLink, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { Button } from "@/components/ui/button";
 import { bagsTokenFees } from "@/lib/bags.functions";
-import { bagsTokenUrl } from "@/lib/bags-sign";
+import { bagsTokenUrl } from "@/lib/bags-client";
 
 export const Route = createFileRoute("/_authenticated/bags_/token/$mint")({
   head: ({ params }) => ({

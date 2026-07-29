@@ -16,11 +16,8 @@ import {
   bagsPartnerStatus,
   bagsSendSignedTx,
 } from "@/lib/bags.functions";
-import {
-  connectBagsWallet,
-  signAndSendBagsTransactions,
-  solscanTxUrl,
-} from "@/lib/bags-sign";
+import { solscanTxUrl } from "@/lib/bags-client";
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 
 export const Route = createFileRoute("/_authenticated/bags_/fees")({
   head: () => ({ meta: [{ title: "Fees — Bags" }] }),
@@ -42,9 +39,22 @@ function BagsFeesPage() {
 
   async function ensureWallet(): Promise<string> {
     if (wallet) return wallet;
+    await ensureBuffer();
+    const { connectBagsWallet } = await import("@/lib/bags-sign");
     const addr = await connectBagsWallet();
     setWallet(addr);
     return addr;
+  }
+
+  async function withSign(
+    encoded: { txBase64: string; kind: "versioned" | "legacy" }[],
+  ): Promise<string[]> {
+    await ensureBuffer();
+    const { signAndSendBagsTransactions } = await import("@/lib/bags-sign");
+    return signAndSendBagsTransactions(encoded, async (signedTxBase64) => {
+      const r = await sendSigned({ data: { signedTxBase64 } });
+      return r.signature;
+    });
   }
 
   async function claimTokenFees() {
@@ -61,17 +71,16 @@ function BagsFeesPage() {
         return;
       }
       toast.message(`Sign ${res.transactions.length} claim transaction(s)…`);
-      const sigs = await signAndSendBagsTransactions(
-        res.transactions,
-        async (signedTxBase64) => {
-          const r = await sendSigned({ data: { signedTxBase64 } });
-          return r.signature;
-        },
-      );
+      const sigs = await withSign(res.transactions);
       setLastSigs(sigs);
       toast.success("Fee claim submitted");
     } catch (err) {
-      toast.error((err as Error).message || "Claim failed");
+      const msg = (err as Error).message || "Claim failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -111,18 +120,17 @@ function BagsFeesPage() {
       const address = await ensureWallet();
       const res = await createPartner({ data: { partnerWallet: address } });
       toast.message("Sign partner config in Phantom…");
-      const sigs = await signAndSendBagsTransactions(
-        [res.transaction],
-        async (signedTxBase64) => {
-          const r = await sendSigned({ data: { signedTxBase64 } });
-          return r.signature;
-        },
-      );
+      const sigs = await withSign([res.transaction]);
       setLastSigs(sigs);
       toast.success("Partner config submitted");
       await loadPartner();
     } catch (err) {
-      toast.error((err as Error).message || "Partner config failed");
+      const msg = (err as Error).message || "Partner config failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -141,17 +149,16 @@ function BagsFeesPage() {
         return;
       }
       toast.message(`Sign ${res.transactions.length} partner claim(s)…`);
-      const sigs = await signAndSendBagsTransactions(
-        res.transactions,
-        async (signedTxBase64) => {
-          const r = await sendSigned({ data: { signedTxBase64 } });
-          return r.signature;
-        },
-      );
+      const sigs = await withSign(res.transactions);
       setLastSigs(sigs);
       toast.success("Partner fees claimed");
     } catch (err) {
-      toast.error((err as Error).message || "Partner claim failed");
+      const msg = (err as Error).message || "Partner claim failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }

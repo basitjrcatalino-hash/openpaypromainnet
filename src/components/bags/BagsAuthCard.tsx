@@ -12,11 +12,8 @@ import {
   bagsAgentAuthInit,
   bagsAuthMe,
 } from "@/lib/bags.functions";
-import {
-  getStoredBagsAgentKey,
-  signBagsAuthChallenge,
-  storeBagsAgentKey,
-} from "@/lib/bags-sign";
+import { getStoredBagsAgentKey, storeBagsAgentKey } from "@/lib/bags-client";
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -45,7 +42,8 @@ export function BagsAuthCard({ className }: Props) {
   async function signInWithBags() {
     setBusy(true);
     try {
-      const { connectBagsWallet } = await import("@/lib/bags-sign");
+      await ensureBuffer();
+      const { connectBagsWallet, signBagsAuthChallenge } = await import("@/lib/bags-sign");
       const address = await connectBagsWallet();
       const init = await agentInit({ data: { address } });
       toast.message("Sign the Bags auth challenge in Phantom…");
@@ -69,7 +67,12 @@ export function BagsAuthCard({ className }: Props) {
       toast.success(done.isSignup ? "Bags account created & linked" : "Signed in to Bags");
       await refetch();
     } catch (err) {
-      toast.error((err as Error).message || "Bags wallet auth failed");
+      const msg = (err as Error).message || "Bags wallet auth failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }

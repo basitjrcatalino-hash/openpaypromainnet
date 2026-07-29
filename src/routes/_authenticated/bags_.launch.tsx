@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
@@ -17,12 +16,8 @@ import {
   bagsCreateTokenInfo,
   bagsSendSignedTx,
 } from "@/lib/bags.functions";
-import {
-  bagsTokenUrl,
-  connectBagsWallet,
-  signAndSendBagsTransactions,
-  solscanTxUrl,
-} from "@/lib/bags-sign";
+import { bagsTokenUrl, LAMPORTS_PER_SOL, solscanTxUrl } from "@/lib/bags-client";
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 
 export const Route = createFileRoute("/_authenticated/bags_/launch")({
   head: () => ({ meta: [{ title: "Launch — Bags" }] }),
@@ -53,6 +48,8 @@ function BagsLaunchPage() {
     setResultMint(null);
     setResultSig(null);
     try {
+      await ensureBuffer();
+      const { connectBagsWallet, signAndSendBagsTransactions } = await import("@/lib/bags-sign");
       let address = wallet;
       if (!address) {
         address = await connectBagsWallet();
@@ -125,7 +122,12 @@ function BagsLaunchPage() {
       setResultSig(sig ?? null);
       toast.success("Token launched on Bags!");
     } catch (err) {
-      toast.error((err as Error).message || "Launch failed");
+      const msg = (err as Error).message || "Launch failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }

@@ -1,16 +1,9 @@
 /**
  * Client-side Bags tx signing via Phantom (extension) or Wallet Standard.
- * Never holds private keys — user approves each transaction in their wallet.
+ * Dynamically loads @solana/web3.js only after Buffer is polyfilled —
+ * static imports crash with: Cannot read properties of undefined (reading 'from').
  */
-import { Transaction, VersionedTransaction } from "@solana/web3.js";
-import {
-  SolanaSignAndSendTransaction,
-  SolanaSignTransaction,
-} from "@solana/wallet-standard-features";
-import { getWallets } from "@wallet-standard/app";
-import { StandardConnect } from "@wallet-standard/features";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
-import bs58 from "bs58";
 
 import { ensureBuffer } from "@/lib/buffer-polyfill";
 
@@ -21,6 +14,14 @@ export type BagsEncodedTx = {
   kind: BagsTxKind;
 };
 
+export {
+  bagsTokenUrl,
+  getStoredBagsAgentKey,
+  LAMPORTS_PER_SOL,
+  solscanTxUrl,
+  storeBagsAgentKey,
+} from "@/lib/bags-client";
+
 type PhantomProvider = {
   isPhantom?: boolean;
   publicKey?: { toBase58(): string };
@@ -28,17 +29,32 @@ type PhantomProvider = {
     publicKey: { toBase58(): string };
   }>;
   signAndSendTransaction?: (
-    transaction: Transaction | VersionedTransaction,
+    transaction: unknown,
     opts?: { skipPreflight?: boolean },
   ) => Promise<{ signature: string } | string>;
-  signTransaction?: (
-    transaction: Transaction | VersionedTransaction,
-  ) => Promise<Transaction | VersionedTransaction>;
+  signTransaction?: (transaction: unknown) => Promise<unknown>;
   signMessage?: (
     message: Uint8Array,
     display?: "utf8" | "hex",
   ) => Promise<{ signature: Uint8Array } | Uint8Array>;
 };
+
+async function loadSolana() {
+  await ensureBuffer();
+  const Buf = (globalThis as { Buffer?: { from?: unknown } }).Buffer;
+  if (typeof Buf?.from !== "function") {
+    throw new Error("Buffer polyfill failed — retry or refresh the page");
+  }
+  const [{ Transaction, VersionedTransaction }, bs58] = await Promise.all([
+    import("@solana/web3.js"),
+    import("bs58"),
+  ]);
+  return {
+    Transaction,
+    VersionedTransaction,
+    bs58: (bs58 as { default?: typeof bs58 }).default ?? bs58,
+  };
+}
 
 function getPhantomProvider(): PhantomProvider | null {
   if (typeof window === "undefined") return null;
@@ -49,8 +65,12 @@ function getPhantomProvider(): PhantomProvider | null {
   return w.phantom?.solana ?? (w.solana?.isPhantom ? w.solana : null) ?? null;
 }
 
-function listSignWallets(): Wallet[] {
+async function listSignWallets(): Promise<Wallet[]> {
   try {
+    const { getWallets } = await import("@wallet-standard/app");
+    const { SolanaSignAndSendTransaction, SolanaSignTransaction } = await import(
+      "@solana/wallet-standard-features"
+    );
     const { get } = getWallets();
     return get().filter(
       (wallet) =>
@@ -75,7 +95,7 @@ export async function getBagsWalletAddress(): Promise<string | null> {
   const phantom = getPhantomProvider();
   if (phantom?.publicKey) return phantom.publicKey.toBase58();
 
-  for (const wallet of listSignWallets()) {
+  for (const wallet of await listSignWallets()) {
     const account = pickSolanaAccount(wallet);
     if (account?.address) return account.address;
   }
@@ -92,11 +112,12 @@ export async function connectBagsWallet(): Promise<string> {
     return address;
   }
 
-  const wallets = listSignWallets();
+  const wallets = await listSignWallets();
   if (!wallets.length) {
     throw new Error("Install Phantom (or another Solana wallet) to use Bags");
   }
   const wallet = wallets[0]!;
+  const { StandardConnect } = await import("@wallet-standard/features");
   if (StandardConnect in wallet.features) {
     await (wallet.features[StandardConnect] as { connect: () => Promise<unknown> }).connect();
   }
@@ -105,22 +126,29 @@ export async function connectBagsWallet(): Promise<string> {
   return account.address;
 }
 
-function decodeTx(encoded: BagsEncodedTx): Transaction | VersionedTransaction {
+async function decodeTx(encoded: BagsEncodedTx) {
+  const { Transaction, VersionedTransaction } = await loadSolana();
   const raw = Buffer.from(encoded.txBase64, "base64");
   if (encoded.kind === "legacy") {
-    return Transaction.from(raw);
+    return { tx: Transaction.from(raw), VersionedTransaction, Transaction };
   }
-  return VersionedTransaction.deserialize(raw);
-}
-
-function signatureFromBytes(bytes: Uint8Array): string {
-  return bs58.encode(bytes);
+  return {
+    tx: VersionedTransaction.deserialize(raw),
+    VersionedTransaction,
+    Transaction,
+  };
 }
 
 async function signViaWalletStandard(
   encoded: BagsEncodedTx,
 ): Promise<{ signature?: string; signedTxBase64?: string }> {
-  const wallets = listSignWallets();
+  const { bs58 } = await loadSolana();
+  const { SolanaSignAndSendTransaction, SolanaSignTransaction } = await import(
+    "@solana/wallet-standard-features"
+  );
+  const { StandardConnect } = await import("@wallet-standard/features");
+
+  const wallets = await listSignWallets();
   if (!wallets.length) throw new Error("No Solana wallet available");
   const wallet = wallets[0]!;
   if (StandardConnect in wallet.features && !wallet.accounts.length) {
@@ -144,7 +172,7 @@ async function signViaWalletStandard(
       transaction: new Uint8Array(bytes),
       chain: "solana:mainnet",
     });
-    return { signature: signatureFromBytes(signature) };
+    return { signature: bs58.encode(signature) };
   }
 
   if (SolanaSignTransaction in wallet.features) {
@@ -168,13 +196,12 @@ async function signViaWalletStandard(
 
 /**
  * Sign (and preferably send) a Bags-built transaction with the user's wallet.
- * Returns a confirmed signature when the wallet can send; otherwise signed bytes for server broadcast.
  */
 export async function signAndSendBagsTransaction(
   encoded: BagsEncodedTx,
 ): Promise<{ signature: string } | { signedTxBase64: string }> {
-  await ensureBuffer();
-  const tx = decodeTx(encoded);
+  const { VersionedTransaction } = await loadSolana();
+  const { tx } = await decodeTx(encoded);
 
   const phantom = getPhantomProvider();
   if (phantom?.signAndSendTransaction) {
@@ -191,15 +218,14 @@ export async function signAndSendBagsTransaction(
     const raw =
       signed instanceof VersionedTransaction
         ? signed.serialize()
-        : signed.serialize();
+        : (signed as { serialize: () => Uint8Array }).serialize();
     return { signedTxBase64: Buffer.from(raw).toString("base64") };
   }
 
-  return await signViaWalletStandard(encoded).then((result) => {
-    if (result.signature) return { signature: result.signature };
-    if (result.signedTxBase64) return { signedTxBase64: result.signedTxBase64 };
-    throw new Error("Wallet returned neither signature nor signed transaction");
-  });
+  const result = await signViaWalletStandard(encoded);
+  if (result.signature) return { signature: result.signature };
+  if (result.signedTxBase64) return { signedTxBase64: result.signedTxBase64 };
+  throw new Error("Wallet returned neither signature nor signed transaction");
 }
 
 export async function signAndSendBagsTransactions(
@@ -221,33 +247,6 @@ export async function signAndSendBagsTransactions(
   return signatures;
 }
 
-export function solscanTxUrl(signature: string): string {
-  return `https://solscan.io/tx/${signature}`;
-}
-
-export function bagsTokenUrl(mint: string): string {
-  return `https://bags.fm/${mint}`;
-}
-
-const AGENT_KEY_STORAGE = "bags_agent_api_key";
-
-export function getStoredBagsAgentKey(): string | null {
-  try {
-    return sessionStorage.getItem(AGENT_KEY_STORAGE);
-  } catch {
-    return null;
-  }
-}
-
-export function storeBagsAgentKey(apiKey: string | null) {
-  try {
-    if (!apiKey) sessionStorage.removeItem(AGENT_KEY_STORAGE);
-    else sessionStorage.setItem(AGENT_KEY_STORAGE, apiKey);
-  } catch {
-    /* ignore */
-  }
-}
-
 /**
  * Sign Bags Agent V2 auth challenge (base58-encoded message bytes).
  * Docs: https://docs.bags.fm/how-to-guides/agent-authentication
@@ -256,7 +255,7 @@ export async function signBagsAuthChallenge(messageBase58: string): Promise<{
   address: string;
   signatureBase58: string;
 }> {
-  await ensureBuffer();
+  const { bs58 } = await loadSolana();
   const address = await connectBagsWallet();
   const messageBytes = bs58.decode(messageBase58);
 
@@ -270,4 +269,3 @@ export async function signBagsAuthChallenge(messageBase58: string): Promise<{
 
   throw new Error("Phantom signMessage is required for Bags wallet auth");
 }
-

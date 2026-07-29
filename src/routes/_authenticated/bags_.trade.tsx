@@ -14,11 +14,8 @@ import {
   bagsGetQuote,
   bagsSendSignedTx,
 } from "@/lib/bags.functions";
-import {
-  connectBagsWallet,
-  signAndSendBagsTransactions,
-  solscanTxUrl,
-} from "@/lib/bags-sign";
+import { solscanTxUrl } from "@/lib/bags-client";
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 
 export const Route = createFileRoute("/_authenticated/bags_/trade")({
   head: () => ({ meta: [{ title: "Trade — Bags" }] }),
@@ -86,6 +83,8 @@ function BagsTradePage() {
     }
     setBusy(true);
     try {
+      await ensureBuffer();
+      const { connectBagsWallet, signAndSendBagsTransactions } = await import("@/lib/bags-sign");
       let address = wallet;
       if (!address) {
         address = await connectBagsWallet();
@@ -108,7 +107,12 @@ function BagsTradePage() {
       setSignature(sig ?? null);
       toast.success("Swap submitted");
     } catch (err) {
-      toast.error((err as Error).message || "Swap failed");
+      const msg = (err as Error).message || "Swap failed";
+      toast.error(
+        /reading 'from'|Buffer/i.test(msg)
+          ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }

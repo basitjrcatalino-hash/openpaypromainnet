@@ -5,7 +5,7 @@ import { Loader2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { connectBagsWallet, getBagsWalletAddress } from "@/lib/bags-sign";
+import { ensureBuffer } from "@/lib/buffer-polyfill";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -16,9 +16,12 @@ type Props = {
 export function BagsWalletBar({ className, onAddress }: Props) {
   const [address, setAddress] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
+      await ensureBuffer();
+      const { getBagsWalletAddress } = await import("@/lib/bags-sign");
       const addr = await getBagsWalletAddress();
       setAddress(addr);
       onAddress?.(addr);
@@ -29,18 +32,36 @@ export function BagsWalletBar({ className, onAddress }: Props) {
   }, [onAddress]);
 
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+    void (async () => {
+      try {
+        await ensureBuffer();
+        if (!cancelled) setReady(true);
+        await refresh();
+      } catch {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [refresh]);
 
   async function connect() {
     setBusy(true);
     try {
+      await ensureBuffer();
+      const { connectBagsWallet } = await import("@/lib/bags-sign");
       const addr = await connectBagsWallet();
       setAddress(addr);
       onAddress?.(addr);
       toast.success("Phantom connected for Bags");
     } catch (err) {
-      toast.error((err as Error).message || "Could not connect wallet");
+      const msg = (err as Error).message || "Could not connect wallet";
+      const friendly = /reading 'from'|Buffer/i.test(msg)
+        ? "Wallet runtime failed to load (Buffer). Refresh and try again."
+        : msg;
+      toast.error(friendly);
     } finally {
       setBusy(false);
     }
@@ -60,17 +81,19 @@ export function BagsWalletBar({ className, onAddress }: Props) {
           Solana wallet
         </div>
         <div className="truncate text-sm font-semibold tabular-nums">
-          {short ?? "Connect Phantom to launch, trade, or claim"}
+          {!ready
+            ? "Preparing wallet runtime…"
+            : (short ?? "Connect Phantom to launch, trade, or claim")}
         </div>
       </div>
       <Button
         type="button"
         size="sm"
         className="h-9 shrink-0 rounded-full px-3"
-        disabled={busy}
+        disabled={busy || !ready}
         onClick={() => void connect()}
       >
-        {busy ? (
+        {busy || !ready ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <>

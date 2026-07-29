@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { Html5QrcodeCameraScanConfig } from "html5-qrcode/esm/html5-qrcode";
 
 export type Html5QrcodeLike = {
@@ -16,11 +16,27 @@ export type Html5QrcodeLike = {
   applyVideoConstraints: (c: MediaTrackConstraints) => Promise<void>;
 };
 
+type BarcodeDetectorLike = {
+  detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>>;
+};
+
+function getBarcodeDetector(): (new (opts?: { formats: string[] }) => BarcodeDetectorLike) | null {
+  if (typeof window === "undefined") return null;
+  const BD = (window as unknown as { BarcodeDetector?: new (opts?: { formats: string[] }) => BarcodeDetectorLike })
+    .BarcodeDetector;
+  return BD ?? null;
+}
+
 /** Full-frame scan — no library shaded box (we draw our own viewfinder). */
 export function buildQrScanConfig(): Html5QrcodeCameraScanConfig {
   return {
-    fps: 10,
+    fps: 12,
     disableFlip: false,
+    qrbox: (viewfinderWidth, viewfinderHeight) => {
+      const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
+      return { width: Math.max(180, edge), height: Math.max(180, edge) };
+    },
+    aspectRatio: 1,
   };
 }
 
@@ -30,9 +46,14 @@ export function styleQrVideo(elementId: string) {
   if (!root) return;
   root.style.position = "relative";
   root.style.overflow = "hidden";
+  root.style.width = "100%";
+  root.style.height = "100%";
 
   const video = root.querySelector("video");
   if (video) {
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.muted = true;
     video.style.position = "absolute";
     video.style.inset = "0";
     video.style.width = "100%";
@@ -42,9 +63,12 @@ export function styleQrVideo(elementId: string) {
     video.style.objectPosition = "center";
   }
 
-  // Hide library border shaders when present (we use a custom frame).
   const shaded = root.querySelector("#qr-shaded-region") as HTMLElement | null;
   if (shaded) shaded.style.display = "none";
+
+  for (const el of root.querySelectorAll("img, canvas")) {
+    (el as HTMLElement).style.display = "none";
+  }
 }
 
 export async function stopQrInstance(instance: Html5QrcodeLike | null | undefined) {
@@ -52,20 +76,36 @@ export async function stopQrInstance(instance: Html5QrcodeLike | null | undefine
   try {
     if (instance.isScanning) await instance.stop();
   } catch {
-    // ignore — already stopped / mid-transition
+    /* ignore */
   }
   try {
     instance.clear();
   } catch {
-    // ignore clear races (common under React Strict Mode)
+    /* ignore */
   }
 }
 
-async function listCameraConfigs(): Promise<Array<MediaTrackConstraints | string>> {
-  const configs: Array<MediaTrackConstraints | string> = [
-    { facingMode: { ideal: "environment" } },
+function stopMediaStream(stream: MediaStream | null | undefined) {
+  if (!stream) return;
+  for (const track of stream.getTracks()) {
+    try {
+      track.stop();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+async function listCameraConfigs(): Promise<MediaTrackConstraints[]> {
+  const configs: MediaTrackConstraints[] = [
+    {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+    },
     { facingMode: "environment" },
-    { facingMode: "user" },
+    { facingMode: { ideal: "user" } },
+    {},
   ];
 
   try {
@@ -75,11 +115,10 @@ async function listCameraConfigs(): Promise<Array<MediaTrackConstraints | string
     if (back) configs.unshift({ deviceId: { exact: back.deviceId } });
     else if (cams[0]) configs.push({ deviceId: { exact: cams[0].deviceId } });
   } catch {
-    // ignore
+    /* ignore */
   }
 
-  // Cap attempts — permission denial fails the same way on every device.
-  return configs.slice(0, 4);
+  return configs.slice(0, 5);
 }
 
 async function startWithFallback(
@@ -99,7 +138,10 @@ async function startWithFallback(
     }) as unknown as Html5QrcodeLike;
 
     try {
-      await instance.start(camera, buildQrScanConfig(), onSuccess, () => undefined);
+      const camArg: MediaTrackConstraints | string =
+        Object.keys(camera).length === 0 ? { facingMode: "environment" } : camera;
+      await instance.start(camArg, buildQrScanConfig(), onSuccess, () => undefined);
+      styleQrVideo(elementId);
       return instance;
     } catch (err) {
       lastError = err;
@@ -112,6 +154,24 @@ async function startWithFallback(
     : new Error(typeof lastError === "string" ? lastError : "Camera permission denied");
 }
 
+function friendlyCameraError(err: unknown): string {
+  const name = err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  if (name === "NotAllowedError" || /permission|denied|NotAllowed/i.test(msg)) {
+    return "Camera access blocked. Allow camera permission and try again.";
+  }
+  if (name === "NotFoundError" || /not found|no camera/i.test(msg)) {
+    return "No camera found on this device.";
+  }
+  if (name === "NotReadableError" || /NotReadable|in use|AbortError/i.test(msg)) {
+    return "Camera is in use by another app. Close it and try again.";
+  }
+  if (/secure|https|SecureContext/i.test(msg)) {
+    return "Camera needs HTTPS (or localhost).";
+  }
+  return msg || "Camera permission denied";
+}
+
 type UseQrCameraArgs = {
   elementId: string;
   active: boolean;
@@ -120,7 +180,7 @@ type UseQrCameraArgs = {
   onReady?: (instance: Html5QrcodeLike) => void;
 };
 
-/** Shared Html5Qrcode lifecycle for Send dialog and /scan. */
+/** Shared Html5Qrcode lifecycle for Send dialog and /scan fallback. */
 export function useQrCamera({ elementId, active, onResult, onError, onReady }: UseQrCameraArgs) {
   const scannerRef = useRef<Html5QrcodeLike | null>(null);
   const handledRef = useRef(false);
@@ -138,9 +198,8 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
     handledRef.current = false;
 
     (async () => {
-      // Wait until the mount node has a real layout size (avoids 0×0 video).
       let el: HTMLElement | null = null;
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 80; i++) {
         el = document.getElementById(elementId);
         if (el && el.clientWidth > 0 && el.clientHeight > 0) break;
         await new Promise((r) => setTimeout(r, 50));
@@ -150,7 +209,7 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
 
       el = document.getElementById(elementId);
       if (!el || el.clientWidth <= 0 || el.clientHeight <= 0) {
-        onErrorRef.current?.("Scanner element missing or not sized");
+        onErrorRef.current?.("Scanner view not ready. Tap Try again.");
         return;
       }
 
@@ -163,16 +222,26 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
 
       const onDecoded = (decoded: string) => {
         if (cancelled || handledRef.current) return;
-        handledRef.current = true;
         const text = decoded.trim();
-        if (!text) {
-          handledRef.current = false;
-          return;
-        }
+        if (!text) return;
+        handledRef.current = true;
         onResultRef.current(text);
       };
 
       try {
+        // Warm permission so enumerateDevices returns labels / back camera.
+        try {
+          const warm = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+            audio: false,
+          });
+          stopMediaStream(warm);
+          await new Promise((r) => setTimeout(r, 120));
+        } catch {
+          /* permission prompt will happen on start */
+        }
+        if (cancelled) return;
+
         instance = await startWithFallback(elementId, onDecoded);
 
         if (cancelled) {
@@ -184,13 +253,13 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
         scannerRef.current = instance;
         styleQrVideo(elementId);
         requestAnimationFrame(() => styleQrVideo(elementId));
+        setTimeout(() => styleQrVideo(elementId), 200);
         onReadyRef.current?.(instance);
       } catch (e) {
         if (cancelled) return;
-        const msg = (e as Error).message || "Camera permission denied";
-        // Strict Mode can interrupt mid-start; retry once after stop settles.
+        const msg = friendlyCameraError(e);
         if (/already.*scanner|paused|transition|NotReadable|AbortError/i.test(msg)) {
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 400));
           if (cancelled) return;
           try {
             instance = await startWithFallback(elementId, onDecoded);
@@ -203,9 +272,7 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
             onReadyRef.current?.(instance);
             return;
           } catch (retryErr) {
-            onErrorRef.current?.(
-              (retryErr as Error).message || "Camera permission denied",
-            );
+            onErrorRef.current?.(friendlyCameraError(retryErr));
             return;
           }
         }
@@ -225,7 +292,264 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
   return scannerRef;
 }
 
+export type PhantomQrScannerControls = {
+  starting: boolean;
+  error: string | null;
+  torchOn: boolean;
+  torchSupported: boolean;
+  mode: "native" | "fallback";
+  toggleTorch: () => Promise<void>;
+  restart: () => void;
+  unlock: () => void;
+};
+
+/**
+ * Phantom-style full-bleed camera scanner.
+ * Prefers native BarcodeDetector + getUserMedia; falls back to html5-qrcode.
+ */
+export function usePhantomQrScanner({
+  videoRef,
+  fallbackElId,
+  active,
+  onResult,
+}: {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  fallbackElId: string;
+  active: boolean;
+  onResult: (text: string) => void;
+}): PhantomQrScannerControls {
+  const [starting, setStarting] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [session, setSession] = useState(0);
+  const [useFallback, setUseFallback] = useState(false);
+
+  const streamRef = useRef<MediaStream | null>(null);
+  const trackRef = useRef<MediaStreamTrack | null>(null);
+  const handledRef = useRef(false);
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+
+  const emit = useCallback((text: string) => {
+    const t = text.trim();
+    if (!t || handledRef.current) return;
+    handledRef.current = true;
+    onResultRef.current(t);
+  }, []);
+
+  const unlock = useCallback(() => {
+    handledRef.current = false;
+  }, []);
+
+  const restart = useCallback(() => {
+    handledRef.current = false;
+    setError(null);
+    setStarting(true);
+    setTorchOn(false);
+    setTorchSupported(false);
+    setSession((s) => s + 1);
+  }, []);
+
+  // Native path
+  useEffect(() => {
+    if (!active || useFallback) return;
+    let cancelled = false;
+    let raf = 0;
+    handledRef.current = false;
+
+    const BD = getBarcodeDetector();
+    if (!BD) {
+      setUseFallback(true);
+      return;
+    }
+
+    (async () => {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setUseFallback(true);
+          return;
+        }
+
+        const configs = await listCameraConfigs();
+        let stream: MediaStream | null = null;
+        let lastErr: unknown;
+
+        for (const cam of configs) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: Object.keys(cam).length ? cam : true,
+              audio: false,
+            });
+            break;
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+
+        if (!stream) throw lastErr ?? new Error("Camera permission denied");
+        if (cancelled) {
+          stopMediaStream(stream);
+          return;
+        }
+
+        streamRef.current = stream;
+        const track = stream.getVideoTracks()[0] ?? null;
+        trackRef.current = track;
+
+        try {
+          const caps = track?.getCapabilities?.() as MediaTrackCapabilities & { torch?: boolean };
+          setTorchSupported(Boolean(caps && "torch" in caps && caps.torch));
+        } catch {
+          setTorchSupported(false);
+        }
+
+        const video = videoRef.current;
+        if (!video) {
+          setUseFallback(true);
+          stopMediaStream(stream);
+          return;
+        }
+
+        video.srcObject = stream;
+        video.setAttribute("playsinline", "true");
+        video.muted = true;
+        await video.play();
+
+        if (cancelled) return;
+
+        setStarting(false);
+        setError(null);
+
+        const detector = new BD({ formats: ["qr_code"] });
+        let busy = false;
+
+        const tick = async () => {
+          if (cancelled || handledRef.current) return;
+          raf = requestAnimationFrame(() => {
+            void tick();
+          });
+          if (busy || video.readyState < 2) return;
+          busy = true;
+          try {
+            const codes = await detector.detect(video);
+            const value = codes.find((c) => c.rawValue?.trim())?.rawValue;
+            if (value) emit(value);
+          } catch {
+            /* frame miss */
+          } finally {
+            busy = false;
+          }
+        };
+        raf = requestAnimationFrame(() => {
+          void tick();
+        });
+      } catch (e) {
+        if (cancelled) return;
+        // Fall back to html5-qrcode for broader device support
+        setUseFallback(true);
+        setError(null);
+        setStarting(true);
+        console.warn("[scan] native camera failed, using fallback", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = null;
+      }
+      stopMediaStream(streamRef.current);
+      streamRef.current = null;
+      trackRef.current = null;
+    };
+  }, [active, session, useFallback, videoRef, emit]);
+
+  // html5-qrcode fallback path
+  const fallbackScanner = useQrCamera({
+    elementId: fallbackElId,
+    active: active && useFallback,
+    onResult: emit,
+    onError: (message) => {
+      setError(message);
+      setStarting(false);
+    },
+    onReady: (instance) => {
+      setError(null);
+      setStarting(false);
+      try {
+        const caps = instance.getRunningTrackCameraCapabilities?.();
+        setTorchSupported(Boolean(caps && "torch" in (caps as object)));
+      } catch {
+        setTorchSupported(false);
+      }
+    },
+  });
+
+  const toggleTorch = useCallback(async () => {
+    const next = !torchOn;
+    const track = trackRef.current;
+    if (track) {
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: next } as MediaTrackConstraintSet],
+        });
+        setTorchOn(next);
+        return;
+      } catch {
+        /* try html5 path */
+      }
+    }
+    const inst = fallbackScanner.current;
+    if (inst?.applyVideoConstraints) {
+      try {
+        await inst.applyVideoConstraints({
+          advanced: [{ torch: next } as MediaTrackConstraintSet],
+        } as MediaTrackConstraints);
+        setTorchOn(next);
+        return;
+      } catch {
+        /* ignore */
+      }
+    }
+    setError((e) => e ?? null);
+  }, [torchOn, fallbackScanner]);
+
+  return {
+    starting,
+    error,
+    torchOn,
+    torchSupported,
+    mode: useFallback ? "fallback" : "native",
+    toggleTorch,
+    restart: () => {
+      setUseFallback(false);
+      restart();
+    },
+    unlock,
+  };
+}
+
 export async function scanQrFromFile(file: File): Promise<string> {
+  const BD = getBarcodeDetector();
+  if (BD && typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file);
+      try {
+        const detector = new BD({ formats: ["qr_code"] });
+        const codes = await detector.detect(bitmap);
+        const value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
+        if (value) return value;
+      } finally {
+        bitmap.close();
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+
   const { Html5Qrcode } = await import("html5-qrcode");
   const tmpId = "openpay-qr-file-reader";
   let holder = document.getElementById(tmpId);

@@ -94,6 +94,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
 /**
  * Accepts:
  * - Raw Pro wallet `0x…`
+ * - Solana base58 addresses / `solana:…` URIs
  * - `openpay:0x…?asset=OUSD&amount=10` (OpenPay Pro receive QR)
  * - `openpaypro:0x…` / `ethereum:0x…`
  * - OpenPay `OP…` account, `@username`, email
@@ -118,15 +119,32 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
       lower.startsWith("openpaypro:") ||
       lower.startsWith("ethereum:") ||
       lower.startsWith("eip681:") ||
+      lower.startsWith("solana:") ||
       (raw.includes("?") && raw.includes(":"))
     ) {
       const colon = raw.indexOf(":");
       const afterScheme = colon >= 0 ? raw.slice(colon + 1) : raw;
       const body = afterScheme.replace(/^\/\//, "");
+      // solana:Address?amount=1  OR  solana:transfer?recipient=…
+      if (lower.startsWith("solana:")) {
+        const [pathPart, query] = body.split("?");
+        const params = new URLSearchParams(query ?? "");
+        const recipient =
+          params.get("recipient") ||
+          params.get("to") ||
+          params.get("address") ||
+          (pathPart && !/^transfer$/i.test(pathPart) ? pathPart : "");
+        if (recipient) {
+          return fromParts(
+            recipient,
+            params.get("amount") ?? params.get("value"),
+            params.get("asset"),
+          );
+        }
+      }
       const [addrPart, query] = body.split("?");
       const params = new URLSearchParams(query ?? "");
       const addr = (addrPart ?? "").trim();
-      // openpay:@alice or openpay:OPxxx
       return fromParts(
         addr,
         params.get("amount") ?? params.get("value"),

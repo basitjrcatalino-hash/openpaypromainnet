@@ -26,6 +26,7 @@ import {
   CircleDollarSign,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -65,6 +66,7 @@ const NAV = [
   { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "OpenToken", icon: BookOpen },
+  { to: "/bags", label: "Bags", icon: Sparkles },
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -78,7 +80,8 @@ function navActive(pathname: string, to: string) {
       (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
-      !pathname.startsWith("/opentoken/create"))
+      !pathname.startsWith("/opentoken/create")) ||
+    (to === "/bags" && pathname.startsWith("/bags"))
   );
 }
 
@@ -253,7 +256,7 @@ function AuthenticatedLayout() {
             aria-label="Primary"
           >
             <div
-              className="mx-auto grid max-w-md grid-cols-5 items-center px-1"
+              className="mx-auto flex max-w-md items-center gap-0.5 overflow-x-auto px-1"
               style={{ height: "var(--ph-tabbar-content)" }}
             >
               {NAV.map((item) => {
@@ -265,7 +268,7 @@ function AuthenticatedLayout() {
                     to={item.to}
                     preload="intent"
                     className={cn(
-                      "flex h-full flex-col items-center justify-center gap-1 ph-tab-label press",
+                      "flex h-full min-w-17 flex-1 flex-col items-center justify-center gap-1 ph-tab-label press",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >

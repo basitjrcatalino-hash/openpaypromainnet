@@ -15,6 +15,7 @@ import {
   QrCode,
   Send,
 } from "lucide-react";
+import QRCode from "qrcode";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +90,9 @@ function PhantomAssetDetail() {
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
+  const isPiMajor = isMajor && majorDef?.id === "pi";
+  /** OpenPay ledger asset for receive QR / send (majors except PI settle as OUSD). */
+  const ledgerAsset: "OUSD" | "PI" = isPiMajor ? "PI" : "OUSD";
 
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -96,15 +100,18 @@ function PhantomAssetDetail() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
   const [moonpayOpen, setMoonpayOpen] = useState(false);
+  const [receiveQrUrl, setReceiveQrUrl] = useState("");
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: () =>
-      fetchActiveWallet<{ id: string; address: string; ousd_balance: number; name: string | null }>(
-        supabase,
-        user.id,
-        "id, address, ousd_balance, name",
-      ),
+      fetchActiveWallet<{
+        id: string;
+        address: string;
+        ousd_balance: number;
+        pi_balance: number | null;
+        name: string | null;
+      }>(supabase, user.id, "id, address, ousd_balance, pi_balance, name"),
   });
 
   const { data: token, isLoading: tokenLoading } = useQuery({
@@ -215,7 +222,7 @@ function PhantomAssetDetail() {
         category: majorDef.category,
         volume24h: m.volume24h,
         createdAt: majorDef.createdAt,
-        contract: null as string | null,
+        contract: wallet?.address ?? null,
         status: "native",
         nativeMajor: true,
       };
@@ -248,13 +255,45 @@ function PhantomAssetDetail() {
 
   const balance = isOusd
     ? Number(wallet?.ousd_balance ?? 0)
-    : isMajor
-      ? 0
-      : Number(holding ?? 0);
-  const valueUsd = balance * meta.price;
+    : isPiMajor
+      ? Number(wallet?.pi_balance ?? 0)
+      : isMajor
+        ? Number(wallet?.ousd_balance ?? 0)
+        : Number(holding ?? 0);
+  /** Position unit on OpenPay ledger (BTC/ETH/SOL pages show OUSD holdings). */
+  const positionSymbol = isMajor && !isPiMajor ? "OUSD" : meta.symbol;
+  const positionPrice = isMajor && !isPiMajor ? 1 : meta.price;
+  const valueUsd = balance * positionPrice;
   const changeAbs = valueUsd * (meta.change / 100);
   const up = meta.change >= 0;
   const returnPath = `/asset/${tokenId}`;
+
+  const receivePayUri = wallet?.address
+    ? `openpay:${wallet.address}?asset=${isOusd || isMajor ? ledgerAsset : meta.symbol}`
+    : "";
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!receiveOpen || !receivePayUri) {
+      setReceiveQrUrl("");
+      return;
+    }
+    void QRCode.toDataURL(receivePayUri, {
+      width: 180,
+      margin: 1,
+      color: { dark: "#111111", light: "#ffffff" },
+      errorCorrectionLevel: "M",
+    })
+      .then((url) => {
+        if (!cancelled) setReceiveQrUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setReceiveQrUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [receiveOpen, receivePayUri]);
 
   useEffect(() => {
     if (search.openpay_cancel) {
@@ -458,7 +497,7 @@ function PhantomAssetDetail() {
             isOusd
               ? "Pegged at $1.00 · stablecoin"
               : isMajor
-                ? `Native ${meta.network} · market data via CoinGecko`
+                ? `OpenPay Pro · ${ledgerAsset} · market data via CoinGecko`
                 : undefined
           }
         />
@@ -469,26 +508,17 @@ function PhantomAssetDetail() {
             icon={Plus}
             label="Buy"
             primary
-            onClick={() => {
-              if (isMajor) {
-                if (!majorDef?.moonpayCode) {
-                  toast.info(
-                    `${meta.symbol} isn’t available on MoonPay yet — buy on an exchange that lists Pi Network.`,
-                  );
-                  return;
-                }
-                setMoonpayOpen(true);
-              } else {
-                setBuyOpen(true);
-              }
-            }}
+            onClick={() => setBuyOpen(true)}
           />
           <ActionTile
             icon={Send}
             label="Send"
             onClick={() => {
               if (isMajor) {
-                toast.info(`${meta.symbol} send uses your ${meta.network} wallet — coming soon in OpenPay.`);
+                navigate({
+                  to: "/send",
+                  search: { asset: ledgerAsset },
+                });
                 return;
               }
               navigate({
@@ -502,12 +532,15 @@ function PhantomAssetDetail() {
             label="Swap"
             onClick={() => {
               if (isMajor) {
-                navigate({ to: "/swap" });
+                navigate({
+                  to: "/swap",
+                  search: { asset: ledgerAsset },
+                });
                 return;
               }
               navigate({
                 to: "/swap",
-                search: isOusd ? {} : { token: tokenId },
+                search: isOusd ? { asset: "OUSD" } : { token: tokenId },
               });
             }}
           />
@@ -528,7 +561,7 @@ function PhantomAssetDetail() {
             <div className="rounded-2xl border border-border bg-card px-4 py-3">
               <div className="text-xs text-muted-foreground">Balance</div>
               <div className="mt-1 truncate text-xl font-bold tabular-nums text-foreground">
-                {formatNumber(balance, balance < 1 ? 6 : 4)} {meta.symbol}
+                {formatNumber(balance, balance < 1 ? 6 : 4)} {positionSymbol}
               </div>
             </div>
           </div>
@@ -541,25 +574,18 @@ function PhantomAssetDetail() {
           </div>
         </section>
 
-        {/* Token address */}
+        {/* Token address — OpenPay Pro wallet for OUSD + majors */}
         <section>
           <h2 className="mb-2 text-sm text-muted-foreground">Address</h2>
-          {isMajor ? (
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="text-xs text-muted-foreground">Native asset</div>
-              <div className="mt-0.5 text-sm text-foreground">
-                {meta.symbol} has no contract address — it is native to the {meta.network} network.
-              </div>
-            </div>
-          ) : (
+          {meta.contract ? (
             <button
               type="button"
-              onClick={() => meta.contract && copy(meta.contract, "Address copied")}
+              onClick={() => copy(meta.contract!, "Address copied")}
               className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition hover:bg-muted/50"
             >
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">
-                  {isOusd ? "Wallet address" : "Token / contract"}
+                  {isOusd || isMajor ? "OpenPay Pro wallet" : "Token / contract"}
                 </div>
                 <div className="mt-0.5 font-mono text-sm text-foreground">
                   {shortAddress(meta.contract, 8, 8)}
@@ -567,6 +593,10 @@ function PhantomAssetDetail() {
               </div>
               <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+              Create a wallet to get your OpenPay Pro address.
+            </div>
           )}
         </section>
 
@@ -683,12 +713,14 @@ function PhantomAssetDetail() {
 
         <p className="pb-4 text-center text-[11px] leading-relaxed text-muted-foreground">
           {isMajor
-            ? "Pricing is informational only and not financial advice. Market data via CoinGecko. OpenPay Pro does not custody native BTC, ETH, or SOL on this ledger."
+            ? isPiMajor
+              ? "Pricing via CoinGecko. PI balance and transfers use your OpenPay Pro wallet on this account."
+              : `Market data via CoinGecko. Receive, send, and buy on this page use your OpenPay Pro wallet (${ledgerAsset}). Native ${meta.symbol} is not custodied on the OpenPay ledger.`
             : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
         </p>
       </div>
 
-      {/* Receive sheet */}
+      {/* Receive sheet — same OpenPay Pro address flow as OUSD */}
       <Dialog open={receiveOpen} onOpenChange={setReceiveOpen}>
         <DialogContent className="max-w-sm rounded-3xl border-border bg-card">
           <DialogHeader>
@@ -696,21 +728,20 @@ function PhantomAssetDetail() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="mx-auto grid h-48 w-48 place-items-center rounded-2xl border border-border bg-white p-3">
-              {/* Lightweight QR via Google chart API for wallet address */}
-              {wallet?.address ? (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(wallet.address)}`}
-                  alt="Receive QR"
-                  className="h-full w-full"
-                />
+              {receiveQrUrl ? (
+                <img src={receiveQrUrl} alt="Receive QR" className="h-full w-full" />
               ) : (
                 <QrCode className="h-16 w-16 text-muted-foreground" />
               )}
             </div>
             <div className="flex items-center justify-between gap-2 rounded-2xl bg-muted/50 px-3 py-3">
               <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">{wallet?.name ?? "Main Wallet"}</div>
-                <div className="truncate font-mono text-sm">({shortAddress(wallet?.address, 4, 4)})</div>
+                <div className="text-xs text-muted-foreground">
+                  {wallet?.name ?? "Main Wallet"} · OpenPay Pro
+                </div>
+                <div className="truncate font-mono text-sm">
+                  ({shortAddress(wallet?.address, 4, 4)})
+                </div>
               </div>
               <Button
                 size="sm"
@@ -722,10 +753,12 @@ function PhantomAssetDetail() {
             </div>
             <p className="text-center text-xs text-muted-foreground">
               {isOusd
-                ? "Use this address to receive OUSD on OpenPay."
+                ? "Use this OpenPay Pro wallet address to receive OUSD."
                 : isMajor
-                  ? `${meta.symbol} is native to ${meta.network}. Buy via MoonPay, or use a ${meta.network} wallet to self-custody.`
-                  : `Share your wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
+                  ? isPiMajor
+                    ? "Use this OpenPay Pro wallet address to receive PI."
+                    : `Use this OpenPay Pro wallet address to receive ${ledgerAsset}. Market price for ${meta.symbol} is shown for reference.`
+                  : `Share your OpenPay Pro wallet address to receive $${meta.symbol}. Trading stays on OpenToken / OpenDEX.`}
             </p>
             <Button className="w-full rounded-full" variant="secondary" onClick={() => setReceiveOpen(false)}>
               Close
@@ -767,18 +800,35 @@ function PhantomAssetDetail() {
                 }}
               />
             )}
+            {isMajor && majorDef?.moonpayCode && (
+              <MoreRow
+                logoUrl={majorDef.logoUrl}
+                label={`Buy ${majorDef.symbol} on MoonPay`}
+                onClick={() => {
+                  setMoreOpen(false);
+                  setMoonpayOpen(true);
+                }}
+              />
+            )}
             <MoreRow
               icon={ArrowLeftRight}
               label="OpenDEX Swap"
               onClick={() => {
                 setMoreOpen(false);
-                navigate({ to: "/swap", search: isOusd || isMajor ? {} : { token: tokenId } });
+                if (isMajor) {
+                  navigate({ to: "/swap", search: { asset: ledgerAsset } });
+                } else {
+                  navigate({
+                    to: "/swap",
+                    search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+                  });
+                }
               }}
             />
             {meta.contract && (
               <MoreRow
                 icon={ExternalLink}
-                label="Copy token address"
+                label="Copy OpenPay Pro address"
                 onClick={() => {
                   void copy(meta.contract!, "Address copied");
                   setMoreOpen(false);
@@ -794,29 +844,34 @@ function PhantomAssetDetail() {
         </DialogContent>
       </Dialog>
 
-      {!isMajor && (
-        <AssetBuySheet
-          open={buyOpen}
-          onClose={() => setBuyOpen(false)}
-          userId={user.id}
-          walletId={wallet?.id}
-          ousdBalance={Number(wallet?.ousd_balance ?? 0)}
-          token={{
-            id: isOusd ? "ousd" : tokenId,
-            symbol: meta.symbol,
-            name: meta.name,
-            price: meta.price,
-            isOusd,
-            status: meta.status,
-          }}
-          returnPath={returnPath}
-          onNavigateSwap={() =>
-            navigate({ to: "/swap", search: isOusd ? {} : { token: tokenId } })
+      <AssetBuySheet
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+        userId={user.id}
+        walletId={wallet?.id}
+        ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+        token={{
+          id: isOusd || isMajor ? "ousd" : tokenId,
+          symbol: isOusd || isMajor ? "OUSD" : meta.symbol,
+          name: isOusd || isMajor ? "OpenUSD OUSD" : meta.name,
+          price: isOusd || isMajor ? 1 : meta.price,
+          isOusd: isOusd || isMajor,
+          status: isOusd || isMajor ? "stable" : meta.status,
+        }}
+        returnPath={returnPath}
+        onNavigateSwap={() => {
+          if (isMajor) {
+            navigate({ to: "/swap", search: { asset: ledgerAsset } });
+          } else {
+            navigate({
+              to: "/swap",
+              search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+            });
           }
-        />
-      )}
+        }}
+      />
 
-      {isMajor && majorDef && (
+      {isMajor && majorDef?.moonpayCode && (
         <MoonPayBuyOverlay
           visible={moonpayOpen}
           amount={50}

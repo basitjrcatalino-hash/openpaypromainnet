@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
-import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
+import { executeOpenDexSwap, OUSD_SWAP_ID, PI_SWAP_ID } from "@/lib/opendex.functions";
 import {
   applyOpenDexFee,
   OPENDEX_SWAP_FEE_BPS,
@@ -39,12 +39,14 @@ import {
   SWAP_NETWORKS,
   type SwapNetworkId,
 } from "@/lib/swap-networks";
+import { fetchMajorMarkets, getMajorToken, majorMarketById } from "@/lib/major-tokens";
 
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
 const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
+  asset: z.enum(["OUSD", "PI"]).optional(),
 });
 
 type SwapToken = {
@@ -56,6 +58,7 @@ type SwapToken = {
   status?: string | null;
   is_verified?: boolean | null;
   isOusd?: boolean;
+  isPi?: boolean;
 };
 
 const OUSD_TOKEN: SwapToken = {
@@ -69,6 +72,8 @@ const OUSD_TOKEN: SwapToken = {
   isOusd: true,
 };
 
+const PI_DEF = getMajorToken("pi")!;
+
 export const Route = createFileRoute("/_authenticated/swap")({
   head: () => ({ meta: [{ title: "OpenDEX — OpenPay Pro" }] }),
   validateSearch: (s: Record<string, unknown>) => searchSchema.parse(s),
@@ -77,7 +82,7 @@ export const Route = createFileRoute("/_authenticated/swap")({
 
 function OpenDexPage() {
   const { user } = Route.useRouteContext();
-  const { token: tokenParam } = Route.useSearch();
+  const { token: tokenParam, asset: assetParam } = Route.useSearch();
   const qc = useQueryClient();
   const swapFn = useServerFn(executeOpenDexSwap);
 
@@ -100,9 +105,31 @@ function OpenDexPage() {
         .eq("is_hidden", false)
         .order("market_cap", { ascending: false });
       if (error) throw error;
-      return (data ?? []).filter((t) => t.symbol !== "OUSD") as SwapToken[];
+      return (data ?? []).filter(
+        (t) => t.symbol !== "OUSD" && t.symbol !== "PI",
+      ) as SwapToken[];
     },
   });
+
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
+  const piToken: SwapToken = useMemo(() => {
+    const m = majorMarketById(majorMarkets, "pi");
+    return {
+      id: PI_SWAP_ID,
+      name: PI_DEF.name,
+      symbol: "PI",
+      price_usd: m.price > 0 ? m.price : 0.079,
+      logo_url: PI_DEF.logoUrl,
+      status: "quote",
+      is_verified: true,
+      isPi: true,
+    };
+  }, [majorMarkets]);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -110,7 +137,7 @@ function OpenDexPage() {
       (
         await supabase
           .from("wallets")
-          .select("id, ousd_balance")
+          .select("id, ousd_balance, pi_balance")
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
@@ -135,14 +162,16 @@ function OpenDexPage() {
   const balanceMap = useMemo(() => {
     const map = new Map<string, number>();
     map.set(OUSD_SWAP_ID, Number(wallet?.ousd_balance ?? 0));
+    map.set(PI_SWAP_ID, Number(wallet?.pi_balance ?? 0));
     for (const h of holdings) map.set(h.token_id, Number(h.balance ?? 0));
     return map;
   }, [wallet, holdings]);
 
   const fromTokens = useMemo(() => {
     const held = dbTokens.filter((t) => (balanceMap.get(t.id) ?? 0) > 0);
-    return [OUSD_TOKEN, ...held];
-  }, [dbTokens, balanceMap]);
+    const list: SwapToken[] = [OUSD_TOKEN, piToken, ...held];
+    return list;
+  }, [dbTokens, balanceMap, piToken]);
 
   const toTokens = useMemo(() => {
     const sorted = [...dbTokens].sort((a, b) => {
@@ -153,37 +182,80 @@ function OpenDexPage() {
       const bg = b.status === "graduated" ? 1 : 0;
       return bg - ag;
     });
-    return [OUSD_TOKEN, ...sorted];
-  }, [dbTokens, balanceMap]);
+    return [OUSD_TOKEN, piToken, ...sorted];
+  }, [dbTokens, balanceMap, piToken]);
 
   const allTokens = useMemo(() => {
     const map = new Map<string, SwapToken>();
     map.set(OUSD_SWAP_ID, OUSD_TOKEN);
+    map.set(PI_SWAP_ID, piToken);
     for (const t of dbTokens) map.set(t.id, t);
     return map;
-  }, [dbTokens]);
+  }, [dbTokens, piToken]);
 
   useEffect(() => {
-    if (!dbTokens.length || initialized) return;
+    if (initialized) return;
+    // Wait for wallet query at least; tokens can be empty on fresh installs
+    if (wallet === undefined) return;
+
+    const prefFromAsset =
+      assetParam === "PI"
+        ? piToken
+        : assetParam === "OUSD"
+          ? OUSD_TOKEN
+          : null;
+    const prefFromToken = tokenParam
+      ? tokenParam === PI_SWAP_ID || tokenParam === "pi"
+        ? piToken
+        : tokenParam === OUSD_SWAP_ID || tokenParam === "ousd"
+          ? OUSD_TOKEN
+          : dbTokens.find((t) => t.id === tokenParam)
+      : null;
     const pref =
-      (tokenParam && dbTokens.find((t) => t.id === tokenParam)) ||
-      fromTokens.find((t) => t.id !== OUSD_SWAP_ID) ||
+      prefFromAsset ||
+      prefFromToken ||
+      fromTokens.find((t) => t.id !== OUSD_SWAP_ID && (balanceMap.get(t.id) ?? 0) > 0) ||
       dbTokens.find((t) => t.status === "graduated") ||
-      dbTokens[0];
+      dbTokens[0] ||
+      piToken;
 
     const ousdBal = Number(wallet?.ousd_balance ?? 0);
-    if (ousdBal > 0) {
+    const wantPi = assetParam === "PI" || tokenParam === "pi" || tokenParam === PI_SWAP_ID;
+
+    if (wantPi) {
+      const piBal = Number(wallet?.pi_balance ?? 0);
+      if (piBal > 0) {
+        setFrom(PI_SWAP_ID);
+        setTo(OUSD_SWAP_ID);
+      } else {
+        setFrom(OUSD_SWAP_ID);
+        setTo(PI_SWAP_ID);
+      }
+    } else if (ousdBal > 0) {
       setFrom(OUSD_SWAP_ID);
-      setTo(pref?.id && pref.id !== OUSD_SWAP_ID ? pref.id : "");
+      setTo(
+        pref?.id && pref.id !== OUSD_SWAP_ID
+          ? pref.id
+          : PI_SWAP_ID,
+      );
     } else if (pref && (balanceMap.get(pref.id) ?? 0) > 0) {
       setFrom(pref.id);
       setTo(OUSD_SWAP_ID);
     } else {
       setFrom(OUSD_SWAP_ID);
-      setTo(pref?.id ?? "");
+      setTo(pref?.id && pref.id !== OUSD_SWAP_ID ? pref.id : PI_SWAP_ID);
     }
     setInitialized(true);
-  }, [dbTokens, tokenParam, initialized, wallet, fromTokens, balanceMap]);
+  }, [
+    dbTokens,
+    tokenParam,
+    assetParam,
+    initialized,
+    wallet,
+    fromTokens,
+    balanceMap,
+    piToken,
+  ]);
 
   const fromToken = allTokens.get(from);
   const toToken = allTokens.get(to);
@@ -509,7 +581,7 @@ function trimAmt(n: number) {
 
 function isTokenVerified(token?: SwapToken | null) {
   if (!token) return false;
-  return !!token.isOusd || !!token.is_verified;
+  return !!token.isOusd || !!token.isPi || !!token.is_verified;
 }
 
 function SwapSide({

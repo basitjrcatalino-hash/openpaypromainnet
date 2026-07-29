@@ -8,6 +8,8 @@ export type WalletBalanceSource = {
   btc_balance?: number | null;
   eth_balance?: number | null;
   sol_balance?: number | null;
+  usdc_balance?: number | null;
+  usdt_balance?: number | null;
 };
 
 /** Deterministic Phantom-style gradient pair from wallet address. */
@@ -66,7 +68,9 @@ export async function fetchWalletPortfolioTotals(
       Number(wallet.pi_balance ?? 0) * (prices?.pi ?? 0.079) +
       Number(wallet.btc_balance ?? 0) * (prices?.btc ?? 65000) +
       Number(wallet.eth_balance ?? 0) * (prices?.eth ?? 1920) +
-      Number(wallet.sol_balance ?? 0) * (prices?.sol ?? 74);
+      Number(wallet.sol_balance ?? 0) * (prices?.sol ?? 74) +
+      Number(wallet.usdc_balance ?? 0) * (prices?.usdc ?? 1) +
+      Number(wallet.usdt_balance ?? 0) * (prices?.usdt ?? 1);
     totals[wallet.id] = (holdingsByWallet[wallet.id] ?? 0) + majorsUsd;
   }
   return totals;

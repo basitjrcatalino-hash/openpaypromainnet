@@ -35,6 +35,8 @@ import {
   BTC_SWAP_ID,
   ETH_SWAP_ID,
   SOL_SWAP_ID,
+  USDC_SWAP_ID,
+  USDT_SWAP_ID,
 } from "@/lib/opendex.functions";
 import {
   applyOpenDexFee,
@@ -53,7 +55,10 @@ import {
   MAJOR_TOKENS,
 } from "@/lib/major-tokens";
 import {
-  majorForNetwork,
+  LEDGER_MAJOR_SWAP_IDS,
+  majorsForNetwork,
+  networkForMajor,
+  readMajorBalance,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 
@@ -62,7 +67,7 @@ const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
-  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL"]).optional(),
+  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT"]).optional(),
 });
 
 type SwapToken = {
@@ -91,12 +96,7 @@ const OUSD_TOKEN: SwapToken = {
   network: "openpay",
 };
 
-const MAJOR_SWAP_IDS = {
-  btc: BTC_SWAP_ID,
-  eth: ETH_SWAP_ID,
-  sol: SOL_SWAP_ID,
-  pi: PI_SWAP_ID,
-} as const;
+const MAJOR_SWAP_IDS = LEDGER_MAJOR_SWAP_IDS;
 
 export const Route = createFileRoute("/_authenticated/swap")({
   head: () => ({ meta: [{ title: "OpenDEX — OpenPay Pro" }] }),
@@ -160,14 +160,7 @@ function OpenDexPage() {
         is_verified: true,
         isPi: id === "pi",
         majorId: id,
-        network:
-          id === "btc"
-            ? "bitcoin"
-            : id === "eth"
-              ? "ethereum"
-              : id === "sol"
-                ? "solana"
-                : "pi",
+        network: networkForMajor(id),
       } satisfies SwapToken;
     });
   }, [majorMarkets]);
@@ -180,7 +173,9 @@ function OpenDexPage() {
       (
         await supabase
           .from("wallets")
-          .select("id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance")
+          .select(
+            "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
+          )
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true })
@@ -205,21 +200,23 @@ function OpenDexPage() {
   const balanceMap = useMemo(() => {
     const map = new Map<string, number>();
     map.set(OUSD_SWAP_ID, Number(wallet?.ousd_balance ?? 0));
-    map.set(PI_SWAP_ID, Number(wallet?.pi_balance ?? 0));
-    map.set(BTC_SWAP_ID, Number(wallet?.btc_balance ?? 0));
-    map.set(ETH_SWAP_ID, Number(wallet?.eth_balance ?? 0));
-    map.set(SOL_SWAP_ID, Number(wallet?.sol_balance ?? 0));
+    for (const id of MAJOR_TOKEN_IDS) {
+      map.set(
+        LEDGER_MAJOR_SWAP_IDS[id],
+        readMajorBalance(wallet as Record<string, unknown> | null | undefined, id),
+      );
+    }
     for (const h of holdings) map.set(h.token_id, Number(h.balance ?? 0));
     return map;
   }, [wallet, holdings]);
 
   const tokensForNetwork = useMemo(() => {
-    const majorOnNet = majorForNetwork(network);
     if (network === "openpay") {
       return [OUSD_TOKEN, ...majorTokens, ...dbTokens];
     }
-    const majorTok = majorTokens.find((t) => t.majorId === majorOnNet);
-    return majorTok ? [OUSD_TOKEN, majorTok] : [OUSD_TOKEN];
+    const onNet = majorsForNetwork(network);
+    const majorToks = majorTokens.filter((t) => t.majorId && onNet.includes(t.majorId));
+    return [OUSD_TOKEN, ...majorToks];
   }, [network, majorTokens, dbTokens]);
 
   const fromTokens = useMemo(() => {
@@ -248,6 +245,8 @@ function OpenDexPage() {
       BTC: BTC_SWAP_ID,
       ETH: ETH_SWAP_ID,
       SOL: SOL_SWAP_ID,
+      USDC: USDC_SWAP_ID,
+      USDT: USDT_SWAP_ID,
     };
 
     const prefFromAsset =
@@ -264,9 +263,13 @@ function OpenDexPage() {
             ? allTokens.get(ETH_SWAP_ID)
             : tokenParam === "sol" || tokenParam === SOL_SWAP_ID
               ? allTokens.get(SOL_SWAP_ID)
-              : tokenParam === "pi" || tokenParam === PI_SWAP_ID
-                ? allTokens.get(PI_SWAP_ID)
-                : dbTokens.find((t) => t.id === tokenParam)
+              : tokenParam === "usdc" || tokenParam === USDC_SWAP_ID
+                ? allTokens.get(USDC_SWAP_ID)
+                : tokenParam === "usdt" || tokenParam === USDT_SWAP_ID
+                  ? allTokens.get(USDT_SWAP_ID)
+                  : tokenParam === "pi" || tokenParam === PI_SWAP_ID
+                    ? allTokens.get(PI_SWAP_ID)
+                    : dbTokens.find((t) => t.id === tokenParam)
       : null;
 
     const pref =

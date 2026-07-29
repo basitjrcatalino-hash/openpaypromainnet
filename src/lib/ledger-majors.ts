@@ -1,9 +1,9 @@
 /**
- * OpenPay Pro ledger majors — BTC / ETH / SOL / PI balances on wallets.
+ * OpenPay Pro ledger majors — BTC / ETH / SOL / PI / USDC / USDT balances on wallets.
  * Swap / buy / send / receive use CoinGecko USD prices (custodial ledger, not on-chain).
  */
 import type { MajorTokenId } from "@/lib/major-tokens";
-import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, isMajorTokenId } from "@/lib/major-tokens";
 import type { SwapNetworkId } from "@/lib/swap-networks";
 
 export const OUSD_SWAP_ID = "__ousd__";
@@ -11,16 +11,34 @@ export const BTC_SWAP_ID = "__btc__";
 export const ETH_SWAP_ID = "__eth__";
 export const SOL_SWAP_ID = "__sol__";
 export const PI_SWAP_ID = "__pi__";
+export const USDC_SWAP_ID = "__usdc__";
+export const USDT_SWAP_ID = "__usdt__";
 
-export type LedgerMajorId = MajorTokenId; // btc | eth | sol | pi
+export type LedgerMajorId = MajorTokenId;
 
-export type LedgerAssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "PI";
+export type LedgerAssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "PI" | "USDC" | "USDT";
+
+export const LEDGER_MAJOR_ASSET_CODES = [
+  "BTC",
+  "ETH",
+  "SOL",
+  "PI",
+  "USDC",
+  "USDT",
+] as const satisfies ReadonlyArray<Exclude<LedgerAssetCode, "OUSD">>;
+
+export const LEDGER_ASSET_CODES = [
+  "OUSD",
+  ...LEDGER_MAJOR_ASSET_CODES,
+] as const satisfies ReadonlyArray<LedgerAssetCode>;
 
 export const LEDGER_MAJOR_SWAP_IDS: Record<LedgerMajorId, string> = {
   btc: BTC_SWAP_ID,
   eth: ETH_SWAP_ID,
   sol: SOL_SWAP_ID,
   pi: PI_SWAP_ID,
+  usdc: USDC_SWAP_ID,
+  usdt: USDT_SWAP_ID,
 };
 
 export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
@@ -28,6 +46,8 @@ export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
   eth: "eth_balance",
   sol: "sol_balance",
   pi: "pi_balance",
+  usdc: "usdc_balance",
+  usdt: "usdt_balance",
 };
 
 const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
@@ -35,10 +55,14 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   [ETH_SWAP_ID]: "eth",
   [SOL_SWAP_ID]: "sol",
   [PI_SWAP_ID]: "pi",
+  [USDC_SWAP_ID]: "usdc",
+  [USDT_SWAP_ID]: "usdt",
   btc: "btc",
   eth: "eth",
   sol: "sol",
   pi: "pi",
+  usdc: "usdc",
+  usdt: "usdt",
 };
 
 export function isLedgerMajorSwapId(id: string): boolean {
@@ -63,16 +87,19 @@ export function majorIdFromAssetCode(code: string): LedgerMajorId | null {
   if (c === "ETH") return "eth";
   if (c === "SOL") return "sol";
   if (c === "PI") return "pi";
+  if (c === "USDC") return "usdc";
+  if (c === "USDT") return "usdt";
   return null;
 }
 
 export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
   if (id === "btc") return "bitcoin";
   if (id === "eth") return "ethereum";
-  if (id === "sol") return "solana";
+  if (id === "sol" || id === "usdc" || id === "usdt") return "solana";
   return "pi";
 }
 
+/** Primary native asset for a network (one per chain). */
 export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
   if (network === "bitcoin") return "btc";
   if (network === "ethereum") return "eth";
@@ -81,14 +108,23 @@ export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
   return null;
 }
 
+/** All ledger majors that belong on a swap network (SOL + stables on Solana). */
+export function majorsForNetwork(network: SwapNetworkId): LedgerMajorId[] {
+  if (network === "bitcoin") return ["btc"];
+  if (network === "ethereum") return ["eth"];
+  if (network === "solana") return ["sol", "usdc", "usdt"];
+  if (network === "pi") return ["pi"];
+  return [];
+}
+
 const FALLBACK_USD: Record<LedgerMajorId, number> = {
   btc: 65000,
   eth: 1920,
   sol: 74,
   pi: 0.079,
+  usdc: 1,
+  usdt: 1,
 };
-
-const CG_IDS = MAJOR_TOKENS.btc.coingeckoId; // unused placeholder
 
 /** Live PI/USD used by display currency (π) — refreshed by fetchMajorUsdPrices. */
 let cachedPiUsd = FALLBACK_USD.pi;
@@ -102,7 +138,7 @@ export function setCachedPiUsdPrice(price: number): void {
 }
 
 export async function fetchMajorUsdPrices(
-  ids: LedgerMajorId[] = ["btc", "eth", "sol", "pi"],
+  ids: LedgerMajorId[] = [...MAJOR_TOKEN_IDS],
 ): Promise<Record<LedgerMajorId, number>> {
   const out = { ...FALLBACK_USD } as Record<LedgerMajorId, number>;
   try {
@@ -137,7 +173,7 @@ export function ousdFromPiAmount(piAmount: number, piUsdPrice = getCachedPiUsdPr
 }
 
 export function walletMajorSelect(): string {
-  return "id, user_id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance";
+  return "id, user_id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance";
 }
 
 export function readMajorBalance(
@@ -149,4 +185,26 @@ export function readMajorBalance(
   return Number(wallet[col] ?? 0);
 }
 
-void CG_IDS;
+export function majorBalancePatch(
+  major: LedgerMajorId,
+  next: number,
+):
+  | { btc_balance: number }
+  | { eth_balance: number }
+  | { sol_balance: number }
+  | { pi_balance: number }
+  | { usdc_balance: number }
+  | { usdt_balance: number } {
+  if (major === "btc") return { btc_balance: next };
+  if (major === "eth") return { eth_balance: next };
+  if (major === "sol") return { sol_balance: next };
+  if (major === "pi") return { pi_balance: next };
+  if (major === "usdc") return { usdc_balance: next };
+  return { usdt_balance: next };
+}
+
+export function isLedgerAssetCode(code: string): code is LedgerAssetCode {
+  return (LEDGER_ASSET_CODES as readonly string[]).includes(code.toUpperCase());
+}
+
+export { isMajorTokenId };

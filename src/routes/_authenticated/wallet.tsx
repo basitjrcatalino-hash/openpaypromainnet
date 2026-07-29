@@ -61,7 +61,7 @@ function CryptoWalletPage() {
         await supabase
           .from("wallets")
           .select(
-            "id, name, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance",
+            "id, name, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
           )
           .eq("user_id", user.id)
           .order("is_active", { ascending: false })
@@ -132,6 +132,26 @@ function CryptoWalletPage() {
         priceUsd: majorMarketById(majorMarkets, "sol").price,
         logoUrl: MAJOR_TOKENS.sol.logoUrl,
         receiveTo: "/wallet/receive?network=solana&asset=SOL",
+      },
+      {
+        key: "usdc",
+        symbol: "USDC",
+        name: MAJOR_TOKENS.usdc.name,
+        network: "Solana",
+        balance: Number(wallet?.usdc_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "usdc").price,
+        logoUrl: MAJOR_TOKENS.usdc.logoUrl,
+        receiveTo: "/wallet/receive?network=usdc&asset=USDC",
+      },
+      {
+        key: "usdt",
+        symbol: "USDT",
+        name: MAJOR_TOKENS.usdt.name,
+        network: "Solana",
+        balance: Number(wallet?.usdt_balance ?? 0),
+        priceUsd: majorMarketById(majorMarkets, "usdt").price,
+        logoUrl: MAJOR_TOKENS.usdt.logoUrl,
+        receiveTo: "/wallet/receive?network=usdt&asset=USDT",
       },
       {
         key: "pi",
@@ -277,6 +297,18 @@ function CryptoWalletPage() {
                     logoUrl: MAJOR_TOKENS.sol.logoUrl,
                   },
                   {
+                    network: "usdc" as const,
+                    label: "USDC",
+                    asset: "USDC" as const,
+                    logoUrl: MAJOR_TOKENS.usdc.logoUrl,
+                  },
+                  {
+                    network: "usdt" as const,
+                    label: "USDT",
+                    asset: "USDT" as const,
+                    logoUrl: MAJOR_TOKENS.usdt.logoUrl,
+                  },
+                  {
                     network: "pi" as const,
                     label: "Pi Network",
                     asset: "PI" as const,
@@ -318,7 +350,13 @@ function CryptoWalletPage() {
                     <Link
                       to="/wallet/receive"
                       search={
-                        a.key === "ousd" || a.key === "btc" || a.key === "eth" || a.key === "sol" || a.key === "pi"
+                        a.key === "ousd" ||
+                        a.key === "btc" ||
+                        a.key === "eth" ||
+                        a.key === "sol" ||
+                        a.key === "usdc" ||
+                        a.key === "usdt" ||
+                        a.key === "pi"
                           ? {
                               network:
                                 a.key === "ousd"
@@ -329,8 +367,19 @@ function CryptoWalletPage() {
                                       ? "ethereum"
                                       : a.key === "sol"
                                         ? "solana"
-                                        : "pi",
-                              asset: a.symbol as "OUSD" | "BTC" | "ETH" | "SOL" | "PI",
+                                        : a.key === "usdc"
+                                          ? "usdc"
+                                          : a.key === "usdt"
+                                            ? "usdt"
+                                            : "pi",
+                              asset: a.symbol as
+                                | "OUSD"
+                                | "BTC"
+                                | "ETH"
+                                | "SOL"
+                                | "USDC"
+                                | "USDT"
+                                | "PI",
                             }
                           : { network: "openpay", token: a.key }
                       }

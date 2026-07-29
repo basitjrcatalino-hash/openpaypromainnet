@@ -38,7 +38,7 @@ import {
 const sendSearchSchema = z.object({
   to: z.string().optional(),
   amount: z.string().optional(),
-  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL"]).optional(),
+  asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT"]).optional(),
   token: z.string().uuid().optional(),
   rail: z.enum(["wallet", "openpay"]).optional(),
 });
@@ -54,7 +54,7 @@ type Step = "asset" | "recipient" | "amount" | "review";
 
 type SendableAsset = {
   key: string;
-  kind: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "TOKEN";
+  kind: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "TOKEN";
   tokenId?: string;
   name: string;
   symbol: string;
@@ -187,8 +187,8 @@ function SendPage() {
       },
     ];
     const majors: Array<{
-      key: "BTC" | "ETH" | "SOL" | "PI";
-      kind: "BTC" | "ETH" | "SOL" | "PI";
+      key: "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
+      kind: "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
       name: string;
       bal: number;
       price: number;
@@ -217,6 +217,22 @@ function SendPage() {
         bal: Number(wallet?.sol_balance ?? 0),
         price: majorMarketById(majorMarkets, "sol").price,
         logo: MAJOR_TOKENS.sol.logoUrl,
+      },
+      {
+        key: "USDC",
+        kind: "USDC",
+        name: MAJOR_TOKENS.usdc.name,
+        bal: Number((wallet as { usdc_balance?: number } | null)?.usdc_balance ?? 0),
+        price: majorMarketById(majorMarkets, "usdc").price,
+        logo: MAJOR_TOKENS.usdc.logoUrl,
+      },
+      {
+        key: "USDT",
+        kind: "USDT",
+        name: MAJOR_TOKENS.usdt.name,
+        bal: Number((wallet as { usdt_balance?: number } | null)?.usdt_balance ?? 0),
+        price: majorMarketById(majorMarkets, "usdt").price,
+        logo: MAJOR_TOKENS.usdt.logoUrl,
       },
       {
         key: "PI",
@@ -278,6 +294,8 @@ function SendPage() {
     wallet?.btc_balance,
     wallet?.eth_balance,
     wallet?.sol_balance,
+    (wallet as { usdc_balance?: number } | null)?.usdc_balance,
+    (wallet as { usdt_balance?: number } | null)?.usdt_balance,
     holdings,
     deepToken,
     search.asset,
@@ -375,7 +393,16 @@ function SendPage() {
         },
         replace: true,
       });
-    } else if (p.asset && (p.asset === "OUSD" || p.asset === "PI" || p.asset === "BTC" || p.asset === "ETH" || p.asset === "SOL")) {
+    } else if (
+      p.asset &&
+      (p.asset === "OUSD" ||
+        p.asset === "PI" ||
+        p.asset === "BTC" ||
+        p.asset === "ETH" ||
+        p.asset === "SOL" ||
+        p.asset === "USDC" ||
+        p.asset === "USDT")
+    ) {
       setSelectedKey(p.asset);
     }
     // Auto-select rail from QR type (Pro wallet vs OpenPay)

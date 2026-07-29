@@ -1,14 +1,16 @@
 /**
- * Major tokens — Phantom-style catalog for BTC / ETH / SOL / PI.
+ * Major tokens — Phantom-style catalog for BTC / ETH / SOL / PI / USDC / USDT.
  * Market stats refreshed from CoinGecko public API.
  * Refs:
  * - https://www.coingecko.com/en/coins/bitcoin
  * - https://www.coingecko.com/en/coins/ethereum
  * - https://www.coingecko.com/en/coins/solana
  * - https://www.coingecko.com/en/coins/pi-network
+ * - https://phantom.com/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (USDC)
+ * - https://phantom.com/tokens/solana/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB (USDT)
  */
 
-export type MajorTokenId = "btc" | "eth" | "sol" | "pi";
+export type MajorTokenId = "btc" | "eth" | "sol" | "pi" | "usdc" | "usdt";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -25,8 +27,12 @@ export type MajorTokenDef = {
   createdLabel: string;
   createdAt: string;
   about: string;
-  /** Native chain asset (no ERC-20 / SPL contract in OpenPay) */
-  native: true;
+  /** Native chain asset (no ERC-20 / SPL contract) */
+  native: boolean;
+  /** Verified Solana SPL mint when applicable */
+  mintAddress?: string;
+  /** Phantom token page for mint verification */
+  phantomUrl?: string;
 };
 
 export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
@@ -98,12 +104,52 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "Pi Network is a mobile-first cryptocurrency project that lets users mine PI from their phones with a social consensus model. The open mainnet listed PI for trading in 2025. PI is the native asset of the Pi blockchain — used for transfers, ecosystem apps, and network participation. Market data is sourced from CoinGecko.",
   },
+  usdc: {
+    id: "usdc",
+    name: "USD Coin",
+    symbol: "USDC",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    website: "https://www.circle.com/usdc",
+    twitter: "https://x.com/circle",
+    coingeckoId: "usd-coin",
+    moonpayCode: "usdc",
+    createdLabel: "Sep 2018",
+    createdAt: "2018-09-26T00:00:00.000Z",
+    native: false,
+    mintAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    about:
+      "USDC is a fully reserved USD stablecoin issued by Circle, natively available on Solana as an SPL token. OpenPay Pro credits USDC to your custodial ledger at market price. Always verify the Solana mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v before accepting external transfers — counterfeit look-alikes exist.",
+  },
+  usdt: {
+    id: "usdt",
+    name: "Tether",
+    symbol: "USDT",
+    network: "Solana",
+    category: "Stablecoin",
+    logoUrl: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
+    website: "https://tether.to",
+    twitter: "https://x.com/Tether_to",
+    coingeckoId: "tether",
+    moonpayCode: "usdt",
+    createdLabel: "Oct 2014",
+    createdAt: "2014-10-06T00:00:00.000Z",
+    native: false,
+    mintAddress: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    about:
+      "USDT (Tether) is the largest USD-pegged stablecoin, issued by Tether Limited. On Solana it runs as a native SPL token. OpenPay Pro credits USDT to your custodial ledger at market price. Confirm the mint Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB before accepting external USDT — fake stables with similar names circulate on Solana.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
 
 export function isMajorTokenId(id: string): id is MajorTokenId {
-  return id === "btc" || id === "eth" || id === "sol" || id === "pi";
+  return id === "btc" || id === "eth" || id === "sol" || id === "pi" || id === "usdc" || id === "usdt";
 }
 
 export function getMajorToken(id: string): MajorTokenDef | null {
@@ -117,11 +163,16 @@ export const MAJOR_SYMBOLS = new Set([
   "ETH",
   "SOL",
   "PI",
+  "USDC",
+  "USDT",
   "BITCOIN",
   "ETHEREUM",
   "SOLANA",
   "PI NETWORK",
   "PINETWORK",
+  "USD COIN",
+  "USDCOIN",
+  "TETHER",
 ]);
 
 export type MajorMarketSnapshot = {
@@ -159,6 +210,8 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   ethereum: "eth",
   solana: "sol",
   "pi-network": "pi",
+  "usd-coin": "usdc",
+  tether: "usdt",
 };
 
 /** Fallback static values if CoinGecko is unreachable. */
@@ -210,6 +263,30 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atl: 0.070586,
     athDate: "2025-02-26T08:41:03.000Z",
     atlDate: "2026-07-14T02:37:30.000Z",
+  },
+  usdc: {
+    price: 1,
+    change24h: 0,
+    marketCap: 7.5e10,
+    volume24h: 1.3e10,
+    totalSupply: 7.45e10,
+    circulatingSupply: 7.45e10,
+    ath: 1.17,
+    atl: 0.877647,
+    athDate: "2019-05-08T00:00:00.000Z",
+    atlDate: "2023-03-11T00:00:00.000Z",
+  },
+  usdt: {
+    price: 1,
+    change24h: 0,
+    marketCap: 1.6e11,
+    volume24h: 8e10,
+    totalSupply: 1.6e11,
+    circulatingSupply: 1.6e11,
+    ath: 1.32,
+    atl: 0.572521,
+    athDate: "2018-07-24T00:00:00.000Z",
+    atlDate: "2015-03-02T00:00:00.000Z",
   },
 };
 

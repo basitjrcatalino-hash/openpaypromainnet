@@ -30,8 +30,10 @@ import { shortAddress } from "@/lib/wallet-utils";
 const RECEIVE_NOTE_KEY = "openpay-receive-wallet-note-v1";
 
 const searchSchema = z.object({
-  network: z.enum(["openpay", "bitcoin", "ethereum", "solana", "pi"]).optional(),
-  asset: z.enum(["OUSD", "BTC", "ETH", "SOL", "PI"]).optional(),
+  network: z
+    .enum(["openpay", "bitcoin", "ethereum", "solana", "usdc", "usdt", "pi"])
+    .optional(),
+  asset: z.enum(["OUSD", "BTC", "ETH", "SOL", "USDC", "USDT", "PI"]).optional(),
   /** OpenToken uuid — receive QR for a specific OpenPay token (not OUSD/majors). */
   token: z.string().uuid().optional(),
 });
@@ -42,8 +44,8 @@ export const Route = createFileRoute("/_authenticated/wallet_/receive")({
   component: WalletReceivePage,
 });
 
-type NetworkId = "openpay" | "bitcoin" | "ethereum" | "solana" | "pi";
-type AssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "PI";
+type NetworkId = "openpay" | "bitcoin" | "ethereum" | "solana" | "usdc" | "usdt" | "pi";
+type AssetCode = "OUSD" | "BTC" | "ETH" | "SOL" | "USDC" | "USDT" | "PI";
 type ReceiveToken = {
   id: string;
   name: string;
@@ -89,6 +91,20 @@ const NETWORKS: Array<{
     logoUrl: MAJOR_TOKENS.sol.logoUrl,
   },
   {
+    id: "usdc",
+    label: "USDC",
+    asset: "USDC",
+    accent: "#2775CA",
+    logoUrl: MAJOR_TOKENS.usdc.logoUrl,
+  },
+  {
+    id: "usdt",
+    label: "USDT",
+    asset: "USDT",
+    accent: "#26A17B",
+    logoUrl: MAJOR_TOKENS.usdt.logoUrl,
+  },
+  {
     id: "pi",
     label: "Pi Network",
     asset: "PI",
@@ -101,6 +117,8 @@ function networkFromAsset(asset: AssetCode): NetworkId {
   if (asset === "BTC") return "bitcoin";
   if (asset === "ETH") return "ethereum";
   if (asset === "SOL") return "solana";
+  if (asset === "USDC") return "usdc";
+  if (asset === "USDT") return "usdt";
   if (asset === "PI") return "pi";
   return "openpay";
 }

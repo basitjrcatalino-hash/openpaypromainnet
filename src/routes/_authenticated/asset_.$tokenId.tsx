@@ -57,6 +57,10 @@ import {
   fetchMajorMarkets,
   majorMarketById,
 } from "@/lib/major-tokens";
+import {
+  LEDGER_BALANCE_COLUMN,
+  type LedgerAssetCode,
+} from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
@@ -96,10 +100,10 @@ function PhantomAssetDetail() {
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
   const isPiMajor = isMajor && majorDef?.id === "pi";
   /** OpenPay ledger asset for receive QR / send (majors except PI settle as OUSD). */
-  const ledgerAsset: "OUSD" | "PI" | "BTC" | "ETH" | "SOL" = isOusd
+  const ledgerAsset: LedgerAssetCode = isOusd
     ? "OUSD"
     : isMajor && majorDef
-      ? (majorDef.symbol as "PI" | "BTC" | "ETH" | "SOL")
+      ? (majorDef.symbol as Exclude<LedgerAssetCode, "OUSD">)
       : "OUSD";
 
   const [period, setPeriod] = useState<PhantomPeriod>("1D");
@@ -121,8 +125,14 @@ function PhantomAssetDetail() {
         btc_balance: number | null;
         eth_balance: number | null;
         sol_balance: number | null;
+        usdc_balance: number | null;
+        usdt_balance: number | null;
         name: string | null;
-      }>(supabase, user.id, "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, name"),
+      }>(
+        supabase,
+        user.id,
+        "id, user_id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance, name",
+      ),
   });
 
   const { data: token, isLoading: tokenLoading } = useQuery({
@@ -233,8 +243,8 @@ function PhantomAssetDetail() {
         category: majorDef.category,
         volume24h: m.volume24h,
         createdAt: majorDef.createdAt,
-        contract: wallet?.address ?? null,
-        status: "native",
+        contract: majorDef.mintAddress ?? wallet?.address ?? null,
+        status: majorDef.native ? "native" : "stablecoin",
         nativeMajor: true,
       };
     }
@@ -269,13 +279,7 @@ function PhantomAssetDetail() {
     : isMajor && majorDef
       ? Number(
           (wallet as Record<string, unknown> | null | undefined)?.[
-            majorDef.id === "btc"
-              ? "btc_balance"
-              : majorDef.id === "eth"
-                ? "eth_balance"
-                : majorDef.id === "sol"
-                  ? "sol_balance"
-                  : "pi_balance"
+            LEDGER_BALANCE_COLUMN[majorDef.id]
           ] ?? 0,
         )
       : Number(holding ?? 0);

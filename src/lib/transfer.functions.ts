@@ -3,7 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   fetchMajorUsdPrices,
+  majorBalancePatch,
   majorIdFromAssetCode,
+  readMajorBalance,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 
@@ -11,7 +13,7 @@ const SendSchema = z
   .object({
     to: z.string().trim().min(2).max(120),
     amount: z.number().positive().max(1e15),
-    asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "TOKEN"]),
+    asset: z.enum(["OUSD", "PI", "BTC", "ETH", "SOL", "USDC", "USDT", "TOKEN"]),
     tokenId: z.string().uuid().optional().nullable(),
     memo: z.string().max(140).optional().nullable(),
   })
@@ -74,7 +76,7 @@ async function resolveRecipientAddress(
 }
 
 const WALLET_SELECT =
-  "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance";
+  "id, address, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance";
 
 export const sendAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -152,29 +154,11 @@ async function sendLedgerNative(opts: {
   userId: string;
 }) {
   const { supabase, admin, wallet, toAddress, asset, major, amount, memo, userId } = opts;
-  const cur = major
-    ? Number(
-        major === "btc"
-          ? wallet.btc_balance
-          : major === "eth"
-            ? wallet.eth_balance
-            : major === "sol"
-              ? wallet.sol_balance
-              : wallet.pi_balance,
-      )
-    : Number(wallet.ousd_balance ?? 0);
+  const cur = major ? readMajorBalance(wallet, major) : Number(wallet.ousd_balance ?? 0);
   if (cur + 1e-12 < amount) throw new Error(`Insufficient ${asset} balance`);
 
   const next = major ? round12(cur - amount) : round8(cur - amount);
-  const senderPatch = major
-    ? major === "btc"
-      ? { btc_balance: next }
-      : major === "eth"
-        ? { eth_balance: next }
-        : major === "sol"
-          ? { sol_balance: next }
-          : { pi_balance: next }
-    : { ousd_balance: next };
+  const senderPatch = major ? majorBalancePatch(major, next) : { ousd_balance: next };
   const { error: updErr } = await supabase
     .from("wallets")
     .update(senderPatch)
@@ -198,26 +182,10 @@ async function sendLedgerNative(opts: {
         .maybeSingle();
       if (rcpt) {
         const rCur = major
-          ? Number(
-              major === "btc"
-                ? rcpt.btc_balance
-                : major === "eth"
-                  ? rcpt.eth_balance
-                  : major === "sol"
-                    ? rcpt.sol_balance
-                    : rcpt.pi_balance,
-            )
+          ? readMajorBalance(rcpt as Record<string, unknown>, major)
           : Number(rcpt.ousd_balance ?? 0);
         const rNext = major ? round12(rCur + amount) : round8(rCur + amount);
-        const rcptPatch = major
-          ? major === "btc"
-            ? { btc_balance: rNext }
-            : major === "eth"
-              ? { eth_balance: rNext }
-              : major === "sol"
-                ? { sol_balance: rNext }
-                : { pi_balance: rNext }
-          : { ousd_balance: rNext };
+        const rcptPatch = major ? majorBalancePatch(major, rNext) : { ousd_balance: rNext };
         await admin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
         await admin.from("transactions").insert({
           wallet_id: rcpt.id,

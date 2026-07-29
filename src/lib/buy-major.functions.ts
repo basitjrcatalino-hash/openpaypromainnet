@@ -3,13 +3,15 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   fetchMajorUsdPrices,
+  majorBalancePatch,
+  readMajorBalance,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
-import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, isMajorTokenId } from "@/lib/major-tokens";
 
 const BuyMajorSchema = z.object({
   wallet_id: z.string().uuid(),
-  major_id: z.enum(["btc", "eth", "sol", "pi"]),
+  major_id: z.string().refine(isMajorTokenId, "Invalid major"),
   /** USD / OUSD to spend */
   usd_amount: z.number().positive().min(0.01).max(50_000),
 });
@@ -22,7 +24,7 @@ function round12(n: number) {
 }
 
 /**
- * Spend OUSD from the Pro wallet and credit BTC/ETH/SOL/PI at live CoinGecko price.
+ * Spend OUSD from the Pro wallet and credit a major ledger balance at live CoinGecko price.
  */
 export const buyMajorWithOusd = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -31,11 +33,13 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const major = data.major_id as LedgerMajorId;
     const usd = round8(data.usd_amount);
-  const def = MAJOR_TOKENS[major];
+    const def = MAJOR_TOKENS[major];
 
-  const { data: wallet, error: walErr } = await supabase
+    const { data: wallet, error: walErr } = await supabase
       .from("wallets")
-      .select("id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance")
+      .select(
+        "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
+      )
       .eq("id", data.wallet_id)
       .eq("user_id", userId)
       .maybeSingle();
@@ -54,24 +58,11 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     const tokenAmt = round12(usd / price);
     if (tokenAmt <= 0) throw new Error("Amount too small");
 
-    const curMajor = Number(
-      major === "btc"
-        ? wallet.btc_balance
-        : major === "eth"
-          ? wallet.eth_balance
-          : major === "sol"
-            ? wallet.sol_balance
-            : wallet.pi_balance,
-    );
-
-    const patch =
-      major === "btc"
-        ? { ousd_balance: round8(ousd - usd), btc_balance: round12(curMajor + tokenAmt) }
-        : major === "eth"
-          ? { ousd_balance: round8(ousd - usd), eth_balance: round12(curMajor + tokenAmt) }
-          : major === "sol"
-            ? { ousd_balance: round8(ousd - usd), sol_balance: round12(curMajor + tokenAmt) }
-            : { ousd_balance: round8(ousd - usd), pi_balance: round12(curMajor + tokenAmt) };
+    const curMajor = readMajorBalance(wallet as unknown as Record<string, unknown>, major);
+    const patch = {
+      ousd_balance: round8(ousd - usd),
+      ...majorBalancePatch(major, round12(curMajor + tokenAmt)),
+    };
 
     const { error: updErr } = await supabase
       .from("wallets")

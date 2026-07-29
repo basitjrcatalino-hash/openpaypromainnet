@@ -176,6 +176,8 @@ function Dashboard() {
     const btcM = majorMarketById(majorMarkets, "btc");
     const ethM = majorMarketById(majorMarkets, "eth");
     const solM = majorMarketById(majorMarkets, "sol");
+    const usdcM = majorMarketById(majorMarkets, "usdc");
+    const usdtM = majorMarketById(majorMarkets, "usdt");
     const piM = majorMarketById(majorMarkets, "pi");
     return [
       {
@@ -215,6 +217,24 @@ function Dashboard() {
         priceUsd: solM.price,
         change24h: solM.change24h,
         logoUrl: MAJOR_TOKENS.sol.logoUrl,
+      },
+      {
+        id: "usdc",
+        name: MAJOR_TOKENS.usdc.name,
+        symbol: "USDC",
+        balance: Number((wallet as { usdc_balance?: number }).usdc_balance ?? 0),
+        priceUsd: usdcM.price,
+        change24h: usdcM.change24h,
+        logoUrl: MAJOR_TOKENS.usdc.logoUrl,
+      },
+      {
+        id: "usdt",
+        name: MAJOR_TOKENS.usdt.name,
+        symbol: "USDT",
+        balance: Number((wallet as { usdt_balance?: number }).usdt_balance ?? 0),
+        priceUsd: usdtM.price,
+        change24h: usdtM.change24h,
+        logoUrl: MAJOR_TOKENS.usdt.logoUrl,
       },
       {
         id: "pi",

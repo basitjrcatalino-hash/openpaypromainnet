@@ -12,9 +12,13 @@ import {
   OUSD_SWAP_ID,
   PI_SWAP_ID,
   SOL_SWAP_ID,
+  USDC_SWAP_ID,
+  USDT_SWAP_ID,
   fetchMajorUsdPrices,
   isLedgerSwapId,
+  majorBalancePatch,
   majorIdFromSwapId,
+  readMajorBalance,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
@@ -25,6 +29,8 @@ export {
   BTC_SWAP_ID,
   ETH_SWAP_ID,
   SOL_SWAP_ID,
+  USDC_SWAP_ID,
+  USDT_SWAP_ID,
 } from "@/lib/ledger-majors";
 export { OPENDEX_SWAP_FEE_BPS, applyOpenDexFee, opendexFeePct } from "@/lib/opendex-fee";
 
@@ -54,7 +60,7 @@ type QuoteToken = {
 };
 
 const WALLET_COLS =
-  "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance";
+  "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance";
 
 export const executeOpenDexSwap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -168,11 +174,8 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     }
 
     const readBal = (major: LedgerMajorId | null, isOusd: boolean) => {
-      if (isOusd) return Number(wallet.ousd_balance ?? 0);
-      if (major === "btc") return Number(wallet.btc_balance ?? 0);
-      if (major === "eth") return Number(wallet.eth_balance ?? 0);
-      if (major === "sol") return Number(wallet.sol_balance ?? 0);
-      if (major === "pi") return Number(wallet.pi_balance ?? 0);
+      if (isOusd) return Number((wallet as { ousd_balance?: number }).ousd_balance ?? 0);
+      if (major) return readMajorBalance(wallet as unknown as Record<string, unknown>, major);
       return null;
     };
 
@@ -201,14 +204,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     } else if (fromMajor) {
       const next = round12(fromBal - amtIn);
-      const patch =
-        fromMajor === "btc"
-          ? { btc_balance: next }
-          : fromMajor === "eth"
-            ? { eth_balance: next }
-            : fromMajor === "sol"
-              ? { sol_balance: next }
-              : { pi_balance: next };
+      const patch = majorBalancePatch(fromMajor, next);
       const { error } = await supabase
         .from("wallets")
         .update(patch)
@@ -249,26 +245,14 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     } else if (toMajor) {
       const { data: fresh } = await supabase
         .from("wallets")
-        .select("pi_balance, btc_balance, eth_balance, sol_balance")
+        .select(
+          "id, user_id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance",
+        )
         .eq("id", wallet_id)
         .maybeSingle();
-      const cur =
-        toMajor === "btc"
-          ? Number(fresh?.btc_balance ?? 0)
-          : toMajor === "eth"
-            ? Number(fresh?.eth_balance ?? 0)
-            : toMajor === "sol"
-              ? Number(fresh?.sol_balance ?? 0)
-              : Number(fresh?.pi_balance ?? 0);
+      const cur = readMajorBalance(fresh as unknown as Record<string, unknown> | null, toMajor);
       const next = round12(cur + netOut);
-      const patch =
-        toMajor === "btc"
-          ? { btc_balance: next }
-          : toMajor === "eth"
-            ? { eth_balance: next }
-            : toMajor === "sol"
-              ? { sol_balance: next }
-              : { pi_balance: next };
+      const patch = majorBalancePatch(toMajor, next);
       const { error } = await supabase
         .from("wallets")
         .update(patch)

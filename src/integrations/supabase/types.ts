@@ -1027,6 +1027,8 @@ export type Database = {
           btc_balance: number
           eth_balance: number
           sol_balance: number
+          usdc_balance: number
+          usdt_balance: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1042,6 +1044,8 @@ export type Database = {
           btc_balance?: number
           eth_balance?: number
           sol_balance?: number
+          usdc_balance?: number
+          usdt_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id: string
@@ -1057,6 +1061,8 @@ export type Database = {
           btc_balance?: number
           eth_balance?: number
           sol_balance?: number
+          usdc_balance?: number
+          usdt_balance?: number
           recovery_hash?: string | null
           removed_at?: string | null
           user_id?: string

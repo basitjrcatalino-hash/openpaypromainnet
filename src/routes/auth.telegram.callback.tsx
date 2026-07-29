@@ -17,6 +17,22 @@ export const Route = createFileRoute("/auth/telegram/callback")({
   component: TelegramAuthCallbackPage,
 });
 
+function parseTgAuthResult(): { code?: string; state?: string; error?: string } | null {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash;
+  if (!hash.includes("tgAuthResult")) return null;
+  try {
+    const fragment = hash.replace(/^#/, "");
+    const params = new URLSearchParams(fragment);
+    const raw = params.get("tgAuthResult");
+    if (raw) {
+      const decoded = JSON.parse(atob(raw));
+      return decoded;
+    }
+  } catch {}
+  return null;
+}
+
 function TelegramAuthCallbackPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -29,23 +45,29 @@ function TelegramAuthCallbackPage() {
 
     const redirect = sessionStorage.getItem("telegram_oauth_redirect") || "/dashboard";
 
+    // Handle fragment-based response (when redirect URI not registered in BotFather)
+    const fragmentResult = parseTgAuthResult();
+    const code = search.code || fragmentResult?.code;
+    const state = search.state || fragmentResult?.state;
+    const searchError = search.error || fragmentResult?.error;
+
     (async () => {
-      if (search.error) {
-        const denied = /access_denied|cancel/i.test(search.error);
+      if (searchError) {
+        const denied = /access_denied|cancel/i.test(searchError);
         setError(
           denied
             ? "Sign-in cancelled — you denied Telegram access."
-            : search.error_description || `Telegram sign-in failed: ${search.error}`,
+            : search.error_description || `Telegram sign-in failed: ${searchError}`,
         );
         return;
       }
-      if (!search.code || !search.state) {
+      if (!code || !state) {
         setError("Missing authorization code from Telegram.");
         return;
       }
 
       const savedState = sessionStorage.getItem("telegram_oauth_state");
-      if (savedState && savedState !== search.state) {
+      if (savedState && savedState !== state) {
         setError("State mismatch — possible CSRF. Please try again.");
         return;
       }
@@ -55,7 +77,7 @@ function TelegramAuthCallbackPage() {
         const res = await fetch("/api/public/telegram-auth", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code: search.code, state: search.state }),
+          body: JSON.stringify({ code, state }),
         });
         const body = (await res.json().catch(() => ({}))) as {
           email?: string;

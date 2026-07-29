@@ -31,7 +31,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Secrets
-.env
-.env.*
-!.env.example
+# Local overrides only — Lovable deploy bootstraps from committed `.env`
+.env.local
+.env.*.local

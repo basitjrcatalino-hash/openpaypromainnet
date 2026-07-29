@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,9 @@ function BagsFeesPage() {
   const [wallet, setWallet] = useState<string | null>(null);
   const [mint, setMint] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmClaim, setConfirmClaim] = useState(false);
+  const [confirmPartnerClaim, setConfirmPartnerClaim] = useState(false);
+  const [confirmPartnerConfig, setConfirmPartnerConfig] = useState(false);
   const [partnerInfo, setPartnerInfo] = useState<string | null>(null);
   const [lastSigs, setLastSigs] = useState<string[]>([]);
 
@@ -184,7 +188,7 @@ function BagsFeesPage() {
           type="button"
           className="h-11 w-full rounded-full font-bold"
           disabled={busy}
-          onClick={() => void claimTokenFees()}
+          onClick={() => setConfirmClaim(true)}
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Claim fees"}
         </Button>
@@ -220,7 +224,7 @@ function BagsFeesPage() {
             variant="secondary"
             className="h-11 rounded-full"
             disabled={busy}
-            onClick={() => void createPartnerConfig()}
+            onClick={() => setConfirmPartnerConfig(true)}
           >
             Create config
           </Button>
@@ -228,7 +232,7 @@ function BagsFeesPage() {
             type="button"
             className="h-11 rounded-full font-bold"
             disabled={busy}
-            onClick={() => void claimPartnerFees()}
+            onClick={() => setConfirmPartnerClaim(true)}
           >
             Claim partner
           </Button>
@@ -239,6 +243,51 @@ function BagsFeesPage() {
           </pre>
         ) : null}
       </section>
+
+      <TxConfirmModal
+        open={confirmClaim}
+        onOpenChange={setConfirmClaim}
+        title="Confirm fee claim"
+        description="You'll sign claim transaction(s) in Phantom"
+        rows={[
+          { label: "Token mint", value: mint.trim() || "—", mono: true },
+          { label: "Wallet", value: wallet ?? "Connect Phantom", mono: true },
+        ]}
+        confirmLabel="Confirm & claim"
+        busy={busy}
+        onConfirm={async () => {
+          await claimTokenFees();
+          setConfirmClaim(false);
+        }}
+      />
+
+      <TxConfirmModal
+        open={confirmPartnerConfig}
+        onOpenChange={setConfirmPartnerConfig}
+        title="Confirm partner config"
+        description="Create on-chain partner config with Phantom"
+        rows={[{ label: "Wallet", value: wallet ?? "Connect Phantom", mono: true }]}
+        confirmLabel="Confirm & create"
+        busy={busy}
+        onConfirm={async () => {
+          await createPartnerConfig();
+          setConfirmPartnerConfig(false);
+        }}
+      />
+
+      <TxConfirmModal
+        open={confirmPartnerClaim}
+        onOpenChange={setConfirmPartnerClaim}
+        title="Confirm partner claim"
+        description="Claim partner fees with Phantom"
+        rows={[{ label: "Wallet", value: wallet ?? "Connect Phantom", mono: true }]}
+        confirmLabel="Confirm & claim"
+        busy={busy}
+        onConfirm={async () => {
+          await claimPartnerFees();
+          setConfirmPartnerClaim(false);
+        }}
+      />
 
       {lastSigs.length ? (
         <ul className="mt-4 space-y-1 text-sm">

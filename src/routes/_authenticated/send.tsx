@@ -11,7 +11,6 @@ import {
   Copy,
   Link2,
   Loader2,
-  Send as SendIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -23,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { OusdIcon } from "@/components/ousd-icon";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { QrScannerButton } from "@/components/qr-scanner";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { sendAsset } from "@/lib/transfer.functions";
 import { sendViaOpenPay, resolveOpenPayAccount, getOpenPayLinkStatus, startOpenPayConnect } from "@/lib/openpay-pro.functions";
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_authenticated/send")({
 });
 
 type Rail = "wallet" | "openpay";
-type Step = "asset" | "recipient" | "amount" | "review";
+type Step = "asset" | "recipient" | "amount";
 
 type SendableAsset = {
   key: string;
@@ -90,6 +90,7 @@ function SendPage() {
 
   const [step, setStep] = useState<Step>("asset");
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [connectBusy, setConnectBusy] = useState(false);
   const [rail, setRail] = useState<Rail>(search.rail === "openpay" ? "openpay" : "wallet");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -539,11 +540,20 @@ function SendPage() {
       setStep("asset");
       return;
     }
-    if (step === "amount") {
-      setStep("recipient");
+    setStep("recipient");
+  }
+
+  function continueFromAmount() {
+    if (!selected) return;
+    if (!amountValid) {
+      toast.error("Enter an amount");
       return;
     }
-    setStep("amount");
+    if (insufficient) {
+      toast.error(`Insufficient ${selected.symbol}`);
+      return;
+    }
+    setConfirmOpen(true);
   }
 
   function continueFromRecipient() {
@@ -560,19 +570,6 @@ function SendPage() {
       return;
     }
     setStep("amount");
-  }
-
-  function continueFromAmount() {
-    if (!selected) return;
-    if (!amountValid) {
-      toast.error("Enter an amount");
-      return;
-    }
-    if (insufficient) {
-      toast.error(`Insufficient ${selected.symbol}`);
-      return;
-    }
-    setStep("review");
   }
 
   async function confirmSend() {
@@ -630,6 +627,7 @@ function SendPage() {
       setMemo("");
       setOpPreview(null);
       setSelectedKey(null);
+      setConfirmOpen(false);
       setStep("asset");
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -643,7 +641,6 @@ function SendPage() {
     asset: "Select asset",
     recipient: "Send to",
     amount: "Enter amount",
-    review: "Review",
   };
 
   return (
@@ -1031,54 +1028,45 @@ function SendPage() {
         </div>
       )}
 
-      {step === "review" && selected && (
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-border bg-card p-5 text-center">
-            <AssetAvatar asset={selected} className="mx-auto mb-3 h-14 w-14" />
-            <div className="text-3xl font-bold tabular-nums text-foreground">
-              {formatNumber(amountNum, amountNum < 1 ? 6 : 4)} {selected.symbol}
-            </div>
-            <div className="mt-1 text-sm text-muted-foreground">{formatUSD(usdEstimate)}</div>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-border bg-card">
-            <ReviewRow label="Asset" value={`${selected.name} (${selected.symbol})`} />
-            <ReviewRow
-              label="To"
-              value={
-                rail === "openpay"
-                  ? opPreview?.account_number || to
-                  : to.startsWith("0x")
-                    ? shortAddress(to, 8, 6)
-                    : to
-              }
-            />
-            <ReviewRow
-              label="Via"
-              value={rail === "openpay" ? "OpenPay balance" : "OpenPay Pro wallet"}
-              last={!memo.trim()}
-            />
-            {memo.trim() && <ReviewRow label="Note" value={memo.trim()} last />}
-          </div>
-
-          <Button
-            type="button"
-            disabled={busy}
-            onClick={() => void confirmSend()}
-            className={cn(
-              "h-12 w-full rounded-full text-base font-semibold text-primary-foreground",
-              rail === "openpay" ? "bg-[#0070BA] hover:opacity-90" : "bg-primary",
-            )}
-          >
-            {busy ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <SendIcon className="mr-2 h-4 w-4" />
-            )}
-            {rail === "openpay" ? "Send via OpenPay" : `Send ${selected.symbol}`}
-          </Button>
-        </div>
-      )}
+      <TxConfirmModal
+        open={confirmOpen && !!selected}
+        onOpenChange={setConfirmOpen}
+        title="Confirm send"
+        description="Review details before sending"
+        icon={selected ? <AssetAvatar asset={selected} className="h-14 w-14" /> : undefined}
+        amount={
+          selected
+            ? `${formatNumber(amountNum, amountNum < 1 ? 6 : 4)} ${selected.symbol}`
+            : undefined
+        }
+        subtitle={formatUSD(usdEstimate)}
+        rows={
+          selected
+            ? [
+                { label: "Asset", value: `${selected.name} (${selected.symbol})` },
+                {
+                  label: "To",
+                  value:
+                    rail === "openpay"
+                      ? opPreview?.account_number || to
+                      : to.startsWith("0x")
+                        ? shortAddress(to, 8, 6)
+                        : to,
+                  mono: rail !== "openpay",
+                },
+                {
+                  label: "Via",
+                  value: rail === "openpay" ? "OpenPay balance" : "OpenPay Pro wallet",
+                },
+                ...(memo.trim() ? [{ label: "Note", value: memo.trim() }] : []),
+              ]
+            : []
+        }
+        confirmLabel={rail === "openpay" ? "Send via OpenPay" : `Send ${selected?.symbol ?? ""}`}
+        busy={busy}
+        variant={rail === "openpay" ? "openpay" : "default"}
+        onConfirm={() => void confirmSend()}
+      />
     </div>
   );
 }
@@ -1142,28 +1130,6 @@ function AssetAvatar({
       )}
     >
       {asset.symbol.slice(0, 2)}
-    </div>
-  );
-}
-
-function ReviewRow({
-  label,
-  value,
-  last,
-}: {
-  label: string;
-  value: string;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start justify-between gap-4 px-4 py-3 text-sm",
-        !last && "border-b border-border",
-      )}
-    >
-      <span className="text-muted-foreground">{label}</span>
-      <span className="max-w-[65%] text-right font-medium text-foreground break-all">{value}</span>
     </div>
   );
 }

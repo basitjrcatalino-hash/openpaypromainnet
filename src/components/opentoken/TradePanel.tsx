@@ -6,6 +6,7 @@ import { Loader2, X, Link2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buyOpenToken, sellOpenToken } from "@/lib/opentoken.functions";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import {
   createOpenPayTopupCharge,
   getOpenPayLinkStatus,
@@ -102,6 +103,7 @@ export function TradePanel({
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<BuyMethod>("openpay_balance");
 
   const { data: openpayLink } = useQuery({
@@ -342,6 +344,7 @@ export function TradePanel({
   async function submit() {
     if (side === "buy") await executeBuy();
     else await executeSell();
+    setConfirmOpen(false);
   }
 
   if (graduated) {
@@ -627,7 +630,7 @@ export function TradePanel({
             : "bg-red-500 text-white hover:bg-red-500/90",
         )}
         disabled={side === "buy" ? buyDisabled : busy || disabled || !walletId || amt <= 0}
-        onClick={submit}
+        onClick={() => setConfirmOpen(true)}
       >
         {(busy || payBusy) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {side === "buy"
@@ -640,6 +643,70 @@ export function TradePanel({
                 : `Buy $${token.symbol}`
           : `Sell $${token.symbol}`}
       </Button>
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={side === "buy" ? "Confirm buy" : "Confirm sell"}
+        description={
+          side === "buy"
+            ? `Buy $${token.symbol} on the bonding curve`
+            : `Sell $${token.symbol} for OUSD`
+        }
+        amount={
+          side === "buy"
+            ? `${formatNumber(amt, 4)} OUSD`
+            : `${formatNumber(amt, amt < 1 ? 6 : 4)} $${token.symbol}`
+        }
+        subtitle={
+          amt > 0
+            ? quote.kind === "buy"
+              ? `≈ ${formatNumber(quote.tokenOut, 0)} $${token.symbol}`
+              : `≈ ${formatNumber(quote.piOut, 4)} OUSD`
+            : undefined
+        }
+        rows={[
+          { label: "Token", value: `$${token.symbol}` },
+          { label: "Side", value: side === "buy" ? "Buy" : "Sell" },
+          ...(side === "buy"
+            ? [
+                {
+                  label: "Pay with",
+                  value: payMethod === "pi" ? "Pi Network" : "OpenPay / OUSD",
+                },
+                {
+                  label: "You receive",
+                  value:
+                    quote.kind === "buy"
+                      ? `${formatNumber(quote.tokenOut, 0)} $${token.symbol}`
+                      : "—",
+                },
+              ]
+            : [
+                {
+                  label: "You receive",
+                  value:
+                    quote.kind === "sell" ? `${formatNumber(quote.piOut, 4)} OUSD` : "—",
+                },
+              ]),
+          {
+            label: "Fee",
+            value: `${formatNumber(quote.fee, 4)} OUSD`,
+          },
+        ]}
+        confirmLabel={
+          side === "buy"
+            ? payMethod === "pi"
+              ? `Pay with Pi & Buy`
+              : needTopup
+                ? `Pay ${formatNumber(topupAmount, 2)} OUSD & Buy`
+                : `Buy $${token.symbol}`
+            : `Sell $${token.symbol}`
+        }
+        busy={busy || payBusy}
+        variant={side === "sell" ? "destructive" : "default"}
+        onConfirm={() => void submit()}
+      />
     </div>
   );
 }

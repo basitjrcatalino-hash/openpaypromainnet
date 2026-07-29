@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,7 @@ function BagsTradePage() {
     raw: Record<string, unknown>;
   } | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function fetchQuote() {
     setBusy(true);
@@ -105,6 +107,7 @@ function BagsTradePage() {
         },
       );
       setSignature(sig ?? null);
+      setConfirmOpen(false);
       toast.success("Swap submitted");
     } catch (err) {
       const msg = (err as Error).message || "Swap failed";
@@ -196,11 +199,47 @@ function BagsTradePage() {
             type="button"
             className="h-12 rounded-full font-bold"
             disabled={busy || !quote}
-            onClick={() => void executeSwap()}
+            onClick={() => setConfirmOpen(true)}
           >
             {busy && quote ? <Loader2 className="h-5 w-5 animate-spin" /> : "Swap"}
           </Button>
         </div>
+
+        <TxConfirmModal
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Confirm Bags swap"
+          description="You'll sign this swap in Phantom"
+          amount={amount}
+          subtitle="Amount in smallest units"
+          rows={[
+            { label: "Input mint", value: inputMint, mono: true },
+            { label: "Output mint", value: outputMint, mono: true },
+            { label: "You pay", value: amount, mono: true },
+            {
+              label: "Est. out",
+              value: quote?.outAmount ?? "—",
+              mono: true,
+            },
+            {
+              label: "Min out",
+              value: quote?.minOutAmount ?? "—",
+              mono: true,
+            },
+            {
+              label: "Impact",
+              value: quote ? `${quote.priceImpactPct}%` : "—",
+            },
+            {
+              label: "Slippage",
+              value: quote ? `${quote.slippageBps / 100}%` : "—",
+            },
+            { label: "Wallet", value: wallet ?? "Connect Phantom", mono: true },
+          ]}
+          confirmLabel="Confirm & sign"
+          busy={busy}
+          onConfirm={() => void executeSwap()}
+        />
 
         {quote ? (
           <div className="rounded-2xl bg-muted/50 px-3 py-3 text-sm">

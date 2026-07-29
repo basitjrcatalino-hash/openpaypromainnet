@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsCashIcon } from "@/components/bags/BagsCashIcon";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,6 +76,7 @@ function BagsLaunchPage() {
   const [feeSharing, setFeeSharing] = useState(true);
   const [initialBuySol, setInitialBuySol] = useState("0.1");
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -198,6 +200,7 @@ function BagsLaunchPage() {
 
       setResultMint(info.tokenMint);
       setResultSig(sig ?? null);
+      setConfirmOpen(false);
       toast.success("Token launched on Bags!");
     } catch (err) {
       const msg = (err as Error).message || "Launch failed";
@@ -563,10 +566,42 @@ function BagsLaunchPage() {
         type="button"
         className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-black hover:bg-emerald-400"
         disabled={busy || uploading}
-        onClick={() => void launch()}
+        onClick={() => setConfirmOpen(true)}
       >
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Launch with Phantom"}
       </Button>
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirm launch"
+        description="You'll sign config + launch transactions in Phantom"
+        icon={
+          imageUrl.trim() ? (
+            <img
+              src={imageUrl}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover ring-4 ring-card"
+            />
+          ) : undefined
+        }
+        amount={`$${symbol.trim() || "TICKER"}`}
+        subtitle={name.trim() || "Token name"}
+        rows={[
+          { label: "Name", value: name.trim() || "—" },
+          { label: "Ticker", value: symbol.trim() || "—" },
+          { label: "Initial buy", value: `${initialBuySol || "0"} SOL` },
+          {
+            label: "Fee sharing",
+            value: feeSharing ? "Enabled" : "Off",
+          },
+          { label: "Wallet", value: wallet ?? "Connect Phantom", mono: true },
+        ]}
+        confirmLabel="Confirm & launch"
+        busy={busy}
+        variant="success"
+        onConfirm={() => void launch()}
+      />
 
       <button
         type="button"

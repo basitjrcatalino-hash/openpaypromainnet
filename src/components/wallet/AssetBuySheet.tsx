@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { buyOpenToken } from "@/lib/opentoken.functions";
 import { isOpenTokenGraduated } from "@/lib/opentoken/bonding-curve";
 import { topUpWithPi } from "@/lib/pi-network";
@@ -137,6 +138,8 @@ export function AssetBuySheet({
   const getOpBalance = useServerFn(getOpenPayLinkedBalance);
 
   const [amount, setAmount] = useState("25");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [awaitingSolana, setAwaitingSolana] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>(
     token.isOusd ? "pi" : "wallet_ousd",
   );
@@ -364,6 +367,7 @@ export function AssetBuySheet({
           await topUpWithPi(amt);
           toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
           await invalidateAfterTopup();
+          setConfirmOpen(false);
           onClose();
           return;
         }
@@ -374,12 +378,14 @@ export function AssetBuySheet({
           const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
           setMoonpaySession({ amount: amt, externalTransactionId });
           setMoonpayVisible(true);
+          setConfirmOpen(false);
           return;
         }
         if (method === "solana") {
           return;
         }
         await startOpenPayCheckout(amt);
+        setConfirmOpen(false);
         return;
       }
 
@@ -389,12 +395,14 @@ export function AssetBuySheet({
             throw new Error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
           }
           await executeMajorBuy(amt);
+          setConfirmOpen(false);
           return;
         }
         if (method === "pi") {
           await topUpWithPi(amt);
           toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
           await executeMajorBuy(amt);
+          setConfirmOpen(false);
           return;
         }
         if (method === "moonpay") {
@@ -481,6 +489,7 @@ export function AssetBuySheet({
       toast.error(msg);
     } finally {
       setBusy(false);
+      setConfirmOpen(false);
     }
   }
 
@@ -617,6 +626,7 @@ export function AssetBuySheet({
           value={method}
           onChange={(m) => {
             setActionError(null);
+            setAwaitingSolana(false);
             setMethod(m);
           }}
           className="mb-4"
@@ -671,7 +681,7 @@ export function AssetBuySheet({
           </div>
         ) : null}
 
-        {method === "solana" && solanaReady ? (
+        {method === "solana" && solanaReady && awaitingSolana ? (
           <SolanaPaymentButton
             mode="buyNow"
             showQR
@@ -699,6 +709,7 @@ export function AssetBuySheet({
                     },
                   });
                   toast.success(`${formatUSD(amtNum)} OUSD credited from Solana`);
+                  setAwaitingSolana(false);
                   if (isMajor && token.majorId) {
                     await executeMajorBuy(amtNum);
                   } else if (graduated) {
@@ -718,15 +729,21 @@ export function AssetBuySheet({
                 }
               })();
             }}
-            onPaymentError={() => setBusy(false)}
-            onCancel={() => setBusy(false)}
+            onPaymentError={() => {
+              setBusy(false);
+              setAwaitingSolana(false);
+            }}
+            onCancel={() => {
+              setBusy(false);
+              setAwaitingSolana(false);
+            }}
           >
             <button
               type="button"
               disabled={busy || !valid || amtNum < MIN_BUY_AMOUNT}
               className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground press disabled:opacity-50"
             >
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continue with Solana"}
             </button>
           </SolanaPaymentButton>
         ) : (
@@ -738,11 +755,55 @@ export function AssetBuySheet({
               !valid ||
               (method === "openpay_checkout" && !openpayLink?.linked)
             }
-            onClick={() => void submit()}
+            onClick={() => setConfirmOpen(true)}
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
           </Button>
         )}
+
+        <TxConfirmModal
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={isOusd ? "Confirm top-up" : "Confirm buy"}
+          description={`Review your ${token.symbol} purchase`}
+          amount={formatUSD(amtNum)}
+          subtitle={
+            !isOusd && token.price > 0
+              ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
+              : token.name
+          }
+          rows={[
+            { label: "Asset", value: `${token.name} (${token.symbol})` },
+            { label: "You pay", value: formatUSD(amtNum) },
+            {
+              label: "Pay with",
+              value:
+                method === "wallet_ousd"
+                  ? "OUSD balance"
+                  : method === "pi"
+                    ? "Pi Network"
+                    : method === "moonpay"
+                      ? "Card (MoonPay)"
+                      : method === "solana"
+                        ? "Solana"
+                        : "OpenPay",
+            },
+            ...(!isOusd && method === "wallet_ousd"
+              ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
+              : []),
+          ]}
+          confirmLabel={method === "solana" ? "Continue" : ctaLabel}
+          busy={busy}
+          variant={method === "openpay_checkout" ? "openpay" : "default"}
+          onConfirm={() => {
+            if (method === "solana" && solanaReady) {
+              setConfirmOpen(false);
+              setAwaitingSolana(true);
+              return;
+            }
+            void submit();
+          }}
+        />
 
         {moonpaySession ? (
           <MoonPayBuyOverlay

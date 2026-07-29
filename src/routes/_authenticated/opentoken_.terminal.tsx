@@ -28,6 +28,7 @@ import type { OtTradeRow } from "@/components/opentoken";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 
 export const Route = createFileRoute("/_authenticated/opentoken_/terminal")({
   head: () => ({ meta: [{ title: "Terminal — OpenPay Pro" }] }),
@@ -857,6 +858,7 @@ function TradePanel({
   busy: boolean;
   onExecute: () => void | Promise<void>;
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 border-b border-border/40">
@@ -958,7 +960,7 @@ function TradePanel({
             <Button
               type="button"
               disabled={busy || tradeAmtNum <= 0}
-              onClick={() => void onExecute()}
+              onClick={() => setConfirmOpen(true)}
               className={cn(
                 "h-11 w-full rounded-lg text-sm font-semibold sm:h-10",
                 tradeSide === "buy"
@@ -974,6 +976,48 @@ function TradePanel({
                 "Sell"
               )}
             </Button>
+
+            <TxConfirmModal
+              open={confirmOpen}
+              onOpenChange={setConfirmOpen}
+              title={tradeSide === "buy" ? "Confirm buy" : "Confirm sell"}
+              description={`$${selectedToken.symbol} on OpenToken`}
+              amount={
+                tradeSide === "buy"
+                  ? `${formatNumber(tradeAmtNum, 4)} OUSD`
+                  : `${formatNumber(tradeAmtNum, 4)} $${selectedToken.symbol}`
+              }
+              subtitle={
+                quote
+                  ? tradeSide === "buy"
+                    ? `≈ ${formatNumber((quote as any).tokenOut ?? 0, 4)} $${selectedToken.symbol}`
+                    : `≈ ${formatNumber((quote as any).piOut ?? 0, 4)} OUSD`
+                  : undefined
+              }
+              rows={[
+                { label: "Token", value: `$${selectedToken.symbol}` },
+                { label: "Side", value: tradeSide === "buy" ? "Buy" : "Sell" },
+                {
+                  label: "You receive",
+                  value: quote
+                    ? tradeSide === "buy"
+                      ? `${formatNumber((quote as any).tokenOut ?? 0, 4)} $${selectedToken.symbol}`
+                      : `${formatNumber((quote as any).piOut ?? 0, 4)} OUSD`
+                    : "—",
+                },
+                {
+                  label: "Fee",
+                  value: quote ? `${formatNumber(quote.fee ?? 0, 4)} OUSD` : "—",
+                },
+              ]}
+              confirmLabel={tradeSide === "buy" ? "Confirm buy" : "Confirm sell"}
+              busy={busy}
+              variant={tradeSide === "sell" ? "destructive" : "success"}
+              onConfirm={async () => {
+                await onExecute();
+                setConfirmOpen(false);
+              }}
+            />
 
             <div className="space-y-2 border-t border-border/40 pt-3">
               <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

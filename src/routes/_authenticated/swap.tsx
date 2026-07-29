@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/wallet/PageHeader";
+import { TxConfirmModal, TxConfirmTokenPair } from "@/components/wallet/TxConfirmModal";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD } from "@/lib/wallet-utils";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
@@ -116,6 +117,7 @@ function OpenDexPage() {
   const [slippage, setSlippage] = useState(0.5);
   const [customSlippage, setCustomSlippage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [network, setNetwork] = useState<SwapNetworkId>(DEFAULT_SWAP_NETWORK);
@@ -418,6 +420,7 @@ function OpenDexPage() {
         `Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`,
       );
       setAmount("");
+      setConfirmOpen(false);
       await refreshBalances();
     } catch (err) {
       toast.error((err as Error).message);
@@ -531,7 +534,7 @@ function OpenDexPage() {
       )}
 
       <Button
-        onClick={doSwap}
+        onClick={() => setConfirmOpen(true)}
         disabled={!canSwap}
         className="h-14 w-full rounded-full text-base font-semibold"
       >
@@ -548,6 +551,62 @@ function OpenDexPage() {
                   ? `Swap ${formatNumber(amt, 4)} ${fromToken.symbol}`
                   : "Enter an amount"}
       </Button>
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirm swap"
+        description="Review details before swapping on OpenDEX"
+        icon={
+          fromToken && toToken ? (
+            <TxConfirmTokenPair
+              from={<TokenLogo token={fromToken} />}
+              to={<TokenLogo token={toToken} />}
+            />
+          ) : undefined
+        }
+        amount={
+          fromToken
+            ? `${formatNumber(amt, amt < 1 ? 6 : 4)} ${fromToken.symbol}`
+            : undefined
+        }
+        subtitle={
+          toToken && netOutput > 0
+            ? `→ ${formatNumber(netOutput, 6)} ${toToken.symbol}`
+            : undefined
+        }
+        rows={[
+          {
+            label: "You pay",
+            value: fromToken ? `${formatNumber(amt, 6)} ${fromToken.symbol}` : "—",
+          },
+          {
+            label: "You receive",
+            value: toToken ? `≈ ${formatNumber(netOutput, 6)} ${toToken.symbol}` : "—",
+          },
+          {
+            label: "Min received",
+            value: toToken ? `${formatNumber(minOut, 6)} ${toToken.symbol}` : "—",
+          },
+          {
+            label: "Rate",
+            value:
+              fromToken && toToken && rate > 0
+                ? `1 ${fromToken.symbol} = ${formatNumber(rate, 8)} ${toToken.symbol}`
+                : "—",
+          },
+          { label: "Slippage", value: `${slippage}%` },
+          {
+            label: "Swap fee",
+            value: toToken
+              ? `${formatNumber(feeOut, feeOut > 0 && feeOut < 0.01 ? 8 : 4)} ${toToken.symbol} (${FEE_PCT}%)`
+              : `${FEE_PCT}%`,
+          },
+        ]}
+        confirmLabel={`Confirm swap`}
+        busy={busy}
+        onConfirm={() => void doSwap()}
+      />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-sm rounded-3xl">

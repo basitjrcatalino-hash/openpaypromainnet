@@ -150,14 +150,34 @@ async function startWithFallback(
     : new Error(typeof lastError === "string" ? lastError : "Camera permission denied");
 }
 
+/** True when the app runs inside an iframe (preview/embed) that can block camera. */
+export function isEmbeddedFrame(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+export function isInsecureContext(): boolean {
+  if (typeof window === "undefined") return false;
+  return !window.isSecureContext;
+}
+
 function friendlyCameraError(err: unknown): string {
   const name = err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
   const msg = err instanceof Error ? err.message : String(err ?? "");
+  if (isInsecureContext()) {
+    return "Camera needs a secure (https) page. Open OpenPay Pro over https and try again.";
+  }
   if (name === "NotAllowedError" || /permission|denied|NotAllowed/i.test(msg)) {
-    return "Camera access blocked. Allow camera permission and try again.";
+    return isEmbeddedFrame()
+      ? "Camera is blocked inside this embedded preview. Open in a new tab, or scan a saved photo below."
+      : "Camera access blocked. Allow camera permission in your browser settings, then tap Try again.";
   }
   if (name === "NotFoundError" || /not found|no camera/i.test(msg)) {
-    return "No camera found on this device.";
+    return "No camera found on this device. Use Photos to scan a saved QR image.";
   }
   if (name === "NotReadableError" || /NotReadable|in use|AbortError/i.test(msg)) {
     return "Camera is in use by another app. Close it and try again.";
@@ -167,6 +187,7 @@ function friendlyCameraError(err: unknown): string {
   }
   return msg || "Camera permission denied";
 }
+
 
 type UseQrCameraArgs = {
   elementId: string;
@@ -463,10 +484,18 @@ export function usePhantomQrScanner({
         });
       } catch (e) {
         if (cancelled) return;
+        const name = e && typeof e === "object" && "name" in e ? String((e as { name: string }).name) : "";
+        // A denied permission won't be fixed by the html5-qrcode fallback — surface it now.
+        if (name === "NotAllowedError" || name === "SecurityError" || isInsecureContext()) {
+          setError(friendlyCameraError(e));
+          setStarting(false);
+          return;
+        }
         setUseFallback(true);
         setError(null);
         setStarting(true);
         console.warn("[scan] native camera failed, using fallback", e);
+
       }
     })();
 

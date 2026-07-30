@@ -12,9 +12,13 @@ export const Route = createFileRoute("/api/webhooks/transactions")({
         try {
           const secret = process.env.TX_WEBHOOK_SECRET?.trim();
           const hdr = request.headers.get("x-webhook-secret") || "";
-          if (secret && hdr !== secret) {
+          if (!secret) {
+            return Response.json({ error: "Webhook not configured" }, { status: 503 });
+          }
+          if (hdr !== secret) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
           }
+
 
           const payload = (await request.json()) as {
             type?: string;

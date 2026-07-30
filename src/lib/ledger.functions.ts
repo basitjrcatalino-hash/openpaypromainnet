@@ -29,7 +29,21 @@ export const getLedgerOverview = createServerFn({ method: "GET" })
       _role: "admin",
     });
 
+    // Ledger aggregates cover every user's activity — admins only.
+    if (!isAdmin) {
+      return {
+        isAdmin: false,
+        total_entries: 0,
+        total_transactions: 0,
+        missing: 0,
+        latest_sequence: 0,
+        latest_at: null as string | null,
+        by_type: {} as Record<string, number>,
+      };
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const types = ["send", "receive", "buy", "sell", "swap", "mint", "reward"] as const;
     const [{ count: ledgerCount }, { count: txCount }, { data: latest }, ...typeRows] =
       await Promise.all([
@@ -82,8 +96,10 @@ export const listLedgerEntries = createServerFn({ method: "GET" })
       .optional()
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const limit = data?.limit ?? 200;
     let q = supabaseAdmin
       .from("ledger_entries")

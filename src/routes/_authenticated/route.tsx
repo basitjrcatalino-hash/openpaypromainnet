@@ -30,6 +30,7 @@ import {
   HelpCircle,
   MessageCircle,
   Bot,
+  Sparkles,
 } from "lucide-react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -653,6 +654,23 @@ function SidebarInner({
             strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
           />
           Ledger API
+        </Link>
+        <Link
+          to="/ai"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/ai"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <Sparkles
+            className={cn("h-5 w-5", pathname === "/ai" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/ai" ? 2.25 : 1.75}
+          />
+          Nova AI
         </Link>
         <Link
           to="/connect"

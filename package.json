@@ -12,6 +12,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.16",
+    "@ai-sdk/react": "^4.0.40",
     "@bagsfm/bags-sdk": "^1.4.1",
     "@circle-fin/developer-controlled-wallets": "^10.8.0",
     "@heliofi/deposit-react": "^1.1.1",
@@ -66,6 +68,7 @@
     "@wallet-standard/features": "^1.1.1",
     "@walletconnect/pay": "^1.0.9",
     "@web3auth/modal": "^11.3.0",
+    "ai": "^7.0.37",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
@@ -87,6 +90,7 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.2",
     "react-i18next": "^17.0.11",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^4.6.5",
     "recharts": "^2.15.4",
     "sonner": "^2.0.7",

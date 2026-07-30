@@ -23,6 +23,7 @@ import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-p
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
+import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -169,6 +171,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
   id: '/admin/testnet-progress',
   path: '/admin/testnet-progress',
@@ -277,6 +284,11 @@ const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
 const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
   id: '/bags',
   path: '/bags',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
@@ -588,6 +600,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/ai': typeof AuthenticatedAiRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
@@ -610,6 +623,7 @@ export interface FileRoutesByFullPath {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -679,6 +693,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/ai': typeof AuthenticatedAiRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
@@ -701,6 +716,7 @@ export interface FileRoutesByTo {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -772,6 +788,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/ai': typeof AuthenticatedAiRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/connect': typeof AuthenticatedConnectRoute
@@ -794,6 +811,7 @@ export interface FileRoutesById {
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -865,6 +883,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/activity'
+    | '/ai'
     | '/bags'
     | '/chat'
     | '/connect'
@@ -887,6 +906,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -956,6 +976,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/activity'
+    | '/ai'
     | '/bags'
     | '/chat'
     | '/connect'
@@ -978,6 +999,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1048,6 +1070,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activity'
+    | '/_authenticated/ai'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
     | '/_authenticated/connect'
@@ -1070,6 +1093,7 @@ export interface FileRouteTypes {
     | '/_authenticated/watchlist'
     | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1141,6 +1165,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  ApiChatRoute: typeof ApiChatRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
@@ -1275,6 +1300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/testnet-progress': {
       id: '/admin/testnet-progress'
@@ -1428,6 +1460,13 @@ declare module '@tanstack/react-router' {
       path: '/bags'
       fullPath: '/bags'
       preLoaderRoute: typeof AuthenticatedBagsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ai': {
+      id: '/_authenticated/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AuthenticatedAiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/activity': {
@@ -1850,6 +1889,7 @@ const AuthenticatedOpentokenTokenIdRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedConnectRoute: typeof AuthenticatedConnectRoute
@@ -1889,6 +1929,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedConnectRoute: AuthenticatedConnectRoute,
@@ -1977,6 +2018,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  ApiChatRoute: ApiChatRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,

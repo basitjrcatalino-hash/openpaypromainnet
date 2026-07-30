@@ -26,7 +26,7 @@ import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { buyOpenToken } from "@/lib/opentoken.functions";
 import { isOpenTokenGraduated } from "@/lib/opentoken/bonding-curve";
-import { topUpWithPi } from "@/lib/pi-network";
+import { topUpWithPi, quotePiTopup } from "@/lib/pi-network";
 import {
   createOpenPayTopupCharge,
   getOpenPayLinkStatus,
@@ -214,6 +214,17 @@ export function AssetBuySheet({
     staleTime: 30_000,
   });
 
+  const amtNum = parseBuyAmount(amount);
+  const parsed = amountSchema.safeParse(amount.trim() === "" ? NaN : amtNum);
+  const valid = parsed.success;
+
+  const { data: piQuote, isFetching: piQuoteLoading } = useQuery({
+    queryKey: ["pi-topup-quote", amtNum],
+    queryFn: () => quotePiTopup(amtNum),
+    enabled: open && method === "pi" && valid,
+    staleTime: 30_000,
+  });
+
   useEffect(() => {
     if (!open) return;
     setAmount("25");
@@ -225,9 +236,6 @@ export function AssetBuySheet({
     setConfirmOpen(false);
   }, [open, isOusd, token.id]);
 
-  const amtNum = parseBuyAmount(amount);
-  const parsed = amountSchema.safeParse(amount.trim() === "" ? NaN : amtNum);
-  const valid = parsed.success;
   const opSpendable =
     openpayBal?.linked && typeof openpayBal.balance === "number" ? openpayBal.balance : null;
   const openpayShort =
@@ -905,6 +913,44 @@ export function AssetBuySheet({
               })}
             </div>
 
+            {method === "pi" && (
+              <div className="mt-3 space-y-2 rounded-2xl bg-muted/50 px-3.5 py-3 text-xs">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Pi payment
+                </p>
+                {piQuoteLoading && !piQuote ? (
+                  <p className="text-muted-foreground">Fetching live π price…</p>
+                ) : piQuote ? (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">Live π price</span>
+                      <span className="font-semibold tabular-nums">
+                        ${formatNumber(piQuote.piUsdPrice, piQuote.piUsdPrice < 0.01 ? 6 : 4)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">You pay</span>
+                      <span className="font-semibold tabular-nums">
+                        {formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π
+                      </span>
+                    </div>
+                    <div className="border-t border-border/50 pt-1.5">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Memo
+                      </p>
+                      <p className="mt-0.5 break-words leading-relaxed text-foreground">
+                        {piQuote.memo}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Pay with Pi · live π price → OUSD ($1)
+                  </p>
+                )}
+              </div>
+            )}
+
             {method === "openpay_checkout" && !linked && (
               <div className="mt-3 rounded-2xl bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
                 Connect OpenPay to pay via checkout.{" "}
@@ -1030,13 +1076,33 @@ export function AssetBuySheet({
         }
         amount={formatUSD(amtNum)}
         subtitle={
-          !isOusd && token.price > 0
-            ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
-            : token.name
+          method === "pi" && piQuote
+            ? `Pay ${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π`
+            : !isOusd && token.price > 0
+              ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
+              : token.name
         }
         rows={[
           { label: "Asset", value: `${token.name} (${token.symbol})` },
-          { label: "You pay", value: formatUSD(amtNum) },
+          {
+            label: "You pay",
+            value:
+              method === "pi" && piQuote
+                ? `${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π`
+                : formatUSD(amtNum),
+          },
+          ...(method === "pi" && piQuote
+            ? [
+                {
+                  label: "Live π price",
+                  value: `$${formatNumber(piQuote.piUsdPrice, piQuote.piUsdPrice < 0.01 ? 6 : 4)}`,
+                },
+                {
+                  label: "Memo",
+                  value: piQuote.memo,
+                },
+              ]
+            : []),
           {
             label: "Pay with",
             value:

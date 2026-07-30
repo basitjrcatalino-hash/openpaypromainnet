@@ -14,9 +14,9 @@ import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
 import { cn } from "@/lib/utils";
-import { formatOUSD, formatUSD } from "@/lib/wallet-utils";
+import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
-import { topUpWithPi } from "@/lib/pi-network";
+import { topUpWithPi, quotePiTopup } from "@/lib/pi-network";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
@@ -160,6 +160,14 @@ function TopUpPage() {
   const feeBps = Number(topupInfo?.fee_bps ?? 0);
   const feeBreakdown = calcTopupFee(amtNum, feeBps);
   const hasFee = feeBreakdown.fee > 0;
+  const amountValid = amtNum >= 0.01 && amtNum <= 50_000;
+
+  const { data: piQuote, isFetching: piQuoteLoading } = useQuery({
+    queryKey: ["pi-topup-quote", amtNum],
+    queryFn: () => quotePiTopup(amtNum),
+    enabled: method === "pi" && amountValid,
+    staleTime: 30_000,
+  });
 
   useEffect(() => {
     try {
@@ -439,7 +447,6 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
-  const amountValid = amtNum >= 0.01 && amtNum <= 50_000;
   const selectedMethod = methods.find((m) => m.id === method);
 
   function goToMethod() {
@@ -795,6 +802,46 @@ function TopUpPage() {
               </Link>{" "}
               to pay from your balance.
             </p>
+          ) : method === "pi" ? (
+            <div className="mt-4 space-y-2 rounded-2xl bg-card px-4 py-3.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Pi payment
+              </p>
+              {piQuoteLoading && !piQuote ? (
+                <p className="text-xs text-muted-foreground">Fetching live π price…</p>
+              ) : piQuote ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Live π price</span>
+                    <span className="font-semibold tabular-nums">
+                      ${formatNumber(piQuote.piUsdPrice, piQuote.piUsdPrice < 0.01 ? 6 : 4)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">You pay</span>
+                    <span className="font-semibold tabular-nums">
+                      {formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">You receive</span>
+                    <span className="font-semibold tabular-nums">
+                      {formatOUSD(amtNum)}
+                    </span>
+                  </div>
+                  <div className="border-t border-border/60 pt-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Memo
+                    </p>
+                    <p className="mt-1 break-words text-xs leading-relaxed text-foreground">
+                      {piQuote.memo}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">{selectedMethod?.desc}</p>
+              )}
+            </div>
           ) : (
             <p className="mt-3 px-1 text-center text-xs leading-relaxed text-muted-foreground">
               {selectedMethod?.desc}
@@ -865,13 +912,33 @@ function TopUpPage() {
         description="Review amount, fees, and third-party payment"
         amount={formatOUSD(amtNum)}
         subtitle={
-          hasFee
-            ? `You receive ${formatOUSD(feeBreakdown.net)}`
-            : `≈ ${formatUSD(amtNum)} · 1 OUSD = $1.00`
+          method === "pi" && piQuote
+            ? `Pay ${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π · 1 OUSD = $1.00`
+            : hasFee
+              ? `You receive ${formatOUSD(feeBreakdown.net)}`
+              : `≈ ${formatUSD(amtNum)} · 1 OUSD = $1.00`
         }
         rows={[
           { label: "You buy", value: formatOUSD(amtNum) },
-          { label: "You pay", value: `$${amtNum.toFixed(2)} USD` },
+          {
+            label: "You pay",
+            value:
+              method === "pi" && piQuote
+                ? `${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π`
+                : `$${amtNum.toFixed(2)} USD`,
+          },
+          ...(method === "pi" && piQuote
+            ? [
+                {
+                  label: "Live π price",
+                  value: `$${formatNumber(piQuote.piUsdPrice, piQuote.piUsdPrice < 0.01 ? 6 : 4)}`,
+                },
+                {
+                  label: "Memo",
+                  value: piQuote.memo,
+                },
+              ]
+            : []),
           ...(hasFee
             ? [
                 {

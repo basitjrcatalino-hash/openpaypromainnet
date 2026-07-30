@@ -167,6 +167,46 @@ export async function linkPiWallet(): Promise<{
 }
 
 /**
+ * Pi payment memo shown in the Pi wallet — keep in sync with createPayment.
+ */
+export function buildPiTopupMemo(
+  ousdAmount: number,
+  piAmount: number,
+  piUsdPrice: number,
+): string {
+  const ousd = Number(ousdAmount.toFixed(2));
+  const pi =
+    piAmount >= 1 ? piAmount.toFixed(4) : piAmount.toPrecision(6);
+  const price =
+    piUsdPrice >= 0.01 ? piUsdPrice.toFixed(4) : piUsdPrice.toPrecision(4);
+  return `OpenPay Pro: ${ousd} OUSD (~${pi} π @ $${price})`;
+}
+
+export type PiTopupQuote = {
+  ousdAmount: number;
+  piAmount: number;
+  piUsdPrice: number;
+  memo: string;
+};
+
+/** Live π quote for an OUSD/$ top-up (1 OUSD = $1). */
+export async function quotePiTopup(ousdAmount: number): Promise<PiTopupQuote> {
+  if (!(ousdAmount > 0)) throw new Error("Enter a valid OUSD amount");
+  const { fetchMajorUsdPrices, piAmountForOusd } = await import("@/lib/ledger-majors");
+  const prices = await fetchMajorUsdPrices(["pi"]);
+  const piUsdPrice = prices.pi;
+  if (!(piUsdPrice > 0)) throw new Error("Could not fetch live Pi price");
+  const piAmount = piAmountForOusd(ousdAmount, piUsdPrice);
+  if (!(piAmount > 0)) throw new Error("Amount too small for current Pi price");
+  return {
+    ousdAmount,
+    piAmount,
+    piUsdPrice,
+    memo: buildPiTopupMemo(ousdAmount, piAmount, piUsdPrice),
+  };
+}
+
+/**
  * Create a Pi U2A payment that tops up the user's OUSD balance.
  * Charges live market PI for the requested OUSD amount (1 OUSD = $1).
  */
@@ -177,15 +217,8 @@ export async function topUpWithPi(ousdAmount: number): Promise<{ paymentId: stri
   const { data: sess } = await supabase.auth.getSession();
   if (!sess.session) throw new Error("Sign in first to top up with Pi");
 
-  if (!(ousdAmount > 0)) throw new Error("Enter a valid OUSD amount");
-
-  const { fetchMajorUsdPrices, piAmountForOusd } = await import("@/lib/ledger-majors");
-  const prices = await fetchMajorUsdPrices(["pi"]);
-  const piUsdPrice = prices.pi;
-  if (!(piUsdPrice > 0)) throw new Error("Could not fetch live Pi price");
-
-  const piAmount = piAmountForOusd(ousdAmount, piUsdPrice);
-  if (!(piAmount > 0)) throw new Error("Amount too small for current Pi price");
+  const quote = await quotePiTopup(ousdAmount);
+  const { piAmount, piUsdPrice, memo } = quote;
 
   // Ensure auth scope includes "payments" (re-auth is cheap and idempotent for already-signed-in Pi users).
   await window.Pi.authenticate(SCOPES, (payment) => {
@@ -204,7 +237,7 @@ export async function topUpWithPi(ousdAmount: number): Promise<{ paymentId: stri
     window.Pi!.createPayment(
       {
         amount: piAmount,
-        memo: `OpenPay Pro: ${ousdAmount} OUSD (~${piAmount} π @ $${piUsdPrice})`,
+        memo,
         metadata,
       },
       {

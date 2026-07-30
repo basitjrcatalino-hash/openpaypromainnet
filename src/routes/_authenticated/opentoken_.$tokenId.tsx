@@ -83,6 +83,7 @@ function OpenTokenDetail() {
   });
   const [showBuyPanel, setShowBuyPanel] = useState(false);
   const [socialTab, setSocialTab] = useState<"live" | "comments">("live");
+  const [liveChatOpen, setLiveChatOpen] = useState(false);
 
   const { data: token, isLoading } = useQuery({
     queryKey: ["ot-token", tokenId],
@@ -517,13 +518,16 @@ function OpenTokenDetail() {
             )}
           </section>
 
-          {/* Live chat + comments */}
+          {/* Live chat + comments — Phantom-style live overlay */}
           <section id="ot-comments-section" className="rounded-3xl bg-card p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 rounded-full bg-muted/60 p-1">
                 <button
                   type="button"
-                  onClick={() => setSocialTab("live")}
+                  onClick={() => {
+                    setSocialTab("live");
+                    setLiveChatOpen(true);
+                  }}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold press",
                     socialTab === "live"
@@ -539,7 +543,10 @@ function OpenTokenDetail() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSocialTab("comments")}
+                  onClick={() => {
+                    setSocialTab("comments");
+                    setLiveChatOpen(false);
+                  }}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold press",
                     socialTab === "comments"
@@ -558,7 +565,42 @@ function OpenTokenDetail() {
               )}
             </div>
             {socialTab === "live" ? (
-              <TokenLiveChat tokenId={tokenId} userId={user.id} />
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setLiveChatOpen(true)}
+                  className="flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-3 py-3 text-left press hover:bg-muted"
+                >
+                  <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-muted">
+                    {token.logo_url ? (
+                      <img src={token.logo_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-bold">{token.symbol.slice(0, 2)}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold">{token.name} live chat</div>
+                    <div className="text-xs text-muted-foreground">
+                      Phantom-style · GIFs, memes &amp; Trade
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+                    Open
+                  </span>
+                </button>
+                <div className="hidden lg:block">
+                  <TokenLiveChat
+                    tokenId={tokenId}
+                    userId={user.id}
+                    name={token.name}
+                    symbol={token.symbol}
+                    logoUrl={token.logo_url}
+                    priceUsd={price}
+                    change24h={change}
+                    onTrade={() => setShowBuyPanel(true)}
+                  />
+                </div>
+              </div>
             ) : (
               <CommentThread tokenId={tokenId} userId={user.id} />
             )}
@@ -779,6 +821,24 @@ function OpenTokenDetail() {
           returnPath={`/opentoken/${tokenId}`}
         />
       </TokenTradeSheet>
+
+      {liveChatOpen ? (
+        <TokenLiveChat
+          variant="overlay"
+          tokenId={tokenId}
+          userId={user.id}
+          name={token.name}
+          symbol={token.symbol}
+          logoUrl={token.logo_url}
+          priceUsd={price}
+          change24h={change}
+          onClose={() => setLiveChatOpen(false)}
+          onTrade={() => {
+            setLiveChatOpen(false);
+            setShowBuyPanel(true);
+          }}
+        />
+      ) : null}
 
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent className="rounded-3xl border-border bg-card">

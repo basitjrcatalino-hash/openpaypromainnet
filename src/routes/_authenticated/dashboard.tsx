@@ -18,6 +18,7 @@ import {
   X,
   Wallet,
   BadgeCheck,
+  Coins,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,7 +38,6 @@ import { TransactionDetailSheet, TxRowButton, type TxRow } from "@/components/tr
 import { OusdIcon } from "@/components/ousd-icon";
 import { OpenNftCollectiblesPanel } from "@/components/open-nft-collectibles";
 import { fetchWalletActivity } from "@/lib/activity";
-import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 import { ActionCircle } from "@/components/wallet/ActionCircle";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
@@ -77,7 +77,7 @@ const PRIMARY_ACTIONS = [
 ] as const;
 
 const MORE_ACTIONS = [
-  { label: "OpenToken", logoUrl: OPENPAY_NETWORK_BADGE_URL, to: "/opentoken" },
+  { label: "OpenToken", icon: Coins, to: "/opentoken" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },

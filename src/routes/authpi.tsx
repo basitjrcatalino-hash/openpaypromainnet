@@ -68,7 +68,23 @@ function goPostAuth() {
 
 export const Route = createFileRoute("/authpi")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Sign in — OpenPay Pro Wallet" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — OpenPay Pro Wallet" },
+      {
+        name: "description",
+        content:
+          "Sign in to OpenPay Pro with Pi Network, OpenPay, Phantom, MetaMask, or Telegram to manage OUSD, Pi, tokens, and NFTs.",
+      },
+      { property: "og:title", content: "Sign in — OpenPay Pro Wallet" },
+      {
+        property: "og:description",
+        content: "Sign in with Pi Network, OpenPay, Phantom, MetaMask, or Telegram.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/authpi" },
+    ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/authpi" }],
+  }),
   component: AuthPiPage,
 });
 

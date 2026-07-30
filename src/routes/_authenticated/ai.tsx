@@ -228,6 +228,8 @@ function AiAssistantPage() {
                   </div>
                 );
               }
+              const isSpeaking = speech.speakingId === m.id;
+              const isLoadingAudio = speech.loadingId === m.id;
               return (
                 <div key={m.id} className="flex gap-3">
                   <img
@@ -236,12 +238,31 @@ function AiAssistantPage() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]"
+                    className={cn("mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]", AVATAR_PLATE)}
                   />
-                  <OpenPayMarkdown text={text} />
-
+                  <div className="min-w-0 flex-1">
+                    <OpenPayMarkdown text={text} />
+                    {text.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => void speech.speak(m.id, text)}
+                        aria-label={isSpeaking ? "Stop reading aloud" : "Read aloud"}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground press"
+                      >
+                        {isLoadingAudio ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : isSpeaking ? (
+                          <Square className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5" />
+                        )}
+                        {isLoadingAudio ? "Loading" : isSpeaking ? "Stop" : "Listen"}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               );
+
             })}
             {status === "submitted" ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">

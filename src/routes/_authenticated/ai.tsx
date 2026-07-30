@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, MoreVertical, Bot } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ArrowUp, ChevronLeft, MoreVertical } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import novaAvatar from "@/assets/nova-assistant.png";
+import novaAvatar from "@/assets/openpay-pro-mark.png";
+
 
 export const Route = createFileRoute("/_authenticated/ai")({
   head: () => ({

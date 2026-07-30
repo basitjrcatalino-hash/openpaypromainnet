@@ -96,7 +96,7 @@ function AiAssistantPage() {
           width={512}
           height={512}
           loading="lazy"
-          className="h-8 w-8 rounded-full"
+          className="h-8 w-8 rounded-[0.6rem]"
         />
         <span className="text-base font-bold">Nova</span>
         <button
@@ -121,7 +121,7 @@ function AiAssistantPage() {
               alt="Nova assistant"
               width={512}
               height={512}
-              className="h-24 w-24 rounded-full"
+              className="h-20 w-20 rounded-[1.4rem] shadow-lg"
             />
             <h1 className="text-2xl font-bold">Nova</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -162,7 +162,7 @@ function AiAssistantPage() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="mt-0.5 h-7 w-7 shrink-0 rounded-full"
+                    className="mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]"
                   />
                   <NovaMarkdown text={text} />
 
@@ -177,7 +177,7 @@ function AiAssistantPage() {
                   width={512}
                   height={512}
                   loading="lazy"
-                  className="h-7 w-7 rounded-full"
+                  className="h-7 w-7 rounded-[0.6rem]"
                 />
                 <span className="animate-pulse">Thinking…</span>
               </div>

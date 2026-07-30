@@ -67,6 +67,7 @@ import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
+import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 
 /** Flip to true to show Bags Cash in nav and unlock /bags routes. */
 const BAGS_CASH_ENABLED = false;
@@ -680,9 +681,13 @@ function SidebarInner({
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
           )}
         >
-          <Sparkles
-            className={cn("h-5 w-5", pathname === "/ai" && "ph-tab-icon-active")}
-            strokeWidth={pathname === "/ai" ? 2.25 : 1.75}
+          <img
+            src={OPENPAY_AUTH_LOGO}
+            alt="OpenPay AI"
+            className={cn(
+              "h-5 w-5 rounded object-contain",
+              pathname !== "/ai" && "opacity-80",
+            )}
           />
           OpenPay AI
         </Link>

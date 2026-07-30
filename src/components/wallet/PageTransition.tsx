@@ -29,6 +29,11 @@ export function PageTransition({
       return;
     }
     setEnter(true);
+    // Land at the top of the new page without a jarring jump.
+    if (typeof window !== "undefined") {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    }
   }, [routeKey, disabled]);
 
   if (disabled) {

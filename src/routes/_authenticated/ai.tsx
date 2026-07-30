@@ -89,19 +89,19 @@ function AiAssistantPage() {
           type="button"
           className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground press"
           aria-label="More"
-          onClick={() => toast("Nova answers questions about OpenPay Pro and OpenPay.")}
+          onClick={() => toast("OpenPay AI answers questions about OpenPay Pro and OpenPay.")}
         >
           <MoreVertical className="h-5 w-5" />
         </button>
         <img
-          src={novaAvatar}
-          alt="Nova assistant"
+          src={AI_AVATAR}
+          alt="OpenPay AI assistant"
           width={512}
           height={512}
           loading="lazy"
           className="h-8 w-8 rounded-[0.6rem]"
         />
-        <span className="text-base font-bold">Nova</span>
+        <span className="text-base font-bold">OpenPay AI</span>
         <button
           type="button"
           onClick={() => {
@@ -120,16 +120,16 @@ function AiAssistantPage() {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center gap-4 px-6 text-center">
             <img
-              src={novaAvatar}
-              alt="Nova assistant"
+              src={AI_AVATAR}
+              alt="OpenPay AI assistant"
               width={512}
               height={512}
               className="h-20 w-20 rounded-[1.4rem] shadow-lg"
             />
-            <h1 className="text-2xl font-bold">Nova</h1>
+            <h1 className="text-2xl font-bold">OpenPay AI</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Responses may not always be accurate. Nova is trained on OpenPay Pro and OpenPay
-              features — it cannot see your balances or move funds.
+              Responses may not always be accurate. OpenPay AI is trained on OpenPay Pro and
+              OpenPay features — it cannot see your balances or move funds.
             </p>
             <div className="mt-2 grid w-full gap-2 sm:grid-cols-2">
               {SUGGESTIONS.map((s) => (
@@ -160,7 +160,7 @@ function AiAssistantPage() {
               return (
                 <div key={m.id} className="flex gap-3">
                   <img
-                    src={novaAvatar}
+                    src={AI_AVATAR}
                     alt=""
                     width={512}
                     height={512}
@@ -175,7 +175,7 @@ function AiAssistantPage() {
             {status === "submitted" ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <img
-                  src={novaAvatar}
+                  src={AI_AVATAR}
                   alt=""
                   width={512}
                   height={512}

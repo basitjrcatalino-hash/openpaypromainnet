@@ -2,6 +2,10 @@
 
 export const OPENPAY_BRAND_BLUE = "#1652f0";
 export const OPENPAY_LOGO_WHITE = "https://openpy.space/openpay-o-white.svg";
+/** Official full-color auth logo (per https://openpy.space/openpay-auth). */
+export const OPENPAY_AUTH_LOGO = "https://openpy.space/openpay-auth-logo.png";
+/** Partner portal — key management (Apps & keys). */
+export const OPENPAY_PARTNER_PORTAL = "https://openpy.space/partner-api";
 
 export async function startOpenPaySignIn(opts?: { redirectTo?: string }): Promise<void> {
   if (typeof window === "undefined") return;

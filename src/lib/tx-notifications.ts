@@ -124,14 +124,29 @@ export async function ensureBrowserPermission(): Promise<NotificationPermission 
   return Notification.requestPermission();
 }
 
-export function showBrowserNotification(note: AppNotification) {
+/** Phantom-style system notification (uses Service Worker when available for lock screen). */
+export async function showBrowserNotification(note: AppNotification) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
+
+  const opts: NotificationOptions & { vibrate?: number[] } = {
+    body: note.body,
+    tag: note.txId,
+    icon: "/ousd-logo.svg",
+    badge: "/ousd-logo.svg",
+    data: { url: "/activity", txId: note.txId },
+    vibrate: [120, 40, 120],
+  };
+
   try {
-    const n = new Notification(note.title, {
-      body: note.body,
-      tag: note.txId,
-    });
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.showNotification) {
+        await reg.showNotification(note.title, opts);
+        return;
+      }
+    }
+    const n = new Notification(note.title, opts);
     n.onclick = () => {
       window.focus();
       n.close();

@@ -56,6 +56,7 @@ import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_au
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
 import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
@@ -69,6 +70,7 @@ import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/t
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
 import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
+import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
@@ -83,6 +85,8 @@ import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
+import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
 import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 
@@ -328,6 +332,12 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHelioDepositWebhookRoute =
+  ApiPublicHelioDepositWebhookRouteImport.update({
+    id: '/api/public/helio-deposit-webhook',
+    path: '/api/public/helio-deposit-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
   id: '/api/public/kyc-webhook',
   path: '/api/public/kyc-webhook',
@@ -392,6 +402,11 @@ const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
 const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
   id: '/api/webhooks/circle',
   path: '/api/webhooks/circle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
+  id: '/api/webhooks/transactions',
+  path: '/api/webhooks/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
@@ -471,6 +486,17 @@ const ApiPublicPiPaymentsIncompleteRoute =
     path: '/api/public/pi-payments/incomplete',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
+  id: '/api/public/push/subscribe',
+  path: '/api/public/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushUnsubscribeRoute =
+  ApiPublicPushUnsubscribeRouteImport.update({
+    id: '/api/public/push/unsubscribe',
+    path: '/api/public/push/unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLedgerEntriesIdRoute =
   ApiPublicLedgerEntriesIdRouteImport.update({
     id: '/$id',
@@ -531,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
@@ -544,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -558,6 +586,8 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
+  '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
@@ -608,6 +638,7 @@ export interface FileRoutesByTo {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
@@ -621,6 +652,7 @@ export interface FileRoutesByTo {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -635,6 +667,8 @@ export interface FileRoutesByTo {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
+  '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
@@ -687,6 +721,7 @@ export interface FileRoutesById {
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
@@ -700,6 +735,7 @@ export interface FileRoutesById {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
@@ -714,6 +750,8 @@ export interface FileRoutesById {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
+  '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
 }
@@ -766,6 +804,7 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/public/health'
+    | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
@@ -779,6 +818,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -793,6 +833,8 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/push/subscribe'
+    | '/api/public/push/unsubscribe'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
   fileRoutesByTo: FileRoutesByTo
@@ -843,6 +885,7 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/public/health'
+    | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
@@ -856,6 +899,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -870,6 +914,8 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/push/subscribe'
+    | '/api/public/push/unsubscribe'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
   id:
@@ -921,6 +967,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
     | '/api/public/health'
+    | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
@@ -934,6 +981,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
@@ -948,6 +996,8 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/push/subscribe'
+    | '/api/public/push/unsubscribe'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
   fileRoutesById: FileRoutesById
@@ -965,6 +1015,7 @@ export interface RootRouteChildren {
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicMoonpaySignRoute: typeof ApiPublicMoonpaySignRoute
   ApiPublicMoonpayWebhookRoute: typeof ApiPublicMoonpayWebhookRoute
@@ -978,6 +1029,7 @@ export interface RootRouteChildren {
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
+  ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -986,6 +1038,8 @@ export interface RootRouteChildren {
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
+  ApiPublicPushSubscribeRoute: typeof ApiPublicPushSubscribeRoute
+  ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
 }
 
@@ -1320,6 +1374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/helio-deposit-webhook': {
+      id: '/api/public/helio-deposit-webhook'
+      path: '/api/public/helio-deposit-webhook'
+      fullPath: '/api/public/helio-deposit-webhook'
+      preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/kyc-webhook': {
       id: '/api/public/kyc-webhook'
       path: '/api/public/kyc-webhook'
@@ -1409,6 +1470,13 @@ declare module '@tanstack/react-router' {
       path: '/api/webhooks/circle'
       fullPath: '/api/webhooks/circle'
       preLoaderRoute: typeof ApiWebhooksCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/transactions': {
+      id: '/api/webhooks/transactions'
+      path: '/api/webhooks/transactions'
+      fullPath: '/api/webhooks/transactions'
+      preLoaderRoute: typeof ApiWebhooksTransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/openpay/callback': {
@@ -1507,6 +1575,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/pi-payments/incomplete'
       fullPath: '/api/public/pi-payments/incomplete'
       preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/subscribe': {
+      id: '/api/public/push/subscribe'
+      path: '/api/public/push/subscribe'
+      fullPath: '/api/public/push/subscribe'
+      preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/unsubscribe': {
+      id: '/api/public/push/unsubscribe'
+      path: '/api/public/push/unsubscribe'
+      fullPath: '/api/public/push/unsubscribe'
+      preLoaderRoute: typeof ApiPublicPushUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries/$id': {
@@ -1672,6 +1754,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicMoonpaySignRoute: ApiPublicMoonpaySignRoute,
   ApiPublicMoonpayWebhookRoute: ApiPublicMoonpayWebhookRoute,
@@ -1685,6 +1768,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
+  ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
@@ -1693,6 +1777,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
+  ApiPublicPushSubscribeRoute: ApiPublicPushSubscribeRoute,
+  ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
 }
 export const routeTree = rootRouteImport

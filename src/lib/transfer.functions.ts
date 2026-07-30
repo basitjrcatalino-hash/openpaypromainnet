@@ -201,16 +201,34 @@ async function sendLedgerNative(opts: {
         const rNext = major ? round12(rCur + amount) : round8(rCur + amount);
         const rcptPatch = major ? majorBalancePatch(major, rNext) : { ousd_balance: rNext };
         await admin.from("wallets").update(rcptPatch).eq("id", rcpt.id);
-        await admin.from("transactions").insert({
-          wallet_id: rcpt.id,
-          type: "receive",
-          status: "confirmed",
-          token_symbol: asset,
-          counterparty: wallet.address,
-          amount,
-          usd_value: usd,
-          memo,
-        });
+        const { data: rx } = await admin
+          .from("transactions")
+          .insert({
+            wallet_id: rcpt.id,
+            type: "receive",
+            status: "confirmed",
+            token_symbol: asset,
+            counterparty: wallet.address,
+            amount,
+            usd_value: usd,
+            memo,
+          })
+          .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
+          .single();
+        try {
+          const { notifyWalletTransaction } = await import("./tx-alerts.server");
+          await notifyWalletTransaction(admin as never, rcpt.id, rx ?? {
+            type: "receive",
+            token_symbol: asset,
+            amount,
+            memo,
+            counterparty: wallet.address,
+            status: "confirmed",
+            wallet_id: rcpt.id,
+          });
+        } catch (e) {
+          console.warn("[transfer] receive alert failed", e);
+        }
         credited = true;
       }
     } catch (e) {
@@ -218,17 +236,37 @@ async function sendLedgerNative(opts: {
     }
   }
 
-  const { error: txErr } = await supabase.from("transactions").insert({
-    wallet_id: wallet.id,
-    type: "send",
-    status: "confirmed",
-    token_symbol: asset,
-    counterparty: toAddress,
-    amount,
-    usd_value: usd,
-    memo,
-  });
+  const { data: sendTx, error: txErr } = await supabase
+    .from("transactions")
+    .insert({
+      wallet_id: wallet.id,
+      type: "send",
+      status: "confirmed",
+      token_symbol: asset,
+      counterparty: toAddress,
+      amount,
+      usd_value: usd,
+      memo,
+    })
+    .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
+    .single();
   if (txErr) throw txErr;
+
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await notifyWalletTransaction((admin ?? supabaseAdmin) as never, wallet.id, sendTx ?? {
+      type: "send",
+      token_symbol: asset,
+      amount,
+      memo,
+      counterparty: toAddress,
+      status: "confirmed",
+      wallet_id: wallet.id,
+    });
+  } catch (e) {
+    console.warn("[transfer] send alert failed", e);
+  }
 
   return { ok: true, credited, resolvedTo: toAddress, symbol: asset };
 }

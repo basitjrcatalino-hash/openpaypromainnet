@@ -41,6 +41,8 @@ export const Route = createFileRoute("/authpi")({
 type AuthMethod =
   "openpay" | "telegram" | "solana" | "pi" | "phantom" | "walletconnect" | "metamask" | "privy";
 
+type AuthGroup = "wallet" | "social";
+
 const AUTH_OPTIONS: {
   id: AuthMethod;
   label: string;
@@ -50,6 +52,7 @@ const AUTH_OPTIONS: {
   logoUrl?: string;
   logoFit?: "cover" | "contain";
   featured?: boolean;
+  group?: AuthGroup;
 }[] = [
   {
     id: "openpay",
@@ -69,15 +72,7 @@ const AUTH_OPTIONS: {
     accentFg: "#1a1330",
     logoUrl: PHANTOM_WALLET_LOGO,
     logoFit: "cover",
-  },
-  {
-    id: "pi",
-    label: "Pi Network",
-    desc: "Sign in with your Pi account",
-    accent: "#7038A1",
-    accentFg: "#ffffff",
-    logoUrl: PI_NETWORK_AUTH_LOGO,
-    logoFit: "cover",
+    group: "wallet",
   },
   {
     id: "solana",
@@ -87,15 +82,7 @@ const AUTH_OPTIONS: {
     accentFg: "#ffffff",
     logoUrl: SOLANA_WALLET_LOGO,
     logoFit: "cover",
-  },
-  {
-    id: "telegram",
-    label: "Telegram",
-    desc: "Telegram Login",
-    accent: TELEGRAM_BRAND_BLUE,
-    accentFg: "#ffffff",
-    logoUrl: TELEGRAM_AUTH_LOGO,
-    logoFit: "cover",
+    group: "wallet",
   },
   {
     id: "walletconnect",
@@ -103,6 +90,7 @@ const AUTH_OPTIONS: {
     desc: "EVM wallets",
     accent: WALLETCONNECT_BRAND_BLUE,
     accentFg: "#ffffff",
+    group: "wallet",
   },
   {
     id: "metamask",
@@ -112,6 +100,27 @@ const AUTH_OPTIONS: {
     accentFg: "#ffffff",
     logoUrl: METAMASK_WALLET_LOGO,
     logoFit: "cover",
+    group: "wallet",
+  },
+  {
+    id: "pi",
+    label: "Pi Network",
+    desc: "Sign in with your Pi account",
+    accent: "#7038A1",
+    accentFg: "#ffffff",
+    logoUrl: PI_NETWORK_AUTH_LOGO,
+    logoFit: "cover",
+    group: "social",
+  },
+  {
+    id: "telegram",
+    label: "Telegram",
+    desc: "Telegram Login",
+    accent: TELEGRAM_BRAND_BLUE,
+    accentFg: "#ffffff",
+    logoUrl: TELEGRAM_AUTH_LOGO,
+    logoFit: "cover",
+    group: "social",
   },
   {
     id: "privy",
@@ -119,7 +128,7 @@ const AUTH_OPTIONS: {
     desc: "Google · Apple · Email · SMS",
     accent: PRIVY_BRAND_COLOR,
     accentFg: "#ffffff",
-    logoFit: "contain",
+    group: "social",
   },
 ];
 
@@ -445,6 +454,65 @@ function AuthPiPageInner() {
   const featuredOpt = inPiBrowser ? null : (visibleOptions.find((o) => o.featured) ?? null);
   const piBrowserRows = inPiBrowser ? visibleOptions : [];
   const gridOptions = inPiBrowser ? [] : visibleOptions.filter((o) => !o.featured);
+  const walletOptions = gridOptions.filter((o) => o.group === "wallet");
+  const socialOptions = gridOptions.filter((o) => o.group === "social" || !o.group);
+
+  function renderAuthTile(
+    opt: (typeof AUTH_OPTIONS)[number],
+    i: number,
+    delayBase = 80,
+  ) {
+    const isOn = selected === opt.id;
+    return (
+      <button
+        key={opt.id}
+        id={`auth-opt-${opt.id}`}
+        type="button"
+        role="option"
+        aria-selected={isOn}
+        disabled={busy}
+        onClick={() => pick(opt.id)}
+        title={opt.desc}
+        style={
+          {
+            "--auth-accent": opt.accent,
+            animationDelay: `${delayBase + i * 40}ms`,
+          } as CSSProperties
+        }
+        className={cn(
+          "auth-option auth-option-tile relative flex flex-col items-center gap-2 rounded-2xl border px-2 py-3 text-center",
+          "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+          "disabled:opacity-60",
+          isOn ? "auth-option-selected" : "border-border/55 bg-muted/20",
+          pulseId === opt.id && "auth-option-pulse",
+        )}
+      >
+        <span
+          className="auth-option-icon grid h-11 w-11 place-items-center overflow-hidden rounded-xl"
+          style={{ backgroundColor: opt.accent }}
+        >
+          <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
+        </span>
+        <span className="w-full truncate text-[11px] font-semibold leading-tight text-foreground">
+          {opt.label}
+        </span>
+        <span
+          className={cn(
+            "absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full transition-all duration-200",
+            isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
+          )}
+          style={{
+            backgroundColor: isOn
+              ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
+              : undefined,
+            color: opt.accent,
+          }}
+        >
+          <Check className="h-2.5 w-2.5" strokeWidth={3} />
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0c0a1a] px-4 py-8 text-white sm:py-10">
@@ -497,7 +565,7 @@ function AuthPiPageInner() {
             ) : null}
 
             {gridOptions.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {featuredOpt ? (
                   <div className="flex items-center gap-3 px-1">
                     <div className="h-px flex-1 bg-border/70" />
@@ -508,60 +576,29 @@ function AuthPiPageInner() {
                   </div>
                 ) : null}
 
-                <div className="grid grid-cols-3 gap-2">
-                  {gridOptions.map((opt, i) => {
-                    const isOn = selected === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        id={`auth-opt-${opt.id}`}
-                        type="button"
-                        role="option"
-                        aria-selected={isOn}
-                        disabled={busy}
-                        onClick={() => pick(opt.id)}
-                        title={opt.desc}
-                        style={
-                          {
-                            "--auth-accent": opt.accent,
-                            animationDelay: `${80 + i * 40}ms`,
-                          } as CSSProperties
-                        }
-                        className={cn(
-                          "auth-option auth-option-tile relative flex flex-col items-center gap-2 rounded-2xl border px-2 py-3 text-center",
-                          "auth-option-enter transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
-                          "disabled:opacity-60",
-                          isOn ? "auth-option-selected" : "border-border/55 bg-muted/20",
-                          pulseId === opt.id && "auth-option-pulse",
-                        )}
-                      >
-                        <span
-                          className="auth-option-icon grid h-11 w-11 place-items-center overflow-hidden rounded-xl"
-                          style={{ backgroundColor: opt.accent }}
-                        >
-                          <AuthOptionIcon id={opt.id} logoUrl={opt.logoUrl} logoFit={opt.logoFit} />
-                        </span>
-                        <span className="w-full truncate text-[11px] font-semibold leading-tight text-foreground">
-                          {opt.label}
-                        </span>
-                        <span
-                          className={cn(
-                            "absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full transition-all duration-200",
-                            isOn ? "scale-100 opacity-100" : "scale-75 opacity-0",
-                          )}
-                          style={{
-                            backgroundColor: isOn
-                              ? `color-mix(in oklab, ${opt.accent} 22%, transparent)`
-                              : undefined,
-                            color: opt.accent,
-                          }}
-                        >
-                          <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {walletOptions.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Wallets
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {walletOptions.map((opt, i) => renderAuthTile(opt, i, 80))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {socialOptions.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Social &amp; network
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {socialOptions.map((opt, i) =>
+                        renderAuthTile(opt, i, 80 + walletOptions.length * 40),
+                      )}
+                    </div>
+                  </div>
+                ) : null}
 
                 {selectedOpt && !selectedOpt.featured ? (
                   <p className="auth-cta-swap text-center text-xs text-muted-foreground">

@@ -12,6 +12,10 @@ export const OPENPAY_NETWORK_BADGE_URL =
 export const PI_NETWORK_LOGO_URL =
   "https://i.ibb.co/v6L6pWbf/pi-network-lvquy-logo-png-seeklogo-440686.png";
 
+/** USDC mark for payment method rows */
+export const USDC_LOGO_URL =
+  "https://assets.coingecko.com/coins/images/6319/large/usdc.png";
+
 /** Canonical logos for ledger majors + OUSD (history, pickers, fallbacks). */
 const KNOWN_TOKEN_LOGOS: Record<string, string> = {
   OUSD: OUSD_LOGO_URL,
@@ -23,9 +27,9 @@ const KNOWN_TOKEN_LOGOS: Record<string, string> = {
   ETHEREUM: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
   SOL: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
   SOLANA: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-  USDC: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
-  USDCOIN: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
-  "USD COIN": "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+  USDC: USDC_LOGO_URL,
+  USDCOIN: USDC_LOGO_URL,
+  "USD COIN": USDC_LOGO_URL,
   USDT: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
   TETHER: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
   PYUSD: "https://424565.fs1.hubspotusercontent-na1.net/hubfs/424565/PYUSDLOGO.png",

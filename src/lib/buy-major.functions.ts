@@ -80,7 +80,9 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     if (updErr) throw new Error(updErr.message);
 
     const txRef = `buy_${major}_${globalThis.crypto?.randomUUID?.()?.replace(/-/g, "").slice(0, 16) ?? Date.now()}`;
-    const { error: txErr } = await supabase.from("transactions").insert({
+    const { data: buyTx, error: txErr } = await supabase
+      .from("transactions")
+      .insert({
       wallet_id: data.wallet_id,
       type: "buy",
       status: "confirmed",
@@ -90,8 +92,24 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
       usd_value: net,
       memo: `Bought ${tokenAmt} ${def.symbol} for ${net} OUSD @ $${price} (fee ${fee} OUSD · ${feeBps / 100}%)`,
       tx_hash: txRef,
-    });
+    })
+      .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
+      .single();
     if (txErr) throw new Error(txErr.message);
+
+    try {
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await notifyWalletTransaction(supabaseAdmin as never, data.wallet_id, buyTx ?? {
+        type: "buy",
+        token_symbol: def.symbol,
+        amount: tokenAmt,
+        wallet_id: data.wallet_id,
+        status: "confirmed",
+      });
+    } catch (e) {
+      console.warn("[buy-major] alert failed", e);
+    }
 
     if (fee > 0) {
       try {

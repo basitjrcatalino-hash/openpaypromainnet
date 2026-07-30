@@ -301,7 +301,9 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     const nonOusdId = fromIsOusd ? toCanon : fromCanon;
     const txRef = `odx_${globalThis.crypto?.randomUUID?.()?.replace(/-/g, "") ?? `${Date.now()}${Math.random().toString(16).slice(2)}`}`;
 
-    const { error: txErr } = await supabase.from("transactions").insert({
+    const { data: swapTx, error: txErr } = await supabase
+      .from("transactions")
+      .insert({
       wallet_id,
       type: "swap",
       status: "confirmed",
@@ -312,8 +314,24 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       usd_value: usdValue,
       memo: `OpenDEX swap ${amtIn} ${fromToken.symbol} → ${netOut} ${toToken.symbol} · fee ${feeOut} ${toToken.symbol} (${opendexFeePct()}%)`,
       tx_hash: txRef,
-    });
+    })
+      .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
+      .single();
     if (txErr) throw new Error(txErr.message);
+
+    try {
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await notifyWalletTransaction(supabaseAdmin as never, wallet_id, swapTx ?? {
+        type: "swap",
+        token_symbol: `${fromToken.symbol}→${toToken.symbol}`,
+        amount: amtIn,
+        wallet_id,
+        status: "confirmed",
+      });
+    } catch (e) {
+      console.warn("[opendex] alert failed", e);
+    }
 
     if (feeOut > 0) {
       try {

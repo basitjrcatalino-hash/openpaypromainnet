@@ -11,14 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/wallet/PageHeader";
-import { SolanaPaymentButton } from "@/components/solana-payment-button";
+import { HelioDepositPanel } from "@/components/helio-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
 import { topUpWithPi } from "@/lib/pi-network";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
-import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
-import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import {
   createOpenPayTopupCharge,
@@ -41,13 +39,13 @@ export const Route = createFileRoute("/_authenticated/topup")({
   component: TopUpPage,
 });
 
-type Method = "openpay_balance" | "pi" | "moonpay" | "solana";
+type Method = "openpay_balance" | "pi" | "moonpay" | "helio" | "usdc";
 const methods: {
   id: Method;
   label: string;
   logoUrl?: string;
   icon?: LucideIcon;
-  solanaMark?: boolean;
+  helioMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -69,10 +67,16 @@ const methods: {
     desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
   },
   {
-    id: "solana",
-    label: "Solana Pay",
-    solanaMark: true,
-    desc: "Pay with SOL or USDC · 1 USD = 1 OUSD credited",
+    id: "usdc",
+    label: "USDC Pay",
+    logoUrl: USDC_LOGO_URL,
+    desc: "Pay with USDC · MoonPay Commerce → OUSD",
+  },
+  {
+    id: "helio",
+    label: "Crypto Deposit",
+    helioMark: true,
+    desc: "SOL / crypto · MoonPay Commerce → OUSD",
   },
 ];
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -83,7 +87,7 @@ const schema = z.object({
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
 const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
 
-function SolanaPayMark({ className }: { className?: string }) {
+function HelioMark({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -116,9 +120,7 @@ function TopUpPage() {
   const settleCharge = useServerFn(settleOpenPayCharge);
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const getLink = useServerFn(getOpenPayLinkStatus);
-  const creditSolana = useServerFn(creditSolanaPayTopup);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
-  const solanaReady = isSolanaMerchantConfigured();
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -327,36 +329,17 @@ function TopUpPage() {
     }
   }
 
-  async function settleSolanaTopup(signature: string, paidAmount: number) {
-    setBusy(true);
-    try {
-      const r = await creditSolana({
-        data: {
-          amount: paidAmount,
-          signature,
-          walletId: wallet?.id,
-        },
-      });
-      if (r.alreadyCredited) {
-        toast.message("This Solana payment was already credited");
-      } else {
-        toast.success(`Solana Pay complete · ${formatUSD(r.amount)} OUSD credited`);
-      }
-      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-      qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-      qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
-      qc.invalidateQueries({ queryKey: ["ledger-entries"] });
-      qc.invalidateQueries({ queryKey: ["ledger-overview"] });
-    } catch (err) {
-      toast.error((err as Error).message || "Could not credit Solana payment");
-    } finally {
-      setBusy(false);
-    }
+  function refreshAfterHelioDeposit() {
+    qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+    qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+    qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+    qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+    qc.invalidateQueries({ queryKey: ["ledger-overview"] });
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (method === "solana") return;
+    if (method === "helio" || method === "usdc") return;
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid");
@@ -441,7 +424,6 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
-  const amountValid = schema.safeParse({ amount }).success;
   const cta =
     method === "moonpay"
       ? `Buy with MoonPay${amount ? ` · ${formatUSD(amtNum)}` : ""}`
@@ -449,10 +431,10 @@ function TopUpPage() {
         ? linked
           ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
           : "Connect OpenPay to continue"
-        : method === "solana"
-          ? solanaReady
-            ? `Pay ${amount ? formatUSD(amtNum) : ""} with Solana`
-            : "Solana Pay not configured"
+        : method === "helio" || method === "usdc"
+          ? method === "usdc"
+            ? "Pay with USDC below"
+            : "Deposit crypto below"
           : `Top up ${amount ? formatUSD(amtNum) : ""}`;
 
   return (
@@ -598,13 +580,14 @@ function TopUpPage() {
                       "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
                       selected ? "bg-primary/15 ring-2 ring-primary/40" : "bg-muted",
                       m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
-                      m.id === "solana" && "bg-[#9945FF]/15 text-[#9945FF]",
+                      m.id === "helio" && "bg-[#9945FF]/15 text-[#9945FF]",
+                      m.id === "usdc" && "bg-[#2775CA]/15",
                     )}
                   >
                     {m.logoUrl ? (
                       <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
-                    ) : m.solanaMark ? (
-                      <SolanaPayMark className="h-5 w-5" />
+                    ) : m.helioMark ? (
+                      <HelioMark className="h-5 w-5" />
                     ) : Icon ? (
                       <Icon className="h-5 w-5" />
                     ) : null}
@@ -640,22 +623,24 @@ function TopUpPage() {
           </p>
         )}
 
-        {method === "solana" && (
+        {method === "helio" && (
           <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            {solanaReady ? (
-              <>
-                Opens Solana Pay in-page (QR + wallet) — pay in SOL/USDC, then{" "}
-                <span className="font-medium text-foreground">
-                  {wallet?.name ?? "your wallet"}
-                </span>{" "}
-                is credited 1:1 in OUSD.
-              </>
-            ) : (
-              <>
-                Set <code className="font-mono text-[11px]">VITE_SOLANA_MERCHANT_WALLET</code> to
-                enable Solana Pay top-ups.
-              </>
-            )}
+            Pay with SOL or other crypto via MoonPay Commerce — funds settle to OpenPay Pro,
+            then{" "}
+            <span className="font-medium text-foreground">
+              {wallet?.name ?? "your wallet"}
+            </span>{" "}
+            is credited in OUSD when the deposit confirms.
+          </p>
+        )}
+
+        {method === "usdc" && (
+          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
+            Pay with USDC via MoonPay Commerce — then{" "}
+            <span className="font-medium text-foreground">
+              {wallet?.name ?? "your wallet"}
+            </span>{" "}
+            is credited 1:1 in OUSD when the deposit confirms.
           </p>
         )}
 
@@ -687,50 +672,26 @@ function TopUpPage() {
           </p>
         )}
 
-        <div className="pt-1">
-          {method === "solana" && solanaReady && amountValid ? (
-            <SolanaPaymentButton
-              mode="buyNow"
-              showQR
-              position="inline"
-              className="w-full"
-              paymentConfig={{
-                products: [
-                  {
-                    id: `ousd-topup-${amtNum}`,
-                    name: `OUSD top-up ${formatUSD(amtNum)}`,
-                    price: amtNum,
-                    quantity: 1,
-                  },
-                ],
-              }}
-              onPaymentStart={() => setBusy(true)}
-              onPaymentSuccess={(signature) => {
-                void settleSolanaTopup(signature, amtNum);
-              }}
-              onPaymentError={() => setBusy(false)}
-              onCancel={() => setBusy(false)}
-            >
-              <button
-                type="button"
-                disabled={busy || amtNum < 1}
-                className="flex h-14 w-full items-center justify-center rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground press disabled:opacity-50"
-              >
-                {busy ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}
-                {cta}
-              </button>
-            </SolanaPaymentButton>
-          ) : (
+        {method === "helio" || method === "usdc" ? (
+          <div className="space-y-3">
+            <HelioDepositPanel
+              product={method === "usdc" ? "usdc" : "crypto"}
+              amountUsd={amtNum >= 1 ? amtNum : 100}
+              onSuccess={refreshAfterHelioDeposit}
+            />
+            <p className="text-center text-[11px] text-muted-foreground">
+              {method === "usdc"
+                ? "Powered by MoonPay Commerce · USDC Pay"
+                : "Powered by MoonPay Commerce · Helio Deposit"}
+            </p>
+          </div>
+        ) : (
+          <div className="pt-1">
             <Button
               type="submit"
               disabled={
                 busy ||
                 (method === "openpay_balance" && !linked) ||
-                (method === "solana" && (!solanaReady || !amountValid)) ||
                 amtNum < 1
               }
               className="h-14 w-full rounded-full text-base font-semibold"
@@ -738,15 +699,13 @@ function TopUpPage() {
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
               {cta}
             </Button>
-          )}
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            {method === "moonpay"
-              ? "Powered by MoonPay · card → OUSD credit"
-              : method === "solana"
-                ? "Powered by Solana Pay · Commerce Kit"
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              {method === "moonpay"
+                ? "Powered by MoonPay · card → OUSD credit"
                 : "1 OUSD = $1.00 · credited to your active wallet"}
-          </p>
-        </div>
+            </p>
+          </div>
+        )}
       </form>
 
       {moonpaySession ? (

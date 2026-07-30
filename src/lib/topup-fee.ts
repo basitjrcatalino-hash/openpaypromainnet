@@ -206,8 +206,27 @@ export async function creditTopupWithFee(
   };
   if (opts.txHash) txRow.tx_hash = opts.txHash;
 
-  const { error: txErr } = await opts.client.from("transactions").insert(txRow);
+  const { data: inserted, error: txErr } = await opts.client
+    .from("transactions")
+    .insert(txRow)
+    .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
+    .single();
   if (txErr) throw txErr;
+
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    await notifyWalletTransaction(admin as never, opts.userWalletId, inserted ?? {
+      type: "buy",
+      token_symbol: "OUSD",
+      amount: net,
+      memo: String(txRow.memo ?? opts.memo),
+      counterparty: opts.counterparty,
+      status: "confirmed",
+      wallet_id: opts.userWalletId,
+    });
+  } catch (e) {
+    console.warn("[topup-fee] tx alert failed", e);
+  }
 
   let feeCredited = false;
   if (fee > 0 && settings.feeWalletAddress) {

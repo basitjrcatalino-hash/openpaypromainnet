@@ -19,13 +19,11 @@ import {
   getOpenPayLinkedBalance,
 } from "@/lib/openpay-pro.functions";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
-import { isSolanaMerchantConfigured } from "@/lib/solana-payment";
-import { creditSolanaPayTopup } from "@/lib/solana-topup.functions";
 import { buyMajorWithOusd } from "@/lib/buy-major.functions";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
-import { SolanaPaymentButton } from "@/components/solana-payment-button";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { HelioDepositPanel } from "@/components/helio-deposit-panel";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -41,7 +39,7 @@ export type AssetBuyTarget = {
   status?: string | null;
 };
 
-type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout" | "moonpay" | "solana";
+type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout" | "moonpay" | "helio" | "usdc";
 
 const PRESETS = [10, 25, 50, 100, 250];
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
@@ -69,7 +67,6 @@ const ALL_METHODS: {
   label: string;
   logoUrl?: string;
   icon?: typeof CreditCard;
-  solanaMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -97,10 +94,15 @@ const ALL_METHODS: {
     desc: "Pay with Pi · live π price → OUSD ($1)",
   },
   {
-    id: "solana",
-    label: "Solana Pay",
-    solanaMark: true,
-    desc: "Pay with SOL or USDC · 1 USD = 1 OUSD",
+    id: "usdc",
+    label: "USDC Pay",
+    logoUrl: USDC_LOGO_URL,
+    desc: "Pay with USDC · MoonPay Commerce → OUSD",
+  },
+  {
+    id: "helio",
+    label: "Crypto Deposit",
+    desc: "SOL / crypto · MoonPay Commerce → OUSD",
   },
 ];
 
@@ -142,7 +144,6 @@ export function AssetBuySheet({
 
   const [amount, setAmount] = useState("25");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [awaitingSolana, setAwaitingSolana] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>(
     token.isOusd ? "pi" : "wallet_ousd",
   );
@@ -154,18 +155,15 @@ export function AssetBuySheet({
     externalTransactionId: string;
   } | null>(null);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
-  const creditSolana = useServerFn(creditSolanaPayTopup);
   const buyMajorFn = useServerFn(buyMajorWithOusd);
   const swapFn = useServerFn(executeOpenDexSwap);
 
   const isOusd = !!token.isOusd;
   const isMajor = !!token.majorId;
   const graduated = !isOusd && !isMajor && isOpenTokenGraduated(token);
-  const solanaReady = isSolanaMerchantConfigured();
   /** Wallet OUSD for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
   const methods = ALL_METHODS.filter((m) => {
     if (m.id === "wallet_ousd") return !isOusd;
-    if (!solanaReady && m.id === "solana") return false;
     return true;
   });
 
@@ -384,7 +382,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "solana") {
+        if (method === "helio" || method === "usdc") {
           return;
         }
         await startOpenPayCheckout(amt);
@@ -415,7 +413,7 @@ export function AssetBuySheet({
           setMoonpayVisible(true);
           return;
         }
-        if (method === "solana") return;
+        if (method === "helio" || method === "usdc") return;
         try {
           sessionStorage.setItem(
             PENDING_ASSET_BUY_KEY,
@@ -452,7 +450,7 @@ export function AssetBuySheet({
           setMoonpayVisible(true);
           return;
         }
-        if (method === "solana") return;
+        if (method === "helio" || method === "usdc") return;
         await startOpenPayCheckout(amt);
         return;
       }
@@ -481,7 +479,7 @@ export function AssetBuySheet({
         return;
       }
 
-      if (method === "solana") {
+      if (method === "helio" || method === "usdc") {
         return;
       }
 
@@ -501,11 +499,13 @@ export function AssetBuySheet({
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
       : method === "moonpay"
         ? `Buy with Card`
-        : method === "solana"
-          ? `Pay with Solana`
-          : openpayShort
-            ? `Amount exceeds OpenPay balance`
-            : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+        : method === "usdc"
+          ? `Pay with USDC`
+          : method === "helio"
+            ? `Deposit crypto`
+            : openpayShort
+              ? `Amount exceeds OpenPay balance`
+              : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
     : isMajor
       ? method === "wallet_ousd"
         ? `Buy ${token.symbol} with OUSD`
@@ -513,7 +513,11 @@ export function AssetBuySheet({
           ? `Buy ${token.symbol} with Card`
           : method === "pi"
             ? `Buy ${token.symbol} with Pi`
-            : `Buy ${token.symbol}`
+            : method === "usdc"
+              ? `Pay with USDC`
+              : method === "helio"
+                ? `Deposit crypto`
+                : `Buy ${token.symbol}`
     : graduated
       ? method === "wallet_ousd"
         ? `Buy $${token.symbol} with OUSD`
@@ -521,22 +525,26 @@ export function AssetBuySheet({
           ? `Buy $${token.symbol} with Pi`
           : method === "moonpay"
             ? `Buy $${token.symbol} with Card`
-            : method === "solana"
-              ? `Pay with Solana & Buy`
-              : openpayShort
-                ? `Amount exceeds OpenPay balance`
-                : `Buy $${token.symbol}`
+            : method === "usdc"
+              ? `Pay with USDC`
+              : method === "helio"
+                ? `Deposit crypto`
+                : openpayShort
+                  ? `Amount exceeds OpenPay balance`
+                  : `Buy $${token.symbol}`
       : method === "wallet_ousd"
         ? `Buy $${token.symbol}`
         : method === "pi"
           ? `Pay with Pi & Buy`
           : method === "moonpay"
             ? `Buy with Card`
-            : method === "solana"
-              ? `Pay with Solana & Buy`
-              : openpayShort
-                ? `Amount exceeds OpenPay balance`
-                : `Pay with OpenPay & Buy`;
+            : method === "usdc"
+              ? `Pay with USDC`
+              : method === "helio"
+                ? `Deposit crypto`
+                : openpayShort
+                  ? `Amount exceeds OpenPay balance`
+                  : `Pay with OpenPay & Buy`;
 
   if (!open) return null;
 
@@ -629,7 +637,6 @@ export function AssetBuySheet({
           value={method}
           onChange={(m) => {
             setActionError(null);
-            setAwaitingSolana(false);
             setMethod(m);
           }}
           className="mb-4"
@@ -684,71 +691,22 @@ export function AssetBuySheet({
           </div>
         ) : null}
 
-        {method === "solana" && solanaReady && awaitingSolana ? (
-          <SolanaPaymentButton
-            mode="buyNow"
-            showQR
-            position="inline"
-            className="w-full"
-            paymentConfig={{
-              products: [
-                {
-                  id: `asset-buy-${token.id}-${amtNum}`,
-                  name: isOusd ? `OUSD top-up ${formatUSD(amtNum)}` : `Buy $${token.symbol}`,
-                  price: amtNum,
-                  quantity: 1,
-                },
-              ],
-            }}
-            onPaymentStart={() => setBusy(true)}
-            onPaymentSuccess={(signature) => {
-              void (async () => {
-                try {
-                  await creditSolana({
-                    data: {
-                      amount: amtNum,
-                      signature,
-                      walletId: walletId!,
-                    },
-                  });
-                  toast.success(`${formatUSD(amtNum)} OUSD credited from Solana`);
-                  setAwaitingSolana(false);
-                  if (isMajor && token.majorId) {
-                    await executeMajorBuy(amtNum);
-                  } else if (graduated) {
-                    await executeDexBuy(amtNum);
-                  } else if (!isOusd) {
-                    await executeTokenBuy(amtNum);
-                  } else {
-                    await invalidateAfterTopup();
-                    onClose();
-                  }
-                } catch (err) {
-                  const msg = (err as Error).message || "Solana top-up failed";
-                  setActionError(msg);
-                  toast.error(msg);
-                } finally {
-                  setBusy(false);
-                }
-              })();
-            }}
-            onPaymentError={() => {
-              setBusy(false);
-              setAwaitingSolana(false);
-            }}
-            onCancel={() => {
-              setBusy(false);
-              setAwaitingSolana(false);
-            }}
-          >
-            <button
-              type="button"
-              disabled={busy || !valid || amtNum < MIN_BUY_AMOUNT}
-              className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground press disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continue with Solana"}
-            </button>
-          </SolanaPaymentButton>
+        {method === "helio" || method === "usdc" ? (
+          <div className="mb-2 space-y-2">
+            <HelioDepositPanel
+              product={method === "usdc" ? "usdc" : "crypto"}
+              amountUsd={amtNum >= 1 ? amtNum : 25}
+              onSuccess={() => {
+                void invalidateAfterTopup();
+                if (isOusd) onClose();
+              }}
+            />
+            {!isOusd ? (
+              <p className="text-center text-[11px] text-muted-foreground">
+                After the deposit confirms, buy {token.symbol} with Wallet OUSD.
+              </p>
+            ) : null}
+          </div>
         ) : (
           <Button
             type="button"
@@ -787,23 +745,20 @@ export function AssetBuySheet({
                     ? "Pi Network"
                     : method === "moonpay"
                       ? "Card (MoonPay)"
-                      : method === "solana"
-                        ? "Solana"
-                        : "OpenPay",
+                      : method === "usdc"
+                        ? "USDC Pay"
+                        : method === "helio"
+                          ? "Crypto Deposit"
+                          : "OpenPay",
             },
             ...(!isOusd && method === "wallet_ousd"
               ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
               : []),
           ]}
-          confirmLabel={method === "solana" ? "Continue" : ctaLabel}
+          confirmLabel={ctaLabel}
           busy={busy}
           variant={method === "openpay_checkout" ? "openpay" : "default"}
           onConfirm={() => {
-            if (method === "solana" && solanaReady) {
-              setConfirmOpen(false);
-              setAwaitingSolana(true);
-              return;
-            }
             void submit();
           }}
         />

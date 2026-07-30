@@ -79,7 +79,7 @@ export function useTransactionNotifications(userId: string) {
       if (!opts?.silent && !likelyLocalAction) {
         toast(note.title, { id: `tx-${note.txId}`, description: note.body });
       }
-      if (pushOn) showBrowserNotification(note);
+      if (pushOn) void showBrowserNotification(note);
       void qc.invalidateQueries({ queryKey: ["recent-txs"] });
       void qc.invalidateQueries({ queryKey: ["all-txs"] });
       void qc.invalidateQueries({ queryKey: ["active-wallet", userId] });
@@ -110,6 +110,12 @@ export function useTransactionNotifications(userId: string) {
       cancelled = true;
     };
   }, [userId, walletIds]);
+
+  // Keep service worker registered when lock-screen push is enabled
+  useEffect(() => {
+    if (!pushOn) return;
+    void import("@/lib/push-client").then((m) => m.registerPushServiceWorker());
+  }, [pushOn]);
 
   // Realtime: notify on every new transaction for this user's wallets
   useEffect(() => {

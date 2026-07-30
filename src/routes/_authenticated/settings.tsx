@@ -1029,19 +1029,31 @@ function SettingsPage() {
                 }
               />
             </SettingRow>
-            <SettingRow label="Browser push" desc="System notifications when tab is in background">
+            <SettingRow label="Lock-screen push" desc="System notifications when phone is locked or app is closed (Phantom-style)">
               <Switch
                 checked={
                   (prefs?.notifications as Record<string, boolean> | null)?.browser_push ?? false
                 }
                 onCheckedChange={async (v) => {
                   if (v) {
-                    const { ensureBrowserPermission } = await import("@/lib/tx-notifications");
-                    const perm = await ensureBrowserPermission();
-                    if (perm !== "granted") {
-                      toast.error("Browser notification permission denied");
+                    const { syncPushSubscription } = await import("@/lib/push-client");
+                    const status = await syncPushSubscription(true);
+                    if (status === "denied") {
+                      toast.error("Notification permission denied");
                       return;
                     }
+                    if (status === "unsupported") {
+                      toast.error("Push not supported on this device — install to Home Screen on iOS");
+                      return;
+                    }
+                    if (status === "error") {
+                      toast.error("Could not enable lock-screen push");
+                      return;
+                    }
+                    toast.success("Lock-screen notifications enabled");
+                  } else {
+                    const { syncPushSubscription } = await import("@/lib/push-client");
+                    await syncPushSubscription(false);
                   }
                   updatePref({
                     notifications: {
@@ -1050,6 +1062,21 @@ function SettingsPage() {
                     },
                   });
                 }}
+              />
+            </SettingRow>
+            <SettingRow label="Email alerts" desc="Email every confirmed transaction to your account email">
+              <Switch
+                checked={
+                  (prefs?.notifications as Record<string, boolean> | null)?.email_alerts ?? true
+                }
+                onCheckedChange={(v) =>
+                  updatePref({
+                    notifications: {
+                      ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                      email_alerts: v,
+                    },
+                  })
+                }
               />
             </SettingRow>
           </div>

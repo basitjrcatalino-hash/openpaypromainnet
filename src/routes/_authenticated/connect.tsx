@@ -9,15 +9,14 @@ import {
   Terminal,
   MessageSquare,
   Sparkles,
-  ChevronRight,
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_authenticated/connect")({
   head: () => ({

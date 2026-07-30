@@ -51,6 +51,70 @@ function messageText(parts: Array<{ type: string; text?: string }>) {
   return parts.map((p) => (p.type === "text" ? (p.text ?? "") : "")).join("");
 }
 
+/** Plain text for speech: strip markdown syntax so the voice doesn't read symbols. */
+function speechText(markdown: string) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, " code block ")
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/[*_>#|]/g, "")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function useSpeech() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  function stop() {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setSpeakingId(null);
+    setLoadingId(null);
+  }
+
+  useEffect(() => () => audioRef.current?.pause(), []);
+
+  async function speak(id: string, text: string) {
+    if (speakingId === id || loadingId === id) {
+      stop();
+      return;
+    }
+    stop();
+    const value = speechText(text);
+    if (!value) return;
+    setLoadingId(id);
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: value }),
+      });
+      if (!res.ok) throw new Error((await res.text()) || "Text-to-speech failed");
+      const url = URL.createObjectURL(await res.blob());
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setSpeakingId(null);
+      };
+      await audio.play();
+      setLoadingId(null);
+      setSpeakingId(id);
+    } catch (e) {
+      setLoadingId(null);
+      setSpeakingId(null);
+      toast.error(e instanceof Error ? e.message : "Could not play audio");
+    }
+  }
+
+  return { speak, stop, speakingId, loadingId };
+}
+
 function AiAssistantPage() {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -62,6 +126,8 @@ function AiAssistantPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
+  const speech = useSpeech();
+
 
   useEffect(() => {
     inputRef.current?.focus();

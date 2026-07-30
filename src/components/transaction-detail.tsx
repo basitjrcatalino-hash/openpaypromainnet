@@ -10,6 +10,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import type { Tables } from "@/integrations/supabase/types";
 import type { ActivityItem } from "@/lib/activity";
@@ -240,7 +241,7 @@ export function TransactionDetailSheet({
 
   async function copy(label: string, value: string) {
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
       setCopied(label);
       toast.success("Copied");
       setTimeout(() => setCopied(null), 1200);

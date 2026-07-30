@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,7 +49,7 @@ const PARTNER_PORTAL = "https://openpy.space/partner-api";
 const AUTH_DOCS = "https://openpy.space/openpay-auth";
 
 function copy(text: string, label = "Copied") {
-  void navigator.clipboard.writeText(text).then(
+  void copyText(text).then(
     () => toast.success(label),
     () => toast.error("Copy failed"),
   );

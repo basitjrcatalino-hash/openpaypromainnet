@@ -50,6 +50,7 @@ import { formatCurrency, useCurrency } from "@/lib/currency";
 import { PageTransition } from "@/components/wallet/PageTransition";
 import { CurrencyProvider } from "@/components/currency-provider";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
@@ -492,7 +493,7 @@ function SidebarInner({
   async function copyAddress() {
     if (!activeWallet?.address) return;
     try {
-      await navigator.clipboard.writeText(activeWallet.address);
+      await copyText(activeWallet.address);
       setCopied(true);
       toast.success("Address copied");
       setTimeout(() => setCopied(false), 1500);

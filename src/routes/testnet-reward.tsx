@@ -11,8 +11,18 @@ export const Route = createFileRoute("/testnet-reward")({
   head: () => ({
     meta: [
       { title: "Claim Test Pi — OpenPay Pro" },
-      { name: "description", content: "Claim a Pi Testnet reward to help OpenPay Pro qualify for Mainnet." },
+      {
+        name: "description",
+        content: "Claim a Pi Testnet reward to help OpenPay Pro qualify for Pi Mainnet listing.",
+      },
+      { property: "og:title", content: "Claim Test Pi — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "Claim a Pi Testnet reward and help OpenPay Pro qualify for Mainnet.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/testnet-reward" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/testnet-reward" }],
   }),
   component: () => (
     <PiAuthProvider>

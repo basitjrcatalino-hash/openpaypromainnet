@@ -20,7 +20,6 @@
     "@metamask/connect-solana": "^2.1.1",
     "@moonpay/moonpay-js": "^0.7.6",
     "@moonpay/moonpay-react": "^1.10.6",
-    "@openrouter/sdk": "^1.1.22",
     "@phantom/react-sdk": "^2.0.2",
     "@privy-io/react-auth": "^3.35.2",
     "@radix-ui/react-accordion": "^1.2.12",

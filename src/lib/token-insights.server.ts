@@ -1,5 +1,3 @@
-import { OpenRouter } from "@openrouter/sdk";
-
 export const TOKEN_INSIGHTS_MODEL = "inclusionai/ling-3.0-flash:free";
 
 export type TokenInsightNews = {
@@ -58,7 +56,10 @@ function fallbackInsights(input: TokenInsightInput): TokenInsightsPayload {
   const sentiment = up ? "bullish" : input.change24h <= -1 ? "bearish" : "neutral";
   const direction = up ? "gained" : "slipped";
   const abs = Math.abs(input.change24h).toFixed(2);
-  const price = input.priceUsd > 0 ? `$${input.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 6 })}` : "its latest mark";
+  const price =
+    input.priceUsd > 0
+      ? `$${input.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 6 })}`
+      : "its latest mark";
   const summary = `${input.name} (${input.symbol}) ${direction} ${abs}% over the last 24 hours and is trading near ${price} on ${input.network}. Market activity remains mixed — treat this as a snapshot, not financial advice.`;
 
   return {
@@ -195,7 +196,6 @@ function messageText(result: unknown): string {
   if (typeof choice.content === "string" && choice.content.trim()) {
     return choice.content;
   }
-  // Ling flash may spend budget on reasoning; salvage JSON from it
   if (typeof choice.reasoning === "string" && choice.reasoning.includes("{")) {
     return choice.reasoning;
   }
@@ -203,8 +203,8 @@ function messageText(result: unknown): string {
 }
 
 /**
- * Phantom-style token market insight via OpenRouter (Ling 3.0 Flash free).
- * Falls back to a local snapshot when the key/model is unavailable.
+ * Phantom-style token market insight via OpenRouter REST API (no SDK).
+ * Model: inclusionai/ling-3.0-flash:free
  */
 export async function generateTokenInsights(
   input: TokenInsightInput,
@@ -236,14 +236,16 @@ export async function generateTokenInsights(
   ].join("\n");
 
   try {
-    const openrouter = new OpenRouter({
-      apiKey: key,
-      httpReferer: process.env.OPENROUTER_HTTP_REFERER?.trim() || "https://openpy.space",
-      appTitle: process.env.OPENROUTER_APP_TITLE?.trim() || "OpenPay Pro",
-    });
-
-    const result = await openrouter.chat.send({
-      chatRequest: {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer":
+          process.env.OPENROUTER_HTTP_REFERER?.trim() || "https://openpy.space",
+        "X-Title": process.env.OPENROUTER_APP_TITLE?.trim() || "OpenPay Pro",
+      },
+      body: JSON.stringify({
         model: TOKEN_INSIGHTS_MODEL,
         messages: [
           {
@@ -255,11 +257,18 @@ export async function generateTokenInsights(
         ],
         stream: false,
         temperature: 0.4,
-        maxTokens: 1600,
-        reasoningEffort: "minimal",
-      },
+        max_tokens: 1600,
+        reasoning: { effort: "minimal" },
+      }),
     });
 
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error("[token-insights] OpenRouter HTTP", res.status, body.slice(0, 400));
+      return fallbackInsights(input);
+    }
+
+    const result = (await res.json()) as unknown;
     const content = messageText(result);
     if (!content.trim()) return fallbackInsights(input);
     return normalizeInsights(extractJsonObject(content), input);

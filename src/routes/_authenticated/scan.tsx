@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
@@ -186,7 +187,7 @@ function ScanPage() {
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyToClipboardRobust(wallet.address);
       toast.success("Address copied");
     } catch {
       toast.error("Couldn’t copy");

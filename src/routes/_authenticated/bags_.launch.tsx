@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ExternalLink, ImageIcon, Link2, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsCashIcon } from "@/components/bags/BagsCashIcon";
@@ -612,7 +613,7 @@ function BagsLaunchPage() {
           if (symbol) params.set("ticker", symbol);
           if (description) params.set("description", description);
           if (imageUrl) params.set("image", imageUrl);
-          void navigator.clipboard.writeText(
+          void copyToClipboardRobust(
             `${window.location.origin}/bags/launch?${params.toString()}`,
           );
           toast.success("Launch settings link copied");

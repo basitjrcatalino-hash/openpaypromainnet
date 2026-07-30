@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -686,7 +687,7 @@ function SettingsPage() {
             setRenameValue(w.name);
           }}
           onCopy={(w) => {
-            void navigator.clipboard.writeText(w.address);
+            void copyToClipboardRobust(w.address);
             toast.success("Address copied");
           }}
           onRemove={(w) => setConfirmDeleteId(w.id)}
@@ -786,7 +787,7 @@ function SettingsPage() {
                         variant="outline"
                         className="flex-1 rounded-full"
                         onClick={() => {
-                          navigator.clipboard.writeText(mnemonic.join(" "));
+                          copyToClipboardRobust(mnemonic.join(" "));
                           toast.success("Phrase copied");
                         }}
                       >
@@ -1695,7 +1696,7 @@ function RecoveryCard({
                 variant="outline"
                 className="rounded-full"
                 onClick={() => {
-                  navigator.clipboard.writeText(phrase.join(" "));
+                  copyToClipboardRobust(phrase.join(" "));
                   toast.success("Copied");
                 }}
               >

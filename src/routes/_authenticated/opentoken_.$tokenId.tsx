@@ -19,6 +19,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -329,7 +330,7 @@ function OpenTokenDetail() {
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
             onClick={() => {
-              void navigator.clipboard.writeText(window.location.href);
+              void copyToClipboardRobust(window.location.href);
               toast.success("Link copied");
             }}
             aria-label="Share"
@@ -507,7 +508,7 @@ function OpenTokenDetail() {
                 type="button"
                 className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-primary"
                 onClick={() => {
-                  void navigator.clipboard.writeText(token.contract_address!);
+                  void copyToClipboardRobust(token.contract_address!);
                   toast.success("Address copied");
                 }}
               >
@@ -637,7 +638,7 @@ function OpenTokenDetail() {
                     type="button"
                     className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
                     onClick={() => {
-                      void navigator.clipboard.writeText(devAddress);
+                      void copyToClipboardRobust(devAddress);
                       toast.success("Dev wallet copied");
                     }}
                   >
@@ -654,7 +655,7 @@ function OpenTokenDetail() {
                     type="button"
                     className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
                     onClick={() => {
-                      void navigator.clipboard.writeText(token.contract_address!);
+                      void copyToClipboardRobust(token.contract_address!);
                       toast.success("Contract copied");
                     }}
                   >

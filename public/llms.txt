@@ -1,0 +1,17 @@
+# OpenPay Pro Wallet
+
+> Self-custody Web3 wallet for the OpenPay ecosystem: hold OUSD and Pi, swap tokens, mint NFTs, send payments, and track every transaction on a public ledger.
+
+## Pages
+
+- [Sign in](/authpi): Sign in with Pi Network, OpenPay, Phantom, MetaMask, or Telegram.
+- [Transfer Pi guide](/guides/transfer-pi): How to transfer Pi Network assets into OpenPay Pro.
+- [FAQ](/docs/faq): Wallets, send/receive, currencies, security, and integrations.
+- [OpenPay integration docs](/docs/openpay): Connect with OpenPay (OAuth) and OpenPay Balance payments.
+- [Claim Test Pi](/testnet-reward): Pi Testnet reward claim page.
+
+## Optional
+
+- [Terms of Service](/terms): Terms governing use of OpenPay Pro.
+- [Privacy Policy](/privacy): How data is collected and protected.
+- [Regulatory status](/regulatory): Disclosures on providers and price feeds.

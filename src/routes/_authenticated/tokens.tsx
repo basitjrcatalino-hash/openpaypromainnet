@@ -21,7 +21,31 @@ import {
 } from "@/lib/major-tokens";
 
 export const Route = createFileRoute("/_authenticated/tokens")({
-  head: () => ({ meta: [{ title: "Tokens — OpenPay Pro" }] }),
+  head: () => ({
+    meta: [
+      { title: "Tokens — OpenPay Pro" },
+      {
+        name: "description",
+        content: "Browse, swap, and track token prices and balances inside your OpenPay Pro wallet.",
+      },
+      { property: "og:title", content: "Tokens — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "Browse, swap, and track token prices and balances in OpenPay Pro.",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Tokens on OpenPay Pro",
+          description: "Digital tokens available to hold and swap in the OpenPay Pro wallet.",
+        }),
+      },
+    ],
+  }),
   component: TokensPage,
 });
 

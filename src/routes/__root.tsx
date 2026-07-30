@@ -119,23 +119,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#000000" },
-      { title: "OpenPay Pro Wallet" },
+      { title: "OpenPay Pro Wallet — Secure Web3 Gateway for OUSD & NFTs" },
       {
         name: "description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "OpenPay Pro Wallet is a Web3 wallet for the OpenPay ecosystem: hold OUSD and Pi, swap tokens, mint NFTs, and pay with full control of your keys.",
       },
-      { property: "og:title", content: "OpenPay Pro Wallet" },
-      { name: "twitter:title", content: "OpenPay Pro Wallet" },
+      { property: "og:site_name", content: "OpenPay Pro Wallet" },
+      { property: "og:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
+      { name: "twitter:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
       {
         property: "og:description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
       },
       {
         name: "twitter:description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
       },
       {
         property: "og:image",
@@ -158,6 +159,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap",
       },
       { rel: "stylesheet", href: appCss },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "OpenPay Pro",
+              url: "https://openpaypro.space",
+              logo: "https://openpaypro.space/ousd-logo.svg",
+            },
+            {
+              "@type": "WebSite",
+              name: "OpenPay Pro Wallet",
+              url: "https://openpaypro.space",
+            },
+          ],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,

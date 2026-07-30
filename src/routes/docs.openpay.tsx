@@ -23,13 +23,20 @@ import { useTheme } from "@/components/theme-provider";
 export const Route = createFileRoute("/docs/openpay")({
   head: () => ({
     meta: [
-      { title: "OpenPay Integration — Connect & Payments" },
+      { title: "OpenPay Integration Docs — Connect & Payments" },
       {
         name: "description",
         content:
           "Add Connect with OpenPay (OAuth) and OpenPay Balance payments to any third-party app. Partner API portal: openpy.space/partner-api.",
       },
+      { property: "og:title", content: "OpenPay Integration Docs — Connect & Payments" },
+      {
+        property: "og:description",
+        content: "Developer guide to OpenPay OAuth Connect and OpenPay Balance payments.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/docs/openpay" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/docs/openpay" }],
   }),
   component: OpenPayDocsPage,
 });

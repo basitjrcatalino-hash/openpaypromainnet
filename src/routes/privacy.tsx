@@ -7,9 +7,17 @@ export const Route = createFileRoute("/privacy")({
       { title: "Privacy Policy — OpenPay Pro" },
       {
         name: "description",
-        content: "Privacy Policy for the OpenPay Pro wallet.",
+        content:
+          "How OpenPay Pro collects, uses, and protects your wallet, payment, and account data.",
       },
+      { property: "og:title", content: "Privacy Policy — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "How OpenPay Pro collects, uses, and protects your wallet and account data.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/privacy" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/privacy" }],
   }),
   component: PrivacyPage,
 });

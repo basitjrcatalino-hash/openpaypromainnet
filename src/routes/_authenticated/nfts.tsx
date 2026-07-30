@@ -32,7 +32,31 @@ import {
 } from "@/lib/openpay-nft";
 
 export const Route = createFileRoute("/_authenticated/nfts")({
-  head: () => ({ meta: [{ title: "Collectibles — OpenPay Pro" }] }),
+  head: () => ({
+    meta: [
+      { title: "Collectibles — OpenPay Pro" },
+      {
+        name: "description",
+        content: "View your NFT collectibles and browse the OpenPay Pro NFT marketplace.",
+      },
+      { property: "og:title", content: "Collectibles — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "Your NFT collectibles and the OpenPay Pro NFT marketplace.",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "NFT collectibles on OpenPay Pro",
+          description: "NFT collectibles and marketplace listings in the OpenPay Pro wallet.",
+        }),
+      },
+    ],
+  }),
   component: NFTPage,
 });
 

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /lovable/
+Disallow: /admin
+Disallow: /.well-known/
+
+Sitemap: https://openpaypro.space/sitemap.xml

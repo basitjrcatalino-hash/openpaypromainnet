@@ -7,9 +7,17 @@ export const Route = createFileRoute("/terms")({
       { title: "Terms of Service — OpenPay Pro" },
       {
         name: "description",
-        content: "Terms of Service for the OpenPay Pro wallet.",
+        content:
+          "The terms that govern your use of the OpenPay Pro wallet, transfers, tokens, and NFT features.",
       },
+      { property: "og:title", content: "Terms of Service — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "The terms governing use of the OpenPay Pro wallet, transfers, tokens, and NFTs.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/terms" }],
   }),
   component: TermsPage,
 });

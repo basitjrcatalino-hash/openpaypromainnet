@@ -8,22 +8,25 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import novaAvatar from "@/assets/openpay-pro-mark.png";
+import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
+
+/** OpenPay AI assistant avatar (official OpenPay logo). */
+const AI_AVATAR = OPENPAY_AUTH_LOGO;
 
 
 export const Route = createFileRoute("/_authenticated/ai")({
   head: () => ({
     meta: [
-      { title: "Nova AI Assistant — OpenPay Pro Wallet" },
+      { title: "OpenPay AI Assistant — OpenPay Pro Wallet" },
       {
         name: "description",
         content:
-          "Chat with Nova, the OpenPay Pro AI assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger, KYC and connecting AI agents over MCP.",
+          "Chat with OpenPay AI, the OpenPay Pro assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger, KYC and connecting AI agents over MCP.",
       },
-      { property: "og:title", content: "Nova AI Assistant — OpenPay Pro Wallet" },
+      { property: "og:title", content: "OpenPay AI Assistant — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Ask Nova anything about OpenPay Pro and OpenPay — balances, top ups, transfers and agent connections.",
+        content: "Ask OpenPay AI anything about OpenPay Pro and OpenPay — balances, top ups, transfers and agent connections.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -47,7 +50,7 @@ function AiAssistantPage() {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, setMessages } = useChat({
     transport,
-    onError: (e) => toast.error(e.message || "Nova is unavailable right now"),
+    onError: (e) => toast.error(e.message || "OpenPay AI is unavailable right now"),
   });
 
   const [input, setInput] = useState("");
@@ -86,19 +89,19 @@ function AiAssistantPage() {
           type="button"
           className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground press"
           aria-label="More"
-          onClick={() => toast("Nova answers questions about OpenPay Pro and OpenPay.")}
+          onClick={() => toast("OpenPay AI answers questions about OpenPay Pro and OpenPay.")}
         >
           <MoreVertical className="h-5 w-5" />
         </button>
         <img
-          src={novaAvatar}
-          alt="Nova assistant"
+          src={AI_AVATAR}
+          alt="OpenPay AI assistant"
           width={512}
           height={512}
           loading="lazy"
           className="h-8 w-8 rounded-[0.6rem]"
         />
-        <span className="text-base font-bold">Nova</span>
+        <span className="text-base font-bold">OpenPay AI</span>
         <button
           type="button"
           onClick={() => {
@@ -117,16 +120,16 @@ function AiAssistantPage() {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center gap-4 px-6 text-center">
             <img
-              src={novaAvatar}
-              alt="Nova assistant"
+              src={AI_AVATAR}
+              alt="OpenPay AI assistant"
               width={512}
               height={512}
               className="h-20 w-20 rounded-[1.4rem] shadow-lg"
             />
-            <h1 className="text-2xl font-bold">Nova</h1>
+            <h1 className="text-2xl font-bold">OpenPay AI</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Responses may not always be accurate. Nova is trained on OpenPay Pro and OpenPay
-              features — it cannot see your balances or move funds.
+              Responses may not always be accurate. OpenPay AI is trained on OpenPay Pro and
+              OpenPay features — it cannot see your balances or move funds.
             </p>
             <div className="mt-2 grid w-full gap-2 sm:grid-cols-2">
               {SUGGESTIONS.map((s) => (
@@ -157,14 +160,14 @@ function AiAssistantPage() {
               return (
                 <div key={m.id} className="flex gap-3">
                   <img
-                    src={novaAvatar}
+                    src={AI_AVATAR}
                     alt=""
                     width={512}
                     height={512}
                     loading="lazy"
                     className="mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]"
                   />
-                  <NovaMarkdown text={text} />
+                  <OpenPayMarkdown text={text} />
 
                 </div>
               );
@@ -172,7 +175,7 @@ function AiAssistantPage() {
             {status === "submitted" ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <img
-                  src={novaAvatar}
+                  src={AI_AVATAR}
                   alt=""
                   width={512}
                   height={512}
@@ -231,7 +234,7 @@ function AiAssistantPage() {
  * Claude-style answer typography: generous line height, clear heading rhythm,
  * readable lists, soft code blocks and bordered tables.
  */
-function NovaMarkdown({ text }: { text: string }) {
+function OpenPayMarkdown({ text }: { text: string }) {
   return (
     <div className="min-w-0 max-w-none text-[15px] leading-[1.75] tracking-[-0.005em] text-foreground">
       <ReactMarkdown

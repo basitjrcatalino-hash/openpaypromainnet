@@ -3,6 +3,7 @@ import {
   Outlet,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SplashScreen } from "@/components/splash-screen";
+import { RouteProgress } from "@/components/wallet/RouteProgress";
+import { PageTransition } from "@/components/wallet/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getSupabasePublishableKey,
@@ -219,6 +222,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  // The authenticated shell runs its own page transition around <Outlet />,
+  // so skip the root-level one there to avoid animating the sidebar/tabbar.
+  const inAppShell = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId.startsWith("/_authenticated")),
+  });
 
   useEffect(() => {
     void import("@/lib/buffer-polyfill")
@@ -239,7 +247,10 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <SplashScreen />
-        <Outlet />
+        <RouteProgress />
+        <PageTransition disabled={inAppShell}>
+          <Outlet />
+        </PageTransition>
         <Toaster richColors position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>

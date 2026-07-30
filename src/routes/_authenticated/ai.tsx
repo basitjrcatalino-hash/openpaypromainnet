@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowUp, ChevronLeft, MoreVertical } from "lucide-react";
+import { ArrowUp, ChevronLeft, Loader2, MoreVertical, Square, Volume2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -12,6 +12,11 @@ import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 
 /** OpenPay AI assistant avatar (official OpenPay logo). */
 const AI_AVATAR = OPENPAY_AUTH_LOGO;
+
+/** The logo mark is light-on-transparent, so it needs a dark plate in light mode. */
+const AVATAR_PLATE = "bg-foreground object-contain p-1 dark:bg-transparent dark:p-0";
+
+
 
 
 export const Route = createFileRoute("/_authenticated/ai")({

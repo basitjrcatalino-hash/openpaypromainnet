@@ -820,3 +820,21 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   z-index: 200 !important;
 }
 
+
+/* Route progress bar */
+@keyframes ph-progress-run {
+  0% { transform: scaleX(0); }
+  60% { transform: scaleX(.72); }
+  100% { transform: scaleX(.92); }
+}
+@keyframes ph-progress-done {
+  0% { opacity: 1; transform: scaleX(.92); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
+.ph-progress-run { animation: ph-progress-run 1.6s cubic-bezier(.22,1,.36,1) forwards; }
+.ph-progress-done { animation: ph-progress-done .24s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-progress-run,
+  .ph-progress-done { animation: none; opacity: .6; }
+}

@@ -30,6 +30,7 @@ import {
   HelpCircle,
   MessageCircle,
   Bot,
+  Sparkles,
 } from "lucide-react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";

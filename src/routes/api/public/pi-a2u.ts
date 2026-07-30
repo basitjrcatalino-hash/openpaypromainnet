@@ -328,7 +328,19 @@ async function handle(req: Request): Promise<Response> {
       return json({ success: true, data: user });
     }
     if (action === "progress") { return json({ success: true, data: await getProgress() }); }
-    if (action === "admin_dashboard") { return json({ success: true, data: await getAdminDashboard() }); }
+    if (action === "admin_dashboard") {
+      const authHeader = req.headers.get("authorization") || "";
+      if (!authHeader.toLowerCase().startsWith("bearer ")) return json({ error: "Unauthorized" }, 401);
+      const jwt = authHeader.slice(7).trim();
+      const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(jwt);
+      if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
+      const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+        _user_id: userData.user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+      return json({ success: true, data: await getAdminDashboard() });
+    }
     if (action === "claim") {
       const b = body as { accessToken?: string; amount?: number; memo?: string };
       const token = String(b?.accessToken || "");

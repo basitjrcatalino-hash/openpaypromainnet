@@ -16,6 +16,7 @@
     "@circle-fin/developer-controlled-wallets": "^10.8.0",
     "@heliofi/deposit-react": "^1.1.1",
     "@hookform/resolvers": "^5.2.2",
+    "@lovable.dev/mcp-js": "^0.25.0",
     "@metamask/connect-multichain": "^1.2.0",
     "@metamask/connect-solana": "^2.1.1",
     "@moonpay/moonpay-js": "^0.7.6",

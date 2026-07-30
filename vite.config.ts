@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -92,7 +93,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [web3authEventsShimPlugin()],
+    plugins: [web3authEventsShimPlugin(), mcpPlugin()],
     define: {
       global: "globalThis",
     },

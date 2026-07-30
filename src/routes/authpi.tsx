@@ -32,6 +32,40 @@ const MetaMaskEmbeddedAuthPanel = lazy(() =>
   })),
 );
 
+const POST_AUTH_KEY = "post_auth_redirect";
+
+/** Where to land after sign-in — honours ?next= (same-origin path only). */
+function postAuthTarget(): string {
+  try {
+    const v = sessionStorage.getItem(POST_AUTH_KEY);
+    if (v && v.startsWith("/") && !v.startsWith("//")) return v;
+  } catch {
+    /* ignore */
+  }
+  return "/dashboard";
+}
+
+function captureNextParam() {
+  try {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      sessionStorage.setItem(POST_AUTH_KEY, next);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function goPostAuth() {
+  const target = postAuthTarget();
+  try {
+    sessionStorage.removeItem(POST_AUTH_KEY);
+  } catch {
+    /* ignore */
+  }
+  window.location.assign(target);
+}
+
 export const Route = createFileRoute("/authpi")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign in — OpenPay Pro Wallet" }] }),
@@ -224,7 +258,7 @@ function PrivySessionButton({
           email: user.email,
           wallet: user.wallet,
         });
-        if (!cancelled) navigate({ to: "/dashboard" });
+        if (!cancelled) goPostAuth();
       } catch (err) {
         if (!cancelled) {
           toast.error((err as Error).message || "Privy sign-in failed");
@@ -332,6 +366,7 @@ function AuthPiPageInner() {
   const [pulseId, setPulseId] = useState<AuthMethod | null>(null);
 
   useEffect(() => {
+    captureNextParam();
     ensureTopLevelAuthWindow();
   }, []);
 
@@ -339,7 +374,7 @@ function AuthPiPageInner() {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) goPostAuth();
     });
     return () => {
       cancelled = true;
@@ -415,15 +450,15 @@ function AuthPiPageInner() {
     setBusy(true);
     try {
       if (method === "openpay") {
-        await startOpenPaySignIn({ redirectTo: "/dashboard" });
+        await startOpenPaySignIn({ redirectTo: postAuthTarget() });
         return;
       }
       if (method === "telegram") {
-        await startTelegramSignIn({ redirectTo: "/dashboard" });
+        await startTelegramSignIn({ redirectTo: postAuthTarget() });
         return;
       }
       if (method === "solana") {
-        await startSolanaSignIn({ redirectTo: "/dashboard" });
+        await startSolanaSignIn({ redirectTo: postAuthTarget() });
         return;
       }
       if (method === "pi") {
@@ -431,7 +466,7 @@ function AuthPiPageInner() {
         return;
       }
       if (method === "walletconnect") {
-        await startWalletConnectSignIn({ redirectTo: "/dashboard" });
+        await startWalletConnectSignIn({ redirectTo: postAuthTarget() });
         return;
       }
     } catch (err) {
@@ -772,7 +807,7 @@ async function handlePiSignIn(navigate: ReturnType<typeof useNavigate>) {
       ? crypto.randomUUID()
       : Math.random().toString(36).slice(2) + Date.now().toString(36);
     sessionStorage.setItem("pi_oauth_state", state);
-    sessionStorage.setItem("pi_oauth_redirect", "/dashboard");
+    sessionStorage.setItem("pi_oauth_redirect", postAuthTarget());
     const redirectUri = `${window.location.origin}/auth/pi/callback`;
     window.location.href =
       `https://accounts.pinet.com/oauth/authorize` +
@@ -786,5 +821,5 @@ async function handlePiSignIn(navigate: ReturnType<typeof useNavigate>) {
 
   const { username } = await signInWithPi();
   toast.success(`Signed in as @${username} via Pi Network`);
-  void navigate({ to: "/dashboard" });
+  goPostAuth();
 }

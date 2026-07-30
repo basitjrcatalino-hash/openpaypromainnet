@@ -9,115 +9,96 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthpiRouteImport } from './routes/authpi'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as RegulatoryRouteImport } from './routes/regulatory'
-import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
-import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
-import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
-import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
-import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
-import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
-import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
-import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
-import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
-import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
-import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
-import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
-import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
-import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
-import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as DocsFaqRouteImport } from './routes/docs.faq'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as RegulatoryRouteImport } from './routes/regulatory'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as AuthpiRouteImport } from './routes/authpi'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
-import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
-import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
-import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
-import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
-import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
-import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
-import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
-import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
-import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
-import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
-import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
-import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
-import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
-import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
-import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
-import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
-import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
-import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
-import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
-import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/pi-link-wallet'
-import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
-import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
-import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
-import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
-import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
-import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
-import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
-import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
-import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
+import { Route as DocsFaqRouteImport } from './routes/docs.faq'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
+import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
+import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
+import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
+import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
+import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
+import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
+import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
-import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
-import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
-import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
-import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
-import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
-import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
-import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
-import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
-import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
-import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
-import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
-import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
-import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
+import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
+import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
+import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
+import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
+import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
+import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
+import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
+import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
+import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/pi-link-wallet'
+import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
+import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
+import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
+import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
+import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
+import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
+import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
+import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
+import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
+import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
+import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
+import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
+import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
+import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
+import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
+import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
-import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
+import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
+import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
+import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
+import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
+import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
+import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
+import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
+import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
+import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
+import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
+import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
 import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
+import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthpiRoute = AuthpiRouteImport.update({
-  id: '/authpi',
-  path: '/authpi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegulatoryRoute = RegulatoryRouteImport.update({
-  id: '/regulatory',
-  path: '/regulatory',
+const TestnetRewardRoute = TestnetRewardRouteImport.update({
+  id: '/testnet-reward',
+  path: '/testnet-reward',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -125,129 +106,38 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TestnetRewardRoute = TestnetRewardRouteImport.update({
-  id: '/testnet-reward',
-  path: '/testnet-reward',
+const RegulatoryRoute = RegulatoryRouteImport.update({
+  id: '/regulatory',
+  path: '/regulatory',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
-  id: '/bags',
-  path: '/bags',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
-  id: '/kyc',
-  path: '/kyc',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
-  id: '/metamask',
-  path: '/metamask',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
-  id: '/nfts',
-  path: '/nfts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOpentokenRoute = AuthenticatedOpentokenRouteImport.update({
-  id: '/opentoken',
-  path: '/opentoken',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
-  id: '/ousd',
-  path: '/ousd',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
-  id: '/receive',
-  path: '/receive',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
-  id: '/scan',
-  path: '/scan',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
-  id: '/send',
-  path: '/send',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
-  id: '/swap',
-  path: '/swap',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
-  id: '/tokens',
-  path: '/tokens',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
-  id: '/topup',
-  path: '/topup',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
-  id: '/watchlist',
-  path: '/watchlist',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
-  id: '/wc-pay',
-  path: '/wc-pay',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
-  id: '/admin/testnet-progress',
-  path: '/admin/testnet-progress',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DocsFaqRoute = DocsFaqRouteImport.update({
-  id: '/docs/faq',
-  path: '/docs/faq',
+const AuthpiRoute = AuthpiRouteImport.update({
+  id: '/authpi',
+  path: '/authpi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
@@ -255,138 +145,166 @@ const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
   path: '/docs/openpay',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
-  id: '/admin/topup',
-  path: '/admin/topup',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAssetTokenIdRoute =
-  AuthenticatedAssetTokenIdRouteImport.update({
-    id: '/asset_/$tokenId',
-    path: '/asset/$tokenId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBagsFeesRoute = AuthenticatedBagsFeesRouteImport.update({
-  id: '/bags_/fees',
-  path: '/bags/fees',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsLaunchRoute = AuthenticatedBagsLaunchRouteImport.update({
-  id: '/bags_/launch',
-  path: '/bags/launch',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsTradeRoute = AuthenticatedBagsTradeRouteImport.update({
-  id: '/bags_/trade',
-  path: '/bags/trade',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
-  id: '/mint',
-  path: '/mint',
-  getParentRoute: () => AuthenticatedNftsRoute,
-} as any)
-const AuthenticatedOpentokenTokenIdRoute =
-  AuthenticatedOpentokenTokenIdRouteImport.update({
-    id: '/opentoken_/$tokenId',
-    path: '/opentoken/$tokenId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenAdminRoute =
-  AuthenticatedOpentokenAdminRouteImport.update({
-    id: '/opentoken_/admin',
-    path: '/opentoken/admin',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenCreateRoute =
-  AuthenticatedOpentokenCreateRouteImport.update({
-    id: '/opentoken_/create',
-    path: '/opentoken/create',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenPortfolioRoute =
-  AuthenticatedOpentokenPortfolioRouteImport.update({
-    id: '/opentoken_/portfolio',
-    path: '/opentoken/portfolio',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenTerminalRoute =
-  AuthenticatedOpentokenTerminalRouteImport.update({
-    id: '/opentoken_/terminal',
-    path: '/opentoken/terminal',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTokensCreateRoute =
-  AuthenticatedTokensCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => AuthenticatedTokensRoute,
-  } as any)
-const AuthenticatedWalletReceiveRoute =
-  AuthenticatedWalletReceiveRouteImport.update({
-    id: '/wallet_/receive',
-    path: '/wallet/receive',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
+const DocsFaqRoute = DocsFaqRouteImport.update({
+  id: '/docs/faq',
+  path: '/docs/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHelioDepositWebhookRoute =
-  ApiPublicHelioDepositWebhookRouteImport.update({
-    id: '/api/public/helio-deposit-webhook',
-    path: '/api/public/helio-deposit-webhook',
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
+  id: '/admin/testnet-progress',
+  path: '/admin/testnet-progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
+  id: '/wc-pay',
+  path: '/wc-pay',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
+  id: '/ousd',
+  path: '/ousd',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpentokenRoute = AuthenticatedOpentokenRouteImport.update({
+  id: '/opentoken',
+  path: '/opentoken',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
+  id: '/nfts',
+  path: '/nfts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
+  id: '/metamask',
+  path: '/metamask',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
+  id: '/bags',
+  path: '/bags',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
-  id: '/api/public/kyc-webhook',
-  path: '/api/public/kyc-webhook',
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
+  id: '/telegram/callback',
+  path: '/telegram/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
+  id: '/pi/callback',
+  path: '/pi/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
+  id: '/openpay/callback',
+  path: '/openpay/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
+  id: '/api/webhooks/transactions',
+  path: '/api/webhooks/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
-  id: '/api/public/moonpay-sign',
-  path: '/api/public/moonpay-sign',
+const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
+  id: '/api/webhooks/circle',
+  path: '/api/webhooks/circle',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
-  id: '/api/public/moonpay-webhook',
-  path: '/api/public/moonpay-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
-  id: '/api/public/openpay-auth',
-  path: '/api/public/openpay-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
-  id: '/api/public/pi-a2u',
-  path: '/api/public/pi-a2u',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
-  id: '/api/public/pi-auth',
-  path: '/api/public/pi-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiLinkWalletRoute = ApiPublicPiLinkWalletRouteImport.update({
-  id: '/api/public/pi-link-wallet',
-  path: '/api/public/pi-link-wallet',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
-  id: '/api/public/solana-auth',
-  path: '/api/public/solana-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
-  id: '/api/public/supabase-config',
-  path: '/api/public/supabase-config',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
-  id: '/api/public/telegram-auth',
-  path: '/api/public/telegram-auth',
+const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
+  id: '/api/public/web3auth-auth',
+  path: '/api/public/web3auth-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWalletconnectAuthRoute =
@@ -395,107 +313,149 @@ const ApiPublicWalletconnectAuthRoute =
     path: '/api/public/walletconnect-auth',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
-  id: '/api/public/web3auth-auth',
-  path: '/api/public/web3auth-auth',
+const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
+  id: '/api/public/telegram-auth',
+  path: '/api/public/telegram-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
-  id: '/api/webhooks/circle',
-  path: '/api/webhooks/circle',
+const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
+  id: '/api/public/supabase-config',
+  path: '/api/public/supabase-config',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
-  id: '/api/webhooks/transactions',
-  path: '/api/webhooks/transactions',
+const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
+  id: '/api/public/solana-auth',
+  path: '/api/public/solana-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
-  id: '/openpay/callback',
-  path: '/openpay/callback',
-  getParentRoute: () => AuthRoute,
+const ApiPublicPiLinkWalletRoute = ApiPublicPiLinkWalletRouteImport.update({
+  id: '/api/public/pi-link-wallet',
+  path: '/api/public/pi-link-wallet',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
-  id: '/pi/callback',
-  path: '/pi/callback',
-  getParentRoute: () => AuthRoute,
+const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
+  id: '/api/public/pi-auth',
+  path: '/api/public/pi-auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
-  id: '/telegram/callback',
-  path: '/telegram/callback',
-  getParentRoute: () => AuthRoute,
+const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
+  id: '/api/public/pi-a2u',
+  path: '/api/public/pi-a2u',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedBagsTokenMintRoute =
-  AuthenticatedBagsTokenMintRouteImport.update({
-    id: '/bags_/token/$mint',
-    path: '/bags/token/$mint',
+const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
+  id: '/api/public/openpay-auth',
+  path: '/api/public/openpay-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
+  id: '/api/public/moonpay-webhook',
+  path: '/api/public/moonpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
+  id: '/api/public/moonpay-sign',
+  path: '/api/public/moonpay-sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
+  id: '/api/public/kyc-webhook',
+  path: '/api/public/kyc-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHelioDepositWebhookRoute =
+  ApiPublicHelioDepositWebhookRouteImport.update({
+    id: '/api/public/helio-deposit-webhook',
+    path: '/api/public/helio-deposit-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWalletReceiveRoute =
+  AuthenticatedWalletReceiveRouteImport.update({
+    id: '/wallet_/receive',
+    path: '/wallet/receive',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedOpenpayConnectCallbackRoute =
-  AuthenticatedOpenpayConnectCallbackRouteImport.update({
-    id: '/openpay/connect/callback',
-    path: '/openpay/connect/callback',
+const AuthenticatedTokensCreateRoute =
+  AuthenticatedTokensCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedTokensRoute,
+  } as any)
+const AuthenticatedOpentokenTerminalRoute =
+  AuthenticatedOpentokenTerminalRouteImport.update({
+    id: '/opentoken_/terminal',
+    path: '/opentoken/terminal',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedOpentokenTokenIdChatRoute =
-  AuthenticatedOpentokenTokenIdChatRouteImport.update({
-    id: '/chat',
-    path: '/chat',
-    getParentRoute: () => AuthenticatedOpentokenTokenIdRoute,
-  } as any)
-const AuthenticatedOpentokenCreatorUserIdRoute =
-  AuthenticatedOpentokenCreatorUserIdRouteImport.update({
-    id: '/opentoken_/creator/$userId',
-    path: '/opentoken/creator/$userId',
+const AuthenticatedOpentokenPortfolioRoute =
+  AuthenticatedOpentokenPortfolioRouteImport.update({
+    id: '/opentoken_/portfolio',
+    path: '/opentoken/portfolio',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
-  id: '/api/public/docs/openpay',
-  path: '/api/public/docs/openpay',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedOpentokenCreateRoute =
+  AuthenticatedOpentokenCreateRouteImport.update({
+    id: '/opentoken_/create',
+    path: '/opentoken/create',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenAdminRoute =
+  AuthenticatedOpentokenAdminRouteImport.update({
+    id: '/opentoken_/admin',
+    path: '/opentoken/admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenTokenIdRoute =
+  AuthenticatedOpentokenTokenIdRouteImport.update({
+    id: '/opentoken_/$tokenId',
+    path: '/opentoken/$tokenId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
+  id: '/mint',
+  path: '/mint',
+  getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
-const ApiPublicDocsOpenpayAuthRoute =
-  ApiPublicDocsOpenpayAuthRouteImport.update({
-    id: '/api/public/docs/openpay-auth',
-    path: '/api/public/docs/openpay-auth',
+const AuthenticatedBagsTradeRoute = AuthenticatedBagsTradeRouteImport.update({
+  id: '/bags_/trade',
+  path: '/bags/trade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBagsLaunchRoute = AuthenticatedBagsLaunchRouteImport.update({
+  id: '/bags_/launch',
+  path: '/bags/launch',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBagsFeesRoute = AuthenticatedBagsFeesRouteImport.update({
+  id: '/bags_/fees',
+  path: '/bags/fees',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssetTokenIdRoute =
+  AuthenticatedAssetTokenIdRouteImport.update({
+    id: '/asset_/$tokenId',
+    path: '/asset/$tokenId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
+  id: '/admin/topup',
+  path: '/admin/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
-  id: '/api/public/ledger/entries',
-  path: '/api/public/ledger/entries',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
-  id: '/api/public/ledger/stats',
-  path: '/api/public/ledger/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
-  id: '/api/public/openpay/inbound',
-  path: '/api/public/openpay/inbound',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiPaymentsApproveRoute =
-  ApiPublicPiPaymentsApproveRouteImport.update({
-    id: '/api/public/pi-payments/approve',
-    path: '/api/public/pi-payments/approve',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPiPaymentsCompleteRoute =
-  ApiPublicPiPaymentsCompleteRouteImport.update({
-    id: '/api/public/pi-payments/complete',
-    path: '/api/public/pi-payments/complete',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPiPaymentsIncompleteRoute =
-  ApiPublicPiPaymentsIncompleteRouteImport.update({
-    id: '/api/public/pi-payments/incomplete',
-    path: '/api/public/pi-payments/incomplete',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
-  id: '/api/public/push/subscribe',
-  path: '/api/public/push/subscribe',
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPushUnsubscribeRoute =
@@ -504,11 +464,78 @@ const ApiPublicPushUnsubscribeRoute =
     path: '/api/public/push/unsubscribe',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicLedgerEntriesIdRoute =
-  ApiPublicLedgerEntriesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => ApiPublicLedgerEntriesRoute,
+const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
+  id: '/api/public/push/subscribe',
+  path: '/api/public/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiPaymentsIncompleteRoute =
+  ApiPublicPiPaymentsIncompleteRouteImport.update({
+    id: '/api/public/pi-payments/incomplete',
+    path: '/api/public/pi-payments/incomplete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsCompleteRoute =
+  ApiPublicPiPaymentsCompleteRouteImport.update({
+    id: '/api/public/pi-payments/complete',
+    path: '/api/public/pi-payments/complete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsApproveRoute =
+  ApiPublicPiPaymentsApproveRouteImport.update({
+    id: '/api/public/pi-payments/approve',
+    path: '/api/public/pi-payments/approve',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
+  id: '/api/public/openpay/inbound',
+  path: '/api/public/openpay/inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
+  id: '/api/public/ledger/stats',
+  path: '/api/public/ledger/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
+  id: '/api/public/ledger/entries',
+  path: '/api/public/ledger/entries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsOpenpayAuthRoute =
+  ApiPublicDocsOpenpayAuthRouteImport.update({
+    id: '/api/public/docs/openpay-auth',
+    path: '/api/public/docs/openpay-auth',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
+  id: '/api/public/docs/openpay',
+  path: '/api/public/docs/openpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedOpentokenCreatorUserIdRoute =
+  AuthenticatedOpentokenCreatorUserIdRouteImport.update({
+    id: '/opentoken_/creator/$userId',
+    path: '/opentoken/creator/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenTokenIdChatRoute =
+  AuthenticatedOpentokenTokenIdChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedOpentokenTokenIdRoute,
+  } as any)
+const AuthenticatedOpenpayConnectCallbackRoute =
+  AuthenticatedOpenpayConnectCallbackRouteImport.update({
+    id: '/openpay/connect/callback',
+    path: '/openpay/connect/callback',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBagsTokenMintRoute =
+  AuthenticatedBagsTokenMintRouteImport.update({
+    id: '/bags_/token/$mint',
+    path: '/bags/token/$mint',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicOpenpayConnectConfirmRoute =
   ApiPublicOpenpayConnectConfirmRouteImport.update({
@@ -516,15 +543,24 @@ const ApiPublicOpenpayConnectConfirmRoute =
     path: '/api/public/openpay/connect/confirm',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLedgerEntriesIdRoute =
+  ApiPublicLedgerEntriesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ApiPublicLedgerEntriesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -550,6 +586,8 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -603,10 +641,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -632,6 +673,8 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -687,10 +730,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
@@ -716,6 +762,8 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
@@ -771,10 +819,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/mcp'
     | '/privacy'
     | '/regulatory'
     | '/terms'
     | '/testnet-reward'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/bags'
     | '/chat'
@@ -800,6 +851,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -853,10 +906,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/mcp'
     | '/privacy'
     | '/regulatory'
     | '/terms'
     | '/testnet-reward'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/bags'
     | '/chat'
@@ -882,6 +938,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -936,10 +994,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/authpi'
+    | '/mcp'
     | '/privacy'
     | '/regulatory'
     | '/terms'
     | '/testnet-reward'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activity'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
@@ -965,6 +1026,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/topup'
     | '/_authenticated/asset_/$tokenId'
     | '/_authenticated/bags_/fees'
@@ -1020,13 +1083,18 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
+  McpRoute: typeof McpRoute
   PrivacyRoute: typeof PrivacyRoute
   RegulatoryRoute: typeof RegulatoryRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -1058,46 +1126,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/authpi': {
-      id: '/authpi'
-      path: '/authpi'
-      fullPath: '/authpi'
-      preLoaderRoute: typeof AuthpiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/regulatory': {
-      id: '/regulatory'
-      path: '/regulatory'
-      fullPath: '/regulatory'
-      preLoaderRoute: typeof RegulatoryRouteImport
+    '/testnet-reward': {
+      id: '/testnet-reward'
+      path: '/testnet-reward'
+      fullPath: '/testnet-reward'
+      preLoaderRoute: typeof TestnetRewardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1107,179 +1140,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/testnet-reward': {
-      id: '/testnet-reward'
-      path: '/testnet-reward'
-      fullPath: '/testnet-reward'
-      preLoaderRoute: typeof TestnetRewardRouteImport
+    '/regulatory': {
+      id: '/regulatory'
+      path: '/regulatory'
+      fullPath: '/regulatory'
+      preLoaderRoute: typeof RegulatoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/activity': {
-      id: '/_authenticated/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof AuthenticatedActivityRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/bags': {
-      id: '/_authenticated/bags'
-      path: '/bags'
-      fullPath: '/bags'
-      preLoaderRoute: typeof AuthenticatedBagsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chat': {
-      id: '/_authenticated/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthenticatedChatRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/kyc': {
-      id: '/_authenticated/kyc'
-      path: '/kyc'
-      fullPath: '/kyc'
-      preLoaderRoute: typeof AuthenticatedKycRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ledger': {
-      id: '/_authenticated/ledger'
-      path: '/ledger'
-      fullPath: '/ledger'
-      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/metamask': {
-      id: '/_authenticated/metamask'
-      path: '/metamask'
-      fullPath: '/metamask'
-      preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nfts': {
-      id: '/_authenticated/nfts'
-      path: '/nfts'
-      fullPath: '/nfts'
-      preLoaderRoute: typeof AuthenticatedNftsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken': {
-      id: '/_authenticated/opentoken'
-      path: '/opentoken'
-      fullPath: '/opentoken'
-      preLoaderRoute: typeof AuthenticatedOpentokenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ousd': {
-      id: '/_authenticated/ousd'
-      path: '/ousd'
-      fullPath: '/ousd'
-      preLoaderRoute: typeof AuthenticatedOusdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/receive': {
-      id: '/_authenticated/receive'
-      path: '/receive'
-      fullPath: '/receive'
-      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/scan': {
-      id: '/_authenticated/scan'
-      path: '/scan'
-      fullPath: '/scan'
-      preLoaderRoute: typeof AuthenticatedScanRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/send': {
-      id: '/_authenticated/send'
-      path: '/send'
-      fullPath: '/send'
-      preLoaderRoute: typeof AuthenticatedSendRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/swap': {
-      id: '/_authenticated/swap'
-      path: '/swap'
-      fullPath: '/swap'
-      preLoaderRoute: typeof AuthenticatedSwapRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tokens': {
-      id: '/_authenticated/tokens'
-      path: '/tokens'
-      fullPath: '/tokens'
-      preLoaderRoute: typeof AuthenticatedTokensRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/topup': {
-      id: '/_authenticated/topup'
-      path: '/topup'
-      fullPath: '/topup'
-      preLoaderRoute: typeof AuthenticatedTopupRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/watchlist': {
-      id: '/_authenticated/watchlist'
-      path: '/watchlist'
-      fullPath: '/watchlist'
-      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/wc-pay': {
-      id: '/_authenticated/wc-pay'
-      path: '/wc-pay'
-      fullPath: '/wc-pay'
-      preLoaderRoute: typeof AuthenticatedWcPayRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/admin/testnet-progress': {
-      id: '/admin/testnet-progress'
-      path: '/admin/testnet-progress'
-      fullPath: '/admin/testnet-progress'
-      preLoaderRoute: typeof AdminTestnetProgressRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/docs/faq': {
-      id: '/docs/faq'
-      path: '/docs/faq'
-      fullPath: '/docs/faq'
-      preLoaderRoute: typeof DocsFaqRouteImport
+    '/authpi': {
+      id: '/authpi'
+      path: '/authpi'
+      fullPath: '/authpi'
+      preLoaderRoute: typeof AuthpiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/openpay': {
@@ -1289,214 +1196,193 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsOpenpayRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/topup': {
-      id: '/_authenticated/admin/topup'
-      path: '/admin/topup'
-      fullPath: '/admin/topup'
-      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+    '/docs/faq': {
+      id: '/docs/faq'
+      path: '/docs/faq'
+      fullPath: '/docs/faq'
+      preLoaderRoute: typeof DocsFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/admin/testnet-progress': {
+      id: '/admin/testnet-progress'
+      path: '/admin/testnet-progress'
+      fullPath: '/admin/testnet-progress'
+      preLoaderRoute: typeof AdminTestnetProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wc-pay': {
+      id: '/_authenticated/wc-pay'
+      path: '/wc-pay'
+      fullPath: '/wc-pay'
+      preLoaderRoute: typeof AuthenticatedWcPayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/asset_/$tokenId': {
-      id: '/_authenticated/asset_/$tokenId'
-      path: '/asset/$tokenId'
-      fullPath: '/asset/$tokenId'
-      preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
+    '/_authenticated/watchlist': {
+      id: '/_authenticated/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/bags_/fees': {
-      id: '/_authenticated/bags_/fees'
-      path: '/bags/fees'
-      fullPath: '/bags/fees'
-      preLoaderRoute: typeof AuthenticatedBagsFeesRouteImport
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/bags_/launch': {
-      id: '/_authenticated/bags_/launch'
-      path: '/bags/launch'
-      fullPath: '/bags/launch'
-      preLoaderRoute: typeof AuthenticatedBagsLaunchRouteImport
+    '/_authenticated/topup': {
+      id: '/_authenticated/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof AuthenticatedTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/bags_/trade': {
-      id: '/_authenticated/bags_/trade'
-      path: '/bags/trade'
-      fullPath: '/bags/trade'
-      preLoaderRoute: typeof AuthenticatedBagsTradeRouteImport
+    '/_authenticated/tokens': {
+      id: '/_authenticated/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof AuthenticatedTokensRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/nfts/mint': {
-      id: '/_authenticated/nfts/mint'
-      path: '/mint'
-      fullPath: '/nfts/mint'
-      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
-      parentRoute: typeof AuthenticatedNftsRoute
-    }
-    '/_authenticated/opentoken_/$tokenId': {
-      id: '/_authenticated/opentoken_/$tokenId'
-      path: '/opentoken/$tokenId'
-      fullPath: '/opentoken/$tokenId'
-      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdRouteImport
+    '/_authenticated/swap': {
+      id: '/_authenticated/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof AuthenticatedSwapRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/admin': {
-      id: '/_authenticated/opentoken_/admin'
-      path: '/opentoken/admin'
-      fullPath: '/opentoken/admin'
-      preLoaderRoute: typeof AuthenticatedOpentokenAdminRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/create': {
-      id: '/_authenticated/opentoken_/create'
-      path: '/opentoken/create'
-      fullPath: '/opentoken/create'
-      preLoaderRoute: typeof AuthenticatedOpentokenCreateRouteImport
+    '/_authenticated/send': {
+      id: '/_authenticated/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthenticatedSendRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/portfolio': {
-      id: '/_authenticated/opentoken_/portfolio'
-      path: '/opentoken/portfolio'
-      fullPath: '/opentoken/portfolio'
-      preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/terminal': {
-      id: '/_authenticated/opentoken_/terminal'
-      path: '/opentoken/terminal'
-      fullPath: '/opentoken/terminal'
-      preLoaderRoute: typeof AuthenticatedOpentokenTerminalRouteImport
+    '/_authenticated/receive': {
+      id: '/_authenticated/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tokens/create': {
-      id: '/_authenticated/tokens/create'
-      path: '/create'
-      fullPath: '/tokens/create'
-      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
-      parentRoute: typeof AuthenticatedTokensRoute
-    }
-    '/_authenticated/wallet_/receive': {
-      id: '/_authenticated/wallet_/receive'
-      path: '/wallet/receive'
-      fullPath: '/wallet/receive'
-      preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
+    '/_authenticated/ousd': {
+      id: '/_authenticated/ousd'
+      path: '/ousd'
+      fullPath: '/ousd'
+      preLoaderRoute: typeof AuthenticatedOusdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken': {
+      id: '/_authenticated/opentoken'
+      path: '/opentoken'
+      fullPath: '/opentoken'
+      preLoaderRoute: typeof AuthenticatedOpentokenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts': {
+      id: '/_authenticated/nfts'
+      path: '/nfts'
+      fullPath: '/nfts'
+      preLoaderRoute: typeof AuthenticatedNftsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metamask': {
+      id: '/_authenticated/metamask'
+      path: '/metamask'
+      fullPath: '/metamask'
+      preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ledger': {
+      id: '/_authenticated/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags': {
+      id: '/_authenticated/bags'
+      path: '/bags'
+      fullPath: '/bags'
+      preLoaderRoute: typeof AuthenticatedBagsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/helio-deposit-webhook': {
-      id: '/api/public/helio-deposit-webhook'
-      path: '/api/public/helio-deposit-webhook'
-      fullPath: '/api/public/helio-deposit-webhook'
-      preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/kyc-webhook': {
-      id: '/api/public/kyc-webhook'
-      path: '/api/public/kyc-webhook'
-      fullPath: '/api/public/kyc-webhook'
-      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/moonpay-sign': {
-      id: '/api/public/moonpay-sign'
-      path: '/api/public/moonpay-sign'
-      fullPath: '/api/public/moonpay-sign'
-      preLoaderRoute: typeof ApiPublicMoonpaySignRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/moonpay-webhook': {
-      id: '/api/public/moonpay-webhook'
-      path: '/api/public/moonpay-webhook'
-      fullPath: '/api/public/moonpay-webhook'
-      preLoaderRoute: typeof ApiPublicMoonpayWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay-auth': {
-      id: '/api/public/openpay-auth'
-      path: '/api/public/openpay-auth'
-      fullPath: '/api/public/openpay-auth'
-      preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-a2u': {
-      id: '/api/public/pi-a2u'
-      path: '/api/public/pi-a2u'
-      fullPath: '/api/public/pi-a2u'
-      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-auth': {
-      id: '/api/public/pi-auth'
-      path: '/api/public/pi-auth'
-      fullPath: '/api/public/pi-auth'
-      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-link-wallet': {
-      id: '/api/public/pi-link-wallet'
-      path: '/api/public/pi-link-wallet'
-      fullPath: '/api/public/pi-link-wallet'
-      preLoaderRoute: typeof ApiPublicPiLinkWalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/solana-auth': {
-      id: '/api/public/solana-auth'
-      path: '/api/public/solana-auth'
-      fullPath: '/api/public/solana-auth'
-      preLoaderRoute: typeof ApiPublicSolanaAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/supabase-config': {
-      id: '/api/public/supabase-config'
-      path: '/api/public/supabase-config'
-      fullPath: '/api/public/supabase-config'
-      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/telegram-auth': {
-      id: '/api/public/telegram-auth'
-      path: '/api/public/telegram-auth'
-      fullPath: '/api/public/telegram-auth'
-      preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/walletconnect-auth': {
-      id: '/api/public/walletconnect-auth'
-      path: '/api/public/walletconnect-auth'
-      fullPath: '/api/public/walletconnect-auth'
-      preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/web3auth-auth': {
-      id: '/api/public/web3auth-auth'
-      path: '/api/public/web3auth-auth'
-      fullPath: '/api/public/web3auth-auth'
-      preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/circle': {
-      id: '/api/webhooks/circle'
-      path: '/api/webhooks/circle'
-      fullPath: '/api/webhooks/circle'
-      preLoaderRoute: typeof ApiWebhooksCircleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/transactions': {
-      id: '/api/webhooks/transactions'
-      path: '/api/webhooks/transactions'
-      fullPath: '/api/webhooks/transactions'
-      preLoaderRoute: typeof ApiWebhooksTransactionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/openpay/callback': {
-      id: '/auth/openpay/callback'
-      path: '/openpay/callback'
-      fullPath: '/auth/openpay/callback'
-      preLoaderRoute: typeof AuthOpenpayCallbackRouteImport
+    '/auth/telegram/callback': {
+      id: '/auth/telegram/callback'
+      path: '/telegram/callback'
+      fullPath: '/auth/telegram/callback'
+      preLoaderRoute: typeof AuthTelegramCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/auth/pi/callback': {
@@ -1506,102 +1392,228 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPiCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/auth/telegram/callback': {
-      id: '/auth/telegram/callback'
-      path: '/telegram/callback'
-      fullPath: '/auth/telegram/callback'
-      preLoaderRoute: typeof AuthTelegramCallbackRouteImport
+    '/auth/openpay/callback': {
+      id: '/auth/openpay/callback'
+      path: '/openpay/callback'
+      fullPath: '/auth/openpay/callback'
+      preLoaderRoute: typeof AuthOpenpayCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_authenticated/bags_/token/$mint': {
-      id: '/_authenticated/bags_/token/$mint'
-      path: '/bags/token/$mint'
-      fullPath: '/bags/token/$mint'
-      preLoaderRoute: typeof AuthenticatedBagsTokenMintRouteImport
+    '/api/webhooks/transactions': {
+      id: '/api/webhooks/transactions'
+      path: '/api/webhooks/transactions'
+      fullPath: '/api/webhooks/transactions'
+      preLoaderRoute: typeof ApiWebhooksTransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/circle': {
+      id: '/api/webhooks/circle'
+      path: '/api/webhooks/circle'
+      fullPath: '/api/webhooks/circle'
+      preLoaderRoute: typeof ApiWebhooksCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/web3auth-auth': {
+      id: '/api/public/web3auth-auth'
+      path: '/api/public/web3auth-auth'
+      fullPath: '/api/public/web3auth-auth'
+      preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/walletconnect-auth': {
+      id: '/api/public/walletconnect-auth'
+      path: '/api/public/walletconnect-auth'
+      fullPath: '/api/public/walletconnect-auth'
+      preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram-auth': {
+      id: '/api/public/telegram-auth'
+      path: '/api/public/telegram-auth'
+      fullPath: '/api/public/telegram-auth'
+      preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/supabase-config': {
+      id: '/api/public/supabase-config'
+      path: '/api/public/supabase-config'
+      fullPath: '/api/public/supabase-config'
+      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/solana-auth': {
+      id: '/api/public/solana-auth'
+      path: '/api/public/solana-auth'
+      fullPath: '/api/public/solana-auth'
+      preLoaderRoute: typeof ApiPublicSolanaAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-link-wallet': {
+      id: '/api/public/pi-link-wallet'
+      path: '/api/public/pi-link-wallet'
+      fullPath: '/api/public/pi-link-wallet'
+      preLoaderRoute: typeof ApiPublicPiLinkWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-auth': {
+      id: '/api/public/pi-auth'
+      path: '/api/public/pi-auth'
+      fullPath: '/api/public/pi-auth'
+      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-a2u': {
+      id: '/api/public/pi-a2u'
+      path: '/api/public/pi-a2u'
+      fullPath: '/api/public/pi-a2u'
+      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/openpay-auth': {
+      id: '/api/public/openpay-auth'
+      path: '/api/public/openpay-auth'
+      fullPath: '/api/public/openpay-auth'
+      preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/moonpay-webhook': {
+      id: '/api/public/moonpay-webhook'
+      path: '/api/public/moonpay-webhook'
+      fullPath: '/api/public/moonpay-webhook'
+      preLoaderRoute: typeof ApiPublicMoonpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/moonpay-sign': {
+      id: '/api/public/moonpay-sign'
+      path: '/api/public/moonpay-sign'
+      fullPath: '/api/public/moonpay-sign'
+      preLoaderRoute: typeof ApiPublicMoonpaySignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/kyc-webhook': {
+      id: '/api/public/kyc-webhook'
+      path: '/api/public/kyc-webhook'
+      fullPath: '/api/public/kyc-webhook'
+      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/helio-deposit-webhook': {
+      id: '/api/public/helio-deposit-webhook'
+      path: '/api/public/helio-deposit-webhook'
+      fullPath: '/api/public/helio-deposit-webhook'
+      preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wallet_/receive': {
+      id: '/_authenticated/wallet_/receive'
+      path: '/wallet/receive'
+      fullPath: '/wallet/receive'
+      preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/openpay/connect/callback': {
-      id: '/_authenticated/openpay/connect/callback'
-      path: '/openpay/connect/callback'
-      fullPath: '/openpay/connect/callback'
-      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
+    '/_authenticated/tokens/create': {
+      id: '/_authenticated/tokens/create'
+      path: '/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
+      parentRoute: typeof AuthenticatedTokensRoute
+    }
+    '/_authenticated/opentoken_/terminal': {
+      id: '/_authenticated/opentoken_/terminal'
+      path: '/opentoken/terminal'
+      fullPath: '/opentoken/terminal'
+      preLoaderRoute: typeof AuthenticatedOpentokenTerminalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/$tokenId/chat': {
-      id: '/_authenticated/opentoken_/$tokenId/chat'
-      path: '/chat'
-      fullPath: '/opentoken/$tokenId/chat'
-      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
-      parentRoute: typeof AuthenticatedOpentokenTokenIdRoute
-    }
-    '/_authenticated/opentoken_/creator/$userId': {
-      id: '/_authenticated/opentoken_/creator/$userId'
-      path: '/opentoken/creator/$userId'
-      fullPath: '/opentoken/creator/$userId'
-      preLoaderRoute: typeof AuthenticatedOpentokenCreatorUserIdRouteImport
+    '/_authenticated/opentoken_/portfolio': {
+      id: '/_authenticated/opentoken_/portfolio'
+      path: '/opentoken/portfolio'
+      fullPath: '/opentoken/portfolio'
+      preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/docs/openpay': {
-      id: '/api/public/docs/openpay'
-      path: '/api/public/docs/openpay'
-      fullPath: '/api/public/docs/openpay'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
+    '/_authenticated/opentoken_/create': {
+      id: '/_authenticated/opentoken_/create'
+      path: '/opentoken/create'
+      fullPath: '/opentoken/create'
+      preLoaderRoute: typeof AuthenticatedOpentokenCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/admin': {
+      id: '/_authenticated/opentoken_/admin'
+      path: '/opentoken/admin'
+      fullPath: '/opentoken/admin'
+      preLoaderRoute: typeof AuthenticatedOpentokenAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/$tokenId': {
+      id: '/_authenticated/opentoken_/$tokenId'
+      path: '/opentoken/$tokenId'
+      fullPath: '/opentoken/$tokenId'
+      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts/mint': {
+      id: '/_authenticated/nfts/mint'
+      path: '/mint'
+      fullPath: '/nfts/mint'
+      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
+      parentRoute: typeof AuthenticatedNftsRoute
+    }
+    '/_authenticated/bags_/trade': {
+      id: '/_authenticated/bags_/trade'
+      path: '/bags/trade'
+      fullPath: '/bags/trade'
+      preLoaderRoute: typeof AuthenticatedBagsTradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/launch': {
+      id: '/_authenticated/bags_/launch'
+      path: '/bags/launch'
+      fullPath: '/bags/launch'
+      preLoaderRoute: typeof AuthenticatedBagsLaunchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/fees': {
+      id: '/_authenticated/bags_/fees'
+      path: '/bags/fees'
+      fullPath: '/bags/fees'
+      preLoaderRoute: typeof AuthenticatedBagsFeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/asset_/$tokenId': {
+      id: '/_authenticated/asset_/$tokenId'
+      path: '/asset/$tokenId'
+      fullPath: '/asset/$tokenId'
+      preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/topup': {
+      id: '/_authenticated/admin/topup'
+      path: '/admin/topup'
+      fullPath: '/admin/topup'
+      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/docs/openpay-auth': {
-      id: '/api/public/docs/openpay-auth'
-      path: '/api/public/docs/openpay-auth'
-      fullPath: '/api/public/docs/openpay-auth'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ledger/entries': {
-      id: '/api/public/ledger/entries'
-      path: '/api/public/ledger/entries'
-      fullPath: '/api/public/ledger/entries'
-      preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ledger/stats': {
-      id: '/api/public/ledger/stats'
-      path: '/api/public/ledger/stats'
-      fullPath: '/api/public/ledger/stats'
-      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay/inbound': {
-      id: '/api/public/openpay/inbound'
-      path: '/api/public/openpay/inbound'
-      fullPath: '/api/public/openpay/inbound'
-      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/approve': {
-      id: '/api/public/pi-payments/approve'
-      path: '/api/public/pi-payments/approve'
-      fullPath: '/api/public/pi-payments/approve'
-      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/complete': {
-      id: '/api/public/pi-payments/complete'
-      path: '/api/public/pi-payments/complete'
-      fullPath: '/api/public/pi-payments/complete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/incomplete': {
-      id: '/api/public/pi-payments/incomplete'
-      path: '/api/public/pi-payments/incomplete'
-      fullPath: '/api/public/pi-payments/incomplete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/push/subscribe': {
-      id: '/api/public/push/subscribe'
-      path: '/api/public/push/subscribe'
-      fullPath: '/api/public/push/subscribe'
-      preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/push/unsubscribe': {
@@ -1611,12 +1623,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/ledger/entries/$id': {
-      id: '/api/public/ledger/entries/$id'
-      path: '/$id'
-      fullPath: '/api/public/ledger/entries/$id'
-      preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
-      parentRoute: typeof ApiPublicLedgerEntriesRoute
+    '/api/public/push/subscribe': {
+      id: '/api/public/push/subscribe'
+      path: '/api/public/push/subscribe'
+      fullPath: '/api/public/push/subscribe'
+      preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/incomplete': {
+      id: '/api/public/pi-payments/incomplete'
+      path: '/api/public/pi-payments/incomplete'
+      fullPath: '/api/public/pi-payments/incomplete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/complete': {
+      id: '/api/public/pi-payments/complete'
+      path: '/api/public/pi-payments/complete'
+      fullPath: '/api/public/pi-payments/complete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/approve': {
+      id: '/api/public/pi-payments/approve'
+      path: '/api/public/pi-payments/approve'
+      fullPath: '/api/public/pi-payments/approve'
+      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/openpay/inbound': {
+      id: '/api/public/openpay/inbound'
+      path: '/api/public/openpay/inbound'
+      fullPath: '/api/public/openpay/inbound'
+      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/stats': {
+      id: '/api/public/ledger/stats'
+      path: '/api/public/ledger/stats'
+      fullPath: '/api/public/ledger/stats'
+      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/entries': {
+      id: '/api/public/ledger/entries'
+      path: '/api/public/ledger/entries'
+      fullPath: '/api/public/ledger/entries'
+      preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay-auth': {
+      id: '/api/public/docs/openpay-auth'
+      path: '/api/public/docs/openpay-auth'
+      fullPath: '/api/public/docs/openpay-auth'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay': {
+      id: '/api/public/docs/openpay'
+      path: '/api/public/docs/openpay'
+      fullPath: '/api/public/docs/openpay'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/opentoken_/creator/$userId': {
+      id: '/_authenticated/opentoken_/creator/$userId'
+      path: '/opentoken/creator/$userId'
+      fullPath: '/opentoken/creator/$userId'
+      preLoaderRoute: typeof AuthenticatedOpentokenCreatorUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/$tokenId/chat': {
+      id: '/_authenticated/opentoken_/$tokenId/chat'
+      path: '/chat'
+      fullPath: '/opentoken/$tokenId/chat'
+      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
+      parentRoute: typeof AuthenticatedOpentokenTokenIdRoute
+    }
+    '/_authenticated/openpay/connect/callback': {
+      id: '/_authenticated/openpay/connect/callback'
+      path: '/openpay/connect/callback'
+      fullPath: '/openpay/connect/callback'
+      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/token/$mint': {
+      id: '/_authenticated/bags_/token/$mint'
+      path: '/bags/token/$mint'
+      fullPath: '/bags/token/$mint'
+      preLoaderRoute: typeof AuthenticatedBagsTokenMintRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/openpay/connect/confirm': {
       id: '/api/public/openpay/connect/confirm'
@@ -1624,6 +1720,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/openpay/connect/confirm'
       preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/entries/$id': {
+      id: '/api/public/ledger/entries/$id'
+      path: '/$id'
+      fullPath: '/api/public/ledger/entries/$id'
+      preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
+      parentRoute: typeof ApiPublicLedgerEntriesRoute
     }
   }
 }
@@ -1782,13 +1885,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
+  McpRoute: McpRoute,
   PrivacyRoute: PrivacyRoute,
   RegulatoryRoute: RegulatoryRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,

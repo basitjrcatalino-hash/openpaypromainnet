@@ -154,6 +154,8 @@ export function AssetBuySheet({
     amount: number;
     externalTransactionId: string;
   } | null>(null);
+  /** After confirm, show Helio / USDC deposit widget */
+  const [depositReady, setDepositReady] = useState(false);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
   const buyMajorFn = useServerFn(buyMajorWithOusd);
   const swapFn = useServerFn(executeOpenDexSwap);
@@ -383,6 +385,8 @@ export function AssetBuySheet({
           return;
         }
         if (method === "helio" || method === "usdc") {
+          setDepositReady(true);
+          setConfirmOpen(false);
           return;
         }
         await startOpenPayCheckout(amt);
@@ -411,9 +415,14 @@ export function AssetBuySheet({
           const externalTransactionId = `major_${token.majorId}_${walletId}_${Date.now()}`;
           setMoonpaySession({ amount: amt, externalTransactionId });
           setMoonpayVisible(true);
+          setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") return;
+        if (method === "helio" || method === "usdc") {
+          setDepositReady(true);
+          setConfirmOpen(false);
+          return;
+        }
         try {
           sessionStorage.setItem(
             PENDING_ASSET_BUY_KEY,
@@ -448,9 +457,14 @@ export function AssetBuySheet({
           const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
           setMoonpaySession({ amount: amt, externalTransactionId });
           setMoonpayVisible(true);
+          setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") return;
+        if (method === "helio" || method === "usdc") {
+          setDepositReady(true);
+          setConfirmOpen(false);
+          return;
+        }
         await startOpenPayCheckout(amt);
         return;
       }
@@ -476,10 +490,13 @@ export function AssetBuySheet({
         const externalTransactionId = `ousd_${walletId}_${Date.now()}`;
         setMoonpaySession({ amount: amt, externalTransactionId });
         setMoonpayVisible(true);
+        setConfirmOpen(false);
         return;
       }
 
       if (method === "helio" || method === "usdc") {
+        setDepositReady(true);
+        setConfirmOpen(false);
         return;
       }
 
@@ -637,6 +654,7 @@ export function AssetBuySheet({
           value={method}
           onChange={(m) => {
             setActionError(null);
+            setDepositReady(false);
             setMethod(m);
           }}
           className="mb-4"
@@ -692,21 +710,43 @@ export function AssetBuySheet({
         ) : null}
 
         {method === "helio" || method === "usdc" ? (
-          <div className="mb-2 space-y-2">
-            <HelioDepositPanel
-              product={method === "usdc" ? "usdc" : "crypto"}
-              amountUsd={amtNum >= 1 ? amtNum : 25}
-              onSuccess={() => {
-                void invalidateAfterTopup();
-                if (isOusd) onClose();
-              }}
-            />
-            {!isOusd ? (
+          depositReady ? (
+            <div className="mb-2 space-y-2">
+              <HelioDepositPanel
+                product={method === "usdc" ? "usdc" : "crypto"}
+                amountUsd={amtNum}
+                onSuccess={() => {
+                  void invalidateAfterTopup();
+                  if (isOusd) onClose();
+                }}
+              />
               <p className="text-center text-[11px] text-muted-foreground">
-                After the deposit confirms, buy {token.symbol} with Wallet OUSD.
+                {method === "usdc"
+                  ? `Pay exactly $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} USDC → OUSD 1:1`
+                  : `Deposit $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} SOL/crypto → OUSD`}
+                {!isOusd
+                  ? ` · then buy ${token.symbol} with Wallet OUSD`
+                  : null}
               </p>
-            ) : null}
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-xs text-muted-foreground"
+                onClick={() => setDepositReady(false)}
+              >
+                Change amount or method
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              className="h-12 w-full rounded-full text-base font-bold"
+              disabled={busy || !valid}
+              onClick={() => setConfirmOpen(true)}
+            >
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
+            </Button>
+          )
         ) : (
           <Button
             type="button"

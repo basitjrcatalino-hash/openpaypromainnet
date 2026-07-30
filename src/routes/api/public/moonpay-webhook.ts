@@ -26,6 +26,7 @@ export const Route = createFileRoute("/api/public/moonpay-webhook")({
         const secret =
           process.env.MOONPAY_WEBHOOK_KEY ||
           process.env.MOONPAY_WEBHOOK_SECRET ||
+          process.env.VITE_MOONPAY_WEBHOOK_KEY ||
           "";
         const sig =
           request.headers.get("moonpay-signature-v2") ||

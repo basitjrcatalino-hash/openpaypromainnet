@@ -498,7 +498,7 @@ function SidebarInner({
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
+    <div className="flex min-h-full min-w-0 flex-col gap-5">
       <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2">
         <Link
           to="/profile"
@@ -671,7 +671,7 @@ function SidebarInner({
         </a>
       </div>
 
-      <div className="ph-group overflow-hidden">
+      <div className="ph-group min-w-0 overflow-hidden">
         {wallets.map((w) => (
           <WalletAccountRow
             key={w.id}

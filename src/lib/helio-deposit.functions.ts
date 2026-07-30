@@ -4,12 +4,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SessionSchema = z.object({
   product: z.enum(["crypto", "usdc"]).default("crypto"),
-  defaultOnrampAmount: z.number().positive().min(1).max(50_000).optional(),
+  /** Exact USD the user typed on Buy — required for amount-locked Helio sessions. */
+  defaultOnrampAmount: z.number().positive().min(1).max(50_000),
 });
 
 /**
  * Returns a MoonPay Commerce depositCustomerToken for the signed-in user.
- * Creates the Helio deposit customer on first use (per OPENPAY-PRO-{userId}).
+ * Creates an amount-scoped Helio deposit customer (OPENPAY-PRO-{userId}-{product}-{cents})
+ * so the widget prefills the exact Buy amount.
  */
 export const getHelioDepositSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -27,10 +29,11 @@ export const getHelioDepositSession = createServerFn({ method: "POST" })
       /* ignore */
     }
 
+    const amount = Math.round(data.defaultOnrampAmount);
     const session = await resolveHelioDepositCustomerToken({
       userId,
       product: data.product,
-      defaultOnrampAmount: data.defaultOnrampAmount,
+      defaultOnrampAmount: amount,
       customerEmail: email,
     });
 
@@ -40,6 +43,7 @@ export const getHelioDepositSession = createServerFn({ method: "POST" })
       customerId: session.customerId,
       depositId: session.depositId,
       product: session.product,
+      amountUsd: session.amountUsd ?? amount,
       mode: session.mode,
       apiConfigured: isHelioDepositApiConfigured(),
       network: "main" as const,

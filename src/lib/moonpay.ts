@@ -44,7 +44,9 @@ export function buildMoonPayBuyUrl(opts: {
 }
 
 /**
- * Request HMAC signature for a MoonPay widget URL (server uses MOONPAY_SECRET_KEY).
+ * Request HMAC signature for a MoonPay widget URL.
+ * Server signs the query string (incl. `?`) with MOONPAY_SECRET_KEY.
+ * Docs: https://dev.moonpay.com/widget/on-ramp/customization/url-signing
  * Returns undefined when signing is not configured — omit signature entirely (never "").
  */
 export async function requestMoonPayUrlSignature(url: string): Promise<string | undefined> {

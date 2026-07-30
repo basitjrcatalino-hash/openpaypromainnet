@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/wallet/PageHeader";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
@@ -105,6 +106,9 @@ function TopUpPage() {
   const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState<Method>("openpay_balance");
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  /** After confirm, show Helio / USDC deposit widget */
+  const [depositReady, setDepositReady] = useState(false);
   const [moonpayVisible, setMoonpayVisible] = useState(false);
   const [moonpaySession, setMoonpaySession] = useState<{
     amount: number;
@@ -337,9 +341,13 @@ function TopUpPage() {
     qc.invalidateQueries({ queryKey: ["ledger-overview"] });
   }
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (method === "helio" || method === "usdc") return;
+  async function submit(e?: FormEvent) {
+    e?.preventDefault();
+    if (method === "helio" || method === "usdc") {
+      setDepositReady(true);
+      setConfirmOpen(false);
+      return;
+    }
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid");
@@ -359,6 +367,7 @@ function TopUpPage() {
           externalTransactionId,
         });
         setMoonpayVisible(true);
+        setConfirmOpen(false);
         return;
       }
       if (method === "openpay_balance") {
@@ -416,6 +425,7 @@ function TopUpPage() {
       qc.invalidateQueries({ queryKey: ["ledger-entries"] });
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
       setAmount("");
+      setConfirmOpen(false);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -424,6 +434,21 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
+
+  function openConfirm(e: FormEvent) {
+    e.preventDefault();
+    const parsed = schema.safeParse({ amount });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid");
+      return;
+    }
+    if (method === "openpay_balance" && !linked) {
+      toast.error("Connect OpenPay in Settings first");
+      return;
+    }
+    setConfirmOpen(true);
+  }
+
   const cta =
     method === "moonpay"
       ? `Buy with MoonPay${amount ? ` · ${formatUSD(amtNum)}` : ""}`
@@ -431,11 +456,22 @@ function TopUpPage() {
         ? linked
           ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
           : "Connect OpenPay to continue"
-        : method === "helio" || method === "usdc"
-          ? method === "usdc"
-            ? "Pay with USDC below"
-            : "Deposit crypto below"
-          : `Top up ${amount ? formatUSD(amtNum) : ""}`;
+        : method === "helio"
+          ? `Deposit ${amount ? formatUSD(amtNum) : ""} crypto`
+          : method === "usdc"
+            ? `Pay ${amount ? formatUSD(amtNum) : ""} with USDC`
+            : `Top up ${amount ? formatUSD(amtNum) : ""}`;
+
+  const payWithLabel =
+    method === "moonpay"
+      ? "Card (MoonPay)"
+      : method === "pi"
+        ? "Pi Network"
+        : method === "usdc"
+          ? "USDC Pay"
+          : method === "helio"
+            ? "Crypto Deposit (SOL)"
+            : "OpenPay Balance";
 
   return (
     <div className="ot-phantom ph-page space-y-6 pb-8">
@@ -500,7 +536,7 @@ function TopUpPage() {
         </div>
       )}
 
-      <form onSubmit={submit} className="space-y-6">
+      <form onSubmit={openConfirm} className="space-y-6">
         {/* Amount */}
         <section>
           <Label
@@ -514,7 +550,10 @@ function TopUpPage() {
             <Input
               id="topup-amount"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setDepositReady(false);
+                setAmount(e.target.value);
+              }}
               type="text"
               inputMode="decimal"
               pattern="[0-9]*[.]?[0-9]*"
@@ -528,7 +567,10 @@ function TopUpPage() {
               <button
                 key={p}
                 type="button"
-                onClick={() => setAmount(String(p))}
+                onClick={() => {
+                  setDepositReady(false);
+                  setAmount(String(p));
+                }}
                 className={cn(
                   "rounded-lg px-3.5 py-2 text-xs font-semibold press",
                   amount === String(p)
@@ -569,7 +611,10 @@ function TopUpPage() {
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => setMethod(m.id)}
+                  onClick={() => {
+                    setMethod(m.id);
+                    setDepositReady(false);
+                  }}
                   className={cn(
                     "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-muted/40",
                     i > 0 && "border-t border-border/60",
@@ -673,18 +718,46 @@ function TopUpPage() {
         )}
 
         {method === "helio" || method === "usdc" ? (
-          <div className="space-y-3">
-            <HelioDepositPanel
-              product={method === "usdc" ? "usdc" : "crypto"}
-              amountUsd={amtNum >= 1 ? amtNum : 100}
-              onSuccess={refreshAfterHelioDeposit}
-            />
-            <p className="text-center text-[11px] text-muted-foreground">
-              {method === "usdc"
-                ? "Powered by MoonPay Commerce · USDC Pay"
-                : "Powered by MoonPay Commerce · Helio Deposit"}
-            </p>
-          </div>
+          depositReady ? (
+            <div className="space-y-3">
+              <HelioDepositPanel
+                product={method === "usdc" ? "usdc" : "crypto"}
+                amountUsd={amtNum}
+                onSuccess={refreshAfterHelioDeposit}
+              />
+              <p className="text-center text-[11px] text-muted-foreground">
+                {method === "usdc"
+                  ? `Pay exactly $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} USDC · 1 OUSD = $1.00`
+                  : `Pay $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} via SOL/crypto · 1 OUSD = $1.00`}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-xs text-muted-foreground"
+                onClick={() => setDepositReady(false)}
+              >
+                Change amount or method
+              </Button>
+            </div>
+          ) : (
+            <div className="pt-1">
+              <Button
+                type="submit"
+                disabled={busy || amtNum < 1}
+                className="h-14 w-full rounded-full text-base font-semibold"
+              >
+                {busy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                {cta}
+              </Button>
+              <p className="mt-3 text-center text-[11px] text-muted-foreground">
+                Confirm first · then pay exactly {amtNum >= 1 ? formatUSD(amtNum) : "—"}
+              </p>
+            </div>
+          )
         ) : (
           <div className="pt-1">
             <Button
@@ -701,12 +774,36 @@ function TopUpPage() {
             </Button>
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
               {method === "moonpay"
-                ? "Powered by MoonPay · card → OUSD credit"
+                ? "Confirm · then MoonPay card checkout (signed URL)"
                 : "1 OUSD = $1.00 · credited to your active wallet"}
             </p>
           </div>
         )}
       </form>
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirm top-up"
+        description="Review your OUSD purchase"
+        amount={formatUSD(amtNum)}
+        subtitle="OUSD · 1:1 with USD"
+        rows={[
+          { label: "Asset", value: "OUSD" },
+          { label: "You pay", value: formatUSD(amtNum) },
+          { label: "Pay with", value: payWithLabel },
+          {
+            label: "Wallet",
+            value: wallet?.name ?? "Active wallet",
+          },
+        ]}
+        confirmLabel={cta}
+        busy={busy}
+        variant={method === "openpay_balance" ? "openpay" : "default"}
+        onConfirm={() => {
+          void submit();
+        }}
+      />
 
       {moonpaySession ? (
         <MoonPayBuyOverlay

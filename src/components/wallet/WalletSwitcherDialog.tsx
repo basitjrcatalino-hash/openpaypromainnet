@@ -231,8 +231,8 @@ export function WalletAccountRow({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-3 text-left press",
-        compact ? "px-3 py-2.5" : "px-3.5 py-3",
+        "flex w-full min-w-0 items-center gap-2.5 text-left press",
+        compact ? "px-2.5 py-2.5" : "gap-3 px-3.5 py-3",
         active ? "bg-primary/12" : "hover:bg-muted/50",
         disabled && "opacity-70",
       )}
@@ -243,35 +243,62 @@ export function WalletAccountRow({
         size={compact ? "sm" : "md"}
         active={active}
       />
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold">{wallet.name}</span>
-          {active && (
-            <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+      <span className="min-w-0 flex-1 overflow-hidden">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate text-sm font-semibold leading-tight">
+            {wallet.name}
+          </span>
+          {active && !compact ? (
+            <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
               Active
             </span>
+          ) : null}
+        </span>
+        {compact ? (
+          <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+            {active ? (
+              <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-primary">
+                Active
+              </span>
+            ) : null}
+            {balance == null ? (
+              <Skeleton className="h-3.5 w-14 rounded-md" />
+            ) : (
+              <span className="truncate text-xs font-semibold tabular-nums text-muted-foreground">
+                {hideBalance ? "••••" : formatCurrency(balance, currency)}
+              </span>
+            )}
+          </span>
+        ) : (
+          <span className="block truncate font-mono text-[11px] text-muted-foreground">
+            {shortAddress(wallet.address, 6, 4)}
+          </span>
+        )}
+      </span>
+      {!compact ? (
+        <span className="flex shrink-0 items-center gap-2">
+          {balance == null ? (
+            <Skeleton className="h-4 w-16 rounded-md" />
+          ) : (
+            <span className="text-sm font-semibold tabular-nums">
+              {hideBalance ? "••••" : formatCurrency(balance, currency)}
+            </span>
+          )}
+          {active ? (
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
+          ) : (
+            <span className="h-6 w-6" aria-hidden />
           )}
         </span>
-        <span className="block truncate font-mono text-[11px] text-muted-foreground">
-          {shortAddress(wallet.address, 6, 4)}
+      ) : active ? (
+        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+          <Check className="h-3 w-3" strokeWidth={3} />
         </span>
-      </span>
-      <span className="flex shrink-0 items-center gap-2">
-        {balance == null ? (
-          <Skeleton className="h-4 w-16 rounded-md" />
-        ) : (
-          <span className="text-sm font-semibold tabular-nums">
-            {hideBalance ? "••••" : formatCurrency(balance, currency)}
-          </span>
-        )}
-        {active ? (
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
-            <Check className="h-3.5 w-3.5" strokeWidth={3} />
-          </span>
-        ) : (
-          <span className="h-6 w-6" aria-hidden />
-        )}
-      </span>
+      ) : (
+        <span className="h-5 w-5 shrink-0" aria-hidden />
+      )}
     </button>
   );
 }

@@ -19,7 +19,9 @@ type Props = {
 
 /**
  * MoonPay Buy overlay for OUSD top-up / major crypto buys.
- * Signs the widget URL via onUrlSignatureRequested (never sends signature:"").
+ * URL signing via onUrlSignatureRequested → `/api/public/moonpay-sign`
+ * (HMAC-SHA256 of query string). Docs:
+ * https://dev.moonpay.com/widget/on-ramp/customization/url-signing
  */
 export function MoonPayBuyOverlay({
   visible,
@@ -43,10 +45,11 @@ export function MoonPayBuyOverlay({
       externalCustomerId={externalCustomerId}
       externalTransactionId={externalTransactionId}
       onUrlSignatureRequested={async (url) => {
+        // React SDK expects the raw base64 signature (not URL-encoded).
         const signature = await requestMoonPayUrlSignature(url);
         if (!signature) {
           throw new Error(
-            "MoonPay URL signing failed. Set MOONPAY_SECRET_KEY on the server.",
+            "MoonPay URL signing failed. Set MOONPAY_SECRET_KEY (sk_test_/sk_live_) on the server.",
           );
         }
         return signature;

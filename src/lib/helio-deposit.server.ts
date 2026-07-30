@@ -79,14 +79,43 @@ export function helioCustomerIdForUser(userId: string): string {
   return `${HELIO_CUSTOMER_PREFIX}-${userId}`;
 }
 
+/**
+ * Unique Helio customer per user + product + USD amount so `defaultOnrampAmount`
+ * is baked in at create time (Helio does not update amount on reuse).
+ * Example: OPENPAY-PRO-{uuid}-usdc-100000 ($1,000.00)
+ */
+export function helioCustomerIdForAmountSession(
+  userId: string,
+  product: HelioDepositProduct,
+  amountUsd: number,
+): string {
+  const cents = Math.max(1, Math.round(amountUsd * 100));
+  return `${HELIO_CUSTOMER_PREFIX}-${userId}-${product}-${cents}`;
+}
+
+const UUID_RE =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-(?:crypto|usdc)-\d+)?$/i;
+
 export function parseUserIdFromHelioCustomerId(customerId: string): string | null {
   const id = String(customerId || "").trim();
   if (!id) return null;
   const prefix = `${HELIO_CUSTOMER_PREFIX}-`;
-  if (id.startsWith(prefix)) return id.slice(prefix.length) || null;
-  // Shared dashboard customer used wallet address as customerId — not mappable
-  if (/^OPENPAY[\s_-]*PRO$/i.test(id)) return null;
+  if (!id.startsWith(prefix)) {
+    // Shared dashboard customer used wallet address as customerId — not mappable
+    if (/^OPENPAY[\s_-]*PRO$/i.test(id)) return null;
+    return null;
+  }
+  const rest = id.slice(prefix.length);
+  const m = UUID_RE.exec(rest);
+  if (m?.[1]) return m[1];
+  // Legacy: OPENPAY-PRO-{userId} without amount suffix
+  if (rest) return rest;
   return null;
+}
+
+/** Whole USD dollars for Helio `defaultOnrampAmount` (integer). */
+export function helioOnrampAmountUsd(amountUsd: number): number {
+  return Math.max(1, Math.round(amountUsd));
 }
 
 function helioKeys() {
@@ -171,7 +200,9 @@ async function getCustomerById(
 }
 
 /**
- * Create or reuse a Helio deposit customer for this OpenPay user + product.
+ * Create or reuse a Helio deposit customer for this OpenPay user + product (+ amount).
+ * When `defaultOnrampAmount` is set, customerId is amount-scoped so the widget
+ * always prefills the exact USD the user entered on Buy.
  * Returns `depositCustomerToken` for `MoonpayCommerceDeposit`.
  */
 export async function getOrCreateHelioDepositCustomer(opts: {
@@ -184,11 +215,22 @@ export async function getOrCreateHelioDepositCustomer(opts: {
   customerId: string;
   depositId: string;
   product: HelioDepositProduct;
+  amountUsd: number | null;
   reused: boolean;
 }> {
   const product = opts.product ?? "crypto";
   const cfg = getHelioProduct(product);
-  const customerId = helioCustomerIdForUser(opts.userId);
+  const amountUsd =
+    typeof opts.defaultOnrampAmount === "number" &&
+    Number.isFinite(opts.defaultOnrampAmount) &&
+    opts.defaultOnrampAmount >= 1
+      ? helioOnrampAmountUsd(opts.defaultOnrampAmount)
+      : null;
+
+  const customerId =
+    amountUsd != null
+      ? helioCustomerIdForAmountSession(opts.userId, product, amountUsd)
+      : helioCustomerIdForUser(opts.userId);
   const depositId = cfg.depositId;
 
   const existing = await getCustomerById(depositId, customerId);
@@ -198,6 +240,7 @@ export async function getOrCreateHelioDepositCustomer(opts: {
       customerId,
       depositId,
       product,
+      amountUsd,
       reused: true,
     };
   }
@@ -210,18 +253,20 @@ export async function getOrCreateHelioDepositCustomer(opts: {
       openpay_user_id: opts.userId,
       brand: "OPENPAY PRO",
       product,
+      expected_amount_usd: amountUsd,
     }),
   };
 
-  if (
-    typeof opts.defaultOnrampAmount === "number" &&
-    Number.isFinite(opts.defaultOnrampAmount) &&
-    opts.defaultOnrampAmount >= 1
-  ) {
-    body.defaultOnrampAmount = Math.round(opts.defaultOnrampAmount);
+  if (amountUsd != null) {
+    // Helio create: integer USD prefill for on-ramp / pay amount in the widget
+    body.defaultOnrampAmount = amountUsd;
   }
   if (opts.customerEmail?.trim()) {
     body.customerEmail = opts.customerEmail.trim();
+  }
+  // USDC Pay: Solana wallets only (USDC on SOL)
+  if (product === "usdc") {
+    body.blockchainEngineTypes = ["SOL"];
   }
 
   const res = await helioFetch("/deposit-customers/api-key", {
@@ -245,6 +290,7 @@ export async function getOrCreateHelioDepositCustomer(opts: {
         customerId,
         depositId,
         product,
+        amountUsd,
         reused: true,
       };
     }
@@ -265,6 +311,7 @@ export async function getOrCreateHelioDepositCustomer(opts: {
     customerId,
     depositId,
     product,
+    amountUsd,
     reused: false,
   };
 }
@@ -282,10 +329,17 @@ export async function resolveHelioDepositCustomerToken(opts: {
   customerId: string | null;
   depositId: string;
   product: HelioDepositProduct;
+  amountUsd: number | null;
   mode: "api" | "fallback";
 }> {
   const product = opts.product ?? "crypto";
   const cfg = getHelioProduct(product);
+  const amountUsd =
+    typeof opts.defaultOnrampAmount === "number" &&
+    Number.isFinite(opts.defaultOnrampAmount) &&
+    opts.defaultOnrampAmount >= 1
+      ? helioOnrampAmountUsd(opts.defaultOnrampAmount)
+      : null;
 
   if (isHelioDepositApiConfigured()) {
     const r = await getOrCreateHelioDepositCustomer({ ...opts, product });
@@ -294,6 +348,7 @@ export async function resolveHelioDepositCustomerToken(opts: {
       customerId: r.customerId,
       depositId: r.depositId,
       product,
+      amountUsd: r.amountUsd,
       mode: "api",
     };
   }
@@ -304,6 +359,7 @@ export async function resolveHelioDepositCustomerToken(opts: {
       customerId: null,
       depositId: cfg.depositId,
       product,
+      amountUsd,
       mode: "fallback",
     };
   }

@@ -120,6 +120,13 @@ function TermsPage() {
             See also our{" "}
             <Link to="/privacy" className="font-medium text-primary underline-offset-2 hover:underline">
               Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="/regulatory"
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Regulatory Status
             </Link>
             .
           </p>

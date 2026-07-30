@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegulatoryRouteImport } from './routes/regulatory'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
@@ -106,6 +107,11 @@ const AuthpiRoute = AuthpiRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegulatoryRoute = RegulatoryRouteImport.update({
+  id: '/regulatory',
+  path: '/regulatory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -477,6 +483,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/privacy': typeof PrivacyRoute
+  '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/privacy': typeof PrivacyRoute
+  '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
@@ -629,6 +637,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/privacy': typeof PrivacyRoute
+  '/regulatory': typeof RegulatoryRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
@@ -706,6 +715,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/privacy'
+    | '/regulatory'
     | '/terms'
     | '/testnet-reward'
     | '/activity'
@@ -781,6 +791,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/privacy'
+    | '/regulatory'
     | '/terms'
     | '/testnet-reward'
     | '/activity'
@@ -857,6 +868,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/privacy'
+    | '/regulatory'
     | '/terms'
     | '/testnet-reward'
     | '/_authenticated/activity'
@@ -934,6 +946,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
   PrivacyRoute: typeof PrivacyRoute
+  RegulatoryRoute: typeof RegulatoryRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
@@ -999,6 +1012,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regulatory': {
+      id: '/regulatory'
+      path: '/regulatory'
+      fullPath: '/regulatory'
+      preLoaderRoute: typeof RegulatoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1624,6 +1644,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
   PrivacyRoute: PrivacyRoute,
+  RegulatoryRoute: RegulatoryRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,

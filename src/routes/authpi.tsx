@@ -701,13 +701,20 @@ function AuthPiPageInner() {
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
               Terms
-            </Link>{" "}
-            &{" "}
+            </Link>
+            ,{" "}
             <Link
               to="/privacy"
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
               Privacy Policy
+            </Link>
+            , and{" "}
+            <Link
+              to="/regulatory"
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              Regulatory Status
             </Link>
             .
           </p>

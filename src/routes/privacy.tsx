@@ -136,6 +136,13 @@ function PrivacyPage() {
             See also our{" "}
             <Link to="/terms" className="font-medium text-primary underline-offset-2 hover:underline">
               Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="/regulatory"
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Regulatory Status
             </Link>
             .
           </p>

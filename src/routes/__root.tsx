@@ -109,7 +109,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
+    if (location.pathname.startsWith("/lovable/")) return;
     // Runs before child routes that touch supabase (auth gate, index redirect).
     await ensureBrowserSupabaseConfig();
   },

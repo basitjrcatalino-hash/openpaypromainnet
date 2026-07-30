@@ -37,6 +37,8 @@ export type TxConfirmModalProps = {
   /** Secondary line under amount, e.g. "$42.10" */
   subtitle?: ReactNode;
   rows: TxConfirmRow[];
+  /** Extra notice below rows (fees, third-party disclosures, etc.) */
+  notice?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   busy?: boolean;
@@ -53,6 +55,7 @@ function ConfirmBody({
   amount,
   subtitle,
   rows,
+  notice,
   confirmLabel,
   cancelLabel,
   busy,
@@ -123,6 +126,8 @@ function ConfirmBody({
         </div>
       ) : null}
 
+      {notice ? <div className="min-w-0">{notice}</div> : null}
+
       <div className="flex flex-col gap-2.5">
         <Button
           type="button"
@@ -163,6 +168,7 @@ export function TxConfirmModal({
   amount,
   subtitle,
   rows,
+  notice,
   confirmLabel,
   cancelLabel,
   busy,
@@ -180,6 +186,7 @@ export function TxConfirmModal({
       amount={amount}
       subtitle={subtitle}
       rows={rows}
+      notice={notice}
       confirmLabel={confirmLabel}
       cancelLabel={cancelLabel}
       busy={busy}

@@ -2,19 +2,20 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Link2, CheckCircle2, CreditCard, type LucideIcon } from "lucide-react";
+import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
+import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
 import { cn } from "@/lib/utils";
-import { formatUSD } from "@/lib/wallet-utils";
+import { formatOUSD, formatUSD } from "@/lib/wallet-utils";
+import { useCurrency } from "@/lib/currency";
 import { topUpWithPi } from "@/lib/pi-network";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/topup")({
 });
 
 type Method = "openpay_balance" | "pi" | "moonpay" | "helio" | "usdc";
+type BuyStep = "amount" | "method" | "deposit";
 const methods: {
   id: Method;
   label: string;
@@ -103,12 +105,14 @@ function TopUpPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/topup" });
-  const [amount, setAmount] = useState("100");
+  const [amount, setAmount] = useState("25");
   const [method, setMethod] = useState<Method>("openpay_balance");
+  const [step, setStep] = useState<BuyStep>("amount");
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   /** After confirm, show Helio / USDC deposit widget */
   const [depositReady, setDepositReady] = useState(false);
+  const { code: displayCurrency } = useCurrency();
   const [moonpayVisible, setMoonpayVisible] = useState(false);
   const [moonpaySession, setMoonpaySession] = useState<{
     amount: number;
@@ -346,6 +350,7 @@ function TopUpPage() {
     if (method === "helio" || method === "usdc") {
       setDepositReady(true);
       setConfirmOpen(false);
+      setStep("deposit");
       return;
     }
     const parsed = schema.safeParse({ amount });
@@ -434,9 +439,21 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
+  const amountValid = amtNum >= 0.01 && amtNum <= 50_000;
+  const selectedMethod = methods.find((m) => m.id === method);
 
-  function openConfirm(e: FormEvent) {
-    e.preventDefault();
+  function goToMethod() {
+    const parsed = schema.safeParse({ amount });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Enter a valid amount");
+      return;
+    }
+    setDepositReady(false);
+    setStep("method");
+  }
+
+  function openConfirm(e?: FormEvent) {
+    e?.preventDefault();
     const parsed = schema.safeParse({ amount });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid");
@@ -449,18 +466,30 @@ function TopUpPage() {
     setConfirmOpen(true);
   }
 
+  function handleHeaderBack() {
+    if (step === "deposit") {
+      setDepositReady(false);
+      setStep("method");
+      return;
+    }
+    if (step === "method") {
+      setStep("amount");
+      return;
+    }
+  }
+
   const cta =
     method === "moonpay"
-      ? `Buy with MoonPay${amount ? ` · ${formatUSD(amtNum)}` : ""}`
+      ? `Continue with MoonPay`
       : method === "openpay_balance"
         ? linked
-          ? `Pay ${amount ? formatUSD(amtNum) : ""} with OpenPay`
+          ? `Pay with OpenPay`
           : "Connect OpenPay to continue"
         : method === "helio"
-          ? `Deposit ${amount ? formatUSD(amtNum) : ""} crypto`
+          ? `Continue with crypto`
           : method === "usdc"
-            ? `Pay ${amount ? formatUSD(amtNum) : ""} with USDC`
-            : `Top up ${amount ? formatUSD(amtNum) : ""}`;
+            ? `Continue with USDC`
+            : `Continue with Pi`;
 
   const payWithLabel =
     method === "moonpay"
@@ -473,23 +502,19 @@ function TopUpPage() {
             ? "Crypto Deposit (SOL)"
             : "OpenPay Balance";
 
-  return (
-    <div className="ot-phantom ph-page space-y-6 pb-8">
-      <PageHeader title="Buy" backTo="/dashboard" />
+  const headerTitle =
+    step === "amount" ? "Buy" : step === "method" ? "Pay with" : method === "usdc" ? "USDC Pay" : "Crypto Deposit";
 
-      {/* Hero balance — Phantom-style */}
-      <div className="px-1 text-center">
-        <p className="text-sm text-muted-foreground">
-          {wallet?.name ?? "Main Wallet"} · OUSD
-        </p>
-        <div className="mt-1 text-4xl font-bold tabular-nums tracking-tight text-foreground">
-          {formatUSD(Number(wallet?.ousd_balance ?? 0))}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">Add OUSD to your wallet</p>
-      </div>
+  return (
+    <div className="ot-phantom ph-page flex min-h-[calc(100dvh-6rem)] flex-col pb-8">
+      <PageHeader
+        title={headerTitle}
+        backTo={step === "amount" ? "/dashboard" : undefined}
+        onBack={step === "amount" ? undefined : handleHeaderBack}
+      />
 
       {pendingPayLink && (
-        <div className="overflow-hidden rounded-2xl bg-card">
+        <div className="mb-5 overflow-hidden rounded-2xl bg-card">
           <div className="flex items-start gap-3 px-4 py-4">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
               <CheckCircle2 className="h-5 w-5" />
@@ -536,94 +561,187 @@ function TopUpPage() {
         </div>
       )}
 
-      <form onSubmit={openConfirm} className="space-y-6">
-        {/* Amount */}
-        <section>
-          <Label
-            htmlFor="topup-amount"
-            className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
-          >
-            Amount
-          </Label>
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-3xl font-bold text-muted-foreground">$</span>
-            <Input
-              id="topup-amount"
-              value={amount}
-              onChange={(e) => {
-                setDepositReady(false);
-                setAmount(e.target.value);
-              }}
-              type="text"
-              inputMode="decimal"
-              pattern="[0-9]*[.]?[0-9]*"
-              required
-              aria-label="Top up amount in USD"
-              className="h-auto w-full max-w-48 border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
-            />
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
-            {presets.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => {
-                  setDepositReady(false);
-                  setAmount(String(p));
-                }}
-                className={cn(
-                  "rounded-lg px-3.5 py-2 text-xs font-semibold press",
-                  amount === String(p)
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                )}
-              >
-                ${p}
-              </button>
-            ))}
-          </div>
-          {hasFee && amtNum > 0 && (
-            <div className="mt-4 rounded-2xl bg-muted/50 px-4 py-3 text-center text-xs text-muted-foreground">
-              <div className="flex items-center justify-between gap-2">
-                <span>Top-up fee ({(feeBps / 100).toFixed(2)}%)</span>
-                <span className="font-semibold tabular-nums text-destructive">
-                  −{formatUSD(feeBreakdown.fee)}
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-border/50 pt-1.5">
-                <span className="font-medium text-foreground">You receive</span>
-                <span className="text-sm font-bold tabular-nums text-foreground">
-                  {formatUSD(feeBreakdown.net)} OUSD
-                </span>
-              </div>
-            </div>
-          )}
-        </section>
+      {/* —— Step 1: Amount (Phantom-style) —— */}
+      {step === "amount" && (
+        <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col items-center justify-center px-2 pb-6 pt-4">
+            <button
+              type="button"
+              className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted/70 py-1.5 pl-1.5 pr-3 press"
+              aria-label="Buying OUSD"
+            >
+              <img
+                src={OUSD_LOGO_URL}
+                alt=""
+                className="h-7 w-7 rounded-full object-cover"
+              />
+              <span className="text-sm font-semibold">OUSD</span>
+            </button>
 
-        {/* Payment method — flat Phantom list */}
-        <section>
-          <h2 className="mb-2 px-1 text-sm text-muted-foreground">Pay with</h2>
+            <div className="flex w-full items-baseline justify-center gap-1">
+              <span className="text-4xl font-bold text-muted-foreground/80">$</span>
+              <Input
+                id="topup-amount"
+                value={amount}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, "");
+                  setDepositReady(false);
+                  setAmount(raw);
+                }}
+                type="text"
+                inputMode="decimal"
+                autoFocus
+                aria-label="Buy amount in USD"
+                className="h-auto w-full max-w-[14rem] border-0 bg-transparent p-0 text-center text-[3.5rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
+              />
+            </div>
+
+            <p className="mt-3 text-sm text-muted-foreground">
+              {amountValid ? (
+                <>
+                  {formatOUSD(amtNum)}
+                  {displayCurrency !== "USD" ? (
+                    <span className="text-muted-foreground/80">
+                      {" "}
+                      · ≈ {formatUSD(amtNum)}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                "Enter an amount"
+              )}
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              {presets.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => {
+                    setDepositReady(false);
+                    setAmount(String(p));
+                  }}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm font-semibold press",
+                    amount === String(p)
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-foreground hover:bg-muted/80",
+                  )}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
+
+            {hasFee && amountValid ? (
+              <div className="mt-6 w-full max-w-sm rounded-2xl bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <span>Platform fee ({(feeBps / 100).toFixed(2)}%)</span>
+                  <span className="font-semibold tabular-nums text-destructive">
+                    −{formatUSD(feeBreakdown.fee)}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-border/50 pt-1.5">
+                  <span className="font-medium text-foreground">You receive</span>
+                  <span className="text-sm font-bold tabular-nums text-foreground">
+                    {formatOUSD(feeBreakdown.net)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Adding to{" "}
+              <span className="font-medium text-foreground">
+                {wallet?.name ?? "Main Wallet"}
+              </span>
+              {" · "}
+              bal {formatUSD(Number(wallet?.ousd_balance ?? 0))}
+            </p>
+          </div>
+
+          <div className="sticky bottom-0 mt-auto space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-2 pt-4">
+            <Button
+              type="button"
+              disabled={!amountValid}
+              onClick={goToMethod}
+              className="h-14 w-full rounded-full text-base font-bold"
+            >
+              Continue
+            </Button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              Next · choose how to pay
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* —— Step 2: Payment method —— */}
+      {step === "method" && (
+        <div className="flex flex-1 flex-col">
+          <div className="mb-5 rounded-2xl bg-card px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <img
+                src={OUSD_LOGO_URL}
+                alt=""
+                className="h-10 w-10 rounded-full object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground">You buy</p>
+                <p className="truncate text-lg font-bold tabular-nums">
+                  {formatOUSD(amtNum)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep("amount")}
+                className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold press hover:bg-muted/80"
+              >
+                Edit
+              </button>
+            </div>
+            {hasFee ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                After {(feeBps / 100).toFixed(2)}% fee →{" "}
+                <span className="font-semibold text-foreground">
+                  {formatOUSD(feeBreakdown.net)}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                1 OUSD = $1.00 · ≈ {formatUSD(amtNum)}
+              </p>
+            )}
+          </div>
+
+          <h2 className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+            Select a provider
+          </h2>
           <div className="overflow-hidden rounded-2xl bg-card">
             {methods.map((m, i) => {
               const selected = method === m.id;
               const Icon = m.icon;
+              const disabled = m.id === "openpay_balance" && !linked;
               return (
                 <button
                   key={m.id}
                   type="button"
+                  disabled={disabled}
                   onClick={() => {
                     setMethod(m.id);
                     setDepositReady(false);
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-muted/40",
+                    "flex w-full items-center gap-3 px-4 py-3.5 text-left press transition hover:bg-muted/40",
                     i > 0 && "border-t border-border/60",
+                    disabled && "opacity-50",
+                    selected && "bg-primary/5",
                   )}
                 >
                   <span
                     className={cn(
                       "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
-                      selected ? "bg-primary/15 ring-2 ring-primary/40" : "bg-muted",
+                      selected ? "bg-primary/15 ring-2 ring-primary/35" : "bg-muted",
                       m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                       m.id === "helio" && "bg-[#9945FF]/15 text-[#9945FF]",
                       m.id === "usdc" && "bg-[#2775CA]/15",
@@ -638,8 +756,17 @@ function TopUpPage() {
                     ) : null}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">{m.label}</div>
-                    <div className="truncate text-xs text-muted-foreground">{m.desc}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">{m.label}</span>
+                      {m.id === "openpay_balance" && linked ? (
+                        <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                          Linked
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {disabled ? "Connect OpenPay in Settings" : m.desc}
+                    </div>
                   </div>
                   <span
                     className={cn(
@@ -656,147 +783,123 @@ function TopUpPage() {
               );
             })}
           </div>
-        </section>
 
-        {method === "moonpay" && (
-          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            Opens the MoonPay widget to pay with card. When the purchase completes,{" "}
-            <span className="font-medium text-foreground">
-              {wallet?.name ?? "your wallet"}
-            </span>{" "}
-            is credited 1:1 in OUSD (sandbox key · test cards in MoonPay dashboard).
-          </p>
-        )}
-
-        {method === "helio" && (
-          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            Pay with SOL or other crypto via MoonPay Commerce — funds settle to OpenPay Pro,
-            then{" "}
-            <span className="font-medium text-foreground">
-              {wallet?.name ?? "your wallet"}
-            </span>{" "}
-            is credited in OUSD when the deposit confirms.
-          </p>
-        )}
-
-        {method === "usdc" && (
-          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            Pay with USDC via MoonPay Commerce — then{" "}
-            <span className="font-medium text-foreground">
-              {wallet?.name ?? "your wallet"}
-            </span>{" "}
-            is credited 1:1 in OUSD when the deposit confirms.
-          </p>
-        )}
-
-        {method === "openpay_balance" && (
-          <p className="px-1 text-center text-xs leading-relaxed text-muted-foreground">
-            {linked ? (
-              <>
-                Paying from connected OpenPay
-                {openpayLink?.username
-                  ? ` @${openpayLink.username}`
-                  : openpayLink?.account_number
-                    ? ` · ${openpayLink.account_number}`
-                    : ""}
-                . Confirm on OpenPay — balance is debited, then{" "}
-                <span className="font-medium text-foreground">
-                  {wallet?.name ?? "your wallet"}
-                </span>{" "}
-                is credited.
-              </>
-            ) : (
-              <>
-                Connect OpenPay in Settings first.{" "}
-                <Link to="/settings" className="inline-flex items-center gap-1 font-semibold text-primary">
-                  <Link2 className="h-3.5 w-3.5" />
-                  Connect
-                </Link>
-              </>
-            )}
-          </p>
-        )}
-
-        {method === "helio" || method === "usdc" ? (
-          depositReady ? (
-            <div className="space-y-3">
-              <HelioDepositPanel
-                product={method === "usdc" ? "usdc" : "crypto"}
-                amountUsd={amtNum}
-                onSuccess={refreshAfterHelioDeposit}
-              />
-              <p className="text-center text-[11px] text-muted-foreground">
-                {method === "usdc"
-                  ? `Pay exactly $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} USDC · 1 OUSD = $1.00`
-                  : `Pay $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} via SOL/crypto · 1 OUSD = $1.00`}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-xs text-muted-foreground"
-                onClick={() => setDepositReady(false)}
+          {method === "openpay_balance" && !linked ? (
+            <p className="mt-3 px-1 text-center text-xs text-muted-foreground">
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-1 font-semibold text-primary"
               >
-                Change amount or method
-              </Button>
-            </div>
+                <Link2 className="h-3.5 w-3.5" />
+                Connect OpenPay
+              </Link>{" "}
+              to pay from your balance.
+            </p>
           ) : (
-            <div className="pt-1">
-              <Button
-                type="submit"
-                disabled={busy || amtNum < 1}
-                className="h-14 w-full rounded-full text-base font-semibold"
-              >
-                {busy ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}
-                {cta}
-              </Button>
-              <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                Confirm first · then pay exactly {amtNum >= 1 ? formatUSD(amtNum) : "—"}
-              </p>
-            </div>
-          )
-        ) : (
-          <div className="pt-1">
+            <p className="mt-3 px-1 text-center text-xs leading-relaxed text-muted-foreground">
+              {selectedMethod?.desc}
+            </p>
+          )}
+
+          <div className="sticky bottom-0 mt-auto space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-2 pt-6">
             <Button
-              type="submit"
+              type="button"
               disabled={
                 busy ||
-                (method === "openpay_balance" && !linked) ||
-                amtNum < 1
+                !amountValid ||
+                (method === "openpay_balance" && !linked)
               }
-              className="h-14 w-full rounded-full text-base font-semibold"
+              onClick={() => openConfirm()}
+              className={cn(
+                "h-14 w-full rounded-full text-base font-bold",
+                method === "openpay_balance" && "bg-[#0070BA] hover:opacity-90",
+                method === "moonpay" && "bg-[#7D00FE] hover:bg-[#7D00FE]/90",
+              )}
             >
-              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-              {cta}
+              {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              Review {formatOUSD(amtNum, { suffix: false })} OUSD
+              <ChevronRight className="ml-1 h-5 w-5 opacity-80" />
             </Button>
-            <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              {method === "moonpay"
-                ? "Confirm · then MoonPay card checkout (signed URL)"
-                : "1 OUSD = $1.00 · credited to your active wallet"}
+            <p className="text-center text-[11px] text-muted-foreground">
+              Fees & third-party terms shown before you pay
             </p>
           </div>
-        )}
-      </form>
+        </div>
+      )}
+
+      {/* —— Step 3: Deposit widget (Helio / USDC) —— */}
+      {step === "deposit" && depositReady && (method === "helio" || method === "usdc") && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <div className="rounded-2xl bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatOUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via {method === "usdc" ? "USDC · MoonPay Commerce" : "SOL / crypto · MoonPay Commerce"}
+            </p>
+          </div>
+          <HelioDepositPanel
+            product={method === "usdc" ? "usdc" : "crypto"}
+            amountUsd={amtNum}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
 
       <TxConfirmModal
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Confirm top-up"
-        description="Review your OUSD purchase"
-        amount={formatUSD(amtNum)}
-        subtitle="OUSD · 1:1 with USD"
+        title="Confirm purchase"
+        description="Review amount, fees, and third-party payment"
+        amount={formatOUSD(amtNum)}
+        subtitle={
+          hasFee
+            ? `You receive ${formatOUSD(feeBreakdown.net)}`
+            : `≈ ${formatUSD(amtNum)} · 1 OUSD = $1.00`
+        }
         rows={[
-          { label: "Asset", value: "OUSD" },
-          { label: "You pay", value: formatUSD(amtNum) },
+          { label: "You buy", value: formatOUSD(amtNum) },
+          { label: "You pay", value: `$${amtNum.toFixed(2)} USD` },
+          ...(hasFee
+            ? [
+                {
+                  label: `Platform fee (${(feeBps / 100).toFixed(2)}%)`,
+                  value: (
+                    <span className="text-destructive">
+                      −{formatUSD(feeBreakdown.fee)}
+                    </span>
+                  ),
+                },
+                {
+                  label: "You receive",
+                  value: formatOUSD(feeBreakdown.net),
+                },
+              ]
+            : []),
           { label: "Pay with", value: payWithLabel },
           {
             label: "Wallet",
             value: wallet?.name ?? "Active wallet",
           },
         ]}
+        notice={
+          <TopupFeesNotice
+            method={method}
+            feeBps={feeBps}
+            feeAmount={feeBreakdown.fee}
+            netAmount={feeBreakdown.net}
+          />
+        }
         confirmLabel={cta}
         busy={busy}
         variant={method === "openpay_balance" ? "openpay" : "default"}

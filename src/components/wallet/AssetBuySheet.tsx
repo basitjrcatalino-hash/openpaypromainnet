@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentMethodPicker } from "@/components/payment-method-picker";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
+import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { buyOpenToken } from "@/lib/opentoken.functions";
 import { isOpenTokenGraduated } from "@/lib/opentoken/bonding-curve";
 import { topUpWithPi } from "@/lib/pi-network";
@@ -766,7 +767,11 @@ export function AssetBuySheet({
           open={confirmOpen}
           onOpenChange={setConfirmOpen}
           title={isOusd ? "Confirm top-up" : "Confirm buy"}
-          description={`Review your ${token.symbol} purchase`}
+          description={
+            isOusd
+              ? "Review amount, fees, and third-party payment"
+              : `Review your ${token.symbol} purchase`
+          }
           amount={formatUSD(amtNum)}
           subtitle={
             !isOusd && token.price > 0
@@ -795,6 +800,11 @@ export function AssetBuySheet({
               ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
               : []),
           ]}
+          notice={
+            method !== "wallet_ousd" ? (
+              <TopupFeesNotice method={method} />
+            ) : undefined
+          }
           confirmLabel={ctaLabel}
           busy={busy}
           variant={method === "openpay_checkout" ? "openpay" : "default"}

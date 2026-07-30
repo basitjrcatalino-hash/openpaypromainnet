@@ -10,7 +10,14 @@ export const Route = createFileRoute("/regulatory")({
         content:
           "Important disclosures about OpenPay and third-party providers — regulatory status, disclaimer, and pricing data feeds.",
       },
+      { property: "og:title", content: "Regulatory Status — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "Disclosures on OpenPay's regulatory status, third-party providers, and price feeds.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/regulatory" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/regulatory" }],
   }),
   component: RegulatoryPage,
 });

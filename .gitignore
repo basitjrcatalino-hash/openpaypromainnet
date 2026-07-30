@@ -34,3 +34,10 @@ dist-ssr
 # Local overrides only — Lovable deploy bootstraps from committed `.env`
 .env.local
 .env.*.local
+
+# Accidental tsc / transpile emit next to TypeScript sources
+src/**/*.js
+src/**/*.js.map
+vite.config.js
+!src/**/*.config.js
+!eslint.config.js

@@ -14,6 +14,9 @@ export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId/chat")
   component: TokenLiveChatPage,
 });
 
+/**
+ * Phantom-style token live chat — full-screen, chrome hidden by parent layout.
+ */
 function TokenLiveChatPage() {
   const { tokenId } = Route.useParams();
   const { user } = Route.useRouteContext();
@@ -59,19 +62,19 @@ function TokenLiveChatPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="flex h-dvh items-center justify-center bg-black">
+        <Loader2 className="h-5 w-5 animate-spin text-white/50" />
       </div>
     );
   }
 
   if (!token) {
     return (
-      <div className="ot-phantom ph-page flex min-h-[50vh] flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-sm text-muted-foreground">Token not found</p>
+      <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-black px-4 text-center">
+        <p className="text-sm text-white/50">Token not found</p>
         <button
           type="button"
-          className="text-sm font-semibold text-primary"
+          className="text-sm font-semibold text-[#ABA3FF]"
           onClick={() => void router.navigate({ to: "/opentoken" })}
         >
           Back to OpenToken
@@ -85,7 +88,7 @@ function TokenLiveChatPage() {
   const backTo = `/opentoken/${tokenId}`;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-black md:static md:inset-auto md:z-auto md:h-[calc(100dvh-6rem)] md:overflow-hidden md:rounded-3xl md:border md:border-white/10">
+    <div className="flex h-dvh min-h-0 flex-col bg-black">
       <TokenLiveChat
         variant="page"
         className="h-full min-h-0 flex-1"

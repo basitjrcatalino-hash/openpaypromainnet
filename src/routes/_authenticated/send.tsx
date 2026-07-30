@@ -11,6 +11,8 @@ import {
   Copy,
   Link2,
   Loader2,
+  Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -118,6 +120,7 @@ function SendPage() {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [connectBusy, setConnectBusy] = useState(false);
+  const [assetQuery, setAssetQuery] = useState("");
   const [rail, setRail] = useState<Rail>(search.rail === "openpay" ? "openpay" : "wallet");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [to, setTo] = useState(search.to ?? "");
@@ -290,6 +293,23 @@ function SendPage() {
     return list;
   }, [wallet, holdings, deepToken, search.asset, majorMarkets]);
 
+  const filteredAssets = useMemo(() => {
+    const q = assetQuery.trim().toLowerCase();
+    const list = !q
+      ? assets
+      : assets.filter((a) => {
+          const hay = `${a.name} ${a.symbol} ${a.key}`.toLowerCase();
+          return hay.includes(q);
+        });
+    // Phantom-style: higher balance / value first within search results
+    return [...list].sort((a, b) => {
+      const va = a.balance * (a.priceUsd || 0);
+      const vb = b.balance * (b.priceUsd || 0);
+      if (vb !== va) return vb - va;
+      return a.symbol.localeCompare(b.symbol);
+    });
+  }, [assets, assetQuery]);
+
   const selected = assets.find((a) => a.key === selectedKey) ?? null;
   const amountNum = Number(amount);
   const amountValid = Number.isFinite(amountNum) && amountNum > 0;
@@ -354,6 +374,7 @@ function SendPage() {
     setSelectedKey(asset.key);
     setAmount("");
     setMemo("");
+    setAssetQuery("");
     setRail("wallet");
     setStep("recipient");
   }
@@ -607,45 +628,95 @@ function SendPage() {
       <PageHeader title={titles[step]} onBack={goBack} />
 
       {step === "asset" && (
-        <div className="space-y-2">
-          <p className="mb-3 px-1 text-sm text-muted-foreground">
-            Choose what you want to send from your wallet
-          </p>
+        <div className="space-y-3">
+          {/* Phantom-style search */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={assetQuery}
+              onChange={(e) => setAssetQuery(e.target.value)}
+              placeholder="Search tokens"
+              className="h-12 rounded-2xl border-0 bg-muted/80 pl-10 pr-10 text-[15px] placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            {assetQuery ? (
+              <button
+                type="button"
+                onClick={() => setAssetQuery("")}
+                className="absolute right-2.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground press"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </button>
+            ) : null}
+          </div>
+
           {holdingsLoading && !wallet ? (
             <div className="grid place-items-center py-16 text-sm text-muted-foreground">
               <Loader2 className="mb-2 h-5 w-5 animate-spin" /> Loading assets…
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl bg-card">
-              {assets.map((a, i) => (
-                <button
-                  key={a.key}
-                  type="button"
-                  onClick={() => pickAsset(a)}
-                  className={cn(
-                    "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-muted/50",
-                    i > 0 && "border-t border-border",
-                  )}
-                >
-                  <AssetAvatar asset={a} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold text-foreground">{a.name}</div>
-                    <div className="text-xs text-muted-foreground">{a.symbol}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold tabular-nums text-foreground">
-                      {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
+            <div className="overflow-hidden rounded-3xl bg-card">
+              <div className="flex items-center justify-between px-4 pb-1 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {assetQuery.trim() ? "Results" : "Your tokens"}
+                </p>
+                <p className="text-[11px] tabular-nums text-muted-foreground">
+                  {filteredAssets.length}
+                </p>
+              </div>
+              {filteredAssets.map((a, i) => {
+                const valueUsd = a.balance * (a.priceUsd || 0);
+                return (
+                  <button
+                    key={a.key}
+                    type="button"
+                    onClick={() => pickAsset(a)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition press hover:bg-muted/45 active:bg-muted/60",
+                      i > 0 && "border-t border-border/50",
+                    )}
+                  >
+                    <AssetAvatar asset={a} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[15px] font-semibold text-foreground">
+                        {a.name}
+                      </div>
+                      <div className="text-[13px] text-muted-foreground">{a.symbol}</div>
                     </div>
-                    <div className="text-xs tabular-nums text-muted-foreground">
-                      {formatUSD(a.balance * (a.priceUsd || 0))}
+                    <div className="min-w-0 text-right">
+                      <div className="text-[15px] font-semibold tabular-nums text-foreground">
+                        {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
+                      </div>
+                      <div className="text-[13px] tabular-nums text-muted-foreground">
+                        {formatUSD(valueUsd)}
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </button>
-              ))}
-              {assets.length === 0 && (
-                <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No assets to send yet
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+                  </button>
+                );
+              })}
+              {filteredAssets.length === 0 && (
+                <div className="px-4 py-12 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    {assetQuery.trim() ? "No tokens found" : "No assets to send yet"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {assetQuery.trim()
+                      ? `Nothing matches “${assetQuery.trim()}”`
+                      : "Buy or receive tokens to get started"}
+                  </p>
+                  {assetQuery.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setAssetQuery("")}
+                      className="mt-4 text-sm font-semibold text-primary"
+                    >
+                      Clear search
+                    </button>
+                  ) : null}
                 </div>
               )}
             </div>

@@ -68,7 +68,16 @@ function chattingLabel(count: number) {
   return `${count} people chatting`;
 }
 
-export function GlobalLiveChat({ userId, className }: { userId: string; className?: string }) {
+export function GlobalLiveChat({
+  userId,
+  className,
+  fill,
+}: {
+  userId: string;
+  className?: string;
+  /** Fill parent height (immersive live chat page). */
+  fill?: boolean;
+}) {
   const qc = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
   const [body, setBody] = useState("");
@@ -216,7 +225,8 @@ export function GlobalLiveChat({ userId, className }: { userId: string; classNam
   return (
     <div
       className={cn(
-        "flex h-[min(40rem,calc(100dvh-8rem))] flex-col overflow-hidden rounded-3xl border border-border/40 bg-background",
+        "flex min-h-0 flex-col overflow-hidden rounded-3xl border border-border/40 bg-background",
+        fill ? "h-full flex-1" : "h-[min(40rem,calc(100dvh-8rem))]",
         className,
       )}
     >

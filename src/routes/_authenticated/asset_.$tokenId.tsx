@@ -67,6 +67,10 @@ import {
   type LedgerAssetCode,
 } from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
+import {
+  PhantomAssetTradeBar,
+  TokenMarketInsights,
+} from "@/components/wallet/TokenMarketInsights";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   head: ({ params }) => {
@@ -457,9 +461,14 @@ function PhantomAssetDetail() {
       ? `${meta.description.slice(0, 140)}…`
       : meta.description;
 
+  const marketCapLabel =
+    meta.marketCap != null && meta.marketCap > 0
+      ? `${formatUSD(meta.marketCap, { compact: true })} market cap`
+      : `${meta.symbol} · OpenPay Pro`;
+
   return (
-    <div className="ot-phantom mx-auto max-w-lg animate-page-in pb-8">
-      {/* Header */}
+    <div className="ot-phantom mx-auto max-w-lg animate-page-in safe-pb">
+      {/* Header — Phantom: back · logo+name · favorite + verified */}
       <div className="ph-header sticky top-0 z-20 flex items-center gap-2 py-3 md:rounded-2xl">
         <Button
           variant="ghost"
@@ -469,65 +478,62 @@ function PhantomAssetDetail() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
-          <h1 className="truncate text-lg font-bold text-foreground">{meta.name}</h1>
-          {meta.verified && (
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-violet-500 text-white">
-              <BadgeCheck className="h-3.5 w-3.5" />
-            </span>
-          )}
-        </div>
-        <button
-          type="button"
-          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
-          aria-label={watched ? "Remove from watchlist" : "Add to watchlist"}
-          onClick={() => {
-            void watch.toggleWatch(watchKey).then(
-              (next) => toast.success(next ? "Added to watchlist" : "Removed from watchlist"),
-              (e) => toast.error((e as Error).message || "Watchlist update failed"),
-            );
-          }}
-        >
-          <Star className={cn("h-4 w-4", watched && "fill-amber-400 text-amber-400")} />
-        </button>
-      </div>
-
-      <div className="space-y-6 px-4 pt-2">
-        {/* Price hero */}
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 overflow-hidden rounded-full">
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full">
             {isOusd ? (
-              <OusdIcon className="h-16 w-16" />
+              <OusdIcon className="h-7 w-7" />
             ) : meta.logo ? (
               <img src={meta.logo} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="grid h-full w-full place-items-center bg-primary/20 text-lg font-bold text-primary">
+              <div className="grid h-full w-full place-items-center bg-primary/20 text-[10px] font-bold text-primary">
                 {meta.symbol.slice(0, 2)}
               </div>
             )}
           </div>
-          <div className="text-4xl font-bold tabular-nums text-foreground">
+          <div className="min-w-0 text-center">
+            <h1 className="truncate text-[15px] font-semibold text-foreground">{meta.name}</h1>
+            <div className="truncate text-xs tabular-nums text-muted-foreground">
+              {formatTokenPrice(meta.price, currency, { maxLen: 12 })}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
+            aria-label={watched ? "Remove from watchlist" : "Add to watchlist"}
+            onClick={() => {
+              void watch.toggleWatch(watchKey).then(
+                (next) => toast.success(next ? "Added to watchlist" : "Removed from watchlist"),
+                (e) => toast.error((e as Error).message || "Watchlist update failed"),
+              );
+            }}
+          >
+            <Star className={cn("h-4 w-4", watched && "fill-amber-400 text-amber-400")} />
+          </button>
+          {meta.verified && (
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-violet-500 text-white">
+              <BadgeCheck className="h-3.5 w-3.5" />
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-6 px-4 pt-2">
+        {/* Price hero — Phantom left-aligned large price */}
+        <div>
+          <div className="text-[2.5rem] font-bold leading-none tracking-tight tabular-nums text-foreground">
             {formatTokenPrice(meta.price, currency, { maxLen: 14 })}
           </div>
-          <div className="mt-2 flex items-center justify-center gap-2 text-sm">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <span
               className={cn(
-                "font-medium tabular-nums",
-                up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                "font-semibold tabular-nums",
+                up ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400",
               )}
             >
               {up ? "+" : ""}
-              {formatUSD(Math.abs(meta.price * (meta.change / 100)))}
-            </span>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                up
-                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                  : "bg-red-500/15 text-red-600 dark:text-red-400",
-              )}
-            >
-              {formatPct(meta.change)}
+              {formatUSD(Math.abs(meta.price * (meta.change / 100)))} ({formatPct(meta.change)})
             </span>
           </div>
         </div>
@@ -595,6 +601,21 @@ function PhantomAssetDetail() {
           <ActionTile icon={QrCode} label="Receive" onClick={goReceive} />
           <ActionTile icon={MoreHorizontal} label="More" onClick={() => setMoreOpen(true)} />
         </div>
+
+        {/* AI insights + Related News / Lists — Phantom */}
+        <TokenMarketInsights
+          tokenKey={isOusd ? "ousd" : tokenId}
+          name={meta.name}
+          symbol={meta.symbol}
+          network={meta.network}
+          category={meta.category}
+          priceUsd={meta.price}
+          change24h={meta.change}
+          marketCap={meta.marketCap}
+          volume24h={meta.volume24h}
+          description={meta.description}
+          chatTokenId={!isOusd && !isMajor ? tokenId : null}
+        />
 
         {/* Position */}
         <section>
@@ -885,6 +906,12 @@ function PhantomAssetDetail() {
           }}
         />
       )}
+
+      {/* Phantom market-cap + lavender Trade CTA */}
+      <PhantomAssetTradeBar
+        marketCapLabel={marketCapLabel}
+        onTrade={() => setBuyOpen(true)}
+      />
     </div>
   );
 }

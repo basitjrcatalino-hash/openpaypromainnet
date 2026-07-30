@@ -13,7 +13,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { formatUSD, shortAddress } from "@/lib/wallet-utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsDesktopViewport } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -68,7 +68,7 @@ export function ManageWalletsSheet({
   onCopy,
   onRemove,
 }: Props) {
-  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktopViewport();
   const [query, setQuery] = useState("");
   const [actionsWallet, setActionsWallet] = useState<ManageWallet | null>(null);
   const wallets = Array.isArray(walletsProp) ? walletsProp : [];
@@ -224,7 +224,7 @@ export function ManageWalletsSheet({
     </div>
   );
 
-  const shell = isMobile ? (
+  const shell = !isDesktop ? (
     <Sheet
       open={open}
       onOpenChange={(v) => {
@@ -252,7 +252,7 @@ export function ManageWalletsSheet({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-md gap-0 rounded-3xl border-border/60 bg-card p-5">
+      <DialogContent className="w-[min(100%-2rem,28rem)] max-w-md gap-0 rounded-[1.75rem] border-border/40 bg-card p-5 shadow-2xl">
         <DialogHeader className="mb-4 space-y-1 text-left">
           <DialogTitle className="text-lg">Your wallets</DialogTitle>
           <DialogDescription>Tap to switch · ··· to manage</DialogDescription>
@@ -316,7 +316,7 @@ function WalletActionsSheet({
   onSelect: () => void;
   onRemove: () => void;
 }) {
-  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktopViewport();
   const open = !!wallet;
 
   const content = wallet ? (
@@ -362,7 +362,7 @@ function WalletActionsSheet({
     </div>
   ) : null;
 
-  if (isMobile) {
+  if (!isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
@@ -382,7 +382,7 @@ function WalletActionsSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm gap-0 rounded-3xl border-border/60 bg-card p-5">
+      <DialogContent className="w-[min(100%-2rem,24rem)] max-w-sm gap-0 rounded-[1.75rem] border-border/40 bg-card p-5 shadow-2xl">
         <DialogHeader className="mb-4 space-y-1 text-left">
           <DialogTitle>Wallet options</DialogTitle>
           <DialogDescription>Manage this OpenPay Pro ledger</DialogDescription>

@@ -23,7 +23,7 @@ import {
   type CurrencyCode,
   type CurrencyMeta,
 } from "@/lib/currency";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsDesktopViewport } from "@/hooks/use-mobile";
 
 type Props = {
   open: boolean;
@@ -156,17 +156,17 @@ function PickerBody({
 }
 
 /**
- * Phantom-style currency picker — full-height bottom sheet on mobile, dialog on desktop.
+ * Phantom-style currency picker — full-height bottom sheet on mobile, centered dialog on desktop.
  */
 export function CurrencyPickerSheet({ open, onOpenChange, value, onSelect }: Props) {
-  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktopViewport();
 
   const handleSelect = (code: CurrencyCode) => {
     onSelect(code);
     onOpenChange(false);
   };
 
-  if (isMobile) {
+  if (!isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
@@ -186,7 +186,7 @@ export function CurrencyPickerSheet({ open, onOpenChange, value, onSelect }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden rounded-3xl border-border/60 bg-background p-5 [&>button]:hidden">
+      <DialogContent className="flex max-h-[85vh] w-[min(100%-2rem,28rem)] max-w-md flex-col gap-0 overflow-hidden rounded-[1.75rem] border-border/40 bg-card p-5 shadow-2xl [&>button]:hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Currency</DialogTitle>
           <DialogDescription>Choose a display currency</DialogDescription>

@@ -47,39 +47,45 @@ function GlobalChatPage() {
     .toUpperCase();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 pb-8 animate-page-in">
-      <PageHeader title="Live Chat" subtitle="Global OpenPay community" />
+    <div className="ot-phantom flex h-dvh min-h-0 flex-col bg-background">
+      <PageHeader
+        title="Live Chat"
+        backTo="/dashboard"
+        className="mx-0 mb-0 shrink-0 rounded-none border-b border-border/40 px-3"
+      />
 
-      <section className="flex items-center gap-3 rounded-3xl bg-card p-4">
-        <Avatar className="h-14 w-14 border border-border/60">
-          {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
-          <AvatarFallback className="bg-primary/15 text-sm font-bold text-primary">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4 shrink-0 text-primary" />
-            <p className="truncate text-base font-semibold">{displayName}</p>
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+        <section className="flex shrink-0 items-center gap-3 rounded-3xl bg-card p-3.5">
+          <Avatar className="h-12 w-12 border border-border/60">
+            {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
+            <AvatarFallback className="bg-primary/15 text-sm font-bold text-primary">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 shrink-0 text-primary" />
+              <p className="truncate text-sm font-semibold">{displayName}</p>
+            </div>
+            {username ? (
+              <p className="truncate text-xs text-muted-foreground">{username}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Add a username in{" "}
+                <Link
+                  to="/settings"
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  Settings
+                </Link>{" "}
+                so others can find you.
+              </p>
+            )}
           </div>
-          {username ? (
-            <p className="truncate text-sm text-muted-foreground">{username}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Add a username in{" "}
-              <Link to="/settings" className="font-medium text-primary underline-offset-2 hover:underline">
-                Settings
-              </Link>{" "}
-              so others can find you.
-            </p>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            Your name, username, and photo show on every message.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      <GlobalLiveChat userId={user.id} />
+        <GlobalLiveChat userId={user.id} fill className="min-h-0" />
+      </div>
     </div>
   );
 }

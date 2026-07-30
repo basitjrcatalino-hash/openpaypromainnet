@@ -16,7 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsDesktopViewport } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export type TxConfirmRow = {
@@ -158,7 +158,7 @@ function ConfirmBody({
   );
 }
 
-/** Phantom-style transaction confirmation — bottom sheet on mobile, dialog on desktop. */
+/** Phantom-style transaction confirmation — bottom sheet on mobile, centered dialog on desktop. */
 export function TxConfirmModal({
   open,
   onOpenChange,
@@ -176,7 +176,7 @@ export function TxConfirmModal({
   variant = "default",
   onConfirm,
 }: TxConfirmModalProps) {
-  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktopViewport();
 
   const body = (
     <ConfirmBody
@@ -194,19 +194,18 @@ export function TxConfirmModal({
       variant={variant}
       onConfirm={onConfirm}
       onClose={() => onOpenChange(false)}
-      showClose={!isMobile}
+      showClose={isDesktop}
     />
   );
 
-  if (isMobile) {
+  const guardClose = (v: boolean) => {
+    if (busy && !v) return;
+    onOpenChange(v);
+  };
+
+  if (!isDesktop) {
     return (
-      <Sheet
-        open={open}
-        onOpenChange={(v) => {
-          if (busy && !v) return;
-          onOpenChange(v);
-        }}
-      >
+      <Sheet open={open} onOpenChange={guardClose}>
         <SheetContent
           side="bottom"
           className="max-h-[92dvh] overflow-y-auto rounded-t-[1.75rem] border-border/50 bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 [&>button.absolute]:hidden"
@@ -223,16 +222,14 @@ export function TxConfirmModal({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (busy && !v) return;
-        onOpenChange(v);
-      }}
-    >
+    <Dialog open={open} onOpenChange={guardClose}>
       <DialogContent
         hideClose
-        className="max-w-sm gap-0 overflow-hidden rounded-[1.75rem] border-border/50 bg-card p-5 sm:rounded-[1.75rem]"
+        className={cn(
+          "w-[min(100%-2rem,24rem)] max-w-sm gap-0 overflow-hidden border-border/40 bg-card p-6 shadow-2xl",
+          "rounded-[1.75rem] sm:rounded-[1.75rem]",
+          "data-[state=open]:zoom-in-95",
+        )}
       >
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>

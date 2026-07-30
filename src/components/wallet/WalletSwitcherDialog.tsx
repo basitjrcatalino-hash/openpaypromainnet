@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, type CurrencyCode } from "@/lib/currency";
 import { fetchWalletPortfolioTotals } from "@/lib/wallet-portfolio";
 import { shortAddress } from "@/lib/wallet-utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsDesktopViewport } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +56,7 @@ export function WalletSwitcherDialog({
   hideBalance = false,
   onNavigateAway,
 }: Props) {
-  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktopViewport();
   const [query, setQuery] = useState("");
 
   const walletIds = useMemo(() => wallets.map((w) => w.id), [wallets]);
@@ -173,7 +173,7 @@ export function WalletSwitcherDialog({
     </div>
   );
 
-  if (isMobile) {
+  if (!isDesktop) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
@@ -193,7 +193,7 @@ export function WalletSwitcherDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md gap-0 rounded-3xl border-border/60 bg-card p-5">
+      <DialogContent className="w-[min(100%-2rem,28rem)] max-w-md gap-0 rounded-[1.75rem] border-border/40 bg-card p-5 shadow-2xl">
         <DialogHeader className="mb-4 space-y-1 text-left">
           <DialogTitle className="text-lg">Your wallets</DialogTitle>
           <DialogDescription>Switch between accounts</DialogDescription>

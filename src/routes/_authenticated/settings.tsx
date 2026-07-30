@@ -1345,6 +1345,18 @@ function OpenPayIntegrationCard({ userId }: { userId: string }) {
                 ? `Connected as ${linkedLabel}${stored?.source === "local" ? " (OpenPay Pro)" : ""}. Session stays linked until you disconnect.`
                 : "Connect your OpenPay account. You’ll confirm on OpenPay, then return here linked."}
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Partner app keys (client ID, <code>opk_live_…</code>, redirect URIs) are managed in the{" "}
+            <a
+              href={OPENPAY_PARTNER_PORTAL}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary hover:underline"
+            >
+              OpenPay partner portal
+            </a>
+            .
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {linkLoading ? (

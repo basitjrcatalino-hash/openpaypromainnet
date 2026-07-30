@@ -31,7 +31,12 @@ import {
   MessageCircle,
   Bot,
   Sparkles,
+  Code2,
 } from "lucide-react";
+
+import { Switch } from "@/components/ui/switch";
+import { useDeveloperMode } from "@/hooks/use-developer-mode";
+
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 

@@ -258,8 +258,9 @@ export const mintOpenNftOnOpenPay = createServerFn({ method: "POST" })
       /* ledger optional */
     }
 
+    const { raw: _raw, ...safeResult } = result as typeof result & { raw?: unknown };
     return {
-      ...result,
+      ...safeResult,
       external_mint_id: externalMintId,
       recipient_username: link.username,
     };

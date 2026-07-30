@@ -217,7 +217,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       const patch = majorBalancePatch(fromMajor, next);
       const { error } = await supabase
         .from("wallets")
-        .update(patch)
+        .update(patch as never)
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);
@@ -265,7 +265,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
       const patch = majorBalancePatch(toMajor, next);
       const { error } = await supabase
         .from("wallets")
-        .update(patch)
+        .update(patch as never)
         .eq("id", wallet_id)
         .eq("user_id", userId);
       if (error) throw new Error(error.message);

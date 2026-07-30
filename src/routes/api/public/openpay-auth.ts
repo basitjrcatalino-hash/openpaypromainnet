@@ -215,7 +215,7 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
           };
           await supabaseAdmin.from("user_preferences").upsert({
             user_id: userId,
-            notifications,
+            notifications: notifications as never,
             updated_at: new Date().toISOString(),
           });
 

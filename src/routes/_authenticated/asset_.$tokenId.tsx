@@ -83,7 +83,15 @@ export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
           : "Token";
     return { meta: [{ title: `${title} — OpenPay Pro` }] };
   },
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): {
+    openpay_charge?: string;
+    openpay_ref?: string;
+    openpay_tx?: string;
+    openpay_return?: "1";
+    openpay_cancel?: "1";
+  } => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
     openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
     openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,

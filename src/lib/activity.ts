@@ -202,7 +202,9 @@ export async function fetchWalletActivity(
         ...t,
         logo_url: logo,
         token_name: tokenName,
-        source: t.source === "opentoken" || t.counterparty === "OpenToken" ? "opentoken" : t.source,
+        source: (t.source === "opentoken" || t.counterparty === "OpenToken"
+          ? "opentoken"
+          : t.source) as ActivityItem["source"],
       };
     });
 

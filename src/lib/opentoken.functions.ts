@@ -175,7 +175,7 @@ export const createOpenToken = createServerFn({ method: "POST" })
         p_wallet_id: wallet.id,
         p_side: "buy",
         p_pi_amount: initialBuy,
-        p_token_amount: null,
+        p_token_amount: undefined,
       });
       if (tradeErr) {
         // Token exists; creator can still buy manually — surface soft warning via return
@@ -217,7 +217,7 @@ export const buyOpenToken = createServerFn({ method: "POST" })
       p_wallet_id: data.wallet_id,
       p_side: "buy",
       p_pi_amount: data.pi_amount,
-      p_token_amount: null,
+      p_token_amount: undefined,
     });
     if (error) throw new Error(error.message);
     return result as {
@@ -246,7 +246,7 @@ export const sellOpenToken = createServerFn({ method: "POST" })
       p_token_id: data.token_id,
       p_wallet_id: data.wallet_id,
       p_side: "sell",
-      p_pi_amount: null,
+      p_pi_amount: undefined,
       p_token_amount: data.token_amount,
     });
     if (error) throw new Error(error.message);

@@ -701,7 +701,7 @@ function Dashboard() {
       ) : (
         <section className="py-2">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-muted-foreground">Your NFTs</span>
+            <span className="text-sm font-semibold text-muted-foreground">Collectibles</span>
             <Link to="/nfts" className="text-xs font-semibold text-primary">
               See all
             </Link>

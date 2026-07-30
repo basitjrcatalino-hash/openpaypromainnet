@@ -76,6 +76,7 @@ import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
 import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
+import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
@@ -436,6 +437,12 @@ const AuthenticatedOpenpayConnectCallbackRoute =
     path: '/openpay/connect/callback',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpentokenTokenIdChatRoute =
+  AuthenticatedOpentokenTokenIdChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedOpentokenTokenIdRoute,
+  } as any)
 const AuthenticatedOpentokenCreatorUserIdRoute =
   AuthenticatedOpentokenCreatorUserIdRouteImport.update({
     id: '/opentoken_/creator/$userId',
@@ -549,7 +556,7 @@ export interface FileRoutesByFullPath {
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
+  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -630,7 +638,7 @@ export interface FileRoutesByTo {
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
+  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -658,6 +666,7 @@ export interface FileRoutesByTo {
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -713,7 +722,7 @@ export interface FileRoutesById {
   '/_authenticated/bags_/launch': typeof AuthenticatedBagsLaunchRoute
   '/_authenticated/bags_/trade': typeof AuthenticatedBagsTradeRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
+  '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
   '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
   '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -741,6 +750,7 @@ export interface FileRoutesById {
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
   '/_authenticated/bags_/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
+  '/_authenticated/opentoken_/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -824,6 +834,7 @@ export interface FileRouteTypes {
     | '/auth/telegram/callback'
     | '/bags/token/$mint'
     | '/openpay/connect/callback'
+    | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -905,6 +916,7 @@ export interface FileRouteTypes {
     | '/auth/telegram/callback'
     | '/bags/token/$mint'
     | '/openpay/connect/callback'
+    | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -987,6 +999,7 @@ export interface FileRouteTypes {
     | '/auth/telegram/callback'
     | '/_authenticated/bags_/token/$mint'
     | '/_authenticated/openpay/connect/callback'
+    | '/_authenticated/opentoken_/$tokenId/chat'
     | '/_authenticated/opentoken_/creator/$userId'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -1514,6 +1527,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/opentoken_/$tokenId/chat': {
+      id: '/_authenticated/opentoken_/$tokenId/chat'
+      path: '/chat'
+      fullPath: '/opentoken/$tokenId/chat'
+      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
+      parentRoute: typeof AuthenticatedOpentokenTokenIdRoute
+    }
     '/_authenticated/opentoken_/creator/$userId': {
       id: '/_authenticated/opentoken_/creator/$userId'
       path: '/opentoken/creator/$userId'
@@ -1630,6 +1650,21 @@ const AuthenticatedTokensRouteChildren: AuthenticatedTokensRouteChildren = {
 const AuthenticatedTokensRouteWithChildren =
   AuthenticatedTokensRoute._addFileChildren(AuthenticatedTokensRouteChildren)
 
+interface AuthenticatedOpentokenTokenIdRouteChildren {
+  AuthenticatedOpentokenTokenIdChatRoute: typeof AuthenticatedOpentokenTokenIdChatRoute
+}
+
+const AuthenticatedOpentokenTokenIdRouteChildren: AuthenticatedOpentokenTokenIdRouteChildren =
+  {
+    AuthenticatedOpentokenTokenIdChatRoute:
+      AuthenticatedOpentokenTokenIdChatRoute,
+  }
+
+const AuthenticatedOpentokenTokenIdRouteWithChildren =
+  AuthenticatedOpentokenTokenIdRoute._addFileChildren(
+    AuthenticatedOpentokenTokenIdRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
@@ -1657,7 +1692,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
   AuthenticatedBagsLaunchRoute: typeof AuthenticatedBagsLaunchRoute
   AuthenticatedBagsTradeRoute: typeof AuthenticatedBagsTradeRoute
-  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
+  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRouteWithChildren
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
@@ -1695,7 +1730,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,
   AuthenticatedBagsLaunchRoute: AuthenticatedBagsLaunchRoute,
   AuthenticatedBagsTradeRoute: AuthenticatedBagsTradeRoute,
-  AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
+  AuthenticatedOpentokenTokenIdRoute:
+    AuthenticatedOpentokenTokenIdRouteWithChildren,
   AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,

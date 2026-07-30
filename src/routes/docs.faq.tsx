@@ -8,13 +8,20 @@ import { useTheme } from "@/components/theme-provider";
 export const Route = createFileRoute("/docs/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — OpenPay Pro" },
+      { title: "FAQ — OpenPay Pro Wallet" },
       {
         name: "description",
         content:
           "OpenPay Pro FAQ: wallets, send/receive, currency, OpenPay link, security, and third-party integration.",
       },
+      { property: "og:title", content: "FAQ — OpenPay Pro Wallet" },
+      {
+        property: "og:description",
+        content: "Answers on wallets, sending and receiving, currencies, security, and integrations.",
+      },
+      { property: "og:url", content: "https://openpaypro.space/docs/faq" },
     ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/docs/faq" }],
   }),
   component: FaqPage,
 });

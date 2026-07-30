@@ -30,13 +30,9 @@ function getBarcodeDetector(): (new (opts?: { formats: string[] }) => BarcodeDet
 /** Full-frame scan — no library shaded box (we draw our own viewfinder). */
 export function buildQrScanConfig(): Html5QrcodeCameraScanConfig {
   return {
-    fps: 12,
+    fps: 16,
     disableFlip: false,
-    qrbox: (viewfinderWidth, viewfinderHeight) => {
-      const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
-      return { width: Math.max(180, edge), height: Math.max(180, edge) };
-    },
-    aspectRatio: 1,
+    // Scan the full video frame — a small qrbox misses addresses on phones.
   };
 }
 
@@ -235,17 +231,8 @@ export function useQrCamera({ elementId, active, onResult, onError, onReady }: U
       };
 
       try {
-        // Warm permission so enumerateDevices returns labels / back camera.
-        try {
-          const warm = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" } },
-            audio: false,
-          });
-          stopMediaStream(warm);
-          await new Promise((r) => setTimeout(r, 120));
-        } catch {
-          /* permission prompt will happen on start */
-        }
+        // Do NOT warm-start+stop the camera — releasing then re-acquiring breaks
+        // detection on many mobile browsers (especially Safari / in-app WebViews).
         if (cancelled) return;
 
         instance = await startWithFallback(elementId, onDecoded);
@@ -334,6 +321,7 @@ export function usePhantomQrScanner({
   const streamRef = useRef<MediaStream | null>(null);
   const trackRef = useRef<MediaStreamTrack | null>(null);
   const handledRef = useRef(false);
+  const nativeReadyRef = useRef(false);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
@@ -350,6 +338,7 @@ export function usePhantomQrScanner({
 
   const restart = useCallback(() => {
     handledRef.current = false;
+    nativeReadyRef.current = false;
     setError(null);
     setStarting(true);
     setTorchOn(false);
@@ -363,6 +352,7 @@ export function usePhantomQrScanner({
     let cancelled = false;
     let raf = 0;
     handledRef.current = false;
+    nativeReadyRef.current = false;
 
     const BD = getBarcodeDetector();
     if (!BD || !navigator.mediaDevices?.getUserMedia) {
@@ -387,6 +377,13 @@ export function usePhantomQrScanner({
         if (!navigator.mediaDevices?.getUserMedia) {
           setUseFallback(true);
           return;
+        }
+
+        // Wait a couple frames so the <video> node is mounted & laid out.
+        for (let i = 0; i < 20; i++) {
+          if (videoRef.current) break;
+          await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+          if (cancelled) return;
         }
 
         const configs = await listCameraConfigs();
@@ -431,11 +428,13 @@ export function usePhantomQrScanner({
 
         video.srcObject = stream;
         video.setAttribute("playsinline", "true");
+        video.setAttribute("webkit-playsinline", "true");
         video.muted = true;
         await video.play();
 
         if (cancelled) return;
 
+        nativeReadyRef.current = true;
         setStarting(false);
         setError(null);
 
@@ -454,7 +453,7 @@ export function usePhantomQrScanner({
             const value = codes.find((c) => c.rawValue?.trim())?.rawValue;
             if (value) emit(value);
           } catch {
-            /* frame miss */
+            /* frame miss — some engines throw until first decodeable frame */
           } finally {
             busy = false;
           }
@@ -471,14 +470,14 @@ export function usePhantomQrScanner({
       }
     })();
 
-    // Timeout: if still starting after 8s on native path, switch to fallback
+    // Only fall back if native never became ready (do not thrash a working camera).
     const timeout = setTimeout(() => {
-      if (!cancelled && starting) {
+      if (!cancelled && !nativeReadyRef.current) {
         setUseFallback(true);
         setStarting(true);
         setError(null);
       }
-    }, 8000);
+    }, 10000);
 
     return () => {
       cancelled = true;

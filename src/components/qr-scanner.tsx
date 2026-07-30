@@ -1,9 +1,12 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Camera, ImageIcon, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { scanQrFromFile, useQrCamera } from "@/lib/qr-camera";
+import { scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
+import { parsePaymentQr } from "@/lib/parse-payment-qr";
+import { cn } from "@/lib/utils";
 
 type Props = {
   onResult: (text: string) => void;
@@ -12,6 +15,10 @@ type Props = {
   hint?: string;
 };
 
+/**
+ * Send-flow QR scanner — same native BarcodeDetector + html5 fallback as /scan.
+ * Parses before closing so invalid codes keep the dialog open.
+ */
 export function QrScannerButton({
   onResult,
   trigger,
@@ -19,38 +26,45 @@ export function QrScannerButton({
 }: Props) {
   const reactId = useId().replace(/:/g, "");
   const [open, setOpen] = useState(false);
-  const [camKey, setCamKey] = useState(0);
-  const [starting, setStarting] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const elId = `qr-reader-${reactId}-${camKey}`;
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fallbackElId = `qr-send-fallback-${reactId}`;
   const fileRefId = `qr-file-${reactId}`;
+  const handled = useRef(false);
+  const unlockRef = useRef<() => void>(() => undefined);
 
   useEffect(() => {
-    if (!open) return;
-    setStarting(true);
-    setError(null);
-  }, [open, camKey]);
+    if (!open) {
+      handled.current = false;
+    }
+  }, [open]);
 
-  useQrCamera({
-    elementId: elId,
+  const scanner = usePhantomQrScanner({
+    videoRef,
+    fallbackElId,
     active: open,
     onResult: (text) => {
+      if (handled.current) return;
+      const parsed = parsePaymentQr(text);
+      if (!parsed.to) {
+        toast.error("Invalid QR — no address or account found");
+        unlockRef.current();
+        return;
+      }
+      handled.current = true;
       onResult(text);
       setOpen(false);
     },
-    onError: (message) => {
-      setError(message);
-      setStarting(false);
-    },
-    onReady: () => {
-      setError(null);
-      setStarting(false);
-    },
   });
+  unlockRef.current = scanner.unlock;
 
   async function onPickImage(file: File) {
     try {
       const decoded = await scanQrFromFile(file);
+      const parsed = parsePaymentQr(decoded);
+      if (!parsed.to) {
+        toast.error("Invalid QR — no address or account found");
+        return;
+      }
       onResult(decoded);
       setOpen(false);
     } catch {
@@ -69,13 +83,13 @@ export function QrScannerButton({
         role="button"
         tabIndex={0}
         onClick={() => {
-          setCamKey((k) => k + 1);
+          handled.current = false;
           setOpen(true);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setCamKey((k) => k + 1);
+            handled.current = false;
             setOpen(true);
           }
         }}
@@ -87,7 +101,7 @@ export function QrScannerButton({
           </Button>
         )}
       </div>
-      <DialogContent className="max-w-sm overflow-hidden rounded-3xl p-0">
+      <DialogContent className="max-w-sm overflow-hidden rounded-3xl p-0 [&>button]:hidden">
         <div className="space-y-3 p-4">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -96,26 +110,45 @@ export function QrScannerButton({
           </DialogHeader>
 
           <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-black">
-            {/* Keep node mounted while open so camera can attach after dialog layout */}
             {open ? (
-              <div
-                id={elId}
-                className="absolute inset-0 h-full w-full [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover"
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  className={cn(
+                    "absolute inset-0 z-0 h-full w-full object-cover",
+                    scanner.mode !== "native" && "invisible",
+                    scanner.starting && "opacity-0",
+                  )}
+                  playsInline
+                  muted
+                  autoPlay
+                />
+                <div
+                  id={fallbackElId}
+                  className={cn(
+                    "absolute inset-0 z-0 h-full w-full overflow-hidden bg-black [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover",
+                    scanner.mode !== "fallback" && "invisible pointer-events-none",
+                  )}
+                  aria-hidden
+                />
+              </>
             ) : null}
-            {starting && !error && (
+            {scanner.starting && !scanner.error && (
               <div className="absolute inset-0 z-10 grid place-items-center bg-black/70">
                 <Loader2 className="h-7 w-7 animate-spin text-white" />
               </div>
             )}
-            {error && (
+            {scanner.error && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/85 px-4 text-center">
-                <p className="text-sm text-red-300">{error}</p>
+                <p className="text-sm text-red-300">{scanner.error}</p>
                 <Button
                   type="button"
                   size="sm"
                   className="rounded-full"
-                  onClick={() => setCamKey((k) => k + 1)}
+                  onClick={() => {
+                    handled.current = false;
+                    scanner.restart();
+                  }}
                 >
                   Try again
                 </Button>

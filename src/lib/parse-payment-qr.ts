@@ -118,9 +118,19 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
  * - `https://openpy.space/pay/@user` / pay links
  */
 export function parsePaymentQr(text: string): ParsedPaymentQr {
-  const raw = text.trim();
+  const raw = text
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!raw) {
     return { to: "", rail: "wallet", kind: "unknown" };
+  }
+
+  // Bare 0x address (common when QR encodes only the address)
+  if (PRO_ADDR_RE.test(raw.replace(/\s/g, ""))) {
+    return fromParts(raw.replace(/\s/g, ""));
   }
 
   // HTTP(S) OpenPay / Pro pay links

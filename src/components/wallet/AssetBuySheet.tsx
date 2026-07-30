@@ -2,13 +2,26 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CreditCard, Loader2, Link2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PaymentMethodPicker } from "@/components/payment-method-picker";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { buyOpenToken } from "@/lib/opentoken.functions";
@@ -28,12 +41,14 @@ import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-l
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
+import { useIsDesktopViewport } from "@/hooks/use-mobile";
 
 export type AssetBuyTarget = {
   id: string;
   symbol: string;
   name: string;
   price: number;
+  logoUrl?: string | null;
   isOusd?: boolean;
   /** When set, buy converts OUSD → this major ledger balance at market price */
   majorId?: import("@/lib/major-tokens").MajorTokenId;
@@ -41,6 +56,7 @@ export type AssetBuyTarget = {
 };
 
 type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout" | "moonpay" | "helio" | "usdc";
+type BuyStep = "amount" | "method" | "deposit";
 
 const PRESETS = [10, 25, 50, 100, 250];
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
@@ -68,6 +84,7 @@ const ALL_METHODS: {
   label: string;
   logoUrl?: string;
   icon?: typeof CreditCard;
+  helioMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -103,6 +120,7 @@ const ALL_METHODS: {
   {
     id: "helio",
     label: "Crypto Deposit",
+    helioMark: true,
     desc: "SOL / crypto · MoonPay Commerce → OUSD",
   },
 ];
@@ -125,6 +143,17 @@ function sanitizeAmountInput(raw: string): string {
   return `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
 }
 
+function HelioMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M4.8 17.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm0-6.5a.7.7 0 0 1 .5-.2h14.2a.35.35 0 0 1 .25.6l-1.7 1.7a.7.7 0 0 1-.5.2H3.35a.35.35 0 0 1-.25-.6l1.7-1.7Zm15.65-4.9a.35.35 0 0 0-.25-.6H6.05a.7.7 0 0 0-.5.2L3.85 7.4a.35.35 0 0 0 .25.6h14.2a.7.7 0 0 0 .5-.2l1.65-1.7Z"
+      />
+    </svg>
+  );
+}
+
 export function AssetBuySheet({
   open,
   onClose,
@@ -133,17 +162,18 @@ export function AssetBuySheet({
   ousdBalance,
   token,
   returnPath,
-  onNavigateSwap,
 }: Props) {
   const qc = useQueryClient();
   // Subscribe so fiat labels refresh when display currency changes
   useCurrency();
+  const isDesktop = useIsDesktopViewport();
   const buyFn = useServerFn(buyOpenToken);
   const createCharge = useServerFn(createOpenPayTopupCharge);
   const getLink = useServerFn(getOpenPayLinkStatus);
   const getOpBalance = useServerFn(getOpenPayLinkedBalance);
 
   const [amount, setAmount] = useState("25");
+  const [step, setStep] = useState<BuyStep>("amount");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>(
     token.isOusd ? "pi" : "wallet_ousd",
@@ -164,6 +194,7 @@ export function AssetBuySheet({
   const isOusd = !!token.isOusd;
   const isMajor = !!token.majorId;
   const graduated = !isOusd && !isMajor && isOpenTokenGraduated(token);
+  const tokenLogo = token.logoUrl || (isOusd ? OUSD_LOGO_URL : null);
   /** Wallet OUSD for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
   const methods = ALL_METHODS.filter((m) => {
     if (m.id === "wallet_ousd") return !isOusd;
@@ -186,10 +217,12 @@ export function AssetBuySheet({
   useEffect(() => {
     if (!open) return;
     setAmount("25");
-    // Prefer Wallet OUSD whenever buying a token (not topping up OUSD)
+    setStep("amount");
     setMethod(isOusd ? "pi" : "wallet_ousd");
     setActionError(null);
     setBusy(false);
+    setDepositReady(false);
+    setConfirmOpen(false);
   }, [open, isOusd, token.id]);
 
   const amtNum = parseBuyAmount(amount);
@@ -202,6 +235,7 @@ export function AssetBuySheet({
     opSpendable != null &&
     amtNum > 0 &&
     amtNum > opSpendable + 1e-9;
+  const linked = !!openpayLink?.linked;
 
   async function executeMajorBuy(usdAmount: number) {
     if (!walletId || !token.majorId) throw new Error("Create a wallet first");
@@ -387,6 +421,7 @@ export function AssetBuySheet({
         }
         if (method === "helio" || method === "usdc") {
           setDepositReady(true);
+          setStep("deposit");
           setConfirmOpen(false);
           return;
         }
@@ -421,6 +456,7 @@ export function AssetBuySheet({
         }
         if (method === "helio" || method === "usdc") {
           setDepositReady(true);
+          setStep("deposit");
           setConfirmOpen(false);
           return;
         }
@@ -463,6 +499,7 @@ export function AssetBuySheet({
         }
         if (method === "helio" || method === "usdc") {
           setDepositReady(true);
+          setStep("deposit");
           setConfirmOpen(false);
           return;
         }
@@ -497,6 +534,7 @@ export function AssetBuySheet({
 
       if (method === "helio" || method === "usdc") {
         setDepositReady(true);
+        setStep("deposit");
         setConfirmOpen(false);
         return;
       }
@@ -564,306 +602,572 @@ export function AssetBuySheet({
                   ? `Amount exceeds OpenPay balance`
                   : `Pay with OpenPay & Buy`;
 
-  if (!open) return null;
+  function goToMethod() {
+    setActionError(null);
+    if (!valid) {
+      const msg =
+        amtNum > 0 && amtNum < MIN_BUY_AMOUNT
+          ? `Minimum amount is $${MIN_BUY_AMOUNT}`
+          : `Enter an amount between $${MIN_BUY_AMOUNT} and $${MAX_BUY_AMOUNT.toLocaleString()}`;
+      setActionError(msg);
+      toast.error(msg);
+      return;
+    }
+    setStep("method");
+  }
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-background/80 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" aria-label="Close" onClick={onClose} />
-      <div className="relative z-10 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/40" />
+  function handleBack() {
+    if (step === "deposit") {
+      setDepositReady(false);
+      setStep("method");
+      return;
+    }
+    if (step === "method") {
+      setStep("amount");
+      return;
+    }
+    onClose();
+  }
 
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-bold">Buy {token.name}</div>
-            <div className="text-sm text-muted-foreground">
-              Price{" "}
-              {isOusd
-                ? formatUSD(token.price)
-                : formatOUSD(token.price, { price: true, suffix: false })}{" "}
-              {!isOusd && <span className="text-muted-foreground">OUSD</span>}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-full bg-muted text-muted-foreground press"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  const headerTitle =
+    step === "amount"
+      ? `Buy ${token.name}`
+      : step === "method"
+        ? "Pay with"
+        : method === "usdc"
+          ? "USDC Pay"
+          : "Crypto Deposit";
 
-        <div className="flex flex-col items-center gap-1 py-2">
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-3xl font-bold text-muted-foreground">$</span>
-            <Input
-              value={amount}
-              onChange={(e) => {
-                setActionError(null);
-                setAmount(sanitizeAmountInput(e.target.value));
-              }}
-              type="text"
-              inputMode="decimal"
-              pattern="[0-9]*[.]?[0-9]*"
-              aria-label={isOusd ? "Amount in USD" : "Amount in OUSD"}
-              className="h-auto w-full max-w-52 border-0 bg-transparent p-0 text-center text-5xl font-bold tabular-nums shadow-none focus-visible:ring-0"
-            />
-          </div>
-          <span className="text-sm font-medium text-muted-foreground">
-            {isOusd ? "USD → OUSD" : "OUSD"}
-          </span>
-        </div>
+  const receiveHint =
+    !isOusd && token.price > 0
+      ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
+      : isOusd
+        ? formatOUSD(amtNum)
+        : token.symbol;
 
-        <div className="mb-3 flex flex-wrap justify-center gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                setActionError(null);
-                setAmount(String(p));
-              }}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-semibold press",
-                amount === String(p) ? "bg-primary text-primary-foreground" : "bg-muted",
-              )}
-            >
-              ${p}
-            </button>
-          ))}
-          {opSpendable != null && opSpendable >= 1 && (
+  const body = (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Header */}
+      <div className="mb-3 flex shrink-0 items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2">
+          {step !== "amount" ? (
             <button
               type="button"
-              onClick={() => {
-                setActionError(null);
-                setAmount(String(Math.floor(opSpendable * 100) / 100));
-              }}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-semibold press",
-                Math.abs(amtNum - opSpendable) < 0.01
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted",
-              )}
+              onClick={handleBack}
+              className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted text-foreground press"
+              aria-label="Back"
             >
-              Max
+              <ChevronLeft className="h-5 w-5" />
             </button>
-          )}
-        </div>
-
-        <PaymentMethodPicker
-          methods={methods}
-          value={method}
-          onChange={(m) => {
-            setActionError(null);
-            setDepositReady(false);
-            setMethod(m);
-          }}
-          className="mb-4"
-        />
-
-        {method === "openpay_checkout" && !openpayLink?.linked && (
-          <div className="mb-4 rounded-2xl bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
-            Connect OpenPay to pay via checkout.{" "}
-            <Link to="/settings" className="inline-flex items-center gap-1 font-semibold text-primary">
-              <Link2 className="h-3.5 w-3.5" />
-              Settings
-            </Link>
-          </div>
-        )}
-
-        {method === "openpay_checkout" && openpayLink?.linked && (
-          <div
-            className={cn(
-              "mb-4 rounded-2xl px-3 py-2.5 text-xs",
-              openpayShort
-                ? "bg-amber-500/15 text-amber-700 dark:text-amber-200"
-                : "bg-muted/60 text-muted-foreground",
-            )}
-          >
-            {opSpendable != null ? (
-              <>
-                OpenPay account
-                {openpayBal?.username ? ` @${openpayBal.username}` : ""}:{" "}
-                <span className="font-semibold tabular-nums">{formatUSD(opSpendable)}</span>
-                {openpayShort
-                  ? " — lower the amount, tap Max, or switch to MoonPay / Pi."
-                  : " · pays into your OpenPay Pro wallet."}
-              </>
-            ) : (
-              <>Pays from your connected OpenPay account into this Pro wallet.</>
-            )}
-            <div className="mt-1 text-[11px] opacity-80">
-              Pro wallet balance: {formatUSD(ousdBalance)} OUSD
+          ) : null}
+          <div className="min-w-0">
+            <div className="truncate text-lg font-bold tracking-tight">
+              {headerTitle}
+              {step === "amount" ? (
+                <span className="text-muted-foreground"> {token.symbol}</span>
+              ) : null}
             </div>
+            {step === "amount" ? (
+              <div className="text-sm text-muted-foreground">
+                Price{" "}
+                {isOusd
+                  ? formatUSD(token.price)
+                  : formatOUSD(token.price, { price: true, suffix: false })}{" "}
+                {!isOusd && <span className="text-muted-foreground">OUSD</span>}
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground press"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-        {!isOusd && method === "wallet_ousd" && (
-          <p className="mb-4 text-center text-xs text-muted-foreground">
-            Balance: {formatNumber(ousdBalance, 2)} OUSD
-          </p>
-        )}
+      {/* —— Step 1: Amount —— */}
+      {step === "amount" && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex flex-col items-center px-1 pb-4 pt-2">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-muted/70 py-1.5 pl-1.5 pr-3">
+                {tokenLogo ? (
+                  <img
+                    src={tokenLogo}
+                    alt=""
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+                    {token.symbol.slice(0, 1)}
+                  </span>
+                )}
+                <span className="text-sm font-semibold">{token.symbol}</span>
+              </div>
 
-        {actionError ? (
-          <div className="mb-3 rounded-2xl bg-destructive/15 px-3 py-2.5 text-xs text-destructive">
-            {actionError}
-          </div>
-        ) : null}
+              <div className="flex w-full items-baseline justify-center gap-1">
+                <span className="text-3xl font-bold text-muted-foreground/80">$</span>
+                <Input
+                  value={amount}
+                  onChange={(e) => {
+                    setActionError(null);
+                    setDepositReady(false);
+                    setAmount(sanitizeAmountInput(e.target.value));
+                  }}
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  autoFocus
+                  aria-label={isOusd ? "Amount in USD" : "Amount in OUSD"}
+                  className="h-auto w-full max-w-[14rem] border-0 bg-transparent p-0 text-center text-[3.25rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
+                />
+              </div>
 
-        {method === "helio" || method === "usdc" ? (
-          depositReady ? (
-            <div className="mb-2 space-y-2">
-              <HelioDepositPanel
-                product={method === "usdc" ? "usdc" : "crypto"}
-                amountUsd={amtNum}
-                onSuccess={() => {
-                  void invalidateAfterTopup();
-                  if (isOusd) onClose();
-                }}
-              />
-              <p className="text-center text-[11px] text-muted-foreground">
-                {method === "usdc"
-                  ? `Pay exactly $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} USDC → OUSD 1:1`
-                  : `Deposit $${amtNum >= 1 ? amtNum.toFixed(2) : "—"} SOL/crypto → OUSD`}
-                {!isOusd
-                  ? ` · then buy ${token.symbol} with Wallet OUSD`
-                  : null}
+              <p className="mt-3 text-sm font-medium text-muted-foreground">
+                {isOusd ? "USD → OUSD" : "OUSD"}
+                {valid ? (
+                  <span className="text-muted-foreground/80"> · {receiveHint}</span>
+                ) : null}
               </p>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-xs text-muted-foreground"
-                onClick={() => setDepositReady(false)}
-              >
-                Change amount or method
-              </Button>
+
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+                {PRESETS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setActionError(null);
+                      setDepositReady(false);
+                      setAmount(String(p));
+                    }}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-sm font-semibold press",
+                      amount === String(p)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80",
+                    )}
+                  >
+                    ${p}
+                  </button>
+                ))}
+                {opSpendable != null && opSpendable >= 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActionError(null);
+                      setDepositReady(false);
+                      setAmount(String(Math.floor(opSpendable * 100) / 100));
+                    }}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-sm font-semibold press",
+                      Math.abs(amtNum - opSpendable) < 0.01
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80",
+                    )}
+                  >
+                    Max
+                  </button>
+                )}
+              </div>
+
+              {!isOusd ? (
+                <p className="mt-6 text-center text-xs text-muted-foreground">
+                  Wallet balance · {formatNumber(ousdBalance, 2)} OUSD
+                </p>
+              ) : null}
+
+              {actionError ? (
+                <div className="mt-4 w-full rounded-2xl bg-destructive/15 px-3 py-2.5 text-xs text-destructive">
+                  {actionError}
+                </div>
+              ) : null}
             </div>
-          ) : (
+          </div>
+
+          <div className="sticky bottom-0 shrink-0 space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-1 pt-4">
             <Button
               type="button"
-              className="h-12 w-full rounded-full text-base font-bold"
-              disabled={busy || !valid}
+              disabled={!valid}
+              onClick={goToMethod}
+              className="h-14 w-full rounded-full text-base font-bold"
+            >
+              Continue
+              <ChevronRight className="ml-1 h-5 w-5 opacity-90" />
+            </Button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              Next · choose how to pay
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* —— Step 2: Payment method —— */}
+      {step === "method" && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
+            <div className="mb-4 rounded-2xl bg-muted/50 px-4 py-3.5">
+              <div className="flex items-center gap-3">
+                {tokenLogo ? (
+                  <img
+                    src={tokenLogo}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                    {token.symbol.slice(0, 1)}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">You buy</p>
+                  <p className="truncate text-lg font-bold tabular-nums">
+                    {isOusd ? formatOUSD(amtNum) : receiveHint}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep("amount")}
+                  className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold press hover:bg-muted/80"
+                >
+                  Edit
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                You pay {formatUSD(amtNum)}
+                {isOusd ? " · 1 OUSD = $1.00" : ` · ${token.name}`}
+              </p>
+            </div>
+
+            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Payment method
+            </div>
+            <div className="space-y-2">
+              {methods.map((m) => {
+                const selected = method === m.id;
+                const Icon = m.icon;
+                const disabled = m.id === "openpay_checkout" && !linked;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      setActionError(null);
+                      setDepositReady(false);
+                      setMethod(m.id);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all press",
+                      selected
+                        ? "border-primary bg-primary/5 shadow-glow"
+                        : "border-border hover:bg-muted/50",
+                      disabled && "opacity-50",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full",
+                        m.logoUrl && "bg-background",
+                        m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
+                        m.id === "helio" &&
+                          "bg-gradient-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",
+                        m.id === "usdc" && "bg-[#2775CA]/15",
+                        m.id === "openpay_checkout" && "bg-[#0070BA]/10",
+                        m.id === "wallet_ousd" && "bg-primary/10",
+                      )}
+                    >
+                      {m.logoUrl ? (
+                        <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                      ) : m.helioMark ? (
+                        <HelioMark className="h-5 w-5" />
+                      ) : Icon ? (
+                        <Icon className="h-5 w-5" />
+                      ) : null}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{m.label}</span>
+                        {m.id === "openpay_checkout" && linked ? (
+                          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                            Linked
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {disabled ? "Connect OpenPay in Settings" : m.desc}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {method === "openpay_checkout" && !linked && (
+              <div className="mt-3 rounded-2xl bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
+                Connect OpenPay to pay via checkout.{" "}
+                <Link
+                  to="/settings"
+                  className="inline-flex items-center gap-1 font-semibold text-primary"
+                >
+                  <Link2 className="h-3.5 w-3.5" />
+                  Settings
+                </Link>
+              </div>
+            )}
+
+            {method === "openpay_checkout" && linked && (
+              <div
+                className={cn(
+                  "mt-3 rounded-2xl px-3 py-2.5 text-xs",
+                  openpayShort
+                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-200"
+                    : "bg-muted/60 text-muted-foreground",
+                )}
+              >
+                {opSpendable != null ? (
+                  <>
+                    OpenPay account
+                    {openpayBal?.username ? ` @${openpayBal.username}` : ""}:{" "}
+                    <span className="font-semibold tabular-nums">{formatUSD(opSpendable)}</span>
+                    {openpayShort
+                      ? " — lower the amount, tap Max, or switch to MoonPay / Pi."
+                      : " · pays into your OpenPay Pro wallet."}
+                  </>
+                ) : (
+                  <>Pays from your connected OpenPay account into this Pro wallet.</>
+                )}
+                <div className="mt-1 text-[11px] opacity-80">
+                  Pro wallet balance: {formatUSD(ousdBalance)} OUSD
+                </div>
+              </div>
+            )}
+
+            {!isOusd && method === "wallet_ousd" && (
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Balance: {formatNumber(ousdBalance, 2)} OUSD
+              </p>
+            )}
+
+            {actionError ? (
+              <div className="mt-3 rounded-2xl bg-destructive/15 px-3 py-2.5 text-xs text-destructive">
+                {actionError}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="sticky bottom-0 shrink-0 space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-1 pt-4">
+            <Button
+              type="button"
+              className={cn(
+                "h-14 w-full rounded-full text-base font-bold",
+                method === "openpay_checkout" &&
+                  "bg-[#0070BA] text-white hover:bg-[#0070BA]/90 hover:text-white",
+                method === "moonpay" &&
+                  "bg-[#7D00FE] text-white hover:bg-[#7D00FE]/90 hover:text-white",
+              )}
+              disabled={
+                busy ||
+                !valid ||
+                (method === "openpay_checkout" && !linked) ||
+                openpayShort
+              }
               onClick={() => setConfirmOpen(true)}
             >
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
+              {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              {ctaLabel}
             </Button>
-          )
-        ) : (
-          <Button
-            type="button"
-            className="h-12 w-full rounded-full text-base font-bold"
-            disabled={
-              busy ||
-              !valid ||
-              (method === "openpay_checkout" && !openpayLink?.linked)
-            }
-            onClick={() => setConfirmOpen(true)}
-          >
-            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : ctaLabel}
-          </Button>
-        )}
+            <p className="text-center text-[11px] text-muted-foreground">
+              Fees & third-party terms shown before you pay
+            </p>
+          </div>
+        </div>
+      )}
 
-        <TxConfirmModal
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          title={isOusd ? "Confirm top-up" : "Confirm buy"}
-          description={
-            isOusd
-              ? "Review amount, fees, and third-party payment"
-              : `Review your ${token.symbol} purchase`
-          }
-          amount={formatUSD(amtNum)}
-          subtitle={
-            !isOusd && token.price > 0
-              ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
-              : token.name
-          }
-          rows={[
-            { label: "Asset", value: `${token.name} (${token.symbol})` },
-            { label: "You pay", value: formatUSD(amtNum) },
-            {
-              label: "Pay with",
-              value:
-                method === "wallet_ousd"
-                  ? "OUSD balance"
-                  : method === "pi"
-                    ? "Pi Network"
-                    : method === "moonpay"
-                      ? "Card (MoonPay)"
-                      : method === "usdc"
-                        ? "USDC Pay"
-                        : method === "helio"
-                          ? "Crypto Deposit"
-                          : "OpenPay",
-            },
-            ...(!isOusd && method === "wallet_ousd"
-              ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
-              : []),
-          ]}
-          notice={
-            method !== "wallet_ousd" ? (
-              <TopupFeesNotice method={method} />
-            ) : undefined
-          }
-          confirmLabel={ctaLabel}
-          busy={busy}
-          variant={method === "openpay_checkout" ? "openpay" : "default"}
-          onConfirm={() => {
-            void submit();
-          }}
-        />
-
-        {moonpaySession ? (
-          <MoonPayBuyOverlay
-            visible={moonpayVisible}
-            amount={moonpaySession.amount}
-            externalCustomerId={userId}
-            externalTransactionId={moonpaySession.externalTransactionId}
-            onClose={() => {
-              setMoonpayVisible(false);
-              setMoonpaySession(null);
-              setBusy(false);
-            }}
-            onTransactionCompleted={async ({ id, baseCurrencyAmount, status }) => {
-              if (status && status !== "completed") {
-                toast.message(`MoonPay status: ${status}`);
-                setMoonpayVisible(false);
-                return;
-              }
-              const paid = Number(baseCurrencyAmount) || moonpaySession.amount;
-              setMoonpayVisible(false);
-              setBusy(true);
-              try {
-                await creditMoonPay({
-                  data: {
-                    amount: paid,
-                    moonpayTransactionId: id,
-                    walletId: walletId!,
-                  },
-                });
-                toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
-                if (isMajor && token.majorId) {
-                  await executeMajorBuy(paid);
-                } else if (graduated) {
-                  await executeDexBuy(paid);
-                } else if (!isOusd) {
-                  await executeTokenBuy(paid);
-                } else {
-                  await invalidateAfterTopup();
-                  onClose();
-                }
-              } catch (err) {
-                const msg = (err as Error).message || "MoonPay credit failed";
-                setActionError(msg);
-                toast.error(msg);
-              } finally {
-                setBusy(false);
-              }
+      {/* —— Step 3: Deposit —— */}
+      {step === "deposit" && depositReady && (method === "helio" || method === "usdc") && (
+        <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto">
+          <div className="rounded-2xl bg-muted/50 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via {method === "usdc" ? "USDC · MoonPay Commerce" : "SOL / crypto · MoonPay Commerce"}
+              {!isOusd ? ` · then buy ${token.symbol}` : null}
+            </p>
+          </div>
+          <HelioDepositPanel
+            product={method === "usdc" ? "usdc" : "crypto"}
+            amountUsd={amtNum}
+            onSuccess={() => {
+              void invalidateAfterTopup();
+              if (isOusd) onClose();
             }}
           />
-        ) : null}
-      </div>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change amount or method
+          </Button>
+        </div>
+      )}
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={isOusd ? "Confirm top-up" : "Confirm buy"}
+        description={
+          isOusd
+            ? "Review amount, fees, and third-party payment"
+            : `Review your ${token.symbol} purchase`
+        }
+        amount={formatUSD(amtNum)}
+        subtitle={
+          !isOusd && token.price > 0
+            ? `≈ ${formatNumber(amtNum / token.price, amtNum / token.price < 1 ? 6 : 4)} ${token.symbol}`
+            : token.name
+        }
+        rows={[
+          { label: "Asset", value: `${token.name} (${token.symbol})` },
+          { label: "You pay", value: formatUSD(amtNum) },
+          {
+            label: "Pay with",
+            value:
+              method === "wallet_ousd"
+                ? "OUSD balance"
+                : method === "pi"
+                  ? "Pi Network"
+                  : method === "moonpay"
+                    ? "Card (MoonPay)"
+                    : method === "usdc"
+                      ? "USDC Pay"
+                      : method === "helio"
+                        ? "Crypto Deposit"
+                        : "OpenPay",
+          },
+          ...(!isOusd && method === "wallet_ousd"
+            ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
+            : []),
+        ]}
+        notice={
+          method !== "wallet_ousd" ? <TopupFeesNotice method={method} /> : undefined
+        }
+        confirmLabel={ctaLabel}
+        busy={busy}
+        variant={method === "openpay_checkout" ? "openpay" : "default"}
+        onConfirm={() => {
+          void submit();
+        }}
+      />
+
+      {moonpaySession ? (
+        <MoonPayBuyOverlay
+          visible={moonpayVisible}
+          amount={moonpaySession.amount}
+          externalCustomerId={userId}
+          externalTransactionId={moonpaySession.externalTransactionId}
+          onClose={() => {
+            setMoonpayVisible(false);
+            setMoonpaySession(null);
+            setBusy(false);
+          }}
+          onTransactionCompleted={async ({ id, baseCurrencyAmount, status }) => {
+            if (status && status !== "completed") {
+              toast.message(`MoonPay status: ${status}`);
+              setMoonpayVisible(false);
+              return;
+            }
+            const paid = Number(baseCurrencyAmount) || moonpaySession.amount;
+            setMoonpayVisible(false);
+            setBusy(true);
+            try {
+              await creditMoonPay({
+                data: {
+                  amount: paid,
+                  moonpayTransactionId: id,
+                  walletId: walletId!,
+                },
+              });
+              toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
+              if (isMajor && token.majorId) {
+                await executeMajorBuy(paid);
+              } else if (graduated) {
+                await executeDexBuy(paid);
+              } else if (!isOusd) {
+                await executeTokenBuy(paid);
+              } else {
+                await invalidateAfterTopup();
+                onClose();
+              }
+            } catch (err) {
+              const msg = (err as Error).message || "MoonPay credit failed";
+              setActionError(msg);
+              toast.error(msg);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
     </div>
+  );
+
+  if (!open) return null;
+
+  if (!isDesktop) {
+    return (
+      <Sheet
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+      >
+        <SheetContent
+          side="bottom"
+          className="flex h-[92dvh] max-h-[92dvh] flex-col gap-0 rounded-t-[1.75rem] border-border/40 bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 [&>button.absolute]:hidden"
+        >
+          <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/35" />
+          <SheetHeader className="sr-only">
+            <SheetTitle>
+              Buy {token.name} {token.symbol}
+            </SheetTitle>
+            <SheetDescription>Choose amount and payment method</SheetDescription>
+          </SheetHeader>
+          {body}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <DialogContent
+        hideClose
+        className="fixed inset-0 left-0 top-0 z-50 flex h-[100dvh] max-h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-none duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 sm:rounded-none"
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>
+            Buy {token.name} {token.symbol}
+          </DialogTitle>
+          <DialogDescription>Choose amount and payment method</DialogDescription>
+        </DialogHeader>
+        <div className="mx-auto flex h-full w-full max-w-xl flex-col px-6 pb-6 pt-5">
+          {body}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

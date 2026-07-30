@@ -875,6 +875,7 @@ function PhantomAssetDetail() {
           symbol: meta.symbol,
           name: meta.name,
           price: meta.price,
+          logoUrl: meta.logo,
           isOusd,
           majorId: isMajor && majorDef ? majorDef.id : undefined,
           status: isOusd || isMajor ? "stable" : meta.status,

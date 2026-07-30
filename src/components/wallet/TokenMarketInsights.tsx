@@ -2,13 +2,32 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 import { getTokenMarketInsights } from "@/lib/token-insights.functions";
 import { useChromeVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
+
+/** Official OKX mark — five squares in an X */
+function OkxLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <title>OKX</title>
+      <rect x="0" y="0" width="14" height="14" rx="1.5" />
+      <rect x="34" y="0" width="14" height="14" rx="1.5" />
+      <rect x="17" y="17" width="14" height="14" rx="1.5" />
+      <rect x="0" y="34" width="14" height="14" rx="1.5" />
+      <rect x="34" y="34" width="14" height="14" rx="1.5" />
+    </svg>
+  );
+}
 
 export type TokenMarketInsightsProps = {
   tokenKey: string;
@@ -165,7 +184,7 @@ export function TokenMarketInsights(props: TokenMarketInsightsProps) {
                 <span>·</span>
                 <span className="inline-flex items-center gap-1">
                   Generated from market insights
-                  <Sparkles className="h-3 w-3 text-violet-400" />
+                  <OkxLogo className="h-3.5 w-3.5 shrink-0 text-foreground" />
                 </span>
               </div>
             )}

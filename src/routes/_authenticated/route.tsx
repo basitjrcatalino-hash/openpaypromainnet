@@ -183,24 +183,28 @@ function AuthenticatedLayout() {
           <>
             <header
               className={cn(
-                "ph-header safe-pt fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition-transform duration-300 ease-out md:hidden",
+                "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center px-2 py-2.5 transition-transform duration-300 ease-out md:hidden",
                 chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
               )}
             >
-              <Link to="/dashboard" className="text-sm font-bold tracking-tight">
+              <button
+                onClick={() => setMobileOpen((v) => !v)}
+                className="justify-self-start rounded-full p-2 text-primary press"
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+              <Link
+                to="/dashboard"
+                className="ph-nav-title truncate text-center text-foreground"
+              >
                 OpenPay Pro
               </Link>
-              <div className="flex items-center gap-1.5">
+              <div className="justify-self-end">
                 <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
-                <button
-                  onClick={() => setMobileOpen((v) => !v)}
-                  className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground press"
-                  aria-label="Toggle menu"
-                >
-                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
               </div>
             </header>
+
             {/* Spacer matches fixed mobile header height */}
             <div
               className="md:hidden"

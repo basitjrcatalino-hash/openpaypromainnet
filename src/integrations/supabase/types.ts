@@ -402,6 +402,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           base_currency: string
+          bio: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -412,12 +413,15 @@ export type Database = {
           pi_uid: string | null
           pi_username: string | null
           pi_wallet_address: string | null
+          twitter_url: string | null
           updated_at: string
           username: string | null
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
           base_currency?: string
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -428,12 +432,15 @@ export type Database = {
           pi_uid?: string | null
           pi_username?: string | null
           pi_wallet_address?: string | null
+          twitter_url?: string | null
           updated_at?: string
           username?: string | null
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
           base_currency?: string
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -444,8 +451,10 @@ export type Database = {
           pi_uid?: string | null
           pi_username?: string | null
           pi_wallet_address?: string | null
+          twitter_url?: string | null
           updated_at?: string
           username?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }

@@ -425,6 +425,8 @@ function SidebarInner({
   onOpenNotifications?: () => void;
 }) {
   const { theme, toggle } = useTheme();
+  const { developerMode, setDeveloperMode } = useDeveloperMode();
+
   const router = useRouter();
   const [hideBalance, setHideBalance] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);

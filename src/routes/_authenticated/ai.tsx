@@ -223,12 +223,6 @@ function AiAssistantPage() {
             <ArrowUp className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-          <Bot className="h-3 w-3" /> AI assistant powered by Lovable AI ·{" "}
-          <Link to="/connect" className="font-semibold text-primary hover:underline">
-            Connect an agent
-          </Link>
-        </p>
       </form>
     </div>
   );

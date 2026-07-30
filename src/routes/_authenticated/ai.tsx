@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowUp, ChevronLeft, MoreVertical } from "lucide-react";
+import { ArrowUp, ChevronLeft, Loader2, MoreVertical, Square, Volume2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -12,6 +12,11 @@ import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 
 /** OpenPay AI assistant avatar (official OpenPay logo). */
 const AI_AVATAR = OPENPAY_AUTH_LOGO;
+
+/** The logo mark is light-on-transparent, so it needs a dark plate in light mode. */
+const AVATAR_PLATE = "bg-foreground object-contain p-1 dark:bg-transparent dark:p-0";
+
+
 
 
 export const Route = createFileRoute("/_authenticated/ai")({
@@ -46,6 +51,70 @@ function messageText(parts: Array<{ type: string; text?: string }>) {
   return parts.map((p) => (p.type === "text" ? (p.text ?? "") : "")).join("");
 }
 
+/** Plain text for speech: strip markdown syntax so the voice doesn't read symbols. */
+function speechText(markdown: string) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, " code block ")
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/[*_>#|]/g, "")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function useSpeech() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  function stop() {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setSpeakingId(null);
+    setLoadingId(null);
+  }
+
+  useEffect(() => () => audioRef.current?.pause(), []);
+
+  async function speak(id: string, text: string) {
+    if (speakingId === id || loadingId === id) {
+      stop();
+      return;
+    }
+    stop();
+    const value = speechText(text);
+    if (!value) return;
+    setLoadingId(id);
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: value }),
+      });
+      if (!res.ok) throw new Error((await res.text()) || "Text-to-speech failed");
+      const url = URL.createObjectURL(await res.blob());
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setSpeakingId(null);
+      };
+      await audio.play();
+      setLoadingId(null);
+      setSpeakingId(id);
+    } catch (e) {
+      setLoadingId(null);
+      setSpeakingId(null);
+      toast.error(e instanceof Error ? e.message : "Could not play audio");
+    }
+  }
+
+  return { speak, stop, speakingId, loadingId };
+}
+
 function AiAssistantPage() {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -57,6 +126,8 @@ function AiAssistantPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
+  const speech = useSpeech();
+
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -99,7 +170,7 @@ function AiAssistantPage() {
           width={512}
           height={512}
           loading="lazy"
-          className="h-8 w-8 rounded-[0.6rem]"
+          className={cn("h-8 w-8 rounded-[0.6rem]", AVATAR_PLATE)}
         />
         <span className="text-base font-bold">OpenPay AI</span>
         <button
@@ -124,7 +195,7 @@ function AiAssistantPage() {
               alt="OpenPay AI assistant"
               width={512}
               height={512}
-              className="h-20 w-20 rounded-[1.4rem] shadow-lg"
+              className={cn("h-20 w-20 rounded-[1.4rem] p-3 shadow-lg", AVATAR_PLATE)}
             />
             <h1 className="text-2xl font-bold">OpenPay AI</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -157,6 +228,8 @@ function AiAssistantPage() {
                   </div>
                 );
               }
+              const isSpeaking = speech.speakingId === m.id;
+              const isLoadingAudio = speech.loadingId === m.id;
               return (
                 <div key={m.id} className="flex gap-3">
                   <img
@@ -165,12 +238,31 @@ function AiAssistantPage() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]"
+                    className={cn("mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]", AVATAR_PLATE)}
                   />
-                  <OpenPayMarkdown text={text} />
-
+                  <div className="min-w-0 flex-1">
+                    <OpenPayMarkdown text={text} />
+                    {text.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => void speech.speak(m.id, text)}
+                        aria-label={isSpeaking ? "Stop reading aloud" : "Read aloud"}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground press"
+                      >
+                        {isLoadingAudio ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : isSpeaking ? (
+                          <Square className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5" />
+                        )}
+                        {isLoadingAudio ? "Loading" : isSpeaking ? "Stop" : "Listen"}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               );
+
             })}
             {status === "submitted" ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -180,7 +272,7 @@ function AiAssistantPage() {
                   width={512}
                   height={512}
                   loading="lazy"
-                  className="h-7 w-7 rounded-[0.6rem]"
+                  className={cn("h-7 w-7 rounded-[0.6rem]", AVATAR_PLATE)}
                 />
                 <span className="animate-pulse">Thinking…</span>
               </div>

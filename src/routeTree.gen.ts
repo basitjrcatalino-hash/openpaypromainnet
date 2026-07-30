@@ -23,6 +23,7 @@ import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-p
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
@@ -170,6 +171,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
@@ -624,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -717,6 +724,7 @@ export interface FileRoutesByTo {
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -812,6 +820,7 @@ export interface FileRoutesById {
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -907,6 +916,7 @@ export interface FileRouteTypes {
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/api/chat'
+    | '/api/tts'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1000,6 +1010,7 @@ export interface FileRouteTypes {
     | '/wc-pay'
     | '/admin/testnet-progress'
     | '/api/chat'
+    | '/api/tts'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1094,6 +1105,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
     | '/api/chat'
+    | '/api/tts'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1166,6 +1178,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiTtsRoute: typeof ApiTtsRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
@@ -1300,6 +1313,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
       id: '/api/chat'
@@ -2019,6 +2039,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiTtsRoute: ApiTtsRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,

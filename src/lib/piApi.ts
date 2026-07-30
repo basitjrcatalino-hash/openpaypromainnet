@@ -2,10 +2,13 @@ import type { PiAuthSession } from "@/lib/piSdk";
 
 const A2U_URL = "/api/public/pi-a2u";
 
-async function invokePiA2U<T>(body: Record<string, unknown>): Promise<T> {
+async function invokePiA2U<T>(body: Record<string, unknown>, accessToken?: string): Promise<T> {
   const res = await fetch(A2U_URL, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify(body),
   });
   const data = (await res.json().catch(() => ({}))) as { error?: string } & T;
@@ -62,6 +65,13 @@ export type AdminDashboard = {
 };
 
 export async function fetchAdminDashboard() {
-  const r = await invokePiA2U<{ success: boolean; data: AdminDashboard }>({ action: "admin_dashboard" });
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) throw new Error("Admin sign-in required");
+  const r = await invokePiA2U<{ success: boolean; data: AdminDashboard }>(
+    { action: "admin_dashboard" },
+    token,
+  );
   return r.data;
 }

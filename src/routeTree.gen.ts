@@ -19,6 +19,7 @@ import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -145,6 +146,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
+  id: '/guides/transfer-pi',
+  path: '/guides/transfer-pi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
@@ -600,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
@@ -689,6 +696,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
@@ -780,6 +788,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
@@ -871,6 +880,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/topup'
@@ -960,6 +970,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/topup'
@@ -1050,6 +1061,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/topup'
@@ -1119,6 +1131,7 @@ export interface RootRouteChildren {
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
+  GuidesTransferPiRoute: typeof GuidesTransferPiRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -1221,6 +1234,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/transfer-pi': {
+      id: '/guides/transfer-pi'
+      path: '/guides/transfer-pi'
+      fullPath: '/guides/transfer-pi'
+      preLoaderRoute: typeof GuidesTransferPiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/openpay': {
@@ -1938,6 +1958,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
+  GuidesTransferPiRoute: GuidesTransferPiRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

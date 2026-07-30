@@ -42,6 +42,7 @@ import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
@@ -261,6 +262,11 @@ const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConnectRoute = AuthenticatedConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
@@ -584,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
+  '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
@@ -674,6 +681,7 @@ export interface FileRoutesByTo {
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
+  '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
+  '/_authenticated/connect': typeof AuthenticatedConnectRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
@@ -858,6 +867,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/bags'
     | '/chat'
+    | '/connect'
     | '/dashboard'
     | '/kyc'
     | '/ledger'
@@ -948,6 +958,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/bags'
     | '/chat'
+    | '/connect'
     | '/dashboard'
     | '/kyc'
     | '/ledger'
@@ -1039,6 +1050,7 @@ export interface FileRouteTypes {
     | '/_authenticated/activity'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
+    | '/_authenticated/connect'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
@@ -1395,6 +1407,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/connect': {
+      id: '/_authenticated/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof AuthenticatedConnectRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/chat': {
@@ -1833,6 +1852,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
+  AuthenticatedConnectRoute: typeof AuthenticatedConnectRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
@@ -1871,6 +1891,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
+  AuthenticatedConnectRoute: AuthenticatedConnectRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,

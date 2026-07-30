@@ -119,23 +119,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#000000" },
-      { title: "OpenPay Pro Wallet" },
+      { title: "OpenPay Pro Wallet — Secure Web3 Gateway for OUSD & NFTs" },
       {
         name: "description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "OpenPay Pro Wallet is a Web3 wallet for the OpenPay ecosystem: hold OUSD and Pi, swap tokens, mint NFTs, and pay with full control of your keys.",
       },
-      { property: "og:title", content: "OpenPay Pro Wallet" },
-      { name: "twitter:title", content: "OpenPay Pro Wallet" },
+      { property: "og:site_name", content: "OpenPay Pro Wallet" },
+      { property: "og:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
+      { name: "twitter:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
       {
         property: "og:description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
       },
       {
         name: "twitter:description",
         content:
-          "OpenPay Pro Wallet is a next-generation Web3 wallet built for the OpenPay ecosystem, giving users full control of their digital assets, tokens, NFTs, and stable",
+          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
       },
       {
         property: "og:image",

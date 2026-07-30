@@ -8,22 +8,25 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import novaAvatar from "@/assets/openpay-pro-mark.png";
+import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
+
+/** OpenPay AI assistant avatar (official OpenPay logo). */
+const AI_AVATAR = OPENPAY_AUTH_LOGO;
 
 
 export const Route = createFileRoute("/_authenticated/ai")({
   head: () => ({
     meta: [
-      { title: "Nova AI Assistant — OpenPay Pro Wallet" },
+      { title: "OpenPay AI Assistant — OpenPay Pro Wallet" },
       {
         name: "description",
         content:
-          "Chat with Nova, the OpenPay Pro AI assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger, KYC and connecting AI agents over MCP.",
+          "Chat with OpenPay AI, the OpenPay Pro assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger, KYC and connecting AI agents over MCP.",
       },
-      { property: "og:title", content: "Nova AI Assistant — OpenPay Pro Wallet" },
+      { property: "og:title", content: "OpenPay AI Assistant — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Ask Nova anything about OpenPay Pro and OpenPay — balances, top ups, transfers and agent connections.",
+        content: "Ask OpenPay AI anything about OpenPay Pro and OpenPay — balances, top ups, transfers and agent connections.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

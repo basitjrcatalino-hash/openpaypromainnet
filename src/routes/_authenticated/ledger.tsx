@@ -60,8 +60,10 @@ function useApiBase() {
 }
 
 function copyText(text: string, label = "Copied") {
-  void copyToClipboardRobust(text);
-  toast.success(label);
+  void copyToClipboardRobust(text).then(
+    () => toast.success(label),
+    () => toast.error("Copy failed"),
+  );
 }
 
 function LedgerPage() {

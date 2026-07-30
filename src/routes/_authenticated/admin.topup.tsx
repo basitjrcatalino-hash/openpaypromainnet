@@ -234,7 +234,7 @@ function AdminTopupPage() {
                   <div className="flex items-center gap-2">
                     <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{v.code}</code>
                     <button
-                      onClick={() => { copyToClipboardRobust(v.code); toast.success("Copied"); }}
+                      onClick={() => { void copyToClipboardRobust(v.code).then(() => toast.success("Copied"), () => toast.error("Copy failed")); }}
                       className="text-muted-foreground hover:text-foreground"
                       title="Copy"
                     >

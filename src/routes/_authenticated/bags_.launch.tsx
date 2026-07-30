@@ -615,8 +615,10 @@ function BagsLaunchPage() {
           if (imageUrl) params.set("image", imageUrl);
           void copyToClipboardRobust(
             `${window.location.origin}/bags/launch?${params.toString()}`,
+          ).then(
+            () => toast.success("Launch settings link copied"),
+            () => toast.error("Copy failed"),
           );
-          toast.success("Launch settings link copied");
         }}
       >
         <Link2 className="h-3.5 w-3.5" />

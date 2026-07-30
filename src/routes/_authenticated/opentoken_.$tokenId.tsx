@@ -330,8 +330,10 @@ function OpenTokenDetail() {
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted press"
             onClick={() => {
-              void copyToClipboardRobust(window.location.href);
-              toast.success("Link copied");
+              void copyToClipboardRobust(window.location.href).then(
+                () => toast.success("Link copied"),
+                () => toast.error("Copy failed"),
+              );
             }}
             aria-label="Share"
           >
@@ -508,8 +510,10 @@ function OpenTokenDetail() {
                 type="button"
                 className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-primary"
                 onClick={() => {
-                  void copyToClipboardRobust(token.contract_address!);
-                  toast.success("Address copied");
+                  void copyToClipboardRobust(token.contract_address!).then(
+                    () => toast.success("Address copied"),
+                    () => toast.error("Copy failed"),
+                  );
                 }}
               >
                 {shortAddress(token.contract_address)} <Copy className="h-3 w-3" />
@@ -638,8 +642,10 @@ function OpenTokenDetail() {
                     type="button"
                     className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
                     onClick={() => {
-                      void copyToClipboardRobust(devAddress);
-                      toast.success("Dev wallet copied");
+                      void copyToClipboardRobust(devAddress).then(
+                        () => toast.success("Dev wallet copied"),
+                        () => toast.error("Copy failed"),
+                      );
                     }}
                   >
                     <span className="truncate">{shortAddress(devAddress, 8, 8)}</span>
@@ -655,8 +661,10 @@ function OpenTokenDetail() {
                     type="button"
                     className="inline-flex max-w-full items-center gap-1.5 font-mono text-xs text-primary"
                     onClick={() => {
-                      void copyToClipboardRobust(token.contract_address!);
-                      toast.success("Contract copied");
+                      void copyToClipboardRobust(token.contract_address!).then(
+                        () => toast.success("Contract copied"),
+                        () => toast.error("Copy failed"),
+                      );
                     }}
                   >
                     <span className="truncate">{shortAddress(token.contract_address, 8, 8)}</span>

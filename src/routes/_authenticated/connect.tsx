@@ -143,10 +143,13 @@ function ConnectPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-20 md:pb-8">
-      <PageHeader
-        title="Connect an AI assistant"
-        subtitle="Use OpenPay Pro Wallet tools inside ChatGPT, Claude, or any MCP client."
-      />
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Connect an AI assistant</h1>
+        <p className="text-sm text-muted-foreground">
+          Use OpenPay Pro Wallet tools inside ChatGPT, Claude, or any MCP client.
+        </p>
+      </div>
+
 
       <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-glow">
         <CardHeader>

@@ -162,7 +162,13 @@ export default defineConfig({
         "loglevel-package",
         "deepmerge",
         "json-stable-stringify",
+        // Browser-only wallet SDKs: must be bundled (and unenv-polyfilled) for the
+        // worker SSR build. Left external they emit raw `node:process` imports that
+        // workerd cannot resolve → every route 500s.
+        "@privy-io/react-auth",
+        /^@web3auth\//,
       ],
+
       resolve: {
         conditions: ["browser", "module", "import", "default"],
       },

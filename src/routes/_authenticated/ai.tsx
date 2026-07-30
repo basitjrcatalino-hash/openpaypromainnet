@@ -226,3 +226,93 @@ function AiAssistantPage() {
     </div>
   );
 }
+
+/**
+ * Claude-style answer typography: generous line height, clear heading rhythm,
+ * readable lists, soft code blocks and bordered tables.
+ */
+function NovaMarkdown({ text }: { text: string }) {
+  return (
+    <div className="min-w-0 max-w-none text-[15px] leading-[1.75] tracking-[-0.005em] text-foreground">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+          h1: ({ children }) => (
+            <h1 className="mb-3 mt-6 text-xl font-bold tracking-tight first:mt-0">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="mb-2.5 mt-6 text-[17px] font-bold tracking-tight first:mt-0">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="mb-2 mt-5 text-[15px] font-bold tracking-tight first:mt-0">{children}</h3>
+          ),
+          ul: ({ children }) => (
+            <ul className="mb-4 list-disc space-y-1.5 pl-5 marker:text-muted-foreground last:mb-0">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="mb-4 list-decimal space-y-1.5 pl-5 marker:text-muted-foreground last:mb-0">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => <li className="pl-0.5">{children}</li>,
+          strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
+            >
+              {children}
+            </a>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="mb-4 border-l-2 border-primary/40 pl-4 text-muted-foreground last:mb-0">
+              {children}
+            </blockquote>
+          ),
+          hr: () => <hr className="my-6 border-border/60" />,
+          code: ({ className, children }) => {
+            const isBlock = Boolean(className?.includes("language-"));
+            if (!isBlock) {
+              return (
+                <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[13px] text-foreground">
+                  {children}
+                </code>
+              );
+            }
+            return (
+              <code className="block whitespace-pre-wrap break-words font-mono text-[13px] leading-relaxed">
+                {children}
+              </code>
+            );
+          },
+          pre: ({ children }: { children?: ReactNode }) => (
+            <pre className="mb-4 overflow-x-auto rounded-2xl border border-border/60 bg-muted/60 p-4 last:mb-0">
+              {children}
+            </pre>
+          ),
+          table: ({ children }) => (
+            <div className="mb-4 overflow-x-auto last:mb-0">
+              <table className="w-full border-collapse overflow-hidden rounded-xl border border-border/60 text-sm">
+                {children}
+              </table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="border-b border-border/60 bg-muted/50 px-3 py-2 text-left font-semibold">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => <td className="border-b border-border/40 px-3 py-2 align-top">{children}</td>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
+}

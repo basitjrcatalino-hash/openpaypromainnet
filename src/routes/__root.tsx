@@ -119,6 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#000000" },
+      { name: "google-site-verification", content: "EA61xEdUw8jdmGPL1g8fqZRwuWqPEGZ6-awF82kSBbw" },
       { title: "OpenPay Pro Wallet — Secure Web3 Gateway for OUSD & NFTs" },
       {
         name: "description",

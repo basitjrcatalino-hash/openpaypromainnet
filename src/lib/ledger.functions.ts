@@ -96,8 +96,10 @@ export const listLedgerEntries = createServerFn({ method: "GET" })
       .optional()
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const limit = data?.limit ?? 200;
     let q = supabaseAdmin
       .from("ledger_entries")

@@ -70,6 +70,7 @@ import {
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
 import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
+import { OPENPAY_PARTNER_PORTAL } from "@/lib/openpay-auth";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — OpenPay Pro Wallet" }] }),

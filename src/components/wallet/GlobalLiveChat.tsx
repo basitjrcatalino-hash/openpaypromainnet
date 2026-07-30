@@ -249,7 +249,7 @@ export function GlobalLiveChat({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-4">
+      <div className="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading chat…</p>
         ) : missingTable ? (
@@ -419,7 +419,7 @@ export function GlobalLiveChat({
         </div>
       ) : null}
 
-      <div className="flex shrink-0 items-center gap-2 border-t border-border/40 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+      <div className="mx-auto flex w-full max-w-3xl shrink-0 items-center gap-2 border-t border-border/40 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
         <div className="relative flex min-w-0 flex-1 items-center">
           <input
             value={body}

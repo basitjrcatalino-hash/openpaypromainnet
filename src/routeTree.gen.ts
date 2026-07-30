@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RegulatoryRouteImport } from './routes/regulatory'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -105,6 +106,11 @@ const TestnetRewardRoute = TestnetRewardRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegulatoryRoute = RegulatoryRouteImport.update({
@@ -564,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -652,6 +659,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -742,6 +750,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -832,6 +841,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/regulatory'
+    | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
     | '/.mcp/list-tools'
@@ -920,6 +930,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/regulatory'
+    | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
     | '/.mcp/list-tools'
@@ -1009,6 +1020,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/regulatory'
+    | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
     | '/.mcp/list-tools'
@@ -1099,6 +1111,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PrivacyRoute: typeof PrivacyRoute
   RegulatoryRoute: typeof RegulatoryRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
@@ -1152,6 +1165,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/regulatory': {
@@ -1909,6 +1929,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PrivacyRoute: PrivacyRoute,
   RegulatoryRoute: RegulatoryRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,

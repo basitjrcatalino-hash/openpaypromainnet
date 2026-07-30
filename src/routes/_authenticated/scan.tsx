@@ -358,18 +358,37 @@ function ScanPage() {
         {!showMyQr && scanner.error && (
           <div className="mt-5 space-y-3 text-center">
             <p className="text-sm text-red-300">{scanner.error}</p>
-            <button
-              type="button"
-              onClick={() => {
-                handled.current = false;
-                scanner.restart();
-              }}
-              className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black press"
-            >
-              Try again
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handled.current = false;
+                  scanner.restart();
+                }}
+                className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black press"
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="rounded-full bg-white/14 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md press"
+              >
+                Scan photo
+              </button>
+              {isEmbeddedFrame() && (
+                <button
+                  type="button"
+                  onClick={() => window.open(window.location.href, "_blank", "noopener")}
+                  className="rounded-full bg-white/14 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md press"
+                >
+                  Open in new tab
+                </button>
+              )}
+            </div>
           </div>
         )}
+
       </div>
 
       <input

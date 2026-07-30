@@ -54,8 +54,9 @@ function GlobalChatPage() {
         className="mx-0 mb-0 shrink-0 rounded-none border-b border-border/40 px-3"
       />
 
-      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-        <section className="flex shrink-0 items-center gap-3 rounded-3xl bg-card p-3.5">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:max-w-none lg:gap-0 lg:px-0 lg:pb-0 lg:pt-0">
+        <section className="flex shrink-0 items-center gap-3 rounded-3xl bg-card p-3.5 lg:hidden">
+
           <Avatar className="h-12 w-12 border border-border/60">
             {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
             <AvatarFallback className="bg-primary/15 text-sm font-bold text-primary">

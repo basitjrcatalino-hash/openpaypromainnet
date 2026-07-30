@@ -164,9 +164,8 @@ function AiAssistantPage() {
                     loading="lazy"
                     className="mt-0.5 h-7 w-7 shrink-0 rounded-full"
                   />
-                  <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none text-sm leading-relaxed text-foreground">
-                    <ReactMarkdown>{text}</ReactMarkdown>
-                  </div>
+                  <NovaMarkdown text={text} />
+
                 </div>
               );
             })}

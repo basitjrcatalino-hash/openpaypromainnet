@@ -838,3 +838,94 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   .ph-progress-run,
   .ph-progress-done { animation: none; opacity: .6; }
 }
+
+/* ============================================================
+   iOS-native feel — mobile only (touch phones / small screens)
+   ============================================================ */
+@media (max-width: 767px) {
+  html {
+    /* iOS never smooth-scrolls on push; snap instantly */
+    scroll-behavior: auto;
+    /* Kill rubber-band chaining to the page behind sheets */
+    overscroll-behavior-y: none;
+  }
+  body {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      var(--font-phantom);
+    overscroll-behavior-y: none;
+    /* Feels like chrome-less native UI: no long-press callout / text drag */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable="true"],
+  [data-selectable] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+  /* Momentum scrolling on any inner scroller */
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"],
+  [class*="overflow-x-auto"] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* UIKit push: new view slides in from the trailing edge */
+  @keyframes ph-ios-push {
+    from {
+      opacity: 0.55;
+      transform: translate3d(22%, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  .ph-route-enter {
+    animation: ph-ios-push 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+    transform-origin: 50% 50%;
+  }
+
+  /* UIKit tap feedback: quick dim + subtle press, springs back */
+  .press:active,
+  button:not(:disabled):active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.55;
+    transform: scale(0.975);
+    transition-duration: 0.06s;
+  }
+
+  /* Tab bar — SF-style caption + selected icon pop */
+  .ph-tabbar {
+    border-top-width: 0.33px;
+  }
+  .ph-tab-label {
+    font-size: 0.5938rem;
+    letter-spacing: 0.005em;
+    font-weight: 590;
+  }
+  .ph-tabbar a[aria-current="page"] .ph-tab-icon-active,
+  .ph-tab-icon-active {
+    animation: ph-ios-tab-pop 0.28s cubic-bezier(0.32, 1.35, 0.5, 1) both;
+  }
+  @keyframes ph-ios-tab-pop {
+    from { transform: scale(0.88); }
+    to { transform: scale(1); }
+  }
+
+  /* Navigation bar — centered title, hairline separator */
+  .ph-header {
+    border-bottom-width: 0.33px;
+  }
+  .ph-nav-title {
+    font-size: 1.0625rem;
+    font-weight: 650;
+    letter-spacing: -0.022em;
+  }
+}

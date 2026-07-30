@@ -226,7 +226,8 @@ export function GlobalLiveChat({
     <div
       className={cn(
         "flex min-h-0 flex-col overflow-hidden rounded-3xl border border-border/40 bg-background",
-        fill ? "h-full flex-1" : "h-[min(40rem,calc(100dvh-8rem))]",
+        fill ? "h-full flex-1 lg:rounded-none lg:border-0" : "h-[min(40rem,calc(100dvh-8rem))]",
+
         className,
       )}
     >

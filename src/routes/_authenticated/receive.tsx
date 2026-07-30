@@ -412,8 +412,10 @@ function ReceivePage() {
                         type="button"
                         className="mt-2 font-mono text-[11px] font-semibold text-[#6B4EFF] underline-offset-2 hover:underline"
                         onClick={() => {
-                          void copyText(profile.pi_wallet_address!);
-                          toast.success("Pi wallet address copied");
+                          void copyText(profile.pi_wallet_address!).then(
+                            () => toast.success("Pi wallet address copied"),
+                            () => toast.error("Copy failed"),
+                          );
                         }}
                       >
                         {profile.pi_wallet_address}

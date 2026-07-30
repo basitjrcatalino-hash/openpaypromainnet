@@ -246,7 +246,7 @@ export const sellOpenToken = createServerFn({ method: "POST" })
       p_token_id: data.token_id,
       p_wallet_id: data.wallet_id,
       p_side: "sell",
-      p_pi_amount: null,
+      p_pi_amount: undefined,
       p_token_amount: data.token_amount,
     });
     if (error) throw new Error(error.message);

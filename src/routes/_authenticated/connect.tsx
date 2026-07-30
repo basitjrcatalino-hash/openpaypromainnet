@@ -12,6 +12,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -51,7 +52,7 @@ function useCopyButton(text: string) {
   async function copy() {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(true);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 1500);

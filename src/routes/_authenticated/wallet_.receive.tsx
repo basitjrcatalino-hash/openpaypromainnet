@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Check, Copy, Link2, Loader2, QrCode, Share2 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -236,7 +237,7 @@ function WalletReceivePage() {
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyText(wallet.address);
       setCopied(true);
       toast.success(`${displayAsset} receive address copied`);
       window.setTimeout(() => setCopied(false), 1600);
@@ -248,7 +249,7 @@ function WalletReceivePage() {
   async function copyPayUri() {
     if (!payUri) return;
     try {
-      await navigator.clipboard.writeText(payUri);
+      await copyText(payUri);
       toast.success("Receive link copied");
     } catch {
       toast.error("Copy failed");
@@ -446,8 +447,10 @@ function WalletReceivePage() {
                           type="button"
                           className="mt-1 break-all font-mono text-[11px] text-[#6B4EFF]"
                           onClick={() => {
-                            void navigator.clipboard.writeText(profile.pi_wallet_address!);
-                            toast.success("Pi wallet address copied");
+                            void copyText(profile.pi_wallet_address!).then(
+                              () => toast.success("Pi wallet address copied"),
+                              () => toast.error("Copy failed"),
+                            );
                           }}
                         >
                           {profile.pi_wallet_address}

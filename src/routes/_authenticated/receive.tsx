@@ -14,6 +14,7 @@ import {
   Link2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import QRCode from "qrcode";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -288,7 +289,7 @@ function ReceivePage() {
   async function copyAddr() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyText(wallet.address);
       setCopied(true);
       toast.success("Address copied");
       window.setTimeout(() => setCopied(false), 1500);
@@ -319,7 +320,7 @@ function ReceivePage() {
       }
     }
     try {
-      await navigator.clipboard.writeText(payUri);
+      await copyText(payUri);
       toast.success("Payment link copied");
     } catch {
       toast.error("Copy failed");
@@ -411,8 +412,10 @@ function ReceivePage() {
                         type="button"
                         className="mt-2 font-mono text-[11px] font-semibold text-[#6B4EFF] underline-offset-2 hover:underline"
                         onClick={() => {
-                          void navigator.clipboard.writeText(profile.pi_wallet_address!);
-                          toast.success("Pi wallet address copied");
+                          void copyText(profile.pi_wallet_address!).then(
+                            () => toast.success("Pi wallet address copied"),
+                            () => toast.error("Copy failed"),
+                          );
                         }}
                       >
                         {profile.pi_wallet_address}
@@ -613,7 +616,7 @@ function ReceivePage() {
                   className="rounded-full"
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(opLink.pay_url);
+                      await copyText(opLink.pay_url);
                       toast.success("OpenPay link copied");
                     } catch {
                       toast.error("Copy failed");

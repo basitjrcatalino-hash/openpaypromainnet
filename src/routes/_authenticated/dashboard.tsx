@@ -22,6 +22,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -297,7 +298,7 @@ function Dashboard() {
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyText(wallet.address);
       setCopied(true);
       toast.success("Address copied");
       setTimeout(() => setCopied(false), 1500);

@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -139,7 +140,7 @@ function ProfilePage() {
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyText(wallet.address);
       toast.success("Address copied");
     } catch {
       toast.error("Copy failed");

@@ -17,6 +17,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -438,7 +439,7 @@ function PhantomAssetDetail() {
 
   async function copy(text: string, label = "Copied") {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       toast.success(label);
     } catch {
       toast.error("Copy failed");

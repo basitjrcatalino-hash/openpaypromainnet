@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 import { Loader2, Plus, Copy, Ban, ShieldCheck } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -233,7 +234,7 @@ function AdminTopupPage() {
                   <div className="flex items-center gap-2">
                     <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{v.code}</code>
                     <button
-                      onClick={() => { navigator.clipboard.writeText(v.code); toast.success("Copied"); }}
+                      onClick={() => { void copyToClipboardRobust(v.code).then(() => toast.success("Copied"), () => toast.error("Copy failed")); }}
                       className="text-muted-foreground hover:text-foreground"
                       title="Copy"
                     >

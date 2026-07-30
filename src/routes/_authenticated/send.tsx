@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -488,7 +489,7 @@ function SendPage() {
       return;
     }
     try {
-      await navigator.clipboard.writeText(next);
+      await copyText(next);
       toast.success("OpenPay wallet copied");
     } catch {
       toast.error("Copy failed");

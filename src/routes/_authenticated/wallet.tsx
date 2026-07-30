@@ -18,6 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 import { Button } from "@/components/ui/button";
 import { OusdIcon } from "@/components/ousd-icon";
@@ -151,7 +152,7 @@ function CryptoWalletPage() {
   async function copyAddress() {
     if (!wallet?.address) return;
     try {
-      await navigator.clipboard.writeText(wallet.address);
+      await copyText(wallet.address);
       toast.success("OpenPay Pro address copied");
     } catch {
       toast.error("Copy failed");

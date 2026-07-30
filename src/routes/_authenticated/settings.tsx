@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -686,8 +687,10 @@ function SettingsPage() {
             setRenameValue(w.name);
           }}
           onCopy={(w) => {
-            void navigator.clipboard.writeText(w.address);
-            toast.success("Address copied");
+            void copyToClipboardRobust(w.address).then(
+              () => toast.success("Address copied"),
+              () => toast.error("Copy failed"),
+            );
           }}
           onRemove={(w) => setConfirmDeleteId(w.id)}
         />
@@ -786,8 +789,10 @@ function SettingsPage() {
                         variant="outline"
                         className="flex-1 rounded-full"
                         onClick={() => {
-                          navigator.clipboard.writeText(mnemonic.join(" "));
-                          toast.success("Phrase copied");
+                          void copyToClipboardRobust(mnemonic.join(" ")).then(
+                            () => toast.success("Phrase copied"),
+                            () => toast.error("Copy failed"),
+                          );
                         }}
                       >
                         <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy
@@ -1695,8 +1700,10 @@ function RecoveryCard({
                 variant="outline"
                 className="rounded-full"
                 onClick={() => {
-                  navigator.clipboard.writeText(phrase.join(" "));
-                  toast.success("Copied");
+                  void copyToClipboardRobust(phrase.join(" ")).then(
+                    () => toast.success("Copied"),
+                    () => toast.error("Copy failed"),
+                  );
                 }}
               >
                 <Copy className="mr-1.5 h-3.5 w-3.5" />

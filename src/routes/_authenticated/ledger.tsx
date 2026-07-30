@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +60,10 @@ function useApiBase() {
 }
 
 function copyText(text: string, label = "Copied") {
-  void navigator.clipboard.writeText(text);
-  toast.success(label);
+  void copyToClipboardRobust(text).then(
+    () => toast.success(label),
+    () => toast.error("Copy failed"),
+  );
 }
 
 function LedgerPage() {

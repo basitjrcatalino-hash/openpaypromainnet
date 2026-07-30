@@ -366,7 +366,8 @@ export function useCurrency() {
 
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
-    await navigator.clipboard.writeText(text);
+    const { copyText } = await import("@/lib/clipboard");
+    await copyText(text);
     return true;
   } catch {
     return false;

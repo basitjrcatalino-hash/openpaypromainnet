@@ -23,6 +23,7 @@ import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-p
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
@@ -168,6 +169,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
   id: '/admin/testnet-progress',
@@ -610,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -701,6 +708,7 @@ export interface FileRoutesByTo {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -794,6 +802,7 @@ export interface FileRoutesById {
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
+  '/api/chat': typeof ApiChatRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
@@ -887,6 +896,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1070,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/watchlist'
     | '/_authenticated/wc-pay'
     | '/admin/testnet-progress'
+    | '/api/chat'
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
@@ -1141,6 +1153,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
+  ApiChatRoute: typeof ApiChatRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
@@ -1275,6 +1288,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/testnet-progress': {
       id: '/admin/testnet-progress'
@@ -1977,6 +1997,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
+  ApiChatRoute: ApiChatRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,

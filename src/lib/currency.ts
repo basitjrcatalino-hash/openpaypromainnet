@@ -343,11 +343,7 @@ export function getFxTick() {
 }
 
 export function useCurrency() {
-  const code = useSyncExternalStore(
-    subscribeDisplayCurrency,
-    getDisplayCurrencyCode,
-    () => "USD",
-  );
+  const code = useSyncExternalStore(subscribeDisplayCurrency, getDisplayCurrencyCode, () => "USD");
 
   useSyncExternalStore(subscribeFxRates, getFxTick, () => 0);
 

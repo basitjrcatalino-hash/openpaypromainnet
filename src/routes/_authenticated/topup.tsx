@@ -811,14 +811,16 @@ function TopUpPage() {
               }
               onClick={() => openConfirm()}
               className={cn(
-                "h-14 w-full rounded-full text-base font-bold",
-                method === "openpay_balance" && "bg-[#0070BA] hover:opacity-90",
-                method === "moonpay" && "bg-[#7D00FE] hover:bg-[#7D00FE]/90",
+                "h-14 w-full rounded-full text-base font-bold text-primary-foreground",
+                method === "openpay_balance" &&
+                  "bg-[#0070BA] text-white hover:bg-[#0070BA]/90 hover:text-white",
+                method === "moonpay" &&
+                  "bg-[#7D00FE] text-white hover:bg-[#7D00FE]/90 hover:text-white",
               )}
             >
-              {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin text-white" /> : null}
               Review {formatOUSD(amtNum, { suffix: false })} OUSD
-              <ChevronRight className="ml-1 h-5 w-5 opacity-80" />
+              <ChevronRight className="ml-1 h-5 w-5 opacity-90 text-white" />
             </Button>
             <p className="text-center text-[11px] text-muted-foreground">
               Fees & third-party terms shown before you pay

@@ -8,7 +8,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -86,9 +92,7 @@ function CurrencyRow({
         <span
           className={cn(
             "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
-            selected
-              ? "border-primary bg-primary"
-              : "border-muted-foreground/50 bg-background",
+            selected ? "border-primary bg-primary" : "border-muted-foreground/50 bg-background",
           )}
           aria-hidden
         >
@@ -174,11 +178,7 @@ export function CurrencyPickerSheet({ open, onOpenChange, value, onSelect }: Pro
             <SheetTitle>Currency</SheetTitle>
             <SheetDescription>Choose a display currency</SheetDescription>
           </SheetHeader>
-          <PickerBody
-            value={value}
-            onSelect={handleSelect}
-            onBack={() => onOpenChange(false)}
-          />
+          <PickerBody value={value} onSelect={handleSelect} onBack={() => onOpenChange(false)} />
         </SheetContent>
       </Sheet>
     );
@@ -191,11 +191,7 @@ export function CurrencyPickerSheet({ open, onOpenChange, value, onSelect }: Pro
           <DialogTitle>Currency</DialogTitle>
           <DialogDescription>Choose a display currency</DialogDescription>
         </DialogHeader>
-        <PickerBody
-          value={value}
-          onSelect={handleSelect}
-          onBack={() => onOpenChange(false)}
-        />
+        <PickerBody value={value} onSelect={handleSelect} onBack={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

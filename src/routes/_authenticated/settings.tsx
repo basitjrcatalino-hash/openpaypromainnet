@@ -39,11 +39,8 @@ import { ManageWalletsSheet } from "@/components/wallet/ManageWalletsSheet";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
-import {
-  currencyListLabel,
-  getCurrencyMeta,
-  useCurrency,
-} from "@/lib/currency";
+import { currencyListLabel, getCurrencyMeta, useCurrency, type CurrencyCode } from "@/lib/currency";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import {
   createFreshRecoveryWallet,
   deriveWalletFromPhrase,
@@ -88,6 +85,19 @@ type SettingsWallet = {
   ousd_balance: number | null;
   pi_balance: number | null;
   created_at: string;
+};
+
+type UserPrefs = Tables<"user_preferences"> & {
+  pin_set?: boolean;
+};
+
+type PrefPatch = Partial<
+  Pick<
+    Tables<"user_preferences">,
+    "currency" | "language" | "theme" | "biometric_enabled" | "recovery_backed_up" | "pin_hash"
+  >
+> & {
+  notifications?: Record<string, unknown>;
 };
 
 async function sha256(text: string): Promise<string> {
@@ -149,18 +159,19 @@ function SettingsPage() {
 
   const { data: prefs } = useQuery({
     queryKey: ["prefs", user.id],
-    queryFn: async (): Promise<Record<string, any>> => {
+    queryFn: async (): Promise<UserPrefs | null> => {
       const [{ data: row }, { data: hasPin }] = await Promise.all([
         supabase
           .from("user_preferences")
           .select(
-            "user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,created_at,updated_at",
+            "user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,pin_hash,updated_at",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase.rpc("has_user_pin"),
       ]);
-      return { ...((row as Record<string, any>) ?? {}), pin_set: !!hasPin };
+      if (!row) return { pin_set: !!hasPin } as UserPrefs;
+      return { ...row, pin_set: !!hasPin };
     },
   });
 
@@ -178,11 +189,11 @@ function SettingsPage() {
 
   useEffect(() => {
     if (profile) {
-      if (profile.display_name && !displayName) setDisplayName(profile.display_name as string);
-      if ((profile as any).username && !username) setUsername((profile as any).username as string);
+      if (profile.display_name && !displayName) setDisplayName(profile.display_name);
+      if (profile.username && !username) setUsername(profile.username);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.display_name, (profile as any)?.username]);
+  }, [profile?.display_name, profile?.username]);
 
   function resetAddDialog() {
     setNewName("");
@@ -271,7 +282,7 @@ function SettingsPage() {
           is_active: true,
           ousd_balance: 0,
           pi_balance: 0,
-        } as any)
+        } as never)
         .select("id,address,name")
         .single();
 
@@ -381,9 +392,7 @@ function SettingsPage() {
       toast.error("Paste an OpenPay Pro wallet address");
       return;
     }
-    const match = wallets.find(
-      (w) => (w.address ?? "").toLowerCase() === addr.toLowerCase(),
-    );
+    const match = wallets.find((w) => (w.address ?? "").toLowerCase() === addr.toLowerCase());
     if (!match) {
       toast.error("Address not in your account — import with the recovery phrase to restore it");
       return;
@@ -447,29 +456,38 @@ function SettingsPage() {
     qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
   }
 
-  async function updatePref(patch: Record<string, any>) {
+  async function updatePref(patch: PrefPatch) {
     // Always merge notifications against the latest DB row so a stale React
     // Query cache cannot wipe the persisted OpenPay connect session.
+    let nextPatch: PrefPatch = { ...patch };
     if (patch.notifications && typeof patch.notifications === "object") {
       const { data: row } = await supabase
         .from("user_preferences")
         .select("notifications")
         .eq("user_id", user.id)
         .maybeSingle();
-      const latest = (row?.notifications as Record<string, unknown> | null) ?? {};
-      const next = {
+      const latest =
+        row?.notifications &&
+        typeof row.notifications === "object" &&
+        !Array.isArray(row.notifications)
+          ? (row.notifications as Record<string, unknown>)
+          : {};
+      const next: Record<string, unknown> = {
         ...latest,
-        ...(patch.notifications as Record<string, unknown>),
+        ...patch.notifications,
       };
       // Preserve OpenPay link unless this patch explicitly clears it
       if (latest.openpay && !Object.prototype.hasOwnProperty.call(patch.notifications, "openpay")) {
         next.openpay = latest.openpay;
       }
-      patch = { ...patch, notifications: next };
+      nextPatch = { ...patch, notifications: next };
     }
-    await supabase
-      .from("user_preferences")
-      .upsert({ user_id: user.id, ...patch, updated_at: new Date().toISOString() });
+    await supabase.from("user_preferences").upsert({
+      user_id: user.id,
+      ...nextPatch,
+      notifications: nextPatch.notifications as Json | undefined,
+      updated_at: new Date().toISOString(),
+    });
     qc.invalidateQueries({ queryKey: ["prefs", user.id] });
     qc.invalidateQueries({ queryKey: ["openpay-link", user.id] });
   }
@@ -494,7 +512,7 @@ function SettingsPage() {
           <div className="flex flex-col gap-5 md:flex-row md:items-start">
             <div className="flex flex-col items-center gap-2">
               <Avatar className="h-20 w-20 ring-2 ring-primary/30">
-                <AvatarImage src={(profile as any)?.avatar_url ?? undefined} />
+                <AvatarImage src={profile?.avatar_url ?? undefined} />
                 <AvatarFallback className="bg-primary/20 text-lg text-primary">
                   {(displayName || user.email || "U")[0].toUpperCase()}
                 </AvatarFallback>
@@ -548,12 +566,12 @@ function SettingsPage() {
                   Others can send to you using{" "}
                   <span className="font-mono">@{username || "yourname"}</span>. Email:{" "}
                   <span className="font-mono">{user.email}</span>
-                  {(profile as any)?.pi_username && (
+                  {profile?.pi_username ? (
                     <>
                       {" "}
-                      · Pi: <span className="font-mono">@{(profile as any).pi_username}</span>
+                      · Pi: <span className="font-mono">@{profile.pi_username}</span>
                     </>
-                  )}
+                  ) : null}
                 </p>
               </div>
               <Button
@@ -676,7 +694,7 @@ function SettingsPage() {
         <CurrencyPickerSheet
           open={currencyOpen}
           onOpenChange={setCurrencyOpen}
-          value={prefs?.currency || displayCurrency || "USD"}
+          value={(prefs?.currency || displayCurrency || "USD") as CurrencyCode}
           onSelect={(code) => {
             setDisplayCurrency(code);
             void updatePref({ currency: code });
@@ -919,11 +937,11 @@ function SettingsPage() {
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
             <BiometricCard
-              enabled={!!(prefs as any)?.biometric_enabled}
+              enabled={!!prefs?.biometric_enabled}
               onToggle={(v) => updatePref({ biometric_enabled: v })}
             />
             <PinCard
-              hasPin={!!(prefs as any)?.pin_set}
+              hasPin={!!prefs?.pin_set}
               onSave={async (pin) => {
                 const h = await sha256(`${user.id}:${pin}`);
                 await updatePref({ pin_hash: h });
@@ -937,7 +955,7 @@ function SettingsPage() {
             <RecoveryCard
               wallets={wallets}
               recoveryFlags={recoveryFlags}
-              backedUp={!!(prefs as any)?.recovery_backed_up}
+              backedUp={!!prefs?.recovery_backed_up}
               onConfirm={async () => {
                 await updatePref({ recovery_backed_up: true });
                 toast.success("Marked as backed up");
@@ -980,9 +998,7 @@ function SettingsPage() {
                 className="flex h-9 max-w-[14rem] items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
               >
                 <span className="truncate">
-                  {currencyListLabel(
-                    getCurrencyMeta(prefs?.currency || displayCurrency || "USD"),
-                  )}
+                  {currencyListLabel(getCurrencyMeta(prefs?.currency || displayCurrency || "USD"))}
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </button>
@@ -1029,7 +1045,10 @@ function SettingsPage() {
                 }
               />
             </SettingRow>
-            <SettingRow label="Lock-screen push" desc="System notifications when phone is locked or app is closed (Phantom-style)">
+            <SettingRow
+              label="Lock-screen push"
+              desc="System notifications when phone is locked or app is closed (Phantom-style)"
+            >
               <Switch
                 checked={
                   (prefs?.notifications as Record<string, boolean> | null)?.browser_push ?? false
@@ -1043,7 +1062,9 @@ function SettingsPage() {
                       return;
                     }
                     if (status === "unsupported") {
-                      toast.error("Push not supported on this device — install to Home Screen on iOS");
+                      toast.error(
+                        "Push not supported on this device — install to Home Screen on iOS",
+                      );
                       return;
                     }
                     if (status === "error") {
@@ -1064,7 +1085,10 @@ function SettingsPage() {
                 }}
               />
             </SettingRow>
-            <SettingRow label="Email alerts" desc="Email every confirmed transaction to your account email">
+            <SettingRow
+              label="Email alerts"
+              desc="Email every confirmed transaction to your account email"
+            >
               <Switch
                 checked={
                   (prefs?.notifications as Record<string, boolean> | null)?.email_alerts ?? true

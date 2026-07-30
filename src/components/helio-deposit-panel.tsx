@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MoonpayCommerceDeposit } from "@heliofi/deposit-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +19,18 @@ type Props = {
   onError?: (message: string) => void;
 };
 
+type DepositWidgetProps = {
+  config: {
+    depositCustomerToken: string;
+    network?: "main" | "test";
+    display?: "inline" | "button" | "new-tab" | "modal";
+    themeMode?: "light" | "dark";
+    onReady?: () => void;
+    onSuccess?: () => void;
+    onError?: (error: { message: string }) => void;
+  };
+};
+
 function formatPayUsd(n: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -31,8 +42,8 @@ function formatPayUsd(n: number): string {
 
 /**
  * Inline MoonPay Commerce (Helio) deposit widget for Buy / top-up.
- * Re-fetches an amount-scoped deposit customer whenever `amountUsd` changes
- * so SOL / USDC checkout matches the Buy input exactly.
+ * Widget is loaded client-only (avoids SSR crashes from @heliofi/deposit-react).
+ * Re-fetches an amount-scoped deposit customer whenever `amountUsd` changes.
  */
 export function HelioDepositPanel({
   product = "crypto",
@@ -42,6 +53,9 @@ export function HelioDepositPanel({
   onError,
 }: Props) {
   const getSession = useServerFn(getHelioDepositSession);
+  const [DepositWidget, setDepositWidget] = useState<ComponentType<DepositWidgetProps> | null>(
+    null,
+  );
   const [token, setToken] = useState<string | null>(null);
   const [sessionAmount, setSessionAmount] = useState<number | null>(null);
   const [amountLocked, setAmountLocked] = useState(false);
@@ -50,8 +64,25 @@ export function HelioDepositPanel({
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
-  const lockedAmount =
-    Number.isFinite(amountUsd) && amountUsd >= 1 ? Math.round(amountUsd) : 0;
+  const lockedAmount = Number.isFinite(amountUsd) && amountUsd >= 1 ? Math.round(amountUsd) : 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    void import("@heliofi/deposit-react")
+      .then((mod) => {
+        if (cancelled) return;
+        setDepositWidget(() => mod.MoonpayCommerceDeposit as ComponentType<DepositWidgetProps>);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        const msg = (e as Error).message || "Could not load MoonPay Commerce deposit widget";
+        setError(msg);
+        onErrorRef.current?.(msg);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (lockedAmount < 1) {
@@ -79,7 +110,6 @@ export function HelioDepositPanel({
           if (cancelled) return;
           setToken(session.depositCustomerToken);
           setSessionAmount(session.amountUsd ?? lockedAmount);
-          // API mode creates amount-scoped Helio customers with defaultOnrampAmount
           setAmountLocked(session.mode === "api");
         } catch (e) {
           if (cancelled) return;
@@ -106,17 +136,16 @@ export function HelioDepositPanel({
           className,
         )}
       >
-        Enter an amount above to pay with{" "}
-        {product === "usdc" ? "USDC" : "SOL / crypto"}.
+        Enter an amount above to pay with {product === "usdc" ? "USDC" : "SOL / crypto"}.
       </div>
     );
   }
 
-  if (loading) {
+  if (loading || !DepositWidget) {
     return (
       <div
         className={cn(
-          "flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-2xl bg-muted/40",
+          "flex min-h-70 flex-col items-center justify-center gap-2 rounded-2xl bg-muted/40",
           className,
         )}
       >
@@ -148,29 +177,23 @@ export function HelioDepositPanel({
       <div className="rounded-xl bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
         {product === "usdc" ? (
           <>
-            Pay exactly <span className="font-semibold text-foreground">{payLabel}</span>{" "}
-            in USDC →{" "}
-            <span className="font-semibold text-foreground">{payLabel} OUSD</span>{" "}
-            credited 1:1
+            Pay exactly <span className="font-semibold text-foreground">{payLabel}</span> in USDC →{" "}
+            <span className="font-semibold text-foreground">{payLabel} OUSD</span> credited 1:1
             {!amountLocked
               ? " · send this exact amount in the widget"
               : " · amount locked in checkout"}
           </>
         ) : (
           <>
-            Deposit{" "}
-            <span className="font-semibold text-foreground">{payLabel}</span> worth
-            of SOL / crypto →{" "}
-            <span className="font-semibold text-foreground">{payLabel} OUSD</span>{" "}
-            when confirmed
-            {!amountLocked
-              ? " · match this amount in the widget"
-              : " · amount locked in checkout"}
+            Deposit <span className="font-semibold text-foreground">{payLabel}</span> worth of SOL /
+            crypto → <span className="font-semibold text-foreground">{payLabel} OUSD</span> when
+            confirmed
+            {!amountLocked ? " · match this amount in the widget" : " · amount locked in checkout"}
           </>
         )}
       </div>
       <div className="overflow-hidden rounded-2xl bg-card">
-        <MoonpayCommerceDeposit
+        <DepositWidget
           key={`${product}-${lockedAmount}-${token}`}
           config={{
             depositCustomerToken: token,

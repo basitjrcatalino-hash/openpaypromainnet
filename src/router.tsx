@@ -20,6 +20,8 @@ export const getRouter = () => {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 30_000,
+    // Soft Phantom-like crossfade when the browser supports View Transitions.
+    defaultViewTransition: true,
   });
 
   return router;

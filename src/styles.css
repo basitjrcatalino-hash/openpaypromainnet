@@ -325,13 +325,67 @@
   }
 }
 
-/* Opacity-only: transform would create a containing block and break position:fixed docks/tabbars. */
+/* Opacity-only legacy helper — layout PageTransition owns Phantom enter motion. */
 @keyframes page-in {
-  from { opacity: 0.88; }
+  from { opacity: 0.92; }
   to   { opacity: 1; }
 }
 @utility animate-page-in {
-  animation: page-in .12s ease-out both;
+  animation: page-in .18s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* Phantom-style route enter (fade + soft rise). Cleared after animationend. */
+@keyframes ph-route-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@utility ph-route-enter {
+  animation: ph-route-enter .34s cubic-bezier(.22, 1, .36, 1) both;
+  will-change: opacity, transform;
+  transform-origin: 50% 0%;
+}
+
+/* Avoid double-enter when pages also use animate-page-in */
+.ph-route-enter .animate-page-in {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-route-enter {
+    animation: page-in .01ms linear both !important;
+    transform: none !important;
+  }
+}
+
+/* Progressive enhancement — soft crossfade when View Transitions API is used */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root) {
+    animation: ph-vt-out .22s cubic-bezier(.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: ph-vt-in .32s cubic-bezier(.22, 1, .36, 1) both;
+  }
+}
+
+@keyframes ph-vt-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes ph-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scan-line {
@@ -492,7 +546,6 @@
   margin-inline: auto;
   width: 100%;
   max-width: 32rem;
-  animation: page-in .12s ease-out both;
 }
 
 @utility ph-group {

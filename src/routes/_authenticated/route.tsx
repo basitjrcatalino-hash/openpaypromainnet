@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
+import { PageTransition } from "@/components/wallet/PageTransition";
 import { CurrencyProvider } from "@/components/currency-provider";
 import { toast } from "sonner";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
@@ -266,7 +267,9 @@ function AuthenticatedLayout() {
               hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
             )}
           >
-            <Outlet />
+            <PageTransition disabled={hideChrome}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
 

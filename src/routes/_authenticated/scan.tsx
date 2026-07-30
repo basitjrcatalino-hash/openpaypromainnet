@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { isWalletConnectPayLink, normalizeWalletConnectPayLink } from "@/lib/walletconnect-pay";
-import { scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
+import { isEmbeddedFrame, scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
 import { shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 

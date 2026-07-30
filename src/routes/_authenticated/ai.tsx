@@ -170,7 +170,7 @@ function AiAssistantPage() {
           width={512}
           height={512}
           loading="lazy"
-          className="h-8 w-8 rounded-[0.6rem]"
+          className={cn("h-8 w-8 rounded-[0.6rem]", AVATAR_PLATE)}
         />
         <span className="text-base font-bold">OpenPay AI</span>
         <button
@@ -195,7 +195,7 @@ function AiAssistantPage() {
               alt="OpenPay AI assistant"
               width={512}
               height={512}
-              className="h-20 w-20 rounded-[1.4rem] shadow-lg"
+              className={cn("h-20 w-20 rounded-[1.4rem] p-3 shadow-lg", AVATAR_PLATE)}
             />
             <h1 className="text-2xl font-bold">OpenPay AI</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -272,7 +272,7 @@ function AiAssistantPage() {
                   width={512}
                   height={512}
                   loading="lazy"
-                  className="h-7 w-7 rounded-[0.6rem]"
+                  className={cn("h-7 w-7 rounded-[0.6rem]", AVATAR_PLATE)}
                 />
                 <span className="animate-pulse">Thinking…</span>
               </div>

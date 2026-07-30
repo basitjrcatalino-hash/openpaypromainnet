@@ -125,7 +125,7 @@ export function MetaMaskEmbeddedAuthPanel({
         <p className="text-center text-[11px] text-destructive">
           {!WEB3AUTH_CLIENT_ID
             ? "Missing VITE_WEB3AUTH_CLIENT_ID"
-            : initError?.message || error?.message || "Connection error"}
+            : (initError as Error | undefined)?.message || (error as Error | undefined)?.message || "Connection error"}
         </p>
       )}
       <p className="text-center text-[10px] text-muted-foreground">

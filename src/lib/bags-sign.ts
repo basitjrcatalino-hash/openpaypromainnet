@@ -39,6 +39,8 @@ type PhantomProvider = {
   ) => Promise<{ signature: Uint8Array } | Uint8Array>;
 };
 
+type Bs58 = { encode: (b: Uint8Array) => string; decode: (s: string) => Uint8Array };
+
 async function loadSolana() {
   await ensureBuffer();
   const Buf = (globalThis as { Buffer?: { from?: unknown } }).Buffer;
@@ -52,7 +54,7 @@ async function loadSolana() {
   return {
     Transaction,
     VersionedTransaction,
-    bs58: (bs58 as { default?: typeof bs58 }).default ?? bs58,
+    bs58: ((bs58 as unknown as { default?: Bs58 }).default ?? (bs58 as unknown as Bs58)),
   };
 }
 

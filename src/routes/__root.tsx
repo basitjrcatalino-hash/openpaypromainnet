@@ -160,6 +160,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "stylesheet", href: appCss },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "OpenPay Pro",
+              url: "https://openpaypro.space",
+              logo: "https://openpaypro.space/ousd-logo.svg",
+            },
+            {
+              "@type": "WebSite",
+              name: "OpenPay Pro Wallet",
+              url: "https://openpaypro.space",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

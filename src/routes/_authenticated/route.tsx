@@ -683,7 +683,7 @@ function SidebarInner({
             className={cn("h-5 w-5", pathname === "/ai" && "ph-tab-icon-active")}
             strokeWidth={pathname === "/ai" ? 2.25 : 1.75}
           />
-          Nova AI
+          OpenPay AI
         </Link>
         {developerMode && (
           <>

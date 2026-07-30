@@ -50,7 +50,7 @@ function AiAssistantPage() {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, setMessages } = useChat({
     transport,
-    onError: (e) => toast.error(e.message || "Nova is unavailable right now"),
+    onError: (e) => toast.error(e.message || "OpenPay AI is unavailable right now"),
   });
 
   const [input, setInput] = useState("");
@@ -167,7 +167,7 @@ function AiAssistantPage() {
                     loading="lazy"
                     className="mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]"
                   />
-                  <NovaMarkdown text={text} />
+                  <OpenPayMarkdown text={text} />
 
                 </div>
               );
@@ -234,7 +234,7 @@ function AiAssistantPage() {
  * Claude-style answer typography: generous line height, clear heading rhythm,
  * readable lists, soft code blocks and bordered tables.
  */
-function NovaMarkdown({ text }: { text: string }) {
+function OpenPayMarkdown({ text }: { text: string }) {
   return (
     <div className="min-w-0 max-w-none text-[15px] leading-[1.75] tracking-[-0.005em] text-foreground">
       <ReactMarkdown

@@ -484,10 +484,18 @@ export function usePhantomQrScanner({
         });
       } catch (e) {
         if (cancelled) return;
+        const name = e && typeof e === "object" && "name" in e ? String((e as { name: string }).name) : "";
+        // A denied permission won't be fixed by the html5-qrcode fallback — surface it now.
+        if (name === "NotAllowedError" || name === "SecurityError" || isInsecureContext()) {
+          setError(friendlyCameraError(e));
+          setStarting(false);
+          return;
+        }
         setUseFallback(true);
         setError(null);
         setStarting(true);
         console.warn("[scan] native camera failed, using fallback", e);
+
       }
     })();
 

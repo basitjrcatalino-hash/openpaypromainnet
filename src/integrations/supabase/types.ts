@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      crypto_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          direction: string
+          id: string
+          network: string
+          provider_tx_id: string | null
+          status: string
+          token: string
+          tx_hash: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          direction: string
+          id?: string
+          network: string
+          provider_tx_id?: string | null
+          status?: string
+          token?: string
+          tx_hash?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          network?: string
+          provider_tx_id?: string | null
+          status?: string
+          token?: string
+          tx_hash?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_wallets: {
+        Row: {
+          address: string
+          blockchain: string
+          circle_wallet_id: string | null
+          created_at: string
+          id: string
+          provider: string
+          status: string
+          user_id: string
+          wallet_set_id: string | null
+        }
+        Insert: {
+          address: string
+          blockchain?: string
+          circle_wallet_id?: string | null
+          created_at?: string
+          id?: string
+          provider?: string
+          status?: string
+          user_id: string
+          wallet_set_id?: string | null
+        }
+        Update: {
+          address?: string
+          blockchain?: string
+          circle_wallet_id?: string | null
+          created_at?: string
+          id?: string
+          provider?: string
+          status?: string
+          user_id?: string
+          wallet_set_id?: string | null
+        }
+        Relationships: []
+      }
+      global_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ledger_api_keys: {
         Row: {
           active: boolean
@@ -272,6 +385,292 @@ export type Database = {
           },
         ]
       }
+      ot_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_comments_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_favorites: {
+        Row: {
+          created_at: string
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_favorites_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_follows: {
+        Row: {
+          created_at: string
+          creator_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          follower_id?: string
+        }
+        Relationships: []
+      }
+      ot_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          href: string | null
+          id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ot_price_ticks: {
+        Row: {
+          created_at: string
+          id: string
+          market_cap: number
+          price: number
+          token_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market_cap?: number
+          price: number
+          token_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market_cap?: number
+          price?: number
+          token_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_price_ticks_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["ot_report_status"]
+          token_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ot_report_status"]
+          token_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ot_report_status"]
+          token_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_reports_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_token_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          token_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          token_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          token_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_token_chat_messages_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_trade_cooldown: {
+        Row: {
+          last_trade_at: string
+          user_id: string
+        }
+        Insert: {
+          last_trade_at?: string
+          user_id: string
+        }
+        Update: {
+          last_trade_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ot_trades: {
+        Row: {
+          created_at: string
+          id: string
+          pi_amount: number
+          price: number
+          side: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount: number
+          token_id: string
+          tx_ref: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pi_amount: number
+          price: number
+          side: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount: number
+          token_id: string
+          tx_ref?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pi_amount?: number
+          price?: number
+          side?: Database["public"]["Enums"]["ot_trade_side"]
+          token_amount?: number
+          token_id?: string
+          tx_ref?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_trades_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_trades_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pi_a2u_transactions: {
         Row: {
           amount: number
@@ -458,6 +857,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       token_holdings: {
         Row: {
           balance: number
@@ -617,290 +1049,6 @@ export type Database = {
           twitter?: string | null
           volume_24h?: number
           website?: string | null
-        }
-        Relationships: []
-      }
-      ot_trades: {
-        Row: {
-          created_at: string
-          id: string
-          pi_amount: number
-          price: number
-          side: Database["public"]["Enums"]["ot_trade_side"]
-          token_amount: number
-          token_id: string
-          tx_ref: string | null
-          user_id: string
-          wallet_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          pi_amount: number
-          price: number
-          side: Database["public"]["Enums"]["ot_trade_side"]
-          token_amount: number
-          token_id: string
-          tx_ref?: string | null
-          user_id: string
-          wallet_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          pi_amount?: number
-          price?: number
-          side?: Database["public"]["Enums"]["ot_trade_side"]
-          token_amount?: number
-          token_id?: string
-          tx_ref?: string | null
-          user_id?: string
-          wallet_id?: string
-        }
-        Relationships: []
-      }
-      ot_comments: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          token_id: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          token_id: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          token_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ot_token_chat_messages: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          media_url: string | null
-          token_id: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          kind?: string
-          media_url?: string | null
-          token_id: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          media_url?: string | null
-          token_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ot_token_chat_messages_token_id_fkey"
-            columns: ["token_id"]
-            isOneToOne: false
-            referencedRelation: "tokens"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      global_chat_messages: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          media_url: string | null
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          kind?: string
-          media_url?: string | null
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          media_url?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          id: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          user_agent: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          user_agent?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          endpoint?: string
-          p256dh?: string
-          auth?: string
-          user_agent?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      ot_favorites: {
-        Row: {
-          created_at: string
-          token_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          token_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          token_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ot_follows: {
-        Row: {
-          created_at: string
-          creator_id: string
-          follower_id: string
-        }
-        Insert: {
-          created_at?: string
-          creator_id: string
-          follower_id: string
-        }
-        Update: {
-          created_at?: string
-          creator_id?: string
-          follower_id?: string
-        }
-        Relationships: []
-      }
-      ot_reports: {
-        Row: {
-          created_at: string
-          id: string
-          reason: string
-          reporter_id: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: Database["public"]["Enums"]["ot_report_status"]
-          token_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          reason: string
-          reporter_id: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: Database["public"]["Enums"]["ot_report_status"]
-          token_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          reason?: string
-          reporter_id?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: Database["public"]["Enums"]["ot_report_status"]
-          token_id?: string
-        }
-        Relationships: []
-      }
-      ot_notifications: {
-        Row: {
-          body: string | null
-          created_at: string
-          href: string | null
-          id: string
-          read_at: string | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          body?: string | null
-          created_at?: string
-          href?: string | null
-          id?: string
-          read_at?: string | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          body?: string | null
-          created_at?: string
-          href?: string | null
-          id?: string
-          read_at?: string | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ot_price_ticks: {
-        Row: {
-          created_at: string
-          id: string
-          market_cap: number
-          price: number
-          token_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          market_cap?: number
-          price: number
-          token_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          market_cap?: number
-          price?: number
-          token_id?: string
         }
         Relationships: []
       }
@@ -1090,68 +1238,83 @@ export type Database = {
       wallets: {
         Row: {
           address: string
+          btc_balance: number
+          cash_balance: number
           created_at: string
+          eth_balance: number
+          eurc_balance: number
           id: string
           is_active: boolean
           name: string
           ousd_balance: number
           pi_balance: number
-          btc_balance: number
-          eth_balance: number
-          sol_balance: number
-          usdc_balance: number
-          usdt_balance: number
           pyusd_balance: number
-          usdg_balance: number
+          recovery_hash: string | null
+          sol_balance: number
           usd1_balance: number
-          cash_balance: number
-          eurc_balance: number
-          recovery_hash?: string | null
-          removed_at?: string | null
+          usdc_balance: number
+          usdg_balance: number
+          usdt_balance: number
           user_id: string
         }
         Insert: {
           address: string
+          btc_balance?: number
+          cash_balance?: number
           created_at?: string
+          eth_balance?: number
+          eurc_balance?: number
           id?: string
           is_active?: boolean
           name: string
           ousd_balance?: number
           pi_balance?: number
-          btc_balance?: number
-          eth_balance?: number
-          sol_balance?: number
-          usdc_balance?: number
-          usdt_balance?: number
           pyusd_balance?: number
-          usdg_balance?: number
-          usd1_balance?: number
-          cash_balance?: number
-          eurc_balance?: number
           recovery_hash?: string | null
-          removed_at?: string | null
+          sol_balance?: number
+          usd1_balance?: number
+          usdc_balance?: number
+          usdg_balance?: number
+          usdt_balance?: number
           user_id: string
         }
         Update: {
           address?: string
+          btc_balance?: number
+          cash_balance?: number
           created_at?: string
+          eth_balance?: number
+          eurc_balance?: number
           id?: string
           is_active?: boolean
           name?: string
           ousd_balance?: number
           pi_balance?: number
-          btc_balance?: number
-          eth_balance?: number
-          sol_balance?: number
-          usdc_balance?: number
-          usdt_balance?: number
           pyusd_balance?: number
-          usdg_balance?: number
-          usd1_balance?: number
-          cash_balance?: number
-          eurc_balance?: number
           recovery_hash?: string | null
-          removed_at?: string | null
+          sol_balance?: number
+          usd1_balance?: number
+          usdc_balance?: number
+          usdg_balance?: number
+          usdt_balance?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watchlist_items: {
+        Row: {
+          asset_key: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_key: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_key?: string
+          created_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1162,11 +1325,20 @@ export type Database = {
     }
     Functions: {
       attach_wallet_recovery: {
-        Args: { p_wallet_id: string; p_recovery_hash: string }
+        Args: { p_recovery_hash: string; p_wallet_id: string }
         Returns: Json
       }
       backfill_ledger_entries: { Args: never; Returns: Json }
       claim_first_admin: { Args: never; Returns: boolean }
+      credit_platform_fee_ousd: {
+        Args: {
+          p_amount: number
+          p_counterparty?: string
+          p_memo?: string
+          p_source_wallet_id?: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1176,21 +1348,16 @@ export type Database = {
       }
       has_user_pin: { Args: never; Returns: boolean }
       import_openpay_wallet: {
-        Args: {
-          p_recovery_hash: string
-          p_address: string
-          p_name?: string
-        }
+        Args: { p_address: string; p_name?: string; p_recovery_hash: string }
         Returns: Json
       }
-      remove_openpay_wallet: { Args: { p_wallet_id: string }; Returns: Json }
       ot_execute_trade: {
         Args: {
+          p_pi_amount?: number
+          p_side: Database["public"]["Enums"]["ot_trade_side"]
+          p_token_amount?: number
           p_token_id: string
           p_wallet_id: string
-          p_side: Database["public"]["Enums"]["ot_trade_side"]
-          p_pi_amount?: number | null
-          p_token_amount?: number | null
         }
         Returns: Json
       }
@@ -1353,6 +1520,18 @@ export const Constants = {
         "verified",
         "rejected",
       ],
+      ot_report_status: ["open", "reviewed", "dismissed", "actioned"],
+      ot_token_category: [
+        "meme",
+        "ai",
+        "gaming",
+        "utility",
+        "defi",
+        "nft",
+        "community",
+      ],
+      ot_token_status: ["curve", "graduated", "halted"],
+      ot_trade_side: ["buy", "sell"],
       tx_status: ["pending", "confirmed", "failed"],
       tx_type: ["send", "receive", "swap", "mint", "buy", "sell", "reward"],
     },

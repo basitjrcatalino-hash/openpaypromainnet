@@ -74,6 +74,7 @@ import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
 import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
@@ -425,6 +426,11 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPushUnsubscribeRoute =
   ApiPublicPushUnsubscribeRouteImport.update({
     id: '/api/public/push/unsubscribe',
@@ -550,6 +556,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -632,6 +639,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -716,6 +724,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
@@ -800,6 +809,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -882,6 +892,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -965,6 +976,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/docs/faq'
     | '/docs/openpay'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/admin/topup'
     | '/_authenticated/asset_/$tokenId'
     | '/_authenticated/bags_/fees'
@@ -1027,6 +1039,7 @@ export interface RootRouteChildren {
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -1513,6 +1526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/push/unsubscribe': {
       id: '/api/public/push/unsubscribe'
       path: '/api/public/push/unsubscribe'
@@ -1789,6 +1809,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,

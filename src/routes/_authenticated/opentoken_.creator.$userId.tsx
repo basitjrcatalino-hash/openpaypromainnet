@@ -185,7 +185,7 @@ function CreatorProfilePage() {
         website_url: normalizeWebsite(website),
         twitter_url: normalizeTwitter(twitter),
       };
-      const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
+      const { error } = await supabase.from("profiles").update(payload as never).eq("id", user.id);
       if (error) {
         // Retry without new columns if migration not applied yet
         if (/bio|website_url|twitter_url/i.test(error.message)) {

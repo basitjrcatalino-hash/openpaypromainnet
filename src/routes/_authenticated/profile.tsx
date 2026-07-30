@@ -150,7 +150,7 @@ function ProfilePage() {
     try {
       stashOpenPayConnectReturn("/profile");
       const res = await startConnect({ data: { return_path: "/profile" } });
-      if (res?.url) window.location.href = res.url;
+      if (res?.authorize_url) window.location.href = res.authorize_url;
     } catch (e) {
       toast.error((e as Error).message || "Could not start OpenPay connect");
     }

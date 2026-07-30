@@ -24,7 +24,7 @@ type LogRoot = {
 function resolveLog(mod: unknown): LogRoot {
   if (!mod) throw new Error("[loglevel shim] package export missing");
   if (typeof mod === "function") {
-    const fn = mod as LogRoot & { levels?: Record<string, number> };
+    const fn = mod as unknown as LogRoot & { levels?: Record<string, number> };
     if (fn.levels && typeof fn.getLogger === "function") return fn;
   }
   if (typeof mod === "object") {

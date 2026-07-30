@@ -2,6 +2,7 @@
  * Server-side transaction alerts — Web Push (lock screen / notification center)
  * and email (Resend) for every wallet transaction.
  */
+// @ts-expect-error - web-push ships no type declarations
 import webpush from "web-push";
 
 type TxLike = {

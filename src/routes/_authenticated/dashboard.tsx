@@ -773,8 +773,8 @@ function Dashboard() {
                 label={a.label}
                 icon={"icon" in a ? a.icon : undefined}
                 logoUrl={"logoUrl" in a ? a.logoUrl : undefined}
-                to={"to" in a ? a.to : undefined}
-                href={"href" in a ? a.href : undefined}
+                to={"to" in a ? (a.to as string) : undefined}
+                href={"href" in a ? (a.href as string) : undefined}
                 onClick={() => setMoreOpen(false)}
               />
             ))}

@@ -418,7 +418,7 @@ function SettingsPage() {
       toast.error("Keep at least one wallet");
       return;
     }
-    const { error } = await supabase.rpc("remove_openpay_wallet", { p_wallet_id: id });
+    const { error } = await supabase.rpc("remove_openpay_wallet" as never, { p_wallet_id: id } as never);
     if (error) {
       // Fallback before soft-delete migration is applied
       const wasActive = wallets.some((w) => w.id === id && w.is_active);

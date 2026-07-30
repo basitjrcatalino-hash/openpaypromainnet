@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/public/pi-link-wallet")({
           const { getSupabaseUrl, getSupabasePublishableKey } = await import(
             "@/integrations/supabase/env"
           );
-          const userClient = createClient(getSupabaseUrl(), getSupabasePublishableKey(), {
+          const userClient = createClient(getSupabaseUrl()!, getSupabasePublishableKey()!, {
             global: { headers: { Authorization: `Bearer ${jwt}` } },
             auth: { persistSession: false, autoRefreshToken: false },
           });

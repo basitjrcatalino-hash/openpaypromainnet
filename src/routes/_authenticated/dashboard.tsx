@@ -19,6 +19,7 @@ import {
   Wallet,
   BadgeCheck,
   Coins,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -78,6 +79,7 @@ const PRIMARY_ACTIONS = [
 
 const MORE_ACTIONS = [
   { label: "OpenToken", icon: Coins, to: "/opentoken" },
+  { label: "Live Chat", icon: MessageCircle, to: "/chat" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },

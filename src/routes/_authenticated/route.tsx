@@ -28,6 +28,7 @@ import {
   PanelLeftOpen,
   Star,
   HelpCircle,
+  MessageCircle,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -583,6 +584,28 @@ function SidebarInner({
       </nav>
 
       <div className="space-y-1">
+        <Link
+          to="/chat"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/chat" || pathname.startsWith("/chat/")
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <MessageCircle
+            className={cn(
+              "h-5 w-5",
+              (pathname === "/chat" || pathname.startsWith("/chat/")) && "ph-tab-icon-active",
+            )}
+            strokeWidth={
+              pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75
+            }
+          />
+          Live Chat
+        </Link>
         <Link
           to="/watchlist"
           onClick={onClose}

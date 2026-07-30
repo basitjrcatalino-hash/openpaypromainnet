@@ -712,6 +712,33 @@ export type Database = {
           },
         ]
       }
+      global_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ot_favorites: {
         Row: {
           created_at: string

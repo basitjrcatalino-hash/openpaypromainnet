@@ -19,6 +19,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
@@ -132,6 +133,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
 const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
   id: '/bags',
   path: '/bags',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -488,6 +494,7 @@ export interface FileRoutesByFullPath {
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
@@ -564,6 +571,7 @@ export interface FileRoutesByTo {
   '/testnet-reward': typeof TestnetRewardRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/bags': typeof AuthenticatedBagsRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
@@ -642,6 +650,7 @@ export interface FileRoutesById {
   '/testnet-reward': typeof TestnetRewardRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
+  '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
@@ -720,6 +729,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/activity'
     | '/bags'
+    | '/chat'
     | '/dashboard'
     | '/kyc'
     | '/ledger'
@@ -796,6 +806,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/activity'
     | '/bags'
+    | '/chat'
     | '/dashboard'
     | '/kyc'
     | '/ledger'
@@ -873,6 +884,7 @@ export interface FileRouteTypes {
     | '/testnet-reward'
     | '/_authenticated/activity'
     | '/_authenticated/bags'
+    | '/_authenticated/chat'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
@@ -1047,6 +1059,13 @@ declare module '@tanstack/react-router' {
       path: '/bags'
       fullPath: '/bags'
       preLoaderRoute: typeof AuthenticatedBagsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -1532,6 +1551,7 @@ const AuthenticatedTokensRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
+  AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
@@ -1569,6 +1589,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
+  AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,

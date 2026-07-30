@@ -638,23 +638,25 @@ function SidebarInner({
           />
           Watchlist
         </Link>
-        <Link
-          to="/ledger"
-          onClick={onClose}
-          preload="intent"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-            pathname === "/ledger"
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-          )}
-        >
-          <ScrollText
-            className={cn("h-5 w-5", pathname === "/ledger" && "ph-tab-icon-active")}
-            strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
-          />
-          Ledger API
-        </Link>
+        {developerMode && (
+          <Link
+            to="/ledger"
+            onClick={onClose}
+            preload="intent"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+              pathname === "/ledger"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+            )}
+          >
+            <ScrollText
+              className={cn("h-5 w-5", pathname === "/ledger" && "ph-tab-icon-active")}
+              strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
+            />
+            Ledger API
+          </Link>
+        )}
         <Link
           to="/ai"
           onClick={onClose}
@@ -672,45 +674,65 @@ function SidebarInner({
           />
           Nova AI
         </Link>
-        <Link
-          to="/connect"
-          onClick={onClose}
-          preload="intent"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-            pathname === "/connect"
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-          )}
-        >
-          <Bot
-            className={cn("h-5 w-5", pathname === "/connect" && "ph-tab-icon-active")}
-            strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
-          />
-          Agent Connect
-        </Link>
-        <a
+        {developerMode && (
+          <>
+            <Link
+              to="/connect"
+              onClick={onClose}
+              preload="intent"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+                pathname === "/connect"
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+              )}
+            >
+              <Bot
+                className={cn("h-5 w-5", pathname === "/connect" && "ph-tab-icon-active")}
+                strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
+              />
+              Agent Connect
+            </Link>
+            <a
+              href="/docs/openpay"
+              target="_blank"
+              rel="noreferrer"
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+            >
+              <BookOpen className="h-5 w-5" strokeWidth={1.75} />
+              OpenPay Docs
+            </a>
+            <a
+              href="/docs/faq"
+              target="_blank"
+              rel="noreferrer"
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+            >
+              <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
+              FAQ
+            </a>
+          </>
+        )}
 
-          href="/docs/openpay"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <BookOpen className="h-5 w-5" strokeWidth={1.75} />
-          OpenPay Docs
-        </a>
-        <a
-          href="/docs/faq"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
-          FAQ
-        </a>
+        <div className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5">
+          <Code2 className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+          <label
+            htmlFor="developer-mode"
+            className="flex-1 cursor-pointer text-sm font-semibold text-muted-foreground"
+          >
+            Developer
+          </label>
+          <Switch
+            id="developer-mode"
+            checked={developerMode}
+            onCheckedChange={setDeveloperMode}
+            aria-label="Toggle developer mode"
+          />
+        </div>
       </div>
+
 
       <div className="ph-group min-w-0 overflow-hidden">
         {wallets.map((w) => (

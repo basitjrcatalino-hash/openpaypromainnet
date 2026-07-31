@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { PageListenButton } from "@/components/page-listen-button";
+import { LegalDocLayout, LegalSection } from "@/components/legal-doc-layout";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -45,152 +44,136 @@ Privacy Policy for OpenPay Pro. Last updated July 28, 2026.
 9. Contact. Privacy requests: support at openpy.space.
 `.trim();
 
+const TOC = [
+  { id: "overview", label: "Overview" },
+  { id: "information", label: "Information we process" },
+  { id: "use", label: "How we use information" },
+  { id: "sharing", label: "Sharing" },
+  { id: "retention", label: "Retention & security" },
+  { id: "choices", label: "Your choices" },
+  { id: "children", label: "Children" },
+  { id: "changes", label: "Changes" },
+  { id: "contact", label: "Contact" },
+];
+
 function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <Link
-          to="/authpi"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to sign in
-        </Link>
+    <LegalDocLayout
+      navKey="privacy"
+      title="Privacy Policy"
+      dek="How OpenPay Pro collects, uses, and protects wallet, payment, and account data — written clearly, designed like our Blog and Wiki."
+      updated="July 28, 2026"
+      speechId="page:privacy"
+      speechText={PRIVACY_SPEECH}
+      hero={{ from: "#a5b4fc", to: "#c4b5fd", glyph: "◎" }}
+      toc={TOC}
+    >
+      <LegalSection id="overview" heading="1. Overview">
+        <p>
+          This Privacy Policy explains how OpenPay Pro (“we”, “the App”) handles information when you
+          use the wallet. Sign-in and some payment features are provided by OpenPay (openpy.space);
+          their policies may also apply to that data.
+        </p>
+      </LegalSection>
 
-        <div className="rounded-3xl bg-card p-6 shadow-card sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Privacy Policy</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
-            </div>
-            <PageListenButton
-              id="page:privacy"
-              text={PRIVACY_SPEECH}
-              label="Listen"
-              stopLabel="Stop"
-              variant="outline"
-              size="sm"
-            />
-          </div>
+      <LegalSection id="information" heading="2. Information we process">
+        <ul className="space-y-3 pl-1">
+          {[
+            {
+              title: "Account identifiers",
+              body: "OpenPay-linked user id, username, and session tokens after you sign in.",
+            },
+            {
+              title: "Wallet & transaction data",
+              body: "Balances, transfers, swaps, OpenToken activity, and related ledger records needed to run the product.",
+            },
+            {
+              title: "Device & usage",
+              body: "Basic technical logs (for example errors, approximate region, or browser type) used to keep the App secure and reliable.",
+            },
+            {
+              title: "Preferences",
+              body: "Settings you choose in the App (theme, chart mode, and similar).",
+            },
+          ].map((item) => (
+            <li key={item.title} className="flex gap-3 text-lg leading-relaxed">
+              <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+              <span>
+                <span className="font-semibold text-[var(--foreground)]">{item.title}</span> —{" "}
+                {item.body}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </LegalSection>
 
-          <div className="mt-6 space-y-5 text-sm leading-relaxed text-muted-foreground">
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">1. Overview</h2>
-              <p>
-                This Privacy Policy explains how OpenPay Pro (“we”, “the App”) handles information
-                when you use the wallet. Sign-in and some payment features are provided by OpenPay
-                (openpy.space); their policies may also apply to that data.
-              </p>
-            </section>
+      <LegalSection id="use" heading="3. How we use information">
+        <p>
+          We use this information to authenticate you, operate wallet features, prevent fraud and
+          abuse, improve reliability, and comply with legal obligations. We do not sell your personal
+          information.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">2. Information we process</h2>
-              <ul className="list-disc space-y-1.5 pl-5">
-                <li>
-                  <span className="font-medium text-foreground">Account identifiers</span> — such as
-                  your OpenPay-linked user id, username, and session tokens after you sign in.
-                </li>
-                <li>
-                  <span className="font-medium text-foreground">Wallet & transaction data</span> —
-                  balances, transfers, swaps, OpenToken activity, and related ledger records needed
-                  to run the product.
-                </li>
-                <li>
-                  <span className="font-medium text-foreground">Device & usage</span> — basic
-                  technical logs (for example errors, approximate region, or browser type) used to
-                  keep the App secure and reliable.
-                </li>
-                <li>
-                  <span className="font-medium text-foreground">Preferences</span> — settings you
-                  choose in the App (theme, chart mode, and similar).
-                </li>
-              </ul>
-            </section>
+      <LegalSection id="sharing" heading="4. Sharing">
+        <p>
+          We may share data with infrastructure providers (for example hosting, auth, and database
+          services), with OpenPay when you use Connect or payments, and when required by law or to
+          protect rights and safety. Public blockchain or on-app activity you initiate may be visible
+          to others by design.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">3. How we use information</h2>
-              <p>
-                We use this information to authenticate you, operate wallet features, prevent fraud
-                and abuse, improve reliability, and comply with legal obligations. We do not sell
-                your personal information.
-              </p>
-            </section>
+      <LegalSection id="retention" heading="5. Retention & security">
+        <p>
+          We retain account and transaction records as long as needed to provide the service and meet
+          legal or accounting requirements. We use reasonable technical and organizational measures,
+          but no system is perfectly secure.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">4. Sharing</h2>
-              <p>
-                We may share data with infrastructure providers (for example hosting, auth, and
-                database services), with OpenPay when you use Connect or payments, and when required
-                by law or to protect rights and safety. Public blockchain or on-app activity you
-                initiate may be visible to others by design.
-              </p>
-            </section>
+      <LegalSection id="choices" heading="6. Your choices">
+        <p>
+          You can sign out at any time. Depending on your region, you may have rights to access,
+          correct, or delete certain personal data. Contact us to make a request; we may need to
+          verify your identity first.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">5. Retention & security</h2>
-              <p>
-                We retain account and transaction records as long as needed to provide the service
-                and meet legal or accounting requirements. We use reasonable technical and
-                organizational measures, but no system is perfectly secure.
-              </p>
-            </section>
+      <LegalSection id="children" heading="7. Children">
+        <p>
+          The App is not directed to children under 13 (or the minimum age required in your country).
+          We do not knowingly collect personal information from children.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">6. Your choices</h2>
-              <p>
-                You can sign out at any time. Depending on your region, you may have rights to
-                access, correct, or delete certain personal data. Contact us to make a request; we
-                may need to verify your identity first.
-              </p>
-            </section>
+      <LegalSection id="changes" heading="8. Changes">
+        <p>
+          We may update this Privacy Policy and will revise the date above when we do. Continued use
+          of the App after an update means you acknowledge the revised policy.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">7. Children</h2>
-              <p>
-                The App is not directed to children under 13 (or the minimum age required in your
-                country). We do not knowingly collect personal information from children.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">8. Changes</h2>
-              <p>
-                We may update this Privacy Policy and will revise the date above when we do.
-                Continued use of the App after an update means you acknowledge the revised policy.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">9. Contact</h2>
-              <p>
-                Privacy requests:{" "}
-                <a
-                  href="mailto:support@openpy.space"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  support@openpy.space
-                </a>
-                .
-              </p>
-            </section>
-          </div>
-
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            See also our{" "}
-            <Link to="/terms" className="font-medium text-primary underline-offset-2 hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              to="/regulatory"
-              className="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              Regulatory Status
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+      <LegalSection id="contact" heading="9. Contact">
+        <p>
+          Privacy requests:{" "}
+          <a
+            href="mailto:support@openpy.space"
+            className="font-semibold text-[var(--foreground)] underline underline-offset-2"
+          >
+            support@openpy.space
+          </a>
+          . See also our{" "}
+          <Link to="/terms" className="font-semibold underline underline-offset-2">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/regulatory" className="font-semibold underline underline-offset-2">
+            Regulatory Status
+          </Link>
+          .
+        </p>
+      </LegalSection>
+    </LegalDocLayout>
   );
 }

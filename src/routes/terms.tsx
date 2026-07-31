@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { PageListenButton } from "@/components/page-listen-button";
+import { LegalDocLayout, LegalSection } from "@/components/legal-doc-layout";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -45,136 +44,111 @@ Terms of Service for OpenPay Pro. Last updated July 28, 2026.
 9. Contact. Questions about these Terms: support at openpy.space. Related OpenPay policies may also apply when you use OpenPay sign-in or payments.
 `.trim();
 
+const TOC = [
+  { id: "agreement", label: "Agreement" },
+  { id: "service", label: "The service" },
+  { id: "eligibility", label: "Eligibility" },
+  { id: "acceptable-use", label: "Acceptable use" },
+  { id: "risk", label: "Digital assets & risk" },
+  { id: "fees", label: "Fees" },
+  { id: "disclaimers", label: "Disclaimers" },
+  { id: "changes", label: "Changes" },
+  { id: "contact", label: "Contact" },
+];
+
 function TermsPage() {
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <Link
-          to="/authpi"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to sign in
-        </Link>
+    <LegalDocLayout
+      navKey="terms"
+      title="Terms of Service"
+      dek="The rules for using OpenPay Pro — wallet, transfers, OpenTokens, NFTs, and related features."
+      updated="July 28, 2026"
+      speechId="page:terms"
+      speechText={TERMS_SPEECH}
+      hero={{ from: "#c4b5fd", to: "#ab9ff2", glyph: "§" }}
+      toc={TOC}
+    >
+      <LegalSection id="agreement" heading="1. Agreement">
+        <p>
+          By accessing or using OpenPay Pro (“the App”), you agree to these Terms of Service. If you
+          do not agree, do not use the App.
+        </p>
+      </LegalSection>
 
-        <div className="rounded-3xl bg-card p-6 shadow-card sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Terms of Service</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
-            </div>
-            <PageListenButton
-              id="page:terms"
-              text={TERMS_SPEECH}
-              label="Listen"
-              stopLabel="Stop"
-              variant="outline"
-              size="sm"
-            />
-          </div>
+      <LegalSection id="service" heading="2. The service">
+        <p>
+          OpenPay Pro is a web3 wallet experience for OUSD, OpenToken assets, NFTs, and related
+          features. Sign-in is provided through OpenPay. Some features depend on third-party networks
+          and services that we do not control.
+        </p>
+      </LegalSection>
 
-          <div className="mt-6 space-y-5 text-sm leading-relaxed text-muted-foreground">
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">1. Agreement</h2>
-              <p>
-                By accessing or using OpenPay Pro (“the App”), you agree to these Terms of Service.
-                If you do not agree, do not use the App.
-              </p>
-            </section>
+      <LegalSection id="eligibility" heading="3. Eligibility & accounts">
+        <p>
+          You must be able to form a binding contract in your jurisdiction. You are responsible for
+          activity under your OpenPay-linked account and for keeping access credentials secure.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">2. The service</h2>
-              <p>
-                OpenPay Pro is a web3 wallet experience for OUSD, OpenToken assets, NFTs, and related
-                features. Sign-in is provided through OpenPay. Some features depend on third-party
-                networks and services that we do not control.
-              </p>
-            </section>
+      <LegalSection id="acceptable-use" heading="4. Acceptable use">
+        <p>
+          You agree not to misuse the App, including attempts to disrupt service, exploit bugs,
+          launder funds, violate sanctions, or infringe others’ rights. We may suspend or restrict
+          access for abuse or legal risk.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">3. Eligibility & accounts</h2>
-              <p>
-                You must be able to form a binding contract in your jurisdiction. You are responsible
-                for activity under your OpenPay-linked account and for keeping access credentials
-                secure.
-              </p>
-            </section>
+      <LegalSection id="risk" heading="5. Digital assets & risk">
+        <p>
+          Cryptocurrency and token balances can lose value, become illiquid, or be lost due to user
+          error, market moves, or technical failure. OpenToken launches, swaps, and NFT actions are
+          experimental and may involve fees. Nothing in the App is investment, legal, or tax advice.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">4. Acceptable use</h2>
-              <p>
-                You agree not to misuse the App, including attempts to disrupt service, exploit bugs,
-                launder funds, violate sanctions, or infringe others’ rights. We may suspend or
-                restrict access for abuse or legal risk.
-              </p>
-            </section>
+      <LegalSection id="fees" heading="6. Fees">
+        <p>
+          Certain actions (for example OpenDEX swaps or token launches) may charge platform fees
+          disclosed in the App. Network or partner fees may apply separately.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">5. Digital assets & risk</h2>
-              <p>
-                Cryptocurrency and token balances can lose value, become illiquid, or be lost due to
-                user error, market moves, or technical failure. OpenToken launches, swaps, and NFT
-                actions are experimental and may involve fees. Nothing in the App is investment,
-                legal, or tax advice.
-              </p>
-            </section>
+      <LegalSection id="disclaimers" heading="7. Disclaimers">
+        <p>
+          The App is provided “as is” without warranties of any kind. To the fullest extent permitted
+          by law, we disclaim liability for indirect, incidental, or consequential damages arising
+          from your use of the App.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">6. Fees</h2>
-              <p>
-                Certain actions (for example OpenDEX swaps or token launches) may charge platform
-                fees disclosed in the App. Network or partner fees may apply separately.
-              </p>
-            </section>
+      <LegalSection id="changes" heading="8. Changes">
+        <p>
+          We may update these Terms. Continued use after changes means you accept the updated Terms.
+          Material changes may be noted by updating the date above.
+        </p>
+      </LegalSection>
 
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">7. Disclaimers</h2>
-              <p>
-                The App is provided “as is” without warranties of any kind. To the fullest extent
-                permitted by law, we disclaim liability for indirect, incidental, or consequential
-                damages arising from your use of the App.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">8. Changes</h2>
-              <p>
-                We may update these Terms. Continued use after changes means you accept the updated
-                Terms. Material changes may be noted by updating the date above.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">9. Contact</h2>
-              <p>
-                Questions about these Terms:{" "}
-                <a
-                  href="mailto:support@openpy.space"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  support@openpy.space
-                </a>
-                . Related OpenPay policies may also apply when you use OpenPay sign-in or payments.
-              </p>
-            </section>
-          </div>
-
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            See also our{" "}
-            <Link to="/privacy" className="font-medium text-primary underline-offset-2 hover:underline">
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link
-              to="/regulatory"
-              className="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              Regulatory Status
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+      <LegalSection id="contact" heading="9. Contact">
+        <p>
+          Questions about these Terms:{" "}
+          <a
+            href="mailto:support@openpy.space"
+            className="font-semibold text-[var(--foreground)] underline underline-offset-2"
+          >
+            support@openpy.space
+          </a>
+          . Related OpenPay policies may also apply when you use OpenPay sign-in or payments. See
+          also our{" "}
+          <Link to="/privacy" className="font-semibold underline underline-offset-2">
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link to="/regulatory" className="font-semibold underline underline-offset-2">
+            Regulatory Status
+          </Link>
+          .
+        </p>
+      </LegalSection>
+    </LegalDocLayout>
   );
 }

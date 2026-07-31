@@ -1,22 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Wallet,
-  Shield,
-  CreditCard,
+  ArrowDown,
   ArrowLeftRight,
+  ArrowUp,
+  BadgeCheck,
+  ChevronDown,
+  ChevronRight,
   Compass,
-  Plus,
+  CreditCard,
+  Heart,
+  Hourglass,
+  InfinityIcon,
+  Share2,
+  Shield,
   Sparkles,
-  MessageCircle,
-  Star,
+  Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
+import { TokenAvatar } from "@/components/wallet/TokenAvatar";
+import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
+import { OusdIcon } from "@/components/ousd-icon";
+import { Button } from "@/components/ui/button";
+import { useCurrency, formatCurrency, type CurrencyCode } from "@/lib/currency";
+import {
+  MAJOR_TOKENS,
+  fetchMajorMarkets,
+  majorMarketById,
+  type MajorTokenId,
+} from "@/lib/major-tokens";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import {
+  fetchActiveWallet,
+  formatOUSD,
+  formatPct,
+  formatNumber,
+} from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/opentoken")({
@@ -24,19 +50,58 @@ export const Route = createFileRoute("/_authenticated/opentoken")({
   component: OpenTokenHome,
 });
 
-type TopTab = "home" | "trade" | "explore";
+type TopTab = "home" | "trade" | "predict" | "explore";
 
 const TOP_TABS: { id: TopTab; label: string; icon?: LucideIcon }[] = [
   { id: "home", label: "Home" },
   { id: "trade", label: "Trade", icon: ArrowLeftRight },
+  { id: "predict", label: "Predict", icon: Sparkles },
   { id: "explore", label: "Explore", icon: Compass },
 ];
 
+type TradeFilter = "featured" | "trending" | "volume";
+type ExploreFilter = "tokens" | "perps" | "people";
+
+const PREDICT_UPCOMING = [
+  {
+    id: "f1-2026",
+    title: "Formula 1 2026 Constructors",
+    eta: "in 129d",
+    accent: "#14b8a6",
+  },
+  {
+    id: "btc-100k",
+    title: "BTC above $100k by Q4",
+    eta: "in 92d",
+    accent: "#f7931a",
+  },
+  {
+    id: "eth-etf",
+    title: "ETH ETF weekly inflow",
+    eta: "in 6d",
+    accent: "#627eea",
+  },
+] as const;
+
+const PREDICT_WINDOWS = [
+  { id: "5m", label: "5min", seconds: 5 * 60 },
+  { id: "15m", label: "15min", seconds: 15 * 60 },
+  { id: "1h", label: "1h", seconds: 60 * 60 },
+] as const;
+
 function OpenTokenHome() {
   const { user } = Route.useRouteContext();
+  const { code: currency } = useCurrency();
   const [topTab, setTopTab] = useState<TopTab>("home");
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [tradeFilter, setTradeFilter] = useState<TradeFilter>("trending");
+  const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("tokens");
+  const [predictAsset, setPredictAsset] = useState<MajorTokenId>("btc");
+  const [predictWindow, setPredictWindow] = useState<(typeof PREDICT_WINDOWS)[number]["id"]>("5m");
+  const [predictDetail, setPredictDetail] = useState(false);
+  const [payToken, setPayToken] = useState("SOL");
+  const [receiveToken, setReceiveToken] = useState("OUSD");
 
   const { data: isStaff } = useQuery({
     queryKey: ["ot-is-staff", user.id],
@@ -49,9 +114,122 @@ function OpenTokenHome() {
     },
   });
 
+  const { data: wallet } = useQuery({
+    queryKey: ["active-wallet", user.id],
+    queryFn: () =>
+      fetchActiveWallet<{
+        id: string;
+        name: string | null;
+        ousd_balance: number | null;
+        pi_balance: number | null;
+      }>(supabase, user.id, "id, name, ousd_balance, pi_balance"),
+  });
+
+  const { data: holdings = [] } = useQuery({
+    queryKey: ["ot-home-holdings", wallet?.id],
+    enabled: !!wallet?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("token_holdings")
+        .select("balance, token_id, tokens(*)")
+        .eq("wallet_id", wallet!.id)
+        .gt("balance", 0);
+      if (error) throw error;
+      return (data ?? []).filter((h: any) => h.tokens && !h.tokens.is_hidden);
+    },
+  });
+
+  const { data: tokens = [], isLoading: tokensLoading } = useQuery({
+    queryKey: ["ot-tokens"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tokens")
+        .select("*")
+        .eq("is_hidden", false)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) {
+        const { data: fallback } = await supabase
+          .from("tokens")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(200);
+        return fallback ?? [];
+      }
+      return data ?? [];
+    },
+  });
+
+  const { data: majorMarkets = [] } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 60_000,
+    queryFn: fetchMajorMarkets,
+  });
+
+  const filteredTokens = useMemo(() => {
+    let list = tokens as any[];
+    if (q.trim()) {
+      const qq = q.trim().toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.name?.toLowerCase().includes(qq) ||
+          t.symbol?.toLowerCase().includes(qq),
+      );
+    }
+    return list;
+  }, [tokens, q]);
+
+  const trending = useMemo(() => {
+    return [...filteredTokens].sort((a, b) => {
+      const vol = Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
+      if (vol !== 0) return vol;
+      return Math.abs(Number(b.change_24h ?? 0)) - Math.abs(Number(a.change_24h ?? 0));
+    });
+  }, [filteredTokens]);
+
+  const byVolume = useMemo(() => {
+    return [...filteredTokens].sort(
+      (a, b) => Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0),
+    );
+  }, [filteredTokens]);
+
+  const byMarketCap = useMemo(() => {
+    return [...filteredTokens].sort(
+      (a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0),
+    );
+  }, [filteredTokens]);
+
+  const tradeList =
+    tradeFilter === "featured"
+      ? byMarketCap.filter((t) => t.is_verified || t.status === "graduated")
+      : tradeFilter === "volume"
+        ? byVolume
+        : trending;
+
+  const holdingsUsd = useMemo(() => {
+    return holdings.reduce((sum: number, h: any) => {
+      const bal = Number(h.balance ?? 0);
+      const price = Number(h.tokens?.price_usd ?? 0);
+      return sum + bal * price;
+    }, 0);
+  }, [holdings]);
+
+  const ousdBal = Number(wallet?.ousd_balance ?? 0);
+  const totalUsd = ousdBal + holdingsUsd;
+  const avgChange = useMemo(() => {
+    const changes = trending.slice(0, 8).map((t) => Number(t.change_24h ?? 0));
+    if (!changes.length) return 0;
+    return changes.reduce((a, b) => a + b, 0) / changes.length;
+  }, [trending]);
+
+  const predictMarket = majorMarketById(majorMarkets, predictAsset);
+  const predictDef = MAJOR_TOKENS[predictAsset];
+  const upOdds = clampOdds(50 + Number(predictMarket.change24h ?? 0) * 2.2);
+  const downOdds = 100 - upOdds;
+
   return (
-    <div className="ot-phantom relative mx-auto flex w-full max-w-lg flex-col md:max-w-2xl">
-      {/* Header — pill tabs only */}
+    <div className="ot-phantom relative mx-auto w-full max-w-lg animate-page-in pb-28 md:max-w-2xl">
+      {/* Phantom pill header */}
       <div className="ph-header sticky top-0 z-30 -mx-4 px-3 pb-3 pt-2 md:mx-0 md:rounded-2xl">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <Link
@@ -69,7 +247,10 @@ function OpenTokenHome() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setTopTab(tab.id)}
+                onClick={() => {
+                  setTopTab(tab.id);
+                  if (tab.id !== "predict") setPredictDetail(false);
+                }}
                 className={cn(
                   "inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold press",
                   active
@@ -88,7 +269,6 @@ function OpenTokenHome() {
               to="/opentoken/terminal"
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground press"
             >
-              <ArrowLeftRight className="h-3.5 w-3.5" />
               Terminal
             </Link>
             <Link
@@ -111,90 +291,1020 @@ function OpenTokenHome() {
         </div>
       </div>
 
-      {/* Body — buttons only (no token cards / list rows) */}
-      <div className="flex flex-1 flex-col justify-center gap-3 px-1 pb-28 pt-6">
-        {topTab === "home" && (
-          <>
-            <p className="mb-2 text-center text-sm text-muted-foreground">
-              OpenToken · pick an action
-            </p>
-            <ActionButton to="/topup" label="Add Funds" primary />
-            <ActionButton to="/swap" label="OpenDEX Swap" icon={ArrowLeftRight} />
-            <ActionButton to="/opentoken/create" label="Create coin" icon={Plus} />
-            <ActionButton to="/opentoken/terminal" label="Terminal" icon={Sparkles} />
-            <ActionButton to="/opentoken/portfolio" label="Portfolio" icon={Wallet} />
-            <ActionButton to="/watchlist" label="Watchlist" icon={Star} />
-            <ActionButton to="/chat" label="Live Chat" icon={MessageCircle} />
-          </>
-        )}
+      {topTab === "home" && (
+        <HomeTab
+          currency={currency}
+          totalUsd={totalUsd}
+          avgChange={avgChange}
+          ousdBal={ousdBal}
+          walletName={wallet?.name || "Main Account"}
+          holdings={holdings}
+          trending={trending}
+          majorMarkets={majorMarkets}
+          loading={tokensLoading}
+          onOpenPredict={() => setTopTab("predict")}
+        />
+      )}
 
-        {topTab === "trade" && (
-          <>
-            <p className="mb-2 text-center text-sm text-muted-foreground">Trade</p>
-            <ActionButton to="/opentoken/terminal" label="Open Terminal" primary icon={Sparkles} />
-            <ActionButton to="/swap" label="OpenDEX Swap" icon={ArrowLeftRight} />
-            <ActionButton to="/opentoken/create" label="Create coin" icon={Plus} />
-            <ActionButton to="/opentoken/portfolio" label="Portfolio" icon={Wallet} />
-          </>
-        )}
+      {topTab === "trade" && (
+        <TradeTab
+          currency={currency}
+          tradeFilter={tradeFilter}
+          setTradeFilter={setTradeFilter}
+          payToken={payToken}
+          receiveToken={receiveToken}
+          onFlip={() => {
+            setPayToken(receiveToken);
+            setReceiveToken(payToken);
+          }}
+          list={tradeList}
+          loading={tokensLoading}
+        />
+      )}
 
-        {topTab === "explore" && (
-          <>
-            <p className="mb-2 text-center text-sm text-muted-foreground">Explore</p>
-            <ActionButton to="/opentoken/terminal" label="Browse Terminal" primary icon={Compass} />
-            <ActionButton to="/watchlist" label="Watchlist" icon={Star} />
-            <ActionButton to="/chat" label="Live Chat" icon={MessageCircle} />
-            <ActionButton to="/wiki" label="OpenPay Wiki" icon={Compass} />
-          </>
-        )}
-      </div>
+      {topTab === "predict" &&
+        (predictDetail ? (
+          <PredictDetail
+            asset={predictAsset}
+            windowId={predictWindow}
+            setWindowId={setPredictWindow}
+            market={predictMarket}
+            def={predictDef}
+            upOdds={upOdds}
+            downOdds={downOdds}
+            onBack={() => setPredictDetail(false)}
+          />
+        ) : (
+          <PredictTab
+            majorMarkets={majorMarkets}
+            predictAsset={predictAsset}
+            setPredictAsset={setPredictAsset}
+            upOdds={upOdds}
+            downOdds={downOdds}
+            onOpenDetail={() => setPredictDetail(true)}
+          />
+        ))}
 
-      {/* Footer dock — search + mint (buttons, not cards) */}
+      {topTab === "explore" && (
+        <ExploreTab
+          currency={currency}
+          exploreFilter={exploreFilter}
+          setExploreFilter={setExploreFilter}
+          trending={trending}
+          loading={tokensLoading}
+        />
+      )}
+
       <ExploreDock
         query={q}
         onQueryChange={setQ}
         searchOpen={searchOpen}
         onSearchOpenChange={setSearchOpen}
+        placeholder="Search OpenPay"
       />
     </div>
   );
 }
 
-function ActionButton({
-  to,
-  label,
-  primary,
-  icon: Icon,
+/* ───────────────────────── HOME ───────────────────────── */
+
+function HomeTab({
+  currency,
+  totalUsd,
+  avgChange,
+  ousdBal,
+  walletName,
+  holdings,
+  trending,
+  majorMarkets,
+  loading,
+  onOpenPredict,
 }: {
-  to: string;
-  label: string;
-  primary?: boolean;
-  icon?: LucideIcon;
+  currency: CurrencyCode;
+  totalUsd: number;
+  avgChange: number;
+  ousdBal: number;
+  walletName: string;
+  holdings: any[];
+  trending: any[];
+  majorMarkets: Awaited<ReturnType<typeof fetchMajorMarkets>>;
+  loading: boolean;
+  onOpenPredict: () => void;
 }) {
-  const topupSearch =
-    to === "/topup"
-      ? {
+  const up = avgChange >= 0;
+  return (
+    <div className="space-y-6 px-1 pt-2">
+      <button type="button" className="flex items-center gap-1 text-sm font-semibold text-muted-foreground press">
+        {walletName}
+        <ChevronDown className="h-4 w-4" />
+      </button>
+
+      <div>
+        <p className="text-[2.35rem] font-extrabold tracking-tight tabular-nums leading-none">
+          {formatCurrency(totalUsd, currency)}
+        </p>
+        <div className="mt-2">
+          <span
+            className={cn(
+              "inline-flex rounded-lg px-2 py-0.5 text-xs font-bold tabular-nums",
+              up ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400",
+            )}
+          >
+            {formatPct(avgChange)}
+          </span>
+        </div>
+      </div>
+
+      {/* Cash / OpenUSD */}
+      <Link
+        to="/topup"
+        search={{
           openpay_charge: undefined,
           openpay_ref: undefined,
           openpay_tx: undefined,
           openpay_return: undefined,
           openpay_cancel: undefined,
-        }
-      : undefined;
+        }}
+        className="flex items-center gap-3 rounded-2xl bg-muted/70 px-4 py-3.5 press"
+      >
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15">
+          <OusdIcon className="h-7 w-7" />
+        </div>
+        <span className="flex-1 text-[15px] font-semibold">Cash</span>
+        <span className="text-[15px] font-bold tabular-nums">{formatOUSD(ousdBal)}</span>
+      </Link>
+
+      {/* Tokens */}
+      <section>
+        <SectionTitle title="Tokens" to="/opentoken/portfolio" />
+        <ul className="mt-1">
+          {holdings.length === 0 && !loading ? (
+            trending.slice(0, 5).map((t) => (
+              <TokenListRow key={String(t.id)} token={t} currency={currency} showBalance={false} />
+            ))
+          ) : (
+            holdings.slice(0, 8).map((h: any) => {
+              const t = h.tokens;
+              const bal = Number(h.balance ?? 0);
+              const price = Number(t?.price_usd ?? 0);
+              return (
+                <li key={String(h.token_id)}>
+                  <Link
+                    to="/opentoken/$tokenId"
+                    params={{ tokenId: t.id }}
+                    className="ph-row press"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <TokenAvatar
+                        logoUrl={t.logo_url}
+                        name={t.name}
+                        symbol={t.symbol}
+                        verified={Boolean(t.is_verified)}
+                      />
+                      <div className="min-w-0">
+                        <div className="ph-row-title truncate">{t.name}</div>
+                        <div className="ph-row-sub tabular-nums">
+                          {formatNumber(bal)} {t.symbol}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[15px] font-bold tabular-nums">
+                        {formatCurrency(bal * price, currency)}
+                      </div>
+                      <div
+                        className={cn(
+                          "text-xs font-bold",
+                          Number(t.change_24h ?? 0) >= 0 ? "text-emerald-400" : "text-red-400",
+                        )}
+                      >
+                        {formatPct(Number(t.change_24h ?? 0))}
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })
+          )}
+          {loading && <TokenSkeleton count={4} />}
+        </ul>
+      </section>
+
+      {/* Perps-style majors rail */}
+      <section>
+        <SectionTitle title="Majors" />
+        <div className="mt-2 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none [-webkit-overflow-scrolling:touch]">
+          {(["btc", "eth", "sol", "pi"] as MajorTokenId[]).map((id) => {
+            const def = MAJOR_TOKENS[id];
+            const m = majorMarketById(majorMarkets, id);
+            const ch = Number(m.change24h ?? 0);
+            return (
+              <Link
+                key={id}
+                to="/asset/$tokenId"
+                params={{ tokenId: id }}
+                search={{}}
+                className="w-[118px] shrink-0 rounded-2xl bg-muted/70 p-3 press"
+              >
+                <img src={def.logoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                <p className="mt-3 text-sm font-bold">{def.symbol}</p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-xs font-bold tabular-nums",
+                    ch >= 0 ? "text-emerald-400" : "text-red-400",
+                  )}
+                >
+                  {formatPct(ch)}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Predictions preview */}
+      <section>
+        <SectionTitle title="Predictions" onClick={onOpenPredict} />
+        <div className="mt-2 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none [-webkit-overflow-scrolling:touch]">
+          {PREDICT_UPCOMING.map((ev) => (
+            <button
+              key={ev.id}
+              type="button"
+              onClick={onOpenPredict}
+              className="w-[168px] shrink-0 rounded-2xl bg-muted/70 p-3 text-left press"
+            >
+              <div
+                className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black text-white"
+                style={{ backgroundColor: ev.accent }}
+              >
+                ◆
+              </div>
+              <p className="mt-3 line-clamp-2 text-sm font-semibold leading-snug">{ev.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{ev.eta}</p>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={onOpenPredict}
+            className="flex w-[168px] shrink-0 flex-col justify-between rounded-2xl bg-muted/70 p-3 text-left press"
+          >
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/20 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <p className="mt-3 text-sm font-semibold leading-snug">Get started with Predictions</p>
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ───────────────────────── TRADE ───────────────────────── */
+
+function TradeTab({
+  currency,
+  tradeFilter,
+  setTradeFilter,
+  payToken,
+  receiveToken,
+  onFlip,
+  list,
+  loading,
+}: {
+  currency: CurrencyCode;
+  tradeFilter: TradeFilter;
+  setTradeFilter: (f: TradeFilter) => void;
+  payToken: string;
+  receiveToken: string;
+  onFlip: () => void;
+  list: any[];
+  loading: boolean;
+}) {
+  const filters: { id: TradeFilter; label: string; icon: LucideIcon }[] = [
+    { id: "featured", label: "Featured", icon: Sparkles },
+    { id: "trending", label: "Trending", icon: ArrowUp },
+    { id: "volume", label: "Top Volume", icon: Wallet },
+  ];
 
   return (
-    <Link
-      to={to}
-      search={topupSearch}
-      className={cn(
-        "flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold press",
-        primary
-          ? "bg-primary text-primary-foreground shadow-[0_12px_32px_-16px_hsl(var(--primary))]"
-          : "bg-muted text-foreground hover:bg-muted/80",
-      )}
-    >
-      {Icon ? <Icon className="h-5 w-5" strokeWidth={2.1} /> : null}
-      {label}
-    </Link>
+    <div className="space-y-5 px-1 pt-2">
+      <div className="flex gap-2 overflow-x-auto scrollbar-none">
+        {filters.map((f) => {
+          const Icon = f.icon;
+          const active = tradeFilter === f.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setTradeFilter(f.id)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold press",
+                active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Swap cards */}
+      <div className="relative space-y-2">
+        <div className="rounded-[1.35rem] bg-muted/80 p-4">
+          <p className="text-xs font-semibold text-muted-foreground">You Pay</p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-3xl font-extrabold tabular-nums text-muted-foreground/80">0</p>
+            <Link
+              to="/swap"
+              className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
+            >
+              <TokenChip symbol={payToken} />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </Link>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onFlip}
+          className="absolute left-1/2 top-1/2 z-10 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
+          aria-label="Flip tokens"
+        >
+          <ArrowLeftRight className="h-4 w-4 rotate-90" />
+        </button>
+
+        <div className="rounded-[1.35rem] bg-muted/80 p-4">
+          <p className="text-xs font-semibold text-muted-foreground">You Receive</p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-3xl font-extrabold tabular-nums text-muted-foreground/80">0</p>
+            <Link
+              to="/swap"
+              className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
+            >
+              <TokenChip symbol={receiveToken} />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between px-0.5">
+        <div className="flex gap-4">
+          <span className="text-lg font-extrabold">Tokens</span>
+          <Link to="/opentoken/terminal" className="text-lg font-extrabold text-muted-foreground">
+            Terminal
+          </Link>
+        </div>
+        <Button asChild size="sm" variant="ghost" className="rounded-full text-primary">
+          <Link to="/swap">OpenDEX</Link>
+        </Button>
+      </div>
+
+      <ul>
+        {loading ? (
+          <TokenSkeleton count={8} />
+        ) : list.length === 0 ? (
+          <li className="py-12 text-center text-sm text-muted-foreground">No tokens yet</li>
+        ) : (
+          list.slice(0, 40).map((t, i) => (
+            <RankedTokenRow key={String(t.id)} token={t} currency={currency} rank={i + 1} />
+          ))
+        )}
+      </ul>
+    </div>
   );
+}
+
+/* ───────────────────────── PREDICT ───────────────────────── */
+
+function PredictTab({
+  majorMarkets,
+  predictAsset,
+  setPredictAsset,
+  upOdds,
+  downOdds,
+  onOpenDetail,
+}: {
+  majorMarkets: Awaited<ReturnType<typeof fetchMajorMarkets>>;
+  predictAsset: MajorTokenId;
+  setPredictAsset: (id: MajorTokenId) => void;
+  upOdds: number;
+  downOdds: number;
+  onOpenDetail: () => void;
+}) {
+  const def = MAJOR_TOKENS[predictAsset];
+  const m = majorMarketById(majorMarkets, predictAsset);
+  const spark = useSparkline(Number(m.change24h ?? 0));
+
+  return (
+    <div className="space-y-7 px-1 pt-2">
+      <section>
+        <h2 className="text-lg font-extrabold">Upcoming</h2>
+        <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+          {PREDICT_UPCOMING.map((ev) => (
+            <div key={ev.id} className="w-[150px] shrink-0 rounded-2xl bg-muted/70 p-3">
+              <div
+                className="grid h-8 w-8 place-items-center rounded-lg text-[10px] font-black text-white"
+                style={{ backgroundColor: ev.accent }}
+              >
+                ◆
+              </div>
+              <p className="mt-3 line-clamp-2 text-sm font-semibold leading-snug">{ev.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{ev.eta}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <button type="button" onClick={onOpenDetail} className="flex items-center gap-0.5 press">
+          <h2 className="text-lg font-extrabold">Up or Down</h2>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          className="mt-3 w-full rounded-[1.5rem] bg-muted/80 p-4 text-left press"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <img src={def.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+              <div>
+                <p className="text-xl font-extrabold tabular-nums">
+                  {formatCurrency(Number(m.price ?? 0), "USD")}
+                </p>
+              </div>
+            </div>
+            <CountdownChip seconds={5 * 60} />
+          </div>
+
+          <Sparkline path={spark} className="mt-4 h-28 w-full" />
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-background/60 px-3 py-3 text-center text-sm font-bold text-emerald-400">
+              ▲ Up · {upOdds}%
+            </div>
+            <div className="rounded-2xl bg-background/60 px-3 py-3 text-center text-sm font-bold text-red-400">
+              ▼ Down · {downOdds}%
+            </div>
+          </div>
+        </button>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-extrabold">15 Minute Markets</h2>
+        <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+          {(["btc", "eth", "sol", "pi"] as MajorTokenId[]).map((id) => {
+            const d = MAJOR_TOKENS[id];
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setPredictAsset(id);
+                  onOpenDetail();
+                }}
+                className="w-[120px] shrink-0 rounded-2xl bg-muted/70 p-3 text-left press"
+              >
+                <img src={d.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                <p className="mt-3 text-sm font-bold">{d.symbol}</p>
+                <p className="text-xs text-muted-foreground">15m</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function PredictDetail({
+  asset,
+  windowId,
+  setWindowId,
+  market,
+  def,
+  upOdds,
+  downOdds,
+  onBack,
+}: {
+  asset: MajorTokenId;
+  windowId: (typeof PREDICT_WINDOWS)[number]["id"];
+  setWindowId: (id: (typeof PREDICT_WINDOWS)[number]["id"]) => void;
+  market: { price: number; change24h: number };
+  def: (typeof MAJOR_TOKENS)[MajorTokenId];
+  upOdds: number;
+  downOdds: number;
+  onBack: () => void;
+}) {
+  const win = PREDICT_WINDOWS.find((w) => w.id === windowId) ?? PREDICT_WINDOWS[0];
+  const spark = useSparkline(Number(market.change24h ?? 0));
+  const target = Number(market.price ?? 0) * (1 - Number(market.change24h ?? 0) / 400);
+  const above = Number(market.price ?? 0) >= target;
+  const deltaPct = target ? ((Number(market.price ?? 0) - target) / target) * 100 : 0;
+
+  function place(side: "up" | "down") {
+    toast.success(
+      `Prediction noted: ${def.symbol} ${side.toUpperCase()} · ${side === "up" ? upOdds : downOdds}% · ${win.label}`,
+      { description: "OpenPay Predict uses live market odds. Full settlement staking ships next." },
+    );
+  }
+
+  return (
+    <div className="space-y-5 px-1 pt-1">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <button type="button" onClick={onBack} className="text-xs font-semibold text-muted-foreground press">
+            ← Up or Down
+          </button>
+          <div className="mt-2 flex items-center gap-2">
+            <img src={def.logoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+          </div>
+          <button
+            type="button"
+            className="mt-2 inline-flex items-center gap-1 text-2xl font-extrabold press"
+            onClick={() => {
+              const idx = PREDICT_WINDOWS.findIndex((w) => w.id === windowId);
+              const next = PREDICT_WINDOWS[(idx + 1) % PREDICT_WINDOWS.length]!;
+              setWindowId(next.id);
+            }}
+          >
+            {def.symbol} {win.label}
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <p className="mt-1 text-2xl font-extrabold tabular-nums">
+            {formatCurrency(Number(market.price ?? 0), "USD")}
+          </p>
+          <p className={cn("mt-1 text-sm font-semibold", above ? "text-emerald-400" : "text-red-400")}>
+            {formatPct(deltaPct)} {above ? "above" : "below"} {formatCurrency(target, "USD")} target
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center rounded-full bg-muted press"
+            aria-label="Favorite"
+          >
+            <Heart className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center rounded-full bg-muted press"
+            aria-label="Share"
+            onClick={() => {
+              void navigator.clipboard?.writeText(
+                `${window.location.origin}/opentoken?predict=${asset}`,
+              );
+              toast.success("Prediction link copied");
+            }}
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative rounded-[1.5rem] bg-muted/40 p-3">
+        <Sparkline path={spark} className="h-48 w-full" glow />
+        <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+          <span className="rounded-full bg-muted px-2.5 py-1 font-semibold tabular-nums">
+            Target {formatCurrency(target, "USD")}
+          </span>
+          <span className="inline-flex items-center gap-1 font-semibold">
+            <Hourglass className="h-3.5 w-3.5" />
+            <CountdownChip seconds={win.seconds} bare />
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-base font-extrabold">Make a Prediction</h3>
+        <div className="mt-3 space-y-2">
+          <PredictOddsRow side="up" stake={31} mult={+(100 / Math.max(upOdds, 1)).toFixed(1)} pct={upOdds} />
+          <PredictOddsRow
+            side="down"
+            stake={31}
+            mult={+(100 / Math.max(downOdds, 1)).toFixed(1)}
+            pct={downOdds}
+          />
+        </div>
+      </div>
+
+      <Link to="/chat" className="flex items-center gap-2 rounded-2xl bg-muted/60 px-3 py-3 press">
+        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+        <span className="text-sm font-semibold">Live Chat</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        <span className="ml-auto text-xs text-muted-foreground">Talk markets</span>
+      </Link>
+
+      <div className="grid grid-cols-2 gap-2 pb-2">
+        <button
+          type="button"
+          onClick={() => place("up")}
+          className="h-14 rounded-full border border-emerald-500/30 bg-background text-base font-extrabold text-emerald-400 press"
+        >
+          Up · {upOdds}%
+        </button>
+        <button
+          type="button"
+          onClick={() => place("down")}
+          className="h-14 rounded-full border border-red-500/30 bg-background text-base font-extrabold text-red-400 press"
+        >
+          Down · {downOdds}%
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── EXPLORE ───────────────────────── */
+
+function ExploreTab({
+  currency,
+  exploreFilter,
+  setExploreFilter,
+  trending,
+  loading,
+}: {
+  currency: CurrencyCode;
+  exploreFilter: ExploreFilter;
+  setExploreFilter: (f: ExploreFilter) => void;
+  trending: any[];
+  loading: boolean;
+}) {
+  const filters: { id: ExploreFilter; label: string; icon: LucideIcon; color: string }[] = [
+    { id: "tokens", label: "Tokens", icon: Sparkles, color: "text-emerald-400" },
+    { id: "perps", label: "Perps", icon: InfinityIcon, color: "text-pink-400" },
+    { id: "people", label: "People", icon: Users, color: "text-amber-400" },
+  ];
+
+  const headlines = useMemo(() => {
+    return trending.slice(0, 6).map((t, i) => ({
+      id: String(t.id),
+      sources: 40 + ((i * 37) % 220),
+      mins: 5 + ((i * 13) % 90),
+      title: `${t.name} (${t.symbol}) ${Number(t.change_24h ?? 0) >= 0 ? "surges" : "slides"} as OpenToken volume heats up`,
+      tag: t.symbol,
+      change: Number(t.change_24h ?? 0),
+    }));
+  }, [trending]);
+
+  return (
+    <div className="space-y-6 px-1 pt-2">
+      <div className="flex gap-2 overflow-x-auto scrollbar-none">
+        {filters.map((f) => {
+          const Icon = f.icon;
+          const active = exploreFilter === f.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setExploreFilter(f.id)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold press",
+                active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+              )}
+            >
+              <Icon className={cn("h-3.5 w-3.5", !active && f.color)} />
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {exploreFilter === "people" ? (
+        <div className="rounded-2xl bg-muted/60 px-4 py-10 text-center">
+          <Users className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm font-semibold">Creators & traders</p>
+          <p className="mt-1 text-xs text-muted-foreground">Follow OpenToken creators from Live Chat and Terminal.</p>
+          <Button asChild className="mt-4 rounded-full" size="sm">
+            <Link to="/chat">Open Live Chat</Link>
+          </Button>
+        </div>
+      ) : (
+        <>
+          <section>
+            <SectionTitle title="Trending Tokens" to="/opentoken/terminal" />
+            <div className="mt-2 rounded-2xl bg-muted/50 px-1 py-1">
+              <ul>
+                {loading ? (
+                  <TokenSkeleton count={5} />
+                ) : (
+                  trending.slice(0, 8).map((t, i) => (
+                    <RankedTokenRow key={String(t.id)} token={t} currency={currency} rank={i + 1} />
+                  ))
+                )}
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <SectionTitle title="What's Happening" to="/blog" />
+            <ul className="mt-2 space-y-4">
+              {headlines.map((h) => (
+                <li key={h.id}>
+                  <Link to="/opentoken/$tokenId" params={{ tokenId: h.id }} className="block press">
+                    <p className="text-[11px] font-semibold text-muted-foreground">
+                      {h.sources} Sources · {h.mins}m
+                    </p>
+                    <p className="mt-1 text-[15px] font-semibold leading-snug">{h.title}</p>
+                    <p className="mt-1 text-xs font-bold text-muted-foreground">
+                      {h.tag}{" "}
+                      <span className={h.change >= 0 ? "text-emerald-400" : "text-red-400"}>
+                        {formatPct(h.change)}
+                      </span>
+                    </p>
+                  </Link>
+                </li>
+              ))}
+              {!loading && headlines.length === 0 ? (
+                <li className="py-8 text-center text-sm text-muted-foreground">No market stories yet</li>
+              ) : null}
+            </ul>
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ───────────────────────── shared bits ───────────────────────── */
+
+function SectionTitle({
+  title,
+  to,
+  onClick,
+}: {
+  title: string;
+  to?: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
+      <h2 className="text-lg font-extrabold">{title}</h2>
+      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    </>
+  );
+  if (to) {
+    return (
+      <Link to={to} className="inline-flex items-center gap-0.5 press">
+        {inner}
+      </Link>
+    );
+  }
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="inline-flex items-center gap-0.5 press">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="inline-flex items-center gap-0.5">{inner}</div>;
+}
+
+function TokenChip({ symbol }: { symbol: string }) {
+  const logo =
+    symbol.toUpperCase() === "OUSD"
+      ? OUSD_LOGO_URL
+      : symbol.toUpperCase() === "SOL"
+        ? MAJOR_TOKENS.sol.logoUrl
+        : undefined;
+  return (
+    <>
+      {logo ? (
+        <img src={logo} alt="" className="h-5 w-5 rounded-full object-cover" />
+      ) : (
+        <span className="grid h-5 w-5 place-items-center rounded-full bg-primary/20 text-[9px] font-bold">
+          {symbol.slice(0, 2)}
+        </span>
+      )}
+      {symbol}
+      <BadgeCheck className="h-3.5 w-3.5 text-primary" />
+    </>
+  );
+}
+
+function TokenListRow({
+  token: t,
+  currency,
+  showBalance,
+}: {
+  token: any;
+  currency: CurrencyCode;
+  showBalance?: boolean;
+}) {
+  return (
+    <li>
+      <Link to="/opentoken/$tokenId" params={{ tokenId: t.id }} className="ph-row press">
+        <div className="flex min-w-0 items-center gap-3">
+          <TokenAvatar
+            logoUrl={t.logo_url}
+            name={t.name}
+            symbol={t.symbol}
+            verified={Boolean(t.is_verified)}
+          />
+          <div className="min-w-0">
+            <div className="ph-row-title truncate">{t.name}</div>
+            <div className="ph-row-sub">
+              {t.symbol}
+              {showBalance ? "" : ""}
+            </div>
+          </div>
+        </div>
+        <TokenPriceRate
+          price={Number(t.price_usd ?? 0)}
+          change={Number(t.change_24h ?? 0)}
+          currency={currency}
+        />
+      </Link>
+    </li>
+  );
+}
+
+function RankedTokenRow({
+  token: t,
+  currency,
+  rank,
+}: {
+  token: any;
+  currency: CurrencyCode;
+  rank: number;
+}) {
+  const badge =
+    rank === 1 ? "bg-amber-400 text-black" : rank === 2 ? "bg-zinc-300 text-black" : rank === 3 ? "bg-amber-700 text-white" : "bg-muted text-muted-foreground";
+  const mc = Number(t.market_cap ?? 0);
+  return (
+    <li>
+      <Link to="/opentoken/$tokenId" params={{ tokenId: t.id }} className="ph-row press">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative">
+            <TokenAvatar
+              logoUrl={t.logo_url}
+              name={t.name}
+              symbol={t.symbol}
+              verified={Boolean(t.is_verified)}
+            />
+            <span
+              className={cn(
+                "absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full text-[9px] font-black",
+                badge,
+              )}
+            >
+              {rank}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <div className="ph-row-title truncate">{t.symbol}</div>
+            <div className="ph-row-sub">
+              {mc > 0 ? `$${formatCompact(mc)} MC` : t.name}
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[15px] font-bold tabular-nums">
+            {formatCurrency(Number(t.price_usd ?? 0), currency)}
+          </div>
+          <div
+            className={cn(
+              "text-xs font-bold",
+              Number(t.change_24h ?? 0) >= 0 ? "text-emerald-400" : "text-red-400",
+            )}
+          >
+            {formatPct(Number(t.change_24h ?? 0))}
+          </div>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+function PredictOddsRow({
+  side,
+  stake,
+  mult,
+  pct,
+}: {
+  side: "up" | "down";
+  stake: number;
+  mult: number;
+  pct: number;
+}) {
+  const up = side === "up";
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-muted/50 px-3 py-3">
+      <div className="grid h-11 w-11 place-items-center rounded-full bg-background">
+        {up ? <ArrowUp className="h-5 w-5 text-muted-foreground" /> : <ArrowDown className="h-5 w-5 text-muted-foreground" />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold capitalize text-muted-foreground">{side}</p>
+        <p className="text-sm font-bold tabular-nums">${stake}</p>
+      </div>
+      <p className="text-sm font-bold tabular-nums">{mult.toFixed(1)}x</p>
+      <span
+        className={cn(
+          "rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums",
+          up ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400",
+        )}
+      >
+        {pct}%
+      </span>
+    </div>
+  );
+}
+
+function CountdownChip({ seconds, bare }: { seconds: number; bare?: boolean }) {
+  const [left, setLeft] = useState(seconds);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(true);
+    const tick = () => setLeft(seconds - (Math.floor(Date.now() / 1000) % seconds));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [seconds]);
+  const m = Math.floor(left / 60);
+  const s = left % 60;
+  const label = ready ? `${m}m${String(s).padStart(2, "0")}s` : "—";
+  if (bare) return <span className="tabular-nums">{label}</span>;
+  return (
+    <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs font-bold tabular-nums">
+      {label}
+    </span>
+  );
+}
+
+function useSparkline(change24h: number) {
+  return useMemo(() => {
+    const pts: string[] = [];
+    let y = 70;
+    const bias = change24h >= 0 ? -0.35 : 0.35;
+    // Deterministic pseudo-noise (SSR/client hydration-safe — no Math.random)
+    let seed = Math.abs(Math.round(change24h * 1000)) + 17;
+    const next = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    for (let i = 0; i <= 28; i++) {
+      y += Math.sin(i / 2.4) * 6 + (next() - 0.5) * 5 + bias * 2;
+      y = Math.max(12, Math.min(88, y));
+      pts.push(`${(i / 28) * 100},${y}`);
+    }
+    return `M ${pts.map((p, i) => `${i === 0 ? "" : "L "}${p}`).join(" ")}`;
+  }, [change24h]);
+}
+
+function Sparkline({
+  path,
+  className,
+  glow,
+}: {
+  path: string;
+  className?: string;
+  glow?: boolean;
+}) {
+  const endY = Number(path.trim().split(/\s+/).pop()?.split(",")[1] ?? 50);
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="ot-spark" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="1" />
+        </linearGradient>
+      </defs>
+      {glow ? (
+        <path d={path} fill="none" stroke="#34d399" strokeWidth="4" opacity="0.25" strokeLinecap="round" />
+      ) : null}
+      <path d={path} fill="none" stroke="url(#ot-spark)" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="100" cy={endY} r="2.2" fill="#34d399" />
+    </svg>
+  );
+}
+
+function TokenSkeleton({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className="flex items-center gap-3 py-3">
+          <div className="h-11 w-11 rounded-full bg-muted" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3.5 w-24 rounded bg-muted" />
+            <div className="h-3 w-12 rounded bg-muted" />
+          </div>
+          <div className="h-3.5 w-14 rounded bg-muted" />
+        </li>
+      ))}
+    </>
+  );
+}
+
+function clampOdds(n: number) {
+  return Math.max(18, Math.min(82, Math.round(n)));
+}
+
+function formatCompact(n: number) {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toFixed(0);
 }

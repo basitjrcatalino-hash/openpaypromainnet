@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -206,7 +206,7 @@ export function AssetBuySheet({
   /** Admin config keys use `openpay_balance` for the OpenPay checkout method. */
   const configKey = (id: PaymentMethod) =>
     id === "openpay_checkout" ? "openpay_balance" : id;
-  const methods = (() => {
+  const methods = useMemo(() => {
     const base = ALL_METHODS.filter((m) => {
       if (m.id === "wallet_ousd") return !isOusd;
       return true;
@@ -215,7 +215,13 @@ export function AssetBuySheet({
     if (!cfg.length) return base;
     const byKey = new Map<string, any>(cfg.map((c) => [c.method_key, c]));
     return base
-      .filter((m) => byKey.get(configKey(m.id))?.enabled !== false)
+      .filter((m) => {
+        // Wallet OUSD spend is not a deposit rail — always available for buys.
+        if (m.id === "wallet_ousd") return true;
+        const c = byKey.get(configKey(m.id));
+        // Missing admin row → still show; only hide when explicitly disabled.
+        return !c || c.enabled !== false;
+      })
       .map((m) => {
         const c = byKey.get(configKey(m.id));
         return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
@@ -225,14 +231,15 @@ export function AssetBuySheet({
           Number(byKey.get(configKey(a.id))?.sort_order ?? 0) -
           Number(byKey.get(configKey(b.id))?.sort_order ?? 0),
       );
-  })();
+  }, [methodConfig, isOusd]);
+
+  const methodIdsKey = useMemo(() => methods.map((m) => m.id).join(","), [methods]);
 
   useEffect(() => {
     if (methods.length && !methods.some((m) => m.id === method)) {
       setMethod(methods[0].id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [methods.map((m) => m.id).join(","), method]);
+  }, [methodIdsKey, method, methods]);
 
   const { data: openpayLink } = useQuery({
     queryKey: ["openpay-link", userId],

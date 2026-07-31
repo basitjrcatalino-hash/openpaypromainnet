@@ -258,6 +258,46 @@ export const updateTopupMethod = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Upsert every catalog method into `topup_methods` so new providers
+ * (Solana Pay, Circle Mint, …) appear in Admin → Top Up and can be hidden
+ * for maintenance. Does not overwrite existing `enabled` flags.
+ */
+export const ensureTopupMethods = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { TOPUP_METHOD_CATALOG } = await import("@/lib/topup-methods");
+
+    const { data: existing, error: listErr } = await context.supabase
+      .from("topup_methods")
+      .select("method_key, enabled");
+    if (listErr) throw new Error(listErr.message);
+
+    const have = new Set((existing ?? []).map((r) => r.method_key));
+    const missing = TOPUP_METHOD_CATALOG.filter((m) => !have.has(m.method_key));
+
+    if (missing.length) {
+      const { error: insertErr } = await context.supabase.from("topup_methods").insert(
+        missing.map((m) => ({
+          method_key: m.method_key,
+          label: m.label,
+          description: m.description,
+          enabled: m.enabled,
+          sort_order: m.sort_order,
+        })),
+      );
+      if (insertErr) throw new Error(insertErr.message);
+    }
+
+    const { data, error } = await context.supabase
+      .from("topup_methods")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { ok: true, inserted: missing.map((m) => m.method_key), methods: data ?? [] };
+  });
+
 export const getPublicTopupInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

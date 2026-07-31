@@ -23,6 +23,7 @@ import {
   disableVoucher,
   listTopupMethods,
   updateTopupMethod,
+  ensureTopupMethods,
 } from "@/lib/topup-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/topup")({
@@ -41,6 +42,7 @@ function AdminTopupPage() {
   const disableV = useServerFn(disableVoucher);
   const listM = useServerFn(listTopupMethods);
   const saveMethod = useServerFn(updateTopupMethod);
+  const ensureMethods = useServerFn(ensureTopupMethods);
 
   const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => check() });
   const isAdmin = !!adminQ.data?.isAdmin;
@@ -57,7 +59,11 @@ function AdminTopupPage() {
   });
   const methodsQ = useQuery({
     queryKey: ["topup-methods-admin"],
-    queryFn: () => listM(),
+    queryFn: async () => {
+      // Sync catalog (Solana Pay, Circle Mint, …) then list — preserves enabled flags.
+      await ensureMethods();
+      return listM();
+    },
     enabled: isAdmin,
   });
 
@@ -237,7 +243,9 @@ function AdminTopupPage() {
       <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
         <h2 className="text-lg font-semibold">Payment methods</h2>
         <p className="text-sm text-muted-foreground">
-          Show, hide, rename and reorder the providers users see on the Top Up page.
+          Show or hide each Top Up rail for maintenance. Off = hidden on{" "}
+          <code className="rounded bg-muted px-1">/topup</code> and buy sheets (Solana Pay, Circle
+          Mint, MoonPay, Pi, Helio, USDC, OpenPay Balance).
         </p>
         {methodsQ.isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -251,7 +259,7 @@ function AdminTopupPage() {
                   <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{m.method_key}</code>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">
-                      {m.enabled ? "Visible" : "Hidden"}
+                      {m.enabled ? "Visible" : "Hidden · maintenance"}
                     </span>
                     <Switch
                       checked={!!m.enabled}

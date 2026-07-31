@@ -74,11 +74,16 @@ export function getCircleMintPurposeOfTransfer(): string | undefined {
 function mintBaseUrl(): string {
   const explicit = process.env.CIRCLE_MINT_BASE_URL?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
-  if (isCircleTestnet() || getCircleBaseUrl().includes("sandbox")) {
+
+  // Prefer explicit CIRCLE_BASE_URL — modern Circle console keys often use the
+  // TEST_API_KEY: prefix but authenticate against api.circle.com (Wallets).
+  const base = getCircleBaseUrl();
+  if (base.includes("api-sandbox") || base.includes("sandbox")) {
     return "https://api-sandbox.circle.com";
   }
-  const base = getCircleBaseUrl();
-  if (base.includes("api.circle.com") || base.includes("api-sandbox")) return base;
+  if (base.includes("api.circle.com")) return base.replace(/\/$/, "");
+
+  if (isCircleTestnet()) return "https://api-sandbox.circle.com";
   return "https://api.circle.com";
 }
 
@@ -117,11 +122,26 @@ async function circleMintFetch<T>(
   }
 
   if (!res.ok) {
-    const msg =
+    const rawMsg =
       (json as { message?: string; error?: string })?.message ||
       (json as { error?: string })?.error ||
       `Circle Mint HTTP ${res.status}`;
-    throw new Error(msg);
+    const lower = String(rawMsg).toLowerCase();
+    if (
+      res.status === 401 ||
+      res.status === 403 ||
+      lower.includes("invalid credentials") ||
+      lower.includes("unauthorized") ||
+      lower.includes("forbidden")
+    ) {
+      throw new Error(
+        "Circle Mint rejected this API key. Developer Console TEST_API_KEY / CLIENT_KEY / KIT_KEY " +
+          "are for Wallets/SDKs — Circle Deposit needs a Circle Mint API key with payments access " +
+          "(Mint Console → API Keys). Also set CIRCLE_MINT_BASE_URL to https://api-sandbox.circle.com " +
+          "for sandbox Mint keys.",
+      );
+    }
+    throw new Error(rawMsg);
   }
 
   return json as T;

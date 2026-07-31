@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
@@ -188,8 +188,12 @@ function TopUpPage() {
   const visibleMethods = useMemo(() => {
     if (!methodConfig?.length) return methods;
     const byKey = new Map<string, any>((methodConfig as any[]).map((c) => [c.method_key, c]));
+    // Hide only when admin explicitly disabled (maintenance). Missing row → still show.
     return methods
-      .filter((m) => byKey.get(m.id)?.enabled !== false)
+      .filter((m) => {
+        const c = byKey.get(m.id);
+        return !c || c.enabled !== false;
+      })
       .map((m) => {
         const c: any = byKey.get(m.id);
         return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
@@ -399,13 +403,13 @@ function TopUpPage() {
     }
   }
 
-  function refreshAfterHelioDeposit() {
+  const refreshAfterHelioDeposit = useCallback(() => {
     qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
     qc.invalidateQueries({ queryKey: ["wallets", user.id] });
     qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
     qc.invalidateQueries({ queryKey: ["ledger-entries"] });
     qc.invalidateQueries({ queryKey: ["ledger-overview"] });
-  }
+  }, [qc, user.id, wallet?.id]);
 
   async function submit(e?: FormEvent) {
     e?.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,15 @@ export function CircleMintDepositPanel({
   const refreshDeposit = useServerFn(refreshCircleMintDeposit);
   const syncDeposit = useServerFn(syncCircleMintDeposit);
 
+  const createDepositRef = useRef(createDeposit);
+  const refreshDepositRef = useRef(refreshDeposit);
+  const syncDepositRef = useRef(syncDeposit);
+  const onSuccessRef = useRef(onSuccess);
+  createDepositRef.current = createDeposit;
+  refreshDepositRef.current = refreshDeposit;
+  syncDepositRef.current = syncDeposit;
+  onSuccessRef.current = onSuccess;
+
   const [busy, setBusy] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +58,24 @@ export function CircleMintDepositPanel({
 
   useEffect(() => {
     let cancelled = false;
+    const amount = Number(amountUsd);
+    if (!Number.isFinite(amount) || amount < 0.01) {
+      setBusy(false);
+      setError("Enter a valid amount first");
+      return;
+    }
+
     void (async () => {
       setBusy(true);
       setError(null);
+      setPaymentIntentId(null);
+      setDepositAddress(null);
+      setStatus("created");
+      setCreditedAmount(null);
       try {
-        const res = await createDeposit({
+        const res = await createDepositRef.current({
           data: {
-            amount: amountUsd,
+            amount,
             walletId,
           },
         });
@@ -68,7 +88,6 @@ export function CircleMintDepositPanel({
         if (cancelled) return;
         const msg = (err as Error).message || "Could not create Circle deposit";
         setError(msg);
-        toast.error(msg);
       } finally {
         if (!cancelled) setBusy(false);
       }
@@ -76,7 +95,7 @@ export function CircleMintDepositPanel({
     return () => {
       cancelled = true;
     };
-  }, [amountUsd, walletId, createDeposit]);
+  }, [amountUsd, walletId]);
 
   useEffect(() => {
     if (!depositAddress) {
@@ -88,28 +107,34 @@ export function CircleMintDepositPanel({
       width: 280,
       margin: 2,
       color: { dark: "#0f172a", light: "#ffffff" },
-    }).then((url) => {
-      if (!cancelled) setQrUrl(url);
-    });
+    })
+      .then((url) => {
+        if (!cancelled) setQrUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrUrl(null);
+      });
     return () => {
       cancelled = true;
     };
   }, [depositAddress]);
 
-  // Auto-poll payments every 12s
+  // Auto-poll payments every 12s (stable deps — fns via refs)
   useEffect(() => {
     if (!paymentIntentId || status === "credited") return;
+    let cancelled = false;
     const tick = () => {
       void (async () => {
         try {
-          const res = await syncDeposit({ data: { paymentIntentId } });
+          const res = await syncDepositRef.current({ data: { paymentIntentId } });
+          if (cancelled) return;
           if (res.status === "credited") {
             setStatus("credited");
             setCreditedAmount(res.amount);
             if (!res.alreadyCredited) {
               toast.success(`${formatUSD(res.amount)} OUSD credited via Circle`);
             }
-            onSuccess?.();
+            onSuccessRef.current?.();
           }
         } catch {
           /* quiet poll */
@@ -119,21 +144,22 @@ export function CircleMintDepositPanel({
     const id = window.setInterval(tick, 12_000);
     const first = window.setTimeout(tick, 4_000);
     return () => {
+      cancelled = true;
       window.clearInterval(id);
       window.clearTimeout(first);
     };
-  }, [paymentIntentId, status, syncDeposit, onSuccess]);
+  }, [paymentIntentId, status]);
 
   async function handleRefresh() {
     if (!paymentIntentId) return;
     setSyncing(true);
     try {
-      const refreshed = await refreshDeposit({ data: { paymentIntentId } });
+      const refreshed = await refreshDepositRef.current({ data: { paymentIntentId } });
       setDepositAddress(refreshed.depositAddress);
       setChain(refreshed.chain);
       setStatus(refreshed.status);
 
-      const synced = await syncDeposit({ data: { paymentIntentId } });
+      const synced = await syncDepositRef.current({ data: { paymentIntentId } });
       if (synced.status === "credited") {
         setStatus("credited");
         setCreditedAmount(synced.amount);
@@ -142,7 +168,7 @@ export function CircleMintDepositPanel({
             ? "Already credited"
             : `${formatUSD(synced.amount)} OUSD credited`,
         );
-        onSuccess?.();
+        onSuccessRef.current?.();
       } else {
         toast.message(
           synced.paymentCount
@@ -175,8 +201,11 @@ export function CircleMintDepositPanel({
       >
         {error}
         <p className="mt-2 text-xs text-muted-foreground">
-          Ensure <code className="font-mono">CIRCLE_API_KEY</code> has Circle Mint access and{" "}
-          <code className="font-mono">CIRCLE_MINT_MERCHANT_WALLET_ID</code> is set if required.
+          Circle Deposit needs a Mint payments API key. Set{" "}
+          <code className="font-mono">CIRCLE_API_KEY</code> from Circle Mint Console (not only
+          Wallets keys). Optional: <code className="font-mono">CIRCLE_MINT_MERCHANT_WALLET_ID</code>
+          . Sandbox Mint:{" "}
+          <code className="font-mono">CIRCLE_MINT_BASE_URL=https://api-sandbox.circle.com</code>.
         </p>
       </div>
     );
@@ -211,7 +240,7 @@ export function CircleMintDepositPanel({
 
       {depositAddress ? (
         <>
-          <div className="mx-auto grid aspect-square w-full max-w-[240px] place-items-center rounded-2xl bg-white p-3 shadow-sm">
+          <div className="mx-auto grid aspect-square w-full max-w-60 place-items-center rounded-2xl bg-white p-3 shadow-sm">
             {qrUrl ? (
               <img src={qrUrl} alt="Circle deposit QR" className="h-full w-full" />
             ) : (
@@ -253,7 +282,11 @@ export function CircleMintDepositPanel({
             disabled={syncing}
             onClick={() => void handleRefresh()}
           >
-            {syncing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+            {syncing ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            )}
             Refresh
           </Button>
         </div>

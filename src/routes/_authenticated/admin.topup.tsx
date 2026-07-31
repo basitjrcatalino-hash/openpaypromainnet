@@ -53,6 +53,13 @@ function AdminTopupPage() {
     queryFn: () => listV(),
     enabled: isAdmin,
   });
+  const listM = useServerFn(listTopupMethods);
+  const saveMethod = useServerFn(updateTopupMethod);
+  const methodsQ = useQuery({
+    queryKey: ["topup-methods-admin"],
+    queryFn: () => listM(),
+    enabled: isAdmin,
+  });
 
   const [url, setUrl] = useState("");
   const [instructions, setInstructions] = useState("");

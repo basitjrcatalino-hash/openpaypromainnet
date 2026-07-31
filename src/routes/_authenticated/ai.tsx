@@ -8,14 +8,13 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
+import { OPENPAY_AI_AVATAR } from "@/lib/openpay-auth";
 import { useSpeech } from "@/hooks/use-speech";
 
-/** OpenPay AI assistant avatar (official OpenPay logo). */
-const AI_AVATAR = OPENPAY_AUTH_LOGO;
+/** OpenPay AI assistant avatar (animated mascot GIF). */
+const AI_AVATAR = OPENPAY_AI_AVATAR;
 
-/** The logo mark is light-on-transparent, so it needs a grey plate in light mode. */
-const AVATAR_PLATE = "bg-neutral-500 object-contain p-1 dark:bg-transparent dark:p-0";
+const AVATAR_CLASS = "object-cover";
 
 
 
@@ -107,7 +106,7 @@ function AiAssistantPage() {
           width={512}
           height={512}
           loading="lazy"
-          className={cn("h-8 w-8 rounded-[0.6rem]", AVATAR_PLATE)}
+          className={cn("h-8 w-8 rounded-[0.6rem]", AVATAR_CLASS)}
         />
         <span className="text-base font-bold">OpenPay AI</span>
         <button
@@ -132,7 +131,7 @@ function AiAssistantPage() {
               alt="OpenPay AI assistant"
               width={512}
               height={512}
-              className={cn("h-20 w-20 rounded-[1.4rem] p-3 shadow-lg", AVATAR_PLATE)}
+              className={cn("h-20 w-20 rounded-[1.4rem] shadow-lg", AVATAR_CLASS)}
             />
             <h1 className="text-2xl font-bold">OpenPay AI</h1>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -175,7 +174,7 @@ function AiAssistantPage() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className={cn("mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]", AVATAR_PLATE)}
+                    className={cn("mt-0.5 h-7 w-7 shrink-0 rounded-[0.6rem]", AVATAR_CLASS)}
                   />
                   <div className="min-w-0 flex-1">
                     <OpenPayMarkdown text={text} />
@@ -209,7 +208,7 @@ function AiAssistantPage() {
                   width={512}
                   height={512}
                   loading="lazy"
-                  className={cn("h-7 w-7 rounded-[0.6rem]", AVATAR_PLATE)}
+                  className={cn("h-7 w-7 rounded-[0.6rem]", AVATAR_CLASS)}
                 />
                 <span className="animate-pulse">Thinking…</span>
               </div>

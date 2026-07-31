@@ -71,7 +71,7 @@ import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
-import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
+import { OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
 
 /** Flip to true to show Bags Cash in nav and unlock /bags routes. */
 const BAGS_CASH_ENABLED = false;
@@ -762,7 +762,7 @@ function SidebarInner({
           )}
         >
           <img
-            src={OPENPAY_AUTH_LOGO}
+            src={OPENPAY_AI_MENU_ICON}
             alt="OpenPay AI"
             className={cn(
               "h-5 w-5 rounded object-contain",

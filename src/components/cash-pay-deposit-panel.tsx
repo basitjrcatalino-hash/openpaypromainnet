@@ -265,7 +265,7 @@ export function CashPayDepositPanel({
             </div>
           ) : (
             <>
-              <div className="mx-auto grid aspect-square w-full max-w-[280px] place-items-center rounded-2xl bg-white p-4 shadow-sm">
+              <div className="mx-auto grid aspect-square w-full max-w-70 place-items-center rounded-2xl bg-white p-4 shadow-sm">
                 {qrBusy || !svg ? (
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : svg.trimStart().startsWith("<") ? (

@@ -842,7 +842,7 @@ export function AssetBuySheet({
             </div>
           </div>
 
-          <div className="sticky bottom-0 shrink-0 space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-1 pt-4">
+          <div className="sticky bottom-0 shrink-0 space-y-2 bg-linear-to-t from-background via-background to-transparent pb-1 pt-4">
             <Button
               type="button"
               disabled={!valid}
@@ -928,7 +928,7 @@ export function AssetBuySheet({
                         m.logoUrl && "bg-background",
                         m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                         m.id === "helio" &&
-                          "bg-gradient-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",
+                          "bg-linear-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",
                         m.id === "usdc" && "bg-[#2775CA]/15",
                         m.id === "openpay_checkout" && "bg-[#0070BA]/10",
                         m.id === "wallet_ousd" && "bg-primary/10",
@@ -985,7 +985,7 @@ export function AssetBuySheet({
                       <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                         Memo
                       </p>
-                      <p className="mt-0.5 break-words leading-relaxed text-foreground">
+                      <p className="mt-0.5 wrap-break-word leading-relaxed text-foreground">
                         {piQuote.memo}
                       </p>
                     </div>
@@ -1051,7 +1051,7 @@ export function AssetBuySheet({
             ) : null}
           </div>
 
-          <div className="sticky bottom-0 shrink-0 space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-1 pt-4">
+          <div className="sticky bottom-0 shrink-0 space-y-2 bg-linear-to-t from-background via-background to-transparent pb-1 pt-4">
             <Button
               type="button"
               className={cn(
@@ -1268,7 +1268,7 @@ export function AssetBuySheet({
     >
       <DialogContent
         hideClose
-        className="fixed inset-0 left-0 top-0 z-50 flex h-[100dvh] max-h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-none duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 sm:rounded-none"
+        className="fixed inset-0 left-0 top-0 z-50 flex h-dvh max-h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-none duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 sm:rounded-none"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>

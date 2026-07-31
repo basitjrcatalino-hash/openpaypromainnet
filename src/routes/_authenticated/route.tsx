@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Wallet,
   ArrowDownToLine,
+  ArrowUpFromLine,
   Compass,
 
   Settings as SettingsIcon,
@@ -96,6 +97,7 @@ const NAV = [
   { to: "/dashboard", labelKey: "nav.home", icon: Compass },
   { to: "/wallet", labelKey: "nav.wallet", icon: Wallet },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
+  { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
   { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen },
 
@@ -104,8 +106,8 @@ const NAV = [
   { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon },
 ] as const;
 
-/** Mobile bottom tab bar — Settings stays in the sidebar/menu only. */
-const FOOTER_NAV = NAV.filter((item) => item.to !== "/settings");
+/** Mobile bottom tab bar — Settings & Withdraw stay in the sidebar/menu only. */
+const FOOTER_NAV = NAV.filter((item) => item.to !== "/settings" && item.to !== "/withdraw");
 
 function navActive(pathname: string, to: string) {
   return (
@@ -236,7 +238,7 @@ function AuthenticatedLayout() {
             <aside
               className={cn(
                 "ph-sidebar sticky top-0 hidden h-screen shrink-0 transition-[width,padding] duration-300 ease-out md:flex md:flex-col",
-                sidebarCollapsed ? "w-[4.25rem] p-2" : "w-[17.5rem] p-3",
+                sidebarCollapsed ? "w-17 p-2" : "w-70 p-3",
               )}
             >
               {sidebarCollapsed ? (
@@ -275,7 +277,7 @@ function AuthenticatedLayout() {
                 className="absolute inset-0 bg-background/70 backdrop-blur-sm"
                 onClick={() => setMobileOpen(false)}
               />
-              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-hidden p-3 shadow-2xl animate-in slide-in-from-left duration-300 ease-out">
+              <aside className="ph-sidebar relative flex h-full w-76 flex-col overflow-hidden p-3 shadow-2xl animate-in slide-in-from-left duration-300 ease-out">
                 <SidebarInner
                   wallets={wallets}
                   activeWallet={activeWallet}
@@ -935,22 +937,40 @@ function SidebarInner({
             </>
           ) : null}
           {isAdmin ? (
-            <Link
-              to="/admin/topup"
-              onClick={onClose}
-              preload="intent"
-              aria-current={pathname === "/admin/topup" ? "page" : undefined}
-              className={sideItemClass(pathname === "/admin/topup")}
-            >
-              <CircleDollarSign
-                className={cn(
-                  "h-[1.15rem] w-[1.15rem] shrink-0",
-                  pathname === "/admin/topup" && "ph-tab-icon-active",
-                )}
-                strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
-              />
-              <span className="truncate">Admin · Top Up &amp; Buy</span>
-            </Link>
+            <>
+              <Link
+                to="/admin/topup"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/admin/topup" ? "page" : undefined}
+                className={sideItemClass(pathname === "/admin/topup")}
+              >
+                <CircleDollarSign
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/admin/topup" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
+                />
+                <span className="truncate">Admin · Top Up &amp; Buy</span>
+              </Link>
+              <Link
+                to="/admin/withdrawals"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/admin/withdrawals" ? "page" : undefined}
+                className={sideItemClass(pathname === "/admin/withdrawals")}
+              >
+                <ArrowUpFromLine
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/admin/withdrawals" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/admin/withdrawals" ? 2.25 : 1.75}
+                />
+                <span className="truncate">Admin · Withdrawals</span>
+              </Link>
+            </>
           ) : null}
           {(developerMode || isAdmin) && (
             <Link

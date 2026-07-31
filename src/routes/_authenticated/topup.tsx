@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, type LucideIcon } from "lucide-react";
+import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -17,6 +17,7 @@ import { SolanaReceivePanel } from "@/components/solana-receive-panel";
 import { CircleMintDepositPanel } from "@/components/circle-mint-deposit-panel";
 import { CashPayDepositPanel } from "@/components/cash-pay-deposit-panel";
 import { BanxaDepositPanel } from "@/components/banxa-deposit-panel";
+import { ScanToPayDepositPanel } from "@/components/scan-to-pay-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -58,7 +59,8 @@ type Method =
   | "solana_pay"
   | "circle_mint"
   | "cash_pay"
-  | BanxaTopupMethodKey;
+  | BanxaTopupMethodKey
+  | "scan_pay";
 type BuyStep = "amount" | "method" | "deposit";
 const methods: {
   id: Method;
@@ -76,6 +78,12 @@ const methods: {
     label: "OpenPay Balance",
     logoUrl: OUSD_LOGO_URL,
     desc: "Pay from your connected OpenPay account · real debit",
+  },
+  {
+    id: "scan_pay",
+    label: "Scan to pay",
+    icon: QrCode,
+    desc: "Multi-chain QR · SOL / USDC / CASH → verify TX → OUSD",
   },
   {
     id: "moonpay",
@@ -465,6 +473,7 @@ function TopUpPage() {
       method === "solana_pay" ||
       method === "circle_mint" ||
       method === "cash_pay" ||
+      method === "scan_pay" ||
       isBanxaTopupMethod(method)
     ) {
       setDepositReady(true);
@@ -621,7 +630,9 @@ function TopUpPage() {
                         ? `Continue with card`
                         : method === "banxa_bank"
                           ? `Continue with bank transfer`
-                          : `Continue with Pi`;
+                          : method === "scan_pay"
+                            ? `Continue with Scan to pay`
+                            : `Continue with Pi`;
 
   const payWithLabel =
     method === "moonpay"
@@ -646,7 +657,9 @@ function TopUpPage() {
                         ? "Card (Banxa)"
                         : method === "banxa_bank"
                           ? "Bank Transfer (Banxa)"
-                          : "OpenPay Balance";
+                          : method === "scan_pay"
+                            ? "Scan to pay"
+                            : "OpenPay Balance";
 
   const headerTitle =
     step === "amount"
@@ -669,7 +682,9 @@ function TopUpPage() {
                       ? "Card"
                       : method === "banxa_bank"
                         ? "Bank Transfer"
-                        : "Crypto Deposit";
+                        : method === "scan_pay"
+                          ? "Scan to pay"
+                          : "Crypto Deposit";
 
   return (
     <div className="ot-phantom ph-page flex min-h-[calc(100dvh-6rem)] flex-col pb-8">
@@ -826,7 +841,7 @@ function TopUpPage() {
             </p>
           </div>
 
-          <div className="sticky bottom-0 mt-auto space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-2 pt-4">
+          <div className="sticky bottom-0 mt-auto space-y-2 bg-linear-to-t from-background via-background to-transparent pb-2 pt-4">
             <Button
               type="button"
               disabled={!amountValid}
@@ -1004,7 +1019,7 @@ function TopUpPage() {
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                       Memo
                     </p>
-                    <p className="mt-1 break-words text-xs leading-relaxed text-foreground">
+                    <p className="mt-1 wrap-break-word text-xs leading-relaxed text-foreground">
                       {piQuote.memo}
                     </p>
                   </div>
@@ -1019,7 +1034,7 @@ function TopUpPage() {
             </p>
           )}
 
-          <div className="sticky bottom-0 mt-auto space-y-2 bg-gradient-to-t from-background via-background to-transparent pb-2 pt-6">
+          <div className="sticky bottom-0 mt-auto space-y-2 bg-linear-to-t from-background via-background to-transparent pb-2 pt-6">
             <Button
               type="button"
               disabled={
@@ -1182,6 +1197,24 @@ function TopUpPage() {
           >
             Change payment method
           </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "scan_pay" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <ScanToPayDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            onSuccess={refreshAfterHelioDeposit}
+            onBack={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+            onClose={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          />
         </div>
       )}
 

@@ -116,6 +116,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ousd_withdrawals: {
+        Row: {
+          id: string
+          user_id: string
+          wallet_id: string
+          amount: number
+          destination_address: string
+          display_name: string | null
+          username: string | null
+          note: string | null
+          status: string
+          treasury_address: string
+          treasury_wallet_id: string | null
+          admin_note: string | null
+          payout_tx_hash: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          wallet_id: string
+          amount: number
+          destination_address: string
+          display_name?: string | null
+          username?: string | null
+          note?: string | null
+          status?: string
+          treasury_address?: string
+          treasury_wallet_id?: string | null
+          admin_note?: string | null
+          payout_tx_hash?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          wallet_id?: string
+          amount?: number
+          destination_address?: string
+          display_name?: string | null
+          username?: string | null
+          note?: string | null
+          status?: string
+          treasury_address?: string
+          treasury_wallet_id?: string | null
+          admin_note?: string | null
+          payout_tx_hash?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crypto_transactions: {
         Row: {
           amount: number

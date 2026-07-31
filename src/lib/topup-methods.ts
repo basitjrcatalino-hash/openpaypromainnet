@@ -14,7 +14,8 @@ export type TopupMethodKey =
   | "banxa_apple_pay"
   | "banxa_google_pay"
   | "banxa_card"
-  | "banxa_bank";
+  | "banxa_bank"
+  | "scan_pay";
 
 export type TopupMethodSeed = {
   method_key: TopupMethodKey;
@@ -111,6 +112,14 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     description:
       "Banxa · bank transfer (ACH / SEPA / Faster Payments / PayID) → OUSD",
     sort_order: 12,
+    enabled: true,
+  },
+  {
+    method_key: "scan_pay",
+    label: "Scan to pay",
+    description:
+      "Multi-chain QR · SOL / USDC / USDT / CASH stables → verify TX → OUSD on OpenLedger",
+    sort_order: 13,
     enabled: true,
   },
 ] as const;

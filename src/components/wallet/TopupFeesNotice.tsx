@@ -17,6 +17,7 @@ export type TopupProvider =
   | "banxa_google_pay"
   | "banxa_card"
   | "banxa_bank"
+  | "scan_pay"
   | "wallet_ousd";
 
 type Props = {
@@ -113,6 +114,13 @@ const PROVIDER: Record<
       "You’ll complete a bank transfer via Banxa (ACH, SEPA, Faster Payments, or PayID). Settlement can take longer than cards; OUSD credits when Banxa marks the order complete.",
     fees: "Bank network and Banxa fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Banxa",
+  },
+  scan_pay: {
+    name: "Scan to pay",
+    blurb:
+      "Scan the QR and send SOL or a stablecoin (USDC, USDT, CASH, …) to the admin receive wallet for that chain. We verify amount, destination, and TX ID on-chain, then release OUSD to your OpenLedger wallet.",
+    fees: "Network gas applies in your wallet. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "On-chain / OpenLedger",
   },
   wallet_ousd: {
     name: "Wallet OUSD",

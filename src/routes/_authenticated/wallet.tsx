@@ -8,7 +8,7 @@ import type { ComponentType } from "react";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowDownLeft,
+  ArrowUpFromLine,
   ArrowUpRight,
   Copy,
   History,
@@ -216,8 +216,8 @@ function CryptoWalletPage() {
           <div className="mb-8 grid grid-cols-4 gap-2">
             <ActionCard to="/wallet/receive" icon={QrCode} label="Receive" primary />
             <ActionCard to="/send" icon={ArrowUpRight} label="Send" />
+            <ActionCard to="/withdraw" icon={ArrowUpFromLine} label="Withdraw" />
             <ActionCard to="/activity" icon={History} label="History" />
-            <ActionCard to="/tokens" icon={ArrowDownLeft} label="Assets" />
           </div>
 
           {/* Network receive shortcuts — Phantom style */}

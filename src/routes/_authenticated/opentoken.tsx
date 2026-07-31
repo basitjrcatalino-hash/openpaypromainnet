@@ -614,7 +614,7 @@ function HomeTab({
                 to="/asset/$tokenId"
                 params={{ tokenId: id }}
                 search={{}}
-                className="w-[118px] shrink-0 rounded-2xl bg-muted/70 p-3 press"
+                className="w-29.5 shrink-0 rounded-2xl bg-muted/70 p-3 press"
               >
                 <img src={def.logoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
                 <p className="mt-3 text-sm font-bold">{def.symbol}</p>
@@ -641,7 +641,7 @@ function HomeTab({
               key={ev.id}
               type="button"
               onClick={onOpenPredict}
-              className="w-[168px] shrink-0 rounded-2xl bg-muted/70 p-3 text-left press"
+              className="w-42 shrink-0 rounded-2xl bg-muted/70 p-3 text-left press"
             >
               <div
                 className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black text-white"
@@ -656,7 +656,7 @@ function HomeTab({
           <button
             type="button"
             onClick={onOpenPredict}
-            className="flex w-[168px] shrink-0 flex-col justify-between rounded-2xl bg-muted/70 p-3 text-left press"
+            className="flex w-42 shrink-0 flex-col justify-between rounded-2xl bg-muted/70 p-3 text-left press"
           >
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/20 text-primary">
               <Sparkles className="h-4 w-4" />
@@ -847,7 +847,7 @@ function PredictTab({
         <h2 className="text-lg font-extrabold">Upcoming</h2>
         <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
           {PREDICT_UPCOMING.map((ev) => (
-            <div key={ev.id} className="w-[150px] shrink-0 rounded-2xl bg-muted/70 p-3">
+            <div key={ev.id} className="w-37.5 shrink-0 rounded-2xl bg-muted/70 p-3">
               <div
                 className="grid h-8 w-8 place-items-center rounded-lg text-[10px] font-black text-white"
                 style={{ backgroundColor: ev.accent }}
@@ -922,7 +922,7 @@ function PredictTab({
                   onOpenDetail();
                 }}
                 className={cn(
-                  "w-[120px] shrink-0 rounded-2xl p-3 text-left press",
+                  "w-30 shrink-0 rounded-2xl p-3 text-left press",
                   selected ? "bg-primary/15 ring-1 ring-primary/40" : "bg-muted/70",
                 )}
               >
@@ -1029,7 +1029,7 @@ function PredictDetail({
           </button>
           <div className="mt-2 flex items-center gap-2">
             <img src={def.logoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
-            <div className="flex gap-1 overflow-x-auto scrollbar-none max-w-[220px]">
+            <div className="flex max-w-55 gap-1 overflow-x-auto scrollbar-none">
               {MAJOR_TOKEN_IDS.map((id) => (
                 <button
                   key={id}

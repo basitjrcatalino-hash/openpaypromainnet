@@ -51,6 +51,7 @@ import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
+import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticated/withdraw'
 import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
@@ -65,6 +66,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
 import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
@@ -328,6 +330,11 @@ const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
   path: '/wc-pay',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWithdrawRoute = AuthenticatedWithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
   id: '/admin/testnet-progress',
   path: '/admin/testnet-progress',
@@ -400,6 +407,12 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminWithdrawalsRoute =
+  AuthenticatedAdminWithdrawalsRouteImport.update({
+    id: '/admin/withdrawals',
+    path: '/admin/withdrawals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAssetTokenIdRoute =
   AuthenticatedAssetTokenIdRouteImport.update({
     id: '/asset_/$tokenId',
@@ -720,6 +733,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
+  '/withdraw': typeof AuthenticatedWithdrawRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
@@ -734,6 +748,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
@@ -828,6 +843,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
+  '/withdraw': typeof AuthenticatedWithdrawRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
@@ -842,6 +858,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
@@ -938,6 +955,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
+  '/_authenticated/withdraw': typeof AuthenticatedWithdrawRoute
   '/admin/testnet-progress': typeof AdminTestnetProgressRoute
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
@@ -952,6 +970,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
+  '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
   '/_authenticated/bags_/launch': typeof AuthenticatedBagsLaunchRoute
@@ -1048,6 +1067,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/watchlist'
     | '/wc-pay'
+    | '/withdraw'
     | '/admin/testnet-progress'
     | '/api/chat'
     | '/api/tts'
@@ -1062,6 +1082,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
     | '/admin/topup'
+    | '/admin/withdrawals'
     | '/asset/$tokenId'
     | '/bags/fees'
     | '/bags/launch'
@@ -1156,6 +1177,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/watchlist'
     | '/wc-pay'
+    | '/withdraw'
     | '/admin/testnet-progress'
     | '/api/chat'
     | '/api/tts'
@@ -1170,6 +1192,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
     | '/admin/topup'
+    | '/admin/withdrawals'
     | '/asset/$tokenId'
     | '/bags/fees'
     | '/bags/launch'
@@ -1265,6 +1288,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/_authenticated/watchlist'
     | '/_authenticated/wc-pay'
+    | '/_authenticated/withdraw'
     | '/admin/testnet-progress'
     | '/api/chat'
     | '/api/tts'
@@ -1279,6 +1303,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/topup'
+    | '/_authenticated/admin/withdrawals'
     | '/_authenticated/asset_/$tokenId'
     | '/_authenticated/bags_/fees'
     | '/_authenticated/bags_/launch'
@@ -1690,6 +1715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWcPayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/withdraw': {
+      id: '/_authenticated/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof AuthenticatedWithdrawRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/admin/testnet-progress': {
       id: '/admin/testnet-progress'
       path: '/admin/testnet-progress'
@@ -1786,6 +1818,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/topup'
       fullPath: '/admin/topup'
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/withdrawals': {
+      id: '/_authenticated/admin/withdrawals'
+      path: '/admin/withdrawals'
+      fullPath: '/admin/withdrawals'
+      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/asset_/$tokenId': {
@@ -2211,8 +2250,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
+  AuthenticatedWithdrawRoute: typeof AuthenticatedWithdrawRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
+  AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
   AuthenticatedBagsLaunchRoute: typeof AuthenticatedBagsLaunchRoute
@@ -2254,8 +2295,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
+  AuthenticatedWithdrawRoute: AuthenticatedWithdrawRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
+  AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,
   AuthenticatedBagsLaunchRoute: AuthenticatedBagsLaunchRoute,

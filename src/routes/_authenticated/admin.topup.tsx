@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -301,6 +301,18 @@ function AdminTopupPage() {
             ))}
           </div>
         )}
+      </Card>
+
+      <Card className="space-y-3 rounded-2xl border-0 p-5 shadow-none">
+        <h2 className="text-lg font-semibold">Scan to pay · receive wallets</h2>
+        <p className="text-sm text-muted-foreground">
+          Multi-chain QR top-ups (SOL, USDC, USDT, CASH, …) verify on-chain that funds hit{" "}
+          <strong>your</strong> receive address, then release OUSD on OpenLedger. Configure chains,
+          tokens, and wallet addresses here:
+        </p>
+        <Button asChild variant="outline" className="rounded-full">
+          <Link to="/admin/deposits">Open Admin → Deposits</Link>
+        </Button>
       </Card>
 
 

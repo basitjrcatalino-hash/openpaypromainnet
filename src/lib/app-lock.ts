@@ -1,6 +1,8 @@
 /** App lock password — Phantom-style unlock for OpenPay Pro. */
 
-const UNLOCK_KEY = (userId: string) => `openpay-pro-unlocked:${userId}`;
+/** In-memory only: survives SPA navigations, clears on full page reload. */
+const unlockedUsers = new Set<string>();
+
 const LOCK_ENABLED_KEY = (userId: string) => `openpay-pro-lock-enabled:${userId}`;
 
 export async function hashLockPassword(userId: string, password: string): Promise<string> {
@@ -14,27 +16,15 @@ export async function hashLockPassword(userId: string, password: string): Promis
 }
 
 export function isSessionUnlocked(userId: string): boolean {
-  try {
-    return sessionStorage.getItem(UNLOCK_KEY(userId)) === "1";
-  } catch {
-    return false;
-  }
+  return unlockedUsers.has(userId);
 }
 
 export function markSessionUnlocked(userId: string) {
-  try {
-    sessionStorage.setItem(UNLOCK_KEY(userId), "1");
-  } catch {
-    /* private mode */
-  }
+  unlockedUsers.add(userId);
 }
 
 export function clearSessionUnlock(userId: string) {
-  try {
-    sessionStorage.removeItem(UNLOCK_KEY(userId));
-  } catch {
-    /* ignore */
-  }
+  unlockedUsers.delete(userId);
 }
 
 /** Prefer remote pin flag; local flag is a UX hint after set. */

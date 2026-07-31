@@ -47,7 +47,6 @@ import { requestWalletLock, notifyLockPasswordChanged } from "@/components/app-l
 import {
   clearSessionUnlock,
   hashLockPassword,
-  markSessionUnlocked,
   rememberLockEnabled,
   validateLockPassword,
 } from "@/lib/app-lock";
@@ -495,12 +494,16 @@ function SettingsPage() {
       }
       nextPatch = { ...patch, notifications: next };
     }
-    await supabase.from("user_preferences").upsert({
+    const { error } = await supabase.from("user_preferences").upsert({
       user_id: user.id,
       ...nextPatch,
       notifications: nextPatch.notifications as Json | undefined,
       updated_at: new Date().toISOString(),
     });
+    if (error) {
+      toast.error(error.message);
+      throw error;
+    }
     qc.invalidateQueries({ queryKey: ["prefs", user.id] });
     qc.invalidateQueries({ queryKey: ["openpay-link", user.id] });
   }
@@ -974,16 +977,18 @@ function SettingsPage() {
                 const h = await hashLockPassword(user.id, password);
                 await updatePref({ pin_hash: h });
                 rememberLockEnabled(user.id, true);
-                markSessionUnlocked(user.id);
+                // Require unlock before dashboard / wallet access
+                clearSessionUnlock(user.id);
                 notifyLockPasswordChanged();
-                toast.success("Lock password saved");
+                toast.success("App lock enabled — enter your password to continue");
+                requestWalletLock();
               }}
               onClear={async () => {
                 await updatePref({ pin_hash: null });
                 rememberLockEnabled(user.id, false);
                 clearSessionUnlock(user.id);
                 notifyLockPasswordChanged();
-                toast.success("Lock password removed");
+                toast.success("App lock turned off");
               }}
               onLockNow={() => requestWalletLock()}
             />
@@ -1583,6 +1588,8 @@ function LockPasswordCard({
       setOpen(false);
       setPassword("");
       setPassword2("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save lock password");
     } finally {
       setBusy(false);
     }
@@ -1593,12 +1600,21 @@ function LockPasswordCard({
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
         <Lock className="h-4 w-4" />
       </span>
-      <div className="mt-2 text-sm font-semibold">
-        Lock password{" "}
-        {hasPin && <span className="ml-1 text-[10px] uppercase text-mint-foreground">on</span>}
-      </div>
-      <div className="text-xs text-muted-foreground">
-        Protect your wallet — unlock like Phantom when you open the app
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">Enable app lock</div>
+          <div className="text-xs text-muted-foreground">
+            Require password before opening your dashboard
+          </div>
+        </div>
+        <Switch
+          checked={hasPin}
+          onCheckedChange={(on) => {
+            if (on) setOpen(true);
+            else void onClear();
+          }}
+          aria-label="Enable app lock"
+        />
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <Dialog
@@ -1613,14 +1629,14 @@ function LockPasswordCard({
         >
           <DialogTrigger asChild>
             <Button size="sm" variant="outline" className="flex-1 rounded-full">
-              {hasPin ? "Change" : "Set up"}
+              {hasPin ? "Change password" : "Set password"}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-sm rounded-3xl">
             <DialogHeader>
-              <DialogTitle>Set lock password</DialogTitle>
+              <DialogTitle>{hasPin ? "Change lock password" : "Enable app lock"}</DialogTitle>
               <DialogDescription>
-                At least 6 characters. You’ll enter this to unlock OpenPay Pro.
+                At least 6 characters. You’ll need this password every time you open the dashboard.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
@@ -1653,20 +1669,15 @@ function LockPasswordCard({
                 className="rounded-full bg-[#AB9FF2] font-bold text-black hover:bg-[#B8B0FF]"
               >
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save password
+                {hasPin ? "Save password" : "Enable lock"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
         {hasPin ? (
-          <>
-            <Button size="sm" variant="secondary" className="rounded-full" onClick={onLockNow}>
-              Lock now
-            </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => void onClear()}>
-              Remove
-            </Button>
-          </>
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={onLockNow}>
+            Lock now
+          </Button>
         ) : null}
       </div>
     </div>

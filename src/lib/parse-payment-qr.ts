@@ -12,6 +12,7 @@ export type ParsedPaymentQr = {
 };
 
 const PRO_ADDR_RE = /^0x[a-fA-F0-9]{40}$/;
+const PRO_ADDR_EMBEDDED_RE = /0x[a-fA-F0-9]{40}/i;
 const OP_ACCOUNT_RE = /^OP[A-Za-z0-9]{4,}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,15 +42,22 @@ function fromParts(
   assetRaw?: string | null,
   tokenRaw?: string | null,
 ): ParsedPaymentQr {
-  const to = toRaw.trim().replace(/^@+/, "").replace(/^\/+/, "");
+  let to = toRaw.trim().replace(/^@+/, "").replace(/^\/+/, "");
+  // Recover address if path/query glued junk around a Pro wallet.
+  if (!PRO_ADDR_RE.test(to)) {
+    const embedded = to.match(PRO_ADDR_EMBEDDED_RE)?.[0];
+    if (embedded) to = embedded;
+  }
   const amountClean = amount?.trim() || undefined;
   const asset = parseAsset(assetRaw ?? null);
   const token =
-    tokenRaw && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tokenRaw.trim())
+    tokenRaw &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      tokenRaw.trim(),
+    )
       ? tokenRaw.trim()
       : undefined;
   const cls = classifyRecipient(to);
-  // Keep @ for display on openpay usernames that were explicitly @-prefixed in URL path
   return {
     to,
     amount: amountClean,
@@ -59,28 +67,22 @@ function fromParts(
   };
 }
 
+/** Pull a Pro wallet address out of arbitrary QR text / URLs. */
+function extractProAddress(raw: string): string | null {
+  const m = raw.replace(/\s/g, "").match(PRO_ADDR_EMBEDDED_RE);
+  return m ? m[0] : null;
+}
+
 /** Extract payee from OpenPay / OpenPay Pro web pay links. */
 function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
   try {
-    const url = new URL(raw);
-    const host = url.hostname.replace(/^www\./, "").toLowerCase();
-    const isOpenPayHost =
-      host === "openpy.space" ||
-      host === "openpay.space" ||
-      host === "openpaypro.space" ||
-      host.endsWith(".openpy.space") ||
-      host.endsWith(".openpay.space") ||
-      host.endsWith(".openpaypro.space") ||
-      host.includes("openpay") ||
-      host.includes("openpy");
-
-    if (!isOpenPayHost && !raw.includes("/pay/") && !url.pathname.startsWith("/send")) {
-      return null;
-    }
+    const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    const path = decodeURIComponent(url.pathname);
 
     // https://openpaypro.space/pay/0x…?asset=OUSD
+    // https://any-host/pay/0x… (preview / custom domains)
     // https://openpy.space/pay/@alice?amount=10
-    const payMatch = url.pathname.match(/\/pay\/([^/?#]+)/i);
+    const payMatch = path.match(/\/pay\/([^/?#]+)/i);
     if (payMatch?.[1]) {
       const handle = decodeURIComponent(payMatch[1]).replace(/^@+/, "");
       return fromParts(
@@ -106,6 +108,17 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
         url.searchParams.get("token"),
       );
     }
+
+    // Last resort: any 0x in the URL (broken / truncated pay links)
+    const embedded = extractProAddress(url.href);
+    if (embedded) {
+      return fromParts(
+        embedded,
+        url.searchParams.get("amount") ?? url.searchParams.get("value"),
+        url.searchParams.get("asset"),
+        url.searchParams.get("token"),
+      );
+    }
   } catch {
     /* not a URL */
   }
@@ -114,9 +127,9 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
 
 /**
  * Accepts OpenPay Pro wallet receive QRs for every Pro token:
- * - Raw Pro wallet `0x…`
- * - `https://openpaypro.space/pay/0x…?asset=OUSD|PI|BTC|…`
- * - `https://openpaypro.space/pay/0x…?token=<OpenToken uuid>&asset=SYM`
+ * - Raw Pro wallet `0x…` (preferred receive QR payload)
+ * - `https://…/pay/0x…?asset=OUSD|PI|BTC|…` (legacy / share links)
+ * - `https://…/pay/0x…?token=<OpenToken uuid>&asset=SYM`
  * - Legacy `openpay:0x…?asset=…&token=…`
  * - `openpaypro:` / `ethereum:` schemes
  * - OpenPay `OP…` account, `@username`, email (Send flow)
@@ -133,9 +146,10 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
     return { to: "", rail: "wallet", kind: "unknown" };
   }
 
-  // Bare 0x address (common when QR encodes only the address)
-  if (PRO_ADDR_RE.test(raw.replace(/\s/g, ""))) {
-    return fromParts(raw.replace(/\s/g, ""));
+  // Bare 0x address (preferred receive QR)
+  const compact = raw.replace(/\s/g, "");
+  if (PRO_ADDR_RE.test(compact)) {
+    return fromParts(compact);
   }
 
   // HTTP(S) OpenPay / Pro pay links (all token assets via ?asset= / ?token=)
@@ -143,7 +157,9 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
     /^https?:\/\//i.test(raw) ||
     raw.includes("openpy.space") ||
     raw.includes("openpaypro.space") ||
-    raw.includes("/pay/")
+    raw.includes("openpay") ||
+    raw.includes("/pay/") ||
+    raw.includes("/send")
   ) {
     const http = parseHttpPayUrl(raw.startsWith("http") ? raw : `https://${raw}`);
     if (http?.to) return http;
@@ -205,6 +221,10 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
       params.get("token"),
     );
   }
+
+  // Embedded 0x anywhere in noisy QR text
+  const embedded = extractProAddress(raw);
+  if (embedded) return fromParts(embedded);
 
   return fromParts(raw);
 }

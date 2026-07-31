@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { isWalletConnectPayLink, normalizeWalletConnectPayLink } from "@/lib/walletconnect-pay";
 import { isEmbeddedFrame, scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
-import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
+import { buildReceiveQrPayload, walletQrDataUrl } from "@/lib/receive-qr";
 import { shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -58,23 +58,23 @@ function ScanPage() {
       ).data,
   });
 
-  const payUri = wallet?.address
-    ? buildReceivePayUri({ address: wallet.address, asset: "OUSD" })
+  const qrPayload = wallet?.address
+    ? buildReceiveQrPayload({ address: wallet.address, asset: "OUSD" })
     : "";
 
   useEffect(() => {
     let cancelled = false;
-    if (!payUri) {
+    if (!qrPayload) {
       setMyQrUrl("");
       return;
     }
-    void walletQrDataUrl(payUri, 280).then((url) => {
+    void walletQrDataUrl(qrPayload, 280).then((url) => {
       if (!cancelled) setMyQrUrl(url);
     });
     return () => {
       cancelled = true;
     };
-  }, [payUri]);
+  }, [qrPayload]);
 
   // Pause camera while My QR sheet is open so it doesn't fight the overlay.
   const scanner = usePhantomQrScanner({
@@ -124,7 +124,10 @@ function ScanPage() {
     }
 
     // /scan is for OpenPay Pro wallet receive QRs (0x…) across all Pro tokens.
-    if (parsed.kind !== "pro_wallet") {
+    // Also accept legacy HTTPS /pay/ links that still decode to a Pro address.
+    const isPro =
+      parsed.kind === "pro_wallet" || /^0x[a-fA-F0-9]{40}$/i.test(parsed.to.trim());
+    if (!isPro) {
       handled.current = false;
       scanner.unlock();
       setFlash(false);
@@ -354,7 +357,7 @@ function ScanPage() {
             </button>
           </div>
           <p className="mt-5 max-w-xs text-center text-[13px] text-white/60">
-            Others can scan this with OpenPay Pro Scan to send any Pro token to you
+            This QR is your wallet address. Scan it in OpenPay Pro → Send, or copy the address below
           </p>
         </div>
       )}
@@ -363,7 +366,7 @@ function ScanPage() {
       <div className="absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         {!showMyQr && (
           <p className="mx-auto mb-7 max-w-xs text-center text-[13px] font-medium leading-snug text-white/65">
-            Scan OpenPay Pro receive QR — OUSD, majors, or any OpenToken
+            Scan a wallet address QR — opens Send with the address filled in
           </p>
         )}
 

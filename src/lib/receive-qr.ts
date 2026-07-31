@@ -5,7 +5,7 @@ const SITE = "https://openpaypro.space";
 function appOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {
     const o = window.location.origin.replace(/\/$/, "");
-    // Prefer production host in QR so phone cameras open a real public URL.
+    // Prefer production host in pay links so phone cameras open a real public URL.
     if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(o)) return SITE;
     return o;
   }
@@ -25,8 +25,22 @@ export type ReceiveQrOptions = {
 };
 
 /**
- * HTTPS receive URI — phone cameras open this instead of showing "No data"
- * for the custom `openpay:` scheme. OpenPay Scan / Send still parse it.
+ * Payload encoded in the on-screen receive QR.
+ * Uses the bare wallet address (or openpay:… with amount/token) so scanners
+ * read the address — not an HTTPS link that only opens the app.
+ */
+export function buildReceiveQrPayload(opts: ReceiveQrOptions): string {
+  const address = opts.address.trim();
+  if (!address) return "";
+  const amount = opts.amount?.trim();
+  const needsMeta = !!(amount || opts.token);
+  if (!needsMeta) return address;
+  return buildOpenPaySchemeUri(opts);
+}
+
+/**
+ * HTTPS receive link for Share / “Copy receive link”.
+ * Phone cameras open this; OpenPay Scan / /pay/$to still parse the address.
  */
 export function buildReceivePayUri(opts: ReceiveQrOptions): string {
   const address = opts.address.trim();
@@ -39,7 +53,7 @@ export function buildReceivePayUri(opts: ReceiveQrOptions): string {
   return `${appOrigin()}/pay/${encodeURIComponent(address)}${qs ? `?${qs}` : ""}`;
 }
 
-/** Legacy custom-scheme URI (still accepted by parsePaymentQr). */
+/** Custom-scheme URI (accepted by parsePaymentQr; used when amount/token is set). */
 export function buildOpenPaySchemeUri(opts: ReceiveQrOptions): string {
   const address = opts.address.trim();
   if (!address) return "";

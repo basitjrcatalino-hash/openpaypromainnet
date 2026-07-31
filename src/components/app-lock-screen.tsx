@@ -64,17 +64,11 @@ export function AppLockGate({ userId, children }: Props) {
     };
   }, [userId]);
 
-  // Re-lock when tab is hidden for a while (close wallet like Phantom).
+  // Relock when the tab is hidden (leave dashboard / switch apps).
   useEffect(() => {
     if (!needsLock) return;
-    let hideAt = 0;
     const onVis = () => {
       if (document.visibilityState === "hidden") {
-        hideAt = Date.now();
-        return;
-      }
-      // Relock after ~45s away
-      if (hideAt && Date.now() - hideAt > 45_000) {
         clearSessionUnlock(userId);
         setLocked(true);
       }
@@ -85,13 +79,12 @@ export function AppLockGate({ userId, children }: Props) {
 
   useEffect(() => {
     const onLock = () => {
-      if (!needsLock) return;
       clearSessionUnlock(userId);
       setLocked(true);
     };
     window.addEventListener("openpay-lock-wallet", onLock);
     return () => window.removeEventListener("openpay-lock-wallet", onLock);
-  }, [needsLock, userId]);
+  }, [userId]);
 
   if (checking) {
     return (
@@ -200,6 +193,9 @@ function AppLockScreen({
         <h1 className="mt-10 text-center text-[1.65rem] font-bold tracking-tight">
           Enter your password
         </h1>
+        <p className="mt-2 max-w-[16rem] text-center text-sm text-white/50">
+          Unlock to open your dashboard
+        </p>
 
         <form onSubmit={unlock} className="mt-8 w-full space-y-4">
           <div className="relative">

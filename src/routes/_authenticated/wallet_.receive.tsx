@@ -10,7 +10,7 @@ import { AlertTriangle, ArrowLeft, Check, Copy, Link2, Loader2, QrCode, Share2 }
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 import { z } from "zod";
-import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
+import { buildReceivePayUri, buildReceiveQrPayload, walletQrDataUrl } from "@/lib/receive-qr";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -205,13 +205,28 @@ function WalletReceivePage() {
     });
   }, [wallet?.address, selected.asset, openToken]);
 
+  const qrPayload = useMemo(() => {
+    if (!wallet?.address) return "";
+    if (openToken?.id) {
+      return buildReceiveQrPayload({
+        address: wallet.address,
+        asset: openToken.symbol,
+        token: openToken.id,
+      });
+    }
+    return buildReceiveQrPayload({
+      address: wallet.address,
+      asset: selected.asset,
+    });
+  }, [wallet?.address, selected.asset, openToken]);
+
   useEffect(() => {
     let cancelled = false;
-    if (!payUri) {
+    if (!qrPayload) {
       setQrUrl("");
       return;
     }
-    void walletQrDataUrl(payUri, 280)
+    void walletQrDataUrl(qrPayload, 280)
       .then((url) => {
         if (!cancelled) setQrUrl(url);
       })
@@ -221,7 +236,7 @@ function WalletReceivePage() {
     return () => {
       cancelled = true;
     };
-  }, [payUri]);
+  }, [qrPayload]);
 
   function selectNetwork(id: NetworkId) {
     const net = NETWORKS.find((n) => n.id === id)!;
@@ -506,6 +521,9 @@ function WalletReceivePage() {
             </p>
             <p className="ph-caption mt-1">
               ({shortAddress(wallet.address, 8, 8)}) · {wallet.name || "Main Wallet"}
+            </p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              QR encodes your wallet address — scan in OpenPay Pro to fill Send
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-2">

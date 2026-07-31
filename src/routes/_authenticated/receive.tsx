@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
-import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
+import { buildReceivePayUri, buildReceiveQrPayload, walletQrDataUrl } from "@/lib/receive-qr";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -117,6 +117,13 @@ function ReceivePage() {
         amount: amount || undefined,
       })
     : "";
+  const qrPayload = wallet?.address
+    ? buildReceiveQrPayload({
+        address: wallet.address,
+        asset,
+        amount: amount || undefined,
+      })
+    : "";
 
   async function connectPiWallet() {
     setPiLinkBusy(true);
@@ -144,11 +151,11 @@ function ReceivePage() {
   // Use data-URL images instead of canvas so React doesn't fight qrcode DOM mutations.
   useEffect(() => {
     let cancelled = false;
-    if (!payUri) {
+    if (!qrPayload) {
       setWalletQrUrl((prev) => (prev ? "" : prev));
       return;
     }
-    void walletQrDataUrl(payUri, 280)
+    void walletQrDataUrl(qrPayload, 280)
       .then((url) => {
         if (!cancelled) setWalletQrUrl(url);
       })
@@ -158,7 +165,7 @@ function ReceivePage() {
     return () => {
       cancelled = true;
     };
-  }, [payUri]);
+  }, [qrPayload]);
 
   useEffect(() => {
     let cancelled = false;

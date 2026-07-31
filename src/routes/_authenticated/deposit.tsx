@@ -140,7 +140,11 @@ function DepositPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-5 px-4 pb-24 pt-2">
-      <PageHeader title="Deposit" subtitle="Fund your wallet from any supported chain" />
+      <PageHeader title="Deposit" backTo="/dashboard" />
+      <p className="-mt-2 text-sm text-muted-foreground">
+        Fund your wallet from any supported chain.
+      </p>
+
 
       <Card className="space-y-4 rounded-3xl border-border/60 bg-card/70 p-4">
         <div>

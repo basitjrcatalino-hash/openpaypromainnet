@@ -88,8 +88,10 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Compass },
   { to: "/wallet", label: "Wallet", icon: Wallet },
+  { to: "/deposit", label: "Deposit", icon: ArrowDownToLine },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "OpenToken", icon: BookOpen },
+
   // Bags Cash hidden for now — re-enable via BAGS_CASH_ENABLED above.
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },

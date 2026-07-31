@@ -91,6 +91,7 @@ import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicPaymentsCreateRouteImport } from './routes/api/public/payments/create'
 import { Route as ApiPublicPaymentsChainsRouteImport } from './routes/api/public/payments/chains'
 import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
@@ -531,6 +532,11 @@ const ApiPublicPiPaymentsApproveRoute =
     path: '/api/public/pi-payments/approve',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsCreateRoute = ApiPublicPaymentsCreateRouteImport.update({
+  id: '/api/public/payments/create',
+  path: '/api/public/payments/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsChainsRoute = ApiPublicPaymentsChainsRouteImport.update({
   id: '/api/public/payments/chains',
   path: '/api/public/payments/chains',
@@ -685,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -780,6 +787,7 @@ export interface FileRoutesByTo {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -877,6 +885,7 @@ export interface FileRoutesById {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -974,6 +983,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/payments/chains'
+    | '/api/public/payments/create'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1069,6 +1079,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/payments/chains'
+    | '/api/public/payments/create'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1165,6 +1176,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/payments/chains'
+    | '/api/public/payments/create'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1218,6 +1230,7 @@ export interface RootRouteChildren {
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicOpenpayInboundRoute: typeof ApiPublicOpenpayInboundRoute
   ApiPublicPaymentsChainsRoute: typeof ApiPublicPaymentsChainsRoute
+  ApiPublicPaymentsCreateRoute: typeof ApiPublicPaymentsCreateRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
@@ -1803,6 +1816,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/create': {
+      id: '/api/public/payments/create'
+      path: '/api/public/payments/create'
+      fullPath: '/api/public/payments/create'
+      preLoaderRoute: typeof ApiPublicPaymentsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/chains': {
       id: '/api/public/payments/chains'
       path: '/api/public/payments/chains'
@@ -2087,6 +2107,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicOpenpayInboundRoute: ApiPublicOpenpayInboundRoute,
   ApiPublicPaymentsChainsRoute: ApiPublicPaymentsChainsRoute,
+  ApiPublicPaymentsCreateRoute: ApiPublicPaymentsCreateRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,

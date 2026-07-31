@@ -9,7 +9,9 @@ import {
 import { useEffect, useState } from "react";
 import {
   Wallet,
+  ArrowDownToLine,
   Compass,
+
   Settings as SettingsIcon,
   LogOut,
   Menu,

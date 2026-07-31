@@ -750,7 +750,7 @@ export function AssetBuySheet({
               </div>
 
               <div className="flex w-full items-baseline justify-center gap-1">
-                <span className="text-3xl font-bold text-muted-foreground/80">$</span>
+                <span className="text-5xl font-bold text-muted-foreground/80">$</span>
                 <Input
                   value={amount}
                   onChange={(e) => {
@@ -763,7 +763,7 @@ export function AssetBuySheet({
                   pattern="[0-9]*[.]?[0-9]*"
                   autoFocus
                   aria-label={isOusd ? "Amount in USD" : "Amount in OUSD"}
-                  className="h-auto w-full max-w-[14rem] border-0 bg-transparent p-0 text-center text-[3.25rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
+                  className="h-auto w-full max-w-[18rem] border-0 bg-transparent p-0 text-center text-[5rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
                 />
               </div>
 

@@ -615,7 +615,7 @@ function TopUpPage() {
             </button>
 
             <div className="flex w-full items-baseline justify-center gap-1">
-              <span className="text-4xl font-bold text-muted-foreground/80">$</span>
+              <span className="text-5xl font-bold text-muted-foreground/80">$</span>
               <Input
                 id="topup-amount"
                 value={amount}
@@ -628,7 +628,7 @@ function TopUpPage() {
                 inputMode="decimal"
                 autoFocus
                 aria-label="Buy amount in USD"
-                className="h-auto w-full max-w-[14rem] border-0 bg-transparent p-0 text-center text-[3.5rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
+                className="h-auto w-full max-w-[18rem] border-0 bg-transparent p-0 text-center text-[5rem] font-bold leading-none tabular-nums shadow-none focus-visible:ring-0"
               />
             </div>
 

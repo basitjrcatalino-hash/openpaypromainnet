@@ -1754,6 +1754,39 @@ export type Database = {
         }
         Relationships: []
       }
+      topup_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          method_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          method_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          method_key?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topup_settings: {
         Row: {
           fee_bps: number

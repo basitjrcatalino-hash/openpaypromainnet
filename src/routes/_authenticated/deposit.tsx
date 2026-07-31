@@ -195,11 +195,14 @@ function DepositPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={async () =>
-                        (await copyText(address.address))
-                          ? toast.success("Address copied")
-                          : toast.error("Copy failed")
-                      }
+                      onClick={async () => {
+                        try {
+                          await copyText(address.address);
+                          toast.success("Address copied");
+                        } catch {
+                          toast.error("Copy failed");
+                        }
+                      }}
                       aria-label="Copy deposit address"
                     >
                       <Copy className="h-4 w-4" />

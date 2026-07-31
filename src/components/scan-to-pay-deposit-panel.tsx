@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import QRCode from "qrcode";
@@ -264,11 +263,7 @@ export function ScanToPayDepositPanel({
           </p>
         ) : !address?.address ? (
           <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
-            No receive wallet for this network yet. An admin must set one in{" "}
-            <Link to="/admin/deposits" className="font-semibold text-primary">
-              Admin → Deposits
-            </Link>
-            .
+            No receive wallet for this network yet. Please try another chain or contact support.
           </div>
         ) : (
           <>

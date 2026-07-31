@@ -6,6 +6,9 @@ import {
   WITHDRAWAL_MIN_OUSD,
   WITHDRAWAL_TREASURY_ADDRESS,
   WITHDRAWAL_TREASURY_USERNAME,
+  WITHDRAWAL_FEE_BPS,
+  WITHDRAWAL_FEE_ADDRESS,
+  calcWithdrawalFee,
   isValidDestinationAddress,
   type WithdrawalDestKind,
 } from "@/lib/withdraw-ousd";
@@ -118,6 +121,9 @@ export const getWithdrawContext = createServerFn({ method: "GET" })
         pi_wallet_address: profile?.pi_wallet_address ?? null,
       },
       min_ousd: WITHDRAWAL_MIN_OUSD,
+      fee_bps: WITHDRAWAL_FEE_BPS,
+      fee_percent: WITHDRAWAL_FEE_BPS / 100,
+      fee_address: WITHDRAWAL_FEE_ADDRESS,
       treasury_address: WITHDRAWAL_TREASURY_ADDRESS,
       treasury_username: WITHDRAWAL_TREASURY_USERNAME,
     };
@@ -132,6 +138,9 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
     if (amount < WITHDRAWAL_MIN_OUSD) {
       throw new Error(`Minimum withdrawal is ${WITHDRAWAL_MIN_OUSD} OUSD`);
     }
+
+    const { fee: feeOusd, net: netOusd, feeBps } = calcWithdrawalFee(amount);
+    if (!(netOusd > 0)) throw new Error("Net payout after fee must be greater than zero");
 
     const dest = data.destination_address.trim();
     const destKind = data.destination_kind as WithdrawalDestKind;
@@ -210,6 +219,9 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
         user_id: userId,
         wallet_id: wallet.id,
         amount,
+        fee_bps: feeBps,
+        fee_ousd: feeOusd,
+        net_ousd: netOusd,
         destination_address: dest,
         destination_kind: destKind,
         display_name: displayName,
@@ -241,8 +253,8 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
           amount,
           usd_value: amount,
           memo: note
-            ? `OUSD withdraw (${destKind}) → ${dest} · ${note}`
-            : `OUSD withdraw (${destKind}) → ${dest}`,
+            ? `OUSD withdraw (${destKind}) net ${netOusd} + fee ${feeOusd} → ${dest} · ${note}`
+            : `OUSD withdraw (${destKind}) net ${netOusd} + fee ${feeOusd} → ${dest}`,
         },
         {
           wallet_id: treasury.id,
@@ -250,9 +262,19 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
           status: "confirmed",
           token_symbol: "OUSD",
           counterparty: wallet.address,
-          amount,
-          usd_value: amount,
-          memo: `Withdrawal lock from @${username || "user"} · ${destKind} payout to ${dest}`,
+          amount: netOusd,
+          usd_value: netOusd,
+          memo: `Withdrawal lock (net) from @${username || "user"} · ${destKind} payout to ${dest}`,
+        },
+        {
+          wallet_id: treasury.id,
+          type: "receive",
+          status: "confirmed",
+          token_symbol: "OUSD",
+          counterparty: wallet.address,
+          amount: feeOusd,
+          usd_value: feeOusd,
+          memo: `Withdrawal fee ${feeBps / 100}% → ${WITHDRAWAL_FEE_ADDRESS}`,
         },
       ]);
     } catch (e) {
@@ -269,7 +291,7 @@ export const listMyWithdrawals = createServerFn({ method: "GET" })
     const { data, error } = await (supabase as any)
       .from("ousd_withdrawals")
       .select(
-        "id, amount, destination_address, destination_kind, display_name, username, note, status, admin_note, payout_tx_hash, created_at, updated_at, reviewed_at",
+        "id, amount, fee_ousd, net_ousd, fee_bps, destination_address, destination_kind, display_name, username, note, status, admin_note, payout_tx_hash, created_at, updated_at, reviewed_at",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })

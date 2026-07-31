@@ -205,6 +205,17 @@ function AdminWithdrawalsPage() {
                       <p className="text-lg font-semibold tabular-nums">
                         {formatNumber(Number(r.amount), 2)} OUSD
                       </p>
+                      <p className="text-xs text-muted-foreground">
+                        Fee {formatNumber(Number(r.fee_ousd ?? Number(r.amount) * 0.02), 2)} · Pay
+                        out{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatNumber(
+                            Number(r.net_ousd ?? Number(r.amount) * 0.98),
+                            2,
+                          )}{" "}
+                          OUSD
+                        </span>
+                      </p>
                       <p className="text-sm">
                         {r.display_name || "—"}{" "}
                         <span className="text-muted-foreground">

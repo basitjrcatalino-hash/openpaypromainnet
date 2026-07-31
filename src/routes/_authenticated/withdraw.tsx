@@ -33,6 +33,8 @@ import {
   WITHDRAWAL_MIN_OUSD,
   WITHDRAWAL_TREASURY_ADDRESS,
   WITHDRAWAL_DEST_KINDS,
+  WITHDRAWAL_FEE_BPS,
+  calcWithdrawalFee,
   extractAddressFromScan,
   isValidDestinationAddress,
   detectDestinationKind,
@@ -63,6 +65,8 @@ function WithdrawPage() {
 
   const bal = ctxQ.data?.wallet?.ousd_balance ?? 0;
   const min = ctxQ.data?.min_ousd ?? WITHDRAWAL_MIN_OUSD;
+  const feeBps = ctxQ.data?.fee_bps ?? WITHDRAWAL_FEE_BPS;
+  const feePercent = ctxQ.data?.fee_percent ?? feeBps / 100;
 
   const [amount, setAmount] = useState("");
   const [destKind, setDestKind] = useState<WithdrawalDestKind>("pi");
@@ -89,6 +93,10 @@ function WithdrawPage() {
   }, [ctxQ.data, hydrated]);
 
   const amtNum = Number(amount);
+  const feeSplit = calcWithdrawalFee(
+    Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0,
+    feeBps,
+  );
   const canSubmit =
     Number.isFinite(amtNum) &&
     amtNum >= min &&
@@ -283,6 +291,31 @@ function WithdrawPage() {
           />
         </div>
 
+        {amtNum >= min ? (
+          <div className="space-y-1.5 rounded-2xl bg-muted/40 px-3 py-3 text-sm">
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">Amount</span>
+              <span className="tabular-nums font-medium">{formatNumber(amtNum, 2)} OUSD</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">Fee ({feePercent}%)</span>
+              <span className="tabular-nums font-medium">
+                −{formatNumber(feeSplit.fee, 2)} OUSD
+              </span>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-border/60 pt-1.5">
+              <span className="font-semibold">You receive</span>
+              <span className="tabular-nums font-semibold">
+                {formatNumber(feeSplit.net, 2)} OUSD
+              </span>
+            </div>
+            <p className="pt-1 text-[11px] text-muted-foreground">
+              Fee goes to @{ctxQ.data?.treasury_username ?? "openpay"} (
+              {shortAddress(ctxQ.data?.fee_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}).
+            </p>
+          </div>
+        ) : null}
+
         <Button
           type="button"
           className="w-full rounded-full"
@@ -298,8 +331,8 @@ function WithdrawPage() {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">
-          OUSD is deducted immediately. Status stays <strong>pending</strong> until admin approves
-          or rejects.{" "}
+          Full amount is deducted now ({feePercent}% fee + net payout). Status stays{" "}
+          <strong>pending</strong> until admin approves or rejects.{" "}
           <Link to="/activity" className="underline underline-offset-2">
             Activity
           </Link>
@@ -328,6 +361,12 @@ function WithdrawPage() {
                     <p className="font-semibold tabular-nums">
                       {formatNumber(Number(r.amount), 2)} OUSD
                     </p>
+                    {(r.fee_ousd != null || r.net_ousd != null) && (
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        Fee {formatNumber(Number(r.fee_ousd ?? 0), 2)} · Net{" "}
+                        {formatNumber(Number(r.net_ousd ?? r.amount), 2)}
+                      </p>
+                    )}
                     <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                       → {String(r.destination_address)}
                     </p>

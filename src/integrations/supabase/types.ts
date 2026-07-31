@@ -122,6 +122,9 @@ export type Database = {
           user_id: string
           wallet_id: string
           amount: number
+          fee_bps: number
+          fee_ousd: number
+          net_ousd: number
           destination_address: string
           display_name: string | null
           username: string | null
@@ -142,6 +145,9 @@ export type Database = {
           user_id: string
           wallet_id: string
           amount: number
+          fee_bps?: number
+          fee_ousd?: number
+          net_ousd?: number
           destination_address: string
           display_name?: string | null
           username?: string | null
@@ -162,6 +168,9 @@ export type Database = {
           user_id?: string
           wallet_id?: string
           amount?: number
+          fee_bps?: number
+          fee_ousd?: number
+          net_ousd?: number
           destination_address?: string
           display_name?: string | null
           username?: string | null

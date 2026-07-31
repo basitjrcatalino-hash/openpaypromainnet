@@ -862,117 +862,113 @@ function SidebarInner({
           ) : null}
         </div>
 
-        <SideSection label={t("nav.developer")}>
-          <div className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
-            <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
-            <label
-              htmlFor="developer-mode"
-              className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
+        {isAdmin ? (
+          <SideSection label={t("nav.developer")}>
+            <div className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
+              <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+              <label
+                htmlFor="developer-mode"
+                className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
+              >
+                {t("nav.developer")}
+              </label>
+              <Switch
+                id="developer-mode"
+                checked={developerMode}
+                onCheckedChange={setDeveloperMode}
+                aria-label="Toggle developer mode"
+              />
+            </div>
+            {developerMode ? (
+              <>
+                <Link
+                  to="/ledger"
+                  onClick={onClose}
+                  preload="intent"
+                  aria-current={pathname === "/ledger" ? "page" : undefined}
+                  className={sideItemClass(pathname === "/ledger")}
+                >
+                  <ScrollText
+                    className={cn(
+                      "h-[1.15rem] w-[1.15rem] shrink-0",
+                      pathname === "/ledger" && "ph-tab-icon-active",
+                    )}
+                    strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
+                  />
+                  <span className="truncate">{t("nav.ledgerApi")}</span>
+                </Link>
+                <Link
+                  to="/connect"
+                  onClick={onClose}
+                  preload="intent"
+                  aria-current={pathname === "/connect" ? "page" : undefined}
+                  className={sideItemClass(pathname === "/connect")}
+                >
+                  <Bot
+                    className={cn(
+                      "h-[1.15rem] w-[1.15rem] shrink-0",
+                      pathname === "/connect" && "ph-tab-icon-active",
+                    )}
+                    strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
+                  />
+                  <span className="truncate">{t("nav.agentConnect")}</span>
+                </Link>
+                <a
+                  href="/docs/openpay"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={onClose}
+                  className={sideItemClass(false)}
+                >
+                  <BookOpen className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1 truncate">{t("nav.docs")}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+                </a>
+                <a
+                  href="/docs/faq"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={onClose}
+                  className={sideItemClass(false)}
+                >
+                  <HelpCircle className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1 truncate">{t("nav.faq")}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+                </a>
+              </>
+            ) : null}
+            <Link
+              to="/admin/topup"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/topup" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/topup")}
             >
-              {t("nav.developer")}
-            </label>
-            <Switch
-              id="developer-mode"
-              checked={developerMode}
-              onCheckedChange={setDeveloperMode}
-              aria-label="Toggle developer mode"
-            />
-          </div>
-          {developerMode ? (
-            <>
-              <Link
-                to="/ledger"
-                onClick={onClose}
-                preload="intent"
-                aria-current={pathname === "/ledger" ? "page" : undefined}
-                className={sideItemClass(pathname === "/ledger")}
-              >
-                <ScrollText
-                  className={cn(
-                    "h-[1.15rem] w-[1.15rem] shrink-0",
-                    pathname === "/ledger" && "ph-tab-icon-active",
-                  )}
-                  strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
-                />
-                <span className="truncate">{t("nav.ledgerApi")}</span>
-              </Link>
-              <Link
-                to="/connect"
-                onClick={onClose}
-                preload="intent"
-                aria-current={pathname === "/connect" ? "page" : undefined}
-                className={sideItemClass(pathname === "/connect")}
-              >
-                <Bot
-                  className={cn(
-                    "h-[1.15rem] w-[1.15rem] shrink-0",
-                    pathname === "/connect" && "ph-tab-icon-active",
-                  )}
-                  strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
-                />
-                <span className="truncate">{t("nav.agentConnect")}</span>
-              </Link>
-              <a
-                href="/docs/openpay"
-                target="_blank"
-                rel="noreferrer"
-                onClick={onClose}
-                className={sideItemClass(false)}
-              >
-                <BookOpen className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                <span className="min-w-0 flex-1 truncate">{t("nav.docs")}</span>
-                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
-              </a>
-              <a
-                href="/docs/faq"
-                target="_blank"
-                rel="noreferrer"
-                onClick={onClose}
-                className={sideItemClass(false)}
-              >
-                <HelpCircle className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                <span className="min-w-0 flex-1 truncate">{t("nav.faq")}</span>
-                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
-              </a>
-            </>
-          ) : null}
-          {isAdmin ? (
-            <>
-              <Link
-                to="/admin/topup"
-                onClick={onClose}
-                preload="intent"
-                aria-current={pathname === "/admin/topup" ? "page" : undefined}
-                className={sideItemClass(pathname === "/admin/topup")}
-              >
-                <CircleDollarSign
-                  className={cn(
-                    "h-[1.15rem] w-[1.15rem] shrink-0",
-                    pathname === "/admin/topup" && "ph-tab-icon-active",
-                  )}
-                  strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
-                />
-                <span className="truncate">Admin · Top Up &amp; Buy</span>
-              </Link>
-              <Link
-                to="/admin/withdrawals"
-                onClick={onClose}
-                preload="intent"
-                aria-current={pathname === "/admin/withdrawals" ? "page" : undefined}
-                className={sideItemClass(pathname === "/admin/withdrawals")}
-              >
-                <ArrowUpFromLine
-                  className={cn(
-                    "h-[1.15rem] w-[1.15rem] shrink-0",
-                    pathname === "/admin/withdrawals" && "ph-tab-icon-active",
-                  )}
-                  strokeWidth={pathname === "/admin/withdrawals" ? 2.25 : 1.75}
-                />
-                <span className="truncate">Admin · Withdrawals</span>
-              </Link>
-            </>
-          ) : null}
-          {(developerMode || isAdmin) && (
+              <CircleDollarSign
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/topup" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Top Up &amp; Buy</span>
+            </Link>
+            <Link
+              to="/admin/withdrawals"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/withdrawals" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/withdrawals")}
+            >
+              <ArrowUpFromLine
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/withdrawals" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/withdrawals" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Withdrawals</span>
+            </Link>
             <Link
               to="/admin/deposits"
               onClick={onClose}
@@ -989,8 +985,8 @@ function SidebarInner({
               />
               <span className="truncate">{t("nav.depositGateway")}</span>
             </Link>
-          )}
-        </SideSection>
+          </SideSection>
+        ) : null}
       </nav>
 
       {/* Docked footer — scrolls never cover this; stays under the nav list */}

@@ -43,6 +43,7 @@ import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/n
 import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -274,6 +275,11 @@ const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDepositRoute = AuthenticatedDepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -637,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
@@ -735,6 +742,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
@@ -835,6 +843,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/connect': typeof AuthenticatedConnectRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/deposit': typeof AuthenticatedDepositRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
   '/_authenticated/metamask': typeof AuthenticatedMetamaskRoute
@@ -935,6 +944,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/connect'
     | '/dashboard'
+    | '/deposit'
     | '/kyc'
     | '/ledger'
     | '/metamask'
@@ -1033,6 +1043,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/connect'
     | '/dashboard'
+    | '/deposit'
     | '/kyc'
     | '/ledger'
     | '/metamask'
@@ -1132,6 +1143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/connect'
     | '/_authenticated/dashboard'
+    | '/_authenticated/deposit'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
     | '/_authenticated/metamask'
@@ -1506,6 +1518,13 @@ declare module '@tanstack/react-router' {
       path: '/kyc'
       fullPath: '/kyc'
       preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/deposit': {
+      id: '/_authenticated/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof AuthenticatedDepositRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -1996,6 +2015,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedConnectRoute: typeof AuthenticatedConnectRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDepositRoute: typeof AuthenticatedDepositRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
   AuthenticatedMetamaskRoute: typeof AuthenticatedMetamaskRoute
@@ -2036,6 +2056,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedConnectRoute: AuthenticatedConnectRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDepositRoute: AuthenticatedDepositRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
   AuthenticatedMetamaskRoute: AuthenticatedMetamaskRoute,

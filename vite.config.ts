@@ -53,6 +53,7 @@ const onVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
 const eventsShim = path.resolve(rootDir, "src/shims/events.ts");
 const safeEventEmitterShim = path.resolve(rootDir, "src/shims/safe-event-emitter.ts");
+const bufferShim = path.resolve(rootDir, "src/shims/buffer.ts");
 
 /**
  * Force Web3Auth SafeEventEmitter + events through pure-ESM shims.
@@ -100,7 +101,10 @@ export default defineConfig({
     resolve: {
       alias: {
         "rpc-websockets": rpcWebsocketsBrowser,
-        buffer: path.resolve(rootDir, "node_modules/buffer/"),
+        // Force every `import … from "buffer"` through our shim (fixes Phantom Buffer.from crashes).
+        buffer: bufferShim,
+        "buffer/": bufferShim,
+        "feross-buffer": path.resolve(rootDir, "node_modules/buffer/index.js"),
         process: path.resolve(rootDir, "node_modules/process/browser.js"),
         events: eventsShim,
         "node:events": eventsShim,
@@ -129,10 +133,11 @@ export default defineConfig({
         "react-dom",
         "react-dom/client",
         "@phantom/react-sdk",
+        "@phantom/browser-sdk",
         "@walletconnect/pay",
         "@moonpay/moonpay-react",
         "buffer",
-        "buffer/",
+        "feross-buffer",
         "base64-js",
         "ieee754",
         "events",
@@ -155,8 +160,10 @@ export default defineConfig({
       },
     },
     ssr: {
-      external: ["buffer", "base64-js", "ieee754", "@moonpay/moonpay-react"],
+      // Do not externalize buffer — use the browser shim so SSR never ships a broken CJS binding.
+      external: ["base64-js", "ieee754", "@moonpay/moonpay-react"],
       noExternal: [
+        "buffer",
         "events",
         "loglevel",
         "loglevel-package",
@@ -167,6 +174,7 @@ export default defineConfig({
         // workerd cannot resolve → every route 500s.
         "@privy-io/react-auth",
         /^@web3auth\//,
+        /^@phantom\//,
       ],
 
       resolve: {

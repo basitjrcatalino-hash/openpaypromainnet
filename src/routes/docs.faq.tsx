@@ -3,6 +3,7 @@ import { BookOpen, ChevronRight, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageListenButton } from "@/components/page-listen-button";
 import { useTheme } from "@/components/theme-provider";
 
 export const Route = createFileRoute("/docs/faq")({
@@ -84,6 +85,13 @@ const FAQS: { q: string; a: string; category: string }[] = [
   },
 ];
 
+function faqSpeechText() {
+  return [
+    "OpenPay Pro frequently asked questions. Account, wallets, payments, fees, and third-party integration.",
+    ...FAQS.map((f) => `${f.category}. ${f.q} ${f.a}`),
+  ].join(" ");
+}
+
 function FaqPage() {
   const { theme, toggle } = useTheme();
   const categories = [...new Set(FAQS.map((f) => f.category))];
@@ -97,6 +105,15 @@ function FaqPage() {
             <span className="truncate text-sm font-semibold">OpenPay Pro FAQ</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <PageListenButton
+              id="page:faq"
+              text={faqSpeechText()}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex"
+            />
             <Button
               type="button"
               variant="ghost"
@@ -123,6 +140,16 @@ function FaqPage() {
           <p className="text-sm text-muted-foreground md:text-base">
             Account, wallets, payments, fees, and third-party integration.
           </p>
+          <div className="pt-1 sm:hidden">
+            <PageListenButton
+              id="page:faq"
+              text={faqSpeechText()}
+              label="Listen to FAQ"
+              stopLabel="Stop"
+              variant="primary"
+              size="sm"
+            />
+          </div>
         </div>
 
         <nav className="flex flex-wrap gap-2">

@@ -9,16 +9,18 @@ import {
   ConnectBox,
   useAccounts,
   usePhantom,
+  useSolana,
 } from "@phantom/react-sdk";
 import {
   clearPhantomOAuthPending,
   getPhantomRedirectUrl,
 } from "@/lib/phantom";
-import { startSolanaSignIn } from "@/lib/solana-auth";
+import { startPhantomConnectSignIn, startSolanaSignIn, hasSolanaWallet } from "@/lib/solana-auth";
 import { Button } from "@/components/ui/button";
 
 function PhantomCallbackBridge() {
   const { isConnected, isLoading, addresses } = usePhantom();
+  const { solana } = useSolana();
   const accounts = useAccounts();
   const bridging = useRef(false);
   const [bridgeError, setBridgeError] = useState<string | null>(null);
@@ -35,7 +37,26 @@ function PhantomCallbackBridge() {
 
     void (async () => {
       try {
-        await startSolanaSignIn({ redirectTo: "/dashboard" });
+        if (hasSolanaWallet()) {
+          try {
+            await startSolanaSignIn({ redirectTo: "/dashboard" });
+            clearPhantomOAuthPending();
+            return;
+          } catch (err) {
+            if (/reject|cancel|denied/i.test((err as Error)?.message || "")) throw err;
+          }
+        }
+
+        await startPhantomConnectSignIn({
+          address: solanaAddress,
+          redirectTo: "/dashboard",
+          signMessage: async (message) => {
+            const result = await solana.signMessage(message);
+            return result.signature instanceof Uint8Array
+              ? result.signature
+              : new Uint8Array(result.signature as ArrayLike<number>);
+          },
+        });
         clearPhantomOAuthPending();
       } catch (err) {
         bridging.current = false;
@@ -44,7 +65,7 @@ function PhantomCallbackBridge() {
         if (!/reject|cancel|denied/i.test(message)) toast.error(message);
       }
     })();
-  }, [isConnected, solanaAddress]);
+  }, [isConnected, solanaAddress, solana]);
 
   if (bridgeError) {
     return (
@@ -94,6 +115,8 @@ export function PhantomAuthCallbackInner({
           Allowed Origin: <span className="font-mono text-foreground">{origin}</span>
           <br />
           Redirect URL: <span className="font-mono text-foreground">{redirect}</span>
+          <br />
+          App ID: <span className="font-mono text-foreground">42ba7350-53ef-4b1e-aba6-43f7905b094e</span>
         </p>
         <div className="flex flex-col gap-2">
           <Button type="button" onClick={() => navigate({ to: "/authpi" })}>

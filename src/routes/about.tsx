@@ -11,6 +11,7 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
 
 const TITLE = "About OpenPay Pro — An Open Network";
 const DESC =
@@ -54,6 +55,22 @@ const PILLARS = [
     body: "MCP and Agent Connect let assistants read permitted account context — so AI can help without hiding the rails.",
   },
 ] as const;
+
+function aboutSpeechText() {
+  const pillars = PILLARS.map((p) => `${p.title}. ${p.body}`).join(" ");
+  return [
+    "About OpenPay Pro. OpenPay Pro is an open network.",
+    "Not a closed bank app. A network where wallets, payments, tokens, APIs, and agents share the same open ledger — so money can move, and builders can build.",
+    "What open means. One network. Many ways in.",
+    "OpenPay Pro connects people, partners, and software on shared rails — so you are never stuck behind a single closed door.",
+    pillars,
+    "How it connects. The network is the product.",
+    "Sign in with OpenPay, Pi, email, or wallets. Hold OUSD and majors. Launch OpenTokens. Deposit from chains. Pay merchants. Let agents assist — all on one Pro ledger.",
+    "For builders. Open to integrate.",
+    "Partner apps can Connect with OpenPay, charge from OpenPay Balance, and read ledger context through documented APIs — the same open network users already live in.",
+    "Join the open network. Create a wallet, move value, or build on the rails — OpenPay Pro stays open so the network can grow with you.",
+  ].join(" ");
+}
 
 function AboutPage() {
   const heroRef = useRef<HTMLElement | null>(null);
@@ -129,6 +146,13 @@ function AboutPage() {
               Open the wallet
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
             </Link>
+            <PageListenButton
+              id="page:about"
+              text={aboutSpeechText()}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+            />
             <a
               href="/docs/openpay"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)]/80 px-6 py-3 text-sm font-semibold backdrop-blur press"

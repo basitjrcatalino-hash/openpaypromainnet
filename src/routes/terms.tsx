@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -22,6 +23,28 @@ export const Route = createFileRoute("/terms")({
   component: TermsPage,
 });
 
+const TERMS_SPEECH = `
+Terms of Service for OpenPay Pro. Last updated July 28, 2026.
+
+1. Agreement. By accessing or using OpenPay Pro, the App, you agree to these Terms of Service. If you do not agree, do not use the App.
+
+2. The service. OpenPay Pro is a web3 wallet experience for OUSD, OpenToken assets, NFTs, and related features. Sign-in is provided through OpenPay. Some features depend on third-party networks and services that we do not control.
+
+3. Eligibility and accounts. You must be able to form a binding contract in your jurisdiction. You are responsible for activity under your OpenPay-linked account and for keeping access credentials secure.
+
+4. Acceptable use. You agree not to misuse the App, including attempts to disrupt service, exploit bugs, launder funds, violate sanctions, or infringe others’ rights. We may suspend or restrict access for abuse or legal risk.
+
+5. Digital assets and risk. Cryptocurrency and token balances can lose value, become illiquid, or be lost due to user error, market moves, or technical failure. OpenToken launches, swaps, and NFT actions are experimental and may involve fees. Nothing in the App is investment, legal, or tax advice.
+
+6. Fees. Certain actions, for example OpenDEX swaps or token launches, may charge platform fees disclosed in the App. Network or partner fees may apply separately.
+
+7. Disclaimers. The App is provided as is without warranties of any kind. To the fullest extent permitted by law, we disclaim liability for indirect, incidental, or consequential damages arising from your use of the App.
+
+8. Changes. We may update these Terms. Continued use after changes means you accept the updated Terms. Material changes may be noted by updating the date above.
+
+9. Contact. Questions about these Terms: support at openpy.space. Related OpenPay policies may also apply when you use OpenPay sign-in or payments.
+`.trim();
+
 function TermsPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -35,8 +58,20 @@ function TermsPage() {
         </Link>
 
         <div className="rounded-3xl bg-card p-6 shadow-card sm:p-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Terms of Service</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Terms of Service</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
+            </div>
+            <PageListenButton
+              id="page:terms"
+              text={TERMS_SPEECH}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+              size="sm"
+            />
+          </div>
 
           <div className="mt-6 space-y-5 text-sm leading-relaxed text-muted-foreground">
             <section className="space-y-2">

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
 
 export const Route = createFileRoute("/regulatory")({
   head: () => ({
@@ -22,6 +23,36 @@ export const Route = createFileRoute("/regulatory")({
   component: RegulatoryPage,
 });
 
+const REGULATORY_SPEECH = `
+Regulatory Status for OpenPay Pro. Last updated July 30, 2026. Important disclosures about OpenPay and third-party providers.
+
+Regulatory Status. OpenPay is a technology platform developed and operated by Mrwain Organization. OpenPay is not a registered broker-dealer, investment adviser, exchange, custodian, bank, money transmitter, or financial institution, and is not subject to regulation as such in any jurisdiction unless explicitly stated otherwise.
+
+OpenPay does not directly offer, solicit, arrange, execute, clear, or settle securities, digital asset trades, or other regulated financial transactions. OpenPay does not provide brokerage, custody, investment advisory, or banking services.
+
+Any regulated services, including but not limited to payments, digital asset transactions, on-ramps, off-ramps, custody, or financial settlement, may be provided exclusively by independent third-party providers that integrate with the OpenPay platform. These providers are solely responsible for their own licensing, regulatory compliance, and legal obligations within the jurisdictions in which they operate.
+
+Nothing on the OpenPay website, APIs, merchant portal, or mobile applications constitutes, or should be interpreted as, an offer to sell or a solicitation to buy any security, digital asset, financial product, or regulated instrument. Any such offer may only be made by the applicable third-party provider and only in jurisdictions where such offers are legally permitted.
+
+Disclaimer. Information available through the OpenPay platform, website, APIs, and mobile applications is provided for general informational and technological purposes only and does not constitute financial, investment, legal, tax, or professional advice.
+
+OpenPay and Mrwain Organization do not endorse, control, verify, or guarantee any third-party providers, merchants, applications, integrations, tools, or services that may interact with the OpenPay ecosystem.
+
+OpenPay is not responsible for transactions, payments, losses, disputes, or outcomes resulting from interactions between users and third-party providers, merchants, or integrated services.
+
+All services are provided on an as is and as available basis without warranties of any kind, whether express or implied, including but not limited to warranties of accuracy, reliability, availability, security, merchantability, or fitness for a particular purpose.
+
+Users should carefully review the OpenPay Terms of Service and Privacy Policy for additional disclosures, limitations of liability, and user responsibilities.
+
+Pricing and Data Feeds. Any prices, exchange rates, token values, yields, availability, transaction fees, or market data displayed within OpenPay — including information related to OpenUSD, Pi Network integrations, or other supported assets — may be provided by third-party data providers or external services.
+
+Such information may be delayed, incomplete, inaccurate, or subject to change without notice. OpenPay does not independently verify pricing data and makes no representations or warranties regarding the accuracy, timeliness, or completeness of such information.
+
+Users should independently verify all pricing, fees, and data before making decisions or initiating any payment or transaction.
+
+All pricing data may be indicative only and may not reflect final or executable transaction prices. Use of pricing information and data feeds is entirely at the user’s own risk.
+`.trim();
+
 function RegulatoryPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -35,11 +66,23 @@ function RegulatoryPage() {
         </Link>
 
         <div className="rounded-3xl bg-card p-6 shadow-card sm:p-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Regulatory Status</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Important disclosures about OpenPay and third-party providers.
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">Last updated: July 30, 2026</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Regulatory Status</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Important disclosures about OpenPay and third-party providers.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Last updated: July 30, 2026</p>
+            </div>
+            <PageListenButton
+              id="page:regulatory"
+              text={REGULATORY_SPEECH}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+              size="sm"
+            />
+          </div>
 
           <div className="mt-6 space-y-5 text-sm leading-relaxed text-muted-foreground">
             <section className="space-y-2">

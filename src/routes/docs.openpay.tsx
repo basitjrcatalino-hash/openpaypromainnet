@@ -19,6 +19,7 @@ import { copyText } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageListenButton } from "@/components/page-listen-button";
 import { useTheme } from "@/components/theme-provider";
 
 export const Route = createFileRoute("/docs/openpay")({
@@ -47,6 +48,26 @@ const CONNECT = "https://openpy.space/connect";
 const PAY_HOST = "https://openpy.space";
 const PARTNER_PORTAL = "https://openpy.space/partner-api";
 const AUTH_DOCS = "https://openpy.space/openpay-auth";
+
+const DOCS_SPEECH = `
+OpenPay Integration Docs. Connect auth, Pro sign-in methods, and payments.
+
+This guide helps third-party apps add Connect with OpenPay using OAuth 2.0, integrate every OpenPay Pro wallet auth method — Solana, Phantom, Pi, WalletConnect, and MetaMask Embedded — and accept OpenPay balance payments.
+
+Start at the Partner API portal on openpy.space slash partner-api. Create an app, copy your Client ID and API key, set your domain for redirects, then ship Sign in, transfers, or PayButton.
+
+Connect with OpenPay is the OAuth flow that links a user’s openpy.space account so your app can act with their consent.
+
+OpenPay Pro also supports wallet-native sign-in: Solana and Phantom, Pi Network, WalletConnect, and MetaMask Embedded — so users can open a Pro wallet without only relying on OpenPay OAuth.
+
+Payments: create a charge through the Partner Transfer API, send the user to OpenPay checkout, then poll charge status after they return. Webhooks for partners are not available yet — poll GET charges by id.
+
+OpenPay to Pro inbound transfers use a pro_xfer note so funds credit the correct Pro wallet.
+
+Security: keep API keys server-side, validate redirects against your registered domain, and never expose secrets in the browser.
+
+For full code samples, auth setup, Ledger API notes, NFT minting, and WalletConnect Pay, read the sections on this page or the raw Markdown docs linked from the header.
+`.trim();
 
 function copy(text: string, label = "Copied") {
   void copyText(text).then(
@@ -113,6 +134,15 @@ function OpenPayDocsPage() {
             <span className="truncate text-sm font-semibold">OpenPay Integration Docs</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <PageListenButton
+              id="page:docs-openpay"
+              text={DOCS_SPEECH}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex"
+            />
             <Button
               type="button"
               variant="ghost"
@@ -172,6 +202,15 @@ function OpenPayDocsPage() {
             .
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
+            <PageListenButton
+              id="page:docs-openpay"
+              text={DOCS_SPEECH}
+              label="Listen to docs"
+              stopLabel="Stop"
+              variant="primary"
+              size="sm"
+              className="sm:hidden"
+            />
             <Button asChild size="sm" className="rounded-full">
               <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
                 <Rocket className="mr-1.5 h-3.5 w-3.5" />

@@ -34,8 +34,11 @@ export const PI_NETWORK_AUTH_LOGO = "/auth-pi.jpg";
 
 export const PHANTOM_PROVIDERS = ["google", "apple", "injected"] as const;
 
-/** Keep as plain strings so this module never pulls @phantom/react-sdk (Buffer crash). */
-export const PHANTOM_ADDRESS_TYPES = ["solana", "ethereum", "sui"] as const;
+/**
+ * Match `@phantom/browser-sdk` AddressType enum values (Capitalized).
+ * Docs: https://docs.phantom.com/sdks/react-sdk
+ */
+export const PHANTOM_ADDRESS_TYPES = ["Solana", "Ethereum"] as const;
 
 export const PHANTOM_OAUTH_PENDING_KEY = "phantom_oauth_pending";
 export const PHANTOM_OAUTH_CALLBACK_URL_KEY = "phantom_oauth_callback_url";

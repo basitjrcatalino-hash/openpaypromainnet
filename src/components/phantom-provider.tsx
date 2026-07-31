@@ -15,7 +15,9 @@ import {
 import {
   getPhantomProviderConfig,
   PHANTOM_APP_ICON,
+  PHANTOM_APP_ID,
   PHANTOM_APP_NAME,
+  PHANTOM_PROVIDERS,
 } from "@/lib/phantom";
 
 type PhantomStatus = "loading" | "ready" | "error";
@@ -51,6 +53,7 @@ type PhantomSdk = {
     children?: ReactNode;
   }>;
   darkTheme: unknown;
+  AddressType: { solana: string; ethereum: string; sui?: string };
 };
 
 /** Use React.Component (namespace) — named `Component` can be undefined under circular ESM init. */
@@ -79,9 +82,25 @@ class PhantomRenderBoundary extends React.Component<
   }
 }
 
+function friendlyPhantomError(raw: string): string {
+  if (/reading 'from'|Buffer|polyfill|stub/i.test(raw)) {
+    return "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in.";
+  }
+  if (/app.?id|unauthorized|forbidden|403|401/i.test(raw)) {
+    return `Phantom rejected App ID ${PHANTOM_APP_ID}. Check Phantom Portal Set Up + Allowed Origins.`;
+  }
+  if (/failed to fetch|networkerror|cors|load failed/i.test(raw)) {
+    return "Phantom blocked this origin. Add this site’s origin and /auth/callback in Phantom Portal.";
+  }
+  return raw;
+}
+
 /**
  * Client-only Phantom Connect provider.
- * Loads Buffer first, then the SDK — keeps CJS `buffer` / @phantom off the SSR graph.
+ * Docs: https://docs.phantom.com/sdks/react-sdk
+ * App: https://phantom.com/portal/apps/42ba7350-53ef-4b1e-aba6-43f7905b094e/phantom-connect
+ *
+ * Loads Buffer first, then the SDK — keeps @phantom off the SSR graph.
  */
 export function AppPhantomProvider({ children }: { children: ReactNode }) {
   const [sdk, setSdk] = useState<PhantomSdk | null>(null);
@@ -99,10 +118,7 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
   const onProviderError = useCallback((message: string) => {
     setSdk(null);
     setStatus("error");
-    const friendly = /reading 'from'|Buffer/i.test(message)
-      ? "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in."
-      : message;
-    setError(friendly);
+    setError(friendlyPhantomError(message));
   }, []);
 
   useEffect(() => {
@@ -111,33 +127,34 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setStatus((s) => (s === "ready" ? s : "error"));
       setError((e) => e || "Phantom SDK is taking too long to load. Retry or use Solana sign-in.");
-    }, 12_000);
+    }, 15_000);
 
     void (async () => {
       try {
+        // 1) Buffer must exist for every `import { Buffer } from "buffer"` inside Phantom.
         const { ensureBuffer } = await import("@/lib/buffer-polyfill");
         await ensureBuffer();
+        const { installBufferGlobal } = await import("@/shims/buffer");
+        installBufferGlobal();
 
-        const Buf = (globalThis as {
-          Buffer?: {
-            from?: unknown;
-            __openpayStub?: unknown;
-            __openpayEarly?: unknown;
-            allocUnsafe?: unknown;
-          };
-        }).Buffer;
+        const Buf = (globalThis as { Buffer?: { from?: unknown } }).Buffer;
         if (typeof Buf?.from !== "function") {
           throw new Error("Buffer.from is not available in this browser");
         }
-        if (Buf.__openpayStub) {
-          throw new Error("Buffer polyfill did not upgrade past the early stub");
-        }
 
+        // 2) Load Phantom Connect React SDK (client-only)
+        // https://docs.phantom.com/sdks/react-sdk/connect
         const mod = await import("@phantom/react-sdk");
         if (cancelled) return;
+
+        const AddressType = (mod as { AddressType?: PhantomSdk["AddressType"] }).AddressType;
         setSdk({
           PhantomProvider: mod.PhantomProvider as PhantomSdk["PhantomProvider"],
           darkTheme: mod.darkTheme,
+          AddressType: AddressType ?? {
+            solana: "Solana",
+            ethereum: "Ethereum",
+          },
         });
         setStatus("ready");
         setError(null);
@@ -146,11 +163,7 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setSdk(null);
         setStatus("error");
-        const raw = (err as Error)?.message || "Could not load Phantom Connect";
-        const friendly = /reading 'from'|Buffer|polyfill|stub/i.test(raw)
-          ? "Wallet runtime failed to load (Buffer). Retry, or use Solana sign-in."
-          : raw;
-        setError(friendly);
+        setError(friendlyPhantomError((err as Error)?.message || "Could not load Phantom Connect"));
       }
     })();
 
@@ -168,12 +181,22 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
   };
 
   const Provider = sdk?.PhantomProvider;
-  // Capture redirect URL once when SDK becomes ready so OAuth state matches callback origin.
-  const config = useMemo(
-    () => (sdk ? getPhantomProviderConfig() : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when sdk instance appears
-    [sdk],
-  );
+  const config = useMemo(() => {
+    if (!sdk) return null;
+    const base = getPhantomProviderConfig();
+    // Prefer official AddressType enums from the SDK (docs: solana + ethereum).
+    const addressTypes = [
+      sdk.AddressType.solana,
+      sdk.AddressType.ethereum,
+      ...(sdk.AddressType.sui ? [sdk.AddressType.sui] : []),
+    ].filter(Boolean);
+    return {
+      ...base,
+      providers: [...PHANTOM_PROVIDERS],
+      appId: PHANTOM_APP_ID,
+      addressTypes: addressTypes.length ? addressTypes : base.addressTypes,
+    };
+  }, [sdk]);
 
   return (
     <PhantomClientContext.Provider value={ctx}>

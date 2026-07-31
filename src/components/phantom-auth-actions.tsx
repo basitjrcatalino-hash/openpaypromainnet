@@ -10,8 +10,9 @@ import {
   useIsExtensionInstalled,
   useModal,
   usePhantom,
+  useSolana,
 } from "@phantom/react-sdk";
-import { startSolanaSignIn } from "@/lib/solana-auth";
+import { startPhantomConnectSignIn, startSolanaSignIn, hasSolanaWallet } from "@/lib/solana-auth";
 import { getPhantomRedirectUrl, markPhantomOAuthPending, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +23,40 @@ function phantomErrorMessage(err: unknown): string {
     return `Phantom blocked this origin. In Phantom Portal → Set Up, add Allowed Origin "${origin}" and Redirect URL "${getPhantomRedirectUrl()}".`;
   }
   return message;
+}
+
+async function bridgePhantomSession(opts: {
+  address: string;
+  solana: {
+    signMessage: (message: string | Uint8Array) => Promise<{
+      signature: Uint8Array;
+      publicKey?: string;
+    }>;
+    publicKey?: string | null;
+  };
+}): Promise<void> {
+  // Prefer extension SIWS when available; otherwise sign via Phantom Connect SDK.
+  // Docs: https://docs.phantom.com/sdks/react-sdk/sign-messages
+  if (hasSolanaWallet()) {
+    try {
+      await startSolanaSignIn({ redirectTo: "/dashboard" });
+      return;
+    } catch (err) {
+      // Fall through to Connect signMessage (embedded Google/Apple wallets).
+      if (/reject|cancel|denied/i.test((err as Error)?.message || "")) throw err;
+    }
+  }
+
+  await startPhantomConnectSignIn({
+    address: opts.address,
+    redirectTo: "/dashboard",
+    signMessage: async (message) => {
+      const result = await opts.solana.signMessage(message);
+      return result.signature instanceof Uint8Array
+        ? result.signature
+        : new Uint8Array(result.signature as ArrayLike<number>);
+    },
+  });
 }
 
 export function PhantomContinueButton({
@@ -39,6 +74,7 @@ export function PhantomContinueButton({
   const { connect, isConnecting } = useConnect();
   const { isInstalled: extensionInstalled } = useIsExtensionInstalled();
   const { isConnected, isLoading: phantomLoading, addresses } = usePhantom();
+  const { solana } = useSolana();
   const accounts = useAccounts();
   const bridgingRef = useRef(false);
   const [bridging, setBridging] = useState(false);
@@ -65,11 +101,11 @@ export function PhantomContinueButton({
 
     (async () => {
       try {
-        await startSolanaSignIn({ redirectTo: "/dashboard" });
+        await bridgePhantomSession({ address: solanaAddress, solana });
       } catch (err) {
         if (cancelled) return;
         const message = (err as Error).message || "Phantom sign-in failed";
-        if (!/reject|cancel|denied/i.test(message)) toast.error(message);
+        if (!/reject|cancel|denied/i.test(message)) toast.error(phantomErrorMessage(err));
         bridgingRef.current = false;
         setBridging(false);
         setBusy(false);
@@ -81,7 +117,7 @@ export function PhantomContinueButton({
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [isConnected, solanaAddress, bridging, setBusy]);
+  }, [isConnected, solanaAddress, bridging, setBusy, solana]);
 
   // Connected but no Solana address yet — don't spin forever.
   useEffect(() => {
@@ -103,9 +139,9 @@ export function PhantomContinueButton({
         if (!ensureTopLevelAuthWindow()) return;
         setBusy(true);
         try {
+          // https://docs.phantom.com/sdks/react-sdk/connect
           if (extensionInstalled) {
             await connect({ provider: "injected" });
-            // Bridge effect takes over when Solana address appears; clear if it never does.
             return;
           }
           markPhantomOAuthPending();

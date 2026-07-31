@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -22,6 +23,28 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
 });
 
+const PRIVACY_SPEECH = `
+Privacy Policy for OpenPay Pro. Last updated July 28, 2026.
+
+1. Overview. This Privacy Policy explains how OpenPay Pro handles information when you use the wallet. Sign-in and some payment features are provided by OpenPay at openpy.space; their policies may also apply to that data.
+
+2. Information we process. Account identifiers such as your OpenPay-linked user id, username, and session tokens after you sign in. Wallet and transaction data including balances, transfers, swaps, OpenToken activity, and related ledger records needed to run the product. Device and usage logs used to keep the App secure and reliable. Preferences such as theme and chart mode.
+
+3. How we use information. We use this information to authenticate you, operate wallet features, prevent fraud and abuse, improve reliability, and comply with legal obligations. We do not sell your personal information.
+
+4. Sharing. We may share data with infrastructure providers, with OpenPay when you use Connect or payments, and when required by law or to protect rights and safety. Public blockchain or on-app activity you initiate may be visible to others by design.
+
+5. Retention and security. We retain account and transaction records as long as needed to provide the service and meet legal or accounting requirements. We use reasonable technical and organizational measures, but no system is perfectly secure.
+
+6. Your choices. You can sign out at any time. Depending on your region, you may have rights to access, correct, or delete certain personal data. Contact us to make a request; we may need to verify your identity first.
+
+7. Children. The App is not directed to children under 13, or the minimum age required in your country. We do not knowingly collect personal information from children.
+
+8. Changes. We may update this Privacy Policy and will revise the date above when we do. Continued use of the App after an update means you acknowledge the revised policy.
+
+9. Contact. Privacy requests: support at openpy.space.
+`.trim();
+
 function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -35,8 +58,20 @@ function PrivacyPage() {
         </Link>
 
         <div className="rounded-3xl bg-card p-6 shadow-card sm:p-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Privacy Policy</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Privacy Policy</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Last updated: July 28, 2026</p>
+            </div>
+            <PageListenButton
+              id="page:privacy"
+              text={PRIVACY_SPEECH}
+              label="Listen"
+              stopLabel="Stop"
+              variant="outline"
+              size="sm"
+            />
+          </div>
 
           <div className="mt-6 space-y-5 text-sm leading-relaxed text-muted-foreground">
             <section className="space-y-2">

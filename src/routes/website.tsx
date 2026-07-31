@@ -7,9 +7,13 @@ import {
   Bot,
   ChevronDown,
   ExternalLink,
+  Fingerprint,
   Globe2,
+  KeyRound,
+  Layers,
   Loader2,
   Lock,
+  MessageCircle,
   QrCode,
   Send,
   ShieldCheck,
@@ -17,6 +21,7 @@ import {
   Square,
   Volume2,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
@@ -197,6 +202,51 @@ const FEATURE_SHOWCASE = [
       { name: "Pi Network", desc: "Pi Browser or Pi OAuth — username into Pro." },
       { name: "Telegram", desc: "One-tap Telegram Login for social-native entry." },
     ],
+  },
+] as const;
+
+const FEATURE_BENTO = [
+  {
+    title: "OpenUSD home",
+    body: "One balance for OUSD, Pi, majors, and OpenTokens — send, receive, swap.",
+    tag: "Money",
+    href: "/website#feature-money",
+    icon: Wallet,
+  },
+  {
+    title: "OpenToken launch",
+    body: "Mint community coins on bonding curves and trade against OUSD.",
+    tag: "Trade",
+    href: "/website#feature-trading",
+    icon: Sparkles,
+  },
+  {
+    title: "Multi-chain in",
+    body: "Deposit from Ethereum, Base, BNB, Polygon, Solana — credit as OUSD.",
+    tag: "Deposit",
+    href: "/website#feature-move",
+    icon: Layers,
+  },
+  {
+    title: "Self-custody",
+    body: "Recovery phrase, PIN, biometrics — your keys, open ledger.",
+    tag: "Security",
+    href: "/website#feature-security",
+    icon: ShieldCheck,
+  },
+  {
+    title: "OpenPay AI",
+    body: "Ask how money moves. Listen to answers. MCP agents on open rails.",
+    tag: "AI",
+    href: "/website#feature-ai",
+    icon: Bot,
+  },
+  {
+    title: "Partner API",
+    body: "Connect, charges, OpenLedger — build on the same OUSD network.",
+    tag: "Builders",
+    href: "/website#feature-builders",
+    icon: Zap,
   },
 ] as const;
 
@@ -482,7 +532,15 @@ function HomePage() {
         {/* Hero — full-bleed rounded plane like Phantom */}
         <section ref={heroRef} className="ophome-hero relative mt-3 overflow-hidden sm:mt-4">
           <div className="ophome-hero-glow" aria-hidden />
-          <div className="relative z-10 mx-auto flex min-h-[min(78vh,720px)] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-20">
+          <div
+            className="pointer-events-none absolute -left-8 top-16 h-40 w-40 rounded-full bg-[var(--lavender)]/25 blur-3xl ophome-float"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -right-6 bottom-24 h-48 w-48 rounded-full bg-[var(--brand)]/20 blur-3xl ophome-float-delay"
+            aria-hidden
+          />
+          <div className="relative z-10 mx-auto flex min-h-[min(88vh,820px)] max-w-3xl flex-col items-center px-6 pb-[min(42vh,340px)] pt-16 text-center sm:px-10 sm:pt-20">
             <p
               data-rise
               className="ophome-rise text-[15px] font-medium tracking-[-0.01em] text-white/80 sm:text-lg"
@@ -524,6 +582,69 @@ function HomePage() {
               </Link>
             </div>
           </div>
+
+          {/* Floating product preview — Phantom-style stage under CTA */}
+          <div className="ophome-hero-preview" aria-hidden>
+            <div className="ophome-phone ophome-float-slow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img src={OPENPAY_AUTH_LOGO} alt="" className="h-7 w-7 rounded-lg object-contain" />
+                  <span className="text-xs font-bold text-white">OpenPay Pro</span>
+                </div>
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold text-white/80">
+                  Live
+                </span>
+              </div>
+              <p className="mt-4 text-left text-[11px] font-semibold text-white/55">Total balance</p>
+              <p className="mt-0.5 bg-linear-to-r from-white via-[var(--lavender)] to-white bg-clip-text text-left text-3xl font-extrabold tracking-tight text-transparent ophome-shimmer">
+                $4,820.40
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-1.5">
+                {[
+                  { label: "Send", Icon: Send },
+                  { label: "Receive", Icon: QrCode },
+                  { label: "Swap", Icon: ArrowLeftRight },
+                ].map(({ label, Icon }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center gap-1 rounded-xl bg-white/12 px-1.5 py-2.5"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-[var(--lavender)]" />
+                    <span className="text-[9px] font-bold text-white/90">{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 space-y-1.5">
+                <div className="flex items-center gap-2 rounded-xl bg-white/10 px-2.5 py-2">
+                  <img src={OUSD_LOGO_URL} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  <span className="flex-1 text-left text-[11px] font-bold text-white">OpenUSD</span>
+                  <span className="text-[11px] font-bold text-white/90">2,480</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-white/10 px-2.5 py-2">
+                  <img src={PI_NETWORK_LOGO_URL} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  <span className="flex-1 text-left text-[11px] font-bold text-white">Pi</span>
+                  <span className="text-[11px] font-bold text-white/90">1,204</span>
+                </div>
+              </div>
+            </div>
+            <div className="ophome-float absolute -left-[18%] top-8 hidden rounded-2xl bg-white/95 px-3 py-2.5 shadow-xl sm:block">
+              <div className="flex items-center gap-2">
+                <img src={OUSD_LOGO_URL} alt="" className="h-7 w-7 rounded-xl object-cover" />
+                <div>
+                  <p className="text-[10px] font-bold text-[var(--ink)]">Sent to @alice</p>
+                  <p className="text-[10px] font-semibold text-emerald-600">+42.00 OUSD</p>
+                </div>
+              </div>
+            </div>
+            <div className="ophome-float-delay absolute -right-[16%] bottom-10 hidden rounded-2xl bg-[#1a1528] px-3 py-2.5 shadow-xl sm:block">
+              <div className="flex items-center gap-2">
+                <img src={OPENPAY_AI_MENU_ICON} alt="" className="h-6 w-6 object-contain" />
+                <p className="max-w-[110px] text-left text-[10px] font-semibold leading-snug text-white">
+                  OpenPay AI · how do I top up?
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Trading tools */}
@@ -554,7 +675,7 @@ function HomePage() {
           renderVisual={(v) => <SecurityVisual kind={v} />}
         />
 
-        {/* Full product showcase */}
+        {/* Full product showcase — Phantom-style visual bands (not text walls) */}
         <section id="features" className="mt-16 scroll-mt-28 sm:mt-24">
           <div className="flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
@@ -565,9 +686,8 @@ function HomePage() {
                 Everything in OpenPay Pro
               </h2>
               <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
-                OpenUSD settlement, OpenDEX and OpenToken, multi-chain deposits, Solana Pay, Circle Mint,
-                OpenPay AI, Partner API, OpenLedger, and every way to sign in — one self-custody Pro
-                account on the open network.
+                Tap a feature — watch the stage react. Same energy as a money app built to amaze, not a
+                docs dump.
               </p>
             </div>
             <button
@@ -593,7 +713,36 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-2 scrollbar-none [-webkit-overflow-scrolling:touch]">
+          {/* Bento highlight row */}
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURE_BENTO.map((card) => {
+              const Icon = card.icon;
+              return (
+                <li key={card.title}>
+                  <a href={card.href} className="ophome-bento block h-full p-5 press">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--lavender-soft)] text-[var(--brand)]">
+                        <Icon className="h-5 w-5" strokeWidth={2.1} />
+                      </div>
+                      <span className="rounded-full bg-[var(--ink)]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+                        {card.tag}
+                      </span>
+                    </div>
+                    <p className="text-lg font-extrabold tracking-tight text-[var(--ink)]">{card.title}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                      {card.body}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-[var(--brand)]">
+                      Explore
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mt-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none [-webkit-overflow-scrolling:touch]">
             {FEATURE_SHOWCASE.map((cat) => (
               <a
                 key={cat.id}
@@ -605,33 +754,9 @@ function HomePage() {
             ))}
           </div>
 
-          <div className="mt-10 space-y-14">
-            {FEATURE_SHOWCASE.map((cat) => (
-              <div key={cat.id} id={`feature-${cat.id}`} className="scroll-mt-28">
-                <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--ink)]/8 pb-4">
-                  <div>
-                    <h3 className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[-0.03em] sm:text-3xl">
-                      {cat.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">{cat.blurb}</p>
-                  </div>
-                  <span className="rounded-full bg-[var(--lavender-soft)] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--ink)]/70">
-                    {cat.items.length} features
-                  </span>
-                </div>
-                <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-                  {cat.items.map((item) => (
-                    <li key={item.name} className="min-w-0">
-                      <p className="text-[15px] font-bold tracking-[-0.015em] text-[var(--ink)]">
-                        {item.name}
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
-                        {item.desc}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="mt-6 space-y-16 sm:space-y-20">
+            {FEATURE_SHOWCASE.map((cat, i) => (
+              <ShowcaseBand key={cat.id} category={cat} reverse={i % 2 === 1} />
             ))}
           </div>
 
@@ -824,6 +949,308 @@ function HomePage() {
         </div>
       </footer>
     </main>
+  );
+}
+
+function ShowcaseBand({
+  category,
+  reverse,
+}: {
+  category: (typeof FEATURE_SHOWCASE)[number];
+  reverse?: boolean;
+}) {
+  const [idx, setIdx] = useState(0);
+  const active = category.items[idx] ?? category.items[0];
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setIdx((i) => (i + 1) % category.items.length);
+    }, 3800);
+    return () => window.clearInterval(id);
+  }, [category.items.length]);
+
+  return (
+    <div id={`feature-${category.id}`} className="scroll-mt-28">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-1">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+            {category.blurb}
+          </p>
+          <h3 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.7rem,3.5vw,2.6rem)] font-extrabold tracking-[-0.035em]">
+            {category.title}
+          </h3>
+        </div>
+        <span className="rounded-full bg-[var(--lavender)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[var(--ink)]">
+          {category.items.length} live
+        </span>
+      </div>
+
+      <div
+        className={cn(
+          "grid items-stretch gap-6 lg:grid-cols-2 lg:gap-10",
+          reverse && "lg:[&>*:first-child]:order-2",
+        )}
+      >
+        <ul className="space-y-1.5">
+          {category.items.map((item, i) => (
+            <li key={item.name}>
+              <button
+                type="button"
+                onClick={() => setIdx(i)}
+                className={cn(
+                  "w-full rounded-2xl px-4 py-3.5 text-left transition press",
+                  i === idx
+                    ? "bg-white shadow-[0_16px_48px_-28px_rgba(40,30,80,0.45)] ring-1 ring-black/[0.05]"
+                    : "hover:bg-white/60",
+                )}
+              >
+                <p
+                  className={cn(
+                    "text-[15px] font-bold tracking-tight",
+                    i === idx ? "text-[var(--ink)]" : "text-[var(--ink)]/70",
+                  )}
+                >
+                  {item.name}
+                </p>
+                {i === idx ? (
+                  <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    {item.desc}
+                  </p>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <div className="ophome-feature-stage relative min-h-[340px] p-5 sm:min-h-[400px] sm:p-7">
+          <div key={`${category.id}-${active.name}`} className="ophome-stage-in relative z-10 h-full">
+            <ShowcaseVisual categoryId={category.id} item={active} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShowcaseVisual({
+  categoryId,
+  item,
+}: {
+  categoryId: (typeof FEATURE_SHOWCASE)[number]["id"];
+  item: { name: string; desc: string };
+}) {
+  if (categoryId === "money") {
+    return (
+      <StageCard>
+        <div className="relative">
+          <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[var(--lavender)]/30 ophome-pulse-ring" />
+          <div className="flex items-center gap-3">
+            <img src={OUSD_LOGO_URL} alt="" className="h-12 w-12 rounded-2xl object-cover" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+                {item.name}
+              </p>
+              <p className="text-2xl font-extrabold tracking-tight">$4,820.40</p>
+            </div>
+          </div>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-[var(--muted-foreground)]">{item.desc}</p>
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          {[
+            { label: "Send", Icon: Send },
+            { label: "Receive", Icon: QrCode },
+            { label: "Swap", Icon: ArrowLeftRight },
+          ].map(({ label, Icon }) => (
+            <div
+              key={label}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-[var(--lavender-soft)] px-2 py-3"
+            >
+              <Icon className="h-4 w-4 text-[var(--brand)]" />
+              <span className="text-[10px] font-bold">{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 space-y-2">
+          <AssetRow logo={OUSD_LOGO_URL} name="OpenUSD" amount="2,480" />
+          <AssetRow logo={PI_NETWORK_LOGO_URL} name="Pi" amount="1,204" />
+          <AssetRow logo={OPENPAY_NETWORK_BADGE_URL} name="OpenToken" amount="+12%" />
+        </div>
+      </StageCard>
+    );
+  }
+
+  if (categoryId === "trading") {
+    return (
+      <StageCard>
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+          {item.name}
+        </p>
+        <p className="mt-2 text-2xl font-extrabold tracking-tight">OUSD ↔ Markets</p>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+        <div className="mt-6 flex h-24 items-end gap-1.5">
+          {[40, 62, 48, 78, 55, 88, 70, 95, 72, 84].map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t-md bg-linear-to-t from-[var(--brand)] to-[var(--lavender)] opacity-80"
+              style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
+            />
+          ))}
+        </div>
+        <div className="mt-5 flex items-center gap-3 rounded-2xl bg-[var(--lavender-soft)] px-4 py-3">
+          <ArrowLeftRight className="h-5 w-5 text-[var(--brand)]" />
+          <div>
+            <p className="text-sm font-bold">OpenDEX · OpenToken</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Live curve · clear fees</p>
+          </div>
+        </div>
+      </StageCard>
+    );
+  }
+
+  if (categoryId === "move") {
+    return (
+      <StageCard>
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+          {item.name}
+        </p>
+        <p className="mt-2 text-2xl font-extrabold tracking-tight">Move value in</p>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+        <div className="relative mx-auto mt-8 grid h-36 w-36 place-items-center">
+          <div className="absolute inset-0 rounded-full border border-dashed border-[var(--brand)]/30 ophome-orbit" />
+          <div className="absolute inset-3 rounded-full border border-[var(--lavender)]/40" />
+          <div className="relative z-10 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--lavender-soft)]">
+            <Send className="h-7 w-7 text-[var(--brand)]" />
+          </div>
+          {["ETH", "SOL", "BNB", "BASE"].map((c, i) => (
+            <span
+              key={c}
+              className="absolute rounded-full bg-white px-2 py-1 text-[10px] font-extrabold shadow-md"
+              style={{
+                top: `${18 + Math.sin((i / 4) * Math.PI * 2) * 42}%`,
+                left: `${42 + Math.cos((i / 4) * Math.PI * 2) * 42}%`,
+              }}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+          {["Solana Pay", "Circle Mint", "QR", "WC Pay"].map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-[var(--lavender-soft)] px-2.5 py-1 text-[10px] font-bold"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      </StageCard>
+    );
+  }
+
+  if (categoryId === "security") {
+    return (
+      <StageCard dark>
+        <div className="relative inline-grid place-items-center">
+          <div className="absolute h-20 w-20 rounded-full border border-[var(--lavender)]/40 ophome-pulse-ring" />
+          <ShieldCheck className="relative h-10 w-10 text-[var(--lavender)]" />
+        </div>
+        <p className="mt-6 text-2xl font-extrabold tracking-tight text-white">{item.name}</p>
+        <p className="mt-2 text-sm text-white/65">{item.desc}</p>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {[
+            { label: "Keys", Icon: KeyRound },
+            { label: "PIN", Icon: Lock },
+            { label: "Bio", Icon: Fingerprint },
+          ].map(({ label, Icon }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white"
+            >
+              <Icon className="h-3.5 w-3.5 text-[var(--lavender)]" />
+              {label}
+            </span>
+          ))}
+        </div>
+      </StageCard>
+    );
+  }
+
+  if (categoryId === "ai") {
+    return (
+      <StageCard dark>
+        <div className="flex items-center gap-3">
+          <img src={OPENPAY_AI_MENU_ICON} alt="" className="h-10 w-10 object-contain" />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-white/50">{item.name}</p>
+            <p className="text-xl font-extrabold text-white">OpenPay AI</p>
+          </div>
+        </div>
+        <div className="mt-5 space-y-2.5">
+          <div className="rounded-2xl rounded-tl-md bg-white/10 px-3.5 py-2.5 text-sm text-white/85">
+            How do I top up OUSD with Pi?
+          </div>
+          <div className="ml-4 rounded-2xl rounded-tr-md bg-[var(--lavender)]/25 px-3.5 py-2.5 text-sm text-white">
+            Open Top up → choose Pi → confirm live π price. I’ll walk you through it.
+          </div>
+        </div>
+        <p className="mt-4 text-xs leading-relaxed text-white/55">{item.desc}</p>
+        <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[var(--lavender)]">
+          <MessageCircle className="h-3.5 w-3.5" />
+          Speak · MCP · Wiki listen
+        </div>
+      </StageCard>
+    );
+  }
+
+  if (categoryId === "builders") {
+    return (
+      <StageCard dark>
+        <p className="text-xs font-bold uppercase tracking-wide text-white/50">{item.name}</p>
+        <p className="mt-2 font-mono text-sm text-[var(--lavender)]">POST /v1/transfers</p>
+        <p className="mt-3 text-2xl font-extrabold text-white">Build on OUSD</p>
+        <p className="mt-2 text-sm text-white/65">{item.desc}</p>
+        <div className="mt-6 space-y-2 font-mono text-[11px] text-white/70">
+          <p>
+            <span className="text-emerald-400">200</span> charge.created
+          </p>
+          <p>
+            <span className="text-[var(--lavender)]">ok</span> ledger.synced
+          </p>
+          <p>
+            <span className="text-sky-300">mcp</span> tools.ready
+          </p>
+        </div>
+      </StageCard>
+    );
+  }
+
+  // auth
+  return (
+    <StageCard>
+      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+        {item.name}
+      </p>
+      <p className="mt-2 text-2xl font-extrabold tracking-tight">Sign in your way</p>
+      <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+      <div className="mt-6 grid grid-cols-2 gap-2">
+        {["OpenPay", "Phantom", "Pi", "Telegram", "Solana", "MetaMask", "Email", "WC"].map(
+          (label, i) => (
+            <div
+              key={label}
+              className={cn(
+                "rounded-2xl px-3 py-3 text-center text-xs font-extrabold",
+                i === 0
+                  ? "bg-[var(--lavender)] text-[var(--ink)]"
+                  : "bg-[var(--lavender-soft)] text-[var(--ink)]/80",
+              )}
+            >
+              {label}
+            </div>
+          ),
+        )}
+      </div>
+    </StageCard>
   );
 }
 

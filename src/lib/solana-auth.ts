@@ -331,6 +331,72 @@ export async function startSolanaSignIn(opts?: { redirectTo?: string }): Promise
 
   const output = await requestSolanaSignIn(input);
 
+  await finishSolanaSession(input, output, opts?.redirectTo);
+}
+
+/**
+ * Phantom Connect path — sign SIWS with `@phantom/react-sdk` useSolana().signMessage
+ * when the browser extension is not available (Google / Apple embedded).
+ * Docs: https://docs.phantom.com/sdks/react-sdk/sign-messages
+ */
+export async function startPhantomConnectSignIn(opts: {
+  address: string;
+  signMessage: (message: Uint8Array) => Promise<Uint8Array>;
+  publicKeyBytes?: Uint8Array;
+  redirectTo?: string;
+}): Promise<void> {
+  if (typeof window === "undefined") return;
+  await ensureBuffer();
+
+  const address = opts.address.trim();
+  if (!address) throw new Error("Phantom Connect returned no Solana address");
+
+  const origin = encodeURIComponent(window.location.origin);
+  const createRes = await fetch(`/api/public/solana-auth?origin=${origin}`);
+  const input = (await createRes.json().catch(() => ({}))) as SolanaSignInInput & {
+    error?: string;
+  };
+  if (!createRes.ok || !input.nonce) {
+    throw new Error(input.error || `Could not start Solana sign-in (${createRes.status})`);
+  }
+
+  const message = createSignInMessage({
+    ...input,
+    domain: input.domain || window.location.host,
+    address,
+  });
+
+  const signature = await opts.signMessage(message);
+  let publicKey = opts.publicKeyBytes;
+  if (!publicKey || publicKey.length === 0) {
+    const bs58 = await import("bs58");
+    const decode = bs58.default?.decode ?? (bs58 as { decode?: (s: string) => Uint8Array }).decode;
+    if (typeof decode !== "function") {
+      throw new Error("Could not decode Phantom Solana address");
+    }
+    publicKey = decode(address);
+  }
+
+  const output: SolanaSignInOutput = {
+    account: {
+      address,
+      publicKey,
+      chains: ["solana:mainnet"],
+      features: [],
+    },
+    signedMessage: message,
+    signature,
+    signatureType: "ed25519",
+  };
+
+  await finishSolanaSession(input, output, opts.redirectTo);
+}
+
+async function finishSolanaSession(
+  input: SolanaSignInInput,
+  output: SolanaSignInOutput,
+  redirectTo?: string,
+): Promise<void> {
   const verifyRes = await fetch("/api/public/solana-auth", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -355,7 +421,6 @@ export async function startSolanaSignIn(opts?: { redirectTo?: string }): Promise
   });
   if (error) throw error;
 
-  // Keep address handy for Settings / debugging
   if (body.address) {
     try {
       sessionStorage.setItem("solana_signed_in_address", body.address);
@@ -364,7 +429,7 @@ export async function startSolanaSignIn(opts?: { redirectTo?: string }): Promise
     }
   }
 
-  window.location.replace(opts?.redirectTo || "/dashboard");
+  window.location.replace(redirectTo || "/dashboard");
 }
 
 /** Detect whether a SIWS-capable wallet appears available (best-effort). */

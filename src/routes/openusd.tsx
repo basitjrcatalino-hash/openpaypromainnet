@@ -13,12 +13,29 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 
 const TITLE = "Meet OpenUSD (OUSD) — OpenPay’s dollar on the open network";
 const DESC =
   "OpenUSD (OUSD) is OpenPay’s $1 ledger dollar — hold, send, spend, and build across OpenPay Pro, OpenLedger, OpenApp, and the wider OpenPay ecosystem.";
+
+function openUsdSpeechText() {
+  const features = FEATURES.map((f) => `${f.title}. ${f.body}`).join(" ");
+  const bullets = BULLETS.map((b) => `${b.title}. ${b.body}`).join(" ");
+  const faqs = FAQS.map((f) => `${f.q} ${f.a}`).join(" ");
+  return [
+    "Meet OpenUSD. OpenPay’s dollar for the open network.",
+    "Hold, send, and settle in OUSD across OpenPay Pro — with the power of crypto and the ease of cash.",
+    "This is New Money. The power of crypto: ledger settlement, APIs, agents, and multi-rail top-ups. The ease of cash: one-dollar OUSD thinking for everyday sends and merchant payouts.",
+    features,
+    "Everything you need from a network dollar.",
+    bullets,
+    "Frequently asked questions.",
+    faqs,
+  ].join(" ");
+}
 
 export const Route = createFileRoute("/openusd")({
   head: () => ({
@@ -189,6 +206,14 @@ function OusdPage() {
                 Get OUSD in OpenPay Pro
                 <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
               </Link>
+              <PageListenButton
+                id="page:openusd"
+                text={openUsdSpeechText()}
+                label="Listen"
+                stopLabel="Stop"
+                variant="outline"
+                className="border-[var(--border)] bg-white/80 backdrop-blur"
+              />
               <a
                 href="https://openpy.space/partner-api"
                 target="_blank"

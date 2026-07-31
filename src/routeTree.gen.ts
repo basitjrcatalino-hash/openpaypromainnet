@@ -55,6 +55,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
+import { Route as PayToRouteImport } from './routes/pay.$to'
 import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -339,6 +340,11 @@ const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
   id: '/guides/transfer-pi',
   path: '/guides/transfer-pi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayToRoute = PayToRouteImport.update({
+  id: '/pay/$to',
+  path: '/pay/$to',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WikiSlugRoute = WikiSlugRouteImport.update({
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$to': typeof PayToRoute
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -783,6 +790,7 @@ export interface FileRoutesByTo {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$to': typeof PayToRoute
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -886,6 +894,7 @@ export interface FileRoutesById {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$to': typeof PayToRoute
   '/wiki_/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -989,6 +998,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$to'
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -1090,6 +1100,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$to'
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -1192,6 +1203,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$to'
     | '/wiki_/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -1270,6 +1282,7 @@ export interface RootRouteChildren {
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
+  PayToRoute: typeof PayToRoute
   WikiSlugRoute: typeof WikiSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -1626,6 +1639,13 @@ declare module '@tanstack/react-router' {
       path: '/guides/transfer-pi'
       fullPath: '/guides/transfer-pi'
       preLoaderRoute: typeof GuidesTransferPiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$to': {
+      id: '/pay/$to'
+      path: '/pay/$to'
+      fullPath: '/pay/$to'
+      preLoaderRoute: typeof PayToRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wiki_/$slug': {
@@ -2189,6 +2209,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
+  PayToRoute: PayToRoute,
   WikiSlugRoute: WikiSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,

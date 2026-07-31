@@ -45,10 +45,13 @@ function BlogIndex() {
         </nav>
 
         <header className="max-w-3xl">
-          <h1 className="opblog-title">Learn OpenPay Pro</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+            Listen aloud
+          </p>
+          <h1 className="opblog-title mt-3">Learn OpenPay Pro</h1>
           <p className="opblog-dek mt-5 text-[var(--muted-foreground)]">
-            One guide per feature — written the way we would explain it to a colleague. Start
-            anywhere.
+            One guide per feature — written the way we would explain it to a colleague. Open any
+            article and tap Listen to hear it with the same text-to-speech as Wiki and OpenPay AI.
           </p>
         </header>
 

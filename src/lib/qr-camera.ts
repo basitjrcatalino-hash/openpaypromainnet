@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { Html5QrcodeCameraScanConfig } from "html5-qrcode/esm/html5-qrcode";
+import jsQR from "jsqr";
 
 export type Html5QrcodeLike = {
   isScanning: boolean;
@@ -98,7 +99,7 @@ async function listCameraConfigs(): Promise<MediaTrackConstraints[]> {
       facingMode: { ideal: "environment" },
       width: { ideal: 1920 },
       height: { ideal: 1080 },
-    },
+    } as MediaTrackConstraints,
     { facingMode: "environment" },
     { facingMode: { ideal: "user" } },
     {},
@@ -115,6 +116,45 @@ async function listCameraConfigs(): Promise<MediaTrackConstraints[]> {
   }
 
   return configs.slice(0, 5);
+}
+
+/** Decode QR from a video frame via canvas + jsQR (handles screen moiré better than some BarcodeDetectors). */
+function decodeQrFromVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): string | null {
+  const image = sampleVideoFrame(video, canvas);
+  if (!image) return null;
+  const code = jsQR(image.data, image.width, image.height, {
+    inversionAttempts: "attemptBoth",
+  });
+  const text = code?.data?.trim();
+  return text || null;
+}
+
+function sampleVideoFrame(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+): ImageData | null {
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  if (!w || !h) return null;
+
+  // Cap work size for mobile CPU while keeping enough detail for dense address QRs.
+  const maxSide = 960;
+  const scale = Math.min(1, maxSide / Math.max(w, h));
+  const cw = Math.max(1, Math.floor(w * scale));
+  const ch = Math.max(1, Math.floor(h * scale));
+  if (canvas.width !== cw) canvas.width = cw;
+  if (canvas.height !== ch) canvas.height = ch;
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0, cw, ch);
+  return ctx.getImageData(0, 0, cw, ch);
+}
+
+/** Return the canvas after drawing the current video frame (for BarcodeDetector). */
+function canvasFromVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): HTMLCanvasElement {
+  sampleVideoFrame(video, canvas);
+  return canvas;
 }
 
 async function startWithFallback(
@@ -460,7 +500,9 @@ export function usePhantomQrScanner({
         setError(null);
 
         const detector = new BD({ formats: ["qr_code"] });
+        const canvas = document.createElement("canvas");
         let busy = false;
+        let frame = 0;
 
         const tick = async () => {
           if (cancelled || handledRef.current) return;
@@ -469,9 +511,35 @@ export function usePhantomQrScanner({
           });
           if (busy || video.readyState < 2) return;
           busy = true;
+          frame += 1;
           try {
-            const codes = await detector.detect(video);
-            const value = codes.find((c) => c.rawValue?.trim())?.rawValue;
+            // Prefer canvas samples — more reliable than raw <video> on many Android WebViews,
+            // especially when scanning another phone's screen.
+            let value: string | undefined;
+
+            if (frame % 2 === 1) {
+              try {
+                const codes = await detector.detect(canvasFromVideo(video, canvas));
+                value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
+              } catch {
+                /* frame miss */
+              }
+            }
+
+            // jsQR every other frame — stronger on screen→camera / moiré than some BD builds
+            if (!value && frame % 2 === 0) {
+              value = decodeQrFromVideo(video, canvas) ?? undefined;
+            }
+
+            if (!value && frame % 5 === 0) {
+              try {
+                const codes = await detector.detect(video);
+                value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
+              } catch {
+                /* ignore */
+              }
+            }
+
             if (value) emit(value);
           } catch {
             /* frame miss — some engines throw until first decodeable frame */
@@ -603,6 +671,30 @@ export async function scanQrFromFile(file: File): Promise<string> {
     } catch {
       /* fall through */
     }
+  }
+
+  // jsQR path — reliable for screenshots / gallery photos
+  try {
+    const bitmap = await createImageBitmap(file);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (ctx) {
+        ctx.drawImage(bitmap, 0, 0);
+        const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(image.data, image.width, image.height, {
+          inversionAttempts: "attemptBoth",
+        });
+        const value = code?.data?.trim();
+        if (value) return value;
+      }
+    } finally {
+      bitmap.close();
+    }
+  } catch {
+    /* fall through */
   }
 
   const { Html5Qrcode } = await import("html5-qrcode");

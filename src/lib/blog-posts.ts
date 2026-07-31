@@ -655,6 +655,26 @@ export function getPost(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug === slug);
 }
 
+/** Flatten a post into plain text for the same TTS pipeline as Wiki / OpenPay AI. */
+export function blogPostSpeechText(post: BlogPost): string {
+  const parts: string[] = [post.title, post.dek, ...post.intro];
+  for (const section of post.sections) {
+    parts.push(section.heading);
+    for (const block of section.blocks) {
+      if (block.type === "p" || block.type === "quote") {
+        parts.push(block.text);
+      } else if (block.type === "list") {
+        parts.push(...block.items);
+      } else {
+        block.items.forEach((item, i) => {
+          parts.push(`Step ${i + 1}. ${item}`);
+        });
+      }
+    }
+  }
+  return parts.join(" ");
+}
+
 export function formatBlogDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "short",

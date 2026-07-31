@@ -7,10 +7,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Check, Copy, Link2, Loader2, QrCode, Share2 } from "lucide-react";
-import QRCode from "qrcode";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 import { z } from "zod";
+import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -193,13 +193,16 @@ function WalletReceivePage() {
   const payUri = useMemo(() => {
     if (!wallet?.address) return "";
     if (openToken?.id) {
-      const params = new URLSearchParams({
+      return buildReceivePayUri({
+        address: wallet.address,
         asset: openToken.symbol,
         token: openToken.id,
       });
-      return `openpay:${wallet.address}?${params.toString()}`;
     }
-    return `openpay:${wallet.address}?asset=${selected.asset}`;
+    return buildReceivePayUri({
+      address: wallet.address,
+      asset: selected.asset,
+    });
   }, [wallet?.address, selected.asset, openToken]);
 
   useEffect(() => {
@@ -208,12 +211,7 @@ function WalletReceivePage() {
       setQrUrl("");
       return;
     }
-    void QRCode.toDataURL(payUri, {
-      width: 220,
-      margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
-      errorCorrectionLevel: "M",
-    })
+    void walletQrDataUrl(payUri, 280)
       .then((url) => {
         if (!cancelled) setQrUrl(url);
       })
@@ -531,7 +529,7 @@ function WalletReceivePage() {
               className="mt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline"
               onClick={() => void copyPayUri()}
             >
-              Copy openpay: receive link
+              Copy receive link
             </button>
           </div>
 

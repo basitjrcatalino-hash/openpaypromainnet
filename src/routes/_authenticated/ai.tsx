@@ -14,8 +14,8 @@ import { useSpeech } from "@/hooks/use-speech";
 /** OpenPay AI assistant avatar (official OpenPay logo). */
 const AI_AVATAR = OPENPAY_AUTH_LOGO;
 
-/** The logo mark is light-on-transparent, so it needs a dark plate in light mode. */
-const AVATAR_PLATE = "bg-foreground object-contain p-1 dark:bg-transparent dark:p-0";
+/** The logo mark is light-on-transparent, so it needs a grey plate in light mode. */
+const AVATAR_PLATE = "bg-neutral-500 object-contain p-1 dark:bg-transparent dark:p-0";
 
 
 

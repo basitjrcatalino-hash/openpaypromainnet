@@ -1,8 +1,17 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { Loader2, Square, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
-import { BLOG_POSTS, formatBlogDate, getPost, type BlogPost } from "@/lib/blog-posts";
+import { useSpeech } from "@/hooks/use-speech";
+import {
+  BLOG_POSTS,
+  blogPostSpeechText,
+  formatBlogDate,
+  getPost,
+  type BlogPost,
+} from "@/lib/blog-posts";
+import { cn } from "@/lib/utils";
 
 const SITE = "https://openpaypro.space";
 
@@ -67,6 +76,14 @@ function BlogNotFound() {
 function BlogArticle() {
   const { post } = Route.useLoaderData() as { post: BlogPost };
   const activeId = useActiveSection(post.sections.map((s: BlogPost["sections"][number]) => s.id));
+  const speech = useSpeech();
+  const speechId = `blog:${post.slug}`;
+  const isSpeaking = speech.speakingId === speechId;
+  const isLoadingAudio = speech.loadingId === speechId;
+
+  const listen = () => {
+    void speech.speak(speechId, blogPostSpeechText(post));
+  };
 
   const share = async () => {
     const url = `${SITE}/blog/${post.slug}`;
@@ -88,6 +105,12 @@ function BlogArticle() {
 
   const more = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
 
+  const listenLabel = isLoadingAudio
+    ? "Preparing audio…"
+    : isSpeaking
+      ? "Stop"
+      : "Listen to article";
+
   return (
     <main className="opblog min-h-screen">
       <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-8 sm:px-8">
@@ -102,11 +125,31 @@ function BlogArticle() {
         <div className="grid gap-10 lg:grid-cols-[80px_minmax(0,1fr)_260px]">
           {/* Share rail */}
           <div className="hidden lg:block">
-            <div className="sticky top-24">
+            <div className="sticky top-24 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={listen}
+                disabled={isLoadingAudio}
+                className={cn(
+                  "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition press",
+                  isSpeaking
+                    ? "bg-[var(--foreground)] text-[var(--background)]"
+                    : "bg-[var(--primary)] text-[var(--primary-foreground)] hover:brightness-105",
+                )}
+                aria-label={isSpeaking ? "Stop reading aloud" : "Listen to this article"}
+              >
+                {isLoadingAudio ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSpeaking ? (
+                  <Square className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" strokeWidth={2.25} />
+                )}
+              </button>
               <button
                 type="button"
                 onClick={share}
-                className="rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition hover:brightness-105"
+                className="rounded-full border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]"
               >
                 Share
               </button>
@@ -130,6 +173,37 @@ function BlogArticle() {
               <span className="rounded-lg bg-[var(--muted)] px-2.5 py-1.5 text-xs font-semibold">
                 {post.category}
               </span>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={listen}
+                disabled={isLoadingAudio}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition press",
+                  isSpeaking
+                    ? "bg-[var(--foreground)] text-[var(--background)]"
+                    : "bg-[var(--primary)] text-[var(--primary-foreground)] hover:brightness-105",
+                )}
+                aria-label={isSpeaking ? "Stop reading aloud" : "Listen to this article"}
+              >
+                {isLoadingAudio ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSpeaking ? (
+                  <Square className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" strokeWidth={2.25} />
+                )}
+                {listenLabel}
+              </button>
+              <button
+                type="button"
+                onClick={share}
+                className="rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)] lg:hidden"
+              >
+                Share
+              </button>
             </div>
 
             <div
@@ -221,41 +295,86 @@ function BlogArticle() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={share}
-              className="mt-10 w-full rounded-full bg-[var(--primary)] px-5 py-3 font-semibold text-[var(--primary-foreground)] lg:hidden"
-            >
-              Share this article
-            </button>
+            <div className="mt-10 flex flex-col gap-3 lg:hidden">
+              <button
+                type="button"
+                onClick={listen}
+                disabled={isLoadingAudio}
+                className={cn(
+                  "inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 font-semibold press",
+                  isSpeaking
+                    ? "bg-[var(--foreground)] text-[var(--background)]"
+                    : "bg-[var(--primary)] text-[var(--primary-foreground)]",
+                )}
+              >
+                {isLoadingAudio ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSpeaking ? (
+                  <Square className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+                {isSpeaking ? "Stop listening" : "Listen to article"}
+              </button>
+              <button
+                type="button"
+                onClick={share}
+                className="w-full rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-3 font-semibold text-[var(--foreground)]"
+              >
+                Share this article
+              </button>
+            </div>
           </article>
 
           {/* Contents */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl bg-[var(--muted)] p-5">
-              <p className="text-sm font-bold">Contents</p>
-              <div className="mt-3 border-t border-[var(--border)] pt-3">
-                <ul className="space-y-3">
-                  {post.sections.map((s) => (
-                    <li key={s.id} className="flex gap-2">
-                      <span
-                        className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${
-                          activeId === s.id ? "bg-[#22c55e]" : "bg-transparent"
-                        }`}
-                      />
-                      <a
-                        href={`#${s.id}`}
-                        className={`text-sm font-semibold leading-snug ${
-                          activeId === s.id
-                            ? "text-[var(--foreground)]"
-                            : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                        }`}
-                      >
-                        {s.heading}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+            <div className="sticky top-24 space-y-4">
+              <button
+                type="button"
+                onClick={listen}
+                disabled={isLoadingAudio}
+                className={cn(
+                  "flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold press",
+                  isSpeaking
+                    ? "bg-[var(--foreground)] text-[var(--background)]"
+                    : "bg-[var(--primary)] text-[var(--primary-foreground)]",
+                )}
+              >
+                {isLoadingAudio ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSpeaking ? (
+                  <Square className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+                {isSpeaking ? "Stop listening" : "Listen to article"}
+              </button>
+
+              <div className="rounded-2xl bg-[var(--muted)] p-5">
+                <p className="text-sm font-bold">Contents</p>
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
+                  <ul className="space-y-3">
+                    {post.sections.map((s) => (
+                      <li key={s.id} className="flex gap-2">
+                        <span
+                          className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${
+                            activeId === s.id ? "bg-[#22c55e]" : "bg-transparent"
+                          }`}
+                        />
+                        <a
+                          href={`#${s.id}`}
+                          className={`text-sm font-semibold leading-snug ${
+                            activeId === s.id
+                              ? "text-[var(--foreground)]"
+                              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                          }`}
+                        >
+                          {s.heading}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </aside>

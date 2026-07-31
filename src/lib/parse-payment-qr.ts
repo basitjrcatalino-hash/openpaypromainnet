@@ -67,15 +67,19 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
     const isOpenPayHost =
       host === "openpy.space" ||
       host === "openpay.space" ||
+      host === "openpaypro.space" ||
       host.endsWith(".openpy.space") ||
       host.endsWith(".openpay.space") ||
+      host.endsWith(".openpaypro.space") ||
       host.includes("openpay") ||
       host.includes("openpy");
 
-    if (!isOpenPayHost && !raw.includes("/pay/")) return null;
+    if (!isOpenPayHost && !raw.includes("/pay/") && !url.pathname.startsWith("/send")) {
+      return null;
+    }
 
+    // https://openpaypro.space/pay/0x…?asset=OUSD
     // https://openpy.space/pay/@alice?amount=10
-    // https://openpy.space/pay/alice
     const payMatch = url.pathname.match(/\/pay\/([^/?#]+)/i);
     if (payMatch?.[1]) {
       const handle = decodeURIComponent(payMatch[1]).replace(/^@+/, "");
@@ -87,7 +91,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
       );
     }
 
-    // Query-style: ?to=0x… | ?address= | ?account=OP… | ?username=
+    // Query-style: /send?to=0x… | ?address= | ?account=OP… | ?username=
     const toParam =
       url.searchParams.get("to") ||
       url.searchParams.get("address") ||

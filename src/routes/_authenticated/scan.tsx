@@ -11,7 +11,6 @@ import {
   QrCode,
   X,
 } from "lucide-react";
-import QRCode from "qrcode";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
@@ -19,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { isWalletConnectPayLink, normalizeWalletConnectPayLink } from "@/lib/walletconnect-pay";
 import { isEmbeddedFrame, scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
+import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
 import { shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +58,9 @@ function ScanPage() {
       ).data,
   });
 
-  const payUri = wallet?.address ? `openpay:${wallet.address}?asset=OUSD` : "";
+  const payUri = wallet?.address
+    ? buildReceivePayUri({ address: wallet.address, asset: "OUSD" })
+    : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -66,12 +68,7 @@ function ScanPage() {
       setMyQrUrl("");
       return;
     }
-    void QRCode.toDataURL(payUri, {
-      width: 240,
-      margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
-      errorCorrectionLevel: "M",
-    }).then((url) => {
+    void walletQrDataUrl(payUri, 280).then((url) => {
       if (!cancelled) setMyQrUrl(url);
     });
     return () => {
@@ -115,7 +112,14 @@ function ScanPage() {
       handled.current = false;
       scanner.unlock();
       setFlash(false);
-      if (alive.current) toast.error("Invalid QR code");
+      const preview = text.trim().slice(0, 48);
+      if (alive.current) {
+        toast.error(
+          preview
+            ? `QR has no payment address (${preview}${text.trim().length > 48 ? "…" : ""})`
+            : "QR decoded empty — try Photos or hold steadier",
+        );
+      }
       return;
     }
 

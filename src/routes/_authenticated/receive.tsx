@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
-import QRCode from "qrcode";
+import { buildReceivePayUri, walletQrDataUrl } from "@/lib/receive-qr";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -111,7 +111,11 @@ function ReceivePage() {
   const piLinked = !!(profile?.pi_wallet_address || profile?.pi_username);
 
   const payUri = wallet?.address
-    ? `openpay:${wallet.address}?asset=${asset}${amount ? `&amount=${encodeURIComponent(amount)}` : ""}`
+    ? buildReceivePayUri({
+        address: wallet.address,
+        asset,
+        amount: amount || undefined,
+      })
     : "";
 
   async function connectPiWallet() {
@@ -144,12 +148,7 @@ function ReceivePage() {
       setWalletQrUrl((prev) => (prev ? "" : prev));
       return;
     }
-    void QRCode.toDataURL(payUri, {
-      width: 220,
-      margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
-      errorCorrectionLevel: "M",
-    })
+    void walletQrDataUrl(payUri, 280)
       .then((url) => {
         if (!cancelled) setWalletQrUrl(url);
       })
@@ -167,12 +166,7 @@ function ReceivePage() {
       setOpQrUrl((prev) => (prev ? "" : prev));
       return;
     }
-    void QRCode.toDataURL(opLink.pay_url, {
-      width: 200,
-      margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
-      errorCorrectionLevel: "M",
-    })
+    void walletQrDataUrl(opLink.pay_url, 260)
       .then((url) => {
         if (!cancelled) setOpQrUrl(url);
       })

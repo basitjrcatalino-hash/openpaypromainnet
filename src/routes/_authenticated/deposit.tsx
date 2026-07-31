@@ -223,9 +223,14 @@ function DepositPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    const ok = await copyText(address.address);
-                    ok ? toast.success("Address copied") : toast.error("Copy failed");
+                    try {
+                      await copyText(address.address);
+                      toast.success("Address copied");
+                    } catch {
+                      toast.error("Copy failed");
+                    }
                   }}
+
                   className="flex w-full items-center gap-2 break-all text-left font-mono text-xs font-semibold hover:text-primary"
                 >
                   {address.address}

@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
+import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -174,6 +175,11 @@ const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
 const DocsFaqRoute = DocsFaqRouteImport.update({
   id: '/docs/faq',
   path: '/docs/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog_/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -659,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -757,6 +764,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -857,6 +865,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog_/$slug': typeof BlogSlugRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -957,6 +966,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/tts'
     | '/auth/callback'
+    | '/blog/$slug'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1055,6 +1065,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/tts'
     | '/auth/callback'
+    | '/blog/$slug'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1154,6 +1165,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/tts'
     | '/auth/callback'
+    | '/blog_/$slug'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1229,6 +1241,7 @@ export interface RootRouteChildren {
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
@@ -1363,6 +1376,13 @@ declare module '@tanstack/react-router' {
       path: '/docs/faq'
       fullPath: '/docs/faq'
       preLoaderRoute: typeof DocsFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog_/$slug': {
+      id: '/blog_/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -2124,6 +2144,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTestnetProgressRoute: AdminTestnetProgressRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
+  BlogSlugRoute: BlogSlugRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,

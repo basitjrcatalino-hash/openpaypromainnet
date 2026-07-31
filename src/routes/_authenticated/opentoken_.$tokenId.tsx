@@ -52,6 +52,7 @@ import {
   CommentThread,
   PhantomSparkline,
   TerminalChart,
+  TokenLiveChat,
   TradePanel,
   type OtTradeRow,
   type PhantomPeriod,
@@ -567,28 +568,30 @@ function OpenTokenDetail() {
             </div>
             {socialTab === "live" ? (
               <div className="space-y-3">
-                <Link
-                  to="/opentoken/$tokenId/chat"
-                  params={{ tokenId }}
-                  className="flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-3 py-3 text-left press hover:bg-muted"
-                >
-                  <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-muted">
-                    {token.logo_url ? (
-                      <img src={token.logo_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-bold">{token.symbol.slice(0, 2)}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold">{token.name} live chat</div>
-                    <div className="text-xs text-muted-foreground">
-                      Dedicated chat · GIFs, memes &amp; Trade
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-                    Open
-                  </span>
-                </Link>
+                <div className="flex items-center justify-between gap-2 px-0.5">
+                  <p className="text-xs text-muted-foreground">
+                    Every OpenToken has its own community channel — chat live with holders.
+                  </p>
+                  <Link
+                    to="/opentoken/$tokenId/chat"
+                    params={{ tokenId }}
+                    className="shrink-0 text-xs font-semibold text-primary"
+                  >
+                    Full screen
+                  </Link>
+                </div>
+                <TokenLiveChat
+                  tokenId={tokenId}
+                  userId={user.id}
+                  name={token.name}
+                  symbol={token.symbol}
+                  logoUrl={token.logo_url}
+                  priceUsd={Number(token.price_usd ?? 0)}
+                  change24h={Number(token.change_24h ?? 0)}
+                  variant="panel"
+                  onTrade={() => setShowBuyPanel(true)}
+                  className="border-border/40"
+                />
               </div>
             ) : (
               <CommentThread tokenId={tokenId} userId={user.id} />

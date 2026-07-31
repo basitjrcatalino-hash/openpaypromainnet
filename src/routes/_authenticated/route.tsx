@@ -75,6 +75,7 @@ import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
+import { AppLockGate } from "@/components/app-lock-screen";
 import { OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
 
 /** Flip to true to show Bags Cash in nav and unlock /bags routes. */
@@ -193,6 +194,7 @@ function AuthenticatedLayout() {
   }
 
   return (
+    <AppLockGate userId={user.id}>
     <AppMoonPayProvider>
       <AppPhantomProvider>
         <CurrencyProvider>
@@ -362,6 +364,7 @@ function AuthenticatedLayout() {
         </CurrencyProvider>
       </AppPhantomProvider>
     </AppMoonPayProvider>
+    </AppLockGate>
   );
 }
 

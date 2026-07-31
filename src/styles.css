@@ -1309,18 +1309,54 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 .ophome-hero {
   border-radius: clamp(1.75rem, 4vw, 2.75rem);
   background:
-    radial-gradient(ellipse 70% 60% at 70% 20%, rgba(171, 159, 242, 0.35), transparent 55%),
-    radial-gradient(ellipse 50% 45% at 15% 80%, rgba(22, 82, 240, 0.22), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 70% 20%, rgba(171, 159, 242, 0.38), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 15% 80%, rgba(22, 82, 240, 0.24), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 50% 100%, rgba(20, 241, 149, 0.12), transparent 55%),
     linear-gradient(155deg, #6d63b8 0%, #4f478f 42%, #3d3774 100%);
   box-shadow: 0 40px 80px -48px rgba(40, 30, 90, 0.55);
+  isolation: isolate;
+}
+
+.ophome-hero-mesh {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 75%);
+  pointer-events: none;
+  animation: ophome-mesh-drift 28s linear infinite;
+}
+
+@keyframes ophome-mesh-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 22px 44px;
+  }
 }
 
 .ophome-hero-glow {
   position: absolute;
   inset: -20% -10% auto;
   height: 70%;
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.18), transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2), transparent 60%);
   pointer-events: none;
+  animation: ophome-glow-breathe 7s ease-in-out infinite;
+}
+
+@keyframes ophome-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
 }
 
 .ophome-hero-cta {
@@ -1555,11 +1591,61 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 .ophome-phone {
   width: min(280px, 72vw);
   border-radius: 1.85rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07));
+  border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(18px);
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   padding: 1rem 1rem 1.15rem;
+  transform: translate3d(var(--phone-x, 0px), var(--phone-y, 0px), 0);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ophome-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+.ophome-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 0.75rem;
+  animation: ophome-marquee 32s linear infinite;
+}
+
+@keyframes ophome-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ophome-stat {
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.ophome-header-scrolled {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ophome-section-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ophome-section-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1570,15 +1656,22 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   .ophome-float-slow,
   .ophome-orbit,
   .ophome-pulse-ring,
-  .ophome-shimmer {
+  .ophome-shimmer,
+  .ophome-marquee-track,
+  .ophome-hero-mesh,
+  .ophome-hero-glow {
     animation: none;
   }
-  .ophome-rise {
+  .ophome-rise,
+  .ophome-section-reveal {
     opacity: 1;
     transform: none;
     transition: none;
   }
   .ophome-bento:hover {
     transform: none;
+  }
+  .ophome-phone {
+    transition: none;
   }
 }

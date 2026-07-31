@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   ChevronRight,
   CircleDollarSign,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
@@ -42,6 +43,14 @@ import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { LanguagePickerSheet } from "@/components/wallet/LanguagePickerSheet";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
+import { requestWalletLock, notifyLockPasswordChanged } from "@/components/app-lock-screen";
+import {
+  clearSessionUnlock,
+  hashLockPassword,
+  markSessionUnlocked,
+  rememberLockEnabled,
+  validateLockPassword,
+} from "@/lib/app-lock";
 import { currencyListLabel, getCurrencyMeta, useCurrency, type CurrencyCode } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getLanguageMeta } from "@/i18n/languages";
@@ -108,13 +117,6 @@ type PrefPatch = Partial<
   notifications?: Record<string, unknown>;
 };
 
-async function sha256(text: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 function SettingsPage() {
   const { user } = Route.useRouteContext();
   const { t } = useTranslation();
@@ -175,7 +177,7 @@ function SettingsPage() {
         supabase
           .from("user_preferences")
           .select(
-            "user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,pin_hash,updated_at",
+            "user_id,currency,language,theme,biometric_enabled,recovery_backed_up,notifications,updated_at",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -966,17 +968,24 @@ function SettingsPage() {
               enabled={!!prefs?.biometric_enabled}
               onToggle={(v) => updatePref({ biometric_enabled: v })}
             />
-            <PinCard
+            <LockPasswordCard
               hasPin={!!prefs?.pin_set}
-              onSave={async (pin) => {
-                const h = await sha256(`${user.id}:${pin}`);
+              onSave={async (password) => {
+                const h = await hashLockPassword(user.id, password);
                 await updatePref({ pin_hash: h });
-                toast.success("PIN saved");
+                rememberLockEnabled(user.id, true);
+                markSessionUnlocked(user.id);
+                notifyLockPasswordChanged();
+                toast.success("Lock password saved");
               }}
               onClear={async () => {
                 await updatePref({ pin_hash: null });
-                toast.success("PIN removed");
+                rememberLockEnabled(user.id, false);
+                clearSessionUnlock(user.id);
+                notifyLockPasswordChanged();
+                toast.success("Lock password removed");
               }}
+              onLockNow={() => requestWalletLock()}
             />
             <RecoveryCard
               wallets={wallets}
@@ -1541,92 +1550,124 @@ function BiometricCard({
   );
 }
 
-function PinCard({
+function LockPasswordCard({
   hasPin,
   onSave,
   onClear,
+  onLockNow,
 }: {
   hasPin: boolean;
-  onSave: (pin: string) => Promise<void>;
+  onSave: (password: string) => Promise<void>;
   onClear: () => Promise<void>;
+  onLockNow: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [pin, setPin] = useState("");
-  const [pin2, setPin2] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+
   async function save() {
-    if (!/^\d{6}$/.test(pin)) {
-      toast.error("Enter 6 digits");
+    const invalid = validateLockPassword(password);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
-    if (pin !== pin2) {
-      toast.error("PINs do not match");
+    if (password !== password2) {
+      toast.error("Passwords do not match");
       return;
     }
     setBusy(true);
     try {
-      await onSave(pin);
+      await onSave(password);
       setOpen(false);
-      setPin("");
-      setPin2("");
+      setPassword("");
+      setPassword2("");
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-        <KeyRound className="h-4 w-4" />
+        <Lock className="h-4 w-4" />
       </span>
       <div className="mt-2 text-sm font-semibold">
-        PIN code{" "}
-        {hasPin && <span className="ml-1 text-[10px] uppercase text-mint-foreground">set</span>}
+        Lock password{" "}
+        {hasPin && <span className="ml-1 text-[10px] uppercase text-mint-foreground">on</span>}
       </div>
-      <div className="text-xs text-muted-foreground">Add a 6-digit PIN for transactions</div>
-      <div className="mt-3 flex gap-2">
-        <Dialog open={open} onOpenChange={setOpen}>
+      <div className="text-xs text-muted-foreground">
+        Protect your wallet — unlock like Phantom when you open the app
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) {
+              setPassword("");
+              setPassword2("");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm" variant="outline" className="flex-1 rounded-full">
-              {hasPin ? "Change" : "Configure"}
+              {hasPin ? "Change" : "Set up"}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-sm rounded-3xl">
             <DialogHeader>
-              <DialogTitle>Set transaction PIN</DialogTitle>
-              <DialogDescription>6 digits, used to confirm sends.</DialogDescription>
+              <DialogTitle>Set lock password</DialogTitle>
+              <DialogDescription>
+                At least 6 characters. You’ll enter this to unlock OpenPay Pro.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <Input
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="Enter PIN"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                type={show ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <Input
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="Confirm PIN"
-                value={pin2}
-                onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))}
+                type={show ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Confirm password"
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
               />
+              <button
+                type="button"
+                className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => setShow((v) => !v)}
+              >
+                {show ? "Hide passwords" : "Show passwords"}
+              </button>
             </div>
             <DialogFooter>
               <Button
-                onClick={save}
+                onClick={() => void save()}
                 disabled={busy}
-                className="rounded-full bg-primary text-primary-foreground"
+                className="rounded-full bg-[#AB9FF2] font-bold text-black hover:bg-[#B8B0FF]"
               >
-                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save PIN
+                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save password
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {hasPin && (
-          <Button size="sm" variant="ghost" className="rounded-full" onClick={onClear}>
-            Clear
-          </Button>
-        )}
+        {hasPin ? (
+          <>
+            <Button size="sm" variant="secondary" className="rounded-full" onClick={onLockNow}>
+              Lock now
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => void onClear()}>
+              Remove
+            </Button>
+          </>
+        ) : null}
       </div>
     </div>
   );

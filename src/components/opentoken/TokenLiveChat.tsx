@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ImageIcon, Loader2, Search, Smile, X } from "lucide-react";
+import { ImageIcon, Loader2, Search, SendHorizonal, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -88,9 +88,9 @@ function handleLabel(profile: ProfileBits | undefined, userId: string) {
 }
 
 function chattingLabel(count: number) {
-  if (count <= 0) return "Be the first to chat";
-  if (count === 1) return "1 person chatting";
-  return `${count} people chatting`;
+  if (count <= 0) return "Community channel · be first";
+  if (count === 1) return "1 person in community";
+  return `${count} in community chat`;
 }
 
 function formatTradeUsd(n: number) {
@@ -577,7 +577,7 @@ export function TokenLiveChat({
         </div>
       ) : null}
 
-      {/* Composer — Write message + smile + Trade (Phantom) */}
+      {/* Composer — Write message + smile + Send + Trade */}
       <div className="flex shrink-0 items-center gap-2 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
         <div className="relative flex min-w-0 flex-1 items-center">
           <input
@@ -618,6 +618,15 @@ export function TokenLiveChat({
             <Smile className="h-5 w-5" />
           </button>
         </div>
+        <button
+          type="button"
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/10 text-white press disabled:opacity-40"
+          onClick={() => void send({ kind: "text", body })}
+          disabled={busy || missingTable || !body.trim()}
+          aria-label="Send message"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
+        </button>
         <button
           type="button"
           className={cn(

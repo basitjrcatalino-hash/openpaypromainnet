@@ -307,11 +307,21 @@ const TRADE_SLIDES = [
   },
 ] as const;
 
+const ECO_MARKS = [
+  { logo: OUSD_LOGO_URL, label: "OpenUSD" },
+  { logo: PI_NETWORK_LOGO_URL, label: "Pi Network" },
+  { logo: OPENPAY_AI_MENU_ICON, label: "OpenPay AI" },
+  { logo: OPENPAY_NETWORK_BADGE_URL, label: "Open network" },
+  { logo: OUSD_LOGO_URL, label: "Partner API" },
+  { logo: OPENPAY_AUTH_LOGO, label: "Self-custody" },
+  { logo: OPENPAY_NETWORK_BADGE_URL, label: "OpenLedger" },
+  { logo: PI_NETWORK_LOGO_URL, label: "Multi-chain" },
+] as const;
+
 /** Plain-language tour for local browser text-to-speech. */
 function websiteSpeechText() {
   const parts: string[] = [
-    "OpenPay Pro. The money app for the open network.",
-    "Your home for OUSD, Pi, OpenTokens, and open money.",
+    "OpenPay Pro. Your home for OUSD, Pi, and OpenTokens on the open network.",
     "Self-custody wallet, public ledger, Partner API, and OpenPay AI — one Pro account.",
   ];
   for (const cat of FEATURE_SHOWCASE) {
@@ -329,7 +339,9 @@ function websiteSpeechText() {
 function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openNav, setOpenNav] = useState<string | null>(null);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
   const heroRef = useRef<HTMLElement | null>(null);
+  const phoneRef = useRef<HTMLDivElement | null>(null);
   const speech = useSpeech();
   const speechId = "website-tour";
   const isSpeaking = speech.speakingId === speechId;
@@ -340,7 +352,7 @@ function HomePage() {
   };
 
   const listenLabel = isLoadingAudio
-    ? "Preparing audio…"
+    ? "Starting…"
     : isSpeaking
       ? "Stop"
       : "Listen";
@@ -349,7 +361,7 @@ function HomePage() {
     const root = heroRef.current;
     if (!root) return;
     root.querySelectorAll<HTMLElement>("[data-rise]").forEach((el, i) => {
-      el.style.setProperty("--rise-delay", `${80 + i * 90}ms`);
+      el.style.setProperty("--rise-delay", `${70 + i * 100}ms`);
       requestAnimationFrame(() => el.classList.add("is-in"));
     });
   }, []);
@@ -360,6 +372,57 @@ function HomePage() {
     return () => window.removeEventListener("scroll", close);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setHeaderScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    if (!nodes.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-in");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+    );
+    nodes.forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    const phone = phoneRef.current;
+    if (!hero || !phone) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const onMove = (e: PointerEvent) => {
+      const rect = hero.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      phone.style.setProperty("--phone-x", `${x * 18}px`);
+      phone.style.setProperty("--phone-y", `${y * 12}px`);
+    };
+    const onLeave = () => {
+      phone.style.setProperty("--phone-x", "0px");
+      phone.style.setProperty("--phone-y", "0px");
+    };
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerleave", onLeave);
+    return () => {
+      hero.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
   return (
     <main className="ophome min-h-screen text-[var(--foreground)]">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
@@ -367,7 +430,12 @@ function HomePage() {
       </div>
 
       {/* Phantom-style floating header */}
-      <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+      <header
+        className={cn(
+          "sticky top-0 z-50 px-3 pt-3 transition-[background,backdrop-filter] duration-300 sm:px-5 sm:pt-4",
+          headerScrolled && "ophome-header-scrolled pb-2",
+        )}
+      >
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
           <Link to="/website" className="flex items-center gap-2.5 press">
             <img
@@ -529,9 +597,10 @@ function HomePage() {
       </header>
 
       <div className="mx-auto w-full max-w-[1180px] px-3 pb-10 sm:px-5">
-        {/* Hero — full-bleed rounded plane like Phantom */}
+        {/* Hero — brand-first composition */}
         <section ref={heroRef} className="ophome-hero relative mt-3 overflow-hidden sm:mt-4">
           <div className="ophome-hero-glow" aria-hidden />
+          <div className="ophome-hero-mesh" aria-hidden />
           <div
             className="pointer-events-none absolute -left-8 top-16 h-40 w-40 rounded-full bg-[var(--lavender)]/25 blur-3xl ophome-float"
             aria-hidden
@@ -541,25 +610,29 @@ function HomePage() {
             aria-hidden
           />
           <div className="relative z-10 mx-auto flex min-h-[min(88vh,820px)] max-w-3xl flex-col items-center px-6 pb-[min(42vh,340px)] pt-16 text-center sm:px-10 sm:pt-20">
-            <p
+            <div
               data-rise
-              className="ophome-rise text-[15px] font-medium tracking-[-0.01em] text-white/80 sm:text-lg"
+              className="ophome-rise inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md"
             >
-              The money app for the open network
-            </p>
+              <img src={OPENPAY_AUTH_LOGO} alt="" className="h-5 w-5 rounded-md object-contain" />
+              <span className="text-[12px] font-bold tracking-wide text-white/90">OpenPay Pro</span>
+            </div>
             <h1
               data-rise
-              className="ophome-rise mt-4 font-[family-name:var(--font-display)] text-[clamp(2.4rem,7vw,4.35rem)] font-extrabold leading-[1.02] tracking-[-0.045em] text-white"
+              className="ophome-rise mt-6 font-[family-name:var(--font-display)] text-[clamp(2.85rem,8vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.05em] text-white"
             >
-              <span className="block text-white/95">OpenPay Pro</span>
-              <span className="mt-2 block text-white">
-                Your home for OUSD, Pi, OpenTokens, and more
-              </span>
+              OpenPay Pro
             </h1>
+            <p
+              data-rise
+              className="ophome-rise mt-5 max-w-xl text-[clamp(1.05rem,2.2vw,1.35rem)] font-medium leading-snug tracking-[-0.02em] text-white/80"
+            >
+              Your home for OUSD, Pi, and OpenTokens on the open network.
+            </p>
             <div data-rise className="ophome-rise mt-9 flex flex-wrap items-center justify-center gap-3">
               <Link to="/authpi" className="ophome-hero-cta">
                 <Wallet className="h-4 w-4" strokeWidth={2.25} />
-                Open OpenPay Pro
+                Open wallet
               </Link>
               <button
                 type="button"
@@ -575,24 +648,22 @@ function HomePage() {
                 ) : (
                   <Volume2 className="h-4 w-4" strokeWidth={2.25} />
                 )}
-                {isSpeaking ? "Stop listening" : "Listen — don’t read"}
+                {isSpeaking ? "Stop" : "Listen"}
               </button>
-              <Link to="/openusd" className="ophome-hero-cta-ghost">
-                Meet OpenUSD
-              </Link>
             </div>
           </div>
 
-          {/* Floating product preview — Phantom-style stage under CTA */}
+          {/* Product preview — single composition (activity lives inside the phone) */}
           <div className="ophome-hero-preview" aria-hidden>
-            <div className="ophome-phone ophome-float-slow">
+            <div ref={phoneRef} className="ophome-phone ophome-float-slow">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <img src={OPENPAY_AUTH_LOGO} alt="" className="h-7 w-7 rounded-lg object-contain" />
                   <span className="text-xs font-bold text-white">OpenPay Pro</span>
                 </div>
-                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold text-white/80">
-                  Live
+                <span className="relative flex h-2 w-2">
+                  <span className="ophome-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400/70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
               </div>
               <p className="mt-4 text-left text-[11px] font-semibold text-white/55">Total balance</p>
@@ -625,69 +696,87 @@ function HomePage() {
                   <span className="flex-1 text-left text-[11px] font-bold text-white">Pi</span>
                   <span className="text-[11px] font-bold text-white/90">1,204</span>
                 </div>
-              </div>
-            </div>
-            <div className="ophome-float absolute -left-[18%] top-8 hidden rounded-2xl bg-white/95 px-3 py-2.5 shadow-xl sm:block">
-              <div className="flex items-center gap-2">
-                <img src={OUSD_LOGO_URL} alt="" className="h-7 w-7 rounded-xl object-cover" />
-                <div>
-                  <p className="text-[10px] font-bold text-[var(--ink)]">Sent to @alice</p>
-                  <p className="text-[10px] font-semibold text-emerald-600">+42.00 OUSD</p>
+                <div className="flex items-center gap-2 rounded-xl bg-emerald-500/15 px-2.5 py-2 ring-1 ring-emerald-400/20">
+                  <img src={OUSD_LOGO_URL} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-[10px] font-bold text-white">Sent to @alice</p>
+                    <p className="text-[10px] font-semibold text-emerald-300">+42.00 OUSD</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="ophome-float-delay absolute -right-[16%] bottom-10 hidden rounded-2xl bg-[#1a1528] px-3 py-2.5 shadow-xl sm:block">
-              <div className="flex items-center gap-2">
-                <img src={OPENPAY_AI_MENU_ICON} alt="" className="h-6 w-6 object-contain" />
-                <p className="max-w-[110px] text-left text-[10px] font-semibold leading-snug text-white">
-                  OpenPay AI · how do I top up?
-                </p>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Ecosystem marquee */}
+        <div
+          data-reveal
+          className="ophome-section-reveal ophome-marquee mt-8 sm:mt-10"
+          aria-label="OpenPay ecosystem"
+        >
+          <div className="ophome-marquee-track px-1">
+            {[...ECO_MARKS, ...ECO_MARKS].map((item, i) => (
+              <span
+                key={`${item.label}-${i}`}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-[var(--ink)] shadow-sm"
+              >
+                <img src={item.logo} alt="" className="h-4 w-4 rounded-md object-cover" />
+                {item.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* Trading tools */}
-        <FeatureBand
-          eyebrow="Trading"
-          title="Trading tools for everyone"
-          moreHref="/wiki"
-          slides={TRADE_SLIDES}
-          renderVisual={(v) => <TradeVisual kind={v} />}
-        />
+        <div data-reveal className="ophome-section-reveal">
+          <FeatureBand
+            eyebrow="Trading"
+            title="Trading tools for everyone"
+            moreHref="/wiki"
+            slides={TRADE_SLIDES}
+            renderVisual={(v) => <TradeVisual kind={v} />}
+          />
+        </div>
 
         {/* Move money */}
-        <FeatureBand
-          eyebrow="Move money"
-          title="Spend, send & settle"
-          moreHref="/openusd"
-          slides={MONEY_SLIDES}
-          renderVisual={(v) => <MoneyVisual kind={v} />}
-          reverse
-        />
+        <div data-reveal className="ophome-section-reveal">
+          <FeatureBand
+            eyebrow="Move money"
+            title="Spend, send & settle"
+            moreHref="/openusd"
+            slides={MONEY_SLIDES}
+            renderVisual={(v) => <MoneyVisual kind={v} />}
+            reverse
+          />
+        </div>
 
         {/* Security */}
-        <FeatureBand
-          eyebrow="Your security"
-          title="Controlled by you, secured on an open ledger"
-          moreHref="/about"
-          slides={SECURITY_SLIDES}
-          renderVisual={(v) => <SecurityVisual kind={v} />}
-        />
+        <div data-reveal className="ophome-section-reveal">
+          <FeatureBand
+            eyebrow="Your security"
+            title="Controlled by you, secured on an open ledger"
+            moreHref="/about"
+            slides={SECURITY_SLIDES}
+            renderVisual={(v) => <SecurityVisual kind={v} />}
+          />
+        </div>
 
-        {/* Full product showcase — Phantom-style visual bands (not text walls) */}
-        <section id="features" className="mt-16 scroll-mt-28 sm:mt-24">
+        {/* Full product showcase */}
+        <section
+          id="features"
+          data-reveal
+          className="ophome-section-reveal mt-16 scroll-mt-28 sm:mt-24"
+        >
           <div className="flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                All features
+                Product
               </p>
               <h2 className="mt-2 max-w-3xl font-[family-name:var(--font-display)] text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
                 Everything in OpenPay Pro
               </h2>
-              <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
-                Tap a feature — watch the stage react. Same energy as a money app built to amaze, not a
-                docs dump.
+              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                One money app — wallet, OpenUSD, OpenToken, deposits, and AI on the same rails.
               </p>
             </div>
             <button
@@ -709,7 +798,7 @@ function HomePage() {
               ) : (
                 <Volume2 className="h-4 w-4" strokeWidth={2.25} />
               )}
-              {isSpeaking ? "Stop" : "Listen to features"}
+              {isSpeaking ? "Stop" : "Listen"}
             </button>
           </div>
 
@@ -782,37 +871,36 @@ function HomePage() {
         </section>
 
         {/* Trust band */}
-        <section className="ophome-trust mt-6 overflow-hidden px-6 py-14 sm:mt-8 sm:px-12 sm:py-16">
+        <section
+          data-reveal
+          className="ophome-section-reveal ophome-trust mt-6 overflow-hidden px-6 py-14 sm:mt-8 sm:px-12 sm:py-16"
+        >
           <div className="mx-auto max-w-3xl text-center">
             <Lock className="mx-auto h-8 w-8 text-[var(--lavender)]" strokeWidth={1.75} />
             <h2 className="mt-6 font-[family-name:var(--font-display)] text-[clamp(1.7rem,4vw,2.75rem)] font-extrabold tracking-[-0.035em] text-white">
-              Trusted by the OpenPay community. It’s more than a wallet.
+              Built for open money — not a closed bank silo.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/65">
-              Address, @username, and Pi identity on the same open network — with OpenUSD settlement,
-              Partner API, OpenLedger, and OpenPay AI on the same rails.
+              Address, @username, and Pi identity on one network — with OpenUSD settlement, Partner
+              API, OpenLedger, and OpenPay AI on the same rails.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
               {[
-                { logo: OUSD_LOGO_URL, label: "OUSD" },
-                { logo: PI_NETWORK_LOGO_URL, label: "Pi Network" },
-                { logo: OPENPAY_AI_MENU_ICON, label: "OpenPay AI" },
-                { logo: OPENPAY_NETWORK_BADGE_URL, label: "Open network" },
-              ].map((b) => (
-                <span
-                  key={b.label}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-white"
-                >
-                  <img src={b.logo} alt="" className="h-4 w-4 rounded-md object-cover" />
-                  {b.label}
-                </span>
+                { value: "Self-custody", label: "Your keys, your wallet" },
+                { value: "OpenUSD", label: "$1 ledger dollar" },
+                { value: "Open rails", label: "API · Ledger · AI" },
+              ].map((s) => (
+                <div key={s.value} className="ophome-stat px-4 py-5 text-center">
+                  <p className="text-lg font-extrabold tracking-tight text-white">{s.value}</p>
+                  <p className="mt-1 text-xs font-medium text-white/55">{s.label}</p>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* Ecosystem grid */}
-        <section className="mt-16 sm:mt-20">
+        <section data-reveal className="ophome-section-reveal mt-16 sm:mt-20">
           <div className="flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
@@ -851,37 +939,30 @@ function HomePage() {
         </section>
 
         {/* Get started */}
-        <section className="ophome-start mt-16 overflow-hidden px-6 py-14 text-center sm:mt-20 sm:px-12 sm:py-20">
+        <section
+          data-reveal
+          className="ophome-section-reveal ophome-start mt-16 overflow-hidden px-6 py-14 text-center sm:mt-20 sm:px-12 sm:py-20"
+        >
           <p className="text-sm font-medium text-[var(--ink)]/55">Get started</p>
           <h2 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(2.2rem,6vw,3.8rem)] font-extrabold tracking-[-0.045em] text-[var(--ink)]">
             Open OpenPay Pro.
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-[var(--muted-foreground)]">
-            Sign in with OpenPay, Phantom, Pi, Telegram, email, and more — then hold OUSD, send, swap,
-            and build on the open ledger.
+            Sign in with OpenPay, Phantom, Pi, Telegram, or email — then hold OUSD, send, swap, and
+            build.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/authpi" className="ophome-cta-pill text-[15px]">
               <Wallet className="h-4 w-4" />
               Open wallet
             </Link>
-            <a
-              href="https://openpy.space/partner-api"
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/openusd"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
             >
-              Partner API
-            </a>
-            <a
-              href="https://www.openpy.space/blog/meet-openpay-ai"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
-            >
-              <Bot className="h-4 w-4" />
-              Meet OpenPay AI
-            </a>
+              Meet OpenUSD
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </div>

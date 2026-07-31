@@ -16,6 +16,7 @@ import {
   Hourglass,
   InfinityIcon,
   Loader2,
+  MessageCircle,
   Share2,
   Shield,
   Sparkles,
@@ -1168,12 +1169,20 @@ function PredictDetail({
         <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
       </button>
 
-      <Link to="/chat" className="flex items-center gap-2 rounded-2xl bg-muted/60 px-3 py-3 press">
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        <span className="text-sm font-semibold">Live Chat</span>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        <span className="ml-auto text-xs text-muted-foreground">Talk markets</span>
-      </Link>
+      <div className="space-y-2">
+        <Link
+          to="/chat"
+          className="flex items-center gap-2 rounded-2xl bg-muted/60 px-3 py-3 press"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          <span className="text-sm font-semibold">OpenPay Live</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <span className="ml-auto text-xs text-muted-foreground">Global room</span>
+        </Link>
+        <p className="px-1 text-[11px] text-muted-foreground">
+          Each OpenToken also has its own community chat — open any token → Live.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 pb-2">
         <Button
@@ -1266,10 +1275,14 @@ function ExploreTab({
         <div className="rounded-2xl bg-muted/60 px-4 py-10 text-center">
           <Users className="mx-auto h-8 w-8 text-muted-foreground" />
           <p className="mt-3 text-sm font-semibold">Creators & traders</p>
-          <p className="mt-1 text-xs text-muted-foreground">Follow OpenToken creators from Live Chat and Terminal.</p>
-          <Button asChild className="mt-4 rounded-full" size="sm">
-            <Link to="/chat">Open Live Chat</Link>
-          </Button>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Meet creators in OpenPay Live, or open any token&apos;s own community chat.
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <Button asChild className="rounded-full" size="sm">
+              <Link to="/chat">OpenPay Live</Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <>
@@ -1384,8 +1397,12 @@ function TokenListRow({
   showBalance?: boolean;
 }) {
   return (
-    <li>
-      <Link to="/opentoken/$tokenId" params={{ tokenId: t.id }} className="ph-row press">
+    <li className="flex items-stretch gap-1">
+      <Link
+        to="/opentoken/$tokenId"
+        params={{ tokenId: t.id }}
+        className="ph-row min-w-0 flex-1 press"
+      >
         <div className="flex min-w-0 items-center gap-3">
           <TokenAvatar
             logoUrl={t.logo_url}
@@ -1407,6 +1424,15 @@ function TokenListRow({
           currency={currency}
         />
       </Link>
+      <Link
+        to="/opentoken/$tokenId/chat"
+        params={{ tokenId: t.id }}
+        className="grid w-11 shrink-0 place-items-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground press"
+        aria-label={`${t.symbol} community chat`}
+        title="Community chat"
+      >
+        <MessageCircle className="h-4 w-4" />
+      </Link>
     </li>
   );
 }
@@ -1424,8 +1450,12 @@ function RankedTokenRow({
     rank === 1 ? "bg-amber-400 text-black" : rank === 2 ? "bg-zinc-300 text-black" : rank === 3 ? "bg-amber-700 text-white" : "bg-muted text-muted-foreground";
   const mc = Number(t.market_cap ?? 0);
   return (
-    <li>
-      <Link to="/opentoken/$tokenId" params={{ tokenId: t.id }} className="ph-row press">
+    <li className="flex items-stretch gap-1">
+      <Link
+        to="/opentoken/$tokenId"
+        params={{ tokenId: t.id }}
+        className="ph-row min-w-0 flex-1 press"
+      >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
             <TokenAvatar
@@ -1463,6 +1493,15 @@ function RankedTokenRow({
             {formatPct(Number(t.change_24h ?? 0))}
           </div>
         </div>
+      </Link>
+      <Link
+        to="/opentoken/$tokenId/chat"
+        params={{ tokenId: t.id }}
+        className="grid w-11 shrink-0 place-items-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground press"
+        aria-label={`${t.symbol} community chat`}
+        title="Community chat"
+      >
+        <MessageCircle className="h-4 w-4" />
       </Link>
     </li>
   );

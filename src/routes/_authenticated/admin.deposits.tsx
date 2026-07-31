@@ -325,10 +325,10 @@ function AdminDepositsPage() {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
-          {((depositsQ.data as any[]) ?? []).length === 0 ? (
+          {(depositsQ.data?.deposits ?? []).length === 0 ? (
             <Card className="p-4 text-sm text-muted-foreground">No deposits recorded yet.</Card>
           ) : (
-            ((depositsQ.data as any[]) ?? []).map((d) => (
+            (depositsQ.data?.deposits ?? []).map((d) => (
               <Card key={d.id} className="space-y-2 p-3">
                 <div className="flex items-center gap-2">
                   <div className="min-w-0 flex-1">

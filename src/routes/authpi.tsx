@@ -824,7 +824,11 @@ async function handlePiSignIn(navigate: ReturnType<typeof useNavigate>) {
       : Math.random().toString(36).slice(2) + Date.now().toString(36);
     sessionStorage.setItem("pi_oauth_state", state);
     sessionStorage.setItem("pi_oauth_redirect", postAuthTarget());
-    const redirectUri = `${window.location.origin}/auth/pi/callback`;
+    // Pi rejects any redirect_uri that isn't allowlisted in the Developer Portal.
+    // Set VITE_PI_REDIRECT_URI to pin one exact allowlisted URI (e.g. preview/iframe origins).
+    const redirectUri =
+      (import.meta.env.VITE_PI_REDIRECT_URI as string | undefined)?.trim() ||
+      `${window.location.origin}/auth/pi/callback`;
     window.location.href =
       `https://accounts.pinet.com/oauth/authorize` +
       `?response_type=token` +

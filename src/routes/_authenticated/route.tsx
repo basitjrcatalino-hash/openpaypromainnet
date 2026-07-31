@@ -450,6 +450,21 @@ function SidebarInner({
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const { data: adminInfo } = useQuery({
+    queryKey: ["is-admin"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return { isAdmin: false };
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: u.user.id,
+        _role: "admin",
+      });
+      return { isAdmin: !!data };
+    },
+  });
+  const isAdmin = !!adminInfo?.isAdmin;
+
   const { data: activeHoldings = [] } = useQuery({
     queryKey: ["holdings", activeWallet?.id],
     enabled: !!activeWallet?.id,

@@ -41,6 +41,7 @@ import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/o
 import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
 import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
+import { Route as AuthenticatedMerchantRouteImport } from './routes/_authenticated/merchant'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
@@ -265,6 +266,11 @@ const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
 const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
   id: '/metamask',
   path: '/metamask',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMerchantRoute = AuthenticatedMerchantRouteImport.update({
+  id: '/merchant',
+  path: '/merchant',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
@@ -646,6 +652,7 @@ export interface FileRoutesByFullPath {
   '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/merchant': typeof AuthenticatedMerchantRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
@@ -745,6 +752,7 @@ export interface FileRoutesByTo {
   '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/merchant': typeof AuthenticatedMerchantRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
@@ -846,6 +854,7 @@ export interface FileRoutesById {
   '/_authenticated/deposit': typeof AuthenticatedDepositRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
+  '/_authenticated/merchant': typeof AuthenticatedMerchantRoute
   '/_authenticated/metamask': typeof AuthenticatedMetamaskRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
@@ -947,6 +956,7 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/kyc'
     | '/ledger'
+    | '/merchant'
     | '/metamask'
     | '/nfts'
     | '/opentoken'
@@ -1046,6 +1056,7 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/kyc'
     | '/ledger'
+    | '/merchant'
     | '/metamask'
     | '/nfts'
     | '/opentoken'
@@ -1146,6 +1157,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deposit'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
+    | '/_authenticated/merchant'
     | '/_authenticated/metamask'
     | '/_authenticated/nfts'
     | '/_authenticated/opentoken'
@@ -1504,6 +1516,13 @@ declare module '@tanstack/react-router' {
       path: '/metamask'
       fullPath: '/metamask'
       preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/merchant': {
+      id: '/_authenticated/merchant'
+      path: '/merchant'
+      fullPath: '/merchant'
+      preLoaderRoute: typeof AuthenticatedMerchantRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ledger': {
@@ -2018,6 +2037,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepositRoute: typeof AuthenticatedDepositRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
+  AuthenticatedMerchantRoute: typeof AuthenticatedMerchantRoute
   AuthenticatedMetamaskRoute: typeof AuthenticatedMetamaskRoute
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
@@ -2059,6 +2079,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepositRoute: AuthenticatedDepositRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
+  AuthenticatedMerchantRoute: AuthenticatedMerchantRoute,
   AuthenticatedMetamaskRoute: AuthenticatedMetamaskRoute,
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,

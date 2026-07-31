@@ -156,6 +156,35 @@ function TopUpPage() {
     queryFn: () => getTopupInfo(),
   });
 
+  const listMethodsFn = useServerFn(listTopupMethods);
+  const { data: methodConfig } = useQuery({
+    queryKey: ["topup-methods"],
+    queryFn: () => listMethodsFn(),
+  });
+
+  const visibleMethods = (() => {
+    if (!methodConfig?.length) return methods;
+    const byKey = new Map(methodConfig.map((c: any) => [c.method_key, c]));
+    return methods
+      .filter((m) => byKey.get(m.id)?.enabled !== false)
+      .map((m) => {
+        const c: any = byKey.get(m.id);
+        return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
+      })
+      .sort(
+        (a, b) =>
+          Number((byKey.get(a.id) as any)?.sort_order ?? 0) -
+          Number((byKey.get(b.id) as any)?.sort_order ?? 0),
+      );
+  })();
+
+  useEffect(() => {
+    if (visibleMethods.length && !visibleMethods.some((m) => m.id === method)) {
+      setMethod(visibleMethods[0].id);
+    }
+  }, [visibleMethods, method]);
+
+
   const amtNum = Number(amount) || 0;
   const feeBps = Number(topupInfo?.fee_bps ?? 0);
   const feeBreakdown = calcTopupFee(amtNum, feeBps);

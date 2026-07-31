@@ -146,6 +146,20 @@ export async function creditProUserFromOpenPay(opts: {
         `OpenPay transfer${opts.fromLabel ? ` from ${opts.fromLabel}` : ""} → ${addr.slice(0, 10)}…`,
     });
     if (tErr) throw new Error(tErr.message);
+    try {
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction(opts.admin as never, byAddr.id, {
+        type: "receive",
+        token_symbol: "OUSD",
+        amount,
+        memo: opts.note || `OpenPay transfer received`,
+        counterparty,
+        status: "confirmed",
+        wallet_id: byAddr.id,
+      });
+    } catch (e) {
+      console.warn("[openpay-inbound] tx alert failed", e);
+    }
     return {
       credited: true,
       userId: byAddr.user_id,
@@ -189,6 +203,23 @@ export async function creditProUserFromOpenPay(opts: {
       `OpenPay transfer${opts.fromLabel ? ` from ${opts.fromLabel}` : ""}`,
   });
   if (tErr) throw new Error(tErr.message);
+
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    await notifyWalletTransaction(opts.admin as never, wallet.id, {
+      type: "receive",
+      token_symbol: "OUSD",
+      amount,
+      memo:
+        opts.note ||
+        `OpenPay transfer${opts.fromLabel ? ` from ${opts.fromLabel}` : ""}`,
+      counterparty,
+      status: "confirmed",
+      wallet_id: wallet.id,
+    });
+  } catch (e) {
+    console.warn("[openpay-inbound] tx alert failed", e);
+  }
 
   return {
     credited: true,

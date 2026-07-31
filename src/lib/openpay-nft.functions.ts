@@ -254,8 +254,19 @@ export const mintOpenNftOnOpenPay = createServerFn({ method: "POST" })
         usd_value: Number(data.price) || 0,
         memo: `OpenPay OpenNFT mint · ${data.name} · ${result.permalink}`,
       });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction(supabaseAdmin as never, wallet.id, {
+        type: "mint",
+        token_symbol: "NFT",
+        amount: Number(data.price) || 0,
+        memo: `OpenPay OpenNFT mint · ${data.name}`,
+        counterparty: `openpay-nft:${result.item_id}`,
+        status: "confirmed",
+        wallet_id: wallet.id,
+      });
     } catch {
-      /* ledger optional */
+      /* ledger / alert optional */
     }
 
     const { raw: _raw, ...safeResult } = result as typeof result & { raw?: unknown };

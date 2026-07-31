@@ -144,8 +144,19 @@ export const createOpenToken = createServerFn({ method: "POST" })
         usd_value: fee,
         memo: `OpenToken mint fee · ${data.symbol}`,
       });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction(supabaseAdmin as never, wallet.id, {
+        type: "send",
+        token_symbol: "OUSD",
+        amount: fee,
+        memo: `OpenToken mint fee · ${data.symbol}`,
+        counterparty: `opentoken:launch:${created.id}`,
+        status: "confirmed",
+        wallet_id: wallet.id,
+      });
     } catch {
-      /* ledger optional */
+      /* ledger / alert optional */
     }
 
     // Platform mint fee → @openpay treasury wallet

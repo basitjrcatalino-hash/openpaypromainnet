@@ -54,6 +54,7 @@ export const en = {
     explore: "Explore",
     discover: "Discover",
     ai: "OpenPay AI",
+    solanaPay: "Solana Pay",
     developer: "Developer",
     agentConnect: "Agent Connect",
     depositGateway: "Deposit gateway",

@@ -500,9 +500,9 @@ function SidebarInner({
   const [copied, setCopied] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(() => {
     try {
-      return localStorage.getItem("sidebar-discover-open") !== "0";
+      return localStorage.getItem("sidebar-discover-open") === "1";
     } catch {
-      return true;
+      return false;
     }
   });
 
@@ -766,7 +766,7 @@ function SidebarInner({
             >
               ◎
             </span>
-            <span className="truncate">Solana Pay</span>
+            <span className="truncate">{t("nav.solanaPay")}</span>
           </Link>
         </SideSection>
 
@@ -789,26 +789,44 @@ function SidebarInner({
             <div className="space-y-0.5">
               {(
                 [
-                  { href: "/", labelKey: "nav.website", Icon: Home },
-                  { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign },
-                  { href: "/about", labelKey: "nav.about", Icon: Globe2 },
-                  { href: "/blog", labelKey: "nav.blog", Icon: Newspaper },
-                  { href: "/wiki", labelKey: "nav.wiki", Icon: BookMarked },
+                  { href: "/", labelKey: "nav.website", Icon: Home, external: true },
+                  { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign, external: false },
+                  { href: "/about", labelKey: "nav.about", Icon: Globe2, external: false },
+                  { href: "/blog", labelKey: "nav.blog", Icon: Newspaper, external: false },
+                  { href: "/wiki", labelKey: "nav.wiki", Icon: BookMarked, external: false },
                 ] as const
-              ).map(({ href, labelKey, Icon }) => (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={onClose}
-                  className={sideItemClass(false)}
-                >
-                  <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                  <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
-                </a>
-              ))}
+              ).map(({ href, labelKey, Icon, external }) =>
+                external ? (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={onClose}
+                    className={sideItemClass(false)}
+                  >
+                    <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                    <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+                  </a>
+                ) : (
+                  <Link
+                    key={href}
+                    to={href}
+                    onClick={onClose}
+                    preload="intent"
+                    aria-current={
+                      pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined
+                    }
+                    className={sideItemClass(
+                      pathname === href || pathname.startsWith(`${href}/`),
+                    )}
+                  >
+                    <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                    <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+                  </Link>
+                ),
+              )}
             </div>
           ) : null}
         </div>

@@ -210,6 +210,20 @@ export const redeemVoucher = createServerFn({ method: "POST" })
       usd_value: amount,
       memo: `Voucher redeemed${claimed.note ? ` · ${claimed.note}` : ""}`,
     });
+    try {
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction(supabaseAdmin as never, wallet.id, {
+        type: "buy",
+        token_symbol: "OUSD",
+        amount,
+        memo: `Voucher redeemed${claimed.note ? ` · ${claimed.note}` : ""}`,
+        counterparty: `voucher:${claimed.code}`,
+        status: "confirmed",
+        wallet_id: wallet.id,
+      });
+    } catch (e) {
+      console.warn("[voucher] tx alert failed", e);
+    }
 
     return { ok: true, amount, balance: newBal };
   });

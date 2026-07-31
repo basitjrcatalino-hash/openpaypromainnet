@@ -387,6 +387,22 @@ export async function creditDeposit(admin: any, depositId: string) {
     .maybeSingle();
   if (txErr) throw new Error(txErr.message);
 
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    await notifyWalletTransaction(admin as never, walletId, {
+      id: tx?.id ? String(tx.id) : undefined,
+      type: "receive",
+      token_symbol: creditSymbol,
+      amount: net,
+      memo: `Deposit ${net} ${creditSymbol} via ${dep.chain_key}`,
+      counterparty: dep.from_address || `${dep.chain_key} deposit`,
+      status: "confirmed",
+      wallet_id: walletId,
+    });
+  } catch (e) {
+    console.warn("[deposit-gateway] tx alert failed", e);
+  }
+
   // Mirror to OpenLedger (immutable, ignore duplicates).
   let ledgerId: string | null = null;
   const { data: entry } = await admin

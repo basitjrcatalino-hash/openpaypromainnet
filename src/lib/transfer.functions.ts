@@ -373,6 +373,20 @@ async function sendOpenToken(opts: {
     usd_value: usd,
     memo,
   });
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    await notifyWalletTransaction(admin as never, rcpt.id, {
+      type: "receive",
+      token_symbol: symbol,
+      amount,
+      memo,
+      counterparty: wallet.address,
+      status: "confirmed",
+      wallet_id: rcpt.id,
+    });
+  } catch (e) {
+    console.warn("[transfer] opentoken receive alert failed", e);
+  }
 
   const { error: txErr } = await supabase.from("transactions").insert({
     wallet_id: wallet.id,
@@ -386,6 +400,20 @@ async function sendOpenToken(opts: {
     memo,
   });
   if (txErr) throw new Error(txErr.message);
+  try {
+    const { notifyWalletTransaction } = await import("./tx-alerts.server");
+    await notifyWalletTransaction(admin as never, wallet.id, {
+      type: "send",
+      token_symbol: symbol,
+      amount,
+      memo,
+      counterparty: toAddress,
+      status: "confirmed",
+      wallet_id: wallet.id,
+    });
+  } catch (e) {
+    console.warn("[transfer] opentoken send alert failed", e);
+  }
 
   return { ok: true, credited: true, resolvedTo: toAddress, symbol };
 }

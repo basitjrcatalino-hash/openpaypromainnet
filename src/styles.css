@@ -1182,12 +1182,15 @@ html.solana-pay-open body > div[style*="z-index:50"] {
    --------------------------------------------------------------- */
 .ophome,
 .dark .ophome {
-  --background: #f4faff;
-  --foreground: #0b1f33;
-  --muted-foreground: #5b7088;
-  --border: #c9dceb;
+  --background: #f6f4fb;
+  --foreground: #1a1430;
+  --ink: #1a1430;
+  --muted-foreground: #6b6580;
+  --border: #ddd6ef;
   --brand: #1652f0;
-  --mint: #0fbe7a;
+  --lavender: #ab9ff2;
+  --lavender-soft: #efeafc;
+  --mint: #14f195;
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   background-color: var(--background);
@@ -1197,24 +1200,156 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 
 .ophome-sky {
   background:
-    radial-gradient(ellipse 85% 50% at 50% -8%, rgba(120, 180, 255, 0.45), transparent 55%),
-    radial-gradient(ellipse 45% 35% at 90% 15%, rgba(20, 241, 149, 0.16), transparent 50%),
-    radial-gradient(ellipse 40% 30% at 10% 40%, rgba(22, 82, 240, 0.1), transparent 55%),
-    linear-gradient(180deg, #dff0ff 0%, #f4faff 38%, #f7fbff 100%);
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(171, 159, 242, 0.42), transparent 58%),
+    radial-gradient(ellipse 40% 30% at 92% 18%, rgba(22, 82, 240, 0.1), transparent 55%),
+    radial-gradient(ellipse 35% 28% at 8% 40%, rgba(20, 241, 149, 0.1), transparent 55%),
+    linear-gradient(180deg, #ebe6f8 0%, #f6f4fb 42%, #f8f7fc 100%);
 }
 
-.ophome-blob {
-  animation: ophome-drift 16s ease-in-out infinite;
+.ophome-pill {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 10px 36px -18px rgba(40, 30, 80, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-@keyframes ophome-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
+.ophome-dropdown {
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 60px -28px rgba(40, 30, 80, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(26, 20, 48, 0.06);
+}
+
+.ophome-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: var(--lavender);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.875rem;
+  padding: 0.7rem 1.15rem;
+  letter-spacing: -0.01em;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.ophome-cta-pill:hover {
+  filter: brightness(1.04);
+}
+.ophome-cta-pill:active {
+  transform: scale(0.98);
+}
+
+.ophome-hero {
+  border-radius: clamp(1.75rem, 4vw, 2.75rem);
+  background:
+    radial-gradient(ellipse 70% 60% at 70% 20%, rgba(171, 159, 242, 0.35), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 15% 80%, rgba(22, 82, 240, 0.22), transparent 50%),
+    linear-gradient(155deg, #6d63b8 0%, #4f478f 42%, #3d3774 100%);
+  box-shadow: 0 40px 80px -48px rgba(40, 30, 90, 0.55);
+}
+
+.ophome-hero-glow {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 70%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.ophome-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  background: var(--lavender);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0.95rem 1.35rem;
+  letter-spacing: -0.015em;
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.ophome-hero-cta:hover {
+  filter: brightness(1.05);
+}
+.ophome-hero-cta:active {
+  transform: scale(0.98);
+}
+
+.ophome-hero-cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.95rem 1.25rem;
+  backdrop-filter: blur(8px);
+}
+
+.ophome-stage {
+  border-radius: clamp(1.5rem, 3vw, 2.25rem);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(239, 234, 252, 0.9));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 28px 70px -40px rgba(40, 30, 80, 0.4);
+  border: 1px solid rgba(26, 20, 48, 0.05);
+}
+
+.ophome-stage-in {
+  animation: ophome-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ophome-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
-  50% {
-    transform: translate3d(14px, -12px, 0) scale(1.04);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+.ophome-trust {
+  border-radius: clamp(1.75rem, 3.5vw, 2.5rem);
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(171, 159, 242, 0.25), transparent 55%),
+    linear-gradient(160deg, #1a1528 0%, #120f1c 100%);
+}
+
+.ophome-eco {
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(26, 20, 48, 0.06);
+  backdrop-filter: blur(10px);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.ophome-eco:hover {
+  background: #fff;
+  border-color: rgba(22, 82, 240, 0.22);
+  transform: translateY(-1px);
+}
+
+.ophome-start {
+  border-radius: clamp(1.75rem, 3.5vw, 2.5rem);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(171, 159, 242, 0.45), transparent 60%),
+    linear-gradient(180deg, #ebe4fb 0%, #f3effc 100%);
+  border: 1px solid rgba(26, 20, 48, 0.05);
 }
 
 .ophome-rise {
@@ -1229,25 +1364,6 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 .ophome-rise.is-in {
   opacity: 1;
   transform: translateY(0);
-}
-
-.ophome-float {
-  animation: ophome-bob 5.8s ease-in-out infinite;
-}
-
-.ophome-float-b {
-  animation: ophome-bob 6.8s ease-in-out infinite;
-  animation-delay: -1.8s;
-}
-
-@keyframes ophome-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-11px);
-  }
 }
 
 .ophome-bar {
@@ -1266,10 +1382,8 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ophome-blob,
-  .ophome-float,
-  .ophome-float-b,
-  .ophome-bar {
+  .ophome-bar,
+  .ophome-stage-in {
     animation: none;
   }
   .ophome-rise {

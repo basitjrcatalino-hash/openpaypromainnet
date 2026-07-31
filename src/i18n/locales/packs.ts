@@ -57,6 +57,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -255,6 +256,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -453,6 +455,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -651,6 +654,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -849,6 +853,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -1047,6 +1052,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -1245,6 +1251,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -1443,6 +1450,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -1641,6 +1649,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -1839,6 +1848,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -2037,6 +2047,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -2235,6 +2246,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -2433,6 +2445,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -2631,6 +2644,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -2829,6 +2843,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -3027,6 +3042,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -3225,6 +3241,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -3423,6 +3440,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -3621,6 +3639,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -3819,6 +3838,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -4017,6 +4037,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -4215,6 +4236,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -4413,6 +4435,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -4611,6 +4634,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -4809,6 +4833,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -5007,6 +5032,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -5205,6 +5231,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -5403,6 +5430,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -5601,6 +5629,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"
@@ -5799,6 +5828,7 @@ export const localePacks = {
       "explore": "Explore",
       "discover": "Discover",
       "ai": "OpenPay AI",
+      "solanaPay": "Solana Pay",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway"

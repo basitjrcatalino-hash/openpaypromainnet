@@ -554,6 +554,20 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
           usd_value: data.amount,
           memo: data.note ?? `From @${localProfile.username ?? to}`,
         });
+        try {
+          const { notifyWalletTransaction } = await import("./tx-alerts.server");
+          await notifyWalletTransaction(supabaseAdmin as never, rcpt.id, {
+            type: "receive",
+            token_symbol: "OUSD",
+            amount: data.amount,
+            memo: data.note ?? `From @${localProfile.username ?? to}`,
+            counterparty: wallet.address,
+            status: "confirmed",
+            wallet_id: rcpt.id,
+          });
+        } catch (e) {
+          console.warn("[openpay-pro] receive alert failed", e);
+        }
       }
 
       await supabase.from("transactions").insert({
@@ -566,6 +580,20 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
         usd_value: data.amount,
         memo: data.note ?? `OpenPay to @${localProfile.username ?? to}`,
       });
+      try {
+        const { notifyWalletTransaction } = await import("./tx-alerts.server");
+        await notifyWalletTransaction(supabaseAdmin as never, wallet.id, {
+          type: "send",
+          token_symbol: "OUSD",
+          amount: data.amount,
+          memo: data.note ?? `OpenPay to @${localProfile.username ?? to}`,
+          counterparty: localAddress,
+          status: "confirmed",
+          wallet_id: wallet.id,
+        });
+      } catch (e) {
+        console.warn("[openpay-pro] send alert failed", e);
+      }
 
       return {
         ok: true,
@@ -622,6 +650,23 @@ export const sendViaOpenPay = createServerFn({ method: "POST" })
       usd_value: data.amount,
       memo: data.note ?? `OpenPay transfer`,
     });
+    try {
+      const { supabaseAdmin: adminForAlert } = await import(
+        "@/integrations/supabase/client.server"
+      );
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction((supabaseAdmin ?? adminForAlert) as never, wallet.id, {
+        type: "send",
+        token_symbol: "OUSD",
+        amount: data.amount,
+        memo: data.note ?? `OpenPay transfer`,
+        counterparty: `openpay:${to}`,
+        status: "confirmed",
+        wallet_id: wallet.id,
+      });
+    } catch (e) {
+      console.warn("[openpay-pro] partner send alert failed", e);
+    }
 
     return { ok: true, balance: newBal, transfer: result };
   });
@@ -1008,9 +1053,10 @@ export const syncOpenPayOUSD = createServerFn({ method: "POST" })
       .eq("id", wallet.id);
     if (uErr) throw new Error(uErr.message);
 
+    const syncType = delta > 0 ? "buy" : "send";
     await supabase.from("transactions").insert({
       wallet_id: wallet.id,
-      type: delta > 0 ? "buy" : "send",
+      type: syncType,
       status: "confirmed",
       token_symbol: "OUSD",
       counterparty: `openpay-sync:${link.openpayUserId ?? link.identifier}`,
@@ -1018,6 +1064,21 @@ export const syncOpenPayOUSD = createServerFn({ method: "POST" })
       usd_value: Math.abs(delta),
       memo: "OpenPay balance sync",
     });
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { notifyWalletTransaction } = await import("./tx-alerts.server");
+      await notifyWalletTransaction(supabaseAdmin as never, wallet.id, {
+        type: syncType,
+        token_symbol: "OUSD",
+        amount: Math.abs(delta),
+        memo: "OpenPay balance sync",
+        counterparty: `openpay-sync:${link.openpayUserId ?? link.identifier}`,
+        status: "confirmed",
+        wallet_id: wallet.id,
+      });
+    } catch (e) {
+      console.warn("[openpay-pro] sync alert failed", e);
+    }
 
     return { balance: partnerBalance, synced: true, delta };
   });

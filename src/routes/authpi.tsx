@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Check, ChevronRight, Loader2 } from "lucide-react";
+import { Check, ChevronRight, Loader2, Mail } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
 import { startSolanaSignIn, PHANTOM_INSTALL_URL } from "@/lib/solana-auth";
 import { TELEGRAM_AUTH_LOGO, TELEGRAM_BRAND_BLUE, startTelegramSignIn } from "@/lib/telegram-auth";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 
@@ -74,12 +75,12 @@ export const Route = createFileRoute("/authpi")({
       {
         name: "description",
         content:
-          "Sign in to OpenPay Pro with Pi Network, OpenPay, Phantom, MetaMask, or Telegram to manage OUSD, Pi, tokens, and NFTs.",
+          "Sign in to OpenPay Pro with email, Pi Network, OpenPay, Phantom, MetaMask, or Telegram to manage OUSD, Pi, tokens, and NFTs.",
       },
       { property: "og:title", content: "Sign in — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Sign in with Pi Network, OpenPay, Phantom, MetaMask, or Telegram.",
+        content: "Sign in with email, Pi Network, OpenPay, Phantom, MetaMask, or Telegram.",
       },
       { property: "og:url", content: "https://openpaypro.space/authpi" },
     ],
@@ -89,7 +90,15 @@ export const Route = createFileRoute("/authpi")({
 });
 
 type AuthMethod =
-  "openpay" | "telegram" | "solana" | "pi" | "phantom" | "walletconnect" | "metamask" | "privy";
+  | "openpay"
+  | "telegram"
+  | "solana"
+  | "pi"
+  | "phantom"
+  | "walletconnect"
+  | "metamask"
+  | "privy"
+  | "email";
 
 type AuthGroup = "wallet" | "social";
 
@@ -173,6 +182,14 @@ const AUTH_OPTIONS: {
     group: "social",
   },
   {
+    id: "email",
+    label: "Email",
+    desc: "Sign in with email and password",
+    accent: "#6366f1",
+    accentFg: "#ffffff",
+    group: "social",
+  },
+  {
     id: "privy",
     label: "Privy",
     desc: "Google · Apple · Email · SMS",
@@ -203,6 +220,103 @@ function PrivyLoginButton({ busy, setBusy }: { busy: boolean; setBusy: (v: boole
     <AppPrivyProvider>
       <PrivyLoginInner busy={busy} setBusy={setBusy} />
     </AppPrivyProvider>
+  );
+}
+
+function EmailAuthPanel({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !password) {
+      toast.error("Enter your email and password");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email: trimmed,
+          password,
+          options: { data: { provider: "email" } },
+        });
+        if (error) throw error;
+        if (data.session) {
+          toast.success("Account created");
+          goPostAuth();
+          return;
+        }
+        toast.success("Check your email to confirm your account, then sign in");
+        setMode("signin");
+        setBusy(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmed,
+        password,
+      });
+      if (error) throw error;
+      goPostAuth();
+    } catch (err) {
+      toast.error((err as Error).message || "Email sign-in failed");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={(e) => void submit(e)} className="space-y-3">
+      <Input
+        type="email"
+        autoComplete="email"
+        inputMode="email"
+        placeholder="you@email.com"
+        value={email}
+        disabled={busy}
+        onChange={(e) => setEmail(e.target.value)}
+        className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
+      />
+      <Input
+        type="password"
+        autoComplete={mode === "signup" ? "new-password" : "current-password"}
+        placeholder="Password"
+        value={password}
+        disabled={busy}
+        onChange={(e) => setPassword(e.target.value)}
+        className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
+      />
+      <Button
+        type="submit"
+        disabled={busy}
+        className="h-12 w-full rounded-full text-base font-semibold"
+        style={{ backgroundColor: "#6366f1", color: "#fff" }}
+      >
+        {busy ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : mode === "signin" ? (
+          "Sign in with email"
+        ) : (
+          "Create account"
+        )}
+      </Button>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => setMode((m) => (m === "signin" ? "signup" : "signin"))}
+        className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+      >
+        {mode === "signin" ? "Need an account? Create one" : "Already have an account? Sign in"}
+      </button>
+    </form>
   );
 }
 
@@ -334,6 +448,9 @@ function AuthOptionIcon({
   logoUrl?: string;
   logoFit?: "cover" | "contain";
 }) {
+  if (id === "email") {
+    return <Mail className="h-5 w-5 text-white" strokeWidth={2} />;
+  }
   if (id === "privy") {
     return <PrivyMark className="h-7 w-7 text-white" />;
   }
@@ -462,7 +579,8 @@ function AuthPiPageInner() {
   async function continueWith(method: AuthMethod) {
     if (busy) return;
     if (!visibleOptions.some((o) => o.id === method)) return;
-    if (method === "metamask" || method === "phantom" || method === "privy") return;
+    if (method === "metamask" || method === "phantom" || method === "privy" || method === "email")
+      return;
     setBusy(true);
     try {
       if (method === "openpay") {
@@ -643,7 +761,7 @@ function AuthPiPageInner() {
                     <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                       Social &amp; network
                     </p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {socialOptions.map((opt, i) =>
                         renderAuthTile(opt, i, 80 + walletOptions.length * 40),
                       )}
@@ -752,6 +870,10 @@ function AuthPiPageInner() {
             ) : selected === "privy" ? (
               <div key="privy-panel" className="auth-cta-swap">
                 <PrivyLoginButton busy={busy} setBusy={setBusy} />
+              </div>
+            ) : selected === "email" ? (
+              <div key="email-panel" className="auth-cta-swap">
+                <EmailAuthPanel busy={busy} setBusy={setBusy} />
               </div>
             ) : (
               <Button

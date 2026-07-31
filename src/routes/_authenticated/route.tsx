@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   X,
-  Plus,
   EyeOff,
   Eye,
   ChevronsUpDown,
@@ -65,7 +64,6 @@ import { NotificationBell, NotificationCenter } from "@/components/notification-
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import {
-  WalletAccountRow,
   WalletSwitcherDialog,
 } from "@/components/wallet/WalletSwitcherDialog";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
@@ -943,32 +941,6 @@ function SidebarInner({
           )}
         </SideSection>
       </nav>
-
-      <div className="ph-group min-w-0 overflow-hidden">
-        {wallets.map((w) => (
-          <WalletAccountRow
-            key={w.id}
-            wallet={w}
-            active={w.id === activeWallet?.id}
-            balance={
-              portfolioTotals[w.id] ??
-              (w.id === activeWallet?.id ? totalUsd : walletLedgerUsd(w))
-            }
-            currency={currency}
-            hideBalance={hideBalance}
-            disabled={switching}
-            compact
-            onClick={() => handleSwitch(w.id)}
-          />
-        ))}
-        <button
-          type="button"
-          onClick={() => setSwitchOpen(true)}
-          className="flex w-full items-center justify-center gap-2 border-t border-border/40 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 press"
-        >
-          <Plus className="h-4 w-4" /> Switch wallet
-        </button>
-      </div>
 
       <div className="mt-auto space-y-1.5 pt-1">
         <div className="flex items-center justify-between gap-2 rounded-[14px] bg-muted/35 px-3 py-2 text-xs text-muted-foreground">

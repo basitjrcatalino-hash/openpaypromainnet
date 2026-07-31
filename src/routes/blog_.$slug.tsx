@@ -65,8 +65,8 @@ function BlogNotFound() {
 }
 
 function BlogArticle() {
-  const { post } = Route.useLoaderData();
-  const activeId = useActiveSection(post.sections.map((s) => s.id));
+  const { post } = Route.useLoaderData() as { post: BlogPost };
+  const activeId = useActiveSection(post.sections.map((s: BlogPost["sections"][number]) => s.id));
 
   const share = async () => {
     const url = `${SITE}/blog/${post.slug}`;
@@ -78,8 +78,12 @@ function BlogArticle() {
         /* fall through to copy */
       }
     }
-    const ok = await copyText(url);
-    toast[ok ? "success" : "error"](ok ? "Link copied" : "Copy failed");
+    try {
+      await copyText(url);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
   };
 
   const more = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);

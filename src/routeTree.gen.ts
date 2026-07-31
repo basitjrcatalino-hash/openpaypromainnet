@@ -77,6 +77,7 @@ import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_a
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
+import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
 import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
@@ -467,6 +468,11 @@ const AuthenticatedWalletReceiveRoute =
     path: '/wallet/receive',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
+  id: '/api/public/banxa-webhook',
+  path: '/api/public/banxa-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDepositMonitorRoute = ApiPublicDepositMonitorRouteImport.update({
   id: '/api/public/deposit-monitor',
   path: '/api/public/deposit-monitor',
@@ -740,6 +746,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
@@ -847,6 +854,7 @@ export interface FileRoutesByTo {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
@@ -956,6 +964,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
@@ -1065,6 +1074,7 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
+    | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
@@ -1172,6 +1182,7 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
+    | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
@@ -1280,6 +1291,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
+    | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
@@ -1349,6 +1361,7 @@ export interface RootRouteChildren {
   WikiSlugRoute: typeof WikiSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicBanxaWebhookRoute: typeof ApiPublicBanxaWebhookRoute
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
@@ -1859,6 +1872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/banxa-webhook': {
+      id: '/api/public/banxa-webhook'
+      path: '/api/public/banxa-webhook'
+      fullPath: '/api/public/banxa-webhook'
+      preLoaderRoute: typeof ApiPublicBanxaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/deposit-monitor': {
       id: '/api/public/deposit-monitor'
       path: '/api/public/deposit-monitor'
@@ -2317,6 +2337,7 @@ const rootRouteChildren: RootRouteChildren = {
   WikiSlugRoute: WikiSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicBanxaWebhookRoute: ApiPublicBanxaWebhookRoute,
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,

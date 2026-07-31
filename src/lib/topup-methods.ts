@@ -9,7 +9,12 @@ export type TopupMethodKey =
   | "usdc"
   | "helio"
   | "solana_pay"
-  | "circle_mint";
+  | "circle_mint"
+  | "cash_pay"
+  | "banxa_apple_pay"
+  | "banxa_google_pay"
+  | "banxa_card"
+  | "banxa_bank";
 
 export type TopupMethodSeed = {
   method_key: TopupMethodKey;
@@ -70,6 +75,58 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     sort_order: 7,
     enabled: true,
   },
+  {
+    method_key: "cash_pay",
+    label: "Pay with CASH",
+    description:
+      "Phantom CASH (Solana SPL) · ledger balance or Solana Pay QR → OUSD 1:1",
+    sort_order: 8,
+    enabled: true,
+  },
+  {
+    method_key: "banxa_apple_pay",
+    label: "Apple Pay",
+    description:
+      "Banxa · Apple Pay (Face ID / Touch ID) → crypto settle → OUSD",
+    sort_order: 9,
+    enabled: true,
+  },
+  {
+    method_key: "banxa_google_pay",
+    label: "Google Pay",
+    description: "Banxa · Google Pay → crypto settle → OUSD",
+    sort_order: 10,
+    enabled: true,
+  },
+  {
+    method_key: "banxa_card",
+    label: "Card",
+    description: "Banxa · debit / credit card → crypto settle → OUSD",
+    sort_order: 11,
+    enabled: true,
+  },
+  {
+    method_key: "banxa_bank",
+    label: "Bank Transfer",
+    description:
+      "Banxa · bank transfer (ACH / SEPA / Faster Payments / PayID) → OUSD",
+    sort_order: 12,
+    enabled: true,
+  },
 ] as const;
 
 export const TOPUP_METHOD_KEYS = TOPUP_METHOD_CATALOG.map((m) => m.method_key);
+
+/** Banxa Hosted Checkout paymentMethodId values. */
+export const BANXA_PAYMENT_METHOD_IDS = {
+  banxa_apple_pay: "apple-pay",
+  banxa_google_pay: "google-pay",
+  banxa_card: "debit-credit-card",
+  banxa_bank: "ach-bank-transfer",
+} as const;
+
+export type BanxaTopupMethodKey = keyof typeof BANXA_PAYMENT_METHOD_IDS;
+
+export function isBanxaTopupMethod(id: string): id is BanxaTopupMethodKey {
+  return id in BANXA_PAYMENT_METHOD_IDS;
+}

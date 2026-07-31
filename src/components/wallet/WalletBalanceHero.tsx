@@ -11,6 +11,8 @@ type Props = {
   className?: string;
   /** Phantom-style uppercase micro-label above the balance */
   label?: string;
+  /** Compact sizing for the sidebar / drawer */
+  size?: "default" | "sidebar";
 };
 
 export function WalletBalanceHero({
@@ -22,20 +24,36 @@ export function WalletBalanceHero({
   onCopyAddress,
   className,
   label = "Balance",
+  size = "default",
 }: Props) {
   const showAddress = Boolean(addressLabel && addressLabel !== "—");
+  const sidebar = size === "sidebar";
 
   return (
-    <div className={cn("flex flex-col items-center gap-2 py-6 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center text-center",
+        sidebar ? "gap-1.5 py-2" : "gap-2 py-6",
+        className,
+      )}
+    >
       <p className="ph-label">{label}</p>
       <button
         type="button"
         onClick={onCycleCurrency}
-        className="ph-display flex items-center gap-2 press"
+        className={cn(
+          "flex max-w-full items-center justify-center gap-1.5 press",
+          sidebar ? "ph-display-sidebar" : "ph-display",
+        )}
         aria-label="Change currency"
       >
-        <span suppressHydrationWarning>{hideBalance ? "••••" : balanceLabel}</span>
-        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+        <span className="min-w-0 truncate tabular-nums" suppressHydrationWarning>
+          {hideBalance ? "••••" : balanceLabel}
+        </span>
+        <ChevronsUpDown
+          className={cn("shrink-0 text-muted-foreground", sidebar ? "h-3.5 w-3.5" : "h-4 w-4")}
+          strokeWidth={2}
+        />
       </button>
       {showAddress ? (
         <button

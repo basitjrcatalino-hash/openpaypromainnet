@@ -51,6 +51,8 @@ function SolanaPayPage() {
             openpay_tx: undefined,
             openpay_return: undefined,
             openpay_cancel: undefined,
+            banxa_return: undefined,
+            banxa_ext: undefined,
           }}
           className="rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground press"
         >

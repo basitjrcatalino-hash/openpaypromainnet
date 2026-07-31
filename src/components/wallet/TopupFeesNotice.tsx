@@ -12,6 +12,11 @@ export type TopupProvider =
   | "usdc"
   | "solana_pay"
   | "circle_mint"
+  | "cash_pay"
+  | "banxa_apple_pay"
+  | "banxa_google_pay"
+  | "banxa_card"
+  | "banxa_bank"
   | "wallet_ousd";
 
 type Props = {
@@ -73,6 +78,41 @@ const PROVIDER: Record<
     blurb: "You send USDC to a Circle payment-intent deposit address. We reconcile with Circle’s list-payments API and credit OUSD when the payment is paid.",
     fees: "On-chain network fees apply when you send USDC. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Circle",
+  },
+  cash_pay: {
+    name: "CASH",
+    blurb:
+      "Pay with Phantom CASH — either from your OpenPay Pro CASH balance, or on-chain via Solana Pay (SPL mint CASHx9…CASH). CASH is a USD-pegged Solana stablecoin; OUSD is credited ~1:1 after confirmation.",
+    fees: "Solana network fees apply for on-chain CASH transfers. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Phantom CASH / Solana",
+  },
+  banxa_apple_pay: {
+    name: "Banxa Apple Pay",
+    blurb:
+      "You’ll finish payment in Banxa Hosted Checkout with Apple Pay. Crypto settles to OpenPay’s Banxa wallet, then OUSD is credited here.",
+    fees: "Banxa and Apple Pay processing fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Banxa",
+  },
+  banxa_google_pay: {
+    name: "Banxa Google Pay",
+    blurb:
+      "You’ll finish payment in Banxa Hosted Checkout with Google Pay. Crypto settles to OpenPay’s Banxa wallet, then OUSD is credited here.",
+    fees: "Banxa and Google Pay processing fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Banxa",
+  },
+  banxa_card: {
+    name: "Banxa Card",
+    blurb:
+      "You’ll enter card details in Banxa / Primer checkout — OpenPay Pro never sees your card. Crypto settles, then OUSD is credited.",
+    fees: "Banxa card and FX fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Banxa",
+  },
+  banxa_bank: {
+    name: "Banxa Bank Transfer",
+    blurb:
+      "You’ll complete a bank transfer via Banxa (ACH, SEPA, Faster Payments, or PayID). Settlement can take longer than cards; OUSD credits when Banxa marks the order complete.",
+    fees: "Bank network and Banxa fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Banxa",
   },
   wallet_ousd: {
     name: "Wallet OUSD",

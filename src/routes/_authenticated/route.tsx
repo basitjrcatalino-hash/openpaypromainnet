@@ -6,7 +6,7 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Wallet,
   ArrowDownToLine,
@@ -68,9 +68,8 @@ import {
 } from "@/components/wallet/WalletSwitcherDialog";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
-import { fetchWalletPortfolioTotals, walletLedgerUsd } from "@/lib/wallet-portfolio";
-import { MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
-import { LEDGER_BALANCE_COLUMN } from "@/lib/ledger-majors";
+import { walletLedgerUsd } from "@/lib/wallet-portfolio";
+import { fetchMajorMarkets } from "@/lib/major-tokens";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
@@ -132,7 +131,11 @@ function AuthenticatedLayout() {
   });
   const toggleSidebar = () => setSidebarCollapsed((v) => {
     const next = !v;
-    try { localStorage.setItem("sidebar-collapsed", next ? "1" : "0"); } catch {}
+    try {
+      localStorage.setItem("sidebar-collapsed", next ? "1" : "0");
+    } catch {
+      /* ignore quota / private mode */
+    }
     return next;
   });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -157,7 +160,8 @@ function AuthenticatedLayout() {
     queryFn: () => listUserWallets<Tables<"wallets">>(supabase, user.id, "*"),
   });
 
-  const activeWallet = wallets[0];
+  const activeWallet =
+    wallets.find((w) => (w as { is_active?: boolean | null }).is_active) ?? wallets[0];
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user.id],
@@ -231,7 +235,7 @@ function AuthenticatedLayout() {
           {!hideChrome && (
             <aside
               className={cn(
-                "ph-sidebar sticky top-0 hidden h-screen shrink-0 md:flex md:flex-col",
+                "ph-sidebar sticky top-0 hidden h-screen shrink-0 transition-[width,padding] duration-300 ease-out md:flex md:flex-col",
                 sidebarCollapsed ? "w-[4.25rem] p-2" : "w-[17.5rem] p-3",
               )}
             >
@@ -271,7 +275,7 @@ function AuthenticatedLayout() {
                 className="absolute inset-0 bg-background/70 backdrop-blur-sm"
                 onClick={() => setMobileOpen(false)}
               />
-              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-hidden p-3 shadow-2xl">
+              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-hidden p-3 shadow-2xl animate-in slide-in-from-left duration-300 ease-out">
                 <SidebarInner
                   wallets={wallets}
                   activeWallet={activeWallet}
@@ -361,7 +365,7 @@ function AuthenticatedLayout() {
 
 function sideItemClass(active: boolean) {
   return cn(
-    "ph-side-item flex w-full items-center gap-3 rounded-[14px] px-3 py-[0.58rem] text-[13.5px] font-semibold tracking-[-0.012em] press",
+    "ph-side-item flex w-full items-center gap-3 rounded-[14px] px-3 py-[0.58rem] text-[13.5px] font-semibold tracking-[-0.012em] press transition-[background-color,color,box-shadow,transform] duration-200 ease-out",
     active
       ? "ph-side-item-active bg-primary/12 text-primary"
       : "text-muted-foreground hover:bg-muted/55 hover:text-foreground",
@@ -465,15 +469,39 @@ function SidebarInner({
     id: string;
     name: string;
     address: string;
+    is_active?: boolean | null;
     ousd_balance?: number | null;
     pi_balance?: number | null;
+    btc_balance?: number | null;
+    eth_balance?: number | null;
+    sol_balance?: number | null;
+    usdc_balance?: number | null;
+    usdt_balance?: number | null;
+    pyusd_balance?: number | null;
+    usdg_balance?: number | null;
+    usd1_balance?: number | null;
+    cash_balance?: number | null;
+    eurc_balance?: number | null;
+    [key: string]: unknown;
   }>;
   activeWallet?: {
     id: string;
     name: string;
     address: string;
+    is_active?: boolean | null;
     ousd_balance?: number | null;
     pi_balance?: number | null;
+    btc_balance?: number | null;
+    eth_balance?: number | null;
+    sol_balance?: number | null;
+    usdc_balance?: number | null;
+    usdt_balance?: number | null;
+    pyusd_balance?: number | null;
+    usdg_balance?: number | null;
+    usd1_balance?: number | null;
+    cash_balance?: number | null;
+    eurc_balance?: number | null;
+    [key: string]: unknown;
   };
   profile?: {
     display_name?: string | null;
@@ -535,42 +563,42 @@ function SidebarInner({
   const { data: activeHoldings = [] } = useQuery({
     queryKey: ["holdings", activeWallet?.id],
     enabled: !!activeWallet?.id,
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await supabase
         .from("token_holdings")
-        .select("balance, tokens:token_id(price_usd)")
+        .select("balance, tokens:token_id(price_usd, is_hidden)")
         .eq("wallet_id", activeWallet!.id);
-      return data ?? [];
+      return (data ?? []).filter(
+        (h: {
+          balance?: number;
+          tokens?: { price_usd?: number; is_hidden?: boolean | null } | null;
+        }) => h.tokens && !h.tokens.is_hidden,
+      );
     },
+  });
+
+  const { data: majorMarkets = [] } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 30_000,
+    queryFn: fetchMajorMarkets,
   });
 
   const holdingsUsd = (
     activeHoldings as Array<{ balance?: number; tokens?: { price_usd?: number } | null }>
   ).reduce((sum, h) => sum + Number(h.balance ?? 0) * Number(h.tokens?.price_usd ?? 0), 0);
 
-  const walletIds = wallets.map((w) => w.id).join(",");
-  const balanceFingerprint = wallets
-    .map((w) => {
-      const row = w as Record<string, unknown>;
-      const majors = MAJOR_TOKEN_IDS.map(
-        (id) => `${id}=${Number(row[LEDGER_BALANCE_COLUMN[id]] ?? 0)}`,
-      ).join("|");
-      return `${w.id}:${w.ousd_balance ?? 0}:${majors}`;
-    })
-    .join("|");
-  const { data: portfolioTotals = {} } = useQuery({
-    queryKey: ["wallet-portfolio-totals", walletIds, balanceFingerprint],
-    enabled: wallets.length > 0,
-    staleTime: 15_000,
-    queryFn: () => fetchWalletPortfolioTotals(supabase, wallets),
-  });
+  const liveMajorPrices = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const m of majorMarkets as Array<{ id: string; price: number }>) {
+      if (m?.id && Number(m.price) > 0) map[m.id] = Number(m.price);
+    }
+    return map;
+  }, [majorMarkets]);
 
-  // Same formula as dashboard: all ledger majors + OpenToken holdings
-  const totalUsd =
-    (activeWallet?.id && portfolioTotals[activeWallet.id] != null
-      ? portfolioTotals[activeWallet.id]
-      : undefined) ??
-    holdingsUsd + walletLedgerUsd(activeWallet);
+  // Same formula as Home: live major prices + visible OpenToken holdings
+  const totalUsd = holdingsUsd + walletLedgerUsd(activeWallet, liveMajorPrices);
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
@@ -655,13 +683,14 @@ function SidebarInner({
       </div>
 
       <WalletBalanceHero
+        size="sidebar"
         balanceLabel={formatCurrency(totalUsd, currency)}
         addressLabel={shortAddress(activeWallet?.address ?? null)}
         hideBalance={hideBalance}
         copied={copied}
         onCycleCurrency={() => setCurrencyOpen(true)}
         onCopyAddress={copyAddress}
-        className="shrink-0 px-1 py-1"
+        className="shrink-0 px-1"
       />
 
       <nav className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch]">

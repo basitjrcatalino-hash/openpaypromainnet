@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowDown,
   ArrowLeftRight,
@@ -14,6 +15,7 @@ import {
   Heart,
   Hourglass,
   InfinityIcon,
+  Loader2,
   Share2,
   Shield,
   Sparkles,
@@ -29,13 +31,30 @@ import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
 import { OusdIcon } from "@/components/ousd-icon";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AssetBuySheet } from "@/components/wallet/AssetBuySheet";
+import {
+  PriceChart,
+  resolveChartTicks,
+  type ChartTick,
+} from "@/components/opentoken/PriceChart";
 import { useCurrency, formatCurrency, type CurrencyCode } from "@/lib/currency";
 import {
   MAJOR_TOKENS,
+  MAJOR_TOKEN_IDS,
   fetchMajorMarkets,
   majorMarketById,
   type MajorTokenId,
+  type MajorMarketSnapshot,
 } from "@/lib/major-tokens";
+import {
+  LEDGER_MAJOR_SWAP_IDS,
+  OUSD_SWAP_ID,
+  readMajorBalance,
+  walletMajorSelect,
+} from "@/lib/ledger-majors";
+import { buyMajorWithOusd } from "@/lib/buy-major.functions";
+import { executeOpenDexSwap } from "@/lib/opendex.functions";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import {
   fetchActiveWallet,
@@ -91,15 +110,19 @@ const PREDICT_WINDOWS = [
 
 function OpenTokenHome() {
   const { user } = Route.useRouteContext();
+  const qc = useQueryClient();
   const { code: currency } = useCurrency();
+  const buyMajorFn = useServerFn(buyMajorWithOusd);
+  const swapFn = useServerFn(executeOpenDexSwap);
   const [topTab, setTopTab] = useState<TopTab>("home");
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [tradeFilter, setTradeFilter] = useState<TradeFilter>("trending");
   const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("tokens");
   const [predictAsset, setPredictAsset] = useState<MajorTokenId>("btc");
-  const [predictWindow, setPredictWindow] = useState<(typeof PREDICT_WINDOWS)[number]["id"]>("5m");
+  const [predictWindow, setPredictWindow] = useState<(typeof PREDICT_WINDOWS)[number]["id"]>("15m");
   const [predictDetail, setPredictDetail] = useState(false);
+  const [predictBuyOpen, setPredictBuyOpen] = useState(false);
   const [payToken, setPayToken] = useState("SOL");
   const [receiveToken, setReceiveToken] = useState("OUSD");
 
@@ -117,12 +140,11 @@ function OpenTokenHome() {
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
     queryFn: () =>
-      fetchActiveWallet<{
-        id: string;
-        name: string | null;
-        ousd_balance: number | null;
-        pi_balance: number | null;
-      }>(supabase, user.id, "id, name, ousd_balance, pi_balance"),
+      fetchActiveWallet<Record<string, unknown>>(
+        supabase,
+        user.id,
+        walletMajorSelect("id, name, ousd_balance"),
+      ),
   });
 
   const { data: holdings = [] } = useQuery({
@@ -132,7 +154,7 @@ function OpenTokenHome() {
       const { data, error } = await supabase
         .from("token_holdings")
         .select("balance, token_id, tokens(*)")
-        .eq("wallet_id", wallet!.id)
+        .eq("wallet_id", String(wallet!.id))
         .gt("balance", 0);
       if (error) throw error;
       return (data ?? []).filter((h: any) => h.tokens && !h.tokens.is_hidden);
@@ -162,7 +184,8 @@ function OpenTokenHome() {
 
   const { data: majorMarkets = [] } = useQuery({
     queryKey: ["major-markets"],
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchInterval: topTab === "predict" ? 15_000 : 60_000,
     queryFn: fetchMajorMarkets,
   });
 
@@ -226,6 +249,16 @@ function OpenTokenHome() {
   const predictDef = MAJOR_TOKENS[predictAsset];
   const upOdds = clampOdds(50 + Number(predictMarket.change24h ?? 0) * 2.2);
   const downOdds = 100 - upOdds;
+  const predictMajorBal = readMajorBalance(wallet ?? null, predictAsset);
+
+  async function refreshPredictBalances() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
+      qc.invalidateQueries({ queryKey: ["major-markets"] }),
+      qc.invalidateQueries({ queryKey: ["wallets", user.id] }),
+      qc.invalidateQueries({ queryKey: ["ledger-entries"] }),
+    ]);
+  }
 
   return (
     <div className="ot-phantom relative mx-auto w-full max-w-lg animate-page-in pb-28 md:max-w-2xl">
@@ -297,7 +330,7 @@ function OpenTokenHome() {
           totalUsd={totalUsd}
           avgChange={avgChange}
           ousdBal={ousdBal}
-          walletName={wallet?.name || "Main Account"}
+          walletName={String(wallet?.name ?? "Main Account")}
           holdings={holdings}
           trending={trending}
           majorMarkets={majorMarkets}
@@ -326,13 +359,68 @@ function OpenTokenHome() {
         (predictDetail ? (
           <PredictDetail
             asset={predictAsset}
+            setAsset={setPredictAsset}
             windowId={predictWindow}
             setWindowId={setPredictWindow}
             market={predictMarket}
             def={predictDef}
             upOdds={upOdds}
             downOdds={downOdds}
+            ousdBalance={ousdBal}
+            majorBalance={predictMajorBal}
+            walletId={wallet?.id ? String(wallet.id) : undefined}
             onBack={() => setPredictDetail(false)}
+            onBuyWithMethods={() => setPredictBuyOpen(true)}
+            onTrade={async (side, stakeUsd) => {
+              if (!wallet?.id) {
+                toast.error("Create a wallet first");
+                return;
+              }
+              const price = Number(predictMarket.price ?? 0);
+              if (!(price > 0)) throw new Error("Live price unavailable");
+              if (side === "up") {
+                if (ousdBal + 1e-12 < stakeUsd) {
+                  setPredictBuyOpen(true);
+                  toast.message("Top up or pay with another method to buy");
+                  return;
+                }
+                const res = await buyMajorFn({
+                  data: {
+                    wallet_id: String(wallet.id),
+                    major_id: predictAsset,
+                    usd_amount: stakeUsd,
+                  },
+                });
+                toast.success(
+                  `Bought ${formatNumber(Number(res.token_amount ?? 0), 6)} ${predictDef.symbol}`,
+                  { description: `Spent ${formatOUSD(stakeUsd)} at live $${formatNumber(price, price < 1 ? 4 : 2)}` },
+                );
+              } else {
+                const tokenAmt = stakeUsd / price;
+                if (predictMajorBal + 1e-12 < tokenAmt) {
+                  toast.error(
+                    `Need ${formatNumber(tokenAmt, 6)} ${predictDef.symbol} to sell (have ${formatNumber(predictMajorBal, 6)})`,
+                  );
+                  return;
+                }
+                const res = await swapFn({
+                  data: {
+                    wallet_id: String(wallet.id),
+                    from_id: LEDGER_MAJOR_SWAP_IDS[predictAsset],
+                    to_id: OUSD_SWAP_ID,
+                    amount: tokenAmt,
+                    slippage: 2,
+                  },
+                });
+                toast.success(
+                  `Sold ${formatNumber(tokenAmt, 6)} ${predictDef.symbol}`,
+                  {
+                    description: `Received ${formatOUSD(Number(res.amount_out ?? stakeUsd))} OUSD`,
+                  },
+                );
+              }
+              await refreshPredictBalances();
+            }}
           />
         ) : (
           <PredictTab
@@ -344,6 +432,26 @@ function OpenTokenHome() {
             onOpenDetail={() => setPredictDetail(true)}
           />
         ))}
+
+      <AssetBuySheet
+        open={predictBuyOpen}
+        onClose={() => {
+          setPredictBuyOpen(false);
+          void refreshPredictBalances();
+        }}
+        userId={user.id}
+        walletId={wallet?.id ? String(wallet.id) : undefined}
+        ousdBalance={ousdBal}
+        returnPath="/opentoken"
+        token={{
+          id: predictAsset,
+          symbol: predictDef.symbol,
+          name: predictDef.name,
+          price: Number(predictMarket.price ?? 0),
+          logoUrl: predictDef.logoUrl,
+          majorId: predictAsset,
+        }}
+      />
 
       {topTab === "explore" && (
         <ExploreTab
@@ -424,6 +532,8 @@ function HomeTab({
           openpay_tx: undefined,
           openpay_return: undefined,
           openpay_cancel: undefined,
+          banxa_return: undefined,
+          banxa_ext: undefined,
         }}
         className="flex items-center gap-3 rounded-2xl bg-muted/70 px-4 py-3.5 press"
       >
@@ -494,7 +604,7 @@ function HomeTab({
       <section>
         <SectionTitle title="Majors" />
         <div className="mt-2 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none [-webkit-overflow-scrolling:touch]">
-          {(["btc", "eth", "sol", "pi"] as MajorTokenId[]).map((id) => {
+          {MAJOR_TOKEN_IDS.map((id) => {
             const def = MAJOR_TOKENS[id];
             const m = majorMarketById(majorMarkets, id);
             const ch = Number(m.change24h ?? 0);
@@ -678,6 +788,27 @@ function TradeTab({
 
 /* ───────────────────────── PREDICT ───────────────────────── */
 
+function majorSparkTicks(market: MajorMarketSnapshot | { price: number; change24h: number; sparkline?: number[] }): ChartTick[] {
+  const spark = Array.isArray((market as MajorMarketSnapshot).sparkline)
+    ? (market as MajorMarketSnapshot).sparkline
+    : [];
+  if (!spark.length) return [];
+  const now = Date.now();
+  const n = spark.length;
+  return spark.map((p, i) => ({
+    created_at: new Date(now - (n - 1 - i) * 60 * 60 * 1000).toISOString(),
+    price: Number(p) || 0,
+  }));
+}
+
+function predictPeriod(windowId: (typeof PREDICT_WINDOWS)[number]["id"]) {
+  if (windowId === "5m") return "5M";
+  if (windowId === "1h") return "1H";
+  return "15M";
+}
+
+const PREDICT_STAKES = [10, 25, 50, 100] as const;
+
 function PredictTab({
   majorMarkets,
   predictAsset,
@@ -695,7 +826,20 @@ function PredictTab({
 }) {
   const def = MAJOR_TOKENS[predictAsset];
   const m = majorMarketById(majorMarkets, predictAsset);
-  const spark = useSparkline(Number(m.change24h ?? 0));
+  const ticks = useMemo(() => majorSparkTicks(m), [m]);
+  const chartTicks = useMemo(
+    () =>
+      resolveChartTicks({
+        period: "15M",
+        ticks,
+        price: Number(m.price ?? 0),
+        changePct: Number(m.change24h ?? 0),
+        tokenKey: predictAsset,
+        peg: ["usdc", "usdt", "pyusd", "usdg", "usd1", "cash"].includes(predictAsset),
+      }),
+    [ticks, m.price, m.change24h, predictAsset],
+  );
+  const up = Number(m.change24h ?? 0) >= 0;
 
   return (
     <div className="space-y-7 px-1 pt-2">
@@ -732,22 +876,29 @@ function PredictTab({
             <div className="flex items-center gap-2.5">
               <img src={def.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
               <div>
+                <p className="text-sm font-semibold text-muted-foreground">{def.symbol}</p>
                 <p className="text-xl font-extrabold tabular-nums">
                   {formatCurrency(Number(m.price ?? 0), "USD")}
                 </p>
               </div>
             </div>
-            <CountdownChip seconds={5 * 60} />
+            <CountdownChip seconds={15 * 60} />
           </div>
 
-          <Sparkline path={spark} className="mt-4 h-28 w-full" />
+          <div className="mt-3 -mx-1">
+            <PriceChart
+              ticks={chartTicks}
+              trend={up ? "up" : "down"}
+              height={120}
+            />
+          </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-2xl bg-background/60 px-3 py-3 text-center text-sm font-bold text-emerald-400">
-              ▲ Up · {upOdds}%
+              ▲ Buy · {upOdds}%
             </div>
             <div className="rounded-2xl bg-background/60 px-3 py-3 text-center text-sm font-bold text-red-400">
-              ▼ Down · {downOdds}%
+              ▼ Sell · {downOdds}%
             </div>
           </div>
         </button>
@@ -755,9 +906,13 @@ function PredictTab({
 
       <section>
         <h2 className="text-lg font-extrabold">15 Minute Markets</h2>
+        <p className="mt-1 text-xs text-muted-foreground">All majors · live CoinGecko prices</p>
         <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-          {(["btc", "eth", "sol", "pi"] as MajorTokenId[]).map((id) => {
+          {MAJOR_TOKEN_IDS.map((id) => {
             const d = MAJOR_TOKENS[id];
+            const mm = majorMarketById(majorMarkets, id);
+            const ch = Number(mm.change24h ?? 0);
+            const selected = id === predictAsset;
             return (
               <button
                 key={id}
@@ -766,11 +921,24 @@ function PredictTab({
                   setPredictAsset(id);
                   onOpenDetail();
                 }}
-                className="w-[120px] shrink-0 rounded-2xl bg-muted/70 p-3 text-left press"
+                className={cn(
+                  "w-[120px] shrink-0 rounded-2xl p-3 text-left press",
+                  selected ? "bg-primary/15 ring-1 ring-primary/40" : "bg-muted/70",
+                )}
               >
                 <img src={d.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                 <p className="mt-3 text-sm font-bold">{d.symbol}</p>
-                <p className="text-xs text-muted-foreground">15m</p>
+                <p className="text-[11px] tabular-nums text-muted-foreground">
+                  {formatCurrency(Number(mm.price ?? 0), "USD")}
+                </p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-xs font-bold tabular-nums",
+                    ch >= 0 ? "text-emerald-400" : "text-red-400",
+                  )}
+                >
+                  {formatPct(ch)} · 15m
+                </p>
               </button>
             );
           })}
@@ -782,34 +950,74 @@ function PredictTab({
 
 function PredictDetail({
   asset,
+  setAsset,
   windowId,
   setWindowId,
   market,
   def,
   upOdds,
   downOdds,
+  ousdBalance,
+  majorBalance,
+  walletId,
   onBack,
+  onBuyWithMethods,
+  onTrade,
 }: {
   asset: MajorTokenId;
+  setAsset: (id: MajorTokenId) => void;
   windowId: (typeof PREDICT_WINDOWS)[number]["id"];
   setWindowId: (id: (typeof PREDICT_WINDOWS)[number]["id"]) => void;
-  market: { price: number; change24h: number };
+  market: MajorMarketSnapshot;
   def: (typeof MAJOR_TOKENS)[MajorTokenId];
   upOdds: number;
   downOdds: number;
+  ousdBalance: number;
+  majorBalance: number;
+  walletId?: string;
   onBack: () => void;
+  onBuyWithMethods: () => void;
+  onTrade: (side: "up" | "down", stakeUsd: number) => Promise<void>;
 }) {
   const win = PREDICT_WINDOWS.find((w) => w.id === windowId) ?? PREDICT_WINDOWS[0];
-  const spark = useSparkline(Number(market.change24h ?? 0));
-  const target = Number(market.price ?? 0) * (1 - Number(market.change24h ?? 0) / 400);
-  const above = Number(market.price ?? 0) >= target;
-  const deltaPct = target ? ((Number(market.price ?? 0) - target) / target) * 100 : 0;
+  const [stake, setStake] = useState("25");
+  const [busy, setBusy] = useState<"up" | "down" | null>(null);
+  const stakeUsd = Math.max(0, Number(stake) || 0);
+  const price = Number(market.price ?? 0);
+  const tokenOut = price > 0 ? stakeUsd / price : 0;
+  const majorUsd = majorBalance * price;
+  const ticks = useMemo(() => majorSparkTicks(market), [market]);
+  const chartTicks = useMemo(
+    () =>
+      resolveChartTicks({
+        period: predictPeriod(windowId),
+        ticks,
+        price,
+        changePct: Number(market.change24h ?? 0),
+        tokenKey: asset,
+        peg: ["usdc", "usdt", "pyusd", "usdg", "usd1", "cash"].includes(asset),
+      }),
+    [windowId, ticks, price, market.change24h, asset],
+  );
+  const target = price * (1 - Number(market.change24h ?? 0) / 400);
+  const above = price >= target;
+  const deltaPct = target ? ((price - target) / target) * 100 : 0;
+  const canBuy = !!walletId && stakeUsd >= 0.01 && ousdBalance + 1e-12 >= stakeUsd;
+  const canSell = !!walletId && stakeUsd >= 0.01 && price > 0 && majorBalance + 1e-12 >= tokenOut;
 
-  function place(side: "up" | "down") {
-    toast.success(
-      `Prediction noted: ${def.symbol} ${side.toUpperCase()} · ${side === "up" ? upOdds : downOdds}% · ${win.label}`,
-      { description: "OpenPay Predict uses live market odds. Full settlement staking ships next." },
-    );
+  async function place(side: "up" | "down") {
+    if (!(stakeUsd >= 0.01)) {
+      toast.error("Enter a stake of at least $0.01");
+      return;
+    }
+    setBusy(side);
+    try {
+      await onTrade(side, Math.round(stakeUsd * 100) / 100);
+    } catch (err) {
+      toast.error((err as Error).message || "Trade failed");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
@@ -821,6 +1029,21 @@ function PredictDetail({
           </button>
           <div className="mt-2 flex items-center gap-2">
             <img src={def.logoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+            <div className="flex gap-1 overflow-x-auto scrollbar-none max-w-[220px]">
+              {MAJOR_TOKEN_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setAsset(id)}
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold press",
+                    id === asset ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {MAJOR_TOKENS[id].symbol}
+                </button>
+              ))}
+            </div>
           </div>
           <button
             type="button"
@@ -835,7 +1058,7 @@ function PredictDetail({
             <ChevronDown className="h-5 w-5 text-muted-foreground" />
           </button>
           <p className="mt-1 text-2xl font-extrabold tabular-nums">
-            {formatCurrency(Number(market.price ?? 0), "USD")}
+            {formatCurrency(price, "USD")}
           </p>
           <p className={cn("mt-1 text-sm font-semibold", above ? "text-emerald-400" : "text-red-400")}>
             {formatPct(deltaPct)} {above ? "above" : "below"} {formatCurrency(target, "USD")} target
@@ -866,10 +1089,14 @@ function PredictDetail({
       </div>
 
       <div className="relative rounded-[1.5rem] bg-muted/40 p-3">
-        <Sparkline path={spark} className="h-48 w-full" glow />
+        <PriceChart
+          ticks={chartTicks}
+          trend={Number(market.change24h ?? 0) >= 0 ? "up" : "down"}
+          height={200}
+        />
         <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
           <span className="rounded-full bg-muted px-2.5 py-1 font-semibold tabular-nums">
-            Target {formatCurrency(target, "USD")}
+            Live · Target {formatCurrency(target, "USD")}
           </span>
           <span className="inline-flex items-center gap-1 font-semibold">
             <Hourglass className="h-3.5 w-3.5" />
@@ -878,18 +1105,68 @@ function PredictDetail({
         </div>
       </div>
 
+      <div className="rounded-2xl bg-card px-4 py-3 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-extrabold">Trade size (USD)</p>
+          <p className="text-[11px] text-muted-foreground">
+            Cash {formatOUSD(ousdBalance)} · {def.symbol} {formatNumber(majorBalance, 6)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {PREDICT_STAKES.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setStake(String(n))}
+              className={cn(
+                "flex-1 rounded-full py-2 text-xs font-bold press",
+                Number(stake) === n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+              )}
+            >
+              ${n}
+            </button>
+          ))}
+        </div>
+        <Input
+          type="number"
+          min="0.01"
+          step="any"
+          value={stake}
+          onChange={(e) => setStake(e.target.value)}
+          className="h-11 rounded-xl text-base font-semibold tabular-nums"
+          placeholder="Custom amount"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Up buys ≈ {formatNumber(tokenOut, 6)} {def.symbol} with OUSD · Down sells that size for OUSD
+          {majorUsd > 0 ? ` · position ≈ ${formatCurrency(majorUsd, "USD")}` : ""}
+        </p>
+      </div>
+
       <div>
         <h3 className="text-base font-extrabold">Make a Prediction</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Real ledger trade at live price — Up = buy · Down = sell
+        </p>
         <div className="mt-3 space-y-2">
-          <PredictOddsRow side="up" stake={31} mult={+(100 / Math.max(upOdds, 1)).toFixed(1)} pct={upOdds} />
+          <PredictOddsRow side="up" stake={stakeUsd || 25} mult={+(100 / Math.max(upOdds, 1)).toFixed(1)} pct={upOdds} />
           <PredictOddsRow
             side="down"
-            stake={31}
+            stake={stakeUsd || 25}
             mult={+(100 / Math.max(downOdds, 1)).toFixed(1)}
             pct={downOdds}
           />
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onBuyWithMethods}
+        className="flex w-full items-center gap-2 rounded-2xl bg-muted/60 px-3 py-3 text-left press"
+      >
+        <CreditCard className="h-4 w-4 text-primary" />
+        <span className="text-sm font-semibold">Pay with MoonPay / Pi / OpenPay / crypto</span>
+        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
+      </button>
 
       <Link to="/chat" className="flex items-center gap-2 rounded-2xl bg-muted/60 px-3 py-3 press">
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -899,20 +1176,32 @@ function PredictDetail({
       </Link>
 
       <div className="grid grid-cols-2 gap-2 pb-2">
-        <button
+        <Button
           type="button"
-          onClick={() => place("up")}
-          className="h-14 rounded-full border border-emerald-500/30 bg-background text-base font-extrabold text-emerald-400 press"
+          disabled={!!busy || !walletId || stakeUsd < 0.01}
+          onClick={() => void place("up")}
+          className="h-14 rounded-full border border-emerald-500/30 bg-background text-base font-extrabold text-emerald-400 hover:bg-emerald-500/10"
         >
-          Up · {upOdds}%
-        </button>
-        <button
+          {busy === "up" ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowUp className="mr-1 h-4 w-4" />
+          )}
+          {canBuy ? `Buy · ${upOdds}%` : ousdBalance < stakeUsd ? "Top up to buy" : `Up · ${upOdds}%`}
+        </Button>
+        <Button
           type="button"
-          onClick={() => place("down")}
-          className="h-14 rounded-full border border-red-500/30 bg-background text-base font-extrabold text-red-400 press"
+          disabled={!!busy || !walletId || stakeUsd < 0.01 || !canSell}
+          onClick={() => void place("down")}
+          className="h-14 rounded-full border border-red-500/30 bg-background text-base font-extrabold text-red-400 hover:bg-red-500/10"
         >
-          Down · {downOdds}%
-        </button>
+          {busy === "down" ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowDown className="mr-1 h-4 w-4" />
+          )}
+          {canSell ? `Sell · ${downOdds}%` : `Need ${def.symbol}`}
+        </Button>
       </div>
     </div>
   );
@@ -1231,53 +1520,6 @@ function CountdownChip({ seconds, bare }: { seconds: number; bare?: boolean }) {
     <span className="rounded-full bg-background/70 px-2.5 py-1 text-xs font-bold tabular-nums">
       {label}
     </span>
-  );
-}
-
-function useSparkline(change24h: number) {
-  return useMemo(() => {
-    const pts: string[] = [];
-    let y = 70;
-    const bias = change24h >= 0 ? -0.35 : 0.35;
-    // Deterministic pseudo-noise (SSR/client hydration-safe — no Math.random)
-    let seed = Math.abs(Math.round(change24h * 1000)) + 17;
-    const next = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff;
-    };
-    for (let i = 0; i <= 28; i++) {
-      y += Math.sin(i / 2.4) * 6 + (next() - 0.5) * 5 + bias * 2;
-      y = Math.max(12, Math.min(88, y));
-      pts.push(`${(i / 28) * 100},${y}`);
-    }
-    return `M ${pts.map((p, i) => `${i === 0 ? "" : "L "}${p}`).join(" ")}`;
-  }, [change24h]);
-}
-
-function Sparkline({
-  path,
-  className,
-  glow,
-}: {
-  path: string;
-  className?: string;
-  glow?: boolean;
-}) {
-  const endY = Number(path.trim().split(/\s+/).pop()?.split(",")[1] ?? 50);
-  return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="ot-spark" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="1" />
-        </linearGradient>
-      </defs>
-      {glow ? (
-        <path d={path} fill="none" stroke="#34d399" strokeWidth="4" opacity="0.25" strokeLinecap="round" />
-      ) : null}
-      <path d={path} fill="none" stroke="url(#ot-spark)" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="100" cy={endY} r="2.2" fill="#34d399" />
-    </svg>
   );
 }
 

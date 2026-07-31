@@ -211,9 +211,16 @@ export function AssetBuySheet({
       if (m.id === "wallet_ousd") return !isOusd;
       return true;
     });
-    const cfg = (methodConfig ?? []) as any[];
+    type MethodCfg = {
+      method_key: string;
+      label?: string | null;
+      description?: string | null;
+      enabled?: boolean | null;
+      sort_order?: number | null;
+    };
+    const cfg = (methodConfig ?? []) as MethodCfg[];
     if (!cfg.length) return base;
-    const byKey = new Map<string, any>(cfg.map((c) => [c.method_key, c]));
+    const byKey = new Map(cfg.map((c) => [c.method_key, c]));
     return base
       .filter((m) => {
         // Wallet OUSD spend is not a deposit rail — always available for buys.

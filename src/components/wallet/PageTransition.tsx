@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
@@ -22,14 +22,17 @@ export function PageTransition({
   const search = useRouterState({ select: (s) => s.location.searchStr });
   const routeKey = `${pathname}${search}`;
   const [enter, setEnter] = useState(!disabled);
+  const prevKey = useRef(routeKey);
 
   useEffect(() => {
     if (disabled) {
       setEnter(false);
+      prevKey.current = routeKey;
       return;
     }
+    if (prevKey.current === routeKey) return;
+    prevKey.current = routeKey;
     setEnter(true);
-    // Land at the top of the new page without a jarring jump.
     if (typeof window !== "undefined") {
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });

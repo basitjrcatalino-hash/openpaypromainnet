@@ -19,6 +19,7 @@ import {
   USD1_SWAP_ID,
   CASH_SWAP_ID,
   EURC_SWAP_ID,
+  LEDGER_MAJOR_SWAP_IDS,
   fetchMajorUsdPrices,
   isLedgerSwapId,
   majorBalancePatch,
@@ -116,7 +117,7 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     const needMajors = [fromMajor, toMajor].filter(Boolean) as LedgerMajorId[];
     const prices =
       needMajors.length > 0
-        ? await fetchMajorUsdPrices(["btc", "eth", "sol", "pi"])
+        ? await fetchMajorUsdPrices(needMajors)
         : ({} as Record<LedgerMajorId, number>);
 
     const resolve = (id: string): QuoteToken | undefined => {
@@ -138,24 +139,8 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     };
 
     // Normalize major ids to canonical swap ids for balance ops
-    const fromCanon = fromMajor
-      ? fromMajor === "btc"
-        ? BTC_SWAP_ID
-        : fromMajor === "eth"
-          ? ETH_SWAP_ID
-          : fromMajor === "sol"
-            ? SOL_SWAP_ID
-            : PI_SWAP_ID
-      : from_id;
-    const toCanon = toMajor
-      ? toMajor === "btc"
-        ? BTC_SWAP_ID
-        : toMajor === "eth"
-          ? ETH_SWAP_ID
-          : toMajor === "sol"
-            ? SOL_SWAP_ID
-            : PI_SWAP_ID
-      : to_id;
+    const fromCanon = fromMajor ? LEDGER_MAJOR_SWAP_IDS[fromMajor] : from_id;
+    const toCanon = toMajor ? LEDGER_MAJOR_SWAP_IDS[toMajor] : to_id;
 
     const fromToken = resolve(fromCanon);
     const toToken = resolve(toCanon);

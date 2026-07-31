@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      banxa_topup_orders: {
+        Row: {
+          id: string
+          user_id: string
+          wallet_id: string
+          method_key: string
+          banxa_order_id: string | null
+          external_order_id: string
+          fiat_currency: string
+          fiat_amount: number
+          payment_method_id: string
+          checkout_url: string | null
+          status: string
+          credited: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          wallet_id: string
+          method_key: string
+          banxa_order_id?: string | null
+          external_order_id: string
+          fiat_currency?: string
+          fiat_amount: number
+          payment_method_id: string
+          checkout_url?: string | null
+          status?: string
+          credited?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          wallet_id?: string
+          method_key?: string
+          banxa_order_id?: string | null
+          external_order_id?: string
+          fiat_currency?: string
+          fiat_amount?: number
+          payment_method_id?: string
+          checkout_url?: string | null
+          status?: string
+          credited?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       circle_mint_deposits: {
         Row: {
           id: string

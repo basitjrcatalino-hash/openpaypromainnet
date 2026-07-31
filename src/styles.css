@@ -242,6 +242,14 @@
     letter-spacing: -0.045em;
     font-variant-numeric: tabular-nums;
   }
+  /* Sidebar / drawer — fits ₱1,234,567.89 without overflow */
+  .ph-display-sidebar {
+    font-size: clamp(1.35rem, 4.2vw, 1.65rem);
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+  }
   /* Secondary amounts (earnings tiles) */
   .ph-amount {
     font-size: 1.375rem;
@@ -338,15 +346,15 @@
 @keyframes ph-route-enter {
   from {
     opacity: 0;
-    transform: translate3d(0, 14px, 0) scale(0.985);
+    transform: translate3d(0, 10px, 0);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 @utility ph-route-enter {
-  animation: ph-route-enter .34s cubic-bezier(.22, 1, .36, 1) both;
+  animation: ph-route-enter .42s cubic-bezier(.22, 1, .36, 1) both;
   will-change: opacity, transform;
   transform-origin: 50% 0%;
 }
@@ -366,10 +374,25 @@
 /* Progressive enhancement — soft crossfade when View Transitions API is used */
 @supports (view-transition-name: none) {
   ::view-transition-old(root) {
-    animation: ph-vt-out .22s cubic-bezier(.4, 0, 1, 1) both;
+    animation: ph-vt-out .2s cubic-bezier(.4, 0, 1, 1) both;
   }
   ::view-transition-new(root) {
-    animation: ph-vt-in .32s cubic-bezier(.22, 1, .36, 1) both;
+    animation: ph-vt-in .38s cubic-bezier(.22, 1, .36, 1) both;
+  }
+  /* Keep chrome (sidebar/tabbar) stable — only main content morphs */
+  .ph-sidebar,
+  .ph-tabbar,
+  .ph-header {
+    view-transition-name: none;
+  }
+  main.ot-phantom {
+    view-transition-name: ph-main;
+  }
+  ::view-transition-old(ph-main) {
+    animation: ph-vt-out .18s cubic-bezier(.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(ph-main) {
+    animation: ph-vt-in .36s cubic-bezier(.22, 1, .36, 1) both;
   }
 }
 

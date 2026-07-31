@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
+import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -15,12 +15,16 @@ import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
 import { SolanaReceivePanel } from "@/components/solana-receive-panel";
 import { CircleMintDepositPanel } from "@/components/circle-mint-deposit-panel";
+import { CashPayDepositPanel } from "@/components/cash-pay-deposit-panel";
+import { BanxaDepositPanel } from "@/components/banxa-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
 import { topUpWithPi, quotePiTopup } from "@/lib/pi-network";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { isBanxaTopupMethod, type BanxaTopupMethodKey } from "@/lib/topup-methods";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import {
   createOpenPayTopupCharge,
@@ -39,6 +43,8 @@ export const Route = createFileRoute("/_authenticated/topup")({
     openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,
     openpay_return: s.openpay_return ? "1" : undefined,
     openpay_cancel: s.openpay_cancel ? "1" : undefined,
+    banxa_return: s.banxa_return ? "1" : undefined,
+    banxa_ext: typeof s.banxa_ext === "string" ? s.banxa_ext : undefined,
   }),
   component: TopUpPage,
 });
@@ -50,7 +56,9 @@ type Method =
   | "helio"
   | "usdc"
   | "solana_pay"
-  | "circle_mint";
+  | "circle_mint"
+  | "cash_pay"
+  | BanxaTopupMethodKey;
 type BuyStep = "amount" | "method" | "deposit";
 const methods: {
   id: Method;
@@ -60,6 +68,7 @@ const methods: {
   helioMark?: boolean;
   solanaMark?: boolean;
   circleMark?: boolean;
+  banxaMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -73,6 +82,30 @@ const methods: {
     label: "MoonPay",
     icon: CreditCard,
     desc: "Card / Apple Pay / Google Pay · MoonPay → OUSD",
+  },
+  {
+    id: "banxa_apple_pay",
+    label: "Apple Pay",
+    banxaMark: true,
+    desc: "Banxa · Apple Pay → OUSD",
+  },
+  {
+    id: "banxa_google_pay",
+    label: "Google Pay",
+    banxaMark: true,
+    desc: "Banxa · Google Pay → OUSD",
+  },
+  {
+    id: "banxa_card",
+    label: "Card",
+    icon: CreditCard,
+    desc: "Banxa · debit / credit card → OUSD",
+  },
+  {
+    id: "banxa_bank",
+    label: "Bank Transfer",
+    icon: Building2,
+    desc: "Banxa · ACH / SEPA / Faster Payments / PayID → OUSD",
   },
   {
     id: "pi",
@@ -103,6 +136,12 @@ const methods: {
     label: "Circle Deposit",
     circleMark: true,
     desc: "Circle Mint · USDC payin (payment intent + list payments) → OUSD",
+  },
+  {
+    id: "cash_pay",
+    label: "Pay with CASH",
+    logoUrl: MAJOR_TOKENS.cash.logoUrl,
+    desc: "Phantom CASH · wallet balance or Solana Pay SPL → OUSD 1:1",
   },
 ];
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -187,7 +226,15 @@ function TopUpPage() {
 
   const visibleMethods = useMemo(() => {
     if (!methodConfig?.length) return methods;
-    const byKey = new Map<string, any>((methodConfig as any[]).map((c) => [c.method_key, c]));
+    type MethodCfg = {
+      method_key: string;
+      label?: string | null;
+      description?: string | null;
+      enabled?: boolean | null;
+      sort_order?: number | null;
+    };
+    const rows = methodConfig as MethodCfg[];
+    const byKey = new Map(rows.map((c) => [c.method_key, c]));
     // Hide only when admin explicitly disabled (maintenance). Missing row → still show.
     return methods
       .filter((m) => {
@@ -195,13 +242,12 @@ function TopUpPage() {
         return !c || c.enabled !== false;
       })
       .map((m) => {
-        const c: any = byKey.get(m.id);
+        const c = byKey.get(m.id);
         return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
       })
       .sort(
         (a, b) =>
-          Number((byKey.get(a.id) as any)?.sort_order ?? 0) -
-          Number((byKey.get(b.id) as any)?.sort_order ?? 0),
+          Number(byKey.get(a.id)?.sort_order ?? 0) - Number(byKey.get(b.id)?.sort_order ?? 0),
       );
   }, [methodConfig]);
 
@@ -417,7 +463,9 @@ function TopUpPage() {
       method === "helio" ||
       method === "usdc" ||
       method === "solana_pay" ||
-      method === "circle_mint"
+      method === "circle_mint" ||
+      method === "cash_pay" ||
+      isBanxaTopupMethod(method)
     ) {
       setDepositReady(true);
       setConfirmOpen(false);
@@ -563,7 +611,17 @@ function TopUpPage() {
               ? `Continue with Solana Pay`
               : method === "circle_mint"
                 ? `Continue with Circle`
-                : `Continue with Pi`;
+                : method === "cash_pay"
+                  ? `Continue with CASH`
+                  : method === "banxa_apple_pay"
+                    ? `Continue with Apple Pay`
+                    : method === "banxa_google_pay"
+                      ? `Continue with Google Pay`
+                      : method === "banxa_card"
+                        ? `Continue with card`
+                        : method === "banxa_bank"
+                          ? `Continue with bank transfer`
+                          : `Continue with Pi`;
 
   const payWithLabel =
     method === "moonpay"
@@ -578,7 +636,17 @@ function TopUpPage() {
               ? "Solana Pay"
               : method === "circle_mint"
                 ? "Circle Mint"
-                : "OpenPay Balance";
+                : method === "cash_pay"
+                  ? "CASH"
+                  : method === "banxa_apple_pay"
+                    ? "Apple Pay (Banxa)"
+                    : method === "banxa_google_pay"
+                      ? "Google Pay (Banxa)"
+                      : method === "banxa_card"
+                        ? "Card (Banxa)"
+                        : method === "banxa_bank"
+                          ? "Bank Transfer (Banxa)"
+                          : "OpenPay Balance";
 
   const headerTitle =
     step === "amount"
@@ -591,7 +659,17 @@ function TopUpPage() {
             ? "Solana Pay"
             : method === "circle_mint"
               ? "Circle Deposit"
-              : "Crypto Deposit";
+              : method === "cash_pay"
+                ? "Pay with CASH"
+                : method === "banxa_apple_pay"
+                  ? "Apple Pay"
+                  : method === "banxa_google_pay"
+                    ? "Google Pay"
+                    : method === "banxa_card"
+                      ? "Card"
+                      : method === "banxa_bank"
+                        ? "Bank Transfer"
+                        : "Crypto Deposit";
 
   return (
     <div className="ot-phantom ph-page flex min-h-[calc(100dvh-6rem)] flex-col pb-8">
@@ -834,6 +912,8 @@ function TopUpPage() {
                       m.id === "helio" && "bg-[#9945FF]/15 text-[#9945FF]",
                       m.id === "solana_pay" && "bg-[#14F195]/20 text-[#0ea5e9]",
                       m.id === "circle_mint" && "bg-[#00BFFF]/15 text-[#0088cc]",
+                      m.id === "cash_pay" && "bg-emerald-500/15",
+                      m.id.startsWith("banxa_") && "bg-[#0B5FFF]/12 text-[#0B5FFF]",
                       m.id === "usdc" && "bg-[#2775CA]/15",
                     )}
                   >
@@ -845,6 +925,10 @@ function TopUpPage() {
                       <span className="text-sm font-black tracking-tight">◎</span>
                     ) : m.circleMark ? (
                       <span className="text-[11px] font-black tracking-tight">USDC</span>
+                    ) : m.banxaMark ? (
+                      <span className="text-[10px] font-black tracking-tight">
+                        {m.id === "banxa_apple_pay" ? "APay" : "GPay"}
+                      </span>
                     ) : Icon ? (
                       <Icon className="h-5 w-5" />
                     ) : null}
@@ -1025,6 +1109,64 @@ function TopUpPage() {
       {step === "deposit" && depositReady && method === "circle_mint" && (
         <div className="flex flex-1 flex-col space-y-4">
           <CircleMintDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "cash_pay" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <div className="rounded-2xl bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatOUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via Phantom CASH · credited as OUSD after confirmation
+            </p>
+          </div>
+          <CashPayDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            cashBalance={Number(wallet?.cash_balance ?? 0)}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && isBanxaTopupMethod(method) && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <div className="rounded-2xl bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatOUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via Banxa · credited as OUSD after confirmation
+            </p>
+          </div>
+          <BanxaDepositPanel
+            methodKey={method}
             amountUsd={amtNum}
             walletId={wallet?.id}
             onSuccess={refreshAfterHelioDeposit}

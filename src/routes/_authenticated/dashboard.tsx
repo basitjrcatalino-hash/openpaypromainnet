@@ -456,6 +456,8 @@ function Dashboard() {
                     openpay_tx: undefined,
                     openpay_return: undefined,
                     openpay_cancel: undefined,
+                    banxa_return: undefined,
+                    banxa_ext: undefined,
                   }}
                   className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
                 >
@@ -530,6 +532,8 @@ function Dashboard() {
                     openpay_tx: undefined,
                     openpay_return: undefined,
                     openpay_cancel: undefined,
+                    banxa_return: undefined,
+                    banxa_ext: undefined,
                   }}
                   className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground press"
                 >

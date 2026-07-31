@@ -49,6 +49,7 @@ export const en = {
     blog: "Blog",
     wiki: "Wiki",
     about: "About",
+    ousd: "OpenUSD",
     ai: "OpenPay AI",
     developer: "Developer",
     agentConnect: "Agent Connect",

@@ -23,6 +23,7 @@ import {
   Pencil,
   AlertTriangle,
   ChevronRight,
+  CircleDollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
@@ -1198,6 +1199,25 @@ function SettingsPage() {
           {t("settings.legal")}
         </h2>
         <ul className="overflow-hidden rounded-2xl bg-card">
+          <li className="border-b border-border/60">
+            <a
+              href="/openusd"
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/40"
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground">
+                <CircleDollarSign className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">Meet OpenUSD</span>
+                <span className="block text-xs text-muted-foreground">
+                  OpenPay’s network dollar — OUSD
+                </span>
+              </span>
+              <span className="text-muted-foreground">›</span>
+            </a>
+          </li>
           <li className="border-b border-border/60">
             <Link
               to="/about"

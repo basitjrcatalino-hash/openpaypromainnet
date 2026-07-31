@@ -679,6 +679,16 @@ function SidebarInner({
           {t("nav.watchlist")}
         </Link>
         <a
+          href="/openusd"
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+        >
+          <CircleDollarSign className="h-5 w-5" strokeWidth={1.75} />
+          {t("nav.ousd")}
+        </a>
+        <a
           href="/about"
           target="_blank"
           rel="noreferrer"

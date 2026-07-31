@@ -26,7 +26,7 @@ import {
   settleOpenPayPayLinkTopup,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
-import { getPublicTopupInfo } from "@/lib/topup-admin.functions";
+import { getPublicTopupInfo, listTopupMethods } from "@/lib/topup-admin.functions";
 import { calcTopupFee } from "@/lib/topup-fee";
 
 export const Route = createFileRoute("/_authenticated/topup")({
@@ -164,7 +164,7 @@ function TopUpPage() {
 
   const visibleMethods = (() => {
     if (!methodConfig?.length) return methods;
-    const byKey = new Map(methodConfig.map((c: any) => [c.method_key, c]));
+    const byKey = new Map<string, any>((methodConfig as any[]).map((c) => [c.method_key, c]));
     return methods
       .filter((m) => byKey.get(m.id)?.enabled !== false)
       .map((m) => {
@@ -476,7 +476,7 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
-  const selectedMethod = methods.find((m) => m.id === method);
+  const selectedMethod = visibleMethods.find((m) => m.id === method);
 
   function goToMethod() {
     const parsed = schema.safeParse({ amount });
@@ -754,7 +754,7 @@ function TopUpPage() {
             Select a provider
           </h2>
           <div className="overflow-hidden rounded-2xl bg-card">
-            {methods.map((m, i) => {
+            {visibleMethods.map((m, i) => {
               const selected = method === m.id;
               const Icon = m.icon;
               const disabled = m.id === "openpay_balance" && !linked;

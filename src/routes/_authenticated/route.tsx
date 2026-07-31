@@ -32,6 +32,8 @@ import {
   Bot,
   Sparkles,
   Code2,
+  ArrowDownToLine,
+  Store,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";

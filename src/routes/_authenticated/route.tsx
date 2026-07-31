@@ -231,7 +231,7 @@ function AuthenticatedLayout() {
           {!hideChrome && (
             <aside
               className={cn(
-                "ph-sidebar sticky top-0 hidden h-screen shrink-0 overflow-y-auto md:flex md:flex-col transition-[width] duration-200 ease-in-out",
+                "ph-sidebar sticky top-0 hidden h-screen shrink-0 md:flex md:flex-col",
                 sidebarCollapsed ? "w-[4.25rem] p-2" : "w-[17.5rem] p-3",
               )}
             >
@@ -242,7 +242,7 @@ function AuthenticatedLayout() {
                   activeWallet={activeWallet}
                 />
               ) : (
-                <>
+                <div className="flex h-full min-h-0 flex-col">
                   <SidebarInner
                     wallets={wallets}
                     activeWallet={activeWallet}
@@ -255,12 +255,12 @@ function AuthenticatedLayout() {
                   <button
                     type="button"
                     onClick={toggleSidebar}
-                    className="mt-auto flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                    className="mt-1 flex shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
                     title="Collapse sidebar"
                   >
                     <PanelLeftClose className="h-4 w-4" />
                   </button>
-                </>
+                </div>
               )}
             </aside>
           )}
@@ -271,7 +271,7 @@ function AuthenticatedLayout() {
                 className="absolute inset-0 bg-background/70 backdrop-blur-sm"
                 onClick={() => setMobileOpen(false)}
               />
-              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-y-auto p-3 shadow-2xl">
+              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-hidden p-3 shadow-2xl">
                 <SidebarInner
                   wallets={wallets}
                   activeWallet={activeWallet}
@@ -601,7 +601,7 @@ function SidebarInner({
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
 
   return (
-    <div className="flex min-h-full min-w-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3">
       <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-1.5 py-1">
         <Link
           to="/profile"
@@ -659,10 +659,10 @@ function SidebarInner({
         copied={copied}
         onCycleCurrency={() => setCurrencyOpen(true)}
         onCopyAddress={copyAddress}
-        className="px-1 py-1"
+        className="shrink-0 px-1 py-1"
       />
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-3">
+      <nav className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch]">
         <SideSection>
           {NAV.map((item) => {
             const Icon = item.icon;
@@ -787,7 +787,7 @@ function SidebarInner({
             <div className="space-y-0.5">
               {(
                 [
-                  { href: "/", labelKey: "nav.website", Icon: Home, external: true },
+                  { href: "/website", labelKey: "nav.website", Icon: Home, external: false },
                   { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign, external: false },
                   { href: "/about", labelKey: "nav.about", Icon: Globe2, external: false },
                   { href: "/blog", labelKey: "nav.blog", Icon: Newspaper, external: false },
@@ -942,34 +942,36 @@ function SidebarInner({
         </SideSection>
       </nav>
 
-      <div className="mt-auto space-y-1.5 pt-1">
-        <div className="flex items-center justify-between gap-2 rounded-[14px] bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
-          <span className="truncate font-semibold">@{handle}</span>
-          <div className="flex items-center gap-0.5">
-            {onOpenNotifications && (
-              <NotificationBell unread={unread} onOpen={onOpenNotifications} />
+      {/* Docked footer — scrolls never cover this; stays under the nav list */}
+      <div className="shrink-0 space-y-2 border-t border-border/50 pt-3">
+        <div className="flex items-center gap-2 rounded-2xl bg-muted/40 px-2.5 py-2">
+          <span className="min-w-0 flex-1 truncate px-1 text-xs font-semibold text-muted-foreground">
+            @{handle}
+          </span>
+          {onOpenNotifications ? (
+            <NotificationBell unread={unread} onOpen={onOpenNotifications} />
+          ) : null}
+          <button
+            type="button"
+            onClick={toggle}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-background/70 text-foreground ring-1 ring-border/60 press hover:bg-muted"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" strokeWidth={2} />
+            ) : (
+              <Moon className="h-4 w-4" strokeWidth={2} />
             )}
-            <button
-              type="button"
-              onClick={toggle}
-              className="rounded-full p-1.5 hover:bg-muted press"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-3.5 w-3.5" />
-              ) : (
-                <Moon className="h-3.5 w-3.5" />
-              )}
-            </button>
-          </div>
+          </button>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start rounded-[14px] text-muted-foreground"
+          className="h-10 w-full justify-start rounded-2xl text-muted-foreground hover:text-foreground"
           onClick={signOut}
         >
-          <LogOut className="mr-1.5 h-3.5 w-3.5" /> {t("common.signOut")}
+          <LogOut className="mr-2 h-4 w-4" /> {t("common.signOut")}
         </Button>
       </div>
 

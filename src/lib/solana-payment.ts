@@ -31,16 +31,18 @@ export const SOLANA_RPC_URL =
   undefined;
 
 /**
- * Theme for Commerce Kit.
- * Prefer a light panel so QR / amounts stay readable on mobile (dark overlay was blank).
+ * Theme for Commerce Kit — Solana purple / mint (not a blank white panel).
+ * Docs default primary is #9945FF; keep that brand language visible in light & dark app chrome.
  */
 export const SOLANA_PAYMENT_THEME = {
-  primaryColor: "#7C3AED",
+  primaryColor: "#9945FF",
   secondaryColor: "#14F195",
-  backgroundColor: "#ffffff",
-  textColor: "#0f172a",
+  backgroundColor: "#F4F0FF",
+  textColor: "#1A1430",
   borderRadius: "xl" as const,
-  buttonShadow: "md" as const,
+  buttonShadow: "lg" as const,
+  buttonBorder: "none" as const,
+  fontFamily: '"Plus Jakarta Sans", system-ui, -apple-system, sans-serif',
 };
 
 export function resolveSolanaMerchantWallet(wallet?: string | null): string {

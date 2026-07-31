@@ -60,7 +60,7 @@ function NotFoundComponent() {
           That route doesn't exist in OpenPay Pro Wallet.
         </p>
         <a
-          href="/"
+          href="/dashboard"
           className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
         >
           Back to wallet
@@ -109,7 +109,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Try again
           </button>
           <a
-            href="/"
+            href="/dashboard"
             className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium"
           >
             Go home

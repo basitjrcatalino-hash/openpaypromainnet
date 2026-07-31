@@ -74,7 +74,7 @@ export function SolanaReceivePanelBody({
   return (
     <div className={cn("space-y-5", className)}>
       <div className="text-center">
-        <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#AB9FF2]/15 text-[#AB9FF2]">
+        <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#9945FF]/15 text-[#9945FF]">
           <WalletIcon className="h-6 w-6" />
         </span>
         <p className="text-lg font-semibold text-foreground">Solana Commerce</p>
@@ -98,6 +98,7 @@ export function SolanaReceivePanelBody({
           merchantWallet={merchantWallet}
           mode={mode}
           showQR
+          position="overlay"
           paymentConfig={
             mode === "buyNow" && amountUsd != null && amountUsd > 0
               ? {
@@ -116,13 +117,19 @@ export function SolanaReceivePanelBody({
             paidAmountRef.current = amount;
           }}
           onPaymentSuccess={(sig) => void handleSuccess(sig)}
-          className="flex justify-center"
+          className="flex w-full justify-center"
         >
           <button
             type="button"
             disabled={crediting}
-            className="flex h-14 w-full max-w-sm items-center justify-center rounded-full bg-[#AB9FF2] px-6 text-base font-semibold text-[#1a1a2e] press disabled:opacity-60"
+            className="solana-pay-cta flex h-14 w-full max-w-sm items-center justify-center gap-2.5 rounded-full px-6 text-base font-bold text-white press disabled:opacity-60"
           >
+            <span
+              className="grid h-7 w-7 place-items-center rounded-full bg-white/20 text-[15px] font-black leading-none"
+              aria-hidden
+            >
+              ◎
+            </span>
             {crediting
               ? "Crediting…"
               : mode === "buyNow"

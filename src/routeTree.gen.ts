@@ -22,6 +22,7 @@ import { Route as RegulatoryRouteImport } from './routes/regulatory'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
+import { Route as WebsiteRouteImport } from './routes/website'
 import { Route as WikiRouteImport } from './routes/wiki'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -177,6 +178,11 @@ const TermsRoute = TermsRouteImport.update({
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
   id: '/testnet-reward',
   path: '/testnet-reward',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteRoute = WebsiteRouteImport.update({
+  id: '/website',
+  path: '/website',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WikiRoute = WikiRouteImport.update({
@@ -679,6 +685,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -785,6 +792,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -893,6 +901,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -1001,6 +1010,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -1107,6 +1117,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -1214,6 +1225,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -1322,6 +1334,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  WebsiteRoute: typeof WebsiteRoute
   WikiRoute: typeof WikiRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -1459,6 +1472,13 @@ declare module '@tanstack/react-router' {
       path: '/testnet-reward'
       fullPath: '/testnet-reward'
       preLoaderRoute: typeof TestnetRewardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website': {
+      id: '/website'
+      path: '/website'
+      fullPath: '/website'
+      preLoaderRoute: typeof WebsiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wiki': {
@@ -2281,6 +2301,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  WebsiteRoute: WebsiteRoute,
   WikiRoute: WikiRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:

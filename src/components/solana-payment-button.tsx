@@ -54,8 +54,8 @@ export type SolanaPaymentButtonProps = {
   showQR?: boolean;
   /**
    * Where the checkout UI renders.
-   * Default: inline on narrow viewports, overlay on desktop — overlay uses kit z-index 50
-   * which collides with our mobile tabbar unless CSS raises it.
+   * Prefer overlay so the branded "Pay with Solana" trigger stays visible —
+   * inline mode embeds a blank white iframe and hides the custom button.
    */
   position?: "inline" | "overlay" | "auto";
   className?: string;
@@ -81,8 +81,8 @@ export type SolanaPaymentButtonProps = {
 
 function resolvePosition(position: "inline" | "overlay" | "auto"): "inline" | "overlay" {
   if (position === "inline" || position === "overlay") return position;
-  if (typeof window === "undefined") return "inline";
-  return window.matchMedia("(max-width: 767px)").matches ? "inline" : "overlay";
+  // Overlay keeps the Solana-branded trigger button; inline was rendering as a white box.
+  return "overlay";
 }
 
 /**
@@ -112,11 +112,6 @@ export function SolanaPaymentButton({
 
   useEffect(() => {
     setResolvedPosition(resolvePosition(position));
-    if (position !== "auto" || typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 767px)");
-    const onChange = () => setResolvedPosition(mq.matches ? "inline" : "overlay");
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
   }, [position]);
 
   useEffect(() => {

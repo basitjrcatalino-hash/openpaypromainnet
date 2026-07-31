@@ -817,11 +817,47 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   z-index: 200 !important;
 }
 
-/* Inline checkout: keep QR / wallet UI visible in the page on mobile */
+/* Branded Solana Pay CTA — purple → mint (not a flat white kit default) */
+.solana-pay-cta {
+  background: linear-gradient(135deg, #9945ff 0%, #7c3aed 48%, #14f195 160%);
+  box-shadow:
+    0 14px 36px -16px rgba(153, 69, 255, 0.65),
+    0 1px 0 rgba(255, 255, 255, 0.22) inset;
+  letter-spacing: -0.01em;
+}
+.solana-pay-cta:hover {
+  filter: brightness(1.05);
+}
+.solana-pay-cta:active {
+  transform: scale(0.98);
+}
+
+.solana-payment-button {
+  width: 100%;
+}
+
+/* If kit falls back to its default trigger (no children), force Solana colors */
+.solana-payment-button > button:not(.solana-pay-cta) {
+  width: 100% !important;
+  max-width: 24rem !important;
+  min-height: 3.5rem !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #9945ff 0%, #7c3aed 48%, #14f195 160%) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 14px 36px -16px rgba(153, 69, 255, 0.65) !important;
+}
+
+/* Inline checkout: branded frame (lavender, not blank white) */
 .solana-payment-button--inline {
   position: relative;
   z-index: 10;
   width: 100%;
+  border-radius: 1.25rem;
+  padding: 0.35rem;
+  background: linear-gradient(145deg, rgba(153, 69, 255, 0.28), rgba(20, 241, 149, 0.22));
+  box-shadow: 0 20px 50px -32px rgba(88, 40, 180, 0.45);
 }
 
 .solana-payment-button--inline iframe {
@@ -831,7 +867,7 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   height: min(70vh, 36rem) !important;
   border: 0 !important;
   border-radius: 1rem !important;
-  background: #fff !important;
+  background: #f4f0ff !important;
 }
 
 /* Always boost kit fixed overlays even without the class (desktop overlay mode) */

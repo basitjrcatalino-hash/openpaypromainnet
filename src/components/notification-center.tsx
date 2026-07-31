@@ -77,12 +77,23 @@ function groupNotes(items: AppNotification[]) {
   return groups;
 }
 
-export function NotificationBell({ unread, onOpen }: { unread: number; onOpen: () => void }) {
+export function NotificationBell({
+  unread,
+  onOpen,
+  className,
+}: {
+  unread: number;
+  onOpen: () => void;
+  className?: string;
+}) {
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="relative grid h-10 w-10 place-items-center rounded-full bg-muted/70 text-foreground press hover:bg-muted"
+      className={cn(
+        "relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted/70 text-foreground press hover:bg-muted",
+        className,
+      )}
       aria-label={unread ? `${unread} unread notifications` : "Notifications"}
     >
       <Bell className="h-4.5 w-4.5" strokeWidth={2} />

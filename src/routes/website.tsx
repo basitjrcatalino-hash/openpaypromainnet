@@ -8,15 +8,19 @@ import {
   ChevronDown,
   ExternalLink,
   Globe2,
+  Loader2,
   Lock,
   QrCode,
   Send,
   ShieldCheck,
   Sparkles,
+  Square,
+  Volume2,
   Wallet,
 } from "lucide-react";
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
+import { useSpeech } from "@/hooks/use-speech";
 import { cn } from "@/lib/utils";
 
 const TITLE = "OpenPay Pro — The money app for the open network";
@@ -48,10 +52,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Features",
     items: [
+      { label: "All features", href: "/website#features", desc: "Everything in OpenPay Pro" },
       { label: "OpenUSD", href: "/openusd", desc: "OpenPay’s $1 ledger dollar" },
       { label: "OpenToken", href: "/wiki", desc: "Mint and trade on bonding curves" },
       { label: "Solana Pay", href: "/authpi", desc: "QR payments on Solana" },
       { label: "Multi-chain deposit", href: "/wiki", desc: "ETH, Base, BNB, Polygon, Solana…" },
+      { label: "OpenPay AI", href: "https://www.openpy.space/blog/meet-openpay-ai", desc: "Assistant & MCP agents" },
     ],
   },
   {
@@ -88,26 +94,109 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-const TRADE_SLIDES = [
+/** Full product showcase — every major OpenPay Pro surface (no bank debit cards). */
+const FEATURE_SHOWCASE = [
   {
-    title: "Buy and sell majors against OUSD in an instant.",
-    visual: "swap" as const,
+    id: "money",
+    title: "Money & OpenUSD",
+    blurb: "Your home balance on the open network.",
+    items: [
+      { name: "OpenUSD (OUSD)", desc: "OpenPay’s $1 ledger dollar for hold, send, spend, and settle." },
+      { name: "Unified Pro wallet", desc: "One home for OUSD, Pi, majors, OpenTokens, and NFTs." },
+      { name: "Multi-asset holdings", desc: "BTC, ETH, SOL, PI, USDC, USDT, EURC and more beside OUSD." },
+      { name: "@username identity", desc: "Pay and get paid with readable @handles on the same ledger." },
+      { name: "Pi in the wallet", desc: "Hold and move Pi alongside OUSD on one Pro account." },
+      { name: "Display currencies", desc: "See balances in USD, EUR, PI, and dozens of display currencies." },
+      { name: "Activity & history", desc: "Every credit and debit in a clear transaction timeline." },
+      { name: "OpenNFT collectibles", desc: "Browse and mint marketplace-linked NFTs inside the wallet." },
+      { name: "Multi-wallet switching", desc: "Create, import, and switch Pro wallets without leaving the app." },
+    ],
   },
   {
-    title: "Mint and trade OpenTokens on bonding curves.",
-    visual: "mint" as const,
+    id: "trading",
+    title: "Trading & OpenToken",
+    blurb: "Swap majors and launch community coins.",
+    items: [
+      { name: "OpenDEX swap", desc: "Buy and sell majors against OUSD with quotes and fee clarity." },
+      { name: "OpenToken launchpad", desc: "Mint and trade community coins on bonding curves." },
+      { name: "Create OpenToken", desc: "Launch your coin with name, symbol, and logo — mint fee in OUSD." },
+      { name: "Token discovery", desc: "Trending rails, charts, holders, and per-token rooms." },
+      { name: "Watchlist", desc: "Star tokens you care about and jump back in one tap." },
+      { name: "Live Chat", desc: "Global and token rooms for launches and markets." },
+    ],
   },
   {
-    title: "Watch trending assets and keep a personal watchlist.",
-    visual: "watch" as const,
+    id: "move",
+    title: "Send, receive & deposit",
+    blurb: "Move value in — and out — on open rails.",
+    items: [
+      { name: "Send anywhere Pro", desc: "OUSD, Pi, majors, or OpenTokens to @users, addresses, or OpenPay." },
+      { name: "Receive + QR", desc: "Share a QR or receive link so others can pay you instantly." },
+      { name: "Public pay links", desc: "Camera-friendly /pay links that open cleanly from phone scans." },
+      { name: "Buy / Top up OUSD", desc: "Fund from OpenPay Balance, Pi, USDC, crypto, Solana Pay, or Circle." },
+      { name: "OpenPay Balance", desc: "Move network balance into Pro OUSD when accounts are linked." },
+      { name: "Pi Network top-up", desc: "Pay with Pi at a live π price and get OUSD credited." },
+      { name: "USDC / crypto deposit", desc: "Deposit USDC and supported crypto via Commerce rails into OUSD." },
+      { name: "Circle Mint", desc: "Circle Mint USDC pay-ins that settle as OUSD on your Pro wallet." },
+      { name: "Solana Pay", desc: "Wallet connect, PaymentButton, and Solana Pay QR → OUSD." },
+      { name: "Multi-chain gateway", desc: "Deposit from Ethereum, Base, BNB, Polygon, Solana, and more." },
+      { name: "Scan QR", desc: "Point the camera at payment QRs to prefill Send or merchant flows." },
+      { name: "WalletConnect Pay", desc: "Pay WalletConnect merchant links with an EVM signature." },
+      { name: "Tx notifications", desc: "In-app alerts — and email when Email alerts are on." },
+    ],
   },
   {
-    title: "Deposit from Ethereum, Base, BNB, Polygon, Solana, and more.",
-    visual: "deposit" as const,
+    id: "security",
+    title: "Security & control",
+    blurb: "Self-custody keys. Open ledger. Your rules.",
+    items: [
+      { name: "Recovery phrase", desc: "Create or import 12/24-word recovery so you control the wallet." },
+      { name: "PIN protection", desc: "Gate sensitive actions with an optional PIN." },
+      { name: "Biometrics", desc: "Fingerprint / Face ID where the device supports it." },
+      { name: "Pi Verify KYC", desc: "Identity verification via Pi Verify when higher access requires it." },
+      { name: "OpenPay OAuth link", desc: "Connect OpenPay for balance top-ups, NFTs, and partner features." },
+      { name: "Self-custody posture", desc: "A money app on open rails — not a closed bank silo." },
+    ],
   },
   {
-    title: "Power builders with Partner API, Connect, and OpenLedger.",
-    visual: "api" as const,
+    id: "ai",
+    title: "OpenPay AI & agents",
+    blurb: "Help without hiding how money moves.",
+    items: [
+      { name: "OpenPay AI assistant", desc: "Ask how-to questions about top-ups, sends, OpenToken, ledger, KYC." },
+      { name: "Spoken answers", desc: "Listen to AI and Wiki replies with built-in text-to-speech." },
+      { name: "Agent Connect (MCP)", desc: "Plug ChatGPT, Claude, or any MCP client into Pro wallet tools." },
+      { name: "Read-oriented tools", desc: "Documented assistant surfaces — help without silent fund moves." },
+    ],
+  },
+  {
+    id: "builders",
+    title: "Builders & open network",
+    blurb: "Same OUSD rails for apps, ledgers, and agents.",
+    items: [
+      { name: "Partner API", desc: "Apps, keys, and OUSD-denominated partner transfers." },
+      { name: "Connect with OpenPay", desc: "Sign in with OpenPay and Balance payments for third-party apps." },
+      { name: "Public Ledger API", desc: "Mirror sends, receives, buys, swaps, and mints to an append-only ledger." },
+      { name: "OpenLedger explorer", desc: "Inspect credits and debits on public OpenLedger rails." },
+      { name: "In-app Ledger console", desc: "API keys, entries, and sync helpers under Developer mode." },
+      { name: "Docs & FAQ", desc: "Ship Connect, payments, Ledger, and WalletConnect Pay with first-party docs." },
+      { name: "Wiki & Blog", desc: "Guides and updates for every major Pro surface." },
+    ],
+  },
+  {
+    id: "auth",
+    title: "Sign in your way",
+    blurb: "One Pro account — many doors in.",
+    items: [
+      { name: "OpenPay", desc: "Featured path for users already on the OpenPay network." },
+      { name: "Email & password", desc: "Classic create / sign-in without a wallet extension." },
+      { name: "Phantom", desc: "Continue with Phantom — or Google / Apple via Phantom." },
+      { name: "Solana wallet", desc: "Sign in with a Solana wallet when Phantom isn’t the path." },
+      { name: "WalletConnect", desc: "Bring mobile and desktop wallets through WalletConnect." },
+      { name: "MetaMask", desc: "Sign in with MetaMask / embedded Web3 auth." },
+      { name: "Pi Network", desc: "Pi Browser or Pi OAuth — username into Pro." },
+      { name: "Telegram", desc: "One-tap Telegram Login for social-native entry." },
+    ],
   },
 ] as const;
 
@@ -145,10 +234,66 @@ const SECURITY_SLIDES = [
   },
 ] as const;
 
+const TRADE_SLIDES = [
+  {
+    title: "Buy and sell majors against OUSD in an instant.",
+    visual: "swap" as const,
+  },
+  {
+    title: "Mint and trade OpenTokens on bonding curves.",
+    visual: "mint" as const,
+  },
+  {
+    title: "Watch trending assets and keep a personal watchlist.",
+    visual: "watch" as const,
+  },
+  {
+    title: "Deposit from Ethereum, Base, BNB, Polygon, Solana, and more.",
+    visual: "deposit" as const,
+  },
+  {
+    title: "Power builders with Partner API, Connect, and OpenLedger.",
+    visual: "api" as const,
+  },
+] as const;
+
+/** Plain-language tour for /api/tts (capped ~4k chars server-side). */
+function websiteSpeechText() {
+  const parts: string[] = [
+    "OpenPay Pro. The money app for the open network.",
+    "Your home for OUSD, Pi, OpenTokens, and open money.",
+    "Self-custody wallet, public ledger, Partner API, and OpenPay AI — one Pro account.",
+  ];
+  for (const cat of FEATURE_SHOWCASE) {
+    parts.push(`${cat.title}. ${cat.blurb}`);
+    for (const item of cat.items) {
+      parts.push(`${item.name}. ${item.desc}`);
+    }
+  }
+  parts.push(
+    "Get started. Sign in with OpenPay, Phantom, Pi, Telegram, email, and more — then hold OUSD, send, swap, and build on the open ledger.",
+  );
+  return parts.join(" ").slice(0, 3900);
+}
+
 function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openNav, setOpenNav] = useState<string | null>(null);
   const heroRef = useRef<HTMLElement | null>(null);
+  const speech = useSpeech();
+  const speechId = "website-tour";
+  const isSpeaking = speech.speakingId === speechId;
+  const isLoadingAudio = speech.loadingId === speechId;
+
+  const listen = () => {
+    void speech.speak(speechId, websiteSpeechText());
+  };
+
+  const listenLabel = isLoadingAudio
+    ? "Preparing audio…"
+    : isSpeaking
+      ? "Stop"
+      : "Listen";
 
   useEffect(() => {
     const root = heroRef.current;
@@ -208,12 +353,13 @@ function HomePage() {
                 {openNav === group.label ? (
                   <div className="ophome-dropdown absolute left-1/2 top-[calc(100%+10px)] z-50 w-[280px] -translate-x-1/2 p-2">
                     {group.items.map((item) =>
-                      item.href.startsWith("http") ? (
+                      item.href.startsWith("http") || item.href.includes("#") ? (
                         <a
                           key={item.href + item.label}
                           href={item.href}
-                          target="_blank"
-                          rel="noreferrer"
+                          {...(item.href.startsWith("http")
+                            ? { target: "_blank", rel: "noreferrer" }
+                            : {})}
                           className="block rounded-2xl px-3.5 py-2.5 hover:bg-[var(--lavender-soft)]"
                           onClick={() => setOpenNav(null)}
                         >
@@ -249,6 +395,27 @@ function HomePage() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={listen}
+              disabled={isLoadingAudio}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-3.5 py-2.5 text-sm font-bold press",
+                isSpeaking
+                  ? "bg-[var(--ink)] text-white"
+                  : "bg-white/80 text-[var(--ink)] shadow-sm ring-1 ring-black/5 hover:bg-white",
+              )}
+              aria-label={isSpeaking ? "Stop listening" : "Listen to this page"}
+            >
+              {isLoadingAudio ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isSpeaking ? (
+                <Square className="h-3.5 w-3.5 fill-current" />
+              ) : (
+                <Volume2 className="h-4 w-4" strokeWidth={2.25} />
+              )}
+              <span className="hidden sm:inline">{listenLabel}</span>
+            </button>
             <Link to="/authpi" className="ophome-cta-pill hidden sm:inline-flex">
               Open wallet
             </Link>
@@ -275,12 +442,13 @@ function HomePage() {
                   {group.label}
                 </p>
                 {group.items.map((item) =>
-                  item.href.startsWith("http") ? (
+                  item.href.startsWith("http") || item.href.includes("#") ? (
                     <a
                       key={item.href + item.label}
                       href={item.href}
-                      target="_blank"
-                      rel="noreferrer"
+                      {...(item.href.startsWith("http")
+                        ? { target: "_blank", rel: "noreferrer" }
+                        : {})}
                       className="block rounded-xl px-3 py-2.5 text-sm font-semibold"
                       onClick={() => setMenuOpen(false)}
                     >
@@ -335,6 +503,22 @@ function HomePage() {
                 <Wallet className="h-4 w-4" strokeWidth={2.25} />
                 Open OpenPay Pro
               </Link>
+              <button
+                type="button"
+                onClick={listen}
+                disabled={isLoadingAudio}
+                className="ophome-hero-cta-ghost"
+                aria-label={isSpeaking ? "Stop listening" : "Listen to this page"}
+              >
+                {isLoadingAudio ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSpeaking ? (
+                  <Square className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Volume2 className="h-4 w-4" strokeWidth={2.25} />
+                )}
+                {isSpeaking ? "Stop listening" : "Listen — don’t read"}
+              </button>
               <Link to="/openusd" className="ophome-hero-cta-ghost">
                 Meet OpenUSD
               </Link>
@@ -369,6 +553,108 @@ function HomePage() {
           slides={SECURITY_SLIDES}
           renderVisual={(v) => <SecurityVisual kind={v} />}
         />
+
+        {/* Full product showcase */}
+        <section id="features" className="mt-16 scroll-mt-28 sm:mt-24">
+          <div className="flex flex-wrap items-end justify-between gap-4 px-1">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                All features
+              </p>
+              <h2 className="mt-2 max-w-3xl font-[family-name:var(--font-display)] text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
+                Everything in OpenPay Pro
+              </h2>
+              <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                OpenUSD settlement, OpenDEX and OpenToken, multi-chain deposits, Solana Pay, Circle Mint,
+                OpenPay AI, Partner API, OpenLedger, and every way to sign in — one self-custody Pro
+                account on the open network.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={listen}
+              disabled={isLoadingAudio}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold press",
+                isSpeaking
+                  ? "bg-[var(--ink)] text-white"
+                  : "bg-[var(--lavender)] text-[var(--ink)] hover:brightness-105",
+              )}
+              aria-label={isSpeaking ? "Stop listening" : "Listen to all features"}
+            >
+              {isLoadingAudio ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isSpeaking ? (
+                <Square className="h-3.5 w-3.5 fill-current" />
+              ) : (
+                <Volume2 className="h-4 w-4" strokeWidth={2.25} />
+              )}
+              {isSpeaking ? "Stop" : "Listen to features"}
+            </button>
+          </div>
+
+          <div className="mt-6 flex gap-2 overflow-x-auto pb-2 scrollbar-none [-webkit-overflow-scrolling:touch]">
+            {FEATURE_SHOWCASE.map((cat) => (
+              <a
+                key={cat.id}
+                href={`#feature-${cat.id}`}
+                className="shrink-0 rounded-full border border-[var(--ink)]/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-[var(--ink)] press hover:bg-white"
+              >
+                {cat.title}
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-10 space-y-14">
+            {FEATURE_SHOWCASE.map((cat) => (
+              <div key={cat.id} id={`feature-${cat.id}`} className="scroll-mt-28">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--ink)]/8 pb-4">
+                  <div>
+                    <h3 className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-[-0.03em] sm:text-3xl">
+                      {cat.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">{cat.blurb}</p>
+                  </div>
+                  <span className="rounded-full bg-[var(--lavender-soft)] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--ink)]/70">
+                    {cat.items.length} features
+                  </span>
+                </div>
+                <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                  {cat.items.map((item) => (
+                    <li key={item.name} className="min-w-0">
+                      <p className="text-[15px] font-bold tracking-[-0.015em] text-[var(--ink)]">
+                        {item.name}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                        {item.desc}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 flex flex-wrap gap-3">
+            <Link to="/authpi" className="ophome-cta-pill">
+              <Wallet className="h-4 w-4" />
+              Open wallet
+            </Link>
+            <Link
+              to="/openusd"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
+            >
+              Meet OpenUSD
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/wiki"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
+            >
+              Read the Wiki
+            </Link>
+          </div>
+        </section>
 
         {/* Trust band */}
         <section className="ophome-trust mt-6 overflow-hidden px-6 py-14 sm:mt-8 sm:px-12 sm:py-16">

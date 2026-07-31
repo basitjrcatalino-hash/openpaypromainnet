@@ -1,25 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Wallet,
   Shield,
-  BadgeCheck,
   CreditCard,
   ArrowLeftRight,
   Compass,
-  ChevronRight,
+  Plus,
+  Sparkles,
+  MessageCircle,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
-import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
-import { useCurrency, type CurrencyCode } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import { OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/opentoken")({
   head: () => ({ meta: [{ title: "Home — OpenPay Pro" }] }),
@@ -36,7 +34,6 @@ const TOP_TABS: { id: TopTab; label: string; icon?: LucideIcon }[] = [
 
 function OpenTokenHome() {
   const { user } = Route.useRouteContext();
-  const { code: currency } = useCurrency();
   const [topTab, setTopTab] = useState<TopTab>("home");
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -52,80 +49,9 @@ function OpenTokenHome() {
     },
   });
 
-  const { data: wallet } = useQuery({
-    queryKey: ["active-wallet", user.id],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("wallets")
-          .select("ousd_balance")
-          .eq("user_id", user.id)
-          .order("is_active", { ascending: false })
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle()
-      ).data,
-  });
-
-  const { data: tokens = [], isLoading } = useQuery({
-    queryKey: ["ot-tokens"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tokens")
-        .select("*")
-        .eq("is_hidden", false)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) {
-        const { data: fallback } = await supabase
-          .from("tokens")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(200);
-        return fallback ?? [];
-      }
-      return data ?? [];
-    },
-  });
-
-  const filtered = useMemo(() => {
-    let l = tokens as any[];
-    if (q) {
-      const qq = q.toLowerCase();
-      l = l.filter(
-        (t) => t.name?.toLowerCase().includes(qq) || t.symbol?.toLowerCase().includes(qq),
-      );
-    }
-    return l;
-  }, [tokens, q]);
-
-  const trending = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const volDiff = Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
-      if (volDiff !== 0) return volDiff;
-      return Math.abs(Number(b.change_24h ?? 0)) - Math.abs(Number(a.change_24h ?? 0));
-    });
-  }, [filtered]);
-
-  const majors = useMemo(() => {
-    const verified = filtered.filter((t) => t.is_verified || t.status === "graduated");
-    const pool = verified.length > 0 ? verified : filtered;
-    return [...pool].sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0)).slice(0, 12);
-  }, [filtered]);
-
-  const exploreList = useMemo(() => {
-    return [...filtered].sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0));
-  }, [filtered]);
-
-  const ousdBal = Number(wallet?.ousd_balance ?? 0);
-  const showWelcome = ousdBal <= 0 && !q;
-
-  const listForTab =
-    topTab === "home" ? null : topTab === "trade" ? trending : exploreList;
-
   return (
-    <div className="ot-phantom relative mx-auto w-full max-w-lg animate-page-in md:max-w-2xl">
-      {/* Phantom-style pill header */}
+    <div className="ot-phantom relative mx-auto flex w-full max-w-lg flex-col md:max-w-2xl">
+      {/* Header — pill tabs only */}
       <div className="ph-header sticky top-0 z-30 -mx-4 px-3 pb-3 pt-2 md:mx-0 md:rounded-2xl">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <Link
@@ -185,98 +111,45 @@ function OpenTokenHome() {
         </div>
       </div>
 
-      {/* HOME tab — Phantom Explore Home */}
-      {topTab === "home" && (
-        <div className="space-y-8">
-          {showWelcome && (
-            <section className="flex flex-col items-center px-2 pt-4 text-center">
-              <div className="relative mb-5 grid h-36 w-36 place-items-center">
-                <div className="absolute inset-0 rounded-4xl bg-primary/20 blur-2xl" />
-                <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-3xl bg-linear-to-br from-primary/40 via-primary/25 to-primary/10 shadow-glow">
-                  <img
-                    src={OPENPAY_NETWORK_BADGE_URL}
-                    alt=""
-                    className="h-20 w-20 object-contain"
-                    aria-hidden
-                  />
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">Welcome to OpenPay Pro</h1>
-              <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                Add cash or crypto to start trading
-              </p>
-              <Button
-                asChild
-                className="mt-5 h-12 min-w-50 rounded-full bg-primary px-8 text-base font-bold text-primary-foreground"
-              >
-                <Link
-                  to="/topup"
-                  search={{
-                    openpay_charge: undefined,
-                    openpay_ref: undefined,
-                    openpay_tx: undefined,
-                    openpay_return: undefined,
-                    openpay_cancel: undefined,
-                  }}
-                >
-                  Add Funds
-                </Link>
-              </Button>
-            </section>
-          )}
+      {/* Body — buttons only (no token cards / list rows) */}
+      <div className="flex flex-1 flex-col justify-center gap-3 px-1 pb-28 pt-6">
+        {topTab === "home" && (
+          <>
+            <p className="mb-2 text-center text-sm text-muted-foreground">
+              OpenToken · pick an action
+            </p>
+            <ActionButton to="/topup" label="Add Funds" primary />
+            <ActionButton to="/swap" label="OpenDEX Swap" icon={ArrowLeftRight} />
+            <ActionButton to="/opentoken/create" label="Create coin" icon={Plus} />
+            <ActionButton to="/opentoken/terminal" label="Terminal" icon={Sparkles} />
+            <ActionButton to="/opentoken/portfolio" label="Portfolio" icon={Wallet} />
+            <ActionButton to="/watchlist" label="Watchlist" icon={Star} />
+            <ActionButton to="/chat" label="Live Chat" icon={MessageCircle} />
+          </>
+        )}
 
-          <TokenSection
-            title="Trending"
-            onTitleClick={() => setTopTab("trade")}
-            loading={isLoading}
-            tokens={trending}
-            currency={currency}
-            empty="No trending tokens yet"
-          />
+        {topTab === "trade" && (
+          <>
+            <p className="mb-2 text-center text-sm text-muted-foreground">Trade</p>
+            <ActionButton to="/opentoken/terminal" label="Open Terminal" primary icon={Sparkles} />
+            <ActionButton to="/swap" label="OpenDEX Swap" icon={ArrowLeftRight} />
+            <ActionButton to="/opentoken/create" label="Create coin" icon={Plus} />
+            <ActionButton to="/opentoken/portfolio" label="Portfolio" icon={Wallet} />
+          </>
+        )}
 
-          <TokenSection
-            title="Majors"
-            loading={isLoading}
-            tokens={majors}
-            currency={currency}
-            empty="No major tokens yet"
-          />
-        </div>
-      )}
+        {topTab === "explore" && (
+          <>
+            <p className="mb-2 text-center text-sm text-muted-foreground">Explore</p>
+            <ActionButton to="/opentoken/terminal" label="Browse Terminal" primary icon={Compass} />
+            <ActionButton to="/watchlist" label="Watchlist" icon={Star} />
+            <ActionButton to="/chat" label="Live Chat" icon={MessageCircle} />
+            <ActionButton to="/wiki" label="OpenPay Wiki" icon={Compass} />
+          </>
+        )}
+      </div>
 
-      {/* TRADE / EXPLORE — full lists */}
-      {topTab !== "home" && (
-        <div>
-          <div className="mb-3 flex items-center justify-between px-1">
-            <h2 className="text-lg font-bold">
-              {topTab === "trade" ? "Trending" : "Explore"}
-            </h2>
-            <Button asChild variant="ghost" size="sm" className="rounded-full text-primary">
-              <Link to="/swap">OpenDEX</Link>
-            </Button>
-          </div>
-          {isLoading ? (
-            <TokenSkeleton count={8} />
-          ) : (listForTab ?? []).length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-sm text-muted-foreground">No tokens found</p>
-              <Button asChild className="mt-4 rounded-full">
-                <Link to="/opentoken/create">Create coin</Link>
-              </Button>
-            </div>
-          ) : (
-            <ul>
-              {(listForTab ?? [])
-                .filter((t: any) => t?.id)
-                .map((t: any) => (
-                  <TokenRow key={String(t.id)} token={t} currency={currency} />
-                ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {/* Floating search + mint — Home / Trade / Explore */}
+      {/* Footer dock — search + mint (buttons, not cards) */}
       <ExploreDock
         query={q}
         onQueryChange={setQ}
@@ -287,100 +160,41 @@ function OpenTokenHome() {
   );
 }
 
-function TokenSection({
-  title,
-  tokens,
-  loading,
-  currency,
-  empty,
-  onTitleClick,
+function ActionButton({
+  to,
+  label,
+  primary,
+  icon: Icon,
 }: {
-  title: string;
-  tokens: any[];
-  loading: boolean;
-  currency: CurrencyCode;
-  empty: string;
-  onTitleClick?: () => void;
+  to: string;
+  label: string;
+  primary?: boolean;
+  icon?: LucideIcon;
 }) {
-  return (
-    <section>
-      {onTitleClick ? (
-        <button
-          type="button"
-          onClick={onTitleClick}
-          className="mb-1 flex items-center gap-0.5 px-1 text-left press"
-        >
-          <h2 className="text-lg font-bold">{title}</h2>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden />
-        </button>
-      ) : (
-        <h2 className="mb-1 px-1 text-lg font-bold">{title}</h2>
-      )}
-      {loading ? (
-        <TokenSkeleton count={5} />
-      ) : tokens.length === 0 ? (
-        <p className="px-1 py-8 text-sm text-muted-foreground">{empty}</p>
-      ) : (
-        <ul>
-          {tokens
-            .filter((t) => t?.id)
-            .map((t) => (
-              <TokenRow key={String(t.id)} token={t} currency={currency} />
-            ))}
-        </ul>
-      )}
-    </section>
-  );
-}
+  const topupSearch =
+    to === "/topup"
+      ? {
+          openpay_charge: undefined,
+          openpay_ref: undefined,
+          openpay_tx: undefined,
+          openpay_return: undefined,
+          openpay_cancel: undefined,
+        }
+      : undefined;
 
-function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }) {
-  const change = Number(t.change_24h ?? 0);
-  const price = Number(t.price_usd ?? 0);
   return (
-    <li>
-      <Link
-        to="/opentoken/$tokenId"
-        params={{ tokenId: t.id }}
-        className="flex items-center gap-3 py-3 press"
-      >
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted">
-          {t.logo_url ? (
-            <img src={t.logo_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="grid h-full w-full place-items-center bg-primary/20 text-xs font-bold text-primary">
-              {t.symbol?.slice(0, 2)}
-            </div>
-          )}
-          {t.is_verified && (
-            <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-semibold">{t.name}</div>
-          <div className="text-xs text-muted-foreground">{t.symbol}</div>
-        </div>
-        <TokenPriceRate price={price} change={change} currency={currency} />
-      </Link>
-    </li>
-  );
-}
-
-function TokenSkeleton({ count }: { count: number }) {
-  return (
-    <div className="space-y-1">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-3">
-          <div className="h-11 w-11 rounded-full bg-muted" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3.5 w-24 rounded bg-muted" />
-            <div className="h-3 w-12 rounded bg-muted" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3.5 w-14 rounded bg-muted" />
-            <div className="h-3.5 w-12 rounded bg-muted" />
-          </div>
-        </div>
-      ))}
-    </div>
+    <Link
+      to={to}
+      search={topupSearch}
+      className={cn(
+        "flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold press",
+        primary
+          ? "bg-primary text-primary-foreground shadow-[0_12px_32px_-16px_hsl(var(--primary))]"
+          : "bg-muted text-foreground hover:bg-muted/80",
+      )}
+    >
+      {Icon ? <Icon className="h-5 w-5" strokeWidth={2.1} /> : null}
+      {label}
+    </Link>
   );
 }

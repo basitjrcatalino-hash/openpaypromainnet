@@ -304,10 +304,12 @@ function AuthenticatedLayout() {
         {!hideChrome && (
           <nav
             className={cn(
-              "ph-tabbar fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out md:hidden",
-              chromeVisible ? "translate-y-0" : "translate-y-full",
+              "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
+              chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
+              mobileOpen && "pointer-events-none opacity-0",
             )}
             aria-label="Primary"
+            aria-hidden={mobileOpen || !chromeVisible}
           >
             <div
               className="mx-auto flex max-w-md items-center gap-0 overflow-x-auto overscroll-x-contain px-1.5 scrollbar-none [-webkit-overflow-scrolling:touch]"

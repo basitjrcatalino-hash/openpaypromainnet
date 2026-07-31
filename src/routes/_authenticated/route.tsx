@@ -689,7 +689,26 @@ function SidebarInner({
             Ledger API
           </Link>
         )}
-        {developerMode && (
+        {isAdmin && (
+          <Link
+            to="/admin/topup"
+            onClick={onClose}
+            preload="intent"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+              pathname === "/admin/topup"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+            )}
+          >
+            <CircleDollarSign
+              className={cn("h-5 w-5", pathname === "/admin/topup" && "ph-tab-icon-active")}
+              strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
+            />
+            Admin · Top Up &amp; Buy
+          </Link>
+        )}
+        {(developerMode || isAdmin) && (
           <Link
             to="/admin/deposits"
             onClick={onClose}

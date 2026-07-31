@@ -929,3 +929,51 @@ html.solana-pay-open body > div[style*="z-index:50"] {
     letter-spacing: -0.022em;
   }
 }
+
+/* ---------------------------------------------------------------
+   OpenPay Pro blog — Phantom-style editorial surface (always light)
+   --------------------------------------------------------------- */
+.opblog,
+.dark .opblog {
+  --background: #fdfcf7;
+  --foreground: #3d2e63;
+  --card: #ffffff;
+  --card-foreground: #3d2e63;
+  --muted: #f1eef9;
+  --muted-foreground: #7c718f;
+  --primary: #ab9ff2;
+  --primary-foreground: #2b1f4a;
+  --border: #e9e5f5;
+  --accent: #efecfd;
+  --accent-foreground: #3d2e63;
+
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-phantom);
+}
+
+.opblog-title {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  font-size: clamp(2.25rem, 5.2vw, 3.75rem);
+}
+
+.opblog-h2 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+}
+
+.opblog-dek {
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+.opblog-body p {
+  font-size: 1.125rem;
+  line-height: 1.72;
+  letter-spacing: -0.006em;
+}

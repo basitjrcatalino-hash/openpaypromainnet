@@ -7,6 +7,7 @@ import {
   WITHDRAWAL_TREASURY_ADDRESS,
   WITHDRAWAL_TREASURY_USERNAME,
   isValidDestinationAddress,
+  type WithdrawalDestKind,
 } from "@/lib/withdraw-ousd";
 
 function round8(n: number) {
@@ -62,18 +63,27 @@ async function resolveWithdrawalTreasury(admin: any): Promise<{
   return byUser ?? null;
 }
 
-const CreateSchema = z.object({
-  amount: z.number().positive().max(1e12),
-  destination_address: z
-    .string()
-    .trim()
-    .min(20)
-    .max(128)
-    .refine(isValidDestinationAddress, "Enter a valid Pi / OUSD wallet address"),
-  note: z.string().trim().max(500).nullable().optional(),
-  display_name: z.string().trim().max(80).nullable().optional(),
-  username: z.string().trim().max(40).nullable().optional(),
-});
+const CreateSchema = z
+  .object({
+    amount: z.number().positive().max(1e12),
+    destination_kind: z.enum(["pi", "openpay"]),
+    destination_address: z.string().trim().min(6).max(128),
+    note: z.string().trim().max(500).nullable().optional(),
+    display_name: z.string().trim().max(80).nullable().optional(),
+    username: z.string().trim().max(40).nullable().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (!isValidDestinationAddress(v.destination_address, v.destination_kind)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["destination_address"],
+        message:
+          v.destination_kind === "openpay"
+            ? "Enter a valid OpenPay address starting with OP"
+            : "Enter a valid Pi mainnet wallet address (G…)",
+      });
+    }
+  });
 
 export const getWithdrawContext = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -124,6 +134,7 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
     }
 
     const dest = data.destination_address.trim();
+    const destKind = data.destination_kind as WithdrawalDestKind;
     const admin = await getAdmin();
     const { fetchActiveWallet } = await import("./wallet-utils");
     const wallet = await fetchActiveWallet<{
@@ -161,8 +172,11 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
       );
     }
 
-    if (dest.toLowerCase() === String(wallet.address).toLowerCase()) {
-      throw new Error("Destination cannot be your OpenPay Pro wallet — use your Pi mainnet OUSD address");
+    if (destKind === "pi" && dest.toLowerCase() === String(wallet.address).toLowerCase()) {
+      throw new Error("Destination cannot be your OpenPay Pro wallet — use your Pi mainnet address");
+    }
+    if (destKind === "openpay" && !/^OP/i.test(dest)) {
+      throw new Error("OpenPay destination must start with OP");
     }
 
     const nextUser = round8(bal - amount);
@@ -197,6 +211,7 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
         wallet_id: wallet.id,
         amount,
         destination_address: dest,
+        destination_kind: destKind,
         display_name: displayName,
         username,
         note,
@@ -226,8 +241,8 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
           amount,
           usd_value: amount,
           memo: note
-            ? `OUSD withdraw → ${dest} · ${note}`
-            : `OUSD withdraw → ${dest}`,
+            ? `OUSD withdraw (${destKind}) → ${dest} · ${note}`
+            : `OUSD withdraw (${destKind}) → ${dest}`,
         },
         {
           wallet_id: treasury.id,
@@ -237,7 +252,7 @@ export const createOusdWithdrawal = createServerFn({ method: "POST" })
           counterparty: wallet.address,
           amount,
           usd_value: amount,
-          memo: `Withdrawal lock from @${username || "user"} · pending payout to ${dest}`,
+          memo: `Withdrawal lock from @${username || "user"} · ${destKind} payout to ${dest}`,
         },
       ]);
     } catch (e) {
@@ -254,7 +269,7 @@ export const listMyWithdrawals = createServerFn({ method: "GET" })
     const { data, error } = await (supabase as any)
       .from("ousd_withdrawals")
       .select(
-        "id, amount, destination_address, display_name, username, note, status, admin_note, payout_tx_hash, created_at, updated_at, reviewed_at",
+        "id, amount, destination_address, destination_kind, display_name, username, note, status, admin_note, payout_tx_hash, created_at, updated_at, reviewed_at",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })

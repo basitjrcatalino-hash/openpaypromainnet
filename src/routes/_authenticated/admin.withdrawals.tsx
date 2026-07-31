@@ -210,10 +210,13 @@ function AdminWithdrawalsPage() {
                         <span className="text-muted-foreground">
                           @{r.username || "unknown"}
                         </span>
+                        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {r.destination_kind === "openpay" ? "OpenPay OP…" : "Pi"}
+                        </span>
                       </p>
                       <button
                         type="button"
-                        className="flex items-center gap-1.5 font-mono text-xs text-primary hover:underline"
+                        className="flex items-center gap-1.5 break-all font-mono text-xs text-primary hover:underline"
                         onClick={() => void copyAddr(String(r.destination_address))}
                       >
                         {r.destination_address}

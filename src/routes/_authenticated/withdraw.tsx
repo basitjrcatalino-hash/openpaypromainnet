@@ -32,7 +32,11 @@ import {
 import {
   WITHDRAWAL_MIN_OUSD,
   WITHDRAWAL_TREASURY_ADDRESS,
+  WITHDRAWAL_DEST_KINDS,
   extractAddressFromScan,
+  isValidDestinationAddress,
+  detectDestinationKind,
+  type WithdrawalDestKind,
 } from "@/lib/withdraw-ousd";
 
 export const Route = createFileRoute("/_authenticated/withdraw")({
@@ -61,11 +65,14 @@ function WithdrawPage() {
   const min = ctxQ.data?.min_ousd ?? WITHDRAWAL_MIN_OUSD;
 
   const [amount, setAmount] = useState("");
+  const [destKind, setDestKind] = useState<WithdrawalDestKind>("pi");
   const [dest, setDest] = useState("");
   const [note, setNote] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [hydrated, setHydrated] = useState(false);
+
+  const destMeta = WITHDRAWAL_DEST_KINDS.find((k) => k.id === destKind) ?? WITHDRAWAL_DEST_KINDS[0];
 
   useEffect(() => {
     if (!ctxQ.data || hydrated) return;
@@ -73,7 +80,11 @@ function WithdrawPage() {
     setName(ctxQ.data.profile.display_name ?? "");
     setUsername(ctxQ.data.profile.username ?? "");
     if (ctxQ.data.profile.pi_wallet_address) {
-      setDest(ctxQ.data.profile.pi_wallet_address);
+      const pi = ctxQ.data.profile.pi_wallet_address;
+      setDest(pi);
+      const detected = detectDestinationKind(pi);
+      if (detected) setDestKind(detected);
+      else setDestKind("pi");
     }
   }, [ctxQ.data, hydrated]);
 
@@ -82,13 +93,14 @@ function WithdrawPage() {
     Number.isFinite(amtNum) &&
     amtNum >= min &&
     amtNum <= bal + 1e-12 &&
-    dest.trim().length >= 20;
+    isValidDestinationAddress(dest, destKind);
 
   const createM = useMutation({
     mutationFn: () =>
       createW({
         data: {
           amount: amtNum,
+          destination_kind: destKind,
           destination_address: dest.trim(),
           note: note.trim() || null,
           display_name: name.trim() || null,
@@ -124,7 +136,7 @@ function WithdrawPage() {
     <div className="mx-auto max-w-lg pb-24">
       <PageHeader title="Withdraw OUSD" backTo="/wallet" />
       <p className="mb-4 text-sm text-muted-foreground">
-        Cash out to your Pi mainnet OUSD wallet. Minimum {min} OUSD.
+        Cash out to Pi or OpenPay (OP…). Minimum {min} OUSD.
       </p>
 
       <Card className="mb-6 space-y-4 border-border p-5">
@@ -181,15 +193,50 @@ function WithdrawPage() {
         </div>
 
         <div className="space-y-2">
+          <Label>Withdraw to</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {WITHDRAWAL_DEST_KINDS.map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => {
+                  setDestKind(k.id);
+                  setDest("");
+                }}
+                className={cn(
+                  "rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors",
+                  destKind === k.id
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60",
+                )}
+              >
+                {k.label}
+                <span className="mt-0.5 block text-[11px] font-normal opacity-80">{k.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="wd-dest">Pi mainnet OUSD wallet</Label>
+            <Label htmlFor="wd-dest">
+              {destKind === "openpay" ? "OpenPay address (OP…)" : "Pi mainnet wallet"}
+            </Label>
             <QrScannerButton
-              hint="Scan destination wallet QR"
+              hint={
+                destKind === "openpay"
+                  ? "Scan OpenPay OP… address QR"
+                  : "Scan Pi wallet QR"
+              }
               onResult={(text) => {
                 const addr = extractAddressFromScan(text);
                 if (!addr) {
                   toast.error("Could not read address from QR");
                   return;
+                }
+                const detected = detectDestinationKind(addr);
+                if (detected && detected !== destKind) {
+                  setDestKind(detected);
                 }
                 setDest(addr);
                 toast.success("Address scanned");
@@ -205,14 +252,23 @@ function WithdrawPage() {
           <Input
             id="wd-dest"
             value={dest}
-            onChange={(e) => setDest(e.target.value.trim())}
-            placeholder="0x… or Pi G… address"
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              setDest(v);
+              const detected = detectDestinationKind(v);
+              if (detected) setDestKind(detected);
+            }}
+            placeholder={destMeta.placeholder}
             className="font-mono text-sm"
+            autoCapitalize="characters"
           />
           <p className="text-xs text-muted-foreground">
+            {destKind === "openpay"
+              ? "OpenPay accounts start with OP (example: OPxxxxxxxx)."
+              : "Use your Pi Network mainnet wallet address (usually starts with G)."}{" "}
             Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
             {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}) until
-            admin pays out to this address.
+            admin pays out.
           </p>
         </div>
 
@@ -273,7 +329,10 @@ function WithdrawPage() {
                       {formatNumber(Number(r.amount), 2)} OUSD
                     </p>
                     <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-                      → {shortAddress(String(r.destination_address), 8, 6)}
+                      → {String(r.destination_address)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                      {r.destination_kind === "openpay" ? "OpenPay (OP…)" : "Pi"}
                     </p>
                     {r.note ? (
                       <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{r.note}</p>

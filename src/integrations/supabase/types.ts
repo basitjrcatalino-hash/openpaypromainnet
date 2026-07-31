@@ -127,6 +127,7 @@ export type Database = {
           username: string | null
           note: string | null
           status: string
+          destination_kind: string | null
           treasury_address: string
           treasury_wallet_id: string | null
           admin_note: string | null
@@ -146,6 +147,7 @@ export type Database = {
           username?: string | null
           note?: string | null
           status?: string
+          destination_kind?: string | null
           treasury_address?: string
           treasury_wallet_id?: string | null
           admin_note?: string | null
@@ -165,6 +167,7 @@ export type Database = {
           username?: string | null
           note?: string | null
           status?: string
+          destination_kind?: string | null
           treasury_address?: string
           treasury_wallet_id?: string | null
           admin_note?: string | null

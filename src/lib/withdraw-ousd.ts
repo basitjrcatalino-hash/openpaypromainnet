@@ -7,16 +7,62 @@ export const WITHDRAWAL_MIN_OUSD = 10;
 
 export type WithdrawalStatus = "pending" | "completed" | "rejected" | "cancelled";
 
-export function isValidDestinationAddress(raw: string): boolean {
+/** Destination rail: Pi Network wallet or OpenPay account (OP…). */
+export type WithdrawalDestKind = "pi" | "openpay";
+
+export const WITHDRAWAL_DEST_KINDS: {
+  id: WithdrawalDestKind;
+  label: string;
+  hint: string;
+  placeholder: string;
+}[] = [
+  {
+    id: "pi",
+    label: "Pi",
+    hint: "Pi mainnet wallet (G… address)",
+    placeholder: "G… Pi wallet address",
+  },
+  {
+    id: "openpay",
+    label: "OpenPay",
+    hint: "OpenPay account address (starts with OP)",
+    placeholder: "OPxxxxxxxx",
+  },
+];
+
+const PI_ADDR_RE = /^G[A-Z2-7]{55}$/;
+const OPENPAY_OP_RE = /^OP[A-Za-z0-9]{4,64}$/i;
+
+export function isValidPiDestination(raw: string): boolean {
   const t = raw.trim();
   if (!t) return false;
-  // OpenPay / EVM
-  if (/^0x[a-fA-F0-9]{40}$/.test(t)) return true;
-  // Pi / Stellar-style
-  if (/^G[A-Z2-7]{55}$/.test(t)) return true;
-  // Generic mainnet wallet (allow paste of other formats)
-  if (/^[a-zA-Z0-9:._-]{20,128}$/.test(t) && !/\s/.test(t)) return true;
+  if (PI_ADDR_RE.test(t)) return true;
+  // Some Pi wallets paste longer mainnet ids
+  if (/^[A-Z0-9]{20,128}$/i.test(t) && !t.startsWith("0x") && !/^OP/i.test(t)) return true;
   return false;
+}
+
+export function isValidOpenPayDestination(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return false;
+  return OPENPAY_OP_RE.test(t);
+}
+
+export function isValidDestinationAddress(
+  raw: string,
+  kind?: WithdrawalDestKind | null,
+): boolean {
+  if (kind === "pi") return isValidPiDestination(raw);
+  if (kind === "openpay") return isValidOpenPayDestination(raw);
+  return isValidPiDestination(raw) || isValidOpenPayDestination(raw);
+}
+
+export function detectDestinationKind(raw: string): WithdrawalDestKind | null {
+  const t = raw.trim();
+  if (!t) return null;
+  if (isValidOpenPayDestination(t)) return "openpay";
+  if (isValidPiDestination(t)) return "pi";
+  return null;
 }
 
 export function extractAddressFromScan(text: string): string {
@@ -29,7 +75,8 @@ export function extractAddressFromScan(text: string): string {
         u.searchParams.get("address") ||
         u.searchParams.get("to") ||
         u.searchParams.get("recipient") ||
-        u.searchParams.get("wallet");
+        u.searchParams.get("wallet") ||
+        u.searchParams.get("account");
       if (q) return q.trim();
       const pathSeg = u.pathname.split("/").filter(Boolean).pop();
       if (pathSeg && isValidDestinationAddress(pathSeg)) return pathSeg.trim();
@@ -37,8 +84,7 @@ export function extractAddressFromScan(text: string): string {
   } catch {
     /* plain text */
   }
-  // openpay://pay?to=0x… or similar
-  const m = raw.match(/(0x[a-fA-F0-9]{40}|G[A-Z2-7]{55})/);
+  const m = raw.match(/(OP[A-Za-z0-9]{4,64}|G[A-Z2-7]{55}|0x[a-fA-F0-9]{40})/i);
   if (m) return m[1];
   return raw;
 }

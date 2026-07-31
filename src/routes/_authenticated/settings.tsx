@@ -38,9 +38,14 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { ManageWalletsSheet } from "@/components/wallet/ManageWalletsSheet";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
+import { LanguagePickerSheet } from "@/components/wallet/LanguagePickerSheet";
 import { useTheme } from "@/components/theme-provider";
 import { PhantomSettingsRows } from "@/components/phantom-settings";
 import { currencyListLabel, getCurrencyMeta, useCurrency, type CurrencyCode } from "@/lib/currency";
+import { useLanguage } from "@/lib/language";
+import { getLanguageMeta } from "@/i18n/languages";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import {
   createFreshRecoveryWallet,
@@ -111,6 +116,7 @@ async function sha256(text: string): Promise<string> {
 
 function SettingsPage() {
   const { user } = Route.useRouteContext();
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const qc = useQueryClient();
   const router = useRouter();
@@ -124,7 +130,9 @@ function SettingsPage() {
   const [addTab, setAddTab] = useState<"create" | "import">("create");
   const [manageOpen, setManageOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const { code: displayCurrency, setCode: setDisplayCurrency } = useCurrency();
+  const { code: displayLanguage, setCode: setDisplayLanguage } = useLanguage();
   const [signingOut, setSigningOut] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -499,7 +507,7 @@ function SettingsPage() {
 
   return (
     <div className="ot-phantom ph-page mx-auto max-w-lg space-y-6 pb-8 md:max-w-2xl">
-      <PageHeader title="Settings" />
+      <PageHeader title={t("settings.title")} />
       <p className="-mt-2 text-center text-sm text-muted-foreground md:text-left">
         Manage wallets, security, and connections
       </p>
@@ -507,7 +515,7 @@ function SettingsPage() {
       {/* Account */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Account
+          {t("settings.account")}
         </h2>
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <h2 className="mb-4 text-sm font-semibold">Profile</h2>
@@ -591,7 +599,7 @@ function SettingsPage() {
       {/* Wallets — Phantom-style drawer selection */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Wallets
+          {t("settings.wallets")}
         </h2>
         <div className="overflow-hidden rounded-2xl bg-card">
           <button
@@ -702,6 +710,17 @@ function SettingsPage() {
           onSelect={(code) => {
             setDisplayCurrency(code);
             void updatePref({ currency: code });
+          }}
+        />
+
+        <LanguagePickerSheet
+          open={languageOpen}
+          onOpenChange={setLanguageOpen}
+          value={prefs?.language || displayLanguage || "en"}
+          onSelect={(code) => {
+            setDisplayLanguage(code);
+            void updatePref({ language: code });
+            toast.success(t("language.updated"));
           }}
         />
 
@@ -938,7 +957,7 @@ function SettingsPage() {
       {/* Security */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Security
+          {t("settings.security")}
         </h2>
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
@@ -977,27 +996,27 @@ function SettingsPage() {
       {/* Preferences */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Preferences
+          {t("settings.preferences")}
         </h2>
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <SettingRow label="Theme" desc="Choose how OpenPay looks">
+            <SettingRow label={t("settings.theme")} desc={t("settings.themeDesc")}>
               <div className="inline-flex rounded-full border border-border bg-card p-1">
-                {(["light", "dark"] as const).map((t) => (
+                {(["light", "dark"] as const).map((mode) => (
                   <button
-                    key={t}
+                    key={mode}
                     onClick={() => {
-                      setTheme(t);
-                      updatePref({ theme: t });
+                      setTheme(mode);
+                      updatePref({ theme: mode });
                     }}
-                    className={`rounded-full px-3 py-1 text-xs capitalize ${theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`rounded-full px-3 py-1 text-xs capitalize ${theme === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                   >
-                    {t}
+                    {mode === "light" ? t("settings.light") : t("settings.dark")}
                   </button>
                 ))}
               </div>
             </SettingRow>
-            <SettingRow label="Currency" desc="Display fiat values in">
+            <SettingRow label={t("settings.currency")} desc={t("settings.currencyDesc")}>
               <button
                 type="button"
                 onClick={() => setCurrencyOpen(true)}
@@ -1009,19 +1028,19 @@ function SettingsPage() {
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </button>
             </SettingRow>
-            <SettingRow label="Language" desc="Interface language">
-              <select
-                value={prefs?.language ?? "en"}
-                onChange={(e) => updatePref({ language: e.target.value })}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            <SettingRow label={t("settings.language")} desc={t("settings.languageDesc")}>
+              <button
+                type="button"
+                onClick={() => setLanguageOpen(true)}
+                className="flex h-9 max-w-[14rem] items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
               >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-              </select>
+                <span className="truncate">
+                  {getLanguageMeta(prefs?.language || displayLanguage || "en").nativeName}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
             </SettingRow>
-            <SettingRow label="Price alerts" desc="Notify on big moves">
+            <SettingRow label={t("settings.priceAlerts")} desc={t("settings.priceAlertsDesc")}>
               <Switch
                 checked={
                   (prefs?.notifications as Record<string, boolean> | null)?.price_alerts ?? true
@@ -1036,7 +1055,7 @@ function SettingsPage() {
                 }
               />
             </SettingRow>
-            <SettingRow label="Transaction alerts" desc="Notify on send, receive & top-ups">
+            <SettingRow label={t("settings.txAlerts")} desc={t("settings.txAlertsDesc")}>
               <Switch
                 checked={
                   (prefs?.notifications as Record<string, boolean> | null)?.tx_alerts ?? true
@@ -1052,8 +1071,8 @@ function SettingsPage() {
               />
             </SettingRow>
             <SettingRow
-              label="Lock-screen push"
-              desc="System notifications when phone is locked or app is closed (Phantom-style)"
+              label={t("settings.lockPush")}
+              desc={t("settings.lockPushDesc")}
             >
               <Switch
                 checked={
@@ -1092,8 +1111,8 @@ function SettingsPage() {
               />
             </SettingRow>
             <SettingRow
-              label="Email alerts"
-              desc="Email every confirmed transaction to your account email"
+              label={t("settings.emailAlerts")}
+              desc={t("settings.emailAlertsDesc")}
             >
               <Switch
                 checked={
@@ -1116,7 +1135,7 @@ function SettingsPage() {
       {/* Connected */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Connected
+          {t("settings.connected")}
         </h2>
         <OpenPayIntegrationCard userId={user.id} />
 
@@ -1176,9 +1195,26 @@ function SettingsPage() {
       {/* Legal */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Legal
+          {t("settings.legal")}
         </h2>
         <ul className="overflow-hidden rounded-2xl bg-card">
+          <li className="border-b border-border/60">
+            <Link
+              to="/about"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/40"
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground">
+                <BookOpen className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">About OpenPay Pro</span>
+                <span className="block text-xs text-muted-foreground">
+                  An open network for wallets, APIs, and agents
+                </span>
+              </span>
+              <span className="text-muted-foreground">›</span>
+            </Link>
+          </li>
           <li className="border-b border-border/60">
             <Link
               to="/terms"
@@ -1238,7 +1274,7 @@ function SettingsPage() {
       {/* Account */}
       <section className="space-y-2">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Account
+          {t("settings.account")}
         </h2>
         <ul className="overflow-hidden rounded-2xl bg-card">
           <PhantomSettingsRows />

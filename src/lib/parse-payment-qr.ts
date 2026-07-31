@@ -113,13 +113,14 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
 }
 
 /**
- * Accepts:
+ * Accepts OpenPay Pro wallet receive QRs for every Pro token:
  * - Raw Pro wallet `0x…`
- * - Solana base58 addresses / `solana:…` URIs
- * - `openpay:0x…?asset=OUSD&amount=10` (OpenPay Pro receive QR)
- * - `openpaypro:0x…` / `ethereum:0x…`
- * - OpenPay `OP…` account, `@username`, email
- * - `https://openpy.space/pay/@user` / pay links
+ * - `https://openpaypro.space/pay/0x…?asset=OUSD|PI|BTC|…`
+ * - `https://openpaypro.space/pay/0x…?token=<OpenToken uuid>&asset=SYM`
+ * - Legacy `openpay:0x…?asset=…&token=…`
+ * - `openpaypro:` / `ethereum:` schemes
+ * - OpenPay `OP…` account, `@username`, email (Send flow)
+ * - `https://openpy.space/pay/@user` pay links
  */
 export function parsePaymentQr(text: string): ParsedPaymentQr {
   const raw = text
@@ -137,8 +138,13 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
     return fromParts(raw.replace(/\s/g, ""));
   }
 
-  // HTTP(S) OpenPay / Pro pay links
-  if (/^https?:\/\//i.test(raw) || raw.includes("openpy.space") || raw.includes("/pay/")) {
+  // HTTP(S) OpenPay / Pro pay links (all token assets via ?asset= / ?token=)
+  if (
+    /^https?:\/\//i.test(raw) ||
+    raw.includes("openpy.space") ||
+    raw.includes("openpaypro.space") ||
+    raw.includes("/pay/")
+  ) {
     const http = parseHttpPayUrl(raw.startsWith("http") ? raw : `https://${raw}`);
     if (http?.to) return http;
   }

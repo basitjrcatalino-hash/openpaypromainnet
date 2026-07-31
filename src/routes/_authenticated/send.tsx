@@ -403,16 +403,7 @@ function SendPage() {
         },
         replace: true,
       });
-    } else if (
-      p.asset &&
-      (p.asset === "OUSD" ||
-        p.asset === "PI" ||
-        p.asset === "BTC" ||
-        p.asset === "ETH" ||
-        p.asset === "SOL" ||
-        p.asset === "USDC" ||
-        p.asset === "USDT")
-    ) {
+    } else if (p.asset) {
       setSelectedKey(p.asset);
     }
     // Auto-select rail from QR type (Pro wallet vs OpenPay)

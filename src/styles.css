@@ -977,3 +977,69 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   line-height: 1.72;
   letter-spacing: -0.006em;
 }
+
+/* ---------------------------------------------------------------
+   About — OpenPay Pro as an open network
+   --------------------------------------------------------------- */
+.opabout,
+.dark .opabout {
+  --background: #f7f5ff;
+  --foreground: #24183f;
+  --card: #ffffff;
+  --muted: #ece8f8;
+  --muted-foreground: #6f6588;
+  --primary: #7c6cf0;
+  --primary-foreground: #ffffff;
+  --border: #ddd5f0;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-phantom), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+.opabout-mesh {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 108, 240, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(171, 159, 242, 0.2), transparent 50%),
+    linear-gradient(180deg, #f7f5ff 0%, #f3f0fc 45%, #efeafc 100%);
+}
+
+.opabout-orb {
+  animation: opabout-float 9s ease-in-out infinite;
+}
+
+@keyframes opabout-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) scale(1.06);
+  }
+}
+
+.opabout-rise {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--rise-delay, 0ms);
+}
+
+.opabout-rise.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opabout-orb {
+    animation: none;
+  }
+  .opabout-rise {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

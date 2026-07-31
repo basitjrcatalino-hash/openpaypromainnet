@@ -22,7 +22,7 @@ type Props = {
 export function QrScannerButton({
   onResult,
   trigger,
-  hint = "Scan OpenPay Pro wallet, OpenPay OP account, or pay link",
+  hint = "Scan OpenPay Pro receive QR — any Pro token or OpenToken",
 }: Props) {
   const reactId = useId().replace(/:/g, "");
   const [open, setOpen] = useState(false);

@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/components/language-provider";
+import "@/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { SplashScreen } from "@/components/splash-screen";
 import { RouteProgress } from "@/components/wallet/RouteProgress";
@@ -206,7 +208,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Apply saved dashboard theme before paint so /docs and all routes match. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t!=="light";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("openpay-theme");var dark=t!=="light";document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";var l=localStorage.getItem("openpay_pro_language")||"en";document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";}catch(e){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}})();`,
           }}
         />
         {/* Early Buffer + EventEmitter so wallet SDKs never see undefined globals.
@@ -253,12 +255,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <LanguageProvider>
         <SplashScreen />
         <RouteProgress />
         <PageTransition disabled={inAppShell}>
           <Outlet />
         </PageTransition>
         <Toaster richColors position="top-right" />
+        </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -123,23 +123,61 @@ function ScanPage() {
       return;
     }
 
-    if (alive.current) {
-      toast.success(
-        parsed.rail === "openpay"
-          ? "OpenPay account scanned"
-          : parsed.kind === "pro_wallet"
-            ? "OpenPay Pro wallet scanned"
-            : "QR scanned",
-      );
+    // /scan is for OpenPay Pro wallet receive QRs (0x…) across all Pro tokens.
+    if (parsed.kind !== "pro_wallet") {
+      handled.current = false;
+      scanner.unlock();
+      setFlash(false);
+      if (alive.current) {
+        toast.error(
+          "Scan an OpenPay Pro wallet receive QR (any token). OpenPay @handles use Send → OpenPay.",
+        );
+      }
+      return;
     }
+
+    if (alive.current) {
+      const label = parsed.token
+        ? "OpenPay Pro token QR scanned"
+        : parsed.asset
+          ? `OpenPay Pro ${parsed.asset} QR scanned`
+          : "OpenPay Pro wallet scanned";
+      toast.success(label);
+    }
+
+    const sendSearch: {
+      to: string;
+      rail: "wallet";
+      amount?: string;
+      token?: string;
+      asset?:
+        | "OUSD"
+        | "PI"
+        | "BTC"
+        | "ETH"
+        | "SOL"
+        | "USDC"
+        | "USDT"
+        | "PYUSD"
+        | "USDG"
+        | "USD1"
+        | "CASH"
+        | "EURC";
+    } = {
+      to: parsed.to,
+      rail: "wallet",
+      ...(parsed.amount ? { amount: parsed.amount } : {}),
+    };
+
+    if (parsed.token) {
+      sendSearch.token = parsed.token;
+    } else {
+      sendSearch.asset = parsed.asset ?? "OUSD";
+    }
+
     void navigate({
       to: "/send",
-      search: {
-        to: parsed.to,
-        rail: parsed.rail,
-        ...(parsed.amount ? { amount: parsed.amount } : {}),
-        ...(parsed.asset ? { asset: parsed.asset } : { asset: "OUSD" as const }),
-      },
+      search: sendSearch,
     });
   };
 
@@ -286,7 +324,7 @@ function ScanPage() {
       {showMyQr && (
         <div className="absolute inset-0 z-[25] flex flex-col items-center justify-center bg-black px-6 pb-28 pt-20">
           <div className="w-full max-w-sm rounded-[1.75rem] bg-white p-6 text-center text-black shadow-2xl">
-            <p className="text-sm font-semibold text-neutral-500">Receive OUSD</p>
+            <p className="text-sm font-semibold text-neutral-500">Receive on OpenPay Pro</p>
             <p className="mt-1 text-lg font-bold">OpenPay Pro</p>
             {myQrUrl ? (
               <img
@@ -316,7 +354,7 @@ function ScanPage() {
             </button>
           </div>
           <p className="mt-5 max-w-xs text-center text-[13px] text-white/60">
-            Others can scan this to send you OUSD on OpenPay Pro
+            Others can scan this with OpenPay Pro Scan to send any Pro token to you
           </p>
         </div>
       )}
@@ -325,7 +363,7 @@ function ScanPage() {
       <div className="absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         {!showMyQr && (
           <p className="mx-auto mb-7 max-w-xs text-center text-[13px] font-medium leading-snug text-white/65">
-            Scan OpenPay, wallet address, or WalletConnect Pay
+            Scan OpenPay Pro receive QR — OUSD, majors, or any OpenToken
           </p>
         )}
 

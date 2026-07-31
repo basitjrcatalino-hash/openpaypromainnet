@@ -36,6 +36,7 @@ import {
   Code2,
   Newspaper,
   BookMarked,
+  Globe2,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -53,6 +54,8 @@ import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { PageTransition } from "@/components/wallet/PageTransition";
 import { CurrencyProvider } from "@/components/currency-provider";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
@@ -90,15 +93,15 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Home", icon: Compass },
-  { to: "/wallet", label: "Wallet", icon: Wallet },
-  { to: "/deposit", label: "Deposit", icon: ArrowDownToLine },
-  { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
-  { to: "/opentoken", label: "OpenToken", icon: BookOpen },
+  { to: "/dashboard", labelKey: "nav.home", icon: Compass },
+  { to: "/wallet", labelKey: "nav.wallet", icon: Wallet },
+  { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
+  { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },
+  { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen },
 
   // Bags Cash hidden for now — re-enable via BAGS_CASH_ENABLED above.
-  { to: "/activity", label: "History", icon: History },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/activity", labelKey: "nav.history", icon: History },
+  { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon },
 ] as const;
 
 /** Mobile bottom tab bar — Settings stays in the sidebar/menu only. */
@@ -119,6 +122,7 @@ function navActive(pathname: string, to: string) {
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
+  const { t } = useTranslation();
   // Re-render the whole shell (Outlet, sidebar, sheets) when display currency changes
   useCurrency();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -328,7 +332,7 @@ function AuthenticatedLayout() {
                       )}
                       strokeWidth={active ? 2.25 : 1.75}
                     />
-                    <span className="px-0.5">{item.label}</span>
+                    <span className="px-0.5">{t(item.labelKey)}</span>
                   </Link>
                 );
               })}
@@ -361,6 +365,7 @@ function CollapsedSidebar({
   onExpand: () => void;
   activeWallet?: { address: string; name: string } | null;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full flex-col items-center gap-1.5 py-2">
       {activeWallet ? (
@@ -392,7 +397,7 @@ function CollapsedSidebar({
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
-            title={item.label}
+            title={t(item.labelKey)}
           >
             <item.icon
               className={cn("h-5 w-5", active && "ph-tab-icon-active")}
@@ -443,6 +448,7 @@ function SidebarInner({
 }) {
   const { theme, toggle } = useTheme();
   const { developerMode, setDeveloperMode } = useDeveloperMode();
+  const { t } = useTranslation();
 
   const router = useRouter();
   const [hideBalance, setHideBalance] = useState(false);
@@ -620,7 +626,7 @@ function SidebarInner({
                 className={cn("h-5 w-5", active && "ph-tab-icon-active")}
                 strokeWidth={active ? 2.25 : 1.75}
               />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -647,7 +653,7 @@ function SidebarInner({
               pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75
             }
           />
-          Live Chat
+          {t("nav.liveChat")}
         </Link>
         <Link
           to="/watchlist"
@@ -670,8 +676,18 @@ function SidebarInner({
               pathname === "/watchlist" || pathname.startsWith("/watchlist/") ? 2.25 : 1.75
             }
           />
-          Watchlist
+          {t("nav.watchlist")}
         </Link>
+        <a
+          href="/about"
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+        >
+          <Globe2 className="h-5 w-5" strokeWidth={1.75} />
+          {t("nav.about")}
+        </a>
         <a
           href="/blog"
           target="_blank"
@@ -680,7 +696,7 @@ function SidebarInner({
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
         >
           <Newspaper className="h-5 w-5" strokeWidth={1.75} />
-          Blog
+          {t("nav.blog")}
         </a>
         <a
           href="/wiki"
@@ -690,7 +706,7 @@ function SidebarInner({
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
         >
           <BookMarked className="h-5 w-5" strokeWidth={1.75} />
-          Wiki
+          {t("nav.wiki")}
         </a>
         {developerMode && (
           <Link
@@ -708,7 +724,7 @@ function SidebarInner({
               className={cn("h-5 w-5", pathname === "/ledger" && "ph-tab-icon-active")}
               strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
             />
-            Ledger API
+            {t("nav.ledgerApi")}
           </Link>
         )}
         {isAdmin && (
@@ -746,7 +762,7 @@ function SidebarInner({
               className={cn("h-5 w-5", pathname === "/admin/deposits" && "ph-tab-icon-active")}
               strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
             />
-            Deposit gateway
+            {t("nav.depositGateway")}
           </Link>
         )}
 
@@ -769,7 +785,7 @@ function SidebarInner({
               pathname !== "/ai" && "opacity-80",
             )}
           />
-          OpenPay AI
+          {t("nav.ai")}
         </Link>
         {developerMode && (
           <>
@@ -788,7 +804,7 @@ function SidebarInner({
                 className={cn("h-5 w-5", pathname === "/connect" && "ph-tab-icon-active")}
                 strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
               />
-              Agent Connect
+              {t("nav.agentConnect")}
             </Link>
             <a
               href="/docs/openpay"
@@ -798,7 +814,7 @@ function SidebarInner({
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
             >
               <BookOpen className="h-5 w-5" strokeWidth={1.75} />
-              OpenPay Docs
+              {t("nav.docs")}
             </a>
             <a
               href="/docs/faq"
@@ -808,7 +824,7 @@ function SidebarInner({
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
             >
               <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
-              FAQ
+              {t("nav.faq")}
             </a>
           </>
         )}
@@ -819,7 +835,7 @@ function SidebarInner({
             htmlFor="developer-mode"
             className="flex-1 cursor-pointer text-sm font-semibold text-muted-foreground"
           >
-            Developer
+            {t("nav.developer")}
           </label>
           <Switch
             id="developer-mode"
@@ -884,7 +900,7 @@ function SidebarInner({
           className="w-full justify-start rounded-xl text-muted-foreground"
           onClick={signOut}
         >
-          <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
+          <LogOut className="mr-1.5 h-3.5 w-3.5" /> {t("common.signOut")}
         </Button>
       </div>
 

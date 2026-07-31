@@ -45,6 +45,14 @@ export const en = {
     swap: "Swap",
     buy: "Buy",
     scan: "Scan",
+    deposit: "Deposit",
+    blog: "Blog",
+    wiki: "Wiki",
+    about: "About",
+    ai: "OpenPay AI",
+    developer: "Developer",
+    agentConnect: "Agent Connect",
+    depositGateway: "Deposit gateway",
   },
   language: {
     title: "Display Language",
@@ -52,6 +60,7 @@ export const en = {
     searchPlaceholder: "Search languages",
     updated: "Language updated",
     current: "Current language",
+    noResults: "No languages found",
   },
   settings: {
     title: "Settings",
@@ -153,6 +162,26 @@ export const en = {
     youPay: "You pay",
     youReceive: "You receive",
     confirm: "Confirm swap",
+  },
+  deposit: {
+    title: "Deposit",
+  },
+  scan: {
+    title: "Scan",
+    hint: "Scan OpenPay Pro receive QR — any Pro token",
+  },
+  ai: {
+    title: "OpenPay AI",
+    endChat: "End chat",
+    messagePlaceholder: "Message…",
+    disclaimer:
+      "Responses may not always be accurate. OpenPay AI is trained on OpenPay Pro and OpenPay features — it cannot see your balances or move funds.",
+  },
+  blog: {
+    title: "Blog",
+  },
+  wiki: {
+    title: "Wiki",
   },
   auth: {
     signIn: "Sign in",

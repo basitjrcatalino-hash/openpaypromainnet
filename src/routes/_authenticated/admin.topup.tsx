@@ -224,6 +224,68 @@ function AdminTopupPage() {
         </Button>
       </Card>
 
+      <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
+        <h2 className="text-lg font-semibold">Payment methods</h2>
+        <p className="text-sm text-muted-foreground">
+          Show, hide, rename and reorder the providers users see on the Top Up page.
+        </p>
+        {methodsQ.isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : !methodsQ.data?.length ? (
+          <p className="text-sm text-muted-foreground">No methods configured.</p>
+        ) : (
+          <div className="space-y-3">
+            {methodsQ.data.map((m: any) => (
+              <div key={m.id} className="space-y-2 rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{m.method_key}</code>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {m.enabled ? "Visible" : "Hidden"}
+                    </span>
+                    <Switch
+                      checked={!!m.enabled}
+                      onCheckedChange={(v) => methodM.mutate({ id: m.id, enabled: v })}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_100px]">
+                  <Input
+                    defaultValue={m.label}
+                    onBlur={(e) => {
+                      const label = e.target.value.trim();
+                      if (label && label !== m.label) methodM.mutate({ id: m.id, label });
+                    }}
+                    placeholder="Label"
+                  />
+                  <Input
+                    type="number"
+                    min="0"
+                    defaultValue={m.sort_order}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (Number.isFinite(n) && n !== m.sort_order)
+                        methodM.mutate({ id: m.id, sort_order: Math.max(0, Math.round(n)) });
+                    }}
+                    placeholder="Order"
+                  />
+                </div>
+                <Input
+                  defaultValue={m.description ?? ""}
+                  onBlur={(e) => {
+                    const description = e.target.value.trim();
+                    if (description !== (m.description ?? ""))
+                      methodM.mutate({ id: m.id, description: description || null });
+                  }}
+                  placeholder="Description shown under the label"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+
       <Card className="p-5 space-y-4">
         <h2 className="text-lg font-semibold">Create vouchers</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">

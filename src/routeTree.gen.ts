@@ -20,6 +20,7 @@ import { Route as RegulatoryRouteImport } from './routes/regulatory'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
+import { Route as WikiRouteImport } from './routes/wiki'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
@@ -54,6 +55,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
+import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
@@ -160,6 +162,11 @@ const TermsRoute = TermsRouteImport.update({
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
   id: '/testnet-reward',
   path: '/testnet-reward',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WikiRoute = WikiRouteImport.update({
+  id: '/wiki',
+  path: '/wiki',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -332,6 +339,11 @@ const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
   id: '/guides/transfer-pi',
   path: '/guides/transfer-pi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WikiSlugRoute = WikiSlugRouteImport.update({
+  id: '/wiki_/$slug',
+  path: '/wiki/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
@@ -635,6 +647,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
@@ -669,6 +682,7 @@ export interface FileRoutesByFullPath {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -734,6 +748,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
@@ -768,6 +783,7 @@ export interface FileRoutesByTo {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -835,6 +851,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
@@ -869,6 +886,7 @@ export interface FileRoutesById {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/wiki_/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -936,6 +954,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/activity'
@@ -970,6 +989,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -1035,6 +1055,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/activity'
@@ -1069,6 +1090,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -1135,6 +1157,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/wiki'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activity'
@@ -1169,6 +1192,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/wiki_/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/deposits'
@@ -1236,6 +1260,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  WikiRoute: typeof WikiRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminTestnetProgressRoute: typeof AdminTestnetProgressRoute
@@ -1245,6 +1270,7 @@ export interface RootRouteChildren {
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
+  WikiSlugRoute: typeof WikiSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
@@ -1355,6 +1381,13 @@ declare module '@tanstack/react-router' {
       path: '/testnet-reward'
       fullPath: '/testnet-reward'
       preLoaderRoute: typeof TestnetRewardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wiki': {
+      id: '/wiki'
+      path: '/wiki'
+      fullPath: '/wiki'
+      preLoaderRoute: typeof WikiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -1593,6 +1626,13 @@ declare module '@tanstack/react-router' {
       path: '/guides/transfer-pi'
       fullPath: '/guides/transfer-pi'
       preLoaderRoute: typeof GuidesTransferPiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wiki_/$slug': {
+      id: '/wiki_/$slug'
+      path: '/wiki/$slug'
+      fullPath: '/wiki/$slug'
+      preLoaderRoute: typeof WikiSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -2138,6 +2178,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  WikiRoute: WikiRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
@@ -2148,6 +2189,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
+  WikiSlugRoute: WikiSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,

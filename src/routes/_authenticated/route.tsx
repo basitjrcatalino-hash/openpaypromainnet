@@ -35,6 +35,7 @@ import {
   Sparkles,
   Code2,
   Newspaper,
+  BookMarked,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -680,6 +681,16 @@ function SidebarInner({
         >
           <Newspaper className="h-5 w-5" strokeWidth={1.75} />
           Blog
+        </a>
+        <a
+          href="/wiki"
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
+        >
+          <BookMarked className="h-5 w-5" strokeWidth={1.75} />
+          Wiki
         </a>
         {developerMode && (
           <Link

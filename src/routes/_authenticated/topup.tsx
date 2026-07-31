@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
@@ -162,7 +162,7 @@ function TopUpPage() {
     queryFn: () => listMethodsFn(),
   });
 
-  const visibleMethods = (() => {
+  const visibleMethods = useMemo(() => {
     if (!methodConfig?.length) return methods;
     const byKey = new Map<string, any>((methodConfig as any[]).map((c) => [c.method_key, c]));
     return methods
@@ -176,13 +176,15 @@ function TopUpPage() {
           Number((byKey.get(a.id) as any)?.sort_order ?? 0) -
           Number((byKey.get(b.id) as any)?.sort_order ?? 0),
       );
-  })();
+  }, [methodConfig]);
+
+  const visibleMethodIds = useMemo(() => visibleMethods.map((m) => m.id).join(","), [visibleMethods]);
 
   useEffect(() => {
     if (visibleMethods.length && !visibleMethods.some((m) => m.id === method)) {
       setMethod(visibleMethods[0].id);
     }
-  }, [visibleMethods, method]);
+  }, [visibleMethodIds, method, visibleMethods]);
 
 
   const amtNum = Number(amount) || 0;

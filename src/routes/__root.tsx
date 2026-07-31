@@ -71,6 +71,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   const detail = error?.message?.trim() || "";
+  const isRenderLoop = /Minified React error #301|Too many re-renders/i.test(detail);
 
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -81,7 +82,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       <div className="glass max-w-md rounded-3xl p-8 text-center">
         <h1 className="text-xl font-semibold">Something went wrong</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          We couldn't load that part of the wallet.
+          {isRenderLoop
+            ? "This page hit a render loop. A full reload usually clears it."
+            : "We couldn't load that part of the wallet."}
         </p>
         {detail ? (
           <p className="mt-3 wrap-break-word rounded-xl border border-border/60 bg-card/50 px-3 py-2 text-left text-xs text-muted-foreground">
@@ -92,6 +95,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           <button
             type="button"
             onClick={() => {
+              if (isRenderLoop) {
+                window.location.reload();
+                return;
+              }
               router.invalidate();
               reset();
             }}

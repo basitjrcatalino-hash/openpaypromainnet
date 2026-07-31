@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -39,6 +39,8 @@ function AdminTopupPage() {
   const listV = useServerFn(listVouchers);
   const createV = useServerFn(createVouchers);
   const disableV = useServerFn(disableVoucher);
+  const listM = useServerFn(listTopupMethods);
+  const saveMethod = useServerFn(updateTopupMethod);
 
   const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => check() });
   const isAdmin = !!adminQ.data?.isAdmin;
@@ -53,8 +55,6 @@ function AdminTopupPage() {
     queryFn: () => listV(),
     enabled: isAdmin,
   });
-  const listM = useServerFn(listTopupMethods);
-  const saveMethod = useServerFn(updateTopupMethod);
   const methodsQ = useQuery({
     queryKey: ["topup-methods-admin"],
     queryFn: () => listM(),
@@ -68,47 +68,7 @@ function AdminTopupPage() {
   const [amount, setAmount] = useState("10");
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
-
-  if (adminQ.isLoading) {
-    return (
-      <div className="grid place-items-center p-12">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="mx-auto max-w-md">
-        <Card className="p-6 text-center space-y-3">
-          <ShieldCheck className="mx-auto h-8 w-8 text-primary" />
-          <h2 className="text-lg font-semibold">Admin access required</h2>
-          <p className="text-sm text-muted-foreground">
-            If no admin exists yet, you can claim it now (first user only).
-          </p>
-          <Button
-            onClick={async () => {
-              try {
-                const r = await claim();
-                if (r.claimed) { toast.success("You are now admin"); adminQ.refetch(); }
-                else toast.error("Admin already exists");
-              } catch (e) { toast.error((e as Error).message); }
-            }}
-          >
-            Claim admin
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  const settings = settingsQ.data;
-  if (settings && url === "" && instructions === "" && feePercent === "0" && feeWallet === "") {
-    if (settings.openpay_payment_url) setUrl(settings.openpay_payment_url);
-    if (settings.instructions) setInstructions(settings.instructions);
-    if (settings.fee_bps != null) setFeePercent(String(Number(settings.fee_bps) / 100));
-    if (settings.fee_wallet_address) setFeeWallet(settings.fee_wallet_address);
-  }
+  const [settingsHydrated, setSettingsHydrated] = useState(false);
 
   const saveM = useMutation({
     mutationFn: () => {
@@ -122,7 +82,11 @@ function AdminTopupPage() {
         },
       });
     },
-    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["topup-settings"] }); qc.invalidateQueries({ queryKey: ["public-topup"] }); },
+    onSuccess: () => {
+      toast.success("Saved");
+      qc.invalidateQueries({ queryKey: ["topup-settings"] });
+      qc.invalidateQueries({ queryKey: ["public-topup"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -158,6 +122,52 @@ function AdminTopupPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    const settings = settingsQ.data;
+    if (!settings || settingsHydrated) return;
+    if (settings.openpay_payment_url) setUrl(settings.openpay_payment_url);
+    if (settings.instructions) setInstructions(settings.instructions);
+    if (settings.fee_bps != null) setFeePercent(String(Number(settings.fee_bps) / 100));
+    if (settings.fee_wallet_address) setFeeWallet(settings.fee_wallet_address);
+    setSettingsHydrated(true);
+  }, [settingsQ.data, settingsHydrated]);
+
+  if (adminQ.isLoading) {
+    return (
+      <div className="grid place-items-center p-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-md">
+        <Card className="p-6 text-center space-y-3">
+          <ShieldCheck className="mx-auto h-8 w-8 text-primary" />
+          <h2 className="text-lg font-semibold">Admin access required</h2>
+          <p className="text-sm text-muted-foreground">
+            If no admin exists yet, you can claim it now (first user only).
+          </p>
+          <Button
+            onClick={async () => {
+              try {
+                const r = await claim();
+                if (r.claimed) {
+                  toast.success("You are now admin");
+                  adminQ.refetch();
+                } else toast.error("Admin already exists");
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }}
+          >
+            Claim admin
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="ph-page mx-auto max-w-3xl space-y-6 md:max-w-3xl">

@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { WIKI_GUIDES } from "@/lib/wiki-guides";
+import { BLOG_POSTS } from "@/lib/blog-posts";
 
 const BASE_URL = "https://openpaypro.space";
 
@@ -16,6 +18,8 @@ export const Route = createFileRoute("/sitemap.xml")({
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/authpi", changefreq: "weekly", priority: "0.9" },
+          { path: "/wiki", changefreq: "weekly", priority: "0.85" },
+          { path: "/blog", changefreq: "weekly", priority: "0.8" },
           { path: "/guides/transfer-pi", changefreq: "monthly", priority: "0.8" },
           { path: "/docs/faq", changefreq: "monthly", priority: "0.7" },
           { path: "/docs/openpay", changefreq: "monthly", priority: "0.7" },
@@ -23,6 +27,16 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/regulatory", changefreq: "yearly", priority: "0.3" },
+          ...WIKI_GUIDES.map((g) => ({
+            path: `/wiki/${g.slug}`,
+            changefreq: "monthly" as const,
+            priority: "0.75",
+          })),
+          ...BLOG_POSTS.map((p) => ({
+            path: `/blog/${p.slug}`,
+            changefreq: "monthly" as const,
+            priority: "0.7",
+          })),
         ];
 
         const urls = entries.map((e) =>

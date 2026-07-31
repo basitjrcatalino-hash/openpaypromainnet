@@ -109,11 +109,8 @@ export function AppPhantomProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       if (cancelled) return;
-      setStatus((s) => {
-        if (s === "ready") return s;
-        setError((e) => e || "Phantom SDK is taking too long to load. Retry or use Solana sign-in.");
-        return "error";
-      });
+      setStatus((s) => (s === "ready" ? s : "error"));
+      setError((e) => e || "Phantom SDK is taking too long to load. Retry or use Solana sign-in.");
     }, 12_000);
 
     void (async () => {

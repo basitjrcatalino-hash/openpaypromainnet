@@ -227,6 +227,13 @@ export function AssetBuySheet({
       );
   })();
 
+  useEffect(() => {
+    if (methods.length && !methods.some((m) => m.id === method)) {
+      setMethod(methods[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods.map((m) => m.id).join(","), method]);
+
   const { data: openpayLink } = useQuery({
     queryKey: ["openpay-link", userId],
     queryFn: () => getLink(),

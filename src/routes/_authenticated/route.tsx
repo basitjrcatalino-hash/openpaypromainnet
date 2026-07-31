@@ -653,6 +653,59 @@ function SidebarInner({
           />
           Watchlist
         </Link>
+        <Link
+          to="/deposit"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/deposit"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <ArrowDownToLine
+            className={cn("h-5 w-5", pathname === "/deposit" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/deposit" ? 2.25 : 1.75}
+          />
+          Deposit
+        </Link>
+        <Link
+          to="/merchant"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/merchant"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <Store
+            className={cn("h-5 w-5", pathname === "/merchant" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/merchant" ? 2.25 : 1.75}
+          />
+          Merchant
+        </Link>
+        {developerMode && (
+          <Link
+            to="/admin/deposits"
+            onClick={onClose}
+            preload="intent"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+              pathname === "/admin/deposits"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+            )}
+          >
+            <Store
+              className={cn("h-5 w-5", pathname === "/admin/deposits" && "ph-tab-icon-active")}
+              strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
+            />
+            Deposit gateway
+          </Link>
+        )}
         {developerMode && (
           <Link
             to="/ledger"

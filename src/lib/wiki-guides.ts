@@ -428,7 +428,7 @@ export const WIKI_GUIDES: WikiGuide[] = [
         id: "listen",
         heading: "Listen with text-to-speech",
         steps: [
-          { title: "Tap the speaker under an answer", detail: "Uses /api/tts — same engine as Wiki Listen." },
+          { title: "Tap the speaker under an answer", detail: "Uses on-device text-to-speech in your browser — same Listen control as Wiki." },
           { title: "Tap again to stop", detail: "Audio stops and the button returns to idle." },
         ],
       },

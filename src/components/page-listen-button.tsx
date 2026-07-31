@@ -32,7 +32,7 @@ export function PageListenButton({
   text,
   label = "Listen",
   stopLabel = "Stop",
-  preparingLabel = "Preparing audio…",
+  preparingLabel = "Starting…",
   variant = "primary",
   className,
   size = "md",

@@ -307,7 +307,7 @@ const TRADE_SLIDES = [
   },
 ] as const;
 
-/** Plain-language tour for /api/tts (capped ~4k chars server-side). */
+/** Plain-language tour for local browser text-to-speech. */
 function websiteSpeechText() {
   const parts: string[] = [
     "OpenPay Pro. The money app for the open network.",

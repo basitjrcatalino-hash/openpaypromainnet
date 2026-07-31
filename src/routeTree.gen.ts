@@ -70,6 +70,7 @@ import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/mo
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
@@ -411,6 +412,11 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDepositMonitorRoute = ApiPublicDepositMonitorRouteImport.update({
+  id: '/api/public/deposit-monitor',
+  path: '/api/public/deposit-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWalletReceiveRoute =
   AuthenticatedWalletReceiveRouteImport.update({
     id: '/wallet_/receive',
@@ -650,6 +656,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -744,6 +751,7 @@ export interface FileRoutesByTo {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -840,6 +848,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
+  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -936,6 +945,7 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
+    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -1030,6 +1040,7 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
+    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -1125,6 +1136,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
+    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -1184,6 +1196,7 @@ export interface RootRouteChildren {
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -1643,6 +1656,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/deposit-monitor': {
+      id: '/api/public/deposit-monitor'
+      path: '/api/public/deposit-monitor'
+      fullPath: '/api/public/deposit-monitor'
+      preLoaderRoute: typeof ApiPublicDepositMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/wallet_/receive': {
       id: '/_authenticated/wallet_/receive'
       path: '/wallet/receive'
@@ -2045,6 +2065,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesTransferPiRoute: GuidesTransferPiRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,

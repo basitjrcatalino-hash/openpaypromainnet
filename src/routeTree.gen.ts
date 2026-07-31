@@ -15,6 +15,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RegulatoryRouteImport } from './routes/regulatory'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -134,6 +135,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthpiRoute = AuthpiRouteImport.update({
@@ -616,6 +622,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/blog': typeof BlogRoute
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
@@ -713,6 +720,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/blog': typeof BlogRoute
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
@@ -812,6 +820,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
+  '/blog': typeof BlogRoute
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/regulatory': typeof RegulatoryRoute
@@ -911,6 +920,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/blog'
     | '/mcp'
     | '/privacy'
     | '/regulatory'
@@ -1008,6 +1018,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/authpi'
+    | '/blog'
     | '/mcp'
     | '/privacy'
     | '/regulatory'
@@ -1106,6 +1117,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/authpi'
+    | '/blog'
     | '/mcp'
     | '/privacy'
     | '/regulatory'
@@ -1205,6 +1217,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
+  BlogRoute: typeof BlogRoute
   McpRoute: typeof McpRoute
   PrivacyRoute: typeof PrivacyRoute
   RegulatoryRoute: typeof RegulatoryRoute
@@ -1294,6 +1307,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/authpi': {
@@ -2091,6 +2111,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
+  BlogRoute: BlogRoute,
   McpRoute: McpRoute,
   PrivacyRoute: PrivacyRoute,
   RegulatoryRoute: RegulatoryRoute,

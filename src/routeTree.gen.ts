@@ -19,6 +19,7 @@ import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PayTokenRouteImport } from './routes/pay.$token'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
@@ -41,6 +42,7 @@ import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/o
 import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
 import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
+import { Route as AuthenticatedMerchantRouteImport } from './routes/_authenticated/merchant'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
@@ -71,7 +73,6 @@ import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/mo
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
@@ -94,6 +95,9 @@ import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicPaymentsMonitorRouteImport } from './routes/api/public/payments/monitor'
+import { Route as ApiPublicPaymentsCreateRouteImport } from './routes/api/public/payments/create'
+import { Route as ApiPublicPaymentsChainsRouteImport } from './routes/api/public/payments/chains'
 import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
@@ -103,6 +107,7 @@ import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './route
 import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
+import { Route as ApiPublicPaymentsStatusIdRouteImport } from './routes/api/public/payments/status.$id'
 import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
 
@@ -153,6 +158,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayTokenRoute = PayTokenRouteImport.update({
+  id: '/pay/$token',
+  path: '/pay/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
@@ -263,6 +273,11 @@ const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
 const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
   id: '/metamask',
   path: '/metamask',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMerchantRoute = AuthenticatedMerchantRouteImport.update({
+  id: '/merchant',
+  path: '/merchant',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
@@ -419,11 +434,6 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicDepositMonitorRoute = ApiPublicDepositMonitorRouteImport.update({
-  id: '/api/public/deposit-monitor',
-  path: '/api/public/deposit-monitor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedWalletReceiveRoute =
   AuthenticatedWalletReceiveRouteImport.update({
     id: '/wallet_/receive',
@@ -549,6 +559,22 @@ const ApiPublicPiPaymentsApproveRoute =
     path: '/api/public/pi-payments/approve',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsMonitorRoute =
+  ApiPublicPaymentsMonitorRouteImport.update({
+    id: '/api/public/payments/monitor',
+    path: '/api/public/payments/monitor',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsCreateRoute = ApiPublicPaymentsCreateRouteImport.update({
+  id: '/api/public/payments/create',
+  path: '/api/public/payments/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaymentsChainsRoute = ApiPublicPaymentsChainsRouteImport.update({
+  id: '/api/public/payments/chains',
+  path: '/api/public/payments/chains',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
   id: '/api/public/openpay/inbound',
   path: '/api/public/openpay/inbound',
@@ -599,6 +625,12 @@ const AuthenticatedBagsTokenMintRoute =
     path: '/bags/token/$mint',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsStatusIdRoute =
+  ApiPublicPaymentsStatusIdRouteImport.update({
+    id: '/api/public/payments/status/$id',
+    path: '/api/public/payments/status/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOpenpayConnectConfirmRoute =
   ApiPublicOpenpayConnectConfirmRouteImport.update({
     id: '/api/public/openpay/connect/confirm',
@@ -633,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/merchant': typeof AuthenticatedMerchantRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
@@ -655,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -671,7 +705,6 @@ export interface FileRoutesByFullPath {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
-  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -700,6 +733,9 @@ export interface FileRoutesByFullPath {
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
+  '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
+  '/api/public/payments/monitor': typeof ApiPublicPaymentsMonitorRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -708,6 +744,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/payments/status/$id': typeof ApiPublicPaymentsStatusIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -730,6 +767,7 @@ export interface FileRoutesByTo {
   '/deposit': typeof AuthenticatedDepositRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
+  '/merchant': typeof AuthenticatedMerchantRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
@@ -752,6 +790,7 @@ export interface FileRoutesByTo {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -768,7 +807,6 @@ export interface FileRoutesByTo {
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
-  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -797,6 +835,9 @@ export interface FileRoutesByTo {
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
+  '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
+  '/api/public/payments/monitor': typeof ApiPublicPaymentsMonitorRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -805,6 +846,7 @@ export interface FileRoutesByTo {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/payments/status/$id': typeof ApiPublicPaymentsStatusIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -829,6 +871,7 @@ export interface FileRoutesById {
   '/_authenticated/deposit': typeof AuthenticatedDepositRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
+  '/_authenticated/merchant': typeof AuthenticatedMerchantRoute
   '/_authenticated/metamask': typeof AuthenticatedMetamaskRoute
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
@@ -851,6 +894,7 @@ export interface FileRoutesById {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -867,7 +911,6 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
-  '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
@@ -896,6 +939,9 @@ export interface FileRoutesById {
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
+  '/api/public/payments/chains': typeof ApiPublicPaymentsChainsRoute
+  '/api/public/payments/create': typeof ApiPublicPaymentsCreateRoute
+  '/api/public/payments/monitor': typeof ApiPublicPaymentsMonitorRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -904,6 +950,7 @@ export interface FileRoutesById {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/payments/status/$id': typeof ApiPublicPaymentsStatusIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -928,6 +975,7 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/kyc'
     | '/ledger'
+    | '/merchant'
     | '/metamask'
     | '/nfts'
     | '/opentoken'
@@ -950,6 +998,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -966,7 +1015,6 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
-    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -995,6 +1043,9 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
+    | '/api/public/payments/chains'
+    | '/api/public/payments/create'
+    | '/api/public/payments/monitor'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1003,6 +1054,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/payments/status/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1025,6 +1077,7 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/kyc'
     | '/ledger'
+    | '/merchant'
     | '/metamask'
     | '/nfts'
     | '/opentoken'
@@ -1047,6 +1100,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -1063,7 +1117,6 @@ export interface FileRouteTypes {
     | '/opentoken/terminal'
     | '/tokens/create'
     | '/wallet/receive'
-    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -1092,6 +1145,9 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
+    | '/api/public/payments/chains'
+    | '/api/public/payments/create'
+    | '/api/public/payments/monitor'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1100,6 +1156,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/payments/status/$id'
   id:
     | '__root__'
     | '/'
@@ -1123,6 +1180,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deposit'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
+    | '/_authenticated/merchant'
     | '/_authenticated/metamask'
     | '/_authenticated/nfts'
     | '/_authenticated/opentoken'
@@ -1145,6 +1203,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/deposits'
@@ -1161,7 +1220,6 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
-    | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
     | '/api/public/kyc-webhook'
@@ -1190,6 +1248,9 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
+    | '/api/public/payments/chains'
+    | '/api/public/payments/create'
+    | '/api/public/payments/monitor'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -1198,6 +1259,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/payments/status/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1219,9 +1281,9 @@ export interface RootRouteChildren {
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
+  PayTokenRoute: typeof PayTokenRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
-  ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
@@ -1243,6 +1305,9 @@ export interface RootRouteChildren {
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicOpenpayInboundRoute: typeof ApiPublicOpenpayInboundRoute
+  ApiPublicPaymentsChainsRoute: typeof ApiPublicPaymentsChainsRoute
+  ApiPublicPaymentsCreateRoute: typeof ApiPublicPaymentsCreateRoute
+  ApiPublicPaymentsMonitorRoute: typeof ApiPublicPaymentsMonitorRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
@@ -1250,6 +1315,7 @@ export interface RootRouteChildren {
   ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
+  ApiPublicPaymentsStatusIdRoute: typeof ApiPublicPaymentsStatusIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1322,6 +1388,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$token': {
+      id: '/pay/$token'
+      path: '/pay/$token'
+      fullPath: '/pay/$token'
+      preLoaderRoute: typeof PayTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guides/transfer-pi': {
@@ -1476,6 +1549,13 @@ declare module '@tanstack/react-router' {
       path: '/metamask'
       fullPath: '/metamask'
       preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/merchant': {
+      id: '/_authenticated/merchant'
+      path: '/merchant'
+      fullPath: '/merchant'
+      preLoaderRoute: typeof AuthenticatedMerchantRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ledger': {
@@ -1688,13 +1768,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/deposit-monitor': {
-      id: '/api/public/deposit-monitor'
-      path: '/api/public/deposit-monitor'
-      fullPath: '/api/public/deposit-monitor'
-      preLoaderRoute: typeof ApiPublicDepositMonitorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/wallet_/receive': {
       id: '/_authenticated/wallet_/receive'
       path: '/wallet/receive'
@@ -1849,6 +1922,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/monitor': {
+      id: '/api/public/payments/monitor'
+      path: '/api/public/payments/monitor'
+      fullPath: '/api/public/payments/monitor'
+      preLoaderRoute: typeof ApiPublicPaymentsMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/create': {
+      id: '/api/public/payments/create'
+      path: '/api/public/payments/create'
+      fullPath: '/api/public/payments/create'
+      preLoaderRoute: typeof ApiPublicPaymentsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/chains': {
+      id: '/api/public/payments/chains'
+      path: '/api/public/payments/chains'
+      fullPath: '/api/public/payments/chains'
+      preLoaderRoute: typeof ApiPublicPaymentsChainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/openpay/inbound': {
       id: '/api/public/openpay/inbound'
       path: '/api/public/openpay/inbound'
@@ -1911,6 +2005,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/bags/token/$mint'
       preLoaderRoute: typeof AuthenticatedBagsTokenMintRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/payments/status/$id': {
+      id: '/api/public/payments/status/$id'
+      path: '/api/public/payments/status/$id'
+      fullPath: '/api/public/payments/status/$id'
+      preLoaderRoute: typeof ApiPublicPaymentsStatusIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/openpay/connect/confirm': {
       id: '/api/public/openpay/connect/confirm'
@@ -1976,6 +2077,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepositRoute: typeof AuthenticatedDepositRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
+  AuthenticatedMerchantRoute: typeof AuthenticatedMerchantRoute
   AuthenticatedMetamaskRoute: typeof AuthenticatedMetamaskRoute
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
@@ -2018,6 +2120,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepositRoute: AuthenticatedDepositRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
+  AuthenticatedMerchantRoute: AuthenticatedMerchantRoute,
   AuthenticatedMetamaskRoute: AuthenticatedMetamaskRoute,
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
@@ -2106,9 +2209,9 @@ const rootRouteChildren: RootRouteChildren = {
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
+  PayTokenRoute: PayTokenRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
-  ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
@@ -2130,6 +2233,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicOpenpayInboundRoute: ApiPublicOpenpayInboundRoute,
+  ApiPublicPaymentsChainsRoute: ApiPublicPaymentsChainsRoute,
+  ApiPublicPaymentsCreateRoute: ApiPublicPaymentsCreateRoute,
+  ApiPublicPaymentsMonitorRoute: ApiPublicPaymentsMonitorRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
@@ -2137,6 +2243,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
+  ApiPublicPaymentsStatusIdRoute: ApiPublicPaymentsStatusIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

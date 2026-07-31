@@ -1,10 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import QRCode from "qrcode";
 import {
-  AlertTriangle,
   ArrowDownToLine,
   CheckCircle2,
   Clock,
@@ -14,15 +11,16 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/wallet/PageHeader";
 import { copyText } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
-import { shortAddress, timeAgo } from "@/lib/wallet-utils";
 import {
   getDepositConfig,
   listMyDeposits,
@@ -31,373 +29,311 @@ import {
 } from "@/lib/deposit-gateway.functions";
 
 export const Route = createFileRoute("/_authenticated/deposit")({
+  head: () => ({
+    meta: [
+      { title: "Crypto Deposit — OpenPay Pro" },
+      {
+        name: "description",
+        content:
+          "Deposit crypto from any supported blockchain into your OpenPay Pro wallet and get credited automatically.",
+      },
+      { property: "og:title", content: "Crypto Deposit — OpenPay Pro" },
+      {
+        property: "og:description",
+        content: "Multi-chain crypto deposits credited to your OpenPay Pro balance.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: DepositPage,
 });
 
-type Row = Record<string, any>;
-
-const STATUS_STYLE: Record<string, string> = {
+const STATUS_TONE: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-500",
+  confirming: "bg-sky-500/15 text-sky-500",
   confirmed: "bg-sky-500/15 text-sky-500",
   credited: "bg-emerald-500/15 text-emerald-500",
   failed: "bg-destructive/15 text-destructive",
-  review: "bg-violet-500/15 text-violet-500",
+  rejected: "bg-destructive/15 text-destructive",
 };
-
-function StatusChip({ status }: { status: string }) {
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize",
-        STATUS_STYLE[status] ?? "bg-muted text-muted-foreground",
-      )}
-    >
-      {status}
-    </span>
-  );
-}
 
 function DepositPage() {
   const qc = useQueryClient();
-  const configFn = useServerFn(getDepositConfig);
-  const depositsFn = useServerFn(listMyDeposits);
-  const submitFn = useServerFn(submitDeposit);
-  const refreshFn = useServerFn(refreshDeposit);
-
-  const { data: config } = useQuery({ queryKey: ["deposit-config"], queryFn: () => configFn() });
-  const { data: deposits = [] } = useQuery({
-    queryKey: ["my-deposits"],
-    queryFn: () => depositsFn(),
-    refetchInterval: 20_000,
-  });
-
-  const chains: Row[] = config?.chains ?? [];
-  const tokens: Row[] = config?.tokens ?? [];
-  const addresses: Row[] = config?.addresses ?? [];
-
   const [chainId, setChainId] = useState<string>("");
   const [tokenId, setTokenId] = useState<string>("");
   const [txHash, setTxHash] = useState("");
-  const [qr, setQr] = useState<string | null>(null);
+  const [qr, setQr] = useState<string>("");
 
-  useEffect(() => {
-    if (!chainId && chains.length) setChainId(chains[0].id);
-  }, [chains, chainId]);
+  const config = useQuery({ queryKey: ["deposit-config"], queryFn: () => getDepositConfig() });
+  const deposits = useQuery({
+    queryKey: ["my-deposits"],
+    queryFn: () => listMyDeposits(),
+    refetchInterval: 20_000,
+  });
 
-  const chainTokens = useMemo(
-    () => tokens.filter((t) => t.chain_id === chainId),
-    [tokens, chainId],
+  const chains = config.data?.chains ?? [];
+  const activeChain = useMemo(
+    () => chains.find((c: any) => c.id === chainId) ?? chains[0],
+    [chains, chainId],
+  );
+  const tokens = (config.data?.tokens ?? []).filter((t: any) => t.chain_id === activeChain?.id);
+  const activeToken = tokens.find((t: any) => t.id === tokenId) ?? tokens[0];
+  const address = (config.data?.addresses ?? []).find(
+    (a: any) =>
+      a.chain_id === activeChain?.id && (a.token_id === activeToken?.id || a.token_id === null),
   );
 
-  useEffect(() => {
-    if (chainTokens.length && !chainTokens.some((t) => t.id === tokenId)) {
-      setTokenId(chainTokens[0].id);
-    }
-    if (!chainTokens.length) setTokenId("");
-  }, [chainTokens, tokenId]);
-
-  const chain = chains.find((c) => c.id === chainId) ?? null;
-  const token = chainTokens.find((t) => t.id === tokenId) ?? null;
-
-  const address = useMemo(() => {
-    const forToken = addresses.find((a) => a.chain_id === chainId && a.token_id === tokenId);
-    return forToken ?? addresses.find((a) => a.chain_id === chainId && !a.token_id) ?? null;
-  }, [addresses, chainId, tokenId]);
-
-  useEffect(() => {
-    let alive = true;
+  useMemo(() => {
     if (!address?.address) {
-      setQr(null);
+      setQr("");
       return;
     }
-    QRCode.toDataURL(address.address, { width: 320, margin: 1 })
-      .then((url) => alive && setQr(url))
-      .catch(() => alive && setQr(null));
-    return () => {
-      alive = false;
-    };
+    void QRCode.toDataURL(address.address, { margin: 1, width: 320 }).then(setQr).catch(() => setQr(""));
   }, [address?.address]);
 
   const submit = useMutation({
-    mutationFn: () => submitFn({ data: { chain_id: chainId, token_id: tokenId, tx_hash: txHash.trim() } }),
-    onSuccess: (row: Row) => {
+    mutationFn: () =>
+      submitDeposit({
+        data: { chainId: activeChain!.id, tokenId: activeToken!.id, txHash: txHash.trim() },
+      }),
+    onSuccess: () => {
+      toast.success("Transaction submitted — tracking confirmations");
       setTxHash("");
       void qc.invalidateQueries({ queryKey: ["my-deposits"] });
-      if (row?.status === "credited") toast.success("Deposit credited to your wallet");
-      else if (row?.status === "failed") toast.error(row.error || "Deposit could not be verified");
-      else toast.success("Deposit detected — waiting for confirmations");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const recheck = useMutation({
-    mutationFn: (id: string) => refreshFn({ data: { id } }),
+    mutationFn: (id: string) => refreshDeposit({ data: { id } }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["my-deposits"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const paused = chain?.maintenance_mode;
-
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 px-4 pb-24 pt-2">
-      <PageHeader title="Deposit" backTo="/dashboard" />
-      <p className="-mt-2 text-sm text-muted-foreground">
-        Fund your wallet from any supported chain.
-      </p>
+    <div className="mx-auto w-full max-w-3xl space-y-4 pb-24">
+      <PageHeader title="Deposit crypto" backTo="/dashboard" />
 
-
-      <Card className="space-y-4 rounded-3xl border-border/60 bg-card/70 p-4">
-        <div>
-          <Label className="text-xs uppercase text-muted-foreground">Network</Label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {chains.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setChainId(c.id)}
-                className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-sm font-semibold press",
-                  c.id === chainId
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border/60 text-muted-foreground hover:bg-muted/50",
-                )}
-              >
-                {c.name}
-              </button>
-            ))}
-            {!chains.length && (
-              <p className="text-sm text-muted-foreground">No networks are enabled yet.</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs uppercase text-muted-foreground">Token</Label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {chainTokens.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTokenId(t.id)}
-                className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-sm font-semibold press",
-                  t.id === tokenId
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border/60 text-muted-foreground hover:bg-muted/50",
-                )}
-              >
-                {t.symbol}
-              </button>
-            ))}
-            {!chainTokens.length && (
-              <p className="text-sm text-muted-foreground">
-                No deposit tokens are enabled on this network yet.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {paused && (
-          <div className="flex items-start gap-2 rounded-2xl bg-amber-500/10 p-3 text-sm text-amber-500">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            {chain?.name} deposits are paused for maintenance.
-          </div>
-        )}
-
-        {token && address && !paused && (
-          <div className="grid gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 sm:grid-cols-[auto_1fr]">
-            {qr ? (
-              <img
-                src={qr}
-                alt={`${token.symbol} deposit address QR code`}
-                className="h-40 w-40 self-center rounded-xl bg-white p-2"
-              />
-            ) : (
-              <div className="grid h-40 w-40 place-items-center rounded-xl bg-muted">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      {config.isLoading ? (
+        <Card className="flex items-center justify-center p-10">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </Card>
+      ) : chains.length === 0 ? (
+        <Card className="p-6 text-sm text-muted-foreground">
+          No networks are enabled yet. An administrator needs to enable a blockchain and set a
+          receiving address first.
+        </Card>
+      ) : (
+        <>
+          <Card className="space-y-4 p-4">
+            <div>
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Network</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {chains.map((c: any) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setChainId(c.id);
+                      setTokenId("");
+                    }}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-sm font-semibold press",
+                      c.id === activeChain?.id
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {c.name}
+                    {c.maintenance_mode ? " · paused" : ""}
+                  </button>
+                ))}
               </div>
-            )}
-            <div className="min-w-0 space-y-2.5 text-sm">
-              <div>
-                <div className="text-[11px] uppercase text-muted-foreground">Deposit address</div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await copyText(address.address);
-                      toast.success("Address copied");
-                    } catch {
-                      toast.error("Copy failed");
-                    }
-                  }}
+            </div>
 
-                  className="flex w-full items-center gap-2 break-all text-left font-mono text-xs font-semibold hover:text-primary"
-                >
-                  {address.address}
-                  <Copy className="h-3.5 w-3.5 shrink-0" />
-                </button>
+            <div>
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Token</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {tokens.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No tokens enabled on this network.</p>
+                ) : (
+                  tokens.map((t: any) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTokenId(t.id)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-sm font-semibold press",
+                        t.id === activeToken?.id
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {t.symbol}
+                    </button>
+                  ))
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
+            </div>
+
+            {activeToken && address ? (
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                {qr ? (
+                  <img
+                    src={qr}
+                    alt={`Deposit address QR for ${activeToken.symbol} on ${activeChain.name}`}
+                    className="mx-auto h-44 w-44 rounded-xl bg-white p-2"
+                  />
+                ) : null}
                 <div>
-                  <div className="text-muted-foreground">Network</div>
-                  <div className="font-semibold">{chain?.name}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Confirmations</div>
-                  <div className="font-semibold">{chain?.required_confirmations}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Minimum</div>
-                  <div className="font-semibold">
-                    {token.min_deposit} {token.symbol}
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {activeChain.name} deposit address
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <code className="min-w-0 flex-1 truncate text-sm">{address.address}</code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={async () => {
+                        try {
+                          await copyText(address.address);
+                          toast.success("Address copied");
+                        } catch {
+                          toast.error("Copy failed");
+                        }
+                      }}
+                      aria-label="Copy deposit address"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Deposit fee</div>
-                  <div className="font-semibold">{(token.deposit_fee_bps / 100).toFixed(2)}%</div>
-                </div>
+                <dl className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div>
+                    Contract:{" "}
+                    <span className="text-foreground">
+                      {activeToken.contract_address ?? "native asset"}
+                    </span>
+                  </div>
+                  <div>
+                    Confirmations:{" "}
+                    <span className="text-foreground">{activeChain.required_confirmations}</span>
+                  </div>
+                  <div>
+                    Minimum:{" "}
+                    <span className="text-foreground">
+                      {activeToken.min_deposit} {activeToken.symbol}
+                    </span>
+                  </div>
+                  <div>
+                    Fee: <span className="text-foreground">{activeToken.deposit_fee_bps / 100}%</span>
+                  </div>
+                </dl>
+                <p className="text-xs text-muted-foreground">
+                  Send only {activeToken.symbol} on {activeChain.name} to this address. Anything else
+                  may be lost permanently.
+                </p>
               </div>
-              {token.contract_address && (
-                <div>
-                  <div className="text-[11px] uppercase text-muted-foreground">Token contract</div>
-                  <div className="break-all font-mono text-[11px]">{token.contract_address}</div>
-                </div>
-              )}
-              {address.memo_tag && (
-                <div className="rounded-xl bg-amber-500/10 p-2 text-xs text-amber-500">
-                  Include memo/tag: <span className="font-mono">{address.memo_tag}</span>
-                </div>
-              )}
-              <p className="text-[11px] text-muted-foreground">
-                Send only {token.symbol} on {chain?.name}. Anything else may be lost permanently.
+            ) : activeToken ? (
+              <p className="text-sm text-destructive">
+                No receiving address is configured for this network yet.
+              </p>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor="txhash">Paste your transaction hash</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="txhash"
+                  value={txHash}
+                  onChange={(e) => setTxHash(e.target.value)}
+                  placeholder="0x… or Solana signature"
+                />
+                <Button
+                  onClick={() => submit.mutate()}
+                  disabled={!activeToken || !address || txHash.trim().length < 16 || submit.isPending}
+                >
+                  {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Track"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We verify the token, destination and confirmation count on-chain before crediting.
               </p>
             </div>
-          </div>
-        )}
+          </Card>
 
-        {token && !address && (
-          <div className="rounded-2xl bg-muted/50 p-3 text-sm text-muted-foreground">
-            No receiving address has been configured for this token yet.
-          </div>
-        )}
-
-        {token && address && !paused && (
-          <form
-            className="space-y-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!txHash.trim()) return;
-              submit.mutate();
-            }}
-          >
-            <Label htmlFor="txhash" className="text-xs uppercase text-muted-foreground">
-              Already sent? Paste the transaction hash
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="txhash"
-                value={txHash}
-                maxLength={120}
-                onChange={(e) => setTxHash(e.target.value)}
-                placeholder={chain?.family === "solana" ? "Signature" : "0x…"}
-                className="font-mono text-xs"
-              />
-              <Button type="submit" disabled={submit.isPending || !txHash.trim()} className="rounded-xl">
-                {submit.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowDownToLine className="h-4 w-4" />
-                )}
-                <span className="ml-1.5 hidden sm:inline">Track</span>
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Deposit history</h2>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void deposits.refetch()}
+                aria-label="Refresh deposits"
+              >
+                <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              We verify the token, network, destination and confirmations on-chain before crediting.
-            </p>
-          </form>
-        )}
-      </Card>
+            {(deposits.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No deposits yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {(deposits.data ?? []).map((d: any) => (
+                  <li
+                    key={d.id}
+                    className="flex items-center gap-3 rounded-xl border border-border/60 p-3"
+                  >
+                    <div className="rounded-full bg-muted p-2">
+                      {d.status === "credited" ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">
+                        {Number(d.amount)} {d.token_symbol} · {d.chain_key}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{d.tx_hash}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={cn("border-0", STATUS_TONE[d.status] ?? "")}>
+                        {d.status === "confirming"
+                          ? `${d.confirmations}/${d.required_confirmations}`
+                          : d.status}
+                      </Badge>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => recheck.mutate(d.id)}
+                        aria-label="Re-check deposit"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
-      <Card className="rounded-3xl border-border/60 bg-card/70 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold">Deposit history</h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="rounded-full"
-            onClick={() => qc.invalidateQueries({ queryKey: ["my-deposits"] })}
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {!deposits.length && (
-          <p className="py-8 text-center text-sm text-muted-foreground">No deposits yet.</p>
-        )}
-
-        <div className="space-y-2">
-          {(deposits as Row[]).map((d) => {
-            const chainRow = chains.find((c) => c.key === d.chain_key);
-            const explorer = chainRow?.explorer_url
-              ? `${String(chainRow.explorer_url).replace(/\/+$/, "")}/tx/${d.tx_hash}`
-              : null;
-            return (
-              <div
-                key={d.id}
-                className="rounded-2xl border border-border/50 bg-background/50 p-3 text-sm"
+          <Card className="flex items-start gap-3 p-4 text-xs text-muted-foreground">
+            <ArrowDownToLine className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Deposits are recorded in OpenLedger once credited.{" "}
+              <a
+                className="inline-flex items-center gap-1 text-primary"
+                href="https://www.openpyledger.space/pro"
+                target="_blank"
+                rel="noreferrer"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 font-semibold">
-                    {d.status === "credited" ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : d.status === "failed" ? (
-                      <AlertTriangle className="h-4 w-4 text-destructive" />
-                    ) : (
-                      <Clock className="h-4 w-4 text-amber-500" />
-                    )}
-                    {d.amount} {d.token_symbol}
-                  </div>
-                  <StatusChip status={d.status} />
-                </div>
-                <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground sm:grid-cols-4">
-                  <span className="capitalize">{d.chain_key}</span>
-                  <span>
-                    {d.confirmations}/{d.required_confirmations} conf
-                  </span>
-                  <span>Block {d.block_number ?? "—"}</span>
-                  <span>{timeAgo(d.created_at)}</span>
-                </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px]">
-                  <span className="font-mono text-muted-foreground">
-                    {shortAddress(d.tx_hash, 8, 6)}
-                  </span>
-                  {explorer && (
-                    <a
-                      href={explorer}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
-                    >
-                      Explorer <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                  {d.status !== "credited" && d.status !== "failed" && (
-                    <button
-                      type="button"
-                      onClick={() => recheck.mutate(d.id)}
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
-                    >
-                      <RefreshCw className="h-3 w-3" /> Re-check
-                    </button>
-                  )}
-                </div>
-                {d.error && <p className="mt-1.5 text-[11px] text-destructive">{d.error}</p>}
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+                View OpenLedger <ExternalLink className="h-3 w-3" />
+              </a>
+            </p>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

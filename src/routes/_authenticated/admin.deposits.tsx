@@ -1,751 +1,544 @@
-import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { Loader2, Pause, Play, Plus, RefreshCw, Save, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/wallet/PageHeader";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { PageHeader } from "@/components/wallet/PageHeader";
-import { cn } from "@/lib/utils";
-import { shortAddress, timeAgo } from "@/lib/wallet-utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  adminDepositAction,
-  adminDepositOverview,
-  adminDeleteRow,
-  adminPauseAll,
+  adminListDeposits,
+  adminPauseAllChains,
+  adminResolveDeposit,
   adminSaveAddress,
   adminSaveChain,
   adminSaveToken,
+  getDepositConfig,
 } from "@/lib/deposit-gateway.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/deposits")({
+  head: () => ({
+    meta: [
+      { title: "Deposit Gateway Admin — OpenPay Pro" },
+      {
+        name: "description",
+        content:
+          "Configure blockchains, tokens, receiving addresses and review incoming crypto deposits.",
+      },
+      { property: "og:title", content: "Deposit Gateway Admin — OpenPay Pro" },
+      { property: "og:description", content: "Manage the OpenPay Pro multi-chain deposit gateway." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminDepositsPage,
 });
 
-type Row = Record<string, any>;
-type Tab = "chains" | "tokens" | "addresses" | "deposits" | "logs";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "chains", label: "Chains" },
-  { id: "tokens", label: "Tokens" },
-  { id: "addresses", label: "Addresses" },
-  { id: "deposits", label: "Deposits" },
-  { id: "logs", label: "Audit log" },
-];
-
-const emptyChain = {
-  key: "",
-  name: "",
-  chain_id: null as number | null,
-  family: "evm" as "evm" | "solana" | "bitcoin" | "other",
-  rpc_url: "",
-  explorer_url: "",
-  required_confirmations: 12,
-  bridge_status: "native",
-  is_enabled: true,
-  maintenance_mode: false,
-};
-
-const emptyToken = {
-  chain_id: "",
-  name: "",
-  symbol: "",
-  contract_address: "",
-  decimals: 18,
-  deposit_enabled: true,
-  withdrawal_enabled: false,
-  min_deposit: 0,
-  max_deposit: null as number | null,
-  deposit_fee_bps: 0,
-  credit_symbol: "OUSD",
-  usd_rate: null as number | null,
-  status: "active" as "active" | "paused" | "delisted",
-};
-
-const emptyAddress = {
-  chain_id: "",
-  token_id: "" as string,
-  address: "",
-  label: "",
-  memo_tag: "",
-  is_active: true,
-};
-
 function AdminDepositsPage() {
   const qc = useQueryClient();
-  const overviewFn = useServerFn(adminDepositOverview);
-  const saveChainFn = useServerFn(adminSaveChain);
-  const saveTokenFn = useServerFn(adminSaveToken);
-  const saveAddressFn = useServerFn(adminSaveAddress);
-  const deleteFn = useServerFn(adminDeleteRow);
-  const pauseFn = useServerFn(adminPauseAll);
-  const actionFn = useServerFn(adminDepositAction);
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-deposit-overview"],
-    queryFn: () => overviewFn(),
-    retry: false,
+  const config = useQuery({ queryKey: ["deposit-config"], queryFn: () => getDepositConfig() });
+  const depositsQ = useQuery({
+    queryKey: ["admin-deposits"],
+    queryFn: () => adminListDeposits(),
+    enabled: Boolean(config.data?.isAdmin),
   });
 
-  const [tab, setTab] = useState<Tab>("chains");
-  const [chainForm, setChainForm] = useState({ ...emptyChain });
-  const [tokenForm, setTokenForm] = useState({ ...emptyToken });
-  const [addressForm, setAddressForm] = useState({ ...emptyAddress });
-
-  const chains: Row[] = data?.chains ?? [];
-  const tokens: Row[] = data?.tokens ?? [];
-  const addresses: Row[] = data?.addresses ?? [];
-  const deposits: Row[] = data?.deposits ?? [];
-  const logs: Row[] = data?.logs ?? [];
-
-  const chainName = useMemo(
-    () => (id: string) => chains.find((c) => c.id === id)?.name ?? "—",
-    [chains],
-  );
-
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-deposit-overview"] });
-  const onErr = (e: Error) => toast.error(e.message);
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["deposit-config"] });
+    void qc.invalidateQueries({ queryKey: ["admin-deposits"] });
+  };
 
   const saveChain = useMutation({
-    mutationFn: (payload: Row) => saveChainFn({ data: payload as never }),
+    mutationFn: (data: any) => adminSaveChain({ data }),
     onSuccess: () => {
-      toast.success("Chain saved");
-      setChainForm({ ...emptyChain });
-      void invalidate();
+      toast.success("Network saved");
+      invalidate();
     },
-    onError: onErr,
+    onError: (e: Error) => toast.error(e.message),
   });
-
   const saveToken = useMutation({
-    mutationFn: (payload: Row) => saveTokenFn({ data: payload as never }),
+    mutationFn: (data: any) => adminSaveToken({ data }),
     onSuccess: () => {
       toast.success("Token saved");
-      setTokenForm({ ...emptyToken });
-      void invalidate();
+      invalidate();
     },
-    onError: onErr,
+    onError: (e: Error) => toast.error(e.message),
   });
-
   const saveAddress = useMutation({
-    mutationFn: (payload: Row) => saveAddressFn({ data: payload as never }),
+    mutationFn: (data: any) => adminSaveAddress({ data }),
     onSuccess: () => {
       toast.success("Address saved");
-      setAddressForm({ ...emptyAddress });
-      void invalidate();
+      invalidate();
     },
-    onError: onErr,
+    onError: (e: Error) => toast.error(e.message),
   });
-
-  const remove = useMutation({
-    mutationFn: (p: { table: "deposit_chains" | "deposit_tokens" | "deposit_addresses"; id: string }) =>
-      deleteFn({ data: p }),
-    onSuccess: () => {
-      toast.success("Deleted");
-      void invalidate();
-    },
-    onError: onErr,
-  });
-
-  const pause = useMutation({
-    mutationFn: (paused: boolean) => pauseFn({ data: { paused } }),
-    onSuccess: () => {
-      toast.success("Gateway state updated");
-      void invalidate();
-    },
-    onError: onErr,
-  });
-
-  const act = useMutation({
-    mutationFn: (p: { id: string; action: "sync" | "credit" | "fail" }) => actionFn({ data: p }),
+  const resolve = useMutation({
+    mutationFn: (data: any) => adminResolveDeposit({ data }),
     onSuccess: () => {
       toast.success("Deposit updated");
-      void invalidate();
+      invalidate();
     },
-    onError: onErr,
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const pauseAll = useMutation({
+    mutationFn: (paused: boolean) => adminPauseAllChains({ data: { paused } }),
+    onSuccess: () => {
+      toast.success("Gateway updated");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  if (isLoading) {
+  const [newToken, setNewToken] = useState({
+    chain_id: "",
+    name: "",
+    symbol: "",
+    contract_address: "",
+    decimals: "18",
+    min_deposit: "0",
+    usd_rate: "1",
+  });
+  const [newAddr, setNewAddr] = useState({ chain_id: "", address: "", label: "" });
+
+  if (config.isLoading) {
     return (
-      <div className="grid h-64 place-items-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex justify-center p-10">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  if (error) {
+  if (!config.data?.isAdmin) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <ShieldAlert className="mx-auto mb-3 h-8 w-8 text-destructive" />
-        <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+      <div className="mx-auto w-full max-w-2xl space-y-4">
+        <PageHeader title="Deposit gateway" backTo="/dashboard" />
+        <Card className="flex items-center gap-3 p-6 text-sm">
+          <ShieldAlert className="h-5 w-5 text-destructive" />
+          Administrator access is required for this page.
+        </Card>
       </div>
     );
   }
 
-  const allPaused = chains.length > 0 && chains.every((c) => c.maintenance_mode);
+  const chains = (config.data.chains ?? []) as any[];
+  const tokens = (config.data.tokens ?? []) as any[];
+  const addresses = (config.data.addresses ?? []) as any[];
+  const anyLive = chains.some((c) => c.is_enabled && !c.maintenance_mode);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pb-24 pt-2">
-      <PageHeader
-        title="Deposit gateway"
-        backTo="/dashboard"
-        right={
-          <Button
-            type="button"
-            size="sm"
-            variant={allPaused ? "default" : "destructive"}
-            className="rounded-full"
-            onClick={() => pause.mutate(!allPaused)}
-          >
-            {allPaused ? "Resume all" : "Emergency pause"}
-          </Button>
-        }
-      />
+    <div className="mx-auto w-full max-w-4xl space-y-4 pb-24">
+      <PageHeader title="Deposit gateway" backTo="/dashboard" />
 
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-sm font-semibold press",
-              tab === t.id
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border/60 text-muted-foreground hover:bg-muted/50",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ---------------------------------------------------------- chains */}
-      {tab === "chains" && (
-        <div className="space-y-4">
-          <Card className="space-y-3 rounded-3xl border-border/60 bg-card/70 p-4">
-            <h2 className="text-sm font-bold">Add blockchain</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Key (slug)">
-                <Input
-                  value={chainForm.key}
-                  onChange={(e) => setChainForm({ ...chainForm, key: e.target.value.toLowerCase() })}
-                  placeholder="ethereum"
-                />
-              </Field>
-              <Field label="Name">
-                <Input
-                  value={chainForm.name}
-                  onChange={(e) => setChainForm({ ...chainForm, name: e.target.value })}
-                  placeholder="Ethereum"
-                />
-              </Field>
-              <Field label="Family">
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-                  value={chainForm.family}
-                  onChange={(e) => setChainForm({ ...chainForm, family: e.target.value as never })}
-                >
-                  <option value="evm">EVM</option>
-                  <option value="solana">Solana</option>
-                  <option value="bitcoin">Bitcoin</option>
-                  <option value="other">Other</option>
-                </select>
-              </Field>
-              <Field label="Chain ID (EVM)">
-                <Input
-                  type="number"
-                  value={chainForm.chain_id ?? ""}
-                  onChange={(e) =>
-                    setChainForm({ ...chainForm, chain_id: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
-              </Field>
-              <Field label="RPC endpoint">
-                <Input
-                  value={chainForm.rpc_url}
-                  onChange={(e) => setChainForm({ ...chainForm, rpc_url: e.target.value })}
-                  placeholder="https://…"
-                />
-              </Field>
-              <Field label="Explorer URL">
-                <Input
-                  value={chainForm.explorer_url}
-                  onChange={(e) => setChainForm({ ...chainForm, explorer_url: e.target.value })}
-                  placeholder="https://etherscan.io"
-                />
-              </Field>
-              <Field label="Required confirmations">
-                <Input
-                  type="number"
-                  value={chainForm.required_confirmations}
-                  onChange={(e) =>
-                    setChainForm({ ...chainForm, required_confirmations: Number(e.target.value) })
-                  }
-                />
-              </Field>
-              <Field label="Bridge status">
-                <Input
-                  value={chainForm.bridge_status}
-                  onChange={(e) => setChainForm({ ...chainForm, bridge_status: e.target.value })}
-                  placeholder="native / bridged"
-                />
-              </Field>
-            </div>
-            <div className="flex flex-wrap items-center gap-5">
-              <Toggle
-                label="Enabled"
-                checked={chainForm.is_enabled}
-                onChange={(v) => setChainForm({ ...chainForm, is_enabled: v })}
-              />
-              <Toggle
-                label="Maintenance"
-                checked={chainForm.maintenance_mode}
-                onChange={(v) => setChainForm({ ...chainForm, maintenance_mode: v })}
-              />
-              <Button
-                type="button"
-                className="ml-auto rounded-full"
-                disabled={saveChain.isPending}
-                onClick={() =>
-                  saveChain.mutate({
-                    ...chainForm,
-                    rpc_url: chainForm.rpc_url || null,
-                    explorer_url: chainForm.explorer_url || null,
-                  })
-                }
-              >
-                <Plus className="mr-1 h-4 w-4" /> Save chain
-              </Button>
-            </div>
-          </Card>
-
-          {chains.map((c) => (
-            <Card key={c.id} className="rounded-2xl border-border/60 bg-card/60 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="font-semibold">
-                    {c.name} <span className="text-xs text-muted-foreground">({c.key})</span>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {c.family} · {c.required_confirmations} conf · {c.bridge_status} ·{" "}
-                    {c.rpc_url ? "custom RPC" : "default RPC"}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Toggle
-                    label="Enabled"
-                    checked={c.is_enabled}
-                    onChange={(v) => saveChain.mutate({ ...c, is_enabled: v })}
-                  />
-                  <Toggle
-                    label="Maintenance"
-                    checked={c.maintenance_mode}
-                    onChange={(v) => saveChain.mutate({ ...c, maintenance_mode: v })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full text-destructive"
-                    onClick={() => remove.mutate({ table: "deposit_chains", id: c.id })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+      <Card className="flex items-center justify-between gap-3 p-4">
+        <div>
+          <p className="text-sm font-semibold">Emergency control</p>
+          <p className="text-xs text-muted-foreground">
+            Pause every network instantly — pending deposits stay tracked.
+          </p>
         </div>
-      )}
+        <Button
+          variant={anyLive ? "destructive" : "default"}
+          onClick={() => pauseAll.mutate(anyLive)}
+          disabled={pauseAll.isPending}
+        >
+          {anyLive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+          {anyLive ? "Pause all" : "Resume all"}
+        </Button>
+      </Card>
 
-      {/* ---------------------------------------------------------- tokens */}
-      {tab === "tokens" && (
-        <div className="space-y-4">
-          <Card className="space-y-3 rounded-3xl border-border/60 bg-card/70 p-4">
-            <h2 className="text-sm font-bold">Add token</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Blockchain">
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-                  value={tokenForm.chain_id}
-                  onChange={(e) => setTokenForm({ ...tokenForm, chain_id: e.target.value })}
-                >
-                  <option value="">Select…</option>
-                  {chains.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Token name">
-                <Input
-                  value={tokenForm.name}
-                  onChange={(e) => setTokenForm({ ...tokenForm, name: e.target.value })}
-                />
-              </Field>
-              <Field label="Symbol">
-                <Input
-                  value={tokenForm.symbol}
-                  onChange={(e) => setTokenForm({ ...tokenForm, symbol: e.target.value.toUpperCase() })}
-                />
-              </Field>
-              <Field label="Contract address (blank = native)">
-                <Input
-                  value={tokenForm.contract_address}
-                  onChange={(e) => setTokenForm({ ...tokenForm, contract_address: e.target.value })}
-                />
-              </Field>
-              <Field label="Decimals">
-                <Input
-                  type="number"
-                  value={tokenForm.decimals}
-                  onChange={(e) => setTokenForm({ ...tokenForm, decimals: Number(e.target.value) })}
-                />
-              </Field>
-              <Field label="Credited as (wallet asset)">
-                <Input
-                  value={tokenForm.credit_symbol}
-                  onChange={(e) =>
-                    setTokenForm({ ...tokenForm, credit_symbol: e.target.value.toUpperCase() })
-                  }
-                  placeholder="OUSD"
-                />
-              </Field>
-              <Field label="Minimum deposit">
-                <Input
-                  type="number"
-                  value={tokenForm.min_deposit}
-                  onChange={(e) => setTokenForm({ ...tokenForm, min_deposit: Number(e.target.value) })}
-                />
-              </Field>
-              <Field label="Maximum deposit (blank = none)">
-                <Input
-                  type="number"
-                  value={tokenForm.max_deposit ?? ""}
-                  onChange={(e) =>
-                    setTokenForm({
-                      ...tokenForm,
-                      max_deposit: e.target.value ? Number(e.target.value) : null,
-                    })
-                  }
-                />
-              </Field>
-              <Field label="Deposit fee (bps)">
-                <Input
-                  type="number"
-                  value={tokenForm.deposit_fee_bps}
-                  onChange={(e) =>
-                    setTokenForm({ ...tokenForm, deposit_fee_bps: Number(e.target.value) })
-                  }
-                />
-              </Field>
-              <Field label="USD rate (optional)">
-                <Input
-                  type="number"
-                  value={tokenForm.usd_rate ?? ""}
-                  onChange={(e) =>
-                    setTokenForm({
-                      ...tokenForm,
-                      usd_rate: e.target.value ? Number(e.target.value) : null,
-                    })
-                  }
-                />
-              </Field>
-            </div>
-            <div className="flex flex-wrap items-center gap-5">
-              <Toggle
-                label="Deposit enabled"
-                checked={tokenForm.deposit_enabled}
-                onChange={(v) => setTokenForm({ ...tokenForm, deposit_enabled: v })}
-              />
-              <Toggle
-                label="Withdrawal enabled"
-                checked={tokenForm.withdrawal_enabled}
-                onChange={(v) => setTokenForm({ ...tokenForm, withdrawal_enabled: v })}
-              />
-              <Button
-                type="button"
-                className="ml-auto rounded-full"
-                disabled={saveToken.isPending || !tokenForm.chain_id}
-                onClick={() => saveToken.mutate({ ...tokenForm })}
+      <Tabs defaultValue="chains">
+        <TabsList className="w-full">
+          <TabsTrigger value="chains" className="flex-1">
+            Chains
+          </TabsTrigger>
+          <TabsTrigger value="tokens" className="flex-1">
+            Tokens
+          </TabsTrigger>
+          <TabsTrigger value="addresses" className="flex-1">
+            Addresses
+          </TabsTrigger>
+          <TabsTrigger value="queue" className="flex-1">
+            Deposits
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="chains" className="space-y-3">
+          {chains.map((c) => (
+            <ChainRow key={c.id} chain={c} onSave={(d) => saveChain.mutate(d)} />
+          ))}
+        </TabsContent>
+
+        <TabsContent value="tokens" className="space-y-3">
+          <Card className="space-y-3 p-4">
+            <p className="text-sm font-semibold">Add token</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                aria-label="Chain"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={newToken.chain_id}
+                onChange={(e) => setNewToken({ ...newToken, chain_id: e.target.value })}
               >
-                <Plus className="mr-1 h-4 w-4" /> Save token
-              </Button>
+                <option value="">Select network…</option>
+                {chains.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <Input
+                placeholder="Name (USD Coin)"
+                value={newToken.name}
+                onChange={(e) => setNewToken({ ...newToken, name: e.target.value })}
+              />
+              <Input
+                placeholder="Symbol (USDC)"
+                value={newToken.symbol}
+                onChange={(e) => setNewToken({ ...newToken, symbol: e.target.value.toUpperCase() })}
+              />
+              <Input
+                placeholder="Contract address (blank = native)"
+                value={newToken.contract_address}
+                onChange={(e) => setNewToken({ ...newToken, contract_address: e.target.value })}
+              />
+              <Input
+                placeholder="Decimals"
+                value={newToken.decimals}
+                onChange={(e) => setNewToken({ ...newToken, decimals: e.target.value })}
+              />
+              <Input
+                placeholder="USD rate"
+                value={newToken.usd_rate}
+                onChange={(e) => setNewToken({ ...newToken, usd_rate: e.target.value })}
+              />
             </div>
+            <Button
+              onClick={() =>
+                saveToken.mutate({
+                  chain_id: newToken.chain_id,
+                  name: newToken.name,
+                  symbol: newToken.symbol,
+                  contract_address: newToken.contract_address || null,
+                  decimals: Number(newToken.decimals) || 18,
+                  deposit_enabled: true,
+                  withdrawal_enabled: false,
+                  min_deposit: Number(newToken.min_deposit) || 0,
+                  max_deposit: null,
+                  deposit_fee_bps: 0,
+                  credit_symbol: "OUSD",
+                  usd_rate: Number(newToken.usd_rate) || 1,
+                  status: "active",
+                  sort_order: 100,
+                })
+              }
+              disabled={!newToken.chain_id || !newToken.symbol || saveToken.isPending}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add token
+            </Button>
           </Card>
 
           {tokens.map((t) => (
-            <Card key={t.id} className="rounded-2xl border-border/60 bg-card/60 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-semibold">
-                    {t.symbol} <span className="text-xs text-muted-foreground">{t.name}</span>
-                  </div>
-                  <div className="truncate text-[11px] text-muted-foreground">
-                    {chainName(t.chain_id)} · {t.decimals} dp · min {t.min_deposit} · fee{" "}
-                    {(t.deposit_fee_bps / 100).toFixed(2)}% · credits {t.credit_symbol}
-                  </div>
-                  {t.contract_address && (
-                    <div className="truncate font-mono text-[10px] text-muted-foreground">
-                      {t.contract_address}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  <Toggle
-                    label="Deposits"
-                    checked={t.deposit_enabled}
-                    onChange={(v) => saveToken.mutate({ ...t, deposit_enabled: v })}
-                  />
-                  <Toggle
-                    label="Withdrawals"
-                    checked={t.withdrawal_enabled}
-                    onChange={(v) => saveToken.mutate({ ...t, withdrawal_enabled: v })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full text-destructive"
-                    onClick={() => remove.mutate({ table: "deposit_tokens", id: t.id })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
+            <TokenRow key={t.id} token={t} chains={chains} onSave={(d) => saveToken.mutate(d)} />
           ))}
-        </div>
-      )}
+        </TabsContent>
 
-      {/* ------------------------------------------------------- addresses */}
-      {tab === "addresses" && (
-        <div className="space-y-4">
-          <Card className="space-y-3 rounded-3xl border-border/60 bg-card/70 p-4">
-            <h2 className="text-sm font-bold">Add receiving address</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Blockchain">
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-                  value={addressForm.chain_id}
-                  onChange={(e) =>
-                    setAddressForm({ ...addressForm, chain_id: e.target.value, token_id: "" })
-                  }
-                >
-                  <option value="">Select…</option>
-                  {chains.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Token (blank = all tokens on chain)">
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-                  value={addressForm.token_id}
-                  onChange={(e) => setAddressForm({ ...addressForm, token_id: e.target.value })}
-                >
-                  <option value="">All tokens</option>
-                  {tokens
-                    .filter((t) => t.chain_id === addressForm.chain_id)
-                    .map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.symbol}
-                      </option>
-                    ))}
-                </select>
-              </Field>
-              <Field label="Address">
-                <Input
-                  value={addressForm.address}
-                  onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
-                  className="font-mono text-xs"
-                />
-              </Field>
-              <Field label="Label">
-                <Input
-                  value={addressForm.label}
-                  onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
-                  placeholder="Hot wallet"
-                />
-              </Field>
-              <Field label="Memo / tag (optional)">
-                <Input
-                  value={addressForm.memo_tag}
-                  onChange={(e) => setAddressForm({ ...addressForm, memo_tag: e.target.value })}
-                />
-              </Field>
-            </div>
-            <div className="flex items-center gap-5">
-              <Toggle
-                label="Active"
-                checked={addressForm.is_active}
-                onChange={(v) => setAddressForm({ ...addressForm, is_active: v })}
-              />
-              <Button
-                type="button"
-                className="ml-auto rounded-full"
-                disabled={saveAddress.isPending || !addressForm.chain_id || !addressForm.address}
-                onClick={() =>
-                  saveAddress.mutate({
-                    ...addressForm,
-                    token_id: addressForm.token_id || null,
-                  })
-                }
+        <TabsContent value="addresses" className="space-y-3">
+          <Card className="space-y-3 p-4">
+            <p className="text-sm font-semibold">Add receiving address</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                aria-label="Chain for address"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={newAddr.chain_id}
+                onChange={(e) => setNewAddr({ ...newAddr, chain_id: e.target.value })}
               >
-                <Plus className="mr-1 h-4 w-4" /> Save address
-              </Button>
+                <option value="">Select network…</option>
+                {chains.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <Input
+                placeholder="Label (Treasury hot wallet)"
+                value={newAddr.label}
+                onChange={(e) => setNewAddr({ ...newAddr, label: e.target.value })}
+              />
+              <Input
+                className="sm:col-span-2"
+                placeholder="Receiving address"
+                value={newAddr.address}
+                onChange={(e) => setNewAddr({ ...newAddr, address: e.target.value })}
+              />
             </div>
+            <Button
+              onClick={() =>
+                saveAddress.mutate({
+                  chain_id: newAddr.chain_id,
+                  token_id: null,
+                  address: newAddr.address.trim(),
+                  label: newAddr.label || null,
+                  is_active: true,
+                })
+              }
+              disabled={!newAddr.chain_id || newAddr.address.trim().length < 10 || saveAddress.isPending}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add address
+            </Button>
           </Card>
 
           {addresses.map((a) => (
-            <Card key={a.id} className="rounded-2xl border-border/60 bg-card/60 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-semibold">{a.label || "Receiving address"}</div>
-                  <div className="truncate font-mono text-[11px] text-muted-foreground">
-                    {a.address}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {chainName(a.chain_id)} ·{" "}
-                    {a.token_id ? tokens.find((t) => t.id === a.token_id)?.symbol : "all tokens"}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Toggle
-                    label="Active"
-                    checked={a.is_active}
-                    onChange={(v) => saveAddress.mutate({ ...a, is_active: v })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full text-destructive"
-                    onClick={() => remove.mutate({ table: "deposit_addresses", id: a.id })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+            <Card key={a.id} className="flex items-center gap-3 p-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{a.label ?? "Receiving address"}</p>
+                <p className="truncate text-xs text-muted-foreground">{a.address}</p>
+                <p className="text-xs text-muted-foreground">
+                  {chains.find((c) => c.id === a.chain_id)?.name ?? "Unknown network"}
+                </p>
               </div>
+              <Switch
+                checked={a.is_active}
+                aria-label="Address active"
+                onCheckedChange={(v) =>
+                  saveAddress.mutate({
+                    id: a.id,
+                    chain_id: a.chain_id,
+                    token_id: a.token_id,
+                    address: a.address,
+                    label: a.label,
+                    is_active: v,
+                  })
+                }
+              />
             </Card>
           ))}
-        </div>
-      )}
+        </TabsContent>
 
-      {/* -------------------------------------------------------- deposits */}
-      {tab === "deposits" && (
-        <div className="space-y-2">
-          {!deposits.length && (
-            <p className="py-10 text-center text-sm text-muted-foreground">No deposits yet.</p>
-          )}
-          {deposits.map((d) => (
-            <Card key={d.id} className="rounded-2xl border-border/60 bg-card/60 p-4 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="font-semibold">
-                  {d.amount} {d.token_symbol}{" "}
-                  <span className="text-xs capitalize text-muted-foreground">{d.chain_key}</span>
+        <TabsContent value="queue" className="space-y-3">
+          <div className="flex justify-end">
+            <Button size="sm" variant="ghost" onClick={() => void depositsQ.refetch()} aria-label="Refresh">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          {(depositsQ.data?.deposits ?? []).length === 0 ? (
+            <Card className="p-4 text-sm text-muted-foreground">No deposits recorded yet.</Card>
+          ) : (
+            (depositsQ.data?.deposits ?? []).map((d) => (
+              <Card key={d.id} className="space-y-2 p-3">
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">
+                      {Number(d.amount)} {d.token_symbol} · {d.chain_key}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{d.tx_hash}</p>
+                  </div>
+                  <Badge variant="outline">{d.status}</Badge>
                 </div>
-                <span className="text-[11px] capitalize text-muted-foreground">
-                  {d.status} · {d.confirmations}/{d.required_confirmations} conf ·{" "}
-                  {timeAgo(d.created_at)}
-                </span>
-              </div>
-              <div className="mt-1 font-mono text-[11px] text-muted-foreground">
-                {shortAddress(d.tx_hash, 10, 8)} → {shortAddress(d.to_address, 6, 6)}
-              </div>
-              {d.error && <p className="mt-1 text-[11px] text-destructive">{d.error}</p>}
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => act.mutate({ id: d.id, action: "sync" })}
-                >
-                  Re-check
-                </Button>
-                {d.status !== "credited" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => act.mutate({ id: d.id, action: "credit" })}
-                  >
-                    Credit manually
+                <div className="flex flex-wrap gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => resolve.mutate({ id: d.id, action: "recheck" })}>
+                    Re-check
                   </Button>
-                )}
-                {d.status !== "credited" && d.status !== "failed" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    className="rounded-full"
-                    onClick={() => act.mutate({ id: d.id, action: "fail" })}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => resolve.mutate({ id: d.id, action: "credit" })}>
+                    Credit
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => resolve.mutate({ id: d.id, action: "reject" })}>
                     Reject
                   </Button>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* ------------------------------------------------------------ logs */}
-      {tab === "logs" && (
-        <Card className="rounded-3xl border-border/60 bg-card/70 p-4">
-          {!logs.length && (
-            <p className="py-8 text-center text-sm text-muted-foreground">No events logged yet.</p>
-          )}
-          <div className="space-y-2">
-            {logs.map((l) => (
-              <div key={l.id} className="rounded-xl border border-border/50 bg-background/50 p-2.5">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>{l.event}</span>
-                  <span className="text-muted-foreground">{timeAgo(l.created_at)}</span>
                 </div>
-                <pre className="mt-1 overflow-x-auto text-[10px] text-muted-foreground">
-                  {JSON.stringify(l.detail, null, 0)}
-                </pre>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+              </Card>
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function ChainRow({ chain, onSave }: { chain: any; onSave: (data: any) => void }) {
+  const [state, setState] = useState({
+    rpc_url: chain.rpc_url ?? "",
+    explorer_url: chain.explorer_url ?? "",
+    required_confirmations: String(chain.required_confirmations),
+    is_enabled: chain.is_enabled,
+    maintenance_mode: chain.maintenance_mode,
+  });
+
   return (
-    <div className="space-y-1.5">
-      <Label className="text-[11px] uppercase text-muted-foreground">{label}</Label>
-      {children}
-    </div>
+    <Card className="space-y-3 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold">{chain.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {chain.family.toUpperCase()} · {chain.key}
+          </p>
+        </div>
+        <Badge variant="outline">{chain.bridge_status}</Badge>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div>
+          <Label className="text-xs">RPC URL</Label>
+          <Input value={state.rpc_url} onChange={(e) => setState({ ...state, rpc_url: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs">Explorer URL</Label>
+          <Input
+            value={state.explorer_url}
+            onChange={(e) => setState({ ...state, explorer_url: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Required confirmations</Label>
+          <Input
+            value={state.required_confirmations}
+            onChange={(e) => setState({ ...state, required_confirmations: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <Switch
+            checked={state.is_enabled}
+            onCheckedChange={(v) => setState({ ...state, is_enabled: v })}
+            aria-label="Chain enabled"
+          />
+          Enabled
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Switch
+            checked={state.maintenance_mode}
+            onCheckedChange={(v) => setState({ ...state, maintenance_mode: v })}
+            aria-label="Maintenance mode"
+          />
+          Maintenance
+        </label>
+        <Button
+          size="sm"
+          className="ml-auto"
+          onClick={() =>
+            onSave({
+              id: chain.id,
+              key: chain.key,
+              name: chain.name,
+              family: chain.family,
+              chain_id: chain.chain_id,
+              rpc_url: state.rpc_url || null,
+              explorer_url: state.explorer_url || null,
+              required_confirmations: Number(state.required_confirmations) || 1,
+              bridge_status: chain.bridge_status,
+              is_enabled: state.is_enabled,
+              maintenance_mode: state.maintenance_mode,
+              sort_order: chain.sort_order ?? 100,
+            })
+          }
+        >
+          <Save className="mr-2 h-4 w-4" /> Save
+        </Button>
+      </div>
+    </Card>
   );
 }
 
-function Toggle({
-  label,
-  checked,
-  onChange,
+function TokenRow({
+  token,
+  chains,
+  onSave,
 }: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
+  token: any;
+  chains: any[];
+  onSave: (data: any) => void;
 }) {
+  const [state, setState] = useState({
+    min_deposit: String(token.min_deposit ?? 0),
+    max_deposit: token.max_deposit == null ? "" : String(token.max_deposit),
+    deposit_fee_bps: String(token.deposit_fee_bps ?? 0),
+    usd_rate: token.usd_rate == null ? "" : String(token.usd_rate),
+    deposit_enabled: token.deposit_enabled,
+    withdrawal_enabled: token.withdrawal_enabled,
+  });
+
   return (
-    <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-      <Switch checked={checked} onCheckedChange={onChange} />
-      {label}
-    </label>
+    <Card className="space-y-3 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold">
+            {token.symbol} · {token.name}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {chains.find((c) => c.id === token.chain_id)?.name} ·{" "}
+            {token.contract_address ?? "native asset"}
+          </p>
+        </div>
+        <Badge variant="outline">{token.status}</Badge>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-4">
+        <div>
+          <Label className="text-xs">Min</Label>
+          <Input value={state.min_deposit} onChange={(e) => setState({ ...state, min_deposit: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs">Max</Label>
+          <Input value={state.max_deposit} onChange={(e) => setState({ ...state, max_deposit: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs">Fee (bps)</Label>
+          <Input
+            value={state.deposit_fee_bps}
+            onChange={(e) => setState({ ...state, deposit_fee_bps: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">USD rate</Label>
+          <Input value={state.usd_rate} onChange={(e) => setState({ ...state, usd_rate: e.target.value })} />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <Switch
+            checked={state.deposit_enabled}
+            onCheckedChange={(v) => setState({ ...state, deposit_enabled: v })}
+            aria-label="Deposits enabled"
+          />
+          Deposits
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Switch
+            checked={state.withdrawal_enabled}
+            onCheckedChange={(v) => setState({ ...state, withdrawal_enabled: v })}
+            aria-label="Withdrawals enabled"
+          />
+          Withdrawals
+        </label>
+        <Button
+          size="sm"
+          className="ml-auto"
+          onClick={() =>
+            onSave({
+              id: token.id,
+              chain_id: token.chain_id,
+              name: token.name,
+              symbol: token.symbol,
+              contract_address: token.contract_address,
+              decimals: token.decimals,
+              deposit_enabled: state.deposit_enabled,
+              withdrawal_enabled: state.withdrawal_enabled,
+              min_deposit: Number(state.min_deposit) || 0,
+              max_deposit: state.max_deposit === "" ? null : Number(state.max_deposit),
+              deposit_fee_bps: Number(state.deposit_fee_bps) || 0,
+              credit_symbol: token.credit_symbol ?? "OUSD",
+              usd_rate: state.usd_rate === "" ? null : Number(state.usd_rate),
+              status: token.status,
+              sort_order: token.sort_order ?? 100,
+            })
+          }
+        >
+          <Save className="mr-2 h-4 w-4" /> Save
+        </Button>
+      </div>
+    </Card>
   );
 }

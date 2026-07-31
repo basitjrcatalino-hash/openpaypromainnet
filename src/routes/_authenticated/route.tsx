@@ -9,9 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   Wallet,
-  ArrowDownToLine,
   Compass,
-
   Settings as SettingsIcon,
   LogOut,
   Menu,
@@ -34,6 +32,8 @@ import {
   Bot,
   Sparkles,
   Code2,
+  ArrowDownToLine,
+  Store,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -90,10 +90,8 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Compass },
   { to: "/wallet", label: "Wallet", icon: Wallet },
-  { to: "/deposit", label: "Deposit", icon: ArrowDownToLine },
   { to: "/tokens", label: "Tokens", icon: CircleDollarSign },
   { to: "/opentoken", label: "OpenToken", icon: BookOpen },
-
   // Bags Cash hidden for now — re-enable via BAGS_CASH_ENABLED above.
   { to: "/activity", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
@@ -655,6 +653,59 @@ function SidebarInner({
           />
           Watchlist
         </Link>
+        <Link
+          to="/deposit"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/deposit"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <ArrowDownToLine
+            className={cn("h-5 w-5", pathname === "/deposit" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/deposit" ? 2.25 : 1.75}
+          />
+          Deposit
+        </Link>
+        <Link
+          to="/merchant"
+          onClick={onClose}
+          preload="intent"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+            pathname === "/merchant"
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          <Store
+            className={cn("h-5 w-5", pathname === "/merchant" && "ph-tab-icon-active")}
+            strokeWidth={pathname === "/merchant" ? 2.25 : 1.75}
+          />
+          Merchant
+        </Link>
+        {developerMode && (
+          <Link
+            to="/admin/deposits"
+            onClick={onClose}
+            preload="intent"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
+              pathname === "/admin/deposits"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+            )}
+          >
+            <Store
+              className={cn("h-5 w-5", pathname === "/admin/deposits" && "ph-tab-icon-active")}
+              strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
+            />
+            Deposit gateway
+          </Link>
+        )}
         {developerMode && (
           <Link
             to="/ledger"
@@ -674,26 +725,6 @@ function SidebarInner({
             Ledger API
           </Link>
         )}
-        {developerMode && (
-          <Link
-            to="/admin/deposits"
-            onClick={onClose}
-            preload="intent"
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-              pathname === "/admin/deposits"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-            )}
-          >
-            <ArrowDownToLine
-              className={cn("h-5 w-5", pathname === "/admin/deposits" && "ph-tab-icon-active")}
-              strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
-            />
-            Deposit gateway
-          </Link>
-        )}
-
         <Link
           to="/ai"
           onClick={onClose}

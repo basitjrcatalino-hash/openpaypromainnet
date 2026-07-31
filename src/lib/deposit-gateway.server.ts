@@ -159,10 +159,11 @@ export async function syncDeposit(depositId: string) {
   }
 
   if (Number(token.min_deposit ?? 0) > 0 && result.amount < Number(token.min_deposit)) {
+    const belowMin = `Below the ${token.min_deposit} ${token.symbol} minimum`;
     patch.status = "failed";
-    patch.error = `Below the ${token.min_deposit} ${token.symbol} minimum`;
+    patch.error = belowMin;
     await db.from("deposits").update(patch as any).eq("id", depositId);
-    return { status: "failed", error: patch.error };
+    return { status: "failed", error: belowMin };
   }
 
   patch.status = "confirmed";

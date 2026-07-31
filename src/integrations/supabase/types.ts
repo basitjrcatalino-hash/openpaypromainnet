@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      circle_mint_deposits: {
+        Row: {
+          id: string
+          user_id: string
+          wallet_id: string
+          payment_intent_id: string
+          expected_amount: number
+          currency: string
+          chain: string
+          deposit_address: string | null
+          status: string
+          circle_payment_id: string | null
+          tx_hash: string | null
+          raw_intent: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          wallet_id: string
+          payment_intent_id: string
+          expected_amount: number
+          currency?: string
+          chain?: string
+          deposit_address?: string | null
+          status?: string
+          circle_payment_id?: string | null
+          tx_hash?: string | null
+          raw_intent?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          wallet_id?: string
+          payment_intent_id?: string
+          expected_amount?: number
+          currency?: string
+          chain?: string
+          deposit_address?: string | null
+          status?: string
+          circle_payment_id?: string | null
+          tx_hash?: string | null
+          raw_intent?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crypto_transactions: {
         Row: {
           amount: number

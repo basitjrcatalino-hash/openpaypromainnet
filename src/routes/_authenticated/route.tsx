@@ -6,7 +6,7 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Wallet,
   ArrowDownToLine,
@@ -37,6 +37,9 @@ import {
   Newspaper,
   BookMarked,
   Globe2,
+  Home,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -230,8 +233,8 @@ function AuthenticatedLayout() {
           {!hideChrome && (
             <aside
               className={cn(
-                "sticky top-0 hidden h-screen shrink-0 overflow-y-auto border-r border-sidebar-border bg-background md:flex md:flex-col transition-[width] duration-200 ease-in-out",
-                sidebarCollapsed ? "w-16 p-2" : "w-80 p-4",
+                "ph-sidebar sticky top-0 hidden h-screen shrink-0 overflow-y-auto md:flex md:flex-col transition-[width] duration-200 ease-in-out",
+                sidebarCollapsed ? "w-[4.25rem] p-2" : "w-[17.5rem] p-3",
               )}
             >
               {sidebarCollapsed ? (
@@ -270,7 +273,7 @@ function AuthenticatedLayout() {
                 className="absolute inset-0 bg-background/70 backdrop-blur-sm"
                 onClick={() => setMobileOpen(false)}
               />
-              <aside className="relative flex h-full w-75 flex-col overflow-y-auto border-r border-sidebar-border bg-background p-4 shadow-2xl">
+              <aside className="ph-sidebar relative flex h-full w-[19rem] flex-col overflow-y-auto p-3 shadow-2xl">
                 <SidebarInner
                   wallets={wallets}
                   activeWallet={activeWallet}
@@ -356,6 +359,32 @@ function AuthenticatedLayout() {
   );
 }
 
+function sideItemClass(active: boolean) {
+  return cn(
+    "ph-side-item flex w-full items-center gap-3 rounded-[14px] px-3 py-[0.58rem] text-[13.5px] font-semibold tracking-[-0.012em] press",
+    active
+      ? "ph-side-item-active bg-primary/12 text-primary"
+      : "text-muted-foreground hover:bg-muted/55 hover:text-foreground",
+  );
+}
+
+function SideSection({
+  label,
+  children,
+  className,
+}: {
+  label?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-0.5", className)}>
+      {label ? <p className="ph-side-label px-3 pb-1.5 pt-1">{label}</p> : null}
+      {children}
+    </div>
+  );
+}
+
 function CollapsedSidebar({
   pathname,
   onExpand,
@@ -367,20 +396,20 @@ function CollapsedSidebar({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex h-full flex-col items-center gap-1.5 py-2">
+    <div className="flex h-full flex-col items-center gap-1 py-1.5">
       {activeWallet ? (
         <WalletAvatar
           address={activeWallet.address}
           name={activeWallet.name}
           size="sm"
           active
-          className="mb-2"
+          className="mb-1.5"
         />
       ) : null}
       <button
         type="button"
         onClick={onExpand}
-        className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+        className="mb-1.5 flex h-10 w-10 items-center justify-center rounded-[14px] text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
         title="Expand sidebar"
       >
         <PanelLeftOpen className="h-5 w-5" />
@@ -392,9 +421,9 @@ function CollapsedSidebar({
             key={item.to}
             to={item.to}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+              "flex h-10 w-10 items-center justify-center rounded-[14px] transition-colors",
               active
-                ? "bg-primary/15 text-primary"
+                ? "bg-primary/12 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
             title={t(item.labelKey)}
@@ -406,6 +435,18 @@ function CollapsedSidebar({
           </Link>
         );
       })}
+      <Link
+        to="/ai"
+        className={cn(
+          "mt-1 flex h-10 w-10 items-center justify-center rounded-[14px] transition-colors",
+          pathname === "/ai"
+            ? "bg-primary/12 text-primary"
+            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+        )}
+        title={t("nav.ai")}
+      >
+        <img src={OPENPAY_AI_MENU_ICON} alt="" className="h-5 w-5 rounded object-contain" />
+      </Link>
     </div>
   );
 }
@@ -457,6 +498,24 @@ function SidebarInner({
   const { code: currency, setCode: setCurrency } = useCurrency();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [discoverOpen, setDiscoverOpen] = useState(() => {
+    try {
+      return localStorage.getItem("sidebar-discover-open") !== "0";
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleDiscover = () =>
+    setDiscoverOpen((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("sidebar-discover-open", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
 
   const { data: adminInfo } = useQuery({
     queryKey: ["is-admin"],
@@ -544,8 +603,8 @@ function SidebarInner({
   const handle = profile?.username || profile?.pi_username || profile?.display_name || "wallet";
 
   return (
-    <div className="flex min-h-full min-w-0 flex-col gap-5">
-      <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-2 py-2">
+    <div className="flex min-h-full min-w-0 flex-col gap-4">
+      <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl px-1.5 py-1">
         <Link
           to="/profile"
           onClick={onClose}
@@ -565,11 +624,11 @@ function SidebarInner({
           )}
           <span className="truncate">{activeWallet?.name ?? "My Wallet"}</span>
         </Link>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-0.5">
           <button
             type="button"
             onClick={() => setHideBalance((v) => !v)}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
             aria-label="Toggle balance"
           >
             {hideBalance ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -577,7 +636,7 @@ function SidebarInner({
           <button
             type="button"
             onClick={() => setSwitchOpen(true)}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
             aria-label="Switch wallet"
           >
             <ChevronsUpDown className="h-4 w-4" />
@@ -586,7 +645,7 @@ function SidebarInner({
             <button
               type="button"
               onClick={onClose}
-              className="ml-1 grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
               aria-label="Close menu"
             >
               <X className="h-4 w-4" />
@@ -602,260 +661,270 @@ function SidebarInner({
         copied={copied}
         onCycleCurrency={() => setCurrencyOpen(true)}
         onCopyAddress={copyAddress}
-        className="py-2"
+        className="px-1 py-1"
       />
 
-      <nav className="space-y-1">
-        {NAV.map((item) => {
-          const Icon = item.icon;
-          const active = navActive(pathname, item.to);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={onClose}
-              preload="intent"
+      <nav className="flex min-h-0 flex-1 flex-col gap-3">
+        <SideSection>
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            const active = navActive(pathname, item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={onClose}
+                preload="intent"
+                aria-current={active ? "page" : undefined}
+                className={sideItemClass(active)}
+              >
+                <Icon
+                  className={cn("h-[1.15rem] w-[1.15rem] shrink-0", active && "ph-tab-icon-active")}
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
+                <span className="truncate">{t(item.labelKey)}</span>
+              </Link>
+            );
+          })}
+        </SideSection>
+
+        <SideSection label={t("nav.explore")}>
+          <Link
+            to="/chat"
+            onClick={onClose}
+            preload="intent"
+            aria-current={
+              pathname === "/chat" || pathname.startsWith("/chat/") ? "page" : undefined
+            }
+            className={sideItemClass(pathname === "/chat" || pathname.startsWith("/chat/"))}
+          >
+            <MessageCircle
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-                active
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                (pathname === "/chat" || pathname.startsWith("/chat/")) && "ph-tab-icon-active",
+              )}
+              strokeWidth={
+                pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75
+              }
+            />
+            <span className="truncate">{t("nav.liveChat")}</span>
+          </Link>
+          <Link
+            to="/watchlist"
+            onClick={onClose}
+            preload="intent"
+            aria-current={
+              pathname === "/watchlist" || pathname.startsWith("/watchlist/")
+                ? "page"
+                : undefined
+            }
+            className={sideItemClass(
+              pathname === "/watchlist" || pathname.startsWith("/watchlist/"),
+            )}
+          >
+            <Star
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                (pathname === "/watchlist" || pathname.startsWith("/watchlist/")) &&
+                  "ph-tab-icon-active",
+              )}
+              strokeWidth={
+                pathname === "/watchlist" || pathname.startsWith("/watchlist/") ? 2.25 : 1.75
+              }
+            />
+            <span className="truncate">{t("nav.watchlist")}</span>
+          </Link>
+          <Link
+            to="/ai"
+            onClick={onClose}
+            preload="intent"
+            aria-current={pathname === "/ai" ? "page" : undefined}
+            className={sideItemClass(pathname === "/ai")}
+          >
+            <img
+              src={OPENPAY_AI_MENU_ICON}
+              alt=""
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0 rounded object-contain",
+                pathname !== "/ai" && "opacity-85",
+              )}
+            />
+            <span className="truncate">{t("nav.ai")}</span>
+          </Link>
+          <Link
+            to="/solana-pay"
+            onClick={onClose}
+            preload="intent"
+            aria-current={pathname === "/solana-pay" ? "page" : undefined}
+            className={sideItemClass(pathname === "/solana-pay")}
+          >
+            <span
+              className={cn(
+                "grid h-[1.15rem] w-[1.15rem] shrink-0 place-items-center text-[13px] font-black leading-none",
+                pathname === "/solana-pay" ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon
-                className={cn("h-5 w-5", active && "ph-tab-icon-active")}
-                strokeWidth={active ? 2.25 : 1.75}
-              />
-              {t(item.labelKey)}
-            </Link>
-          );
-        })}
-      </nav>
+              ◎
+            </span>
+            <span className="truncate">Solana Pay</span>
+          </Link>
+        </SideSection>
 
-      <div className="space-y-1">
-        <Link
-          to="/chat"
-          onClick={onClose}
-          preload="intent"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-            pathname === "/chat" || pathname.startsWith("/chat/")
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-          )}
-        >
-          <MessageCircle
-            className={cn(
-              "h-5 w-5",
-              (pathname === "/chat" || pathname.startsWith("/chat/")) && "ph-tab-icon-active",
-            )}
-            strokeWidth={
-              pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75
-            }
-          />
-          {t("nav.liveChat")}
-        </Link>
-        <Link
-          to="/watchlist"
-          onClick={onClose}
-          preload="intent"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-            pathname === "/watchlist" || pathname.startsWith("/watchlist/")
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-          )}
-        >
-          <Star
-            className={cn(
-              "h-5 w-5",
-              (pathname === "/watchlist" || pathname.startsWith("/watchlist/")) &&
-                "ph-tab-icon-active",
-            )}
-            strokeWidth={
-              pathname === "/watchlist" || pathname.startsWith("/watchlist/") ? 2.25 : 1.75
-            }
-          />
-          {t("nav.watchlist")}
-        </Link>
-        <a
-          href="/openusd"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <CircleDollarSign className="h-5 w-5" strokeWidth={1.75} />
-          {t("nav.ousd")}
-        </a>
-        <a
-          href="/about"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <Globe2 className="h-5 w-5" strokeWidth={1.75} />
-          {t("nav.about")}
-        </a>
-        <a
-          href="/blog"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <Newspaper className="h-5 w-5" strokeWidth={1.75} />
-          {t("nav.blog")}
-        </a>
-        <a
-          href="/wiki"
-          target="_blank"
-          rel="noreferrer"
-          onClick={onClose}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-        >
-          <BookMarked className="h-5 w-5" strokeWidth={1.75} />
-          {t("nav.wiki")}
-        </a>
-        {developerMode && (
-          <Link
-            to="/ledger"
-            onClick={onClose}
-            preload="intent"
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-              pathname === "/ledger"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-            )}
+        <div className="space-y-0.5">
+          <button
+            type="button"
+            onClick={toggleDiscover}
+            className="ph-side-label flex w-full items-center justify-between px-3 pb-1.5 pt-1 press"
+            aria-expanded={discoverOpen}
           >
-            <ScrollText
-              className={cn("h-5 w-5", pathname === "/ledger" && "ph-tab-icon-active")}
-              strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
-            />
-            {t("nav.ledgerApi")}
-          </Link>
-        )}
-        {isAdmin && (
-          <Link
-            to="/admin/topup"
-            onClick={onClose}
-            preload="intent"
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-              pathname === "/admin/topup"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-            )}
-          >
-            <CircleDollarSign
-              className={cn("h-5 w-5", pathname === "/admin/topup" && "ph-tab-icon-active")}
-              strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
-            />
-            Admin · Top Up &amp; Buy
-          </Link>
-        )}
-        {(developerMode || isAdmin) && (
-          <Link
-            to="/admin/deposits"
-            onClick={onClose}
-            preload="intent"
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-              pathname === "/admin/deposits"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-            )}
-          >
-            <ArrowDownToLine
-              className={cn("h-5 w-5", pathname === "/admin/deposits" && "ph-tab-icon-active")}
-              strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
-            />
-            {t("nav.depositGateway")}
-          </Link>
-        )}
-
-        <Link
-          to="/ai"
-          onClick={onClose}
-          preload="intent"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-            pathname === "/ai"
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-          )}
-        >
-          <img
-            src={OPENPAY_AI_MENU_ICON}
-            alt="OpenPay AI"
-            className={cn(
-              "h-5 w-5 rounded object-contain",
-              pathname !== "/ai" && "opacity-80",
-            )}
-          />
-          {t("nav.ai")}
-        </Link>
-        {developerMode && (
-          <>
-            <Link
-              to="/connect"
-              onClick={onClose}
-              preload="intent"
+            <span>{t("nav.discover")}</span>
+            <ChevronDown
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold press",
-                pathname === "/connect"
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                "h-3.5 w-3.5 text-muted-foreground/80 transition-transform duration-200",
+                discoverOpen && "rotate-180",
               )}
-            >
-              <Bot
-                className={cn("h-5 w-5", pathname === "/connect" && "ph-tab-icon-active")}
-                strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
-              />
-              {t("nav.agentConnect")}
-            </Link>
-            <a
-              href="/docs/openpay"
-              target="_blank"
-              rel="noreferrer"
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-            >
-              <BookOpen className="h-5 w-5" strokeWidth={1.75} />
-              {t("nav.docs")}
-            </a>
-            <a
-              href="/docs/faq"
-              target="_blank"
-              rel="noreferrer"
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground press"
-            >
-              <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
-              {t("nav.faq")}
-            </a>
-          </>
-        )}
-
-        <div className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5">
-          <Code2 className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-          <label
-            htmlFor="developer-mode"
-            className="flex-1 cursor-pointer text-sm font-semibold text-muted-foreground"
-          >
-            {t("nav.developer")}
-          </label>
-          <Switch
-            id="developer-mode"
-            checked={developerMode}
-            onCheckedChange={setDeveloperMode}
-            aria-label="Toggle developer mode"
-          />
+            />
+          </button>
+          {discoverOpen ? (
+            <div className="space-y-0.5">
+              {(
+                [
+                  { href: "/", labelKey: "nav.website", Icon: Home },
+                  { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign },
+                  { href: "/about", labelKey: "nav.about", Icon: Globe2 },
+                  { href: "/blog", labelKey: "nav.blog", Icon: Newspaper },
+                  { href: "/wiki", labelKey: "nav.wiki", Icon: BookMarked },
+                ] as const
+              ).map(({ href, labelKey, Icon }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={onClose}
+                  className={sideItemClass(false)}
+                >
+                  <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
-      </div>
 
+        <SideSection label={t("nav.developer")}>
+          <div className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
+            <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+            <label
+              htmlFor="developer-mode"
+              className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
+            >
+              {t("nav.developer")}
+            </label>
+            <Switch
+              id="developer-mode"
+              checked={developerMode}
+              onCheckedChange={setDeveloperMode}
+              aria-label="Toggle developer mode"
+            />
+          </div>
+          {developerMode ? (
+            <>
+              <Link
+                to="/ledger"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/ledger" ? "page" : undefined}
+                className={sideItemClass(pathname === "/ledger")}
+              >
+                <ScrollText
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/ledger" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
+                />
+                <span className="truncate">{t("nav.ledgerApi")}</span>
+              </Link>
+              <Link
+                to="/connect"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/connect" ? "page" : undefined}
+                className={sideItemClass(pathname === "/connect")}
+              >
+                <Bot
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/connect" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
+                />
+                <span className="truncate">{t("nav.agentConnect")}</span>
+              </Link>
+              <a
+                href="/docs/openpay"
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className={sideItemClass(false)}
+              >
+                <BookOpen className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate">{t("nav.docs")}</span>
+                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+              </a>
+              <a
+                href="/docs/faq"
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className={sideItemClass(false)}
+              >
+                <HelpCircle className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate">{t("nav.faq")}</span>
+                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+              </a>
+            </>
+          ) : null}
+          {isAdmin ? (
+            <Link
+              to="/admin/topup"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/topup" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/topup")}
+            >
+              <CircleDollarSign
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/topup" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Top Up &amp; Buy</span>
+            </Link>
+          ) : null}
+          {(developerMode || isAdmin) && (
+            <Link
+              to="/admin/deposits"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/deposits" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/deposits")}
+            >
+              <ArrowDownToLine
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/deposits" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
+              />
+              <span className="truncate">{t("nav.depositGateway")}</span>
+            </Link>
+          )}
+        </SideSection>
+      </nav>
 
       <div className="ph-group min-w-0 overflow-hidden">
         {wallets.map((w) => (
@@ -883,10 +952,10 @@ function SidebarInner({
         </button>
       </div>
 
-      <div className="mt-auto space-y-2 pt-2">
-        <div className="flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-          <span className="truncate">@{handle}</span>
-          <div className="flex items-center gap-1">
+      <div className="mt-auto space-y-1.5 pt-1">
+        <div className="flex items-center justify-between gap-2 rounded-[14px] bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
+          <span className="truncate font-semibold">@{handle}</span>
+          <div className="flex items-center gap-0.5">
             {onOpenNotifications && (
               <NotificationBell unread={unread} onOpen={onOpenNotifications} />
             )}
@@ -907,7 +976,7 @@ function SidebarInner({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start rounded-xl text-muted-foreground"
+          className="w-full justify-start rounded-[14px] text-muted-foreground"
           onClick={signOut}
         >
           <LogOut className="mr-1.5 h-3.5 w-3.5" /> {t("common.signOut")}

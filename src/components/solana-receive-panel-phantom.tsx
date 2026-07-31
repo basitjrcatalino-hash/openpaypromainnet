@@ -3,13 +3,12 @@
 import { AddressType, useAccounts, usePhantom } from "@phantom/react-sdk";
 
 import { SolanaReceivePanelBody } from "@/components/solana-receive-panel-body";
-import {
-  SOLANA_MERCHANT_WALLET,
-} from "@/lib/solana-payment";
+import type { SolanaReceivePanelProps } from "@/components/solana-receive-panel";
+import { SOLANA_MERCHANT_WALLET } from "@/lib/solana-payment";
 import { shortAddress } from "@/lib/wallet-utils";
 
 /** Loaded only after Phantom client is ready (keeps @phantom off the SSR graph). */
-export default function SolanaReceivePanelWithPhantom() {
+export default function SolanaReceivePanelWithPhantom(props: SolanaReceivePanelProps) {
   const { isConnected } = usePhantom();
   const accounts = useAccounts();
   const phantomSolanaAddress = accounts?.find(
@@ -25,5 +24,11 @@ export default function SolanaReceivePanelWithPhantom() {
         ? `Merchant · ${shortAddress(SOLANA_MERCHANT_WALLET)}`
         : null;
 
-  return <SolanaReceivePanelBody merchantWallet={merchantWallet} sourceLabel={sourceLabel} />;
+  return (
+    <SolanaReceivePanelBody
+      merchantWallet={merchantWallet}
+      sourceLabel={sourceLabel}
+      {...props}
+    />
+  );
 }

@@ -43,6 +43,7 @@ import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
@@ -91,6 +92,7 @@ import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/t
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
 import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
+import { Route as ApiWebhooksCircleMintRouteImport } from './routes/api/webhooks/circle-mint'
 import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
@@ -282,6 +284,11 @@ const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
+  id: '/solana-pay',
+  path: '/solana-pay',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
@@ -536,6 +543,11 @@ const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
   path: '/api/webhooks/circle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksCircleMintRoute = ApiWebhooksCircleMintRouteImport.update({
+  id: '/api/webhooks/circle-mint',
+  path: '/api/webhooks/circle-mint',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
   id: '/api/webhooks/transactions',
   path: '/api/webhooks/transactions',
@@ -688,6 +700,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -736,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/circle-mint': typeof ApiWebhooksCircleMintRoute
   '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -792,6 +806,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -840,6 +855,7 @@ export interface FileRoutesByTo {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/circle-mint': typeof ApiWebhooksCircleMintRoute
   '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -898,6 +914,7 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
@@ -946,6 +963,7 @@ export interface FileRoutesById {
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
+  '/api/webhooks/circle-mint': typeof ApiWebhooksCircleMintRoute
   '/api/webhooks/transactions': typeof ApiWebhooksTransactionsRoute
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
@@ -1004,6 +1022,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/send'
     | '/settings'
+    | '/solana-pay'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -1052,6 +1071,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/circle-mint'
     | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -1108,6 +1128,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/send'
     | '/settings'
+    | '/solana-pay'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -1156,6 +1177,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/circle-mint'
     | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -1213,6 +1235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/_authenticated/send'
     | '/_authenticated/settings'
+    | '/_authenticated/solana-pay'
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
@@ -1261,6 +1284,7 @@ export interface FileRouteTypes {
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
+    | '/api/webhooks/circle-mint'
     | '/api/webhooks/transactions'
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
@@ -1328,6 +1352,7 @@ export interface RootRouteChildren {
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
+  ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
@@ -1581,6 +1606,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/solana-pay': {
+      id: '/_authenticated/solana-pay'
+      path: '/solana-pay'
+      fullPath: '/solana-pay'
+      preLoaderRoute: typeof AuthenticatedSolanaPayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/swap': {
@@ -1919,6 +1951,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksCircleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/circle-mint': {
+      id: '/api/webhooks/circle-mint'
+      path: '/api/webhooks/circle-mint'
+      fullPath: '/api/webhooks/circle-mint'
+      preLoaderRoute: typeof ApiWebhooksCircleMintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/webhooks/transactions': {
       id: '/api/webhooks/transactions'
       path: '/api/webhooks/transactions'
@@ -2125,6 +2164,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSolanaPayRoute: typeof AuthenticatedSolanaPayRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
@@ -2167,6 +2207,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSolanaPayRoute: AuthenticatedSolanaPayRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
@@ -2271,6 +2312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
+  ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,

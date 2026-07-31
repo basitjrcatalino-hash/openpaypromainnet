@@ -10,17 +10,26 @@ const SolanaReceivePanelWithPhantom = lazy(
   () => import("@/components/solana-receive-panel-phantom"),
 );
 
+export type SolanaReceivePanelProps = {
+  amountUsd?: number;
+  mode?: "tip" | "buyNow";
+  creditOnSuccess?: boolean;
+  showWalletConnect?: boolean;
+  showSolanaPayQr?: boolean;
+};
+
 /**
- * Receive-via-Solana panel using Commerce Kit PaymentButton.
+ * Receive-via-Solana panel using Commerce Kit PaymentButton + Solana Pay.
  * Phantom hooks only run when AppPhantomProvider is ready.
  */
-export function SolanaReceivePanel() {
+export function SolanaReceivePanel(props: SolanaReceivePanelProps = {}) {
   const ready = usePhantomClientReady();
   if (!ready) {
     return (
       <SolanaReceivePanelBody
         merchantWallet={SOLANA_MERCHANT_WALLET || null}
         sourceLabel={null}
+        {...props}
       />
     );
   }
@@ -30,10 +39,11 @@ export function SolanaReceivePanel() {
         <SolanaReceivePanelBody
           merchantWallet={SOLANA_MERCHANT_WALLET || null}
           sourceLabel={null}
+          {...props}
         />
       }
     >
-      <SolanaReceivePanelWithPhantom />
+      <SolanaReceivePanelWithPhantom {...props} />
     </Suspense>
   );
 }

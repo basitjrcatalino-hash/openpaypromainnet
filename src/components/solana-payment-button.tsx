@@ -43,6 +43,7 @@ type PaymentButtonComponent = ComponentType<{
   onPaymentSuccess?: (signature: string) => void;
   onPaymentError?: (error: Error) => void;
   onCancel?: () => void;
+  onPayment?: (amount: number, currency: string) => void;
 }>;
 
 export type SolanaPaymentButtonProps = {
@@ -63,6 +64,8 @@ export type SolanaPaymentButtonProps = {
   onPaymentError?: (error: Error) => void;
   onPaymentStart?: () => void;
   onCancel?: () => void;
+  /** Fired when user confirms amount/currency in the kit UI. */
+  onPayment?: (amount: number, currency: string) => void;
   paymentConfig?: {
     amount?: number;
     currency?: string;
@@ -98,6 +101,7 @@ export function SolanaPaymentButton({
   onPaymentError,
   onPaymentStart,
   onCancel,
+  onPayment,
   paymentConfig,
 }: SolanaPaymentButtonProps) {
   const [PaymentButton, setPaymentButton] = useState<PaymentButtonComponent | null>(null);
@@ -195,6 +199,9 @@ export function SolanaPaymentButton({
           showMerchantInfo: true,
         }}
         paymentConfig={paymentConfig}
+        onPayment={(amount, currency) => {
+          onPayment?.(amount, currency);
+        }}
         onPaymentStart={() => {
           setSolanaPayOpen(true);
           toast.message("Solana payment started");

@@ -10,6 +10,8 @@ export type TopupProvider =
   | "pi"
   | "helio"
   | "usdc"
+  | "solana_pay"
+  | "circle_mint"
   | "wallet_ousd";
 
 type Props = {
@@ -59,6 +61,18 @@ const PROVIDER: Record<
     blurb: "USDC Pay uses MoonPay Commerce — a third-party deposit rail. Confirmed USDC settles 1:1 into OUSD here.",
     fees: "USDC transfer / network fees and any MoonPay Commerce fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "MoonPay Commerce",
+  },
+  solana_pay: {
+    name: "Solana Pay",
+    blurb: "You pay with a Solana wallet via Commerce Kit (Wallet Standard connect, PaymentButton, or Solana Pay QR). After on-chain confirmation, OUSD is credited here.",
+    fees: "Solana network fees apply in your wallet. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Solana",
+  },
+  circle_mint: {
+    name: "Circle Mint",
+    blurb: "You send USDC to a Circle payment-intent deposit address. We reconcile with Circle’s list-payments API and credit OUSD when the payment is paid.",
+    fees: "On-chain network fees apply when you send USDC. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Circle",
   },
   wallet_ousd: {
     name: "Wallet OUSD",

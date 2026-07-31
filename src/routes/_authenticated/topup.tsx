@@ -13,6 +13,8 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { TopupFeesNotice } from "@/components/wallet/TopupFeesNotice";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
+import { SolanaReceivePanel } from "@/components/solana-receive-panel";
+import { CircleMintDepositPanel } from "@/components/circle-mint-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -41,7 +43,14 @@ export const Route = createFileRoute("/_authenticated/topup")({
   component: TopUpPage,
 });
 
-type Method = "openpay_balance" | "pi" | "moonpay" | "helio" | "usdc";
+type Method =
+  | "openpay_balance"
+  | "pi"
+  | "moonpay"
+  | "helio"
+  | "usdc"
+  | "solana_pay"
+  | "circle_mint";
 type BuyStep = "amount" | "method" | "deposit";
 const methods: {
   id: Method;
@@ -49,6 +58,8 @@ const methods: {
   logoUrl?: string;
   icon?: LucideIcon;
   helioMark?: boolean;
+  solanaMark?: boolean;
+  circleMark?: boolean;
   desc: string;
 }[] = [
   {
@@ -80,6 +91,18 @@ const methods: {
     label: "Crypto Deposit",
     helioMark: true,
     desc: "SOL / crypto · MoonPay Commerce → OUSD",
+  },
+  {
+    id: "solana_pay",
+    label: "Solana Pay",
+    solanaMark: true,
+    desc: "Commerce Kit · wallet connect, PaymentButton, Solana Pay QR → OUSD",
+  },
+  {
+    id: "circle_mint",
+    label: "Circle Deposit",
+    circleMark: true,
+    desc: "Circle Mint · USDC payin (payment intent + list payments) → OUSD",
   },
 ];
 const presets = [25, 50, 100, 250, 500, 1000];
@@ -386,7 +409,12 @@ function TopUpPage() {
 
   async function submit(e?: FormEvent) {
     e?.preventDefault();
-    if (method === "helio" || method === "usdc") {
+    if (
+      method === "helio" ||
+      method === "usdc" ||
+      method === "solana_pay" ||
+      method === "circle_mint"
+    ) {
       setDepositReady(true);
       setConfirmOpen(false);
       setStep("deposit");
@@ -527,7 +555,11 @@ function TopUpPage() {
           ? `Continue with crypto`
           : method === "usdc"
             ? `Continue with USDC`
-            : `Continue with Pi`;
+            : method === "solana_pay"
+              ? `Continue with Solana Pay`
+              : method === "circle_mint"
+                ? `Continue with Circle`
+                : `Continue with Pi`;
 
   const payWithLabel =
     method === "moonpay"
@@ -538,10 +570,24 @@ function TopUpPage() {
           ? "USDC Pay"
           : method === "helio"
             ? "Crypto Deposit (SOL)"
-            : "OpenPay Balance";
+            : method === "solana_pay"
+              ? "Solana Pay"
+              : method === "circle_mint"
+                ? "Circle Mint"
+                : "OpenPay Balance";
 
   const headerTitle =
-    step === "amount" ? "Buy" : step === "method" ? "Pay with" : method === "usdc" ? "USDC Pay" : "Crypto Deposit";
+    step === "amount"
+      ? "Buy"
+      : step === "method"
+        ? "Pay with"
+        : method === "usdc"
+          ? "USDC Pay"
+          : method === "solana_pay"
+            ? "Solana Pay"
+            : method === "circle_mint"
+              ? "Circle Deposit"
+              : "Crypto Deposit";
 
   return (
     <div className="ot-phantom ph-page flex min-h-[calc(100dvh-6rem)] flex-col pb-8">
@@ -782,6 +828,8 @@ function TopUpPage() {
                       selected ? "bg-primary/15 ring-2 ring-primary/35" : "bg-muted",
                       m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                       m.id === "helio" && "bg-[#9945FF]/15 text-[#9945FF]",
+                      m.id === "solana_pay" && "bg-[#14F195]/20 text-[#0ea5e9]",
+                      m.id === "circle_mint" && "bg-[#00BFFF]/15 text-[#0088cc]",
                       m.id === "usdc" && "bg-[#2775CA]/15",
                     )}
                   >
@@ -789,6 +837,10 @@ function TopUpPage() {
                       <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
                     ) : m.helioMark ? (
                       <HelioMark className="h-5 w-5" />
+                    ) : m.solanaMark ? (
+                      <span className="text-sm font-black tracking-tight">◎</span>
+                    ) : m.circleMark ? (
+                      <span className="text-[11px] font-black tracking-tight">USDC</span>
                     ) : Icon ? (
                       <Icon className="h-5 w-5" />
                     ) : null}
@@ -907,7 +959,7 @@ function TopUpPage() {
         </div>
       )}
 
-      {/* —— Step 3: Deposit widget (Helio / USDC) —— */}
+      {/* —— Step 3: Deposit widget (Helio / USDC / Solana Pay) —— */}
       {step === "deposit" && depositReady && (method === "helio" || method === "usdc") && (
         <div className="flex flex-1 flex-col space-y-4">
           <div className="rounded-2xl bg-card px-4 py-3">
@@ -920,6 +972,57 @@ function TopUpPage() {
           <HelioDepositPanel
             product={method === "usdc" ? "usdc" : "crypto"}
             amountUsd={amtNum}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "solana_pay" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <div className="rounded-2xl bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatOUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via Solana Commerce Kit · credited as OUSD after confirmation
+            </p>
+          </div>
+          <SolanaReceivePanel
+            amountUsd={amtNum}
+            mode="buyNow"
+            creditOnSuccess
+            showWalletConnect
+            showSolanaPayQr
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "circle_mint" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <CircleMintDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
             onSuccess={refreshAfterHelioDeposit}
           />
           <Button

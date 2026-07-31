@@ -19,6 +19,7 @@ import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PayTokenRouteImport } from './routes/pay.$token'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
@@ -157,6 +158,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayTokenRoute = PayTokenRouteImport.update({
+  id: '/pay/$token',
+  path: '/pay/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -783,6 +790,7 @@ export interface FileRoutesByTo {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -886,6 +894,7 @@ export interface FileRoutesById {
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
+  '/pay/$token': typeof PayTokenRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
@@ -989,6 +998,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -1090,6 +1100,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/deposits'
@@ -1192,6 +1203,7 @@ export interface FileRouteTypes {
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
+    | '/pay/$token'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/deposits'
@@ -1269,6 +1281,7 @@ export interface RootRouteChildren {
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
+  PayTokenRoute: typeof PayTokenRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -1375,6 +1388,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$token': {
+      id: '/pay/$token'
+      path: '/pay/$token'
+      fullPath: '/pay/$token'
+      preLoaderRoute: typeof PayTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guides/transfer-pi': {
@@ -2189,6 +2209,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
+  PayTokenRoute: PayTokenRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

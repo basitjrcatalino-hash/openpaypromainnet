@@ -214,6 +214,36 @@ export const redeemVoucher = createServerFn({ method: "POST" })
     return { ok: true, amount, balance: newBal };
   });
 
+export const listTopupMethods = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("topup_methods")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+const MethodUpdateSchema = z.object({
+  id: z.string().uuid(),
+  label: z.string().trim().min(1).max(60).optional(),
+  description: z.string().trim().max(200).nullable().optional(),
+  enabled: z.boolean().optional(),
+  sort_order: z.number().int().min(0).max(999).optional(),
+});
+
+export const updateTopupMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => MethodUpdateSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("topup_methods").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const getPublicTopupInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

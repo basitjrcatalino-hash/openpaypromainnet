@@ -26,7 +26,7 @@ import {
   settleOpenPayPayLinkTopup,
   getOpenPayLinkStatus,
 } from "@/lib/openpay-pro.functions";
-import { getPublicTopupInfo } from "@/lib/topup-admin.functions";
+import { getPublicTopupInfo, listTopupMethods } from "@/lib/topup-admin.functions";
 import { calcTopupFee } from "@/lib/topup-fee";
 
 export const Route = createFileRoute("/_authenticated/topup")({
@@ -155,6 +155,35 @@ function TopUpPage() {
     queryKey: ["public-topup"],
     queryFn: () => getTopupInfo(),
   });
+
+  const listMethodsFn = useServerFn(listTopupMethods);
+  const { data: methodConfig } = useQuery({
+    queryKey: ["topup-methods"],
+    queryFn: () => listMethodsFn(),
+  });
+
+  const visibleMethods = (() => {
+    if (!methodConfig?.length) return methods;
+    const byKey = new Map<string, any>((methodConfig as any[]).map((c) => [c.method_key, c]));
+    return methods
+      .filter((m) => byKey.get(m.id)?.enabled !== false)
+      .map((m) => {
+        const c: any = byKey.get(m.id);
+        return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
+      })
+      .sort(
+        (a, b) =>
+          Number((byKey.get(a.id) as any)?.sort_order ?? 0) -
+          Number((byKey.get(b.id) as any)?.sort_order ?? 0),
+      );
+  })();
+
+  useEffect(() => {
+    if (visibleMethods.length && !visibleMethods.some((m) => m.id === method)) {
+      setMethod(visibleMethods[0].id);
+    }
+  }, [visibleMethods, method]);
+
 
   const amtNum = Number(amount) || 0;
   const feeBps = Number(topupInfo?.fee_bps ?? 0);
@@ -447,7 +476,7 @@ function TopUpPage() {
   }
 
   const linked = !!openpayLink?.linked;
-  const selectedMethod = methods.find((m) => m.id === method);
+  const selectedMethod = visibleMethods.find((m) => m.id === method);
 
   function goToMethod() {
     const parsed = schema.safeParse({ amount });
@@ -725,7 +754,7 @@ function TopUpPage() {
             Select a provider
           </h2>
           <div className="overflow-hidden rounded-2xl bg-card">
-            {methods.map((m, i) => {
+            {visibleMethods.map((m, i) => {
               const selected = method === m.id;
               const Icon = m.icon;
               const disabled = m.id === "openpay_balance" && !linked;

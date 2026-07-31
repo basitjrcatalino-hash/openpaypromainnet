@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   checkIsAdmin,
   claimFirstAdmin,
@@ -20,6 +21,8 @@ import {
   listVouchers,
   createVouchers,
   disableVoucher,
+  listTopupMethods,
+  updateTopupMethod,
 } from "@/lib/topup-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/topup")({
@@ -48,6 +51,13 @@ function AdminTopupPage() {
   const vouchersQ = useQuery({
     queryKey: ["vouchers"],
     queryFn: () => listV(),
+    enabled: isAdmin,
+  });
+  const listM = useServerFn(listTopupMethods);
+  const saveMethod = useServerFn(updateTopupMethod);
+  const methodsQ = useQuery({
+    queryKey: ["topup-methods-admin"],
+    queryFn: () => listM(),
     enabled: isAdmin,
   });
 
@@ -133,6 +143,22 @@ function AdminTopupPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const methodM = useMutation({
+    mutationFn: (patch: {
+      id: string;
+      label?: string;
+      description?: string | null;
+      enabled?: boolean;
+      sort_order?: number;
+    }) => saveMethod({ data: patch }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["topup-methods-admin"] });
+      qc.invalidateQueries({ queryKey: ["topup-methods"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <div className="ph-page mx-auto max-w-3xl space-y-6 md:max-w-3xl">
       <div>
@@ -197,6 +223,68 @@ function AdminTopupPage() {
           Save fee settings
         </Button>
       </Card>
+
+      <Card className="space-y-4 rounded-2xl border-0 p-5 shadow-none">
+        <h2 className="text-lg font-semibold">Payment methods</h2>
+        <p className="text-sm text-muted-foreground">
+          Show, hide, rename and reorder the providers users see on the Top Up page.
+        </p>
+        {methodsQ.isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : !methodsQ.data?.length ? (
+          <p className="text-sm text-muted-foreground">No methods configured.</p>
+        ) : (
+          <div className="space-y-3">
+            {methodsQ.data.map((m: any) => (
+              <div key={m.id} className="space-y-2 rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">{m.method_key}</code>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {m.enabled ? "Visible" : "Hidden"}
+                    </span>
+                    <Switch
+                      checked={!!m.enabled}
+                      onCheckedChange={(v) => methodM.mutate({ id: m.id, enabled: v })}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_100px]">
+                  <Input
+                    defaultValue={m.label}
+                    onBlur={(e) => {
+                      const label = e.target.value.trim();
+                      if (label && label !== m.label) methodM.mutate({ id: m.id, label });
+                    }}
+                    placeholder="Label"
+                  />
+                  <Input
+                    type="number"
+                    min="0"
+                    defaultValue={m.sort_order}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (Number.isFinite(n) && n !== m.sort_order)
+                        methodM.mutate({ id: m.id, sort_order: Math.max(0, Math.round(n)) });
+                    }}
+                    placeholder="Order"
+                  />
+                </div>
+                <Input
+                  defaultValue={m.description ?? ""}
+                  onBlur={(e) => {
+                    const description = e.target.value.trim();
+                    if (description !== (m.description ?? ""))
+                      methodM.mutate({ id: m.id, description: description || null });
+                  }}
+                  placeholder="Description shown under the label"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
 
       <Card className="p-5 space-y-4">
         <h2 className="text-lg font-semibold">Create vouchers</h2>

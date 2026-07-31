@@ -1081,6 +1081,274 @@ export type Database = {
           },
         ]
       }
+      payment_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          invoice_id: string | null
+          merchant_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          invoice_id?: string | null
+          merchant_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          invoice_id?: string | null
+          merchant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_audit_logs_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "payment_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_audit_logs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "payment_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_invoices: {
+        Row: {
+          amount_usd: number
+          block_number: number | null
+          chain_id: string | null
+          chain_key: string | null
+          confirmations: number
+          created_at: string
+          customer_email: string | null
+          description: string | null
+          detected_at: string | null
+          error: string | null
+          expires_at: string | null
+          from_address: string | null
+          id: string
+          ledger_entry_id: string | null
+          merchant_id: string
+          metadata: Json
+          paid_at: string | null
+          pay_to_address: string | null
+          public_token: string
+          reference: string | null
+          required_confirmations: number
+          status: string
+          token_amount: number | null
+          token_id: string | null
+          token_symbol: string | null
+          tx_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_usd: number
+          block_number?: number | null
+          chain_id?: string | null
+          chain_key?: string | null
+          confirmations?: number
+          created_at?: string
+          customer_email?: string | null
+          description?: string | null
+          detected_at?: string | null
+          error?: string | null
+          expires_at?: string | null
+          from_address?: string | null
+          id?: string
+          ledger_entry_id?: string | null
+          merchant_id: string
+          metadata?: Json
+          paid_at?: string | null
+          pay_to_address?: string | null
+          public_token: string
+          reference?: string | null
+          required_confirmations?: number
+          status?: string
+          token_amount?: number | null
+          token_id?: string | null
+          token_symbol?: string | null
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          block_number?: number | null
+          chain_id?: string | null
+          chain_key?: string | null
+          confirmations?: number
+          created_at?: string
+          customer_email?: string | null
+          description?: string | null
+          detected_at?: string | null
+          error?: string | null
+          expires_at?: string | null
+          from_address?: string | null
+          id?: string
+          ledger_entry_id?: string | null
+          merchant_id?: string
+          metadata?: Json
+          paid_at?: string | null
+          pay_to_address?: string | null
+          public_token?: string
+          reference?: string | null
+          required_confirmations?: number
+          status?: string
+          token_amount?: number | null
+          token_id?: string | null
+          token_symbol?: string | null
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_invoices_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_chains"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_invoices_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "payment_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_invoices_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_merchants: {
+        Row: {
+          api_key_hash: string | null
+          api_key_prefix: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          settlement_symbol: string
+          slug: string
+          updated_at: string
+          user_id: string
+          webhook_secret: string | null
+          webhook_url: string | null
+          website: string | null
+        }
+        Insert: {
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          settlement_symbol?: string
+          slug: string
+          updated_at?: string
+          user_id: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          website?: string | null
+        }
+        Update: {
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          settlement_symbol?: string
+          slug?: string
+          updated_at?: string
+          user_id?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      payment_webhook_deliveries: {
+        Row: {
+          attempts: number
+          created_at: string
+          event: string
+          id: string
+          invoice_id: string
+          merchant_id: string
+          payload: Json
+          response_body: string | null
+          response_code: number | null
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event: string
+          id?: string
+          invoice_id: string
+          merchant_id: string
+          payload?: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event?: string
+          id?: string
+          invoice_id?: string
+          merchant_id?: string
+          payload?: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_webhook_deliveries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "payment_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_webhook_deliveries_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "payment_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pi_a2u_transactions: {
         Row: {
           amount: number
@@ -1483,6 +1751,39 @@ export type Database = {
           twitter?: string | null
           volume_24h?: number
           website?: string | null
+        }
+        Relationships: []
+      }
+      topup_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          method_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          method_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          method_key?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }

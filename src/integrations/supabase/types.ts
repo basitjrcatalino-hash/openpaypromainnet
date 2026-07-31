@@ -100,6 +100,329 @@ export type Database = {
         }
         Relationships: []
       }
+      deposit_addresses: {
+        Row: {
+          address: string
+          chain_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string | null
+          memo_tag: string | null
+          token_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          chain_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          memo_tag?: string | null
+          token_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          chain_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          memo_tag?: string | null
+          token_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_addresses_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_chains"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposit_addresses_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deposit_audit_logs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          deposit_id: string | null
+          detail: Json
+          event: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          deposit_id?: string | null
+          detail?: Json
+          event: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          deposit_id?: string | null
+          detail?: Json
+          event?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_audit_logs_deposit_id_fkey"
+            columns: ["deposit_id"]
+            isOneToOne: false
+            referencedRelation: "deposits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deposit_chains: {
+        Row: {
+          bridge_status: string
+          chain_id: number | null
+          created_at: string
+          explorer_url: string | null
+          family: string
+          id: string
+          is_enabled: boolean
+          key: string
+          logo_url: string | null
+          maintenance_mode: boolean
+          name: string
+          required_confirmations: number
+          rpc_url: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bridge_status?: string
+          chain_id?: number | null
+          created_at?: string
+          explorer_url?: string | null
+          family?: string
+          id?: string
+          is_enabled?: boolean
+          key: string
+          logo_url?: string | null
+          maintenance_mode?: boolean
+          name: string
+          required_confirmations?: number
+          rpc_url?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bridge_status?: string
+          chain_id?: number | null
+          created_at?: string
+          explorer_url?: string | null
+          family?: string
+          id?: string
+          is_enabled?: boolean
+          key?: string
+          logo_url?: string | null
+          maintenance_mode?: boolean
+          name?: string
+          required_confirmations?: number
+          rpc_url?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deposit_tokens: {
+        Row: {
+          chain_id: string
+          contract_address: string | null
+          created_at: string
+          credit_symbol: string
+          decimals: number
+          deposit_enabled: boolean
+          deposit_fee_bps: number
+          id: string
+          logo_url: string | null
+          max_deposit: number | null
+          min_deposit: number
+          name: string
+          sort_order: number
+          status: string
+          symbol: string
+          updated_at: string
+          usd_rate: number | null
+          withdrawal_enabled: boolean
+        }
+        Insert: {
+          chain_id: string
+          contract_address?: string | null
+          created_at?: string
+          credit_symbol?: string
+          decimals?: number
+          deposit_enabled?: boolean
+          deposit_fee_bps?: number
+          id?: string
+          logo_url?: string | null
+          max_deposit?: number | null
+          min_deposit?: number
+          name: string
+          sort_order?: number
+          status?: string
+          symbol: string
+          updated_at?: string
+          usd_rate?: number | null
+          withdrawal_enabled?: boolean
+        }
+        Update: {
+          chain_id?: string
+          contract_address?: string | null
+          created_at?: string
+          credit_symbol?: string
+          decimals?: number
+          deposit_enabled?: boolean
+          deposit_fee_bps?: number
+          id?: string
+          logo_url?: string | null
+          max_deposit?: number | null
+          min_deposit?: number
+          name?: string
+          sort_order?: number
+          status?: string
+          symbol?: string
+          updated_at?: string
+          usd_rate?: number | null
+          withdrawal_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_tokens_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_chains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deposits: {
+        Row: {
+          amount: number
+          block_number: number | null
+          chain_id: string | null
+          chain_key: string
+          confirmations: number
+          confirmed_at: string | null
+          created_at: string
+          credited_amount: number
+          credited_at: string | null
+          detected_at: string
+          error: string | null
+          fee_amount: number
+          from_address: string | null
+          id: string
+          ledger_entry_id: string | null
+          required_confirmations: number
+          status: string
+          to_address: string
+          token_id: string | null
+          token_symbol: string
+          transaction_id: string | null
+          tx_hash: string
+          updated_at: string
+          usd_value: number
+          user_id: string
+          wallet_id: string | null
+        }
+        Insert: {
+          amount: number
+          block_number?: number | null
+          chain_id?: string | null
+          chain_key: string
+          confirmations?: number
+          confirmed_at?: string | null
+          created_at?: string
+          credited_amount?: number
+          credited_at?: string | null
+          detected_at?: string
+          error?: string | null
+          fee_amount?: number
+          from_address?: string | null
+          id?: string
+          ledger_entry_id?: string | null
+          required_confirmations?: number
+          status?: string
+          to_address: string
+          token_id?: string | null
+          token_symbol: string
+          transaction_id?: string | null
+          tx_hash: string
+          updated_at?: string
+          usd_value?: number
+          user_id: string
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number
+          block_number?: number | null
+          chain_id?: string | null
+          chain_key?: string
+          confirmations?: number
+          confirmed_at?: string | null
+          created_at?: string
+          credited_amount?: number
+          credited_at?: string | null
+          detected_at?: string
+          error?: string | null
+          fee_amount?: number
+          from_address?: string | null
+          id?: string
+          ledger_entry_id?: string | null
+          required_confirmations?: number
+          status?: string
+          to_address?: string
+          token_id?: string | null
+          token_symbol?: string
+          transaction_id?: string | null
+          tx_hash?: string
+          updated_at?: string
+          usd_value?: number
+          user_id?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposits_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_chains"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposits_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "deposit_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposits_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string

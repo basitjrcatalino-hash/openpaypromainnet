@@ -143,6 +143,22 @@ function AdminTopupPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const methodM = useMutation({
+    mutationFn: (patch: {
+      id: string;
+      label?: string;
+      description?: string | null;
+      enabled?: boolean;
+      sort_order?: number;
+    }) => saveMethod({ data: patch }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["topup-methods-admin"] });
+      qc.invalidateQueries({ queryKey: ["topup-methods"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <div className="ph-page mx-auto max-w-3xl space-y-6 md:max-w-3xl">
       <div>

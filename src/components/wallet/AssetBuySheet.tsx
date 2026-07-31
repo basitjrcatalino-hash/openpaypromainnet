@@ -33,6 +33,7 @@ import {
   getOpenPayLinkedBalance,
 } from "@/lib/openpay-pro.functions";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
+import { listTopupMethods } from "@/lib/topup-admin.functions";
 import { buyMajorWithOusd } from "@/lib/buy-major.functions";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
@@ -196,10 +197,42 @@ export function AssetBuySheet({
   const graduated = !isOusd && !isMajor && isOpenTokenGraduated(token);
   const tokenLogo = token.logoUrl || (isOusd ? OUSD_LOGO_URL : null);
   /** Wallet OUSD for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
-  const methods = ALL_METHODS.filter((m) => {
-    if (m.id === "wallet_ousd") return !isOusd;
-    return true;
+  const listMethodsFn = useServerFn(listTopupMethods);
+  const { data: methodConfig } = useQuery({
+    queryKey: ["topup-methods"],
+    queryFn: () => listMethodsFn(),
+    enabled: open,
   });
+  /** Admin config keys use `openpay_balance` for the OpenPay checkout method. */
+  const configKey = (id: PaymentMethod) =>
+    id === "openpay_checkout" ? "openpay_balance" : id;
+  const methods = (() => {
+    const base = ALL_METHODS.filter((m) => {
+      if (m.id === "wallet_ousd") return !isOusd;
+      return true;
+    });
+    const cfg = (methodConfig ?? []) as any[];
+    if (!cfg.length) return base;
+    const byKey = new Map<string, any>(cfg.map((c) => [c.method_key, c]));
+    return base
+      .filter((m) => byKey.get(configKey(m.id))?.enabled !== false)
+      .map((m) => {
+        const c = byKey.get(configKey(m.id));
+        return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
+      })
+      .sort(
+        (a, b) =>
+          Number(byKey.get(configKey(a.id))?.sort_order ?? 0) -
+          Number(byKey.get(configKey(b.id))?.sort_order ?? 0),
+      );
+  })();
+
+  useEffect(() => {
+    if (methods.length && !methods.some((m) => m.id === method)) {
+      setMethod(methods[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods.map((m) => m.id).join(","), method]);
 
   const { data: openpayLink } = useQuery({
     queryKey: ["openpay-link", userId],

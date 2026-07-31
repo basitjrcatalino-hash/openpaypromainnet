@@ -663,6 +663,43 @@
   min-height: 100%;
 }
 
+/* Donate — stable layout (no input zoom / reflow shake) */
+.donate-page {
+  touch-action: manipulation;
+  overscroll-behavior: contain;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: min(32rem, 100%);
+}
+.donate-amount-box {
+  contain: layout;
+}
+.donate-amount-input {
+  /* Keep >= 16px so iOS never auto-zooms on focus; override Input md:text-sm */
+  font-size: 2.75rem !important;
+  line-height: 1 !important;
+  transform: none !important;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (min-width: 640px) {
+  .donate-amount-input {
+    font-size: 3rem !important;
+  }
+}
+.donate-page .donate-embed iframe,
+.donate-page .donate-embed canvas,
+.donate-page .donate-embed img {
+  max-width: 100%;
+}
+.donate-page button:active,
+.donate-page a:active,
+.donate-page [role="button"]:active {
+  /* Disable global press scale on this page — feels like screen shake */
+  transform: none !important;
+  opacity: 0.85;
+}
+
 /* Auth method picker — motion + selection polish */
 @keyframes auth-select-enter {
   from {

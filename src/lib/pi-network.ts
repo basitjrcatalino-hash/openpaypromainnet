@@ -211,23 +211,40 @@ export async function quotePiTopup(ousdAmount: number): Promise<PiTopupQuote> {
  * Charges live market PI for the requested OUSD amount (1 OUSD = $1).
  */
 export async function topUpWithPi(ousdAmount: number): Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }> {
+  return createPiOusdPayment(ousdAmount, "ousd_topup");
+}
+
+/**
+ * Donate via Pi — same quote as top-up, but credits the OpenPay Pro treasury.
+ */
+export async function donateWithPi(ousdAmount: number): Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }> {
+  return createPiOusdPayment(ousdAmount, "ousd_donate");
+}
+
+async function createPiOusdPayment(
+  ousdAmount: number,
+  product: "ousd_topup" | "ousd_donate",
+): Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }> {
   await ensureInit();
   if (!window.Pi) throw new Error("Pi SDK unavailable");
 
   const { data: sess } = await supabase.auth.getSession();
-  if (!sess.session) throw new Error("Sign in first to top up with Pi");
+  if (!sess.session) throw new Error("Sign in first to pay with Pi");
 
   const quote = await quotePiTopup(ousdAmount);
   const { piAmount, piUsdPrice, memo } = quote;
+  const payMemo =
+    product === "ousd_donate"
+      ? `OpenPay Pro donate: ${memo.replace(/^OpenPay Pro:\s*/i, "")}`
+      : memo;
 
-  // Ensure auth scope includes "payments" (re-auth is cheap and idempotent for already-signed-in Pi users).
   await window.Pi.authenticate(SCOPES, (payment) => {
     void completeIncomplete(payment);
   });
 
   return await new Promise<{ paymentId: string; txid: string; piAmount: number; piUsdPrice: number }>((resolve, reject) => {
     const metadata = {
-      product: "ousd_topup",
+      product,
       ousdAmount,
       piUsdPrice,
       supabaseUserId: sess.session!.user.id,
@@ -237,7 +254,7 @@ export async function topUpWithPi(ousdAmount: number): Promise<{ paymentId: stri
     window.Pi!.createPayment(
       {
         amount: piAmount,
-        memo,
+        memo: payMemo,
         metadata,
       },
       {

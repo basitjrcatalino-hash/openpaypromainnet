@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/pi-payments/approve")({
           if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
           const payment = await fetchPiPayment(paymentId);
-          if (payment.metadata?.product !== "ousd_topup") {
+          if (payment.metadata?.product !== "ousd_topup" && payment.metadata?.product !== "ousd_donate") {
             return Response.json({ error: "Unsupported product" }, { status: 400 });
           }
           if (payment.metadata?.supabaseUserId !== userId) {

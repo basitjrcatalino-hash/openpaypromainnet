@@ -15,20 +15,27 @@ export default function SolanaReceivePanelWithPhantom(props: SolanaReceivePanelP
     (a) => a.addressType === AddressType.solana || String(a.addressType) === "Solana",
   )?.address;
 
+  // Explicit merchant (e.g. Donate) wins over connected Phantom address.
   const merchantWallet =
-    (isConnected && phantomSolanaAddress) || SOLANA_MERCHANT_WALLET || null;
+    (props.merchantWallet !== undefined
+      ? props.merchantWallet
+      : (isConnected && phantomSolanaAddress) || SOLANA_MERCHANT_WALLET) || null;
   const sourceLabel =
-    isConnected && phantomSolanaAddress
-      ? `Phantom · ${shortAddress(phantomSolanaAddress)}`
-      : SOLANA_MERCHANT_WALLET
-        ? `Merchant · ${shortAddress(SOLANA_MERCHANT_WALLET)}`
-        : null;
+    props.merchantWallet
+      ? props.merchantWallet
+        ? `OpenPay Pro · ${shortAddress(props.merchantWallet)}`
+        : null
+      : isConnected && phantomSolanaAddress
+        ? `Phantom · ${shortAddress(phantomSolanaAddress)}`
+        : SOLANA_MERCHANT_WALLET
+          ? `Merchant · ${shortAddress(SOLANA_MERCHANT_WALLET)}`
+          : null;
 
   return (
     <SolanaReceivePanelBody
+      {...props}
       merchantWallet={merchantWallet}
       sourceLabel={sourceLabel}
-      {...props}
     />
   );
 }

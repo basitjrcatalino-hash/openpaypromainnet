@@ -64,14 +64,21 @@ export function AppLockGate({ userId, children }: Props) {
     };
   }, [userId]);
 
-  // Relock when the tab is hidden (leave dashboard / switch apps).
+  // Relock after leaving the tab for a while (not instantly — avoids flash when
+  // opening Pi / Helio / wallet sheets that briefly hide the document).
   useEffect(() => {
     if (!needsLock) return;
+    let hideAt = 0;
     const onVis = () => {
       if (document.visibilityState === "hidden") {
+        hideAt = Date.now();
+        return;
+      }
+      if (hideAt && Date.now() - hideAt > 60_000) {
         clearSessionUnlock(userId);
         setLocked(true);
       }
+      hideAt = 0;
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);

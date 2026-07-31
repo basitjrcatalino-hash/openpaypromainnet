@@ -16,6 +16,9 @@ export type SolanaReceivePanelProps = {
   creditOnSuccess?: boolean;
   showWalletConnect?: boolean;
   showSolanaPayQr?: boolean;
+  /** Force recipient (Donate). When set, ignores connected Phantom as merchant. */
+  merchantWallet?: string | null;
+  className?: string;
 };
 
 /**
@@ -24,12 +27,19 @@ export type SolanaReceivePanelProps = {
  */
 export function SolanaReceivePanel(props: SolanaReceivePanelProps = {}) {
   const ready = usePhantomClientReady();
-  if (!ready) {
+  const forceMerchant = props.merchantWallet !== undefined;
+  if (!ready || forceMerchant) {
     return (
       <SolanaReceivePanelBody
-        merchantWallet={SOLANA_MERCHANT_WALLET || null}
-        sourceLabel={null}
         {...props}
+        merchantWallet={
+          forceMerchant ? props.merchantWallet || null : SOLANA_MERCHANT_WALLET || null
+        }
+        sourceLabel={
+          forceMerchant && props.merchantWallet
+            ? `OpenPay Pro · ${props.merchantWallet.slice(0, 4)}…${props.merchantWallet.slice(-4)}`
+            : null
+        }
       />
     );
   }

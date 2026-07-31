@@ -85,6 +85,7 @@ import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -496,6 +497,12 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminDepositsRoute =
+  AuthenticatedAdminDepositsRouteImport.update({
+    id: '/admin/deposits',
+    path: '/admin/deposits',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -650,6 +657,7 @@ export interface FileRoutesByFullPath {
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -746,6 +754,7 @@ export interface FileRoutesByTo {
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
@@ -844,6 +853,7 @@ export interface FileRoutesById {
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
@@ -942,6 +952,7 @@ export interface FileRouteTypes {
     | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/deposits'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -1038,6 +1049,7 @@ export interface FileRouteTypes {
     | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/deposits'
     | '/admin/topup'
     | '/asset/$tokenId'
     | '/bags/fees'
@@ -1135,6 +1147,7 @@ export interface FileRouteTypes {
     | '/guides/transfer-pi'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/topup'
     | '/_authenticated/asset_/$tokenId'
     | '/_authenticated/bags_/fees'
@@ -1773,6 +1786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/deposits': {
+      id: '/_authenticated/admin/deposits'
+      path: '/admin/deposits'
+      fullPath: '/admin/deposits'
+      preLoaderRoute: typeof AuthenticatedAdminDepositsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
       path: '/.mcp/invoke-tool/$tool'
@@ -1971,6 +1991,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
+  AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
@@ -2012,6 +2033,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
+  AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,

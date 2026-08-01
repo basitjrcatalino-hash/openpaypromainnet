@@ -103,7 +103,7 @@ type SettingsWallet = {
   created_at: string;
 };
 
-type UserPrefs = Tables<"user_preferences"> & {
+type UserPrefs = Partial<Tables<"user_preferences">> & {
   pin_set?: boolean;
 };
 

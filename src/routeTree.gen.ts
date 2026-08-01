@@ -105,6 +105,7 @@ import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authentica
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
+import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
 import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
 import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -647,6 +648,11 @@ const ApiAdminP2pFixRoute = ApiAdminP2pFixRouteImport.update({
   path: '/api/admin/p2p-fix',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminTransferFixRoute = ApiAdminTransferFixRouteImport.update({
+  id: '/api/admin/transfer-fix',
+  path: '/api/admin/transfer-fix',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
   id: '/api/public/banxa-webhook',
   path: '/api/public/banxa-webhook',
@@ -958,6 +964,7 @@ export interface FileRoutesByFullPath {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
+  '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1095,6 +1102,7 @@ export interface FileRoutesByTo {
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
+  '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1234,6 +1242,7 @@ export interface FileRoutesById {
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
+  '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1373,6 +1382,7 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
+    | '/api/admin/transfer-fix'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -1510,6 +1520,7 @@ export interface FileRouteTypes {
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
+    | '/api/admin/transfer-fix'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -1648,6 +1659,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
     | '/api/admin/p2p-fix'
+    | '/api/admin/transfer-fix'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -1721,6 +1733,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiAdminP2pFixRoute: typeof ApiAdminP2pFixRoute
+  ApiAdminTransferFixRoute: typeof ApiAdminTransferFixRoute
   ApiPublicBanxaWebhookRoute: typeof ApiPublicBanxaWebhookRoute
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -2428,6 +2441,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminP2pFixRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/transfer-fix': {
+      id: '/api/admin/transfer-fix'
+      path: '/api/admin/transfer-fix'
+      fullPath: '/api/admin/transfer-fix'
+      preLoaderRoute: typeof ApiAdminTransferFixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/banxa-webhook': {
       id: '/api/public/banxa-webhook'
       path: '/api/public/banxa-webhook'
@@ -2956,6 +2976,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiAdminP2pFixRoute: ApiAdminP2pFixRoute,
+  ApiAdminTransferFixRoute: ApiAdminTransferFixRoute,
   ApiPublicBanxaWebhookRoute: ApiPublicBanxaWebhookRoute,
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

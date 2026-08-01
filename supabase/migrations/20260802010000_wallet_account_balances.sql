@@ -214,7 +214,7 @@ begin
   ) values (
     wid, 'send', 'confirmed', asset_u, amt, 0,
     initcap(to_a), memo_txt,
-    'xfer_' || encode(gen_random_bytes(12), 'hex')
+    'xfer_' || replace(gen_random_uuid()::text, '-', '')
   );
 
   insert into public.transactions (
@@ -222,7 +222,7 @@ begin
   ) values (
     wid, 'receive', 'confirmed', asset_u, amt, 0,
     initcap(from_a), memo_txt,
-    'xfer_' || encode(gen_random_bytes(12), 'hex')
+    'xfer_' || replace(gen_random_uuid()::text, '-', '')
   );
 
   return jsonb_build_object(

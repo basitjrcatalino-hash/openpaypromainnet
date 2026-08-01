@@ -74,6 +74,7 @@ function WithdrawPage() {
   const [step, setStep] = useState<Step>("destination");
   const [amount, setAmount] = useState("");
   const [destKind, setDestKind] = useState<WithdrawalDestKind>("pi");
+  const [withdrawVia, setWithdrawVia] = useState<"rail" | "p2p">("rail");
   const [dest, setDest] = useState("");
   const [note, setNote] = useState("");
   const [name, setName] = useState("");
@@ -156,7 +157,7 @@ function WithdrawPage() {
     <div className="ot-phantom ph-page mx-auto min-h-[70vh] max-w-lg pb-24">
       <PageHeader
         title={titles[step]}
-        backTo={step === "destination" ? "/wallet" : undefined}
+        backTo={step === "destination" ? "/assets" : undefined}
         onBack={step === "amount" ? () => setStep("destination") : undefined}
       />
 
@@ -172,7 +173,7 @@ function WithdrawPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
             {WITHDRAWAL_DEST_KINDS.map((k) => (
               <button
                 key={k.id}
@@ -180,10 +181,11 @@ function WithdrawPage() {
                 onClick={() => {
                   setDestKind(k.id);
                   setDest("");
+                  setWithdrawVia("rail");
                 }}
                 className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition press",
-                  destKind === k.id
+                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  destKind === k.id && withdrawVia === "rail"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
@@ -191,8 +193,44 @@ function WithdrawPage() {
                 {k.label}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setWithdrawVia("p2p")}
+              className={cn(
+                "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                withdrawVia === "p2p"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              P2P
+            </button>
           </div>
 
+          {withdrawVia === "p2p" ? (
+            <div className="space-y-3 rounded-3xl border border-border bg-card p-4">
+              <p className="text-[15px] font-semibold">Cash out via P2P</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Move OUSD into your P2P account, then sell to a merchant for local payment methods
+                (GCash, bank, etc.). Escrow protects both sides until release.
+              </p>
+              <div className="grid gap-2">
+                <Button asChild className="h-12 w-full rounded-full text-base font-semibold">
+                  <Link to="/transfer" search={{ from: "funding", to: "p2p", asset: "OUSD" }}>
+                    Transfer to P2P
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 w-full rounded-full text-base font-semibold">
+                  <Link to="/p2p">Open P2P market</Link>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Need funding first? Deposit, then transfer Funding → P2P before listing or taking a
+                sell order.
+              </p>
+            </div>
+          ) : (
+            <>
           <div className="rounded-3xl border border-border bg-card p-4">
             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {destKind === "openpay" ? "OpenPay address" : "Pi mainnet wallet"}
@@ -261,6 +299,8 @@ function WithdrawPage() {
           >
             Continue
           </Button>
+            </>
+          )}
         </div>
       )}
 

@@ -29,6 +29,7 @@ import {
   Users,
   CircleDollarSign,
   Layers,
+  CandlestickChart,
   PanelLeftClose,
   PanelLeftOpen,
   Star,
@@ -105,6 +106,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", labelKey: "nav.home", icon: Compass },
   { to: "/assets", labelKey: "nav.assets", icon: Layers },
+  { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
   { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
@@ -124,6 +126,7 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.p2p") return "P2P";
   if (labelKey === "nav.transfer") return "Transfer";
   if (labelKey === "nav.assets") return "Assets";
+  if (labelKey === "nav.trade") return "Trade";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
@@ -138,6 +141,7 @@ function navActive(pathname: string, to: string) {
     pathname === to ||
     (to === "/dashboard" && pathname === "/") ||
     (to === "/assets" && pathname.startsWith("/assets")) ||
+    (to === "/trade" && pathname.startsWith("/trade")) ||
     (to === "/wallet" && pathname.startsWith("/wallet")) ||
     (to === "/transfer" && pathname.startsWith("/transfer")) ||
     (to === "/tokens" &&

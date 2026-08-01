@@ -51,6 +51,7 @@ import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
 import { Route as AuthenticatedTransferRouteImport } from './routes/_authenticated/transfer'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
@@ -359,6 +360,11 @@ const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
 const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
   id: '/topup',
   path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTradeRoute = AuthenticatedTradeRouteImport.update({
+  id: '/trade',
+  path: '/trade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTransferRoute = AuthenticatedTransferRouteImport.update({
@@ -930,6 +936,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
@@ -1071,6 +1078,7 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
+  '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
@@ -1214,6 +1222,7 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
+  '/_authenticated/trade': typeof AuthenticatedTradeRoute
   '/_authenticated/transfer': typeof AuthenticatedTransferRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
@@ -1357,6 +1366,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/trade'
     | '/transfer'
     | '/wallet'
     | '/watchlist'
@@ -1498,6 +1508,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tokens'
     | '/topup'
+    | '/trade'
     | '/transfer'
     | '/wallet'
     | '/watchlist'
@@ -1640,6 +1651,7 @@ export interface FileRouteTypes {
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
+    | '/_authenticated/trade'
     | '/_authenticated/transfer'
     | '/_authenticated/wallet'
     | '/_authenticated/watchlist'
@@ -2099,6 +2111,13 @@ declare module '@tanstack/react-router' {
       path: '/topup'
       fullPath: '/topup'
       preLoaderRoute: typeof AuthenticatedTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trade': {
+      id: '/_authenticated/trade'
+      path: '/trade'
+      fullPath: '/trade'
+      preLoaderRoute: typeof AuthenticatedTradeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/transfer': {
@@ -2852,6 +2871,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
+  AuthenticatedTradeRoute: typeof AuthenticatedTradeRoute
   AuthenticatedTransferRoute: typeof AuthenticatedTransferRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
@@ -2925,6 +2945,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
+  AuthenticatedTradeRoute: AuthenticatedTradeRoute,
   AuthenticatedTransferRoute: AuthenticatedTransferRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,

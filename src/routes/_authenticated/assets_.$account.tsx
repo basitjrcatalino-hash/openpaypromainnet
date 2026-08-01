@@ -101,7 +101,7 @@ function AccountDetailPage() {
               to: "/transfer",
               search: { from: "trading", to: "funding" },
             },
-            { label: "Convert", icon: RefreshCw, to: "/swap" },
+            { label: "Trade", icon: RefreshCw, to: "/trade" },
             { label: "History", icon: History, to: "/activity" },
           ]
         : [

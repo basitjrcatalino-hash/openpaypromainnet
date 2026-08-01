@@ -11,6 +11,7 @@ import {
   Wallet,
   ArrowDownToLine,
   ArrowUpFromLine,
+  ArrowLeftRight,
   Compass,
 
   Settings as SettingsIcon,
@@ -104,6 +105,7 @@ const NAV = [
   { to: "/dashboard", labelKey: "nav.home", icon: Compass },
   { to: "/wallet", labelKey: "nav.wallet", icon: Wallet },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
+  { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
   { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen },
@@ -119,18 +121,22 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   const translated = t(labelKey);
   if (translated !== labelKey) return translated;
   if (labelKey === "nav.p2p") return "P2P";
+  if (labelKey === "nav.transfer") return "Transfer";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
 
 /** Mobile bottom tab bar — Settings & Withdraw stay in the sidebar/menu only. */
-const FOOTER_NAV = NAV.filter((item) => item.to !== "/settings" && item.to !== "/withdraw");
+const FOOTER_NAV = NAV.filter(
+  (item) => item.to !== "/settings" && item.to !== "/withdraw" && item.to !== "/transfer",
+);
 
 function navActive(pathname: string, to: string) {
   return (
     pathname === to ||
     (to === "/dashboard" && pathname === "/") ||
     (to === "/wallet" && pathname.startsWith("/wallet")) ||
+    (to === "/transfer" && pathname.startsWith("/transfer")) ||
     (to === "/tokens" &&
       (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&

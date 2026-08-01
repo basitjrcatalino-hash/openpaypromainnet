@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/p2p_/wallet")({
       {
         name: "description",
         content:
-          "Fund crypto for P2P escrow and add receive accounts so buyers know where to send payment.",
+          "Transfer crypto into your P2P account for escrow and add receive accounts so buyers know where to send payment.",
       },
       { property: "og:title", content: "Merchant Wallet — OpenPay Pro P2P" },
       { property: "og:type", content: "website" },
@@ -52,12 +52,29 @@ function MerchantWalletPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wallets")
-        .select("*")
+        .select("id")
         .eq("user_id", userQ.data as string)
         .order("is_active", { ascending: false })
         .limit(1)
         .maybeSingle();
       return data;
+    },
+  });
+  const p2pBalQ = useQuery({
+    queryKey: ["p2p-account-balances", walletQ.data?.id],
+    enabled: !!walletQ.data?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wallet_account_balances")
+        .select("asset, balance")
+        .eq("wallet_id", walletQ.data!.id)
+        .eq("account", "p2p");
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      for (const row of data ?? []) {
+        map[String(row.asset).toUpperCase()] = Number(row.balance ?? 0) || 0;
+      }
+      return map;
     },
   });
   const lockedQ = useQuery({
@@ -84,11 +101,11 @@ function MerchantWalletPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // P2P bucket balance is already net of escrow locks; locked is informational.
   const balances = P2P_ASSETS.map((asset) => {
-    const w = walletQ.data as Record<string, number | string | boolean | null> | null | undefined;
-    const bal = Number(w?.[`${asset.toLowerCase()}_balance`] ?? 0);
+    const bal = Number(p2pBalQ.data?.[asset] ?? 0);
     const locked = Number(lockedQ.data?.[asset] ?? 0);
-    return { asset, bal, locked, free: Math.max(0, bal - locked) };
+    return { asset, bal, locked, free: bal };
   }).filter((b) => b.bal > 0 || b.locked > 0);
 
   const ready = (accountsQ.data ?? []).some((a) => a.is_active);
@@ -102,10 +119,12 @@ function MerchantWalletPage() {
       },
     });
 
+  const transferSearch = { from: "funding", to: "p2p" } as const;
+
   return (
     <P2pHubLayout
       title="Merchant wallet"
-      dek="Fund crypto for P2P escrow and add receive accounts so buyers know where to send payment."
+      dek="Transfer crypto into your P2P account for escrow and add receive accounts so buyers know where to send payment."
       crumb="Profile"
       eyebrow="Escrow · Receive"
       hero={{ from: "#bbf7d0", to: "#a5b4fc", glyph: "◈" }}
@@ -118,7 +137,13 @@ function MerchantWalletPage() {
           >
             <Plus className="mr-1.5 h-4 w-4" /> Add account
           </button>
-          <P2pHubPill to="/deposit">Fund wallet</P2pHubPill>
+          <Link
+            to="/transfer"
+            search={transferSearch}
+            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+          >
+            Transfer to P2P
+          </Link>
           <P2pHubPill to="/p2p/create">Go to ads</P2pHubPill>
         </>
       }
@@ -127,12 +152,12 @@ function MerchantWalletPage() {
         className={cn(
           "rounded-3xl border px-5 py-4 text-sm font-semibold",
           ready
-            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-            : "border-amber-200 bg-amber-50 text-amber-800",
+            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
         )}
       >
         {ready
-          ? "Ready for P2P — crypto funds and receive accounts are set."
+          ? "Ready for P2P — transfer funds into P2P and keep receive accounts active."
           : "Required: add at least one receive account before publishing sell ads."}
       </div>
 
@@ -141,30 +166,44 @@ function MerchantWalletPage() {
           <div className="flex items-center gap-2">
             <Wallet className="h-4 w-4 text-[var(--muted-foreground)]" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
-              Crypto funds (escrow)
+              P2P account
             </h2>
           </div>
           <Button asChild size="sm" variant="secondary" className="h-8 rounded-full">
-            <Link to="/deposit">Fund wallet</Link>
+            <Link to="/transfer" search={transferSearch}>
+              Transfer in
+            </Link>
           </Button>
         </div>
         <div className="px-5 py-4">
-          {walletQ.isLoading ? (
+          {walletQ.isLoading || p2pBalQ.isLoading ? (
             <Loader2 className="h-5 w-5 animate-spin text-[var(--muted-foreground)]" />
           ) : !balances.length ? (
-            <p className="text-sm text-[var(--muted-foreground)]">
-              No crypto balance yet. Deposit funds so you can publish sell ads and lock escrow.
-            </p>
+            <div className="space-y-3 text-sm text-[var(--muted-foreground)]">
+              <p>
+                No P2P balance yet. Transfer from Funding to publish sell ads and lock escrow.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm" className="h-8 rounded-full">
+                  <Link to="/transfer" search={transferSearch}>
+                    Transfer to P2P
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="h-8 rounded-full">
+                  <Link to="/deposit">Deposit to Funding</Link>
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {balances.map((b) => (
                 <div key={b.asset} className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-bold">{b.asset}</span>
                   <div className="text-right">
-                    <p className="font-bold tabular-nums">{fmtAmount(b.free)} free</p>
+                    <p className="font-bold tabular-nums">{fmtAmount(b.free)} available</p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {fmtAmount(b.bal)} wallet
-                      {b.locked > 0 ? ` · ${fmtAmount(b.locked)} locked` : ""}
+                      {fmtAmount(b.bal)} in P2P
+                      {b.locked > 0 ? ` · ${fmtAmount(b.locked)} in escrow` : ""}
                       {" · ≈ "}
                       {formatCurrency(b.free, fiat as never, { compact: false })}
                     </p>

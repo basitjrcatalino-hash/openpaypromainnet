@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BuySellToggle } from "@/components/p2p/P2pUi";
+import { BuySellToggle, P2pAssetIcon, P2pAssetPickerGrid } from "@/components/p2p/P2pUi";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -192,7 +192,10 @@ function ExpressPage() {
                 asset === a ? "border-foreground bg-secondary" : "border-border/60 bg-background/40",
               )}
             >
-              <p className="text-xs font-bold">{a}</p>
+              <div className="flex items-center gap-1.5">
+                <P2pAssetIcon asset={a} className="h-4 w-4" />
+                <p className="text-xs font-bold">{a}</p>
+              </div>
               <p className="mt-1 text-[11px] text-muted-foreground">P2P live</p>
             </button>
           ))}
@@ -343,23 +346,14 @@ function ExpressPage() {
           <DialogHeader>
             <DialogTitle>Select crypto</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-3 gap-2">
-            {P2P_ASSETS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => {
-                  setAsset(a);
-                  setAssetOpen(false);
-                }}
-                className={cn(
-                  "h-11 rounded-xl border text-sm font-bold",
-                  asset === a ? "border-foreground bg-secondary" : "border-border",
-                )}
-              >
-                {a}
-              </button>
-            ))}
+          <div className="max-h-[60vh] overflow-y-auto pr-0.5">
+            <P2pAssetPickerGrid
+              value={asset}
+              onSelect={(a) => {
+                setAsset(a);
+                setAssetOpen(false);
+              }}
+            />
           </div>
         </DialogContent>
       </Dialog>

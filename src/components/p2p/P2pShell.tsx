@@ -25,8 +25,9 @@ function isAdminPath(pathname: string) {
   return pathname.startsWith("/p2p/admin");
 }
 
-function isOpblogPath(pathname: string) {
+function isWidePath(pathname: string) {
   return (
+    isAdminPath(pathname) ||
     pathname.startsWith("/p2p/guide") ||
     pathname.startsWith("/p2p/rules") ||
     pathname.startsWith("/p2p/security") ||
@@ -51,16 +52,15 @@ export function P2pShell({ children }: { children: ReactNode }) {
   const modes = showModeTabs(pathname);
   const bottom = showBottomNav(pathname);
   const admin = isAdminPath(pathname);
-  const opblog = isOpblogPath(pathname);
+  const wide = isWidePath(pathname);
   const isExpress = pathname.startsWith("/p2p/express");
 
   return (
     <div
       className={cn(
-        "relative min-h-[100dvh]",
-        opblog ? "opblog" : "bg-background text-foreground",
-        admin || opblog ? P2P_ADMIN_SHELL_WIDTH : P2P_SHELL_WIDTH,
-        !opblog && "md:border-0",
+        "relative min-h-[100dvh] bg-background text-foreground",
+        admin || wide ? P2P_ADMIN_SHELL_WIDTH : P2P_SHELL_WIDTH,
+        !wide && "md:border-0",
       )}
     >
       {modes ? (

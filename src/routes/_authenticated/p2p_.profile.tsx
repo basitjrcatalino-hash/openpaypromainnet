@@ -129,7 +129,7 @@ function P2pProfilePage() {
 
   if (userQ.isLoading || profileQ.isLoading) {
     return (
-      <div className="opblog grid min-h-[40vh] place-items-center">
+      <div className="grid min-h-[40vh] place-items-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
       </div>
     );

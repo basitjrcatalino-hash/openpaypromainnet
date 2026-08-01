@@ -127,7 +127,7 @@ function TradeRoom() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("p2p_ads")
-        .select("user_id")
+        .select("user_id, terms")
         .eq("id", order!.ad_id)
         .maybeSingle();
       if (error) throw new Error(error.message);
@@ -513,6 +513,17 @@ function TradeRoom() {
           ) : isBuyer && order.status === "pending_payment" ? (
             <div className="mx-4 my-3 rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[12px] font-semibold text-amber-500 md:mx-6">
               Merchant receive details unavailable. Ask the seller in chat.
+            </div>
+          ) : null}
+
+          {adQ.data?.terms ? (
+            <div className="mx-4 mb-1 rounded-[8px] border border-border/50 bg-muted/30 px-3 py-3 md:mx-6">
+              <h2 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#11C66D]">
+                Merchant instructions
+              </h2>
+              <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+                {adQ.data.terms}
+              </p>
             </div>
           ) : null}
 

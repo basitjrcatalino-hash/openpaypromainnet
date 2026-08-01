@@ -291,7 +291,7 @@ function TopUpPage() {
     }
   }, []);
 
-  // Settle OpenPay hosted-checkout / pay-link returns
+  // Settle OpenPay hosted-checkout / pay-link returns (exclusive — never both)
   useEffect(() => {
     if (search.openpay_cancel) {
       toast.error("OpenPay payment canceled — order not completed");
@@ -309,76 +309,91 @@ function TopUpPage() {
       return;
     }
 
-    // Pay-link return: auto-confirm credit
-    if (search.openpay_return && (search.openpay_ref || pendingPayLink?.reference)) {
-      const reference = search.openpay_ref || pendingPayLink?.reference;
-      (async () => {
-        try {
-          const r = await settlePayLink({
-            data: {
-              reference,
-              txId: search.openpay_tx,
-              fromReturn: true,
-            },
-          });
-          if (r.credited) {
-            notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
-            setPendingPayLink(null);
-            try {
-              sessionStorage.removeItem(PENDING_PAYLINK_KEY);
-            } catch {
-              /* ignore */
-            }
-            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-            qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-            qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
-            qc.invalidateQueries({ queryKey: ["ledger-entries"] });
-            qc.invalidateQueries({ queryKey: ["ledger-overview"] });
-          } else {
-            toast.message(r.message || "Confirming payment…");
-            // Keep pending card visible for manual confirm
-            if (reference && !pendingPayLink) {
-              setPendingPayLink({ reference, amount: Number(amount) || 0 });
-            }
-          }
-        } catch (e) {
-          toast.error((e as Error).message);
-        } finally {
-          const u = new URL(window.location.href);
-          u.searchParams.delete("openpay_return");
-          u.searchParams.delete("openpay_ref");
-          u.searchParams.delete("openpay_tx");
-          window.history.replaceState({}, "", u.toString());
-        }
-      })();
-      return;
-    }
-
-    let chargeId = search.openpay_charge;
-    if (!chargeId && search.openpay_return) {
-      try {
-        chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined;
-      } catch {
-        /* ignore */
-      }
-    }
-    if (!chargeId) return;
+    if (!search.openpay_return && !search.openpay_charge) return;
 
     (async () => {
       try {
-        const r = await settleCharge({ data: { chargeId } });
-        if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
-        else toast.message(`OpenPay charge status: ${r.status}`);
-        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-        qc.invalidateQueries({ queryKey: ["wallets", user.id] });
-        qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
-        qc.invalidateQueries({ queryKey: ["ledger-entries"] });
-        qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+        let chargeId = search.openpay_charge;
+        if (!chargeId) {
+          try {
+            chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined;
+          } catch {
+            /* ignore */
+          }
+        }
+
+        // Checkout path wins when a charge id exists — do not also run pay-link settle.
+        if (chargeId) {
+          const r = await settleCharge({ data: { chargeId } });
+          if (r.credited && !r.already) {
+            notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+          } else if (r.credited && r.already) {
+            toast.message("OpenPay payment already credited");
+          } else {
+            toast.message(`OpenPay charge status: ${r.status}`);
+          }
+          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+          qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+          qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+          qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+          return;
+        }
+
+        const reference = search.openpay_ref || pendingPayLink?.reference;
+        if (!reference) return;
+
+        const r = await settlePayLink({
+          data: {
+            reference,
+            txId: search.openpay_tx,
+            fromReturn: false,
+          },
+        });
+        if (r.credited && !r.already) {
+          notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+          setPendingPayLink(null);
+          try {
+            sessionStorage.removeItem(PENDING_PAYLINK_KEY);
+          } catch {
+            /* ignore */
+          }
+          qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+          qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+          qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+          qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+          qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+        } else if (r.credited && r.already) {
+          toast.message("OpenPay payment already credited");
+          setPendingPayLink(null);
+        } else {
+          toast.message(r.message || "Confirming payment…");
+          if (reference && !pendingPayLink) {
+            setPendingPayLink({ reference, amount: Number(amount) || 0 });
+          }
+        }
       } catch (e) {
-        toast.error((e as Error).message);
+        const msg = (e as Error).message || "";
+        if (msg.includes("CHECKOUT_USE_CHARGE")) {
+          try {
+            const chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY);
+            if (chargeId) {
+              const r = await settleCharge({ data: { chargeId } });
+              if (r.credited) {
+                notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+              }
+              qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            }
+          } catch (e2) {
+            toast.error((e2 as Error).message);
+          }
+        } else {
+          toast.error(msg);
+        }
       } finally {
         try {
           sessionStorage.removeItem(PENDING_CHARGE_KEY);
+          // Keep paylink pending for manual confirm if still unpaid
         } catch {
           /* ignore */
         }
@@ -386,6 +401,8 @@ function TopUpPage() {
         u.searchParams.delete("openpay_charge");
         u.searchParams.delete("openpay_return");
         u.searchParams.delete("openpay_cancel");
+        u.searchParams.delete("openpay_ref");
+        u.searchParams.delete("openpay_tx");
         window.history.replaceState({}, "", u.toString());
       }
     })();

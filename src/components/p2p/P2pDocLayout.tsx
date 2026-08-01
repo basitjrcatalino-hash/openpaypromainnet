@@ -41,19 +41,19 @@ export function P2pDocLayout({
   const activeLabel = P2P_LEGAL_NAV.find((n) => n.to === active)?.label ?? title;
 
   return (
-    <div className="opblog min-h-[100dvh]">
+    <div className="min-h-[100dvh] bg-background text-foreground">
       <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-6 sm:px-8">
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/p2p/profile"
-            className="rounded-full bg-[var(--muted)] px-3 py-1.5 text-[var(--foreground)]/80 hover:text-[var(--foreground)]"
+            className="rounded-full bg-muted px-3 py-1.5 text-foreground/80 hover:text-foreground"
           >
             P2P
           </Link>
-          <span className="text-[var(--muted-foreground)]">›</span>
-          <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">Guides</span>
-          <span className="text-[var(--muted-foreground)]">›</span>
-          <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">{activeLabel}</span>
+          <span className="text-muted-foreground">›</span>
+          <span className="rounded-full bg-muted px-3 py-1.5">Guides</span>
+          <span className="text-muted-foreground">›</span>
+          <span className="rounded-full bg-muted px-3 py-1.5">{activeLabel}</span>
         </nav>
 
         <div className="mb-8 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -64,8 +64,8 @@ export function P2pDocLayout({
               className={cn(
                 "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition",
                 n.to === active
-                  ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                  : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-card text-muted-foreground hover:text-foreground",
               )}
             >
               {n.label}
@@ -74,12 +74,16 @@ export function P2pDocLayout({
         </div>
 
         <article className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
             {eyebrow}
           </p>
-          <h1 className="opblog-title mt-3">{title}</h1>
-          <p className="opblog-dek mt-5 max-w-2xl text-[var(--foreground)]/80">{dek}</p>
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">
+          <h1 className="mt-3 text-[clamp(1.75rem,4vw,2.75rem)] font-bold tracking-tight text-foreground">
+            {title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed text-muted-foreground">
+            {dek}
+          </p>
+          <p className="mt-5 text-sm text-muted-foreground">
             Last updated <span className="italic">{updated}</span>
           </p>
 
@@ -94,14 +98,14 @@ export function P2pDocLayout({
             />
             <Link
               to="/p2p"
-              className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+              className="inline-flex items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground"
             >
               Open marketplace
             </Link>
           </div>
 
           <div
-            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-[color:rgba(61,46,99,0.28)] sm:text-7xl"
+            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
             style={{
               backgroundImage: `linear-gradient(135deg, ${hero.from}, ${hero.to})`,
             }}
@@ -110,11 +114,13 @@ export function P2pDocLayout({
             {hero.glyph}
           </div>
 
-          <div className="opblog-body mt-12 max-w-[46rem] space-y-10">{children}</div>
+          <div className="mt-12 max-w-[46rem] space-y-10 text-base leading-relaxed text-foreground/90">
+            {children}
+          </div>
 
-          <div className="mt-14 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-7">
+          <div className="mt-14 rounded-3xl border border-border bg-card p-7">
             <h2 className="text-2xl font-bold tracking-tight">Keep reading</h2>
-            <p className="mt-2 text-[var(--muted-foreground)]">
+            <p className="mt-2 text-muted-foreground">
               More from the OpenPay Pro P2P guide pack.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -122,14 +128,14 @@ export function P2pDocLayout({
                 <Link
                   key={n.to}
                   to={n.to}
-                  className="rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)]"
+                  className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
                 >
                   {n.label}
                 </Link>
               ))}
               <Link
                 to="/p2p/profile"
-                className="rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold"
+                className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold"
               >
                 Back to profile
               </Link>
@@ -152,7 +158,7 @@ export function P2pDocSection({
 }) {
   return (
     <section id={id} className="scroll-mt-28 space-y-4">
-      <h2 className="opblog-h2">{title}</h2>
+      <h2 className="text-[clamp(1.35rem,2.5vw,1.85rem)] font-bold tracking-tight">{title}</h2>
       {children}
     </section>
   );
@@ -164,7 +170,7 @@ export function P2pDocList({ items }: { items: string[] }) {
       {items.map((item) => (
         <li
           key={item}
-          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3.5 text-base leading-relaxed text-[var(--foreground)]/85"
+          className="rounded-2xl border border-border bg-card px-4 py-3.5 text-base leading-relaxed text-foreground/85"
         >
           {item}
         </li>
@@ -181,19 +187,14 @@ export function P2pDocSteps({
   return (
     <ol className="space-y-4">
       {steps.map((step, i) => (
-        <li
-          key={step.title}
-          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-5"
-        >
+        <li key={step.title} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
           <div className="flex gap-3">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--primary)] text-sm font-bold text-[var(--primary-foreground)]">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
               {i + 1}
             </span>
             <div className="min-w-0">
               <p className="text-lg font-bold tracking-tight">{step.title}</p>
-              <p className="mt-1.5 text-base leading-relaxed text-[var(--muted-foreground)]">
-                {step.detail}
-              </p>
+              <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">{step.detail}</p>
             </div>
           </div>
         </li>
@@ -204,10 +205,8 @@ export function P2pDocSteps({
 
 export function P2pDocTips({ items }: { items: string[] }) {
   return (
-    <div className="rounded-2xl border-l-4 border-[var(--primary)] bg-[var(--accent)] px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
-        Good to know
-      </p>
+    <div className="rounded-2xl border-l-4 border-primary bg-accent px-5 py-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Good to know</p>
       <ul className="mt-2 space-y-2">
         {items.map((tip) => (
           <li key={tip} className="text-base font-medium leading-relaxed">
@@ -237,7 +236,7 @@ export function P2pDocCtas({
       {primary ? (
         <Link
           to={primary.to}
-          className="inline-flex rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-[var(--primary-foreground)]"
+          className="inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
         >
           {primary.label}
         </Link>
@@ -246,7 +245,7 @@ export function P2pDocCtas({
         <Link
           key={s.to + s.label}
           to={s.to}
-          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--card)] px-6 py-3 text-sm font-semibold text-[var(--foreground)]"
+          className="inline-flex rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground"
         >
           {s.label}
         </Link>

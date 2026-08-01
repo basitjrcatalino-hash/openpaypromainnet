@@ -33,6 +33,7 @@ export type P2pPath =
   | "/ledger"
   | "/docs/openpay"
   | "/deposit"
+  | "/transfer"
   | "/terms"
   | "/privacy";
 
@@ -57,34 +58,38 @@ export function P2pHubLayout({
   actions?: ReactNode;
 }) {
   return (
-    <div className="opblog min-h-[100dvh]">
+    <div className="min-h-[100dvh] bg-background text-foreground">
       <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-6 sm:px-8">
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to={backTo}
-            className="inline-flex items-center gap-1 rounded-full bg-[var(--muted)] px-3 py-1.5 text-[var(--foreground)]/80 hover:text-[var(--foreground)]"
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-foreground/80 hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             P2P
           </Link>
-          <span className="text-[var(--muted-foreground)]">›</span>
-          <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">{crumb}</span>
-          <span className="text-[var(--muted-foreground)]">›</span>
-          <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">{title}</span>
+          <span className="text-muted-foreground">›</span>
+          <span className="rounded-full bg-muted px-3 py-1.5">{crumb}</span>
+          <span className="text-muted-foreground">›</span>
+          <span className="rounded-full bg-muted px-3 py-1.5">{title}</span>
         </nav>
 
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
           {eyebrow ?? "P2P · OpenPay Pro"}
         </p>
-        <h1 className="opblog-title mt-3">{title}</h1>
+        <h1 className="mt-3 text-[clamp(1.75rem,4vw,2.75rem)] font-bold tracking-tight text-foreground">
+          {title}
+        </h1>
         {dek ? (
-          <p className="opblog-dek mt-5 max-w-2xl text-[var(--foreground)]/80">{dek}</p>
+          <p className="mt-5 max-w-2xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed text-muted-foreground">
+            {dek}
+          </p>
         ) : null}
         {actions ? <div className="mt-6 flex flex-wrap gap-2">{actions}</div> : null}
 
         {hero ? (
           <div
-            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-[color:rgba(61,46,99,0.28)] sm:text-7xl"
+            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
             style={{
               backgroundImage: `linear-gradient(135deg, ${hero.from}, ${hero.to})`,
             }}
@@ -111,21 +116,19 @@ export function P2pSubpageHeader({
   right?: ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--background)]/95 px-5 backdrop-blur-xl sm:px-8">
+    <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-5 backdrop-blur-xl sm:px-8">
       <div
         className="mx-auto flex h-14 max-w-[1180px] items-center gap-2"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <Link
           to={backTo}
-          className="grid h-9 w-9 place-items-center rounded-full bg-[var(--muted)] text-[var(--foreground)] press"
+          className="grid h-9 w-9 place-items-center rounded-full bg-muted text-foreground press"
           aria-label="Back"
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-[var(--foreground)]">
-          {title}
-        </h1>
+        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-foreground">{title}</h1>
         {right ? <div>{right}</div> : null}
       </div>
     </header>
@@ -142,7 +145,7 @@ export function P2pMenuCard({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm",
+        "overflow-hidden rounded-3xl border border-border bg-card shadow-sm",
         className,
       )}
     >
@@ -165,18 +168,14 @@ export function P2pActionRow({
   const body = (
     <>
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-bold tracking-tight text-[var(--foreground)]">
-          {title}
-        </span>
-        {desc ? (
-          <span className="mt-0.5 block text-sm text-[var(--muted-foreground)]">{desc}</span>
-        ) : null}
+        <span className="block text-base font-bold tracking-tight text-foreground">{title}</span>
+        {desc ? <span className="mt-0.5 block text-sm text-muted-foreground">{desc}</span> : null}
       </span>
-      <ChevronLeft className="h-4 w-4 rotate-180 text-[var(--muted-foreground)]" />
+      <ChevronLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
     </>
   );
   const cls =
-    "flex w-full items-center gap-3 border-b border-[var(--border)] px-5 py-4 text-left last:border-b-0 transition hover:bg-[var(--muted)]";
+    "flex w-full items-center gap-3 border-b border-border px-5 py-4 text-left last:border-b-0 transition hover:bg-muted";
   if (to) {
     return (
       <Link to={to} className={cls}>
@@ -206,8 +205,8 @@ export function P2pHubPill({
       className={cn(
         "inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold transition",
         primary
-          ? "bg-[var(--primary)] text-[var(--primary-foreground)] hover:brightness-105"
-          : "border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]",
+          ? "bg-primary text-primary-foreground hover:brightness-105"
+          : "border border-border bg-card text-foreground",
       )}
     >
       {children}

@@ -35,8 +35,25 @@ export function parsePaymentSnapshot(raw: unknown): P2PPaymentAccountSnapshot | 
   };
 }
 
-export const P2P_ASSETS = ["OUSD", "USDT", "USDC", "ETH", "BTC", "SOL"] as const;
+export const P2P_STABLE_ASSETS = [
+  "OUSD",
+  "USDT",
+  "USDC",
+  "PYUSD",
+  "USDG",
+  "USD1",
+  "CASH",
+  "EURC",
+] as const;
+
+export const P2P_MAJOR_ASSETS = ["ETH", "BTC", "SOL"] as const;
+
+export const P2P_ASSETS = [...P2P_STABLE_ASSETS, ...P2P_MAJOR_ASSETS] as const;
 export type P2PAsset = (typeof P2P_ASSETS)[number];
+
+export function isP2pStableAsset(asset: string): boolean {
+  return (P2P_STABLE_ASSETS as readonly string[]).includes(asset.toUpperCase());
+}
 
 /** Hard cap per P2P ad total / order (OUSD units, or $ notional for other assets). */
 export const P2P_MAX_AMOUNT_OUSD = 5000;
@@ -47,8 +64,7 @@ export function p2pAmountExceedsLimit(
   priceUsd = 1,
 ): boolean {
   if (!(amount > 0) || !(priceUsd > 0)) return true;
-  const a = asset.toUpperCase();
-  if (a === "OUSD" || a === "USDT" || a === "USDC") {
+  if (isP2pStableAsset(asset)) {
     return amount > P2P_MAX_AMOUNT_OUSD + 1e-12;
   }
   return amount * priceUsd > P2P_MAX_AMOUNT_OUSD + 1e-12;
@@ -56,7 +72,7 @@ export function p2pAmountExceedsLimit(
 
 export function p2pLimitError(asset: string): string {
   const a = asset.toUpperCase();
-  if (a === "OUSD" || a === "USDT" || a === "USDC") {
+  if (isP2pStableAsset(a)) {
     return `P2P limit is ${P2P_MAX_AMOUNT_OUSD.toLocaleString()} ${a} per ad/order`;
   }
   return `P2P limit is $${P2P_MAX_AMOUNT_OUSD.toLocaleString()} notional (~${P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD) per ad/order`;

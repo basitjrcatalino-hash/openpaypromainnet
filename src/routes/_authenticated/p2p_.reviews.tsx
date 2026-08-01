@@ -101,7 +101,7 @@ function ReviewsPage() {
       </section>
 
       <div>
-        <h2 className="opblog-h2">Recent completed trades</h2>
+        <h2 className="text-xl font-bold tracking-tight">Recent completed trades</h2>
         <div className="mt-4">
           {ordersQ.isLoading ? (
             <div className="grid place-items-center py-16">

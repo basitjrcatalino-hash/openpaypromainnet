@@ -356,9 +356,43 @@ function PhantomAssetDetail() {
 
     const settle = async () => {
       try {
-        if (search.openpay_return && search.openpay_ref) {
+        let chargeId = search.openpay_charge;
+        if (!chargeId && search.openpay_return) {
+          try {
+            chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined;
+          } catch {
+            /* ignore */
+          }
+        }
+
+        // Exclusive: checkout charge OR pay-link — never both.
+        if (chargeId) {
+          const r = await settleCharge({ data: { chargeId } });
+          if (r.credited && wallet?.id) {
+            const pending = await runPendingAssetBuy({
+              buyFn,
+              buyMajorFn,
+              swapFn,
+              walletId: wallet.id,
+            });
+            if (pending?.bought) {
+              toast.success(
+                `Bought ${formatNumber(pending.tokenAmount, 4)} $${pending.symbol}`,
+              );
+            } else if (!r.already) {
+              toast.success("OpenPay payment complete · OUSD credited");
+            }
+            qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+            qc.invalidateQueries({ queryKey: ["ot-holding", tokenId] });
+          }
+          try {
+            sessionStorage.removeItem(PENDING_CHARGE_KEY);
+          } catch {
+            /* ignore */
+          }
+        } else if (search.openpay_return && search.openpay_ref) {
           const r = await settlePayLink({
-            data: { reference: search.openpay_ref, txId: search.openpay_tx, fromReturn: true },
+            data: { reference: search.openpay_ref, txId: search.openpay_tx, fromReturn: false },
           });
           if (r.credited && wallet?.id) {
             const pending = await runPendingAssetBuy({
@@ -372,47 +406,11 @@ function PhantomAssetDetail() {
               toast.success(
                 `Bought ${formatNumber(pending.tokenAmount, 4)} $${pending.symbol}`,
               );
-            } else if (pending?.toppedUp) {
-              toast.success("OpenPay payment complete · OUSD credited");
-            } else {
+            } else if (!r.already) {
               toast.success("OpenPay payment complete · OUSD credited");
             }
             qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
             qc.invalidateQueries({ queryKey: ["ot-holding", tokenId] });
-          }
-        } else if (search.openpay_charge || search.openpay_return) {
-          let chargeId = search.openpay_charge;
-          if (!chargeId) {
-            try {
-              chargeId = sessionStorage.getItem(PENDING_CHARGE_KEY) ?? undefined;
-            } catch {
-              /* ignore */
-            }
-          }
-          if (chargeId) {
-            const r = await settleCharge({ data: { chargeId } });
-            if (r.credited && wallet?.id) {
-              const pending = await runPendingAssetBuy({
-                buyFn,
-                buyMajorFn,
-                swapFn,
-                walletId: wallet.id,
-              });
-              if (pending?.bought) {
-                toast.success(
-                  `Bought ${formatNumber(pending.tokenAmount, 4)} $${pending.symbol}`,
-                );
-              } else {
-                toast.success("OpenPay payment complete · OUSD credited");
-              }
-              qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
-              qc.invalidateQueries({ queryKey: ["ot-holding", tokenId] });
-            }
-            try {
-              sessionStorage.removeItem(PENDING_CHARGE_KEY);
-            } catch {
-              /* ignore */
-            }
           }
         }
       } catch (e) {

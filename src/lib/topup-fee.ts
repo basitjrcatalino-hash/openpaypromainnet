@@ -164,11 +164,13 @@ export type CreditTopupWithFeeResult = {
   feeBps: number;
   balance: number;
   feeCredited: boolean;
+  alreadyCredited?: boolean;
 };
 
 /**
  * Credit user wallet (net) and route fee to configured fee wallet.
  * `grossAmount` is what the user paid; user receives gross − fee.
+ * When `txHash` is set, skips credit if that hash already exists (idempotent).
  */
 export async function creditTopupWithFee(
   opts: CreditTopupWithFeeOpts,
@@ -184,7 +186,49 @@ export async function creditTopupWithFee(
     .maybeSingle();
   if (!wallet) throw new Error("Wallet not found");
 
-  const newBal = round8(Number(wallet.ousd_balance ?? 0) + net);
+  const curBal = Number(wallet.ousd_balance ?? 0);
+
+  // Idempotency: never credit twice for the same payment key.
+  if (opts.txHash) {
+    const { data: byHash } = await admin
+      .from("transactions")
+      .select("id")
+      .eq("tx_hash", opts.txHash)
+      .limit(1)
+      .maybeSingle();
+    if (byHash) {
+      return {
+        grossAmount: gross,
+        netAmount: net,
+        feeAmount: fee,
+        feeBps,
+        balance: curBal,
+        feeCredited: false,
+        alreadyCredited: true,
+      };
+    }
+  }
+  if (opts.counterparty) {
+    const { data: byCp } = await admin
+      .from("transactions")
+      .select("id")
+      .eq("counterparty", opts.counterparty)
+      .limit(1)
+      .maybeSingle();
+    if (byCp) {
+      return {
+        grossAmount: gross,
+        netAmount: net,
+        feeAmount: fee,
+        feeBps,
+        balance: curBal,
+        feeCredited: false,
+        alreadyCredited: true,
+      };
+    }
+  }
+
+  const newBal = round8(curBal + net);
   const { error: uErr } = await opts.client
     .from("wallets")
     .update({ ousd_balance: newBal })
@@ -211,7 +255,28 @@ export async function creditTopupWithFee(
     .insert(txRow)
     .select("id, type, token_symbol, amount, memo, counterparty, status, created_at, wallet_id")
     .single();
-  if (txErr) throw txErr;
+
+  // Unique / race: another request already inserted this payment — do not leave a double balance.
+  if (txErr) {
+    const msg = String(txErr.message || "");
+    if (/duplicate|unique|tx_hash/i.test(msg) && opts.txHash) {
+      // Best-effort rollback of our balance bump
+      await opts.client
+        .from("wallets")
+        .update({ ousd_balance: curBal })
+        .eq("id", opts.userWalletId);
+      return {
+        grossAmount: gross,
+        netAmount: net,
+        feeAmount: fee,
+        feeBps,
+        balance: curBal,
+        feeCredited: false,
+        alreadyCredited: true,
+      };
+    }
+    throw txErr;
+  }
 
   try {
     const { notifyWalletTransaction } = await import("./tx-alerts.server");

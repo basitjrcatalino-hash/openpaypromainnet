@@ -22,6 +22,8 @@ import {
   FilterChipRow,
   MerchantAvatar,
   MerchantStatLine,
+  P2pAssetIcon,
+  P2pAssetPickerGrid,
   P2pEmptyState,
   PaymentMethodTags,
   TradeCta,
@@ -31,7 +33,6 @@ import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
-  P2P_ASSETS,
   P2P_MAX_AMOUNT_OUSD,
   expireOrders,
   fetchAds,
@@ -185,7 +186,12 @@ function P2PMarketplace() {
 
         <div className="px-3 pb-2.5 md:px-4">
           <FilterChipRow>
-            <FilterChip label={asset} active onClick={() => setAssetOpen(true)} />
+            <FilterChip
+              label={asset}
+              active
+              onClick={() => setAssetOpen(true)}
+              icon={<P2pAssetIcon asset={asset} className="h-4 w-4" />}
+            />
             <FilterChip
               label={amountFilter ? `Amt ${amountFilter}` : "Amount"}
               active={!!amountFilter}
@@ -367,23 +373,14 @@ function P2PMarketplace() {
           <DialogHeader>
             <DialogTitle>Select crypto</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-3 gap-2">
-            {P2P_ASSETS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => {
-                  setAsset(a);
-                  setAssetOpen(false);
-                }}
-                className={cn(
-                  "h-11 rounded-[6px] border text-sm font-bold",
-                  asset === a ? "border-foreground bg-secondary" : "border-border",
-                )}
-              >
-                {a}
-              </button>
-            ))}
+          <div className="max-h-[60vh] overflow-y-auto pr-0.5">
+            <P2pAssetPickerGrid
+              value={asset}
+              onSelect={(a) => {
+                setAsset(a);
+                setAssetOpen(false);
+              }}
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -530,8 +527,8 @@ function BuyDialog({
           </div>
 
           {ad?.terms ? (
-            <div className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
-              <span className="font-bold text-foreground">Terms:</span> {ad.terms}
+            <div className="rounded-xl border border-border/50 bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+              <span className="font-bold text-foreground">Merchant instructions:</span> {ad.terms}
             </div>
           ) : null}
 

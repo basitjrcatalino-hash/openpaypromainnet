@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { P2pEmptyState } from "@/components/p2p/P2pUi";
+import { P2pAssetIcon, P2pEmptyState } from "@/components/p2p/P2pUi";
 import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayChip, P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,9 +115,13 @@ function AdsHubPage() {
       ) : null}
 
       <div className="border-b border-border/40 px-4 py-2.5 text-xs text-muted-foreground md:px-6">
-        Sell ads need a funded merchant wallet + receive accounts.{" "}
-        <Link to="/p2p/wallet" className="font-semibold text-primary">
-          Set up merchant wallet ›
+        Sell ads need a funded P2P account + receive accounts.{" "}
+        <Link
+          to="/transfer"
+          search={{ from: "funding", to: "p2p" }}
+          className="font-semibold text-primary"
+        >
+          Transfer to P2P ›
         </Link>
       </div>
 
@@ -334,9 +338,14 @@ function CreateAdDialog({
 
           {side === "sell" ? (
             <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Sell ads lock crypto from your merchant wallet and show your receive accounts to buyers.{" "}
-              <Link to="/p2p/wallet" className="font-semibold text-primary" onClick={() => onOpenChange(false)}>
-                Manage merchant wallet ›
+              Sell ads lock crypto from your P2P account. Transfer from Funding first if needed.{" "}
+              <Link
+                to="/transfer"
+                search={{ from: "funding", to: "p2p" }}
+                className="font-semibold text-primary"
+                onClick={() => onOpenChange(false)}
+              >
+                Transfer to P2P ›
               </Link>
             </div>
           ) : null}
@@ -348,10 +357,11 @@ function CreateAdDialog({
                 type="button"
                 onClick={() => setAsset(a)}
                 className={cn(
-                  "h-8 rounded-lg border px-3 text-xs font-bold",
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-bold",
                   asset === a ? "border-foreground bg-secondary" : "border-border",
                 )}
               >
+                <P2pAssetIcon asset={a} className="h-4 w-4" />
                 {a}
               </button>
             ))}
@@ -418,13 +428,21 @@ function CreateAdDialog({
             <p className="text-xs font-semibold text-rose-500">{p2pLimitError(asset)}</p>
           )}
 
-          <Textarea
-            value={terms}
-            maxLength={1000}
-            onChange={(e) => setTerms(e.target.value)}
-            placeholder="Terms (optional)"
-            className="min-h-20"
-          />
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+              Merchant instructions
+            </label>
+            <Textarea
+              value={terms}
+              maxLength={1000}
+              onChange={(e) => setTerms(e.target.value)}
+              placeholder="Payment notes buyers will see (e.g. include order ref, preferred bank branch…)"
+              className="min-h-20"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Shown to customers on the trade sheet and order page.
+            </p>
+          </div>
 
           <label className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-muted/20 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
             <input

@@ -248,6 +248,63 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
     };
   });
 
+/** Stable idempotency keys — one payment must never use both. */
+function openPayRefTxHash(reference: string) {
+  return `openpay:ref:${reference}`;
+}
+function openPayChargeTxHash(chargeId: string) {
+  return `openpay:charge:${chargeId}`;
+}
+
+async function openPayTopupAlreadyCredited(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  keys: { reference?: string | null; chargeId?: string | null },
+): Promise<boolean> {
+  const hashes: string[] = [];
+  const counterparties: string[] = [];
+  if (keys.reference) {
+    hashes.push(openPayRefTxHash(keys.reference));
+    counterparties.push(`openpay-paylink:${keys.reference}`);
+  }
+  if (keys.chargeId) {
+    hashes.push(openPayChargeTxHash(keys.chargeId));
+    counterparties.push(`openpay:${keys.chargeId}`);
+  }
+  if (!hashes.length && !counterparties.length) return false;
+
+  if (hashes.length) {
+    const { data } = await db
+      .from("transactions")
+      .select("id")
+      .in("tx_hash", hashes)
+      .limit(1)
+      .maybeSingle();
+    if (data) return true;
+  }
+  if (counterparties.length) {
+    const { data } = await db
+      .from("transactions")
+      .select("id")
+      .in("counterparty", counterparties)
+      .limit(1)
+      .maybeSingle();
+    if (data) return true;
+  }
+  // Legacy memo / unstable paylink keys
+  if (keys.reference) {
+    const { data: byMemo } = await db
+      .from("transactions")
+      .select("id")
+      .ilike("memo", `%${keys.reference}%`)
+      .eq("token_symbol", "OUSD")
+      .limit(1)
+      .maybeSingle();
+    if (byMemo) return true;
+  }
+  return false;
+}
+
 /** After user returns from /pay/@partner — match incoming OpenPay credit and credit Pro OUSD. */
 export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -256,7 +313,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       .object({
         reference: z.string().min(8).max(120).optional(),
         txId: z.string().min(4).max(200).optional(),
-        /** When true, allow settle after OpenPay thank-you redirect if pending is fresh */
+        /** Kept for API compat — blind credit on return is disabled (use verified match only). */
         fromReturn: z.boolean().optional(),
       })
       .parse(d ?? {}),
@@ -280,6 +337,8 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
           payer_account?: string;
           payer_username?: string;
           created_at?: string;
+          charge_id?: string;
+          mode?: string;
         }
       | undefined;
 
@@ -287,11 +346,25 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
     if (!reference || !pending?.amount) {
       throw new Error("No pending OpenPay top-up to settle — start Top Up again");
     }
+
+    // Checkout payments must settle via charge id only — prevents double credit with pay-link.
+    if (pending.mode === "checkout" && pending.charge_id) {
+      throw new Error("CHECKOUT_USE_CHARGE");
+    }
+
     const amount = Number(pending.amount);
-    const createdAt = pending.created_at ? Date.parse(pending.created_at) : 0;
-    const fresh = createdAt > 0 && Date.now() - createdAt < 2 * 60 * 60 * 1000; // 2h
+
+    if (
+      await openPayTopupAlreadyCredited(supabaseAdmin, {
+        reference,
+        chargeId: pending.charge_id,
+      })
+    ) {
+      return { credited: true as const, status: "paid" as const, already: true };
+    }
 
     let matchedId = data.txId || "";
+    let verified = false;
 
     try {
       const transfers = await openpayPro.listTransfers({ limit: 50 });
@@ -321,12 +394,13 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
 
       if (match2?.id) matchedId = String(match2.id);
       else if (match2?.transaction_id) matchedId = String(match2.transaction_id);
+      if (matchedId) verified = true;
     } catch (e) {
       console.warn("[openpay topup] listTransfers failed:", (e as Error).message);
     }
 
-    // OpenPay P2P may not appear on partner /transfers — honor fresh thank-you return
-    if (!matchedId && !(data.fromReturn && fresh)) {
+    // Never trust redirect alone — requires a matched OpenPay transfer.
+    if (!verified) {
       return {
         credited: false as const,
         status: "pending" as const,
@@ -334,27 +408,9 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       };
     }
 
-    const counterparty = `openpay-paylink:${matchedId || data.txId || reference}`;
-    const { data: existing } = await supabase
-      .from("transactions")
-      .select("id")
-      .eq("counterparty", counterparty)
-      .limit(1)
-      .maybeSingle();
-    if (existing) {
-      return { credited: true as const, status: "paid" as const, already: true };
-    }
-
-    // Also block double-credit on same reference
-    const { data: existingRef } = await supabase
-      .from("transactions")
-      .select("id")
-      .eq("memo", `OpenPay balance top-up · ${reference}`)
-      .limit(1)
-      .maybeSingle();
-    if (existingRef) {
-      return { credited: true as const, status: "paid" as const, already: true };
-    }
+    // Stable key by reference (never matchedId) so Confirm + return share one key.
+    const txHash = openPayRefTxHash(reference);
+    const counterparty = `openpay-paylink:${reference}`;
 
     const { resolveCreditWallet } = await import("./wallet-utils");
     const wallet = await resolveCreditWallet<{ id: string; ousd_balance?: number | null }>(
@@ -372,6 +428,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
       grossAmount: amount,
       counterparty,
       memo: `OpenPay balance top-up · ${reference}`,
+      txHash,
     });
 
     // Clear pending
@@ -386,6 +443,7 @@ export const settleOpenPayPayLinkTopup = createServerFn({ method: "POST" })
     return {
       credited: true as const,
       status: "paid" as const,
+      already: !!credited.alreadyCredited,
       balance: credited.balance,
       wallet_id: wallet.id,
       netAmount: credited.netAmount,
@@ -408,24 +466,25 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
       return { status: charge.status, credited: false };
     }
 
-    // Idempotency: use counterparty tag to guarantee single credit.
-    const counterparty = `openpay:${charge.id}`;
-    const { data: existing } = await supabaseAdmin
-      .from("transactions")
-      .select("id")
-      .eq("counterparty", counterparty)
-      .limit(1)
-      .maybeSingle();
-    if (existing) return { status: "paid", credited: true, already: true };
-
     const { data: prefs } = await supabase
       .from("user_preferences")
       .select("notifications")
       .eq("user_id", userId)
       .maybeSingle();
     const pending = (prefs?.notifications as Record<string, unknown> | null)?.openpay_pending_topup as
-      | { wallet_id?: string; charge_id?: string }
+      | { wallet_id?: string; charge_id?: string; reference?: string; amount?: number }
       | undefined;
+
+    const reference = pending?.reference || charge.reference || null;
+
+    if (
+      await openPayTopupAlreadyCredited(supabaseAdmin, {
+        reference,
+        chargeId: charge.id,
+      })
+    ) {
+      return { status: "paid", credited: true, already: true };
+    }
 
     const { resolveCreditWallet } = await import("./wallet-utils");
     const wallet = await resolveCreditWallet<{ id: string; ousd_balance?: number | null }>(
@@ -436,6 +495,9 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Active wallet not found");
 
     const amount = Number(charge.amount);
+    // Prefer charge key; also bind reference so pay-link path cannot credit again.
+    const txHash = openPayChargeTxHash(charge.id);
+    const counterparty = `openpay:${charge.id}`;
 
     const { creditTopupWithFee } = await import("./topup-fee");
     const credited = await creditTopupWithFee({
@@ -444,8 +506,30 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
       userWalletId: wallet.id,
       grossAmount: amount,
       counterparty,
-      memo: `OpenPay checkout ${charge.id}`,
+      memo: reference
+        ? `OpenPay checkout ${charge.id} · ${reference}`
+        : `OpenPay checkout ${charge.id}`,
+      txHash,
     });
+
+    // Bind reference key so a later pay-link settle cannot credit again.
+    if (reference && !credited.alreadyCredited) {
+      try {
+        await supabaseAdmin.from("transactions").insert({
+          wallet_id: wallet.id,
+          type: "buy",
+          status: "confirmed",
+          token_symbol: "OUSD",
+          amount: 0,
+          usd_value: 0,
+          counterparty: `openpay-paylink:${reference}`,
+          tx_hash: openPayRefTxHash(reference),
+          memo: `OpenPay top-up idempotency · ${reference}`,
+        });
+      } catch {
+        /* ignore duplicate marker */
+      }
+    }
 
     if (prefs?.notifications) {
       const next = { ...((prefs.notifications as Record<string, unknown>) ?? {}) };
@@ -460,6 +544,7 @@ export const settleOpenPayCharge = createServerFn({ method: "POST" })
     return {
       status: "paid",
       credited: true,
+      already: !!credited.alreadyCredited,
       balance: credited.balance,
       wallet_id: wallet.id,
       netAmount: credited.netAmount,

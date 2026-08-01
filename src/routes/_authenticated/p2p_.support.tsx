@@ -87,7 +87,7 @@ function SupportPage() {
       </div>
 
       <div>
-        <h2 className="opblog-h2">Common questions</h2>
+        <h2 className="text-xl font-bold tracking-tight">Common questions</h2>
         <P2pMenuCard className="mt-4">
           {FAQS.map((f) => (
             <div key={f.q} className="border-b border-[var(--border)] px-5 py-4 last:border-b-0">

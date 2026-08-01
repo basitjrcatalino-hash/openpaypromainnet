@@ -150,7 +150,15 @@ export function TradePanel({
 
     void (async () => {
       try {
-        if (openpayRef || returned) {
+        // Exclusive settle: checkout charge OR pay-link — never both.
+        if (chargeId) {
+          const r = await settleCharge({ data: { chargeId } });
+          if (r.credited && !r.already) {
+            notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+          } else if (r.status && !r.credited) {
+            toast.message(`OpenPay charge status: ${r.status}`);
+          }
+        } else if (openpayRef || returned) {
           let pending: { reference?: string; amount?: number } | null = null;
           try {
             pending = JSON.parse(sessionStorage.getItem(PENDING_PAYLINK_KEY) || "null");
@@ -160,23 +168,31 @@ export function TradePanel({
           const reference = openpayRef || pending?.reference;
           if (reference) {
             const r = await settlePayLink({
-              data: { reference, txId: openpayTx || undefined, fromReturn: true },
+              data: { reference, txId: openpayTx || undefined, fromReturn: false },
             });
-            if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
-            else toast.message((r as { message?: string }).message || "Confirming payment…");
+            if (r.credited && !r.already) {
+              notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+            } else if (!r.credited) {
+              toast.message((r as { message?: string }).message || "Confirming payment…");
+            }
           }
-        }
-        if (chargeId) {
-          const r = await settleCharge({ data: { chargeId } });
-          if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
-          else if (r.status) toast.message(`OpenPay charge status: ${r.status}`);
         }
         await Promise.all([
           qc.invalidateQueries({ queryKey: ["active-wallet", userId] }),
           qc.invalidateQueries({ queryKey: ["wallets"] }),
         ]);
       } catch (err) {
-        toast.error((err as Error).message || "Could not confirm OpenPay payment");
+        const msg = (err as Error).message || "";
+        if (msg.includes("CHECKOUT_USE_CHARGE") && chargeId) {
+          try {
+            const r = await settleCharge({ data: { chargeId } });
+            if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
+          } catch (e2) {
+            toast.error((e2 as Error).message || "Could not confirm OpenPay payment");
+          }
+        } else {
+          toast.error(msg || "Could not confirm OpenPay payment");
+        }
       } finally {
         try {
           sessionStorage.removeItem(PENDING_CHARGE_KEY);

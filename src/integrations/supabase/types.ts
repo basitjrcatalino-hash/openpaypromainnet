@@ -2554,6 +2554,38 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_account_balances: {
+        Row: {
+          wallet_id: string
+          account: string
+          asset: string
+          balance: number
+          updated_at: string
+        }
+        Insert: {
+          wallet_id: string
+          account: string
+          asset: string
+          balance?: number
+          updated_at?: string
+        }
+        Update: {
+          wallet_id?: string
+          account?: string
+          asset?: string
+          balance?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_account_balances_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallets: {
         Row: {
           address: string
@@ -2696,6 +2728,15 @@ export type Database = {
       has_user_pin: { Args: never; Returns: boolean }
       import_openpay_wallet: {
         Args: { p_address: string; p_name?: string; p_recovery_hash: string }
+        Returns: Json
+      }
+      internal_account_transfer: {
+        Args: {
+          _from: string
+          _to: string
+          _asset: string
+          _amount: number
+        }
         Returns: Json
       }
       move_to_dlq: {

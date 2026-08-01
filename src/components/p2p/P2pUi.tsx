@@ -1,5 +1,8 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
+import { P2P_ASSETS, isP2pStableAsset } from "@/lib/p2p";
+import { logoUrlForTokenSymbol } from "@/lib/token-logos";
 
 /** OKX-style Buy / Sell text tabs (green buy · red sell). */
 export function BuySellToggle({
@@ -73,7 +76,7 @@ export function FilterChip({
   label: string;
   active?: boolean;
   onClick?: () => void;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }) {
   return (
     <button
@@ -100,7 +103,7 @@ export function P2pEmptyState({
 }: {
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="grid place-items-center gap-3 px-6 py-20 text-center">
@@ -274,5 +277,90 @@ export function TradeCta({
     >
       {label ?? (side === "buy" ? "Buy" : "Sell")}
     </button>
+  );
+}
+
+export function P2pAssetIcon({
+  asset,
+  className,
+}: {
+  asset: string;
+  className?: string;
+}) {
+  const logo = logoUrlForTokenSymbol(asset);
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt=""
+        className={cn("h-6 w-6 rounded-full object-cover", className)}
+      />
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[9px] font-bold text-primary",
+        className,
+      )}
+    >
+      {asset.slice(0, 2)}
+    </span>
+  );
+}
+
+/** Select-crypto grid: all P2P stables + majors with logos. */
+export function P2pAssetPickerGrid({
+  value,
+  onSelect,
+  assets = P2P_ASSETS,
+}: {
+  value?: string;
+  onSelect: (asset: string) => void;
+  assets?: readonly string[];
+}) {
+  const stables = assets.filter((a) => isP2pStableAsset(a));
+  const majors = assets.filter((a) => !isP2pStableAsset(a));
+
+  function Row({ list }: { list: string[] }) {
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        {list.map((a) => (
+          <button
+            key={a}
+            type="button"
+            onClick={() => onSelect(a)}
+            className={cn(
+              "flex h-12 items-center justify-center gap-2 rounded-[8px] border text-sm font-bold press",
+              value === a ? "border-foreground bg-secondary" : "border-border hover:bg-muted/50",
+            )}
+          >
+            <P2pAssetIcon asset={a} className="h-5 w-5" />
+            {a}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {stables.length ? (
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Stablecoins
+          </p>
+          <Row list={[...stables]} />
+        </div>
+      ) : null}
+      {majors.length ? (
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Crypto
+          </p>
+          <Row list={[...majors]} />
+        </div>
+      ) : null}
+    </div>
   );
 }

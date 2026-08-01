@@ -51,7 +51,7 @@ const STEPS = [
 const TIPS = [
   "Platform trading fee is 0 — only bank/network fees may apply.",
   "Max size is 5,000 OUSD (or $5,000 notional) per trade.",
-  "Sell ads need a funded merchant wallet + receive accounts.",
+  "Sell ads need a funded P2P account (Transfer from Funding) + receive accounts.",
   "Never release escrow before money clears in your own account.",
   "Read Trading rules and Safety before your first large trade.",
 ];

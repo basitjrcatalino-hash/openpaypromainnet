@@ -158,7 +158,14 @@ function MerchantPage() {
           <P2pHubPill to="/p2p/create" primary>
             {canList ? "Create / manage ads" : "Ads (locked)"}
           </P2pHubPill>
-          <P2pHubPill to="/p2p/wallet">Fund wallet</P2pHubPill>
+          <P2pHubPill to="/p2p/wallet">P2P wallet</P2pHubPill>
+          <Link
+            to="/transfer"
+            search={{ from: "funding", to: "p2p" }}
+            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+          >
+            Transfer to P2P
+          </Link>
         </>
       }
     >
@@ -225,7 +232,7 @@ function MerchantPage() {
       ) : null}
 
       <div>
-        <h2 className="opblog-h2">1. Verified Merchant</h2>
+        <h2 className="text-xl font-bold tracking-tight">1. Verified Merchant</h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">Required to list ads</p>
         <P2pMenuCard className="mt-4">
           {verifiedChecks.map((c) => (
@@ -245,7 +252,7 @@ function MerchantPage() {
       </div>
 
       <div>
-        <h2 className="opblog-h2">2. Super Merchant</h2>
+        <h2 className="text-xl font-bold tracking-tight">2. Super Merchant</h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">Badge + ranking boost</p>
         <P2pMenuCard className="mt-4">
           {superChecks.map((c) => (

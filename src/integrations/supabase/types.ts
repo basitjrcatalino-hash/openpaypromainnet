@@ -2599,6 +2599,42 @@ export type Database = {
         Returns: Json
       }
       p2p_balance_column: { Args: { _asset: string }; Returns: string }
+      p2p_create_ad: {
+        Args: {
+          _side: Database["public"]["Enums"]["p2p_ad_side"]
+          _asset: string
+          _price_usd: number
+          _total_amount: number
+          _min_order: number
+          _max_order: number
+          _payment_methods: string[]
+          _pay_time_limit_minutes?: number
+          _terms?: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          side: Database["public"]["Enums"]["p2p_ad_side"]
+          asset: string
+          price_usd: number
+          total_amount: number
+          available_amount: number
+          min_order: number
+          max_order: number
+          payment_methods: string[]
+          pay_time_limit_minutes: number
+          terms: string | null
+          status: Database["public"]["Enums"]["p2p_ad_status"]
+          created_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_ads"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       p2p_cancel_order: {
         Args: { _order_id: string; _reason?: string }
         Returns: {
@@ -2670,6 +2706,16 @@ export type Database = {
         Returns: {
           id: string
           name: string
+        }[]
+      }
+      p2p_trader_stats: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          completed_count: number
+          completion_rate: number | null
+          avg_pay_seconds: number | null
+          last_active_at: string | null
         }[]
       }
       p2p_expire_orders: { Args: never; Returns: number }

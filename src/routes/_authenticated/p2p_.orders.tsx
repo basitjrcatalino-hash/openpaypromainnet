@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, ScrollText } from "lucide-react";
+import { Loader2, MessageCircle, Search } from "lucide-react";
 
-import { PageHeader } from "@/components/wallet/PageHeader";
+import { FilterChipRow, P2pEmptyState } from "@/components/p2p/P2pUi";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
-  ESCROW_LABEL,
-  ORDER_STATUS_LABEL,
   expireOrders,
+  fetchDisplayNames,
   fetchMyOrders,
   fmtAmount,
-  statusTone,
+  type P2POrder,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -19,12 +19,8 @@ export const Route = createFileRoute("/_authenticated/p2p_/orders")({
   head: () => ({
     meta: [
       { title: "P2P Orders — OpenPay Pro" },
-      {
-        name: "description",
-        content: "Track your peer-to-peer trades, escrow status and settlement history.",
-      },
+      { name: "description", content: "Track pending and completed P2P escrow trades." },
       { property: "og:title", content: "P2P Orders — OpenPay Pro" },
-      { property: "og:description", content: "Escrow status and trade history for P2P orders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -32,7 +28,19 @@ export const Route = createFileRoute("/_authenticated/p2p_/orders")({
   component: OrdersPage,
 });
 
+type MainTab = "pending" | "completed";
+type PendingChip = "all" | "progress" | "dispute";
+type CompletedChip = "all" | "fulfilled" | "canceled";
+
+const PENDING_STATUSES = new Set(["pending_payment", "paid", "disputed"]);
+const COMPLETED_STATUSES = new Set(["completed", "cancelled", "expired"]);
+
 function OrdersPage() {
+  const [main, setMain] = useState<MainTab>("pending");
+  const [pendingChip, setPendingChip] = useState<PendingChip>("all");
+  const [completedChip, setCompletedChip] = useState<CompletedChip>("all");
+  const { code: fiat } = useCurrency();
+
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
     queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
@@ -41,82 +49,209 @@ function OrdersPage() {
     queryKey: ["p2p-orders", userQ.data],
     queryFn: () => fetchMyOrders(userQ.data as string),
     enabled: !!userQ.data,
-    refetchInterval: 20_000,
+    refetchInterval: 15_000,
   });
 
   useEffect(() => {
     void expireOrders().catch(() => {});
   }, []);
 
+  const counterparties = useMemo(() => {
+    const uid = userQ.data;
+    if (!uid || !ordersQ.data) return [];
+    return ordersQ.data.map((o) => (o.buyer_id === uid ? o.seller_id : o.buyer_id));
+  }, [ordersQ.data, userQ.data]);
+
+  const names = useQuery({
+    queryKey: ["p2p-names", counterparties.join(",")],
+    queryFn: () => fetchDisplayNames(counterparties),
+    enabled: counterparties.length > 0,
+  });
+
+  const filtered = useMemo(() => {
+    const uid = userQ.data;
+    let list = ordersQ.data ?? [];
+    if (main === "pending") {
+      list = list.filter((o) => PENDING_STATUSES.has(o.status));
+      if (pendingChip === "progress") {
+        list = list.filter((o) => o.status === "pending_payment" || o.status === "paid");
+      } else if (pendingChip === "dispute") {
+        list = list.filter((o) => o.status === "disputed");
+      }
+    } else {
+      list = list.filter((o) => COMPLETED_STATUSES.has(o.status));
+      if (completedChip === "fulfilled") list = list.filter((o) => o.status === "completed");
+      if (completedChip === "canceled") {
+        list = list.filter((o) => o.status === "cancelled" || o.status === "expired");
+      }
+    }
+    return list.map((o) => ({
+      order: o,
+      isBuyer: o.buyer_id === uid,
+      counterparty: names.data?.[o.buyer_id === uid ? o.seller_id : o.buyer_id] ?? "Trader",
+    }));
+  }, [ordersQ.data, userQ.data, main, pendingChip, completedChip, names.data]);
+
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 pb-24">
-      <PageHeader
-        title="P2P orders"
-        backTo="/p2p"
-        right={
-          <Link
-            to="/p2p"
-            className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground press"
-          >
-            Marketplace
-          </Link>
-        }
-      />
+    <div>
+      <header
+        className="sticky top-0 z-20 border-b border-border/40 bg-background/95 backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
+        <div className="flex h-12 items-center justify-between px-4">
+          <h1 className="text-lg font-bold">Orders</h1>
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="flex items-center gap-6 px-4">
+          {(["pending", "completed"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setMain(tab)}
+              className={cn(
+                "relative pb-2.5 text-sm font-bold capitalize",
+                main === tab ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {tab}
+              {main === tab ? (
+                <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-foreground" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className="px-4 py-3">
+        <FilterChipRow>
+          {main === "pending"
+            ? (
+                [
+                  ["all", "All"],
+                  ["progress", "In progress"],
+                  ["dispute", "In dispute"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPendingChip(id)}
+                  className={cn(
+                    "h-8 shrink-0 rounded-full px-3 text-xs font-semibold",
+                    pendingChip === id ? "bg-secondary text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              ))
+            : (
+                [
+                  ["all", "All"],
+                  ["fulfilled", "Fulfilled"],
+                  ["canceled", "Canceled"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setCompletedChip(id)}
+                  className={cn(
+                    "h-8 shrink-0 rounded-full px-3 text-xs font-semibold",
+                    completedChip === id ? "bg-secondary text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+        </FilterChipRow>
+      </div>
 
       {ordersQ.isLoading ? (
-        <div className="grid place-items-center py-20">
+        <div className="grid place-items-center py-24">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : !ordersQ.data?.length ? (
-        <div className="grid place-items-center gap-3 rounded-3xl border border-border/60 bg-card/50 py-20 text-center">
-          <ScrollText className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">No P2P trades yet.</p>
-          <Link to="/p2p" className="text-sm font-semibold text-primary underline underline-offset-4">
-            Browse the marketplace
-          </Link>
-        </div>
+      ) : !filtered.length ? (
+        <P2pEmptyState title="No orders" description="Your P2P trades will show up here." />
       ) : (
-        <div className="divide-y divide-border/60 overflow-hidden rounded-3xl border border-border/60 bg-card/50">
-          {ordersQ.data.map((o) => {
-            const isBuyer = o.buyer_id === userQ.data;
-            return (
-              <Link
-                key={o.id}
-                to="/p2p/order/$id"
-                params={{ id: o.id }}
-                className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-muted/40"
-              >
-                <span
-                  className={cn(
-                    "rounded-md px-2 py-0.5 text-[11px] font-bold uppercase",
-                    isBuyer
-                      ? "bg-emerald-500/12 text-emerald-500"
-                      : "bg-rose-500/12 text-rose-500",
-                  )}
-                >
-                  {isBuyer ? "Buy" : "Sell"}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold tabular-nums">
-                    {fmtAmount(o.amount)} {o.asset} · ${Number(o.total_fiat).toFixed(2)}
-                  </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {o.ref} · {o.payment_method} · {ESCROW_LABEL[o.escrow_status]}
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold",
-                    statusTone(o.status),
-                  )}
-                >
-                  {ORDER_STATUS_LABEL[o.status]}
-                </span>
-              </Link>
-            );
-          })}
+        <div className="divide-y divide-border/40">
+          {filtered.map(({ order, isBuyer, counterparty }) => (
+            <OrderRow
+              key={order.id}
+              order={order}
+              isBuyer={!!isBuyer}
+              counterparty={counterparty}
+              fiat={fiat}
+            />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+function OrderRow({
+  order,
+  isBuyer,
+  counterparty,
+  fiat,
+}: {
+  order: P2POrder;
+  isBuyer: boolean;
+  counterparty: string;
+  fiat: string;
+}) {
+  const statusLabel =
+    order.status === "completed"
+      ? "Fulfilled"
+      : order.status === "cancelled" || order.status === "expired"
+        ? "Canceled"
+        : order.status === "disputed"
+          ? "In dispute"
+          : "In progress";
+
+  return (
+    <Link
+      to="/p2p/order/$id"
+      params={{ id: order.id }}
+      className="block px-4 py-4 transition-colors hover:bg-muted/30"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className={cn(
+            "text-sm font-bold",
+            isBuyer ? "text-emerald-500" : "text-rose-500",
+          )}
+        >
+          {isBuyer ? "Buy" : "Sell"} {order.asset}
+        </span>
+        <span className="text-xs text-muted-foreground">{statusLabel} ›</span>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        {new Date(order.created_at).toLocaleString()}
+      </p>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="space-y-0.5 text-xs text-muted-foreground">
+          <p>
+            Unit price{" "}
+            <span className="text-foreground">
+              {formatCurrency(Number(order.price_usd), fiat as never, { compact: false })}
+            </span>
+          </p>
+          <p>
+            Quantity{" "}
+            <span className="text-foreground">
+              {fmtAmount(order.amount)} {order.asset}
+            </span>
+          </p>
+        </div>
+        <p className="text-lg font-extrabold tabular-nums">
+          {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
+        </p>
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        <p className="truncate text-xs text-muted-foreground">{counterparty}</p>
+        <MessageCircle className="h-4 w-4 text-muted-foreground" />
+      </div>
+    </Link>
   );
 }

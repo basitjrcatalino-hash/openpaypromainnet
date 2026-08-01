@@ -51,7 +51,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Mercado P2P"
     },
     "language": {
       "title": "Idioma de visualización",
@@ -224,7 +225,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P-Markt"
     },
     "language": {
       "title": "Anzeigesprache",
@@ -397,7 +399,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Marché P2P"
     },
     "language": {
       "title": "Langue d'affichage",
@@ -570,7 +573,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Mercato P2P"
     },
     "language": {
       "title": "Lingua di visualizzazione",
@@ -743,7 +747,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P 市场"
     },
     "language": {
       "title": "显示语言",
@@ -916,7 +921,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P 市場"
     },
     "language": {
       "title": "顯示語言",
@@ -1089,7 +1095,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2Pマーケット"
     },
     "language": {
       "title": "表示言語",
@@ -1262,7 +1269,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P 마켓"
     },
     "language": {
       "title": "표시 언어",
@@ -1435,7 +1443,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P рынок"
     },
     "language": {
       "title": "Язык интерфейса",
@@ -1608,7 +1617,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P बाज़ार"
     },
     "language": {
       "title": "प्रदर्शन भाषा",
@@ -1781,7 +1791,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Pasar P2P"
     },
     "language": {
       "title": "Bahasa tampilan",
@@ -1954,7 +1965,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Pasar P2P"
     },
     "language": {
       "title": "Bahasa paparan",
@@ -2127,7 +2139,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "ตลาด P2P"
     },
     "language": {
       "title": "ภาษาที่แสดง",
@@ -2300,7 +2313,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Thị trường P2P"
     },
     "language": {
       "title": "Ngôn ngữ hiển thị",
@@ -2473,7 +2487,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Mercado P2P"
     },
     "language": {
       "title": "Idioma de exibição",
@@ -2646,7 +2661,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P Piyasası"
     },
     "language": {
       "title": "Görüntüleme dili",
@@ -2819,7 +2835,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "سوق P2P"
     },
     "language": {
       "title": "لغة العرض",
@@ -2992,7 +3009,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P Market"
     },
     "language": {
       "title": "Wika ng display",
@@ -3165,7 +3183,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P বাজার"
     },
     "language": {
       "title": "প্রদর্শনের ভাষা",
@@ -3338,7 +3357,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P စျေးကွက်"
     },
     "language": {
       "title": "ပြသဘာသာစကား",
@@ -3483,7 +3503,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P ገበያ"
     },
     "language": {
       "title": "የማሳያ ቋንቋ",
@@ -3628,7 +3649,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P બજાર"
     },
     "language": {
       "title": "પ્રદર્શન ભાષા",
@@ -3773,7 +3795,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Kasuwar P2P"
     },
     "language": {
       "title": "Harshen nunawa",
@@ -3918,7 +3941,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Ahịa P2P"
     },
     "language": {
       "title": "Asụsụ ngosi",
@@ -4047,7 +4071,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P ਬਜ਼ਾਰ"
     },
     "language": {
       "title": "ਡਿਸਪਲੇ ਭਾਸ਼ਾ",
@@ -4101,7 +4126,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Soko la P2P"
     },
     "language": {
       "title": "Lugha ya Kuonyesha",
@@ -4155,7 +4181,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P சந்தை"
     },
     "language": {
       "title": "காட்சி மொழி",
@@ -4209,7 +4236,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "P2P మార్కెట్"
     },
     "language": {
       "title": "డిస్‌ప్లే భాష",
@@ -4263,7 +4291,8 @@
       "ai": "OpenPay AI",
       "developer": "Developer",
       "agentConnect": "Agent Connect",
-      "depositGateway": "Deposit gateway"
+      "depositGateway": "Deposit gateway",
+      "p2p": "Ọja P2P"
     },
     "language": {
       "title": "Èdè ìfihàn",

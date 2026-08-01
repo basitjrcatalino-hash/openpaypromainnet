@@ -1,13 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, Loader2, Lock, Send, ShieldCheck, Timer, X } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, Loader2, Lock, Send, ShieldCheck, Timer, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageHeader } from "@/components/wallet/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   ESCROW_LABEL,
   ORDER_STATUS_LABEL,
@@ -49,6 +49,8 @@ export const Route = createFileRoute("/_authenticated/p2p_/order/$id")({
 function TradeRoom() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { code: fiat } = useCurrency();
   const [now, setNow] = useState(() => Date.now());
   const [draft, setDraft] = useState("");
   const [proof, setProof] = useState("");
@@ -156,13 +158,26 @@ function TradeRoom() {
   const live = order.status === "pending_payment" || order.status === "paid";
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 pb-28">
-      <PageHeader title={`Trade ${order.ref}`} backTo="/p2p/orders" />
+    <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-8 pt-2">
+      <header className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => void navigate({ to: "/p2p/orders" })}
+          className="grid h-9 w-9 place-items-center rounded-full press"
+          aria-label="Back"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-bold">{order.ref}</h1>
+          <p className="truncate text-[11px] text-muted-foreground">{counterparty}</p>
+        </div>
+      </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-        <div className="space-y-5">
+      <div className="space-y-4">
+        <div className="space-y-4">
           {/* Escrow header */}
-          <div className="rounded-3xl border border-border/60 bg-card/70 p-5">
+          <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={cn(
@@ -172,7 +187,7 @@ function TradeRoom() {
               >
                 {ORDER_STATUS_LABEL[order.status]}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-500">
                 <Lock className="h-3 w-3" /> {ESCROW_LABEL[order.escrow_status]}
               </span>
               {order.status === "pending_payment" ? (
@@ -184,8 +199,14 @@ function TradeRoom() {
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <Stat label={isBuyer ? "You buy" : "You sell"} value={`${fmtAmount(order.amount)} ${order.asset}`} />
-              <Stat label="You pay / receive" value={`$${Number(order.total_fiat).toFixed(2)}`} />
-              <Stat label="Price" value={`$${fmtAmount(order.price_usd)} / ${order.asset}`} />
+              <Stat
+                label="You pay / receive"
+                value={formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
+              />
+              <Stat
+                label="Price"
+                value={`${formatCurrency(Number(order.price_usd), fiat as never, { compact: false })} / ${order.asset}`}
+              />
               <Stat label="Payment method" value={methodLabel} />
               <Stat label="Counterparty" value={counterparty} />
               <Stat label="Escrow reference" value={order.escrow_tx_hash ?? "—"} mono />
@@ -207,7 +228,7 @@ function TradeRoom() {
           </div>
 
           {/* Actions */}
-          <div className="space-y-3 rounded-3xl border border-border/60 bg-card/70 p-5">
+          <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               Next step
             </h2>
@@ -215,7 +236,8 @@ function TradeRoom() {
             {isBuyer && order.status === "pending_payment" ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Send ${Number(order.total_fiat).toFixed(2)} via {methodLabel}, then confirm below.
+                  Send {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via{" "}
+                  {methodLabel}, then confirm below.
                 </p>
                 <Input
                   value={proof}
@@ -224,7 +246,7 @@ function TradeRoom() {
                   className="h-11"
                 />
                 <Button
-                  className="h-12 w-full rounded-xl text-base font-bold"
+                  className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-white hover:bg-emerald-500/90"
                   disabled={paid.isPending}
                   onClick={() => act(() => markPaid(id, proof || null), "Marked as paid")}
                 >

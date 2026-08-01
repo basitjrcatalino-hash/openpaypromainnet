@@ -1,10 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, ShieldCheck, Store, Timer, Users } from "lucide-react";
+import { ChevronDown, Clock3, Gift, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageHeader } from "@/components/wallet/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,13 +14,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
+import {
+  BuySellToggle,
+  FilterChip,
+  FilterChipRow,
+  MerchantStatLine,
+  P2pEmptyState,
+} from "@/components/p2p/P2pUi";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   P2P_ASSETS,
+  expireOrders,
   fetchAds,
   fetchDisplayNames,
   fetchPaymentMethods,
+  fetchTraderStats,
   fmtAmount,
+  isTraderOnline,
   openOrder,
   type P2PAd,
 } from "@/lib/p2p";
@@ -34,13 +45,9 @@ export const Route = createFileRoute("/_authenticated/p2p")({
       {
         name: "description",
         content:
-          "Buy and sell OUSD, USDT, USDC and more peer-to-peer with smart-contract style escrow, bank transfer, GCash, Maya, PayPal and Wise.",
+          "Buy and sell crypto peer-to-peer with escrow protection, local payment methods and OKX-style trading.",
       },
       { property: "og:title", content: "P2P Marketplace — OpenPay Pro" },
-      {
-        property: "og:description",
-        content: "Escrow-protected peer-to-peer crypto trading on OpenPay Pro.",
-      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -51,11 +58,16 @@ export const Route = createFileRoute("/_authenticated/p2p")({
 function P2PMarketplace() {
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [asset, setAsset] = useState<string>("OUSD");
+  const [amountFilter, setAmountFilter] = useState("");
+  const [methodFilter, setMethodFilter] = useState<string | null>(null);
+  const [assetOpen, setAssetOpen] = useState(false);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [fiatOpen, setFiatOpen] = useState(false);
   const [selected, setSelected] = useState<P2PAd | null>(null);
+  const { code: fiat, setCode, meta } = useCurrency();
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  // Buying means matching against SELL ads; selling matches BUY ads.
   const adSide = side === "buy" ? "sell" : "buy";
 
   const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
@@ -65,10 +77,20 @@ function P2PMarketplace() {
     refetchInterval: 15_000,
   });
 
+  useEffect(() => {
+    void expireOrders().catch(() => {});
+  }, []);
+
+  const traderIds = (adsQ.data ?? []).map((a) => a.user_id);
   const names = useQuery({
-    queryKey: ["p2p-names", (adsQ.data ?? []).map((a) => a.user_id).join(",")],
-    queryFn: () => fetchDisplayNames((adsQ.data ?? []).map((a) => a.user_id)),
-    enabled: !!adsQ.data?.length,
+    queryKey: ["p2p-names", traderIds.join(",")],
+    queryFn: () => fetchDisplayNames(traderIds),
+    enabled: traderIds.length > 0,
+  });
+  const stats = useQuery({
+    queryKey: ["p2p-stats", traderIds.join(",")],
+    queryFn: () => fetchTraderStats(traderIds),
+    enabled: traderIds.length > 0,
   });
 
   const methodLabel = useMemo(() => {
@@ -76,6 +98,20 @@ function P2PMarketplace() {
     for (const pm of methodsQ.data ?? []) m[pm.code] = `${pm.icon ?? ""} ${pm.name}`.trim();
     return m;
   }, [methodsQ.data]);
+
+  const filtered = useMemo(() => {
+    let list = adsQ.data ?? [];
+    const amt = Number(amountFilter);
+    if (amt > 0) {
+      list = list.filter(
+        (ad) => amt >= Number(ad.min_order) && amt <= Math.min(Number(ad.max_order), Number(ad.available_amount)),
+      );
+    }
+    if (methodFilter) {
+      list = list.filter((ad) => ad.payment_methods.includes(methodFilter));
+    }
+    return list;
+  }, [adsQ.data, amountFilter, methodFilter]);
 
   const buy = useMutation({
     mutationFn: (v: { adId: string; amount: number; method: string }) =>
@@ -90,179 +126,235 @@ function P2PMarketplace() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5 pb-24">
-      <PageHeader
-        title="P2P Marketplace"
-        backTo="/dashboard"
-        right={
-          <Link
-            to="/p2p/orders"
-            className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground press"
-          >
-            My orders
-          </Link>
-        }
-      />
+    <div className="min-h-[70dvh]">
+      <div className="flex items-center gap-3 border-b border-border/40 px-4 py-2.5">
+        <Gift className="h-4 w-4 text-emerald-500" />
+        <p className="flex-1 truncate text-xs text-muted-foreground">
+          Escrow-protected P2P · zero platform trading fees
+        </p>
+        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+      </div>
 
-      <div className="rounded-3xl border border-border/60 bg-card/70 p-5 backdrop-blur">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-[-0.02em]">
-              Trade crypto peer-to-peer
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Every trade is protected by escrow. Funds only move when both sides confirm.
-            </p>
-          </div>
-          <Link
-            to="/p2p/create"
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground press"
-          >
-            <Plus className="h-4 w-4" /> Post ad
-          </Link>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <BuySellToggle value={side} onChange={setSide} />
+        <button
+          type="button"
+          onClick={() => setFiatOpen(true)}
+          className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-sm font-bold press"
+        >
+          {meta.code}
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </div>
+
+      <div className="border-b border-border/40 px-3 pb-3">
+        <FilterChipRow>
+          <FilterChip
+            label={asset}
+            active
+            onClick={() => setAssetOpen(true)}
+          />
+          <FilterChip
+            label={amountFilter ? `Amt ${amountFilter}` : "Amount"}
+            active={!!amountFilter}
+            onClick={() => {
+              const next = window.prompt("Filter by crypto amount", amountFilter || "");
+              if (next == null) return;
+              setAmountFilter(next.replace(/[^0-9.]/g, ""));
+            }}
+          />
+          <FilterChip
+            label={
+              methodFilter
+                ? methodLabel[methodFilter] ?? methodFilter
+                : "Payment methods"
+            }
+            active={!!methodFilter}
+            onClick={() => setMethodOpen(true)}
+          />
+        </FilterChipRow>
+      </div>
+
+      {adsQ.isLoading ? (
+        <div className="grid place-items-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-full bg-muted/60 p-1">
-            {(["buy", "sell"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSide(s)}
+      ) : !filtered.length ? (
+        <P2pEmptyState
+          title="No ads found"
+          description={`No ${side} offers for ${asset} match your filters.`}
+        />
+      ) : (
+        <div className="divide-y divide-border/40">
+          {filtered.map((ad, idx) => {
+            const st = stats.data?.[ad.user_id];
+            const name = names.data?.[ad.user_id] ?? "Trader";
+            const priceFiat = formatCurrency(Number(ad.price_usd), fiat, { compact: false });
+            const minFiat = formatCurrency(Number(ad.min_order) * Number(ad.price_usd), fiat, {
+              compact: false,
+            });
+            const maxFiat = formatCurrency(
+              Math.min(Number(ad.max_order), Number(ad.available_amount)) * Number(ad.price_usd),
+              fiat,
+              { compact: false },
+            );
+            return (
+              <article
+                key={ad.id}
                 className={cn(
-                  "h-9 rounded-full px-6 text-sm font-bold capitalize transition-colors",
-                  side === s
-                    ? s === "buy"
-                      ? "bg-emerald-500 text-white"
-                      : "bg-rose-500 text-white"
-                    : "text-muted-foreground",
+                  "relative px-4 py-4",
+                  idx === 0 && "border-l-2 border-l-emerald-500/80 bg-emerald-500/3",
                 )}
               >
-                {s}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
+                {idx === 0 ? (
+                  <span className="absolute left-4 top-2 text-[10px] font-bold text-emerald-500">
+                    Paid ad
+                  </span>
+                ) : null}
+                <div className={cn("flex items-start justify-between gap-3", idx === 0 && "mt-3")}>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-bold">{name}</p>
+                      <span className="text-amber-400" title="Verified">
+                        ◆
+                      </span>
+                    </div>
+                    <MerchantStatLine
+                      completed={st?.completed_count}
+                      completionRate={st?.completion_rate}
+                      online={isTraderOnline(st?.last_active_at)}
+                    />
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
+                    <Clock3 className="h-3 w-3" />
+                    {ad.pay_time_limit_minutes} min
+                  </span>
+                </div>
+
+                <p className="mt-3 text-2xl font-extrabold tabular-nums tracking-tight">
+                  {priceFiat}
+                </p>
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  <p>
+                    Available{" "}
+                    <span className="font-semibold text-foreground/80">
+                      {fmtAmount(ad.available_amount)} {ad.asset}
+                    </span>
+                  </p>
+                  <p>
+                    Limit{" "}
+                    <span className="font-semibold text-foreground/80">
+                      {minFiat} – {maxFiat}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="mt-3 flex items-end justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                    {ad.payment_methods.slice(0, 3).map((code) => (
+                      <span
+                        key={code}
+                        className="truncate text-[11px] font-medium text-muted-foreground"
+                      >
+                        {methodLabel[code] ?? code}
+                      </span>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => setSelected(ad)}
+                    className={cn(
+                      "h-9 shrink-0 rounded-full px-5 text-sm font-bold",
+                      side === "buy"
+                        ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
+                        : "bg-rose-500 text-white hover:bg-rose-500/90",
+                    )}
+                  >
+                    {side === "buy" ? "Buy" : "Sell"}
+                  </Button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <CurrencyPickerSheet
+        open={fiatOpen}
+        onOpenChange={setFiatOpen}
+        value={fiat}
+        onSelect={setCode}
+      />
+
+      <Dialog open={assetOpen} onOpenChange={setAssetOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Select crypto</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2">
             {P2P_ASSETS.map((a) => (
               <button
                 key={a}
                 type="button"
-                onClick={() => setAsset(a)}
+                onClick={() => {
+                  setAsset(a);
+                  setAssetOpen(false);
+                }}
                 className={cn(
-                  "h-8 rounded-full px-3 text-xs font-bold transition-colors",
-                  asset === a
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground",
+                  "h-11 rounded-xl border text-sm font-bold",
+                  asset === a ? "border-foreground bg-secondary" : "border-border",
                 )}
               >
                 {a}
               </button>
             ))}
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
-      <div className="rounded-3xl border border-border/60 bg-card/50">
-        <div className="hidden grid-cols-12 gap-3 border-b border-border/60 px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground md:grid">
-          <div className="col-span-3">Advertiser</div>
-          <div className="col-span-2">Price</div>
-          <div className="col-span-3">Available / Limits</div>
-          <div className="col-span-2">Payment</div>
-          <div className="col-span-2 text-right">Trade</div>
-        </div>
-
-        {adsQ.isLoading ? (
-          <div className="grid place-items-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Payment methods</DialogTitle>
+          </DialogHeader>
+          <button
+            type="button"
+            className="mb-2 h-10 w-full rounded-xl border border-border text-sm font-semibold"
+            onClick={() => {
+              setMethodFilter(null);
+              setMethodOpen(false);
+            }}
+          >
+            All payment methods
+          </button>
+          <div className="flex flex-wrap gap-2">
+            {(methodsQ.data ?? [])
+              .filter((m) => m.is_active)
+              .map((m) => (
+                <button
+                  key={m.code}
+                  type="button"
+                  onClick={() => {
+                    setMethodFilter(m.code);
+                    setMethodOpen(false);
+                  }}
+                  className={cn(
+                    "h-9 rounded-xl border px-3 text-xs font-semibold",
+                    methodFilter === m.code
+                      ? "border-foreground bg-secondary"
+                      : "border-border text-muted-foreground",
+                  )}
+                >
+                  {m.icon} {m.name}
+                </button>
+              ))}
           </div>
-        ) : !adsQ.data?.length ? (
-          <div className="grid place-items-center gap-3 py-20 text-center">
-            <Store className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              No {side === "buy" ? "sell" : "buy"} ads for {asset} yet.
-            </p>
-            <Link
-              to="/p2p/create"
-              className="text-sm font-semibold text-primary underline underline-offset-4"
-            >
-              Post the first advertisement
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y divide-border/60">
-            {adsQ.data.map((ad) => (
-              <div key={ad.id} className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-12">
-                <div className="col-span-3 flex items-center gap-3">
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/12 text-sm font-black text-primary">
-                    {(names.data?.[ad.user_id] ?? "T").slice(0, 1).toUpperCase()}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">
-                      {names.data?.[ad.user_id] ?? "Trader"}
-                    </p>
-                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Timer className="h-3 w-3" /> {ad.pay_time_limit_minutes} min
-                    </p>
-                  </div>
-                </div>
-                <div className="col-span-2 flex items-baseline gap-1">
-                  <span className="text-lg font-extrabold tabular-nums">
-                    ${fmtAmount(ad.price_usd)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">USD</span>
-                </div>
-                <div className="col-span-3 text-sm">
-                  <p className="font-semibold tabular-nums">
-                    {fmtAmount(ad.available_amount)} {ad.asset}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground tabular-nums">
-                    {fmtAmount(ad.min_order)} – {fmtAmount(ad.max_order)} {ad.asset}
-                  </p>
-                </div>
-                <div className="col-span-2 flex flex-wrap gap-1">
-                  {ad.payment_methods.slice(0, 3).map((code) => (
-                    <span
-                      key={code}
-                      className="rounded-md bg-muted/70 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
-                    >
-                      {methodLabel[code] ?? code}
-                    </span>
-                  ))}
-                </div>
-                <div className="col-span-2 flex items-center md:justify-end">
-                  <Button
-                    onClick={() => setSelected(ad)}
-                    className={cn(
-                      "h-9 w-full rounded-xl text-sm font-bold md:w-auto md:px-6",
-                      side === "buy"
-                        ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
-                        : "bg-rose-500 text-white hover:bg-rose-500/90",
-                    )}
-                  >
-                    {side === "buy" ? "Buy" : "Sell"} {ad.asset}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border/60 bg-card/40 px-5 py-4 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-primary" /> Escrow-protected settlement
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <Users className="h-4 w-4 text-primary" /> Moderator dispute resolution
-        </span>
-        <Link to="/p2p/orders" className="ml-auto font-semibold text-primary">
-          Order history →
-        </Link>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <BuyDialog
         ad={selected}
         side={side}
+        fiat={fiat}
         methodLabel={methodLabel}
         onClose={() => setSelected(null)}
         pending={buy.isPending}
@@ -277,6 +369,7 @@ function P2PMarketplace() {
 function BuyDialog({
   ad,
   side,
+  fiat,
   methodLabel,
   onClose,
   onConfirm,
@@ -284,6 +377,7 @@ function BuyDialog({
 }: {
   ad: P2PAd | null;
   side: "buy" | "sell";
+  fiat: string;
   methodLabel: Record<string, string>;
   onClose: () => void;
   onConfirm: (amount: number, method: string) => void;
@@ -299,7 +393,6 @@ function BuyDialog({
     setMethod(ad.payment_methods[0] ?? "");
   }, [ad]);
 
-  // Selling requires the seller (you) to have the asset available for escrow.
   useEffect(() => {
     let alive = true;
     if (!ad || side !== "sell") {
@@ -326,7 +419,7 @@ function BuyDialog({
   }, [ad, side]);
 
   const amt = Number(amount || 0);
-  const total = ad ? amt * Number(ad.price_usd) : 0;
+  const totalUsd = ad ? amt * Number(ad.price_usd) : 0;
   const invalid =
     !ad ||
     !method ||
@@ -337,14 +430,14 @@ function BuyDialog({
 
   return (
     <Dialog open={!!ad} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md border-border/60 bg-background">
         <DialogHeader>
           <DialogTitle>
             {side === "buy" ? "Buy" : "Sell"} {ad?.asset}
           </DialogTitle>
           <DialogDescription>
-            Price ${ad ? fmtAmount(ad.price_usd) : "0.00"} · limits{" "}
-            {ad ? `${fmtAmount(ad.min_order)} – ${fmtAmount(ad.max_order)}` : ""}
+            Price {ad ? formatCurrency(Number(ad.price_usd), fiat as never, { compact: false }) : "—"} ·
+            limits {ad ? `${fmtAmount(ad.min_order)} – ${fmtAmount(ad.max_order)}` : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -359,7 +452,7 @@ function BuyDialog({
             />
             {side === "sell" && balance != null ? (
               <p className="text-[11px] text-muted-foreground">
-                Your balance: {fmtAmount(balance)} {ad?.asset}
+                Available {fmtAmount(balance)} {ad?.asset}
               </p>
             ) : null}
           </div>
@@ -375,7 +468,7 @@ function BuyDialog({
                   className={cn(
                     "h-9 rounded-xl border px-3 text-xs font-semibold",
                     method === code
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "border-foreground bg-secondary text-foreground"
                       : "border-border text-muted-foreground",
                   )}
                 >
@@ -391,23 +484,27 @@ function BuyDialog({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
-            <span className="text-sm text-muted-foreground">You pay</span>
-            <span className="text-lg font-extrabold tabular-nums">${total.toFixed(2)}</span>
+          <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              {side === "buy" ? "You pay" : "You receive"}
+            </span>
+            <span className="text-lg font-extrabold tabular-nums">
+              {formatCurrency(totalUsd, fiat as never, { compact: false })}
+            </span>
           </div>
 
           <Button
-            className="h-12 w-full rounded-xl text-base font-bold"
+            className={cn(
+              "h-12 w-full rounded-full text-base font-bold",
+              side === "buy"
+                ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
+                : "bg-rose-500 text-white hover:bg-rose-500/90",
+            )}
             disabled={invalid || pending}
             onClick={() => onConfirm(amt, method)}
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start escrow trade"}
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">
-            {side === "buy"
-              ? "Seller's crypto is locked in escrow before you pay."
-              : "Your crypto is locked in escrow until the buyer pays."}
-          </p>
         </div>
       </DialogContent>
     </Dialog>

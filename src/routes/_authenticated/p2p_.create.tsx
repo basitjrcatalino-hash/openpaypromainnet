@@ -1,85 +1,51 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageHeader } from "@/components/wallet/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { P2pEmptyState } from "@/components/p2p/P2pUi";
 import { supabase } from "@/integrations/supabase/client";
-import { P2P_ASSETS, fetchMyAds, fetchPaymentMethods, fmtAmount } from "@/lib/p2p";
+import { formatCurrency, useCurrency } from "@/lib/currency";
+import { P2P_ASSETS, createAd, fetchMyAds, fetchPaymentMethods, fmtAmount } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/create")({
   head: () => ({
     meta: [
-      { title: "Create P2P Advertisement — OpenPay Pro" },
-      {
-        name: "description",
-        content: "Post a buy or sell advertisement on the OpenPay Pro escrow-protected P2P market.",
-      },
-      { property: "og:title", content: "Create P2P Advertisement — OpenPay Pro" },
-      { property: "og:description", content: "Set your price, limits and payment methods." },
+      { title: "P2P Ads — OpenPay Pro" },
+      { name: "description", content: "Manage your P2P buy and sell advertisements." },
+      { property: "og:title", content: "P2P Ads — OpenPay Pro" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: CreateAdPage,
+  component: AdsHubPage,
 });
 
-function CreateAdPage() {
-  const navigate = useNavigate();
+function AdsHubPage() {
+  const [creating, setCreating] = useState(false);
+  const { code: fiat } = useCurrency();
   const qc = useQueryClient();
-  const [side, setSide] = useState<"sell" | "buy">("sell");
-  const [asset, setAsset] = useState<string>("OUSD");
-  const [price, setPrice] = useState("1.00");
-  const [total, setTotal] = useState("100");
-  const [min, setMin] = useState("10");
-  const [max, setMax] = useState("100");
-  const [limitMin, setLimitMin] = useState("15");
-  const [terms, setTerms] = useState("");
-  const [methods, setMethods] = useState<string[]>([]);
 
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
     queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
   });
-  const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
   const myAdsQ = useQuery({
     queryKey: ["p2p-my-ads", userQ.data],
     queryFn: () => fetchMyAds(userQ.data as string),
     enabled: !!userQ.data,
-  });
-
-  const create = useMutation({
-    mutationFn: async () => {
-      const uid = userQ.data;
-      if (!uid) throw new Error("Not signed in");
-      const { error } = await supabase.from("p2p_ads").insert({
-        user_id: uid,
-        side,
-        asset,
-        price_usd: Number(price),
-        total_amount: Number(total),
-        available_amount: Number(total),
-        min_order: Number(min),
-        max_order: Number(max),
-        payment_methods: methods,
-        pay_time_limit_minutes: Number(limitMin),
-        terms: terms.trim() || null,
-      });
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: () => {
-      toast.success("Advertisement published");
-      void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
-      void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
-      void navigate({ to: "/p2p" });
-    },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   const toggleStatus = useMutation({
@@ -88,6 +54,143 @@ function CreateAdPage() {
       if (error) throw new Error(error.message);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div>
+      <header
+        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
+        <h1 className="text-lg font-bold">Ads</h1>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="grid h-9 w-9 place-items-center rounded-full text-foreground press"
+          aria-label="Create ad"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+      </header>
+
+      {myAdsQ.isLoading ? (
+        <div className="grid place-items-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : !myAdsQ.data?.length ? (
+        <P2pEmptyState
+          title="No ads found"
+          description="Create an ad to buy or sell crypto."
+          action={
+            <Button
+              className="mt-2 h-10 rounded-full bg-secondary px-6 font-bold text-foreground"
+              onClick={() => setCreating(true)}
+            >
+              Create ad
+            </Button>
+          }
+        />
+      ) : (
+        <div className="divide-y divide-border/40">
+          {myAdsQ.data.map((ad) => (
+            <div key={ad.id} className="px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <span
+                  className={cn(
+                    "text-sm font-bold capitalize",
+                    ad.side === "sell" ? "text-rose-500" : "text-emerald-500",
+                  )}
+                >
+                  {ad.side} {ad.asset}
+                </span>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                    ad.status === "active"
+                      ? "bg-emerald-500/15 text-emerald-500"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {ad.status}
+                </span>
+              </div>
+              <p className="mt-2 text-xl font-extrabold tabular-nums">
+                {formatCurrency(Number(ad.price_usd), fiat as never, { compact: false })}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Available {fmtAmount(ad.available_amount)} / {fmtAmount(ad.total_amount)} {ad.asset}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {ad.payment_methods.join(", ") || "No methods"}
+              </p>
+              <div className="mt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full"
+                  disabled={toggleStatus.isPending || ad.status === "closed"}
+                  onClick={() =>
+                    toggleStatus.mutate({
+                      id: ad.id,
+                      status: ad.status === "active" ? "paused" : "active",
+                    })
+                  }
+                >
+                  {ad.status === "active" ? "Pause" : "Activate"}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CreateAdDialog open={creating} onOpenChange={setCreating} />
+    </div>
+  );
+}
+
+function CreateAdDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [side, setSide] = useState<"sell" | "buy">("sell");
+  const [asset, setAsset] = useState("OUSD");
+  const [price, setPrice] = useState("1.00");
+  const [total, setTotal] = useState("100");
+  const [min, setMin] = useState("10");
+  const [max, setMax] = useState("100");
+  const [limitMin, setLimitMin] = useState("15");
+  const [terms, setTerms] = useState("");
+  const [methods, setMethods] = useState<string[]>([]);
+
+  const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
+
+  const create = useMutation({
+    mutationFn: () =>
+      createAd({
+        side,
+        asset,
+        priceUsd: Number(price),
+        totalAmount: Number(total),
+        minOrder: Number(min),
+        maxOrder: Number(max),
+        paymentMethods: methods,
+        payTimeLimitMinutes: Number(limitMin),
+        terms: terms.trim() || null,
+      }),
+    onSuccess: () => {
+      toast.success("Advertisement published");
+      void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
+      void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
+      onOpenChange(false);
+      void navigate({ to: "/p2p/create" });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -102,32 +205,32 @@ function CreateAdPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 pb-24">
-      <PageHeader title="Create advertisement" backTo="/p2p" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create ad</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="inline-flex rounded-full bg-muted/60 p-1">
+            {(["sell", "buy"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSide(s)}
+                className={cn(
+                  "h-9 rounded-full px-5 text-sm font-bold capitalize",
+                  side === s
+                    ? s === "sell"
+                      ? "bg-rose-500 text-white"
+                      : "bg-emerald-500 text-white"
+                    : "text-muted-foreground",
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
 
-      <div className="space-y-5 rounded-3xl border border-border/60 bg-card/70 p-5">
-        <div className="inline-flex rounded-full bg-muted/60 p-1">
-          {(["sell", "buy"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSide(s)}
-              className={cn(
-                "h-9 rounded-full px-6 text-sm font-bold capitalize",
-                side === s
-                  ? s === "sell"
-                    ? "bg-rose-500 text-white"
-                    : "bg-emerald-500 text-white"
-                  : "text-muted-foreground",
-              )}
-            >
-              I want to {s}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Asset</Label>
           <div className="flex flex-wrap gap-1.5">
             {P2P_ASSETS.map((a) => (
               <button
@@ -135,26 +238,23 @@ function CreateAdPage() {
                 type="button"
                 onClick={() => setAsset(a)}
                 className={cn(
-                  "h-9 rounded-xl border px-4 text-xs font-bold",
-                  asset === a ? "border-primary bg-primary/10 text-primary" : "border-border",
+                  "h-8 rounded-lg border px-3 text-xs font-bold",
+                  asset === a ? "border-foreground bg-secondary" : "border-border",
                 )}
               >
                 {a}
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Price per unit (USD)" value={price} onChange={setPrice} />
-          <Field label={`Total amount (${asset})`} value={total} onChange={setTotal} />
-          <Field label="Minimum order" value={min} onChange={setMin} />
-          <Field label="Maximum order" value={max} onChange={setMax} />
-          <Field label="Payment window (minutes)" value={limitMin} onChange={setLimitMin} />
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Price (USD)" value={price} onChange={setPrice} />
+            <Field label={`Total (${asset})`} value={total} onChange={setTotal} />
+            <Field label="Min order" value={min} onChange={setMin} />
+            <Field label="Max order" value={max} onChange={setMax} />
+            <Field label="Pay window (min)" value={limitMin} onChange={setLimitMin} />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label>Accepted payment methods</Label>
           <div className="flex flex-wrap gap-2">
             {(methodsQ.data ?? [])
               .filter((m) => m.is_active)
@@ -170,10 +270,8 @@ function CreateAdPage() {
                       )
                     }
                     className={cn(
-                      "h-9 rounded-xl border px-3 text-xs font-semibold",
-                      on
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground",
+                      "h-8 rounded-lg border px-2.5 text-[11px] font-semibold",
+                      on ? "border-foreground bg-secondary" : "border-border text-muted-foreground",
                     )}
                   >
                     {m.icon} {m.name}
@@ -181,82 +279,25 @@ function CreateAdPage() {
                 );
               })}
           </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <Label>Terms and conditions</Label>
           <Textarea
             value={terms}
             maxLength={1000}
             onChange={(e) => setTerms(e.target.value)}
-            placeholder="e.g. Send from an account matching your verified name. No third-party payments."
-            className="min-h-24"
+            placeholder="Terms (optional)"
+            className="min-h-20"
           />
+
+          <Button
+            className="h-11 w-full rounded-full font-bold"
+            disabled={invalid || create.isPending}
+            onClick={() => create.mutate()}
+          >
+            {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish ad"}
+          </Button>
         </div>
-
-        <Button
-          className="h-12 w-full rounded-xl text-base font-bold"
-          disabled={invalid || create.isPending}
-          onClick={() => create.mutate()}
-        >
-          {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish advertisement"}
-        </Button>
-        <p className="text-center text-[11px] text-muted-foreground">
-          Escrow locks the seller&apos;s balance only when a buyer opens an order.
-        </p>
-      </div>
-
-      <div className="rounded-3xl border border-border/60 bg-card/50 p-5">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          My advertisements
-        </h2>
-        {myAdsQ.isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        ) : !myAdsQ.data?.length ? (
-          <p className="text-sm text-muted-foreground">No advertisements yet.</p>
-        ) : (
-          <div className="divide-y divide-border/60">
-            {myAdsQ.data.map((ad) => (
-              <div key={ad.id} className="flex items-center gap-3 py-3">
-                <span
-                  className={cn(
-                    "rounded-md px-2 py-0.5 text-[11px] font-bold uppercase",
-                    ad.side === "sell"
-                      ? "bg-rose-500/12 text-rose-500"
-                      : "bg-emerald-500/12 text-emerald-500",
-                  )}
-                >
-                  {ad.side}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold tabular-nums">
-                    {fmtAmount(ad.available_amount)} / {fmtAmount(ad.total_amount)} {ad.asset} @ $
-                    {fmtAmount(ad.price_usd)}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {ad.payment_methods.join(", ") || "No methods"} · {ad.status}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-lg"
-                  disabled={toggleStatus.isPending || ad.status === "closed"}
-                  onClick={() =>
-                    toggleStatus.mutate({
-                      id: ad.id,
-                      status: ad.status === "active" ? "paused" : "active",
-                    })
-                  }
-                >
-                  {ad.status === "active" ? "Pause" : "Activate"}
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -270,13 +311,13 @@ function Field({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label>{label}</Label>
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
       <Input
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
-        className="h-11 tabular-nums"
+        className="h-10 tabular-nums"
       />
     </div>
   );

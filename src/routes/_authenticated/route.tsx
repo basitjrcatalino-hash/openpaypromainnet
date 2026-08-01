@@ -74,6 +74,7 @@ import { walletLedgerUsd } from "@/lib/wallet-portfolio";
 import { fetchMajorMarkets } from "@/lib/major-tokens";
 import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
+import { P2pShell } from "@/components/p2p/P2pShell";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
 import { AppLockGate } from "@/components/app-lock-screen";
@@ -121,7 +122,8 @@ function navActive(pathname: string, to: string) {
       (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
-      !pathname.startsWith("/opentoken/create"))
+      !pathname.startsWith("/opentoken/create")) ||
+    (to === "/p2p" && pathname.startsWith("/p2p"))
   );
 }
 
@@ -151,7 +153,14 @@ function AuthenticatedLayout() {
     pathname.startsWith("/chat/") ||
     /\/opentoken\/[^/]+\/chat\/?$/.test(pathname) ||
     pathname === "/opentoken/terminal" ||
-    pathname.startsWith("/opentoken/terminal/");
+    pathname.startsWith("/opentoken/terminal/") ||
+    pathname.startsWith("/p2p");
+  const isP2p = pathname.startsWith("/p2p");
+  const isHome =
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/" ||
+    pathname === "/" ||
+    pathname === "";
   const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
   const txNotes = useTransactionNotifications(user.id);
@@ -202,7 +211,7 @@ function AuthenticatedLayout() {
         <CurrencyProvider>
         <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
       <div className="relative min-h-screen bg-background text-foreground">
-        {!hideChrome && (
+        {!hideChrome && isHome && (
           <>
             <header
               className={cn(
@@ -306,7 +315,13 @@ function AuthenticatedLayout() {
             )}
           >
             <PageTransition disabled={hideChrome}>
-              <Outlet />
+              {isP2p ? (
+                <P2pShell>
+                  <Outlet />
+                </P2pShell>
+              ) : (
+                <Outlet />
+              )}
             </PageTransition>
           </main>
         </div>
@@ -942,6 +957,22 @@ function SidebarInner({
                 </a>
               </>
             ) : null}
+            <Link
+              to="/p2p/admin"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname.startsWith("/p2p/admin") ? "page" : undefined}
+              className={sideItemClass(pathname.startsWith("/p2p/admin"))}
+            >
+              <Users
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname.startsWith("/p2p/admin") && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname.startsWith("/p2p/admin") ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · P2P</span>
+            </Link>
             <Link
               to="/admin/topup"
               onClick={onClose}

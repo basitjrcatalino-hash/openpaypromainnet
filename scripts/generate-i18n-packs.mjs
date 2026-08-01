@@ -41,6 +41,7 @@ const en = {
     wallet: "Wallet",
     tokens: "Tokens",
     openToken: "OpenToken",
+    p2p: "P2P Market",
     history: "History",
     settings: "Settings",
     liveChat: "Live Chat",

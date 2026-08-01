@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowUpFromLine,
   Camera,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Loader2,
   XCircle,
@@ -15,12 +16,11 @@ import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { QrScannerButton } from "@/components/qr-scanner";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { OusdIcon } from "@/components/ousd-icon";
 import { cn } from "@/lib/utils";
 import { formatNumber, shortAddress, timeAgo } from "@/lib/wallet-utils";
@@ -47,6 +47,8 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
   component: WithdrawPage,
 });
 
+type Step = "destination" | "amount";
+
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-600",
   completed: "bg-emerald-500/15 text-emerald-600",
@@ -69,12 +71,15 @@ function WithdrawPage() {
   const feeBps = ctxQ.data?.fee_bps ?? WITHDRAWAL_FEE_BPS;
   const feePercent = ctxQ.data?.fee_percent ?? feeBps / 100;
 
+  const [step, setStep] = useState<Step>("destination");
   const [amount, setAmount] = useState("");
   const [destKind, setDestKind] = useState<WithdrawalDestKind>("pi");
   const [dest, setDest] = useState("");
   const [note, setNote] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   const destMeta = WITHDRAWAL_DEST_KINDS.find((k) => k.id === destKind) ?? WITHDRAWAL_DEST_KINDS[0];
@@ -98,11 +103,10 @@ function WithdrawPage() {
     Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0,
     feeBps,
   );
-  const canSubmit =
-    Number.isFinite(amtNum) &&
-    amtNum >= min &&
-    amtNum <= bal + 1e-12 &&
-    isValidDestinationAddress(dest, destKind);
+  const amountValid = Number.isFinite(amtNum) && amtNum >= min;
+  const insufficient = amountValid && amtNum > bal + 1e-12;
+  const destValid = isValidDestinationAddress(dest, destKind);
+  const canSubmit = amountValid && !insufficient && destValid;
 
   const createM = useMutation({
     mutationFn: () =>
@@ -120,6 +124,8 @@ function WithdrawPage() {
       notifySuccess("Withdrawal submitted — OUSD locked pending admin payout", { sound: "send" });
       setAmount("");
       setNote("");
+      setConfirmOpen(false);
+      setStep("destination");
       void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
       void qc.invalidateQueries({ queryKey: ["my-withdrawals"] });
       void qc.invalidateQueries({ queryKey: ["wallet"] });
@@ -141,69 +147,32 @@ function WithdrawPage() {
 
   const rows = useMemo(() => (histQ.data ?? []) as any[], [histQ.data]);
 
-  return (
-    <div className="mx-auto max-w-lg pb-24">
-      <PageHeader title="Withdraw OUSD" backTo="/wallet" />
-      <p className="mb-4 text-sm text-muted-foreground">
-        Cash out to Pi or OpenPay (OP…). Minimum {min} OUSD.
-      </p>
+  const titles: Record<Step, string> = {
+    destination: "Withdraw to",
+    amount: "Enter amount",
+  };
 
-      <Card className="mb-6 space-y-4 border-border p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <OusdIcon className="h-8 w-8" />
-            <div>
-              <p className="text-xs text-muted-foreground">Available</p>
-              <p className="font-semibold tabular-nums">{formatNumber(bal, 2)} OUSD</p>
+  return (
+    <div className="ot-phantom ph-page mx-auto min-h-[70vh] max-w-lg pb-24">
+      <PageHeader
+        title={titles[step]}
+        backTo={step === "destination" ? "/wallet" : undefined}
+        onBack={step === "amount" ? () => setStep("destination") : undefined}
+      />
+
+      {step === "destination" && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+            <OusdIcon className="h-10 w-10 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold">OUSD</p>
+              <p className="text-[13px] text-muted-foreground">
+                Available {formatNumber(bal, 2)} · Min {min}
+              </p>
             </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-            disabled={bal < min}
-            onClick={() => setAmount(String(Math.floor(bal * 100) / 100))}
-          >
-            Max
-          </Button>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="wd-amount">Amount (OUSD)</Label>
-          <Input
-            id="wd-amount"
-            inputMode="decimal"
-            placeholder={`Min ${min}`}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-          />
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="wd-name">Name</Label>
-            <Input
-              id="wd-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="wd-user">Username</Label>
-            <Input
-              id="wd-user"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="@username"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Withdraw to</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
             {WITHDRAWAL_DEST_KINDS.map((k) => (
               <button
                 key={k.id}
@@ -213,135 +182,284 @@ function WithdrawPage() {
                   setDest("");
                 }}
                 className={cn(
-                  "rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors",
+                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition press",
                   destKind === k.id
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60",
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {k.label}
-                <span className="mt-0.5 block text-[11px] font-normal opacity-80">{k.hint}</span>
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="wd-dest">
-              {destKind === "openpay" ? "OpenPay address (OP…)" : "Pi mainnet wallet"}
-            </Label>
-            <QrScannerButton
-              hint={
-                destKind === "openpay"
-                  ? "Scan OpenPay OP… address QR"
-                  : "Scan Pi wallet QR"
-              }
-              onResult={(text) => {
-                const addr = extractAddressFromScan(text);
-                if (!addr) {
-                  toast.error("Could not read address from QR");
-                  return;
+          <div className="rounded-3xl border border-border bg-card p-4">
+            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {destKind === "openpay" ? "OpenPay address" : "Pi mainnet wallet"}
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={dest}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  setDest(v);
+                  const detected = detectDestinationKind(v);
+                  if (detected) setDestKind(detected);
+                }}
+                placeholder={destMeta.placeholder}
+                className="h-12 rounded-2xl font-mono text-sm"
+                autoCapitalize="characters"
+                autoFocus
+              />
+              <QrScannerButton
+                hint={
+                  destKind === "openpay"
+                    ? "Scan OpenPay OP… address QR"
+                    : "Scan Pi wallet QR"
                 }
-                const detected = detectDestinationKind(addr);
-                if (detected && detected !== destKind) {
-                  setDestKind(detected);
+                onResult={(text) => {
+                  const addr = extractAddressFromScan(text);
+                  if (!addr) {
+                    toast.error("Could not read address from QR");
+                    return;
+                  }
+                  const detected = detectDestinationKind(addr);
+                  if (detected && detected !== destKind) {
+                    setDestKind(detected);
+                  }
+                  setDest(addr);
+                  toast.success("Address scanned");
+                }}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 shrink-0 rounded-2xl"
+                    aria-label="Scan QR"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
                 }
-                setDest(addr);
-                toast.success("Address scanned");
-              }}
-              trigger={
-                <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 px-2">
-                  <Camera className="h-3.5 w-3.5" />
-                  Scan
-                </Button>
-              }
-            />
-          </div>
-          <Input
-            id="wd-dest"
-            value={dest}
-            onChange={(e) => {
-              const v = e.target.value.trim();
-              setDest(v);
-              const detected = detectDestinationKind(v);
-              if (detected) setDestKind(detected);
-            }}
-            placeholder={destMeta.placeholder}
-            className="font-mono text-sm"
-            autoCapitalize="characters"
-          />
-          <p className="text-xs text-muted-foreground">
-            {destKind === "openpay"
-              ? "OpenPay accounts start with OP (example: OPxxxxxxxx)."
-              : "Use your Pi Network mainnet wallet address (usually starts with G)."}{" "}
-            Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
-            {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}) until
-            admin pays out.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="wd-note">Note (optional)</Label>
-          <Textarea
-            id="wd-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Reference for you or admin"
-            rows={2}
-          />
-        </div>
-
-        {amtNum >= min ? (
-          <div className="space-y-1.5 rounded-2xl bg-muted/40 px-3 py-3 text-sm">
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">Amount</span>
-              <span className="tabular-nums font-medium">{formatNumber(amtNum, 2)} OUSD</span>
+              />
             </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">Fee ({feePercent}%)</span>
-              <span className="tabular-nums font-medium">
-                −{formatNumber(feeSplit.fee, 2)} OUSD
-              </span>
-            </div>
-            <div className="flex justify-between gap-3 border-t border-border/60 pt-1.5">
-              <span className="font-semibold">You receive</span>
-              <span className="tabular-nums font-semibold">
-                {formatNumber(feeSplit.net, 2)} OUSD
-              </span>
-            </div>
-            <p className="pt-1 text-[11px] text-muted-foreground">
-              Fee goes to @{ctxQ.data?.treasury_username ?? "openpay"} (
-              {shortAddress(ctxQ.data?.fee_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}).
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              {destKind === "openpay"
+                ? "OpenPay accounts start with OP (example: OPxxxxxxxx)."
+                : "Use your Pi Network mainnet wallet address (usually starts with G)."}{" "}
+              Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
+              {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}) until
+              admin pays out.
             </p>
           </div>
-        ) : null}
 
-        <Button
-          type="button"
-          className="w-full rounded-full"
-          disabled={!canSubmit || createM.isPending || ctxQ.isLoading}
-          onClick={() => createM.mutate()}
-        >
-          {createM.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ArrowUpFromLine className="mr-2 h-4 w-4" />
-          )}
-          Lock &amp; withdraw {amtNum >= min ? formatNumber(amtNum, 2) : ""} OUSD
-        </Button>
+          <Button
+            type="button"
+            className="h-12 w-full rounded-full text-base font-semibold"
+            disabled={!destValid}
+            onClick={() => setStep("amount")}
+          >
+            Continue
+          </Button>
+        </div>
+      )}
 
-        <p className="text-center text-xs text-muted-foreground">
-          Full amount is deducted now ({feePercent}% fee + net payout). Status stays{" "}
-          <strong>pending</strong> until admin approves or rejects.{" "}
-          <Link to="/activity" className="underline underline-offset-2">
-            Activity
-          </Link>
-        </p>
-      </Card>
+      {step === "amount" && (
+        <div className="space-y-5">
+          <button
+            type="button"
+            onClick={() => setStep("destination")}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left press hover:bg-muted/40"
+          >
+            <OusdIcon className="h-10 w-10 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold">OUSD</p>
+              <p className="truncate font-mono text-[12px] text-muted-foreground">
+                → {destKind === "openpay" ? "OpenPay" : "Pi"} ·{" "}
+                {dest.length > 18 ? shortAddress(dest, 6, 4) : dest}
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-primary">Change</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold">Withdrawal history</h2>
+          <div className="rounded-3xl border border-border bg-card px-4 py-8 text-center">
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+              inputMode="decimal"
+              placeholder="0"
+              autoFocus
+              className="w-full bg-transparent text-center text-5xl font-bold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/40"
+            />
+            <div className="mt-2 text-sm text-muted-foreground">OUSD</div>
+            {amount.length > 0 && !amountValid && (
+              <div className="mt-2 text-sm text-destructive">Minimum {min} OUSD</div>
+            )}
+            {insufficient && (
+              <div className="mt-2 text-sm text-destructive">Insufficient balance</div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Available{" "}
+              <span className="font-semibold text-foreground">
+                {formatNumber(bal, 2)} OUSD
+              </span>
+            </span>
+            <button
+              type="button"
+              className="rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary disabled:opacity-40"
+              disabled={bal < min}
+              onClick={() => setAmount(String(Math.floor(bal * 100) / 100))}
+            >
+              Max
+            </button>
+          </div>
+
+          {amountValid && !insufficient ? (
+            <div className="space-y-1.5 rounded-2xl bg-muted/40 px-4 py-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="tabular-nums font-medium">{formatNumber(amtNum, 2)} OUSD</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Fee ({feePercent}%)</span>
+                <span className="tabular-nums font-medium">
+                  −{formatNumber(feeSplit.fee, 2)} OUSD
+                </span>
+              </div>
+              <div className="flex justify-between gap-3 border-t border-border/60 pt-1.5">
+                <span className="font-semibold">You receive</span>
+                <span className="tabular-nums font-semibold">
+                  {formatNumber(feeSplit.net, 2)} OUSD
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-2xl px-1 py-2 text-left text-sm font-semibold text-muted-foreground press hover:text-foreground"
+            >
+              Details (optional)
+              <ChevronDown
+                className={cn("h-4 w-4 transition", detailsOpen && "rotate-180")}
+              />
+            </button>
+            {detailsOpen ? (
+              <div className="mt-2 space-y-3 rounded-3xl border border-border bg-card p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="wd-name"
+                      className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    >
+                      Name
+                    </label>
+                    <Input
+                      id="wd-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      className="h-11 rounded-2xl"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="wd-user"
+                      className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    >
+                      Username
+                    </label>
+                    <Input
+                      id="wd-user"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="@username"
+                      className="h-11 rounded-2xl"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label
+                    htmlFor="wd-note"
+                    className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                  >
+                    Note
+                  </label>
+                  <Textarea
+                    id="wd-note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Reference for you or admin"
+                    rows={2}
+                    className="rounded-2xl"
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <Button
+            type="button"
+            className="h-12 w-full rounded-full text-base font-semibold"
+            disabled={!canSubmit || ctxQ.isLoading}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Continue
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            Full amount is deducted now ({feePercent}% fee + net payout). Status stays{" "}
+            <strong>pending</strong> until admin approves or rejects.{" "}
+            <Link to="/activity" className="underline underline-offset-2">
+              Activity
+            </Link>
+          </p>
+        </div>
+      )}
+
+      <TxConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirm withdraw"
+        description="OUSD locks until admin pays out"
+        icon={<OusdIcon className="h-14 w-14" />}
+        amount={`${formatNumber(amtNum, 2)} OUSD`}
+        subtitle={`You receive ${formatNumber(feeSplit.net, 2)} after ${feePercent}% fee`}
+        rows={[
+          { label: "Asset", value: "OUSD" },
+          {
+            label: "To",
+            value: dest.length > 22 ? shortAddress(dest, 8, 6) : dest,
+            mono: true,
+          },
+          {
+            label: "Via",
+            value: destKind === "openpay" ? "OpenPay (OP…)" : "Pi mainnet",
+          },
+          { label: "Fee", value: `${formatNumber(feeSplit.fee, 2)} OUSD` },
+          ...(note.trim() ? [{ label: "Note", value: note.trim() }] : []),
+        ]}
+        notice={
+          <p>
+            Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} until payout. You can cancel
+            while status is pending.
+          </p>
+        }
+        confirmLabel={`Lock & withdraw ${formatNumber(amtNum, 2)} OUSD`}
+        busy={createM.isPending}
+        onConfirm={() => createM.mutate()}
+      />
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Withdrawal history
+        </h2>
         {histQ.isLoading ? (
           <div className="flex justify-center py-10 text-muted-foreground">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -351,15 +469,15 @@ function WithdrawPage() {
             No withdrawals yet.
           </p>
         ) : (
-          <ul className="space-y-2">
-            {rows.map((r) => (
+          <ul className="overflow-hidden rounded-3xl bg-card">
+            {rows.map((r, i) => (
               <li
                 key={r.id}
-                className="rounded-2xl border border-border bg-card px-4 py-3"
+                className={cn("px-4 py-3", i > 0 && "border-t border-border/50")}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold tabular-nums">
+                    <p className="text-[15px] font-semibold tabular-nums">
                       {formatNumber(Number(r.amount), 2)} OUSD
                     </p>
                     {(r.fee_ousd != null || r.net_ousd != null) && (

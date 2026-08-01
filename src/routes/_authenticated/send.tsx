@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AlertTriangle,
   Clock,
   Camera,
   Check,
@@ -925,10 +926,16 @@ function SendPage() {
             {rail === "openpay" && opError && (
               <div className="mt-2 text-xs text-destructive">{opError}</div>
             )}
-            {selected.kind === "TOKEN" && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                OpenTokens can only be sent to another OpenPay Pro wallet.
-              </p>
+            {rail === "wallet" && (
+              <div className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-500">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p>
+                  Only send to an{" "}
+                  <span className="font-semibold text-foreground">OpenPay Pro</span> wallet
+                  address or @username. External wallets (MetaMask, Phantom, exchanges) are not
+                  supported — those sends won’t credit and funds may be lost.
+                </p>
+              </div>
             )}
           </div>
 

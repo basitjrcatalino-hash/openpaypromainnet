@@ -298,6 +298,8 @@ export const adminUpdateOpenToken = createServerFn({ method: "POST" })
       .object({
         token_id: z.string().uuid(),
         is_featured: z.boolean().optional(),
+        is_trending: z.boolean().optional(),
+        is_top_volume: z.boolean().optional(),
         is_hidden: z.boolean().optional(),
         is_verified: z.boolean().optional(),
         status: z.enum(["curve", "graduated", "halted"]).optional(),
@@ -309,11 +311,15 @@ export const adminUpdateOpenToken = createServerFn({ method: "POST" })
     await assertStaff(supabase, userId);
     const patch: {
       is_featured?: boolean;
+      is_trending?: boolean;
+      is_top_volume?: boolean;
       is_hidden?: boolean;
       is_verified?: boolean;
       status?: "curve" | "graduated" | "halted";
     } = {};
     if (data.is_featured !== undefined) patch.is_featured = data.is_featured;
+    if (data.is_trending !== undefined) patch.is_trending = data.is_trending;
+    if (data.is_top_volume !== undefined) patch.is_top_volume = data.is_top_volume;
     if (data.is_hidden !== undefined) patch.is_hidden = data.is_hidden;
     if (data.is_verified !== undefined) patch.is_verified = data.is_verified;
     if (data.status !== undefined) patch.status = data.status;

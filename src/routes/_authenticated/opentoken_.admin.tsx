@@ -2,7 +2,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, EyeOff, Star, BadgeCheck, Shield } from "lucide-react";
+import { ArrowLeft, EyeOff, Star, BadgeCheck, Shield, Flame, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +46,7 @@ function OpenTokenAdmin() {
       const { data } = await supabase
         .from("tokens")
         .select(
-          "id, name, symbol, is_featured, is_hidden, is_verified, status, report_count, volume_24h",
+          "id, name, symbol, is_featured, is_trending, is_top_volume, is_hidden, is_verified, status, report_count, volume_24h, market_cap",
         )
         .order("created_at", { ascending: false })
         .limit(100);
@@ -58,6 +58,8 @@ function OpenTokenAdmin() {
     tokenId: string,
     patch: {
       is_featured?: boolean;
+      is_trending?: boolean;
+      is_top_volume?: boolean;
       is_hidden?: boolean;
       is_verified?: boolean;
       status?: "curve" | "graduated" | "halted";
@@ -69,6 +71,7 @@ function OpenTokenAdmin() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ot-admin-tokens"] }),
         qc.invalidateQueries({ queryKey: ["ot-tokens"] }),
+        qc.invalidateQueries({ queryKey: ["ot-admin"] }),
       ]);
     } catch (err) {
       toast.error((err as Error).message);
@@ -105,7 +108,7 @@ function OpenTokenAdmin() {
             <Shield className="h-6 w-6 text-primary" /> OpenToken Admin
           </h1>
           <p className="text-sm text-muted-foreground">
-            Moderate launches, feature projects, review reports
+            Control Featured, Trending, Top Volume · moderate reports
           </p>
         </div>
       </div>
@@ -171,8 +174,11 @@ function OpenTokenAdmin() {
       </Card>
 
       <Card className="overflow-hidden rounded-3xl border-border/60">
-        <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold">
-          Manage tokens
+        <div className="border-b border-border/60 px-4 py-3">
+          <div className="text-sm font-semibold">Manage tokens</div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Featured · Trending · Top Volume pin tokens to Trade / Tokens lists
+          </p>
         </div>
         <ul className="divide-y divide-border/50">
           {tokens.map((t: any) => (
@@ -186,19 +192,41 @@ function OpenTokenAdmin() {
                   {t.name} <span className="text-muted-foreground">${t.symbol}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {t.status} · reports {t.report_count ?? 0}
+                  {t.status} · vol {formatNumber(t.volume_24h ?? 0, 0)}
+                  {" · "}reports {t.report_count ?? 0}
+                  {t.is_featured ? " · featured" : ""}
+                  {t.is_trending ? " · trending" : ""}
+                  {t.is_top_volume ? " · top vol" : ""}
                   {t.is_hidden ? " · hidden" : ""}
                 </div>
               </Link>
               <div className="flex flex-wrap gap-1.5">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant={t.is_featured ? "default" : "outline"}
                   className="rounded-full"
                   onClick={() => patchToken(t.id, { is_featured: !t.is_featured })}
                 >
                   <Star className="mr-1 h-3.5 w-3.5" />
-                  {t.is_featured ? "Unfeature" : "Feature"}
+                  Featured
+                </Button>
+                <Button
+                  size="sm"
+                  variant={t.is_trending ? "default" : "outline"}
+                  className="rounded-full"
+                  onClick={() => patchToken(t.id, { is_trending: !t.is_trending })}
+                >
+                  <Flame className="mr-1 h-3.5 w-3.5" />
+                  Trending
+                </Button>
+                <Button
+                  size="sm"
+                  variant={t.is_top_volume ? "default" : "outline"}
+                  className="rounded-full"
+                  onClick={() => patchToken(t.id, { is_top_volume: !t.is_top_volume })}
+                >
+                  <BarChart3 className="mr-1 h-3.5 w-3.5" />
+                  Top Vol
                 </Button>
                 <Button
                   size="sm"

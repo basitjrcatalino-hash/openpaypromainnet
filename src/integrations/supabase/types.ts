@@ -2214,6 +2214,8 @@ export type Database = {
           id: string
           is_featured: boolean
           is_hidden: boolean
+          is_trending: boolean
+          is_top_volume: boolean
           is_verified: boolean
           launch_fee_pi: number
           logo_url: string | null
@@ -2254,6 +2256,8 @@ export type Database = {
           id?: string
           is_featured?: boolean
           is_hidden?: boolean
+          is_trending?: boolean
+          is_top_volume?: boolean
           is_verified?: boolean
           launch_fee_pi?: number
           logo_url?: string | null
@@ -2294,6 +2298,8 @@ export type Database = {
           id?: string
           is_featured?: boolean
           is_hidden?: boolean
+          is_trending?: boolean
+          is_top_volume?: boolean
           is_verified?: boolean
           launch_fee_pi?: number
           logo_url?: string | null

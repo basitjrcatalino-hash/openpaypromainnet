@@ -211,6 +211,8 @@ function OpenTokenHome() {
 
   const trending = useMemo(() => {
     return [...filteredTokens].sort((a, b) => {
+      const pin = Number(!!b.is_trending) - Number(!!a.is_trending);
+      if (pin !== 0) return pin;
       const vol = Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
       if (vol !== 0) return vol;
       return Math.abs(Number(b.change_24h ?? 0)) - Math.abs(Number(a.change_24h ?? 0));
@@ -218,23 +220,21 @@ function OpenTokenHome() {
   }, [filteredTokens]);
 
   const byVolume = useMemo(() => {
-    return [...filteredTokens].sort(
-      (a, b) => Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0),
-    );
+    return [...filteredTokens].sort((a, b) => {
+      const pin = Number(!!b.is_top_volume) - Number(!!a.is_top_volume);
+      if (pin !== 0) return pin;
+      return Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
+    });
   }, [filteredTokens]);
 
-  const byMarketCap = useMemo(() => {
-    return [...filteredTokens].sort(
-      (a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0),
-    );
+  const byFeatured = useMemo(() => {
+    return filteredTokens
+      .filter((t) => !!t.is_featured)
+      .sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0));
   }, [filteredTokens]);
 
   const tradeList =
-    tradeFilter === "featured"
-      ? byMarketCap.filter((t) => t.is_verified || t.status === "graduated")
-      : tradeFilter === "volume"
-        ? byVolume
-        : trending;
+    tradeFilter === "featured" ? byFeatured : tradeFilter === "volume" ? byVolume : trending;
 
   const holdingsUsd = useMemo(() => {
     return holdings.reduce((sum: number, h: any) => {

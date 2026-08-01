@@ -2,7 +2,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, CircleDollarSign, Plus } from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDollarSign, Plus, Shield } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { OusdIcon } from "@/components/ousd-icon";
 import { useCurrency, type CurrencyCode } from "@/lib/currency";
 import { TokenPriceRate } from "@/components/wallet/TokenPriceRate";
+import { cn } from "@/lib/utils";
 import {
   MAJOR_TOKEN_IDS,
   MAJOR_TOKENS,
@@ -19,6 +20,10 @@ import {
   majorMarketById,
   type MajorTokenId,
 } from "@/lib/major-tokens";
+import {
+  WALLET_NETWORKS,
+  type WalletNetworkId,
+} from "@/lib/wallet-networks";
 
 export const Route = createFileRoute("/_authenticated/tokens")({
   head: () => ({
@@ -49,10 +54,34 @@ export const Route = createFileRoute("/_authenticated/tokens")({
   component: TokensPage,
 });
 
+type ListMode = "all" | "featured" | "trending" | "volume";
+type SortKey = "market" | "name" | "price" | "change";
+
+const LIST_MODES: { id: ListMode; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "featured", label: "Featured" },
+  { id: "trending", label: "Trending" },
+  { id: "volume", label: "Top Vol" },
+];
+
+const SORT_OPTIONS: { id: SortKey; label: string }[] = [
+  { id: "market", label: "Market" },
+  { id: "name", label: "Name" },
+  { id: "price", label: "Price" },
+  { id: "change", label: "24h %" },
+];
+
 function TokensPage() {
   const { code: currency } = useCurrency();
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [network, setNetwork] = useState<WalletNetworkId>("all");
+  const [listMode, setListMode] = useState<ListMode>("all");
+  const [sort, setSort] = useState<SortKey>("market");
+
+  const curatedOnly = listMode !== "all";
+  const activeNetwork = WALLET_NETWORKS.find((n) => n.id === network) ?? WALLET_NETWORKS[0]!;
+  const isOpenPayNet = network === "all" || network === "openpay";
 
   const { data: tokens = [], isLoading } = useQuery({
     queryKey: ["ot-tokens", "all"],
@@ -81,15 +110,89 @@ function TokensPage() {
     queryFn: fetchMajorMarkets,
   });
 
+  const { data: isStaff = false } = useQuery({
+    queryKey: ["ot-staff"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return false;
+      const [{ data: isAdmin }, { data: isMod }] = await Promise.all([
+        supabase.rpc("has_role", { _user_id: userData.user.id, _role: "admin" }),
+        supabase.rpc("has_role", { _user_id: userData.user.id, _role: "moderator" }),
+      ]);
+      return !!(isAdmin || isMod);
+    },
+  });
+
+  const showOusd = useMemo(() => {
+    if (curatedOnly) return false;
+    if (!isOpenPayNet) return false;
+    if (!q.trim()) return true;
+    const qq = q.trim().toLowerCase();
+    return (
+      "openusd ousd".includes(qq) ||
+      qq.includes("ousd") ||
+      qq.includes("openusd") ||
+      qq.includes("openpay")
+    );
+  }, [q, curatedOnly, isOpenPayNet]);
+
+  const visibleMajors = useMemo(() => {
+    if (curatedOnly) return [] as MajorTokenId[];
+    const qq = q.trim().toLowerCase();
+    let ids = MAJOR_TOKEN_IDS.filter((id) => {
+      const m = MAJOR_TOKENS[id];
+      if (activeNetwork.match && m.network !== activeNetwork.match) return false;
+      if (!qq) return true;
+      return (
+        m.name.toLowerCase().includes(qq) ||
+        m.symbol.toLowerCase().includes(qq) ||
+        m.network.toLowerCase().includes(qq) ||
+        id.includes(qq)
+      );
+    });
+
+    ids = [...ids].sort((a, b) => {
+      const ma = majorMarketById(majorMarkets, a);
+      const mb = majorMarketById(majorMarkets, b);
+      const da = MAJOR_TOKENS[a];
+      const db = MAJOR_TOKENS[b];
+      switch (sort) {
+        case "name":
+          return da.name.localeCompare(db.name);
+        case "price":
+          return (mb.price ?? 0) - (ma.price ?? 0);
+        case "change":
+          return (mb.change24h ?? 0) - (ma.change24h ?? 0);
+        case "market":
+        default:
+          return (mb.marketCap ?? 0) - (ma.marketCap ?? 0);
+      }
+    });
+    return ids;
+  }, [q, sort, majorMarkets, curatedOnly, activeNetwork]);
+
   const filtered = useMemo(() => {
-    let list = tokens as any[];
-    // Hide DB seed duplicates of BTC/ETH/SOL — majors are pinned above
-    list = list.filter((t) => {
+    // OpenTokens live on OpenPay Pro ledger (no external chain column).
+    if (!isOpenPayNet) return [] as any[];
+
+    let list = (tokens as any[]).filter((t) => {
       const sym = String(t.symbol ?? "").toUpperCase();
       const name = String(t.name ?? "").toUpperCase();
       if (MAJOR_SYMBOLS.has(sym) || MAJOR_SYMBOLS.has(name)) return false;
       return true;
     });
+
+    if (listMode === "featured") {
+      list = list.filter((t) => !!t.is_featured);
+    } else if (listMode === "trending") {
+      const pinned = list.filter((t) => !!t.is_trending);
+      if (pinned.length) list = pinned;
+    } else if (listMode === "volume") {
+      const pinned = list.filter((t) => !!t.is_top_volume);
+      if (pinned.length) list = pinned;
+    }
+
     if (q.trim()) {
       const qq = q.trim().toLowerCase();
       list = list.filter(
@@ -99,28 +202,39 @@ function TokensPage() {
           String(t.id).toLowerCase().includes(qq),
       );
     }
-    return [...list].sort((a, b) => Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0));
-  }, [tokens, q]);
 
-  const showOusd =
-    !q.trim() ||
-    "openusd ousd".includes(q.trim().toLowerCase()) ||
-    q.trim().toLowerCase().includes("ousd") ||
-    q.trim().toLowerCase().includes("openusd");
-
-  const visibleMajors = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-    if (!qq) return MAJOR_TOKEN_IDS;
-    return MAJOR_TOKEN_IDS.filter((id) => {
-      const m = MAJOR_TOKENS[id];
-      return (
-        m.name.toLowerCase().includes(qq) ||
-        m.symbol.toLowerCase().includes(qq) ||
-        m.network.toLowerCase().includes(qq) ||
-        id.includes(qq)
-      );
+    return [...list].sort((a, b) => {
+      if (listMode === "trending") {
+        const pin = Number(!!b.is_trending) - Number(!!a.is_trending);
+        if (pin !== 0) return pin;
+        const vol = Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
+        if (vol !== 0) return vol;
+        return Math.abs(Number(b.change_24h ?? 0)) - Math.abs(Number(a.change_24h ?? 0));
+      }
+      if (listMode === "volume") {
+        const pin = Number(!!b.is_top_volume) - Number(!!a.is_top_volume);
+        if (pin !== 0) return pin;
+        return Number(b.volume_24h ?? 0) - Number(a.volume_24h ?? 0);
+      }
+      if (listMode === "featured") {
+        return Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0);
+      }
+      switch (sort) {
+        case "name":
+          return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+        case "price":
+          return Number(b.price_usd ?? 0) - Number(a.price_usd ?? 0);
+        case "change":
+          return Number(b.change_24h ?? 0) - Number(a.change_24h ?? 0);
+        case "market":
+        default:
+          return Number(b.market_cap ?? 0) - Number(a.market_cap ?? 0);
+      }
     });
-  }, [q]);
+  }, [tokens, q, sort, listMode, isOpenPayNet]);
+
+  const empty =
+    !isLoading && filtered.length === 0 && visibleMajors.length === 0 && !showOusd;
 
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in md:max-w-2xl">
@@ -134,13 +248,120 @@ function TokensPage() {
             <p className="ph-caption">Majors · OpenPay Pro tokens</p>
           </div>
         </div>
-        <Button asChild size="sm" className="rounded-full">
-          <Link to="/opentoken/create" search={{}}>
-            <Plus className="mr-1 h-4 w-4" />
-            Create
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {isStaff && (
+            <Button asChild size="sm" variant="outline" className="rounded-full">
+              <Link to="/opentoken/admin">
+                <Shield className="mr-1 h-4 w-4" />
+                Admin
+              </Link>
+            </Button>
+          )}
+          <Button asChild size="sm" className="rounded-full">
+            <Link to="/opentoken/create" search={{}}>
+              <Plus className="mr-1 h-4 w-4" />
+              Create
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* List mode */}
+      <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {LIST_MODES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => setListMode(m.id)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition press",
+              listMode === m.id
+                ? "bg-foreground text-background"
+                : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Network filter — Phantom-style full list */}
+      {!curatedOnly && (
+        <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {WALLET_NETWORKS.map((n) => {
+            const active = network === n.id;
+            return (
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => setNetwork(n.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3 text-xs font-semibold transition press",
+                  active
+                    ? "bg-foreground text-background"
+                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {n.id === "all" ? (
+                  <span
+                    className={cn(
+                      "grid h-5 w-5 place-items-center rounded-full text-[9px] font-bold",
+                      active ? "bg-background/20" : "bg-background/80 text-foreground",
+                    )}
+                  >
+                    ∗
+                  </span>
+                ) : n.id === "openpay" ? (
+                  <span className="grid h-5 w-5 place-items-center overflow-hidden rounded-full">
+                    <OusdIcon className="h-5 w-5" />
+                  </span>
+                ) : n.logoUrl ? (
+                  <img
+                    src={n.logoUrl}
+                    alt=""
+                    className="h-5 w-5 rounded-full object-cover"
+                  />
+                ) : (
+                  <span
+                    className="grid h-5 w-5 place-items-center rounded-full text-[8px] font-bold text-white"
+                    style={{ background: n.accent }}
+                  >
+                    {n.short.slice(0, 2)}
+                  </span>
+                )}
+                {n.short}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Sort (All mode only) */}
+      {listMode === "all" && (
+        <div className="mb-3 flex items-center gap-2">
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Sort
+          </span>
+          <div className="flex flex-1 gap-1 overflow-x-auto scrollbar-none">
+            {SORT_OPTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSort(s.id)}
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition press",
+                  sort === s.id
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ul className="pb-4">
         {showOusd && (
@@ -158,7 +379,7 @@ function TokensPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="ph-row-title truncate">OpenUSD OUSD</div>
-                  <div className="ph-row-sub">OUSD · Stablecoin</div>
+                  <div className="ph-row-sub">OUSD · OpenPay</div>
                 </div>
               </div>
               <TokenPriceRate price={1} change={0} currency={currency} />
@@ -180,8 +401,18 @@ function TokensPage() {
               </div>
             </li>
           ))
-        ) : filtered.length === 0 && visibleMajors.length === 0 && !showOusd ? (
-          <li className="py-16 text-center text-sm text-muted-foreground">No tokens found</li>
+        ) : empty ? (
+          <li className="py-16 text-center text-sm text-muted-foreground">
+            {listMode === "featured"
+              ? "No featured tokens yet"
+              : listMode === "trending"
+                ? "No trending tokens yet"
+                : listMode === "volume"
+                  ? "No top volume tokens yet"
+                  : activeNetwork.status === "soon"
+                    ? `${activeNetwork.label} coming soon`
+                    : `No tokens on ${activeNetwork.label}`}
+          </li>
         ) : (
           filtered
             .filter((t) => t?.id)
@@ -194,7 +425,7 @@ function TokensPage() {
         onQueryChange={setQ}
         searchOpen={searchOpen}
         onSearchOpenChange={setSearchOpen}
-        placeholder="Search Bitcoin, Solana, tokens…"
+        placeholder="Search Solana, Base, Bitcoin…"
       />
     </div>
   );
@@ -259,7 +490,7 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
           />
           <div className="min-w-0">
             <div className="ph-row-title truncate">{t.name}</div>
-            <div className="ph-row-sub">{t.symbol}</div>
+            <div className="ph-row-sub">{t.symbol} · OpenPay</div>
           </div>
         </div>
         <TokenPriceRate price={price} change={change} currency={currency} />

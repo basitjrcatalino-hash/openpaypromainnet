@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Globe,
   MoreHorizontal,
+  MessageCircle,
   Plus,
   QrCode,
   Send,
@@ -64,6 +65,12 @@ import {
   majorMarketById,
 } from "@/lib/major-tokens";
 import {
+  getListedSolanaToken,
+  isListedSolanaTokenId,
+  fetchListedSolanaMarkets,
+  listedSolanaMarketById,
+} from "@/lib/listed-solana-tokens";
+import {
   LEDGER_BALANCE_COLUMN,
   type LedgerAssetCode,
 } from "@/lib/ledger-majors";
@@ -76,12 +83,15 @@ import {
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
   head: ({ params }) => {
     const major = getMajorToken(params.tokenId);
+    const listed = getListedSolanaToken(params.tokenId);
     const title =
       params.tokenId === "ousd"
         ? "OUSD"
         : major
           ? major.symbol
-          : "Token";
+          : listed
+            ? listed.symbol
+            : "Token";
     return { meta: [{ title: `${title} — OpenPay Pro` }] };
   },
   validateSearch: (
@@ -116,7 +126,9 @@ function PhantomAssetDetail() {
   const swapFn = useServerFn(executeOpenDexSwap);
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
+  const isListed = isListedSolanaTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
+  const listedDef = isListed ? getListedSolanaToken(tokenId) : null;
   const isPiMajor = isMajor && majorDef?.id === "pi";
   /** OpenPay ledger asset for receive QR / send (majors except PI settle as OUSD). */
   const ledgerAsset: LedgerAssetCode = isOusd
@@ -161,7 +173,7 @@ function PhantomAssetDetail() {
 
   const { data: token, isLoading: tokenLoading } = useQuery({
     queryKey: ["asset-token", tokenId],
-    enabled: !isOusd && !isMajor,
+    enabled: !isOusd && !isMajor && !isListed,
     queryFn: async () => {
       const { data, error } = await supabase.from("tokens").select("*").eq("id", tokenId).maybeSingle();
       if (error) throw error;
@@ -176,9 +188,17 @@ function PhantomAssetDetail() {
     queryFn: fetchMajorMarkets,
   });
 
+  const { data: listedMarkets } = useQuery({
+    queryKey: ["listed-solana-markets"],
+    enabled: isListed,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    queryFn: fetchListedSolanaMarkets,
+  });
+
   const { data: holding } = useQuery({
     queryKey: ["ot-holding", tokenId, wallet?.id],
-    enabled: !isOusd && !isMajor && !!wallet?.id,
+    enabled: !isOusd && !isMajor && !isListed && !!wallet?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("token_holdings")
@@ -192,7 +212,7 @@ function PhantomAssetDetail() {
 
   const { data: ticks = [] } = useQuery({
     queryKey: ["ot-ticks", tokenId, period],
-    enabled: !isOusd && !isMajor,
+    enabled: !isOusd && !isMajor && !isListed,
     queryFn: async () => {
       const { data } = await supabase
         .from("ot_price_ticks")
@@ -205,6 +225,8 @@ function PhantomAssetDetail() {
   });
 
   const majorMarket = isMajor && majorDef ? majorMarketById(majorMarkets, majorDef.id) : null;
+  const listedMarket =
+    isListed && listedDef ? listedSolanaMarketById(listedMarkets, listedDef.id) : null;
 
   const majorTicks = useMemo(() => {
     if (!majorMarket?.sparkline?.length) return [];
@@ -243,6 +265,8 @@ function PhantomAssetDetail() {
         contract: wallet?.address ?? null,
         status: "stable",
         nativeMajor: false,
+        phantomUrl: null as string | null,
+        liquidity: null as number | null,
       };
     }
     if (isMajor && majorDef) {
@@ -270,6 +294,37 @@ function PhantomAssetDetail() {
         contract: majorDef.mintAddress ?? wallet?.address ?? null,
         status: majorDef.native ? "native" : "stablecoin",
         nativeMajor: true,
+        phantomUrl: null as string | null,
+        liquidity: null as number | null,
+      };
+    }
+    if (isListed && listedDef) {
+      const m = listedMarket ?? listedSolanaMarketById(undefined, listedDef.id);
+      return {
+        name: listedDef.name,
+        symbol: listedDef.symbol,
+        logo: m.logoUrl ?? listedDef.logoUrl,
+        price: m.price,
+        change: m.change24h,
+        verified: true,
+        description: listedDef.about,
+        website: listedDef.website ?? listedDef.phantomUrl,
+        network: listedDef.network,
+        marketCap: m.marketCap,
+        totalSupply: null as number | null,
+        circulatingSupply: null as number | null,
+        ath: null as number | null,
+        atl: null as number | null,
+        athDate: null as string | null,
+        atlDate: null as string | null,
+        category: listedDef.category,
+        volume24h: m.volume24h,
+        createdAt: listedDef.createdAt,
+        contract: listedDef.mintAddress,
+        status: "solana-listed",
+        nativeMajor: false,
+        phantomUrl: listedDef.phantomUrl,
+        liquidity: m.liquidity,
       };
     }
     return {
@@ -295,8 +350,20 @@ function PhantomAssetDetail() {
       contract: token?.contract_address ?? token?.id ?? null,
       status: token?.status ?? "curve",
       nativeMajor: false,
+      phantomUrl: null as string | null,
+      liquidity: null as number | null,
     };
-  }, [isOusd, isMajor, majorDef, majorMarket, token, wallet?.address]);
+  }, [
+    isOusd,
+    isMajor,
+    isListed,
+    majorDef,
+    listedDef,
+    majorMarket,
+    listedMarket,
+    token,
+    wallet?.address,
+  ]);
 
   const balance = isOusd
     ? Number(wallet?.ousd_balance ?? 0)
@@ -306,7 +373,9 @@ function PhantomAssetDetail() {
             LEDGER_BALANCE_COLUMN[majorDef.id]
           ] ?? 0,
         )
-      : Number(holding ?? 0);
+      : isListed
+        ? 0
+        : Number(holding ?? 0);
   /** Position unit on OpenPay ledger */
   const positionSymbol = meta.symbol;
   const positionPrice = meta.price;
@@ -315,7 +384,22 @@ function PhantomAssetDetail() {
   const up = meta.change >= 0;
   const returnPath = `/asset/${tokenId}`;
 
+  function openListedOnPhantom() {
+    if (!listedDef?.phantomUrl) return;
+    window.open(listedDef.phantomUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function listedLedgerToast() {
+    toast.message(`${meta.symbol} trades on Solana`, {
+      description: "Open in Phantom to buy or sell. Not held on the OpenPay Pro ledger.",
+    });
+  }
+
   function goReceive() {
+    if (isListed) {
+      listedLedgerToast();
+      return;
+    }
     if (isOusd) {
       navigate({ to: "/wallet/receive", search: { network: "openpay", asset: "OUSD" } });
       return;
@@ -444,7 +528,7 @@ function PhantomAssetDetail() {
     }
   }
 
-  if (!isOusd && !isMajor && tokenLoading) {
+  if (!isOusd && !isMajor && !isListed && tokenLoading) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">
         Loading token…
@@ -452,7 +536,7 @@ function PhantomAssetDetail() {
     );
   }
 
-  if (!isOusd && !isMajor && !token) {
+  if (!isOusd && !isMajor && !isListed && !token) {
     return (
       <div className="mx-auto max-w-lg space-y-4 px-4 py-16 text-center">
         <p className="text-sm text-muted-foreground">Token not found</p>
@@ -471,7 +555,9 @@ function PhantomAssetDetail() {
   const marketCapLabel =
     meta.marketCap != null && meta.marketCap > 0
       ? `${formatUSD(meta.marketCap, { compact: true })} market cap`
-      : `${meta.symbol} · OpenPay Pro`;
+      : isListed
+        ? `${meta.symbol} · Solana`
+        : `${meta.symbol} · OpenPay Pro`;
 
   return (
     <div className="ot-phantom mx-auto max-w-lg animate-page-in safe-pb">
@@ -505,6 +591,14 @@ function PhantomAssetDetail() {
           </div>
         </div>
         <div className="flex items-center gap-0.5">
+          <Link
+            to="/asset/$tokenId/chat"
+            params={{ tokenId: isOusd ? "ousd" : tokenId }}
+            className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-primary press hover:bg-primary/25"
+            aria-label="Live Chat"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </Link>
           <button
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground press"
@@ -549,7 +643,7 @@ function PhantomAssetDetail() {
         <PhantomSparkline
           period={period}
           onPeriodChange={setPeriod}
-          ticks={isOusd ? null : isMajor ? majorTicks : ticks}
+          ticks={isOusd || isListed ? null : isMajor ? majorTicks : ticks}
           price={meta.price}
           changePct={meta.change}
           tokenKey={isOusd ? "ousd" : tokenId}
@@ -559,7 +653,9 @@ function PhantomAssetDetail() {
               ? "Pegged at $1.00 · stablecoin"
               : isMajor
                 ? `OpenPay Pro · ${ledgerAsset} · market data via CoinGecko`
-                : undefined
+                : isListed
+                  ? "Solana · Phantom-listed · DexScreener / CoinGecko"
+                  : undefined
           }
         />
 
@@ -569,12 +665,22 @@ function PhantomAssetDetail() {
             icon={Plus}
             label="Buy"
             primary
-            onClick={() => setBuyOpen(true)}
+            onClick={() => {
+              if (isListed) {
+                openListedOnPhantom();
+                return;
+              }
+              setBuyOpen(true);
+            }}
           />
           <ActionTile
             icon={Send}
             label="Send"
             onClick={() => {
+              if (isListed) {
+                listedLedgerToast();
+                return;
+              }
               if (isMajor) {
                 navigate({
                   to: "/send",
@@ -592,6 +698,10 @@ function PhantomAssetDetail() {
             icon={ArrowLeftRight}
             label="Swap"
             onClick={() => {
+              if (isListed) {
+                openListedOnPhantom();
+                return;
+              }
               if (isMajor) {
                 navigate({
                   to: "/swap",
@@ -621,7 +731,7 @@ function PhantomAssetDetail() {
           marketCap={meta.marketCap}
           volume24h={meta.volume24h}
           description={meta.description}
-          chatTokenId={!isOusd && !isMajor ? tokenId : null}
+          chatTokenId={isOusd ? "ousd" : tokenId}
         />
 
         {/* Position */}
@@ -661,7 +771,11 @@ function PhantomAssetDetail() {
             >
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">
-                  {isOusd || isMajor ? "OpenPay Pro wallet" : "Token / contract"}
+                  {isListed
+                    ? "Solana mint"
+                    : isOusd || isMajor
+                      ? "OpenPay Pro wallet"
+                      : "Token / contract"}
                 </div>
                 <div className="mt-0.5 font-mono text-sm text-foreground">
                   {shortAddress(meta.contract, 8, 8)}
@@ -714,7 +828,20 @@ function PhantomAssetDetail() {
             )}
             {isOusd && <InfoRow label="Peg" value="$1.00 USD" last />}
             {isMajor && <InfoRow label="Type" value={`Native · ${meta.network}`} last />}
-            {!isOusd && !isMajor && <InfoRow label="Status" value={String(meta.status)} last />}
+            {isListed && (
+              <InfoRow
+                label="Liquidity"
+                value={
+                  meta.liquidity != null && meta.liquidity > 0
+                    ? formatUSD(meta.liquidity)
+                    : "—"
+                }
+              />
+            )}
+            {isListed && <InfoRow label="Type" value="Phantom-listed · Solana" last />}
+            {!isOusd && !isMajor && !isListed && (
+              <InfoRow label="Status" value={String(meta.status)} last />
+            )}
           </div>
         </section>
 
@@ -762,11 +889,19 @@ function PhantomAssetDetail() {
                   </span>
                 </div>
               </div>
-              {!isMajor && (
+              {!isMajor && !isListed && (
                 <div className="flex items-center justify-between border-t border-border px-4 py-3">
                   <span className="text-sm text-muted-foreground">Holders</span>
                   <span className="text-sm font-semibold tabular-nums text-foreground">
                     {formatNumber(token?.holder_count ?? 0, 0)}
+                  </span>
+                </div>
+              )}
+              {isListed && meta.liquidity != null && meta.liquidity > 0 && (
+                <div className="flex items-center justify-between border-t border-border px-4 py-3">
+                  <span className="text-sm text-muted-foreground">Liquidity</span>
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
+                    {formatUSD(meta.liquidity)}
                   </span>
                 </div>
               )}
@@ -786,11 +921,13 @@ function PhantomAssetDetail() {
         )}
 
         <p className="pb-4 text-center text-[11px] leading-relaxed text-muted-foreground">
-          {isMajor
-            ? isPiMajor
-              ? "Pricing via CoinGecko. PI balance and transfers use your OpenPay Pro wallet on this account."
-              : `Pricing via CoinGecko. ${meta.symbol} balance, buy, send, and receive use your OpenPay Pro wallet (custodial ledger at market price).`
-            : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
+          {isListed
+            ? "Phantom-listed Solana token. Prices via DexScreener / CoinGecko. Not held on the OpenPay Pro ledger — buy/sell in Phantom and always verify the mint address."
+            : isMajor
+              ? isPiMajor
+                ? "Pricing via CoinGecko. PI balance and transfers use your OpenPay Pro wallet on this account."
+                : `Pricing via CoinGecko. ${meta.symbol} balance, buy, send, and receive use your OpenPay Pro wallet (custodial ledger at market price).`
+              : "Past performance is not an indicator of future performance. OpenPay Pro wallet balances reflect your OUSD and OpenToken holdings on this account."}
         </p>
       </div>
 
@@ -817,6 +954,15 @@ function PhantomAssetDetail() {
                   window.open(majorDef.website, "_blank", "noopener,noreferrer");
                 }}
               />
+            ) : isListed && listedDef ? (
+              <MoreRow
+                logoUrl={listedDef.logoUrl}
+                label="Open on Phantom"
+                onClick={() => {
+                  setMoreOpen(false);
+                  openListedOnPhantom();
+                }}
+              />
             ) : (
               <MoreRow
                 logoUrl={OPENPAY_NETWORK_BADGE_URL}
@@ -837,27 +983,29 @@ function PhantomAssetDetail() {
                 }}
               />
             )}
-            <MoreRow
-              icon={ArrowLeftRight}
-              label="OpenDEX Swap"
-              onClick={() => {
-                setMoreOpen(false);
-                if (isMajor) {
-                  navigate({ to: "/swap", search: { asset: ledgerAsset } });
-                } else {
-                  navigate({
-                    to: "/swap",
-                    search: isOusd ? { asset: "OUSD" } : { token: tokenId },
-                  });
-                }
-              }}
-            />
+            {!isListed && (
+              <MoreRow
+                icon={ArrowLeftRight}
+                label="OpenDEX Swap"
+                onClick={() => {
+                  setMoreOpen(false);
+                  if (isMajor) {
+                    navigate({ to: "/swap", search: { asset: ledgerAsset } });
+                  } else {
+                    navigate({
+                      to: "/swap",
+                      search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+                    });
+                  }
+                }}
+              />
+            )}
             {meta.contract && (
               <MoreRow
                 icon={ExternalLink}
-                label="Copy OpenPay Pro address"
+                label={isListed ? "Copy Solana mint" : "Copy OpenPay Pro address"}
                 onClick={() => {
-                  void copy(meta.contract!, "Address copied");
+                  void copy(meta.contract!, isListed ? "Mint copied" : "Address copied");
                   setMoreOpen(false);
                 }}
               />
@@ -871,34 +1019,36 @@ function PhantomAssetDetail() {
         </DialogContent>
       </Dialog>
 
-      <AssetBuySheet
-        open={buyOpen}
-        onClose={() => setBuyOpen(false)}
-        userId={user.id}
-        walletId={wallet?.id}
-        ousdBalance={Number(wallet?.ousd_balance ?? 0)}
-        token={{
-          id: isOusd ? "ousd" : isMajor && majorDef ? majorDef.id : tokenId,
-          symbol: meta.symbol,
-          name: meta.name,
-          price: meta.price,
-          logoUrl: meta.logo,
-          isOusd,
-          majorId: isMajor && majorDef ? majorDef.id : undefined,
-          status: isOusd || isMajor ? "stable" : meta.status,
-        }}
-        returnPath={returnPath}
-        onNavigateSwap={() => {
-          if (isMajor) {
-            navigate({ to: "/swap", search: { asset: ledgerAsset } });
-          } else {
-            navigate({
-              to: "/swap",
-              search: isOusd ? { asset: "OUSD" } : { token: tokenId },
-            });
-          }
-        }}
-      />
+      {!isListed && (
+        <AssetBuySheet
+          open={buyOpen}
+          onClose={() => setBuyOpen(false)}
+          userId={user.id}
+          walletId={wallet?.id}
+          ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+          token={{
+            id: isOusd ? "ousd" : isMajor && majorDef ? majorDef.id : tokenId,
+            symbol: meta.symbol,
+            name: meta.name,
+            price: meta.price,
+            logoUrl: meta.logo,
+            isOusd,
+            majorId: isMajor && majorDef ? majorDef.id : undefined,
+            status: isOusd || isMajor ? "stable" : meta.status,
+          }}
+          returnPath={returnPath}
+          onNavigateSwap={() => {
+            if (isMajor) {
+              navigate({ to: "/swap", search: { asset: ledgerAsset } });
+            } else {
+              navigate({
+                to: "/swap",
+                search: isOusd ? { asset: "OUSD" } : { token: tokenId },
+              });
+            }
+          }}
+        />
+      )}
 
       {isMajor && majorDef?.moonpayCode && (
         <MoonPayBuyOverlay
@@ -918,7 +1068,13 @@ function PhantomAssetDetail() {
       {/* Phantom market-cap + lavender Trade CTA */}
       <PhantomAssetTradeBar
         marketCapLabel={marketCapLabel}
-        onTrade={() => setBuyOpen(true)}
+        onTrade={() => {
+          if (isListed) {
+            openListedOnPhantom();
+            return;
+          }
+          setBuyOpen(true);
+        }}
       />
     </div>
   );

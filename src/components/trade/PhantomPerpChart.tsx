@@ -13,17 +13,56 @@ type Candle = {
   label: string;
 };
 
-/** Build OHLC candles from CoinGecko sparkline prices. */
-export function sparklineToCandles(prices: number[], markPrice?: number): Candle[] {
+function periodSpanMs(period?: string): number {
+  switch (period) {
+    case "LIVE":
+      return 3 * 60 * 60 * 1000;
+    case "1H":
+      return 60 * 60 * 1000;
+    case "4H":
+      return 4 * 60 * 60 * 1000;
+    case "1D":
+      return 24 * 60 * 60 * 1000;
+    case "1W":
+      return 7 * 24 * 60 * 60 * 1000;
+    case "1M":
+      return 30 * 24 * 60 * 60 * 1000;
+    case "1Y":
+      return 365 * 24 * 60 * 60 * 1000;
+    case "ALL":
+      return 3 * 365 * 24 * 60 * 60 * 1000;
+    default:
+      return 7 * 24 * 60 * 60 * 1000;
+  }
+}
+
+function formatCandleLabel(ts: number, period?: string): string {
+  const d = new Date(ts);
+  if (period === "1Y" || period === "ALL" || period === "1M") {
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
+  if (period === "1W" || period === "1D") {
+    return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit" });
+  }
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+/** Build OHLC candles from price series (sparkline or market_chart). */
+export function sparklineToCandles(
+  prices: number[],
+  markPrice?: number,
+  period?: string,
+): Candle[] {
   const pts = prices.filter((p) => Number.isFinite(p) && p > 0);
   if (pts.length < 4) {
     const px = markPrice && markPrice > 0 ? markPrice : 1;
     const now = Date.now();
+    const step = Math.max(60_000, Math.floor(periodSpanMs(period) / 24));
     return Array.from({ length: 24 }, (_, i) => {
       const wobble = 1 + Math.sin(i / 3) * 0.002;
       const v = px * wobble;
       return {
-        ts: now - (24 - i) * 60_000,
+        ts: now - (24 - i) * step,
         open: v,
         high: v * 1.001,
         low: v * 0.999,
@@ -34,10 +73,11 @@ export function sparklineToCandles(prices: number[], markPrice?: number): Candle
     });
   }
 
-  const bucket = Math.max(1, Math.floor(pts.length / 36));
+  const targetCandles = period === "1H" || period === "LIVE" ? 28 : 36;
+  const bucket = Math.max(1, Math.floor(pts.length / targetCandles));
   const candles: Candle[] = [];
   const now = Date.now();
-  const stepMs = (7 * 24 * 60 * 60 * 1000) / Math.max(pts.length, 1);
+  const stepMs = periodSpanMs(period) / Math.max(pts.length, 1);
 
   for (let i = 0; i < pts.length; i += bucket) {
     const slice = pts.slice(i, i + bucket);
@@ -54,7 +94,7 @@ export function sparklineToCandles(prices: number[], markPrice?: number): Candle
       low,
       close,
       up: close >= open,
-      label: new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      label: formatCandleLabel(ts, period),
     });
   }
 
@@ -72,17 +112,22 @@ export function sparklineToCandles(prices: number[], markPrice?: number): Candle
 export function PhantomPerpChart({
   prices,
   markPrice,
+  period,
   className,
   height = 280,
 }: {
   prices: number[];
   markPrice?: number;
+  period?: string;
   className?: string;
   height?: number;
 }) {
   const { theme } = useTheme();
   const dark = theme === "dark";
-  const candles = useMemo(() => sparklineToCandles(prices, markPrice), [prices, markPrice]);
+  const candles = useMemo(
+    () => sparklineToCandles(prices, markPrice, period),
+    [prices, markPrice, period],
+  );
 
   const chrome = dark
     ? { grid: "rgba(255,255,255,0.06)", axis: "rgba(255,255,255,0.4)", mark: "#fff" }

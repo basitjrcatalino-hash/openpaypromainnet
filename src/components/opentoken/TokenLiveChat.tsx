@@ -45,6 +45,11 @@ type FeedItem = MessageFeedRow | TradeFeedRow;
 
 export type TokenLiveChatProps = {
   tokenId: string;
+  /**
+   * When set, messages use `asset_chat_messages.room_id` (majors / OUSD / any string).
+   * When omitted, uses OpenToken `ot_token_chat_messages` keyed by UUID `tokenId`.
+   */
+  roomId?: string;
   userId: string;
   name: string;
   symbol: string;
@@ -76,7 +81,7 @@ function errMessage(err: unknown): string {
 }
 
 function isMissingChatTable(message: string) {
-  return /relation|ot_token_chat_messages|schema cache|does not exist|Could not find the table/i.test(
+  return /relation|ot_token_chat_messages|asset_chat_messages|schema cache|does not exist|Could not find the table/i.test(
     message,
   );
 }
@@ -88,9 +93,15 @@ function handleLabel(profile: ProfileBits | undefined, userId: string) {
 }
 
 function chattingLabel(count: number) {
-  if (count <= 0) return "Community channel · be first";
-  if (count === 1) return "1 person in community";
-  return `${count} in community chat`;
+  if (count <= 0) return "Be the first to chat";
+  if (count === 1) return "1 person chatting";
+  return `${count} people chatting`;
+}
+
+function isUuidTokenId(id: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id,
+  );
 }
 
 function formatTradeUsd(n: number) {
@@ -143,6 +154,7 @@ function AvatarBubble({
 
 export function TokenLiveChat({
   tokenId,
+  roomId,
   userId,
   name,
   symbol,
@@ -165,6 +177,11 @@ export function TokenLiveChat({
   const [emojiRow, setEmojiRow] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  /** Asset rooms (majors/OUSD) use text room_id; OpenToken UUID keeps legacy table unless roomId set. */
+  const assetRoom = (roomId ?? (!isUuidTokenId(tokenId) ? tokenId : null))?.toLowerCase() ?? null;
+  const chatKey = assetRoom ?? tokenId;
+  const useAssetTable = Boolean(assetRoom);
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
@@ -173,10 +190,36 @@ export function TokenLiveChat({
   }, [pickerQuery]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ot-live-chat", tokenId],
-    enabled: Boolean(tokenId),
+    queryKey: ["ot-live-chat", chatKey, useAssetTable ? "asset" : "ot"],
+    enabled: Boolean(chatKey),
     retry: false,
     queryFn: async (): Promise<{ rows: ChatRow[]; error: string | null }> => {
+      if (useAssetTable && assetRoom) {
+        const { data: rows, error: qErr } = await (supabase as any)
+          .from("asset_chat_messages")
+          .select("id, body, kind, media_url, created_at, user_id")
+          .eq("room_id", assetRoom)
+          .order("created_at", { ascending: true })
+          .limit(150);
+
+        if (qErr) {
+          return { rows: [], error: errMessage(qErr) || "Could not load chat" };
+        }
+
+        const ids = [
+          ...new Set((rows ?? []).map((c: { user_id: string }) => String(c.user_id))),
+        ] as string[];
+        const profiles = await loadProfiles(ids);
+        return {
+          rows: (rows ?? []).map((c: ChatRow & { kind?: string }) => ({
+            ...c,
+            kind: (c.kind as ChatKind) || "text",
+            profile: profiles[c.user_id],
+          })),
+          error: null,
+        };
+      }
+
       const { data: rows, error: qErr } = await supabase
         .from("ot_token_chat_messages")
         .select("id, body, kind, media_url, created_at, user_id")
@@ -203,7 +246,7 @@ export function TokenLiveChat({
 
   const { data: trades = [] } = useQuery({
     queryKey: ["ot-live-chat-trades", tokenId],
-    enabled: Boolean(tokenId),
+    enabled: Boolean(tokenId) && isUuidTokenId(tokenId) && !useAssetTable,
     queryFn: async (): Promise<TradeFeedRow[]> => {
       const { data: rows, error } = await supabase
         .from("ot_trades")
@@ -259,7 +302,28 @@ export function TokenLiveChat({
   });
 
   useEffect(() => {
-    if (!tokenId) return;
+    if (!chatKey) return;
+    if (useAssetTable && assetRoom) {
+      const channel = supabase
+        .channel(`asset-chat-${assetRoom}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "asset_chat_messages",
+            filter: `room_id=eq.${assetRoom}`,
+          },
+          () => {
+            void qc.invalidateQueries({ queryKey: ["ot-live-chat", chatKey] });
+          },
+        )
+        .subscribe();
+      return () => {
+        void supabase.removeChannel(channel);
+      };
+    }
+
     const channel = supabase
       .channel(`ot-chat-${tokenId}`)
       .on(
@@ -271,7 +335,7 @@ export function TokenLiveChat({
           filter: `token_id=eq.${tokenId}`,
         },
         () => {
-          void qc.invalidateQueries({ queryKey: ["ot-live-chat", tokenId] });
+          void qc.invalidateQueries({ queryKey: ["ot-live-chat", chatKey] });
         },
       )
       .on(
@@ -290,7 +354,7 @@ export function TokenLiveChat({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [tokenId, qc]);
+  }, [chatKey, tokenId, useAssetTable, assetRoom, qc]);
 
   useEffect(() => {
     if (!mounted || feed.length === 0) return;
@@ -306,22 +370,33 @@ export function TokenLiveChat({
     if (!text && !payload.media_url) return;
     setBusy(true);
     try {
-      const { error: insertErr } = await supabase.from("ot_token_chat_messages").insert({
-        token_id: tokenId,
-        user_id: userId,
-        kind: payload.kind,
-        body: text || payload.kind,
-        media_url: payload.media_url ?? null,
-      });
-      if (insertErr) throw insertErr;
+      if (useAssetTable && assetRoom) {
+        const { error: insertErr } = await (supabase as any).from("asset_chat_messages").insert({
+          room_id: assetRoom,
+          user_id: userId,
+          kind: payload.kind,
+          body: text || payload.kind,
+          media_url: payload.media_url ?? null,
+        });
+        if (insertErr) throw insertErr;
+      } else {
+        const { error: insertErr } = await supabase.from("ot_token_chat_messages").insert({
+          token_id: tokenId,
+          user_id: userId,
+          kind: payload.kind,
+          body: text || payload.kind,
+          media_url: payload.media_url ?? null,
+        });
+        if (insertErr) throw insertErr;
+      }
       setBody("");
       setPickerOpen(false);
       setEmojiRow(false);
-      await qc.invalidateQueries({ queryKey: ["ot-live-chat", tokenId] });
+      await qc.invalidateQueries({ queryKey: ["ot-live-chat", chatKey] });
     } catch (err) {
       const msg = errMessage(err) || "Could not send";
       if (isMissingChatTable(msg)) {
-        toast.error("Live chat needs a DB migration — run ot_token_chat_messages on Supabase");
+        toast.error("Live chat needs a DB migration — apply asset_chat_messages on Supabase");
       } else {
         toast.error(msg);
       }

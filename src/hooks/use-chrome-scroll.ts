@@ -18,12 +18,17 @@ export function useChromeScroll(threshold = 10, resetKey?: string) {
       requestAnimationFrame(() => {
         const y = Math.max(0, window.scrollY);
         const dy = y - lastY;
+        const doc = document.documentElement;
+        const nearBottom =
+          y + window.innerHeight >= doc.scrollHeight - 48;
+
         if (y < 32) {
           setVisible(true);
-        } else if (dy > threshold) {
-          setVisible(false);
         } else if (dy < -threshold) {
           setVisible(true);
+        } else if (dy > threshold || (nearBottom && dy >= 0)) {
+          // Hide on scroll-down, or while resting near page end (keep CTAs clear)
+          setVisible(false);
         }
         lastY = y;
         ticking = false;

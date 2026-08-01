@@ -79,7 +79,7 @@ import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { walletLedgerUsd } from "@/lib/wallet-portfolio";
 import { fetchMajorMarkets } from "@/lib/major-tokens";
-import { ChromeVisibleProvider } from "@/hooks/chrome-visible";
+import { ChromeVisibleProvider, useChromeVisible } from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
 import { P2pShell } from "@/components/p2p/P2pShell";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
@@ -153,6 +153,103 @@ function navActive(pathname: string, to: string) {
   );
 }
 
+/** Mobile top bar — uses context so Trade force-hide / scroll hide stay in sync. */
+function MobileAppHeader({
+  isHome,
+  mobileOpen,
+  onToggleMenu,
+  unread,
+  onOpenNotifications,
+}: {
+  isHome: boolean;
+  mobileOpen: boolean;
+  onToggleMenu: () => void;
+  unread: number;
+  onOpenNotifications: () => void;
+}) {
+  const chromeVisible = useChromeVisible();
+  return (
+    <header
+      className={cn(
+        "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center px-2 py-2.5 transition-transform duration-300 ease-out md:hidden",
+        chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
+      )}
+    >
+      <button
+        onClick={onToggleMenu}
+        className="justify-self-start rounded-full p-2 text-primary press"
+        aria-label="Toggle menu"
+      >
+        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+      {isHome ? (
+        <Link to="/dashboard" className="ph-nav-title truncate text-center text-foreground">
+          OpenPay Pro
+        </Link>
+      ) : (
+        <span className="pointer-events-none" aria-hidden />
+      )}
+      <div className="justify-self-end">
+        <NotificationBell unread={unread} onOpen={onOpenNotifications} />
+      </div>
+    </header>
+  );
+}
+
+/** Mobile tabbar — hides with scroll / Trade menu force-hide. */
+function MobileTabBar({
+  pathname,
+  mobileOpen,
+  t,
+}: {
+  pathname: string;
+  mobileOpen: boolean;
+  t: (key: string) => string;
+}) {
+  const chromeVisible = useChromeVisible();
+  return (
+    <nav
+      className={cn(
+        "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
+        chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
+        mobileOpen && "pointer-events-none opacity-0",
+      )}
+      aria-label="Primary"
+      aria-hidden={mobileOpen || !chromeVisible}
+    >
+      <div
+        className="mx-auto flex max-w-md items-center gap-0 overflow-x-auto overscroll-x-contain px-1.5 scrollbar-none [-webkit-overflow-scrolling:touch]"
+        style={{ height: "var(--ph-tabbar-content)" }}
+      >
+        {FOOTER_NAV.map((item) => {
+          const Icon = item.icon;
+          const active = navActive(pathname, item.to);
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              preload="intent"
+              className={cn(
+                "flex h-full min-w-14 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-5 w-5 transition-[filter,opacity]",
+                  active && "ph-tab-icon-active",
+                )}
+                strokeWidth={active ? 2.25 : 1.75}
+              />
+              <span className="px-0.5">{navLabel(t, item.labelKey)}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const { t } = useTranslation();
@@ -178,6 +275,7 @@ function AuthenticatedLayout() {
     pathname === "/chat" ||
     pathname.startsWith("/chat/") ||
     /\/opentoken\/[^/]+\/chat\/?$/.test(pathname) ||
+    /\/asset\/[^/]+\/chat\/?$/.test(pathname) ||
     pathname === "/opentoken/terminal" ||
     pathname.startsWith("/opentoken/terminal/") ||
     pathname.startsWith("/p2p");
@@ -240,33 +338,13 @@ function AuthenticatedLayout() {
       <div className="relative min-h-screen bg-background text-foreground">
         {!hideChrome && (
           <>
-            <header
-              className={cn(
-                "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center px-2 py-2.5 transition-transform duration-300 ease-out md:hidden",
-                chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
-              )}
-            >
-              <button
-                onClick={() => setMobileOpen((v) => !v)}
-                className="justify-self-start rounded-full p-2 text-primary press"
-                aria-label="Toggle menu"
-              >
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              {isHome ? (
-                <Link
-                  to="/dashboard"
-                  className="ph-nav-title truncate text-center text-foreground"
-                >
-                  OpenPay Pro
-                </Link>
-              ) : (
-                <span className="pointer-events-none" aria-hidden />
-              )}
-              <div className="justify-self-end">
-                <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
-              </div>
-            </header>
+            <MobileAppHeader
+              isHome={isHome}
+              mobileOpen={mobileOpen}
+              onToggleMenu={() => setMobileOpen((v) => !v)}
+              unread={txNotes.unread}
+              onOpenNotifications={() => setNotifOpen(true)}
+            />
 
             {/* Spacer matches fixed mobile header height */}
             <div
@@ -358,45 +436,11 @@ function AuthenticatedLayout() {
         </div>
 
         {!hideChrome && (
-          <nav
-            className={cn(
-              "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
-              chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
-              mobileOpen && "pointer-events-none opacity-0",
-            )}
-            aria-label="Primary"
-            aria-hidden={mobileOpen || !chromeVisible}
-          >
-            <div
-              className="mx-auto flex max-w-md items-center gap-0 overflow-x-auto overscroll-x-contain px-1.5 scrollbar-none [-webkit-overflow-scrolling:touch]"
-              style={{ height: "var(--ph-tabbar-content)" }}
-            >
-              {FOOTER_NAV.map((item) => {
-                const Icon = item.icon;
-                const active = navActive(pathname, item.to);
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    preload="intent"
-                    className={cn(
-                      "flex h-full min-w-14 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
-                      active ? "text-primary" : "text-muted-foreground",
-                    )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-5 w-5 transition-[filter,opacity]",
-                        active && "ph-tab-icon-active",
-                      )}
-                      strokeWidth={active ? 2.25 : 1.75}
-                    />
-                    <span className="px-0.5">{navLabel(t, item.labelKey)}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
+          <MobileTabBar
+            pathname={pathname}
+            mobileOpen={mobileOpen}
+            t={t}
+          />
         )}
 
         <NotificationCenter

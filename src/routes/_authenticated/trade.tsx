@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -36,11 +37,16 @@ import {
 } from "@/lib/perp";
 import {
   MAJOR_TOKENS,
+  PERP_CHART_PERIODS,
   fetchMajorMarkets,
+  fetchMajorPriceSeries,
   majorMarketById,
+  sliceSparklineForPeriod,
+  type PerpChartPeriod,
 } from "@/lib/major-tokens";
 import { formatNumber } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
+import { useChromeForceHidden, useChromeVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
@@ -61,12 +67,12 @@ export const Route = createFileRoute("/_authenticated/trade")({
   component: TradePage,
 });
 
-const PERIODS = ["LIVE", "1D", "1W", "1M", "1Y", "ALL"] as const;
-
 function TradePage() {
   const search = Route.useSearch();
   const qc = useQueryClient();
   const { code: currency } = useCurrency();
+  const chromeVisible = useChromeVisible();
+  const setChromeForceHidden = useChromeForceHidden();
   const fetchBalances = useServerFn(getAccountBalances);
   const listPos = useServerFn(listPerpPositions);
   const openPos = useServerFn(openPerpPosition);
@@ -78,13 +84,21 @@ function TradePage() {
       : "BTC";
 
   const [market, setMarket] = useState<PerpMarket>(initialMarket);
-  const [period, setPeriod] = useState<(typeof PERIODS)[number]>("LIVE");
+  const [period, setPeriod] = useState<PerpChartPeriod>("LIVE");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetSide, setSheetSide] = useState<PerpSide | null>(null);
   const [leverage, setLeverage] = useState(5);
   const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("USDT");
   const [margin, setMargin] = useState("");
+  const [barMounted, setBarMounted] = useState(false);
+
+  useEffect(() => setBarMounted(true), []);
+
+  useEffect(() => {
+    setChromeForceHidden(menuOpen);
+    return () => setChromeForceHidden(false);
+  }, [menuOpen, setChromeForceHidden]);
 
   const { data: majorMarkets, isLoading: marketsLoading } = useQuery({
     queryKey: ["major-markets"],
@@ -112,6 +126,13 @@ function TradePage() {
   const change = Number(snap.change24h ?? 0);
   const up = change >= 0;
   const spark = snap.sparkline ?? [];
+
+  const chartQ = useQuery({
+    queryKey: ["perp-chart", majorId, period],
+    staleTime: 60_000,
+    refetchInterval: period === "LIVE" ? 45_000 : 120_000,
+    queryFn: () => fetchMajorPriceSeries(majorId, period),
+  });
 
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
   const openPositions = (posQ.data ?? []).filter((p) => p.status === "open");
@@ -150,11 +171,9 @@ function TradePage() {
   });
 
   const chartPrices = useMemo(() => {
-    if (period === "LIVE" || period === "1D") return spark.slice(-48);
-    if (period === "1W") return spark;
-    if (period === "1M") return spark;
-    return spark;
-  }, [period, spark]);
+    if (chartQ.data && chartQ.data.length >= 4) return chartQ.data;
+    return sliceSparklineForPeriod(spark, period);
+  }, [chartQ.data, spark, period]);
 
   const marginNum = Number(margin);
   const marginOk = Number.isFinite(marginNum) && marginNum > 0 && marginNum <= tradingBal + 1e-12;
@@ -170,8 +189,71 @@ function TradePage() {
     setMenuOpen(false);
   }
 
+  const tradeBar =
+    barMounted &&
+    createPortal(
+      <div
+        className={cn(
+          "ph-trade-bar border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur-xl",
+          "transition-[bottom] duration-300 ease-out",
+        )}
+        data-chrome={chromeVisible ? "visible" : "hidden"}
+      >
+        <div className="mx-auto flex max-w-lg items-end justify-between gap-3">
+          <div className="min-w-0 pb-1">
+            <p className="text-[11px] text-muted-foreground">Market cap</p>
+            <p className="text-sm font-bold tabular-nums">
+              {formatCurrency(Number(snap.marketCap ?? 0), currency)}
+            </p>
+          </div>
+          {!menuOpen ? (
+            <Button
+              type="button"
+              className="h-12 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-6 text-base font-bold text-black hover:bg-[#b8a6fc]"
+              onClick={() => setMenuOpen(true)}
+            >
+              Trade
+            </Button>
+          ) : (
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
+                onClick={() => openTrade("long")}
+              >
+                Long
+              </button>
+              <button
+                type="button"
+                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
+                onClick={() => openTrade("short")}
+              >
+                Short
+              </button>
+              <button
+                type="button"
+                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
+                onClick={() => openTrade("buy")}
+              >
+                Buy
+              </button>
+              <button
+                type="button"
+                aria-label="Close menu"
+                className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground press"
+                onClick={() => setMenuOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>,
+      document.body,
+    );
+
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col bg-background pb-28">
+    <div className="ot-phantom mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col bg-background pb-36">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 px-4 pt-3">
         <button
@@ -217,12 +299,17 @@ function TradePage() {
 
       {/* Chart */}
       <div className="mt-2 px-1">
-        <PhantomPerpChart prices={chartPrices} markPrice={price} height={260} />
+        <PhantomPerpChart
+          prices={chartPrices}
+          markPrice={price}
+          period={period}
+          height={260}
+        />
       </div>
 
       {/* Periods */}
-      <div className="mt-1 flex gap-1 overflow-x-auto px-4 pb-2">
-        {PERIODS.map((p) => (
+      <div className="mt-1 flex gap-1 overflow-x-auto px-4 pb-2 scrollbar-none">
+        {PERP_CHART_PERIODS.map((p) => (
           <button
             key={p}
             type="button"
@@ -241,7 +328,8 @@ function TradePage() {
 
       {/* Live chat teaser */}
       <Link
-        to="/chat"
+        to="/asset/$tokenId/chat"
+        params={{ tokenId: market.toLowerCase() }}
         className="mx-4 mt-2 flex items-center justify-between rounded-2xl border border-border/60 bg-card/70 px-3.5 py-3 press"
       >
         <div>
@@ -267,7 +355,11 @@ function TradePage() {
       <section className="mx-4 mt-4 space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold">Open positions</h2>
-          <Link to="/transfer" search={{ from: "funding", to: "trading", asset: "USDT" }} className="text-xs font-semibold text-primary">
+          <Link
+            to="/transfer"
+            search={{ from: "funding", to: "trading", asset: "USDT" }}
+            className="text-xs font-semibold text-primary"
+          >
             Fund Trading
           </Link>
         </div>
@@ -337,58 +429,7 @@ function TradePage() {
         )}
       </section>
 
-      {/* Bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur md:left-auto md:right-[max(0px,calc((100vw-32rem)/2))] md:w-full md:max-w-lg">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] text-muted-foreground">Market cap</p>
-            <p className="text-sm font-bold tabular-nums">
-              {formatCurrency(Number(snap.marketCap ?? 0), currency)}
-            </p>
-          </div>
-          {!menuOpen ? (
-            <Button
-              type="button"
-              className="h-12 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-6 text-base font-bold text-black hover:bg-[#b8a6fc]"
-              onClick={() => setMenuOpen(true)}
-            >
-              Trade
-            </Button>
-          ) : (
-            <div className="flex flex-col items-end gap-2">
-              <button
-                type="button"
-                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
-                onClick={() => openTrade("long")}
-              >
-                Long
-              </button>
-              <button
-                type="button"
-                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
-                onClick={() => openTrade("short")}
-              >
-                Short
-              </button>
-              <button
-                type="button"
-                className="h-11 min-w-[7.5rem] rounded-2xl bg-[#c4b5fd] px-5 text-sm font-bold text-black press"
-                onClick={() => openTrade("buy")}
-              >
-                Buy
-              </button>
-              <button
-                type="button"
-                aria-label="Close menu"
-                className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground press"
-                onClick={() => setMenuOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      {tradeBar}
 
       {/* Market picker */}
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
@@ -503,8 +544,9 @@ function TradePage() {
               </div>
               {marginNum > 0 ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Notional ≈ {formatNumber(marginNum * (sheetSide && leverage > 1 ? leverage : 1), 2)} USD
-                  · Entry ~ ${formatNumber(price, 2)}
+                  Notional ≈{" "}
+                  {formatNumber(marginNum * (sheetSide && leverage > 1 ? leverage : 1), 2)} USD ·
+                  Entry ~ ${formatNumber(price, 2)}
                 </p>
               ) : null}
             </div>

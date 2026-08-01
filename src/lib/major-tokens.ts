@@ -531,4 +531,111 @@ export function majorMarketById(
   return { id, ...FALLBACK_MARKET[id], sparkline: [] };
 }
 
+/** Perp / live chart timeframe pills (Phantom-style + intraday). */
+export const PERP_CHART_PERIODS = [
+  "LIVE",
+  "1H",
+  "4H",
+  "1D",
+  "1W",
+  "1M",
+  "1Y",
+  "ALL",
+] as const;
+export type PerpChartPeriod = (typeof PERP_CHART_PERIODS)[number];
+
+function chartPeriodWindowMs(period: PerpChartPeriod): number | null {
+  switch (period) {
+    case "LIVE":
+      return 3 * 60 * 60 * 1000;
+    case "1H":
+      return 60 * 60 * 1000;
+    case "4H":
+      return 4 * 60 * 60 * 1000;
+    case "1D":
+      return 24 * 60 * 60 * 1000;
+    default:
+      return null;
+  }
+}
+
+function chartPeriodCgDays(period: PerpChartPeriod): number | "max" {
+  switch (period) {
+    case "LIVE":
+    case "1H":
+    case "4H":
+    case "1D":
+      return 1;
+    case "1W":
+      return 7;
+    case "1M":
+      return 30;
+    case "1Y":
+      return 365;
+    case "ALL":
+      return "max";
+  }
+}
+
+/**
+ * Price series for perp charts. Uses CoinGecko market_chart for real
+ * intraday/weekly history, then windows LIVE / 1H / 4H / 1D.
+ */
+export async function fetchMajorPriceSeries(
+  majorId: MajorTokenId,
+  period: PerpChartPeriod,
+): Promise<number[]> {
+  const def = MAJOR_TOKENS[majorId];
+  if (!def?.coingeckoId || def.coingeckoId === "phantom-cash") return [];
+
+  const days = chartPeriodCgDays(period);
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${def.coingeckoId}/market_chart?vs_currency=usd&days=${days}`,
+      { headers: { accept: "application/json" } },
+    );
+    if (!res.ok) throw new Error(`CoinGecko chart ${res.status}`);
+    const json = (await res.json()) as { prices?: [number, number][] };
+    const rows = json.prices ?? [];
+    if (!rows.length) return [];
+
+    const windowMs = chartPeriodWindowMs(period);
+    const now = Date.now();
+    const filtered =
+      windowMs == null
+        ? rows
+        : rows.filter(([ts]) => ts >= now - windowMs);
+
+    const series = (filtered.length >= 4 ? filtered : rows).map(([, p]) => Number(p));
+    return series.filter((p) => Number.isFinite(p) && p > 0);
+  } catch {
+    return [];
+  }
+}
+
+/** Fallback slicer when live chart fetch is empty — CoinGecko 7d sparkline. */
+export function sliceSparklineForPeriod(
+  spark: number[],
+  period: PerpChartPeriod,
+): number[] {
+  if (!spark.length) return spark;
+  const n = spark.length;
+  switch (period) {
+    case "LIVE":
+      return spark.slice(-Math.max(12, Math.floor(n / 14)));
+    case "1H":
+      return spark.slice(-Math.max(6, Math.floor(n / 48)));
+    case "4H":
+      return spark.slice(-Math.max(12, Math.floor(n / 12)));
+    case "1D":
+      return spark.slice(-Math.max(24, Math.floor(n / 7)));
+    case "1W":
+    case "1M":
+    case "1Y":
+    case "ALL":
+    default:
+      return spark;
+  }
+}
+
 export { CG_ID_TO_MAJOR };

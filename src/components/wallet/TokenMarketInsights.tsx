@@ -40,7 +40,7 @@ export type TokenMarketInsightsProps = {
   marketCap?: number | null;
   volume24h?: number | null;
   description?: string | null;
-  /** OpenToken live chat route when available */
+  /** Live Chat route — `/asset/$tokenId/chat` for any asset (majors, OUSD, OpenToken) */
   chatTokenId?: string | null;
   chatPreview?: string | null;
   chatHereCount?: number;
@@ -141,7 +141,7 @@ export function TokenMarketInsights(props: TokenMarketInsightsProps) {
       {props.chatTokenId && (
         <section>
           <Link
-            to="/opentoken/$tokenId/chat"
+            to="/asset/$tokenId/chat"
             params={{ tokenId: props.chatTokenId }}
             className="flex items-center gap-1.5 text-[17px] font-bold text-foreground"
           >

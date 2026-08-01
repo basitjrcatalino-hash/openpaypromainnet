@@ -16,177 +16,121 @@ export type Database = {
     Tables: {
       banxa_topup_orders: {
         Row: {
+          banxa_order_id: string | null
+          checkout_url: string | null
+          created_at: string
+          credited: boolean
+          external_order_id: string
+          fiat_amount: number
+          fiat_currency: string
           id: string
+          method_key: string
+          payment_method_id: string
+          status: string
+          updated_at: string
           user_id: string
           wallet_id: string
-          method_key: string
-          banxa_order_id: string | null
-          external_order_id: string
-          fiat_currency: string
-          fiat_amount: number
-          payment_method_id: string
-          checkout_url: string | null
-          status: string
-          credited: boolean
-          created_at: string
-          updated_at: string
         }
         Insert: {
+          banxa_order_id?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          credited?: boolean
+          external_order_id: string
+          fiat_amount: number
+          fiat_currency?: string
           id?: string
+          method_key: string
+          payment_method_id: string
+          status?: string
+          updated_at?: string
           user_id: string
           wallet_id: string
-          method_key: string
-          banxa_order_id?: string | null
-          external_order_id: string
-          fiat_currency?: string
-          fiat_amount: number
-          payment_method_id: string
-          checkout_url?: string | null
-          status?: string
-          credited?: boolean
-          created_at?: string
-          updated_at?: string
         }
         Update: {
+          banxa_order_id?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          credited?: boolean
+          external_order_id?: string
+          fiat_amount?: number
+          fiat_currency?: string
           id?: string
+          method_key?: string
+          payment_method_id?: string
+          status?: string
+          updated_at?: string
           user_id?: string
           wallet_id?: string
-          method_key?: string
-          banxa_order_id?: string | null
-          external_order_id?: string
-          fiat_currency?: string
-          fiat_amount?: number
-          payment_method_id?: string
-          checkout_url?: string | null
-          status?: string
-          credited?: boolean
-          created_at?: string
-          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "banxa_topup_orders_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       circle_mint_deposits: {
         Row: {
-          id: string
-          user_id: string
-          wallet_id: string
-          payment_intent_id: string
-          expected_amount: number
-          currency: string
           chain: string
-          deposit_address: string | null
-          status: string
           circle_payment_id: string | null
-          tx_hash: string | null
-          raw_intent: Json | null
           created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          wallet_id: string
-          payment_intent_id: string
+          currency: string
+          deposit_address: string | null
           expected_amount: number
-          currency?: string
-          chain?: string
-          deposit_address?: string | null
-          status?: string
-          circle_payment_id?: string | null
-          tx_hash?: string | null
-          raw_intent?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          wallet_id?: string
-          payment_intent_id?: string
-          expected_amount?: number
-          currency?: string
-          chain?: string
-          deposit_address?: string | null
-          status?: string
-          circle_payment_id?: string | null
-          tx_hash?: string | null
-          raw_intent?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      ousd_withdrawals: {
-        Row: {
           id: string
+          payment_intent_id: string
+          raw_intent: Json | null
+          status: string
+          tx_hash: string | null
+          updated_at: string
           user_id: string
           wallet_id: string
-          amount: number
-          fee_bps: number
-          fee_ousd: number
-          net_ousd: number
-          destination_address: string
-          display_name: string | null
-          username: string | null
-          note: string | null
-          status: string
-          destination_kind: string | null
-          treasury_address: string
-          treasury_wallet_id: string | null
-          admin_note: string | null
-          payout_tx_hash: string | null
-          reviewed_by: string | null
-          reviewed_at: string | null
-          created_at: string
-          updated_at: string
         }
         Insert: {
+          chain?: string
+          circle_payment_id?: string | null
+          created_at?: string
+          currency?: string
+          deposit_address?: string | null
+          expected_amount: number
           id?: string
+          payment_intent_id: string
+          raw_intent?: Json | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
           user_id: string
           wallet_id: string
-          amount: number
-          fee_bps?: number
-          fee_ousd?: number
-          net_ousd?: number
-          destination_address: string
-          display_name?: string | null
-          username?: string | null
-          note?: string | null
-          status?: string
-          destination_kind?: string | null
-          treasury_address?: string
-          treasury_wallet_id?: string | null
-          admin_note?: string | null
-          payout_tx_hash?: string | null
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Update: {
+          chain?: string
+          circle_payment_id?: string | null
+          created_at?: string
+          currency?: string
+          deposit_address?: string | null
+          expected_amount?: number
           id?: string
+          payment_intent_id?: string
+          raw_intent?: Json | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
           user_id?: string
           wallet_id?: string
-          amount?: number
-          fee_bps?: number
-          fee_ousd?: number
-          net_ousd?: number
-          destination_address?: string
-          display_name?: string | null
-          username?: string | null
-          note?: string | null
-          status?: string
-          destination_kind?: string | null
-          treasury_address?: string
-          treasury_wallet_id?: string | null
-          admin_note?: string | null
-          payout_tx_hash?: string | null
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "circle_mint_deposits_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crypto_transactions: {
         Row: {
@@ -1255,6 +1199,93 @@ export type Database = {
           },
         ]
       }
+      ousd_withdrawals: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          created_at: string
+          destination_address: string
+          destination_kind: string | null
+          display_name: string | null
+          fee_bps: number
+          fee_ousd: number
+          id: string
+          net_ousd: number
+          note: string | null
+          payout_tx_hash: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          treasury_address: string
+          treasury_wallet_id: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+          wallet_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          destination_address: string
+          destination_kind?: string | null
+          display_name?: string | null
+          fee_bps?: number
+          fee_ousd?: number
+          id?: string
+          net_ousd: number
+          note?: string | null
+          payout_tx_hash?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          treasury_address?: string
+          treasury_wallet_id?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+          wallet_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          destination_address?: string
+          destination_kind?: string | null
+          display_name?: string | null
+          fee_bps?: number
+          fee_ousd?: number
+          id?: string
+          net_ousd?: number
+          note?: string | null
+          payout_tx_hash?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          treasury_address?: string
+          treasury_wallet_id?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ousd_withdrawals_treasury_wallet_id_fkey"
+            columns: ["treasury_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ousd_withdrawals_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_audit_logs: {
         Row: {
           action: string
@@ -2086,6 +2117,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tx_email_webhook_config: {
+        Row: {
+          enabled: boolean
+          id: number
+          secret: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: number
+          secret?: string
+          updated_at?: string
+          url?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: number
+          secret?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
       }
       user_preferences: {
         Row: {

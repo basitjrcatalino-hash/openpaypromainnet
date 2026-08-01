@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchInboxUnreadCount } from "@/lib/p2p";
 
 const TABS = [
-  { to: "/p2p", label: "P2P", icon: Users, match: (p: string) => p === "/p2p" || p === "/p2p/" || p.startsWith("/p2p/express") },
+  { to: "/p2p", label: "P2P", icon: Users, match: (p: string) => p === "/p2p" || p === "/p2p/" || p.startsWith("/p2p/express") || p.startsWith("/p2p/select-payment") },
   {
     to: "/p2p/orders",
     label: "Orders",
@@ -41,6 +41,7 @@ const TABS = [
       p.startsWith("/p2p/profile") ||
       p.startsWith("/p2p/wallet") ||
       p.startsWith("/p2p/payment") ||
+      p.startsWith("/p2p/select-payment") ||
       p.startsWith("/p2p/settings") ||
       p.startsWith("/p2p/reviews") ||
       p.startsWith("/p2p/support") ||

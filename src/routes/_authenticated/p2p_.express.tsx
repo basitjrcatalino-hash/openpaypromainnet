@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2 } from "lucide-react";
@@ -9,12 +9,10 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BuySellToggle } from "@/components/p2p/P2pUi";
-import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -47,13 +45,17 @@ export const Route = createFileRoute("/_authenticated/p2p_/express")({
 });
 
 function ExpressPage() {
+  const method = useRouterState({
+    select: (s) => {
+      const q = s.location.search as Record<string, unknown>;
+      return typeof q.pay === "string" && q.pay.trim() ? q.pay.trim() : null;
+    },
+  });
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [asset, setAsset] = useState("OUSD");
   const [cryptoAmt, setCryptoAmt] = useState("");
   const [fiatAmt, setFiatAmt] = useState("");
-  const [method, setMethod] = useState<string | null>(null);
   const [assetOpen, setAssetOpen] = useState(false);
-  const [methodOpen, setMethodOpen] = useState(false);
   const [fiatOpen, setFiatOpen] = useState(false);
   const { code: fiat, setCode, meta } = useCurrency();
   const qc = useQueryClient();
@@ -140,6 +142,27 @@ function ExpressPage() {
     !!matched &&
     (method || matched.payment_methods[0]) &&
     !p2pAmountExceedsLimit(asset, amount, bestPrice || 1);
+
+  const openPaymentPage = () => {
+    const codes =
+      matched?.payment_methods?.length
+        ? matched.payment_methods.join(",")
+        : undefined;
+    void navigate({
+      to: "/p2p/select-payment",
+      search: {
+        return: "/p2p/express",
+        method: method ?? undefined,
+        codes,
+      },
+    });
+  };
+
+  const methodLabel = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const pm of methodsQ.data ?? []) m[pm.code] = pm.name;
+    return m;
+  }, [methodsQ.data]);
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 pb-8 pt-3 md:max-w-xl lg:max-w-2xl md:px-6">
@@ -232,6 +255,24 @@ function ExpressPage() {
         </div>
       </div>
 
+      <button
+        type="button"
+        onClick={openPaymentPage}
+        className="mt-3 flex w-full items-center justify-between rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-left"
+      >
+        <span>
+          <span className="block text-[11px] text-muted-foreground">Payment method</span>
+          <span className="text-sm font-bold">
+            {method
+              ? methodLabel[method] ?? method
+              : matched?.payment_methods[0]
+                ? methodLabel[matched.payment_methods[0]] ?? matched.payment_methods[0]
+                : "Select"}
+          </span>
+        </span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </button>
+
       <Button
         className={cn(
           "mt-5 h-12 w-full rounded-[8px] text-base font-bold",
@@ -243,8 +284,8 @@ function ExpressPage() {
         )}
         disabled={!canTrade || start.isPending}
         onClick={() => {
-          if (!method && matched?.payment_methods[0]) {
-            setMethodOpen(true);
+          if (!method && !matched?.payment_methods[0]) {
+            openPaymentPage();
             return;
           }
           start.mutate();
@@ -296,46 +337,6 @@ function ExpressPage() {
                 {a}
               </button>
             ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent
-          className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
-            <DialogTitle className="text-[17px] font-extrabold tracking-tight">
-              Select payment method
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Choose how you want to complete this Express trade
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 px-4 py-3">
-            <P2pPaymentMethodPicker
-              methods={(methodsQ.data ?? []).filter(
-                (m) => !matched || matched.payment_methods.includes(m.code),
-              )}
-              mode="single"
-              value={method}
-              onSelect={setMethod}
-            />
-            <Button
-              className={cn(
-                "h-11 w-full rounded-[8px] font-bold",
-                method
-                  ? side === "buy"
-                    ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
-                    : "bg-[#F04438] text-white hover:bg-[#DE3A2F]"
-                  : "bg-secondary text-muted-foreground",
-              )}
-              disabled={!method || !matched || start.isPending}
-              onClick={() => start.mutate()}
-            >
-              {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

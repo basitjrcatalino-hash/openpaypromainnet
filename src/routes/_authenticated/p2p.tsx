@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
@@ -26,7 +26,6 @@ import {
   TradeCta,
 } from "@/components/p2p/P2pUi";
 import { MerchantBadge } from "@/components/p2p/MerchantBadge";
-import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -67,12 +66,16 @@ export const Route = createFileRoute("/_authenticated/p2p")({
 });
 
 function P2PMarketplace() {
+  const payParam = useRouterState({
+    select: (s) => {
+      const q = s.location.search as Record<string, unknown>;
+      return typeof q.pay === "string" && q.pay.trim() ? q.pay.trim() : null;
+    },
+  });
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [asset, setAsset] = useState<string>("OUSD");
   const [amountFilter, setAmountFilter] = useState("");
-  const [methodFilter, setMethodFilter] = useState<string | null>(null);
   const [assetOpen, setAssetOpen] = useState(false);
-  const [methodOpen, setMethodOpen] = useState(false);
   const [fiatOpen, setFiatOpen] = useState(false);
   const [amountOpen, setAmountOpen] = useState(false);
   const [amountDraft, setAmountDraft] = useState("");
@@ -81,6 +84,7 @@ function P2PMarketplace() {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
+  const methodFilter = payParam;
   const adSide = side === "buy" ? "sell" : "buy";
 
   const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
@@ -188,7 +192,16 @@ function P2PMarketplace() {
                 methodFilter ? methodLabel[methodFilter] ?? methodFilter : "All payments"
               }
               active={!!methodFilter}
-              onClick={() => setMethodOpen(true)}
+              onClick={() =>
+                void navigate({
+                  to: "/p2p/select-payment",
+                  search: {
+                    return: "/p2p",
+                    method: methodFilter ?? undefined,
+                    all: "1",
+                  },
+                })
+              }
             />
           </FilterChipRow>
         </div>
@@ -362,39 +375,6 @@ function P2PMarketplace() {
                 {a}
               </button>
             ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent
-          className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
-            <DialogTitle className="text-[17px] font-extrabold tracking-tight">
-              Payment methods
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Filter ads by how you want to pay or get paid
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-4 py-3">
-            <P2pPaymentMethodPicker
-              methods={methodsQ.data ?? []}
-              mode="single"
-              value={methodFilter}
-              showAllOption
-              onSelectAll={() => {
-                setMethodFilter(null);
-                setMethodOpen(false);
-              }}
-              onSelect={(code) => {
-                setMethodFilter(code);
-                // Let the checkmark paint before the sheet closes.
-                window.setTimeout(() => setMethodOpen(false), 180);
-              }}
-            />
           </div>
         </DialogContent>
       </Dialog>

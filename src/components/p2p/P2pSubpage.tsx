@@ -10,6 +10,8 @@ type P2pPath =
   | "/p2p/wallet"
   | "/p2p/payments"
   | "/p2p/payment-ads"
+  | "/p2p/payment-account"
+  | "/p2p/select-payment"
   | "/p2p/settings"
   | "/p2p/reviews"
   | "/p2p/support"

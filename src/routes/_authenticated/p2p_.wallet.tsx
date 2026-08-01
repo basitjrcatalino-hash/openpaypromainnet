@@ -1,20 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Loader2, Plus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
-import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -25,9 +16,6 @@ import {
   fetchPaymentMethods,
   fmtAmount,
   setPaymentAccountActive,
-  upsertPaymentAccount,
-  type P2PPaymentAccount,
-  type P2PPaymentMethod,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -50,9 +38,8 @@ export const Route = createFileRoute("/_authenticated/p2p_/wallet")({
 
 function MerchantWalletPage() {
   const { code: fiat } = useCurrency();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<P2PPaymentAccount | null>(null);
 
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
@@ -105,6 +92,15 @@ function MerchantWalletPage() {
 
   const ready = (accountsQ.data ?? []).some((a) => a.is_active);
 
+  const openForm = (id?: string) =>
+    void navigate({
+      to: "/p2p/payment-account",
+      search: {
+        return: "/p2p/wallet",
+        ...(id ? { id } : {}),
+      },
+    });
+
   return (
     <div>
       <header
@@ -121,10 +117,7 @@ function MerchantWalletPage() {
         <h1 className="flex-1 text-lg font-bold">Merchant wallet</h1>
         <button
           type="button"
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
+          onClick={() => openForm()}
           className="grid h-9 w-9 place-items-center rounded-full press"
           aria-label="Add receive account"
         >
@@ -168,9 +161,7 @@ function MerchantWalletPage() {
                 <div key={b.asset} className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-semibold">{b.asset}</span>
                   <div className="text-right">
-                    <p className="font-bold tabular-nums">
-                      {fmtAmount(b.free)} free
-                    </p>
+                    <p className="font-bold tabular-nums">{fmtAmount(b.free)} free</p>
                     <p className="text-[11px] text-muted-foreground">
                       {fmtAmount(b.bal)} wallet
                       {b.locked > 0 ? ` · ${fmtAmount(b.locked)} locked` : ""}
@@ -187,45 +178,26 @@ function MerchantWalletPage() {
         <section className="rounded-2xl border border-border/50 bg-card/40 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold">Receive accounts</h2>
-            <Button
-              size="sm"
-              className="h-8 rounded-full"
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
+            <Button size="sm" className="h-8 rounded-full" onClick={() => openForm()}>
               Add
             </Button>
           </div>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Buyers send fiat here when they buy your crypto. Details are shown in the trade room.
-          </p>
-
           {accountsQ.isLoading ? (
-            <div className="grid place-items-center py-10">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           ) : !(accountsQ.data ?? []).length ? (
             <P2pEmptyState
               title="No receive accounts"
-              description="Add bank, GCash, Maya, or other payment details so P2P knows where you receive."
+              description="Add GCash, bank, PIX, or other details so buyers know where to pay."
               action={
-                <Button
-                  className="mt-2 h-10 rounded-full px-5 font-bold"
-                  onClick={() => {
-                    setEditing(null);
-                    setFormOpen(true);
-                  }}
-                >
-                  Add receive account
+                <Button className="mt-2 h-9 rounded-full" onClick={() => openForm()}>
+                  <Plus className="mr-1.5 h-4 w-4" /> Add account
                 </Button>
               }
             />
           ) : (
-            <div className="divide-y divide-border/40">
+            <div className="space-y-3">
               {(accountsQ.data ?? []).map((acc) => (
-                <div key={acc.id} className="flex items-start justify-between gap-3 py-3">
+                <div key={acc.id} className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="inline-flex items-center gap-2 text-sm font-bold">
                       <P2pPayIcon
@@ -235,12 +207,12 @@ function MerchantWalletPage() {
                       />
                       {methodName[acc.method_code] ?? acc.method_code}
                       {!acc.is_active ? (
-                        <span className="ml-1 text-[10px] font-semibold uppercase text-muted-foreground">
+                        <span className="text-[10px] font-semibold uppercase text-muted-foreground">
                           Off
                         </span>
                       ) : null}
                     </p>
-                    <p className="truncate text-sm text-foreground">{acc.account_name}</p>
+                    <p className="mt-1 truncate text-sm">{acc.account_name}</p>
                     <p className="font-mono text-xs text-muted-foreground">{acc.account_number}</p>
                     {acc.bank_name ? (
                       <p className="text-[11px] text-muted-foreground">{acc.bank_name}</p>
@@ -251,10 +223,7 @@ function MerchantWalletPage() {
                       size="sm"
                       variant="outline"
                       className="h-8 rounded-full"
-                      onClick={() => {
-                        setEditing(acc);
-                        setFormOpen(true);
-                      }}
+                      onClick={() => openForm(acc.id)}
                     >
                       Edit
                     </Button>
@@ -278,116 +247,6 @@ function MerchantWalletPage() {
           <Link to="/p2p/create">Go to ads</Link>
         </Button>
       </div>
-
-      <AccountFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        editing={editing}
-        methods={(methodsQ.data ?? []).filter((m) => m.is_active && m.code !== "openpay")}
-      />
     </div>
-  );
-}
-
-function AccountFormDialog({
-  open,
-  onOpenChange,
-  editing,
-  methods,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  editing: P2PPaymentAccount | null;
-  methods: P2PPaymentMethod[];
-}) {
-  const qc = useQueryClient();
-  const [method, setMethod] = useState(editing?.method_code ?? "bank_transfer");
-  const [name, setName] = useState(editing?.account_name ?? "");
-  const [number, setNumber] = useState(editing?.account_number ?? "");
-  const [bank, setBank] = useState(editing?.bank_name ?? "");
-
-  useEffect(() => {
-    if (!open) return;
-    setMethod(editing?.method_code ?? methods[0]?.code ?? "bank_transfer");
-    setName(editing?.account_name ?? "");
-    setNumber(editing?.account_number ?? "");
-    setBank(editing?.bank_name ?? "");
-  }, [open, editing, methods]);
-
-  const save = useMutation({
-    mutationFn: () =>
-      upsertPaymentAccount({
-        id: editing?.id,
-        methodCode: method,
-        accountName: name,
-        accountNumber: number,
-        bankName: bank,
-      }),
-    onSuccess: () => {
-      toast.success(editing ? "Account updated" : "Receive account added");
-      void qc.invalidateQueries({ queryKey: ["p2p-payment-accounts"] });
-      onOpenChange(false);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const invalid = name.trim().length < 2 || number.trim().length < 2 || !method;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit receive account" : "Add receive account"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Payment method</Label>
-            <P2pPaymentMethodPicker
-              methods={methods}
-              mode="single"
-              value={method}
-              onSelect={setMethod}
-              maxHeightClass="max-h-48"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Account name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Full name on account"
-              className="h-11"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Account number / handle</Label>
-            <Input
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              placeholder="Bank account, GCash, email…"
-              className="h-11"
-            />
-          </div>
-          {method === "bank_transfer" ? (
-            <div className="space-y-1.5">
-              <Label>Bank name (optional)</Label>
-              <Input
-                value={bank}
-                onChange={(e) => setBank(e.target.value)}
-                placeholder="e.g. BDO, BPI, UnionBank"
-                className="h-11"
-              />
-            </div>
-          ) : null}
-          <Button
-            className="h-11 w-full rounded-full font-bold"
-            disabled={invalid || save.isPending}
-            onClick={() => save.mutate()}
-          >
-            {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

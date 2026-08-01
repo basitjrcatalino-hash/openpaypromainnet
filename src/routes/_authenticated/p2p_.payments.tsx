@@ -1,20 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
-import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,11 +13,7 @@ import {
   fetchMyPaymentAccounts,
   fetchPaymentMethods,
   setPaymentAccountActive,
-  upsertPaymentAccount,
-  type P2PPaymentAccount,
-  type P2PPaymentMethod,
 } from "@/lib/p2p";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/payments")({
   head: () => ({
@@ -45,9 +32,8 @@ export const Route = createFileRoute("/_authenticated/p2p_/payments")({
 });
 
 function PaymentsPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<P2PPaymentAccount | null>(null);
 
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
@@ -72,6 +58,15 @@ function PaymentsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const openForm = (id?: string) =>
+    void navigate({
+      to: "/p2p/payment-account",
+      search: {
+        return: "/p2p/payments",
+        ...(id ? { id } : {}),
+      },
+    });
+
   return (
     <div>
       <P2pSubpageHeader
@@ -80,10 +75,7 @@ function PaymentsPage() {
           <button
             type="button"
             className="text-xs font-bold text-[#11C66D]"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
+            onClick={() => openForm()}
           >
             Add
           </button>
@@ -108,10 +100,7 @@ function PaymentsPage() {
           action={
             <Button
               className="mt-2 h-10 rounded-[8px] bg-[#11C66D] px-5 font-bold text-white hover:bg-[#0FB461]"
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
+              onClick={() => openForm()}
             >
               <Plus className="mr-1.5 h-4 w-4" /> Add method
             </Button>
@@ -146,10 +135,7 @@ function PaymentsPage() {
                   size="sm"
                   variant="outline"
                   className="h-8 rounded-full"
-                  onClick={() => {
-                    setEditing(acc);
-                    setFormOpen(true);
-                  }}
+                  onClick={() => openForm(acc.id)}
                 >
                   Edit
                 </Button>
@@ -167,102 +153,6 @@ function PaymentsPage() {
           ))}
         </div>
       )}
-
-      <AccountFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        editing={editing}
-        methods={(methodsQ.data ?? []).filter((m) => m.is_active && m.code !== "openpay")}
-      />
     </div>
-  );
-}
-
-function AccountFormDialog({
-  open,
-  onOpenChange,
-  editing,
-  methods,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  editing: P2PPaymentAccount | null;
-  methods: P2PPaymentMethod[];
-}) {
-  const qc = useQueryClient();
-  const [method, setMethod] = useState(editing?.method_code ?? "bank_transfer");
-  const [name, setName] = useState(editing?.account_name ?? "");
-  const [number, setNumber] = useState(editing?.account_number ?? "");
-  const [bank, setBank] = useState(editing?.bank_name ?? "");
-
-  useEffect(() => {
-    if (!open) return;
-    setMethod(editing?.method_code ?? methods[0]?.code ?? "bank_transfer");
-    setName(editing?.account_name ?? "");
-    setNumber(editing?.account_number ?? "");
-    setBank(editing?.bank_name ?? "");
-  }, [open, editing, methods]);
-
-  const save = useMutation({
-    mutationFn: () =>
-      upsertPaymentAccount({
-        id: editing?.id,
-        methodCode: method,
-        accountName: name,
-        accountNumber: number,
-        bankName: bank,
-      }),
-    onSuccess: () => {
-      toast.success(editing ? "Updated" : "Payment method added");
-      void qc.invalidateQueries({ queryKey: ["p2p-payment-accounts"] });
-      onOpenChange(false);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const invalid = name.trim().length < 2 || number.trim().length < 2 || !method;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85dvh] max-w-md overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit payment method" : "Add payment method"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Method</Label>
-            <P2pPaymentMethodPicker
-              methods={methods}
-              mode="single"
-              value={method}
-              onSelect={setMethod}
-              maxHeightClass="max-h-44"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Account name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Account number / handle</Label>
-            <Input value={number} onChange={(e) => setNumber(e.target.value)} className="h-11" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Bank / notes (optional)</Label>
-            <Input value={bank} onChange={(e) => setBank(e.target.value)} className="h-11" />
-          </div>
-          <Button
-            className={cn(
-              "h-11 w-full rounded-[8px] font-bold",
-              invalid ? "bg-secondary text-muted-foreground" : "bg-[#11C66D] text-white hover:bg-[#0FB461]",
-            )}
-            disabled={invalid || save.isPending}
-            onClick={() => save.mutate()}
-          >
-            {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

@@ -94,8 +94,12 @@ function AdminWithdrawalsPage() {
   });
 
   async function copyAddr(addr: string) {
-    const ok = await copyText(addr);
-    toast[ok ? "success" : "error"](ok ? "Address copied" : "Copy failed");
+    try {
+      await copyText(addr);
+      toast.success("Address copied");
+    } catch {
+      toast.error("Copy failed");
+    }
   }
 
   if (adminQ.isLoading) {

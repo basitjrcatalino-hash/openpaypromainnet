@@ -2600,19 +2600,24 @@ export type Database = {
           created_at: string
           eth_balance: number
           eurc_balance: number
+          googlx_balance: number
+          hype_balance: number
           id: string
           is_active: boolean
           name: string
+          nflxx_balance: number
           ousd_balance: number
           pi_balance: number
           pyusd_balance: number
           recovery_hash: string | null
           sol_balance: number
+          tslax_balance: number
           usd1_balance: number
           usdc_balance: number
           usdg_balance: number
           usdt_balance: number
           user_id: string
+          zec_balance: number
         }
         Insert: {
           address: string
@@ -2621,19 +2626,24 @@ export type Database = {
           created_at?: string
           eth_balance?: number
           eurc_balance?: number
+          googlx_balance?: number
+          hype_balance?: number
           id?: string
           is_active?: boolean
           name: string
+          nflxx_balance?: number
           ousd_balance?: number
           pi_balance?: number
           pyusd_balance?: number
           recovery_hash?: string | null
           sol_balance?: number
+          tslax_balance?: number
           usd1_balance?: number
           usdc_balance?: number
           usdg_balance?: number
           usdt_balance?: number
           user_id: string
+          zec_balance?: number
         }
         Update: {
           address?: string
@@ -2642,19 +2652,24 @@ export type Database = {
           created_at?: string
           eth_balance?: number
           eurc_balance?: number
+          googlx_balance?: number
+          hype_balance?: number
           id?: string
           is_active?: boolean
           name?: string
+          nflxx_balance?: number
           ousd_balance?: number
           pi_balance?: number
           pyusd_balance?: number
           recovery_hash?: string | null
           sol_balance?: number
+          tslax_balance?: number
           usd1_balance?: number
           usdc_balance?: number
           usdg_balance?: number
           usdt_balance?: number
           user_id?: string
+          zec_balance?: number
         }
         Relationships: []
       }

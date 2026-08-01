@@ -99,7 +99,9 @@ function normalizeNetwork(raw: string | undefined): NetworkId {
 
 function networkFromAsset(asset: AssetCode): NetworkId {
   if (asset === "OUSD") return "openpay";
-  const major = MAJOR_TOKEN_IDS.find((id) => MAJOR_TOKENS[id].symbol === asset);
+  const major = MAJOR_TOKEN_IDS.find(
+    (id) => MAJOR_TOKENS[id].symbol.toUpperCase() === asset.toUpperCase(),
+  );
   return major ?? "openpay";
 }
 

@@ -153,19 +153,7 @@ function ScanPage() {
       rail: "wallet";
       amount?: string;
       token?: string;
-      asset?:
-        | "OUSD"
-        | "PI"
-        | "BTC"
-        | "ETH"
-        | "SOL"
-        | "USDC"
-        | "USDT"
-        | "PYUSD"
-        | "USDG"
-        | "USD1"
-        | "CASH"
-        | "EURC";
+      asset?: import("@/lib/ledger-majors").LedgerAssetCode;
     } = {
       to: parsed.to,
       rail: "wallet",

@@ -247,19 +247,7 @@ function CryptoWalletPage() {
                   to="/wallet/receive"
                   search={{
                     network: n.network,
-                    asset: n.asset as
-                      | "OUSD"
-                      | "BTC"
-                      | "ETH"
-                      | "SOL"
-                      | "PI"
-                      | "USDC"
-                      | "USDT"
-                      | "PYUSD"
-                      | "USDG"
-                      | "USD1"
-                      | "CASH"
-                      | "EURC",
+                    asset: n.asset as import("@/lib/ledger-majors").LedgerAssetCode,
                   }}
                   className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 press hover:bg-muted/40"
                 >
@@ -298,30 +286,8 @@ function CryptoWalletPage() {
                           ? {
                               network: (a.key === "ousd" ? "openpay" : a.key) as
                                 | "openpay"
-                                | "btc"
-                                | "eth"
-                                | "sol"
-                                | "pi"
-                                | "usdc"
-                                | "usdt"
-                                | "pyusd"
-                                | "usdg"
-                                | "usd1"
-                                | "cash"
-                                | "eurc",
-                              asset: a.symbol as
-                                | "OUSD"
-                                | "BTC"
-                                | "ETH"
-                                | "SOL"
-                                | "PI"
-                                | "USDC"
-                                | "USDT"
-                                | "PYUSD"
-                                | "USDG"
-                                | "USD1"
-                                | "CASH"
-                                | "EURC",
+                                | import("@/lib/major-tokens").MajorTokenId,
+                              asset: a.symbol as import("@/lib/ledger-majors").LedgerAssetCode,
                             }
                           : { network: "openpay", token: a.key }
                       }

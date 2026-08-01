@@ -21,14 +21,6 @@ import {
   type MajorTokenId,
 } from "@/lib/major-tokens";
 import {
-  LISTED_SOLANA_TOKEN_IDS,
-  LISTED_SOLANA_TOKENS,
-  LISTED_SOLANA_SYMBOLS,
-  fetchListedSolanaMarkets,
-  listedSolanaMarketById,
-  type ListedSolanaTokenId,
-} from "@/lib/listed-solana-tokens";
-import {
   WALLET_NETWORKS,
   type WalletNetworkId,
 } from "@/lib/wallet-networks";
@@ -118,12 +110,6 @@ function TokensPage() {
     queryFn: fetchMajorMarkets,
   });
 
-  const { data: listedMarkets = [] } = useQuery({
-    queryKey: ["listed-solana-markets"],
-    staleTime: 60_000,
-    queryFn: fetchListedSolanaMarkets,
-  });
-
   const { data: isStaff = false } = useQuery({
     queryKey: ["ot-staff"],
     staleTime: 60_000,
@@ -186,44 +172,6 @@ function TokensPage() {
     return ids;
   }, [q, sort, majorMarkets, curatedOnly, activeNetwork]);
 
-  const showListedSolana =
-    !curatedOnly && (network === "all" || network === "solana");
-
-  const visibleListed = useMemo(() => {
-    if (!showListedSolana) return [] as ListedSolanaTokenId[];
-    const qq = q.trim().toLowerCase();
-    let ids = LISTED_SOLANA_TOKEN_IDS.filter((id) => {
-      const m = LISTED_SOLANA_TOKENS[id];
-      if (!qq) return true;
-      return (
-        m.name.toLowerCase().includes(qq) ||
-        m.symbol.toLowerCase().includes(qq) ||
-        m.mintAddress.toLowerCase().includes(qq) ||
-        m.category.toLowerCase().includes(qq) ||
-        id.includes(qq)
-      );
-    });
-
-    ids = [...ids].sort((a, b) => {
-      const ma = listedSolanaMarketById(listedMarkets, a);
-      const mb = listedSolanaMarketById(listedMarkets, b);
-      const da = LISTED_SOLANA_TOKENS[a];
-      const db = LISTED_SOLANA_TOKENS[b];
-      switch (sort) {
-        case "name":
-          return da.name.localeCompare(db.name);
-        case "price":
-          return (mb.price ?? 0) - (ma.price ?? 0);
-        case "change":
-          return (mb.change24h ?? 0) - (ma.change24h ?? 0);
-        case "market":
-        default:
-          return (mb.marketCap ?? 0) - (ma.marketCap ?? 0);
-      }
-    });
-    return ids;
-  }, [q, sort, listedMarkets, showListedSolana]);
-
   const filtered = useMemo(() => {
     // OpenTokens live on OpenPay Pro ledger (no external chain column).
     if (!isOpenPayNet) return [] as any[];
@@ -232,7 +180,6 @@ function TokensPage() {
       const sym = String(t.symbol ?? "").toUpperCase();
       const name = String(t.name ?? "").toUpperCase();
       if (MAJOR_SYMBOLS.has(sym) || MAJOR_SYMBOLS.has(name)) return false;
-      if (LISTED_SOLANA_SYMBOLS.has(sym) || LISTED_SOLANA_SYMBOLS.has(name)) return false;
       return true;
     });
 
@@ -290,7 +237,6 @@ function TokensPage() {
     !isLoading &&
     filtered.length === 0 &&
     visibleMajors.length === 0 &&
-    visibleListed.length === 0 &&
     !showOusd;
 
   return (
@@ -448,15 +394,6 @@ function TokensPage() {
           <MajorTokenRow key={id} id={id} currency={currency} markets={majorMarkets} />
         ))}
 
-        {visibleListed.map((id) => (
-          <ListedSolanaRow
-            key={id}
-            id={id}
-            currency={currency}
-            markets={listedMarkets}
-          />
-        ))}
-
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <li key={i} className="flex items-center gap-3 py-3">
@@ -527,45 +464,6 @@ function MajorTokenRow({
             <div className="ph-row-title truncate">{def.name}</div>
             <div className="ph-row-sub">
               {def.symbol} · {def.network}
-            </div>
-          </div>
-        </div>
-        <TokenPriceRate price={m.price} change={m.change24h} currency={currency} />
-      </Link>
-    </li>
-  );
-}
-
-function ListedSolanaRow({
-  id,
-  currency,
-  markets,
-}: {
-  id: ListedSolanaTokenId;
-  currency: CurrencyCode;
-  markets: Awaited<ReturnType<typeof fetchListedSolanaMarkets>>;
-}) {
-  const def = LISTED_SOLANA_TOKENS[id];
-  const m = listedSolanaMarketById(markets, id);
-  return (
-    <li>
-      <Link
-        to="/asset/$tokenId"
-        params={{ tokenId: id }}
-        search={{}}
-        className="ph-row press"
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <TokenAvatar
-            logoUrl={m.logoUrl ?? def.logoUrl}
-            name={def.name}
-            symbol={def.symbol}
-            verified
-          />
-          <div className="min-w-0">
-            <div className="ph-row-title truncate">{def.name}</div>
-            <div className="ph-row-sub">
-              {def.symbol} · Solana · {def.category}
             </div>
           </div>
         </div>

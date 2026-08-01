@@ -12,12 +12,6 @@ import {
   isMajorTokenId,
   majorMarketById,
 } from "@/lib/major-tokens";
-import {
-  fetchListedSolanaMarkets,
-  getListedSolanaToken,
-  isListedSolanaTokenId,
-  listedSolanaMarketById,
-} from "@/lib/listed-solana-tokens";
 import { isPerpMarket } from "@/lib/perp";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 
@@ -29,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/asset_/$tokenId/chat")({
 });
 
 /**
- * Phantom-style live chat for every asset: majors, OUSD, listed Solana, OpenTokens.
+ * Phantom-style live chat for every asset: majors, OUSD, OpenTokens.
  * Header shows live price + 24h change; Trade opens /trade (perps) or asset page.
  */
 function AssetLiveChatPage() {
@@ -40,9 +34,7 @@ function AssetLiveChatPage() {
 
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
-  const isListed = isListedSolanaTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
-  const listedDef = isListed ? getListedSolanaToken(tokenId) : null;
   const roomId = (isOusd ? "ousd" : tokenId).toLowerCase();
 
   const { data: majorMarkets } = useQuery({
@@ -53,17 +45,9 @@ function AssetLiveChatPage() {
     queryFn: () => fetchMajorMarkets(),
   });
 
-  const { data: listedMarkets } = useQuery({
-    queryKey: ["listed-solana-markets"],
-    staleTime: 30_000,
-    refetchInterval: 45_000,
-    enabled: isListed,
-    queryFn: fetchListedSolanaMarkets,
-  });
-
   const { data: otToken, isLoading: otLoading } = useQuery({
     queryKey: ["ot-token", tokenId],
-    enabled: !isOusd && !isMajor && !isListed,
+    enabled: !isOusd && !isMajor,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tokens")
@@ -95,16 +79,6 @@ function AssetLiveChatPage() {
         change24h: Number(m.change24h ?? 0),
       };
     }
-    if (isListed && listedDef) {
-      const m = listedSolanaMarketById(listedMarkets, listedDef.id);
-      return {
-        name: listedDef.name,
-        symbol: listedDef.symbol,
-        logoUrl: m.logoUrl ?? listedDef.logoUrl,
-        priceUsd: Number(m.price ?? 0),
-        change24h: Number(m.change24h ?? 0),
-      };
-    }
     if (otToken) {
       return {
         name: otToken.name,
@@ -115,9 +89,9 @@ function AssetLiveChatPage() {
       };
     }
     return null;
-  }, [isOusd, isMajor, isListed, majorDef, listedDef, majorMarkets, listedMarkets, otToken]);
+  }, [isOusd, isMajor, majorDef, majorMarkets, otToken]);
 
-  if (!isOusd && !isMajor && !isListed && otLoading) {
+  if (!isOusd && !isMajor && otLoading) {
     return (
       <div className="flex h-dvh items-center justify-center bg-black">
         <Loader2 className="h-5 w-5 animate-spin text-white/50" />
@@ -167,10 +141,6 @@ function AssetLiveChatPage() {
               to: "/trade",
               search: { market: meta.symbol },
             });
-            return;
-          }
-          if (isListed && listedDef?.phantomUrl) {
-            window.open(listedDef.phantomUrl, "_blank", "noopener,noreferrer");
             return;
           }
           void router.navigate({

@@ -46,7 +46,7 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     const { data: wallet, error: walErr } = await supabase
       .from("wallets")
       .select(
-        "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance, pyusd_balance, usdg_balance, usd1_balance, cash_balance, eurc_balance",
+        "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance, pyusd_balance, usdg_balance, usd1_balance, cash_balance, eurc_balance, hype_balance, zec_balance, tslax_balance, nflxx_balance, googlx_balance",
       )
       .eq("id", data.wallet_id)
       .eq("user_id", userId)

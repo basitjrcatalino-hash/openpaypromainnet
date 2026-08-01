@@ -44,6 +44,11 @@ import {
   USD1_SWAP_ID,
   CASH_SWAP_ID,
   EURC_SWAP_ID,
+  HYPE_SWAP_ID,
+  ZEC_SWAP_ID,
+  TSLAX_SWAP_ID,
+  NFLXX_SWAP_ID,
+  GOOGLX_SWAP_ID,
 } from "@/lib/opendex.functions";
 import {
   LEDGER_MAJOR_SWAP_IDS,
@@ -90,6 +95,11 @@ const searchSchema = z.object({
       "USD1",
       "CASH",
       "EURC",
+      "HYPE",
+      "ZEC",
+      "TSLAX",
+      "NFLXX",
+      "GOOGLX",
     ])
     .optional(),
 });
@@ -270,6 +280,11 @@ function OpenDexPage() {
       USD1: USD1_SWAP_ID,
       CASH: CASH_SWAP_ID,
       EURC: EURC_SWAP_ID,
+      HYPE: HYPE_SWAP_ID,
+      ZEC: ZEC_SWAP_ID,
+      TSLAX: TSLAX_SWAP_ID,
+      NFLXX: NFLXX_SWAP_ID,
+      GOOGLX: GOOGLX_SWAP_ID,
     };
 
     const prefFromAsset =

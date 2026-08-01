@@ -1,5 +1,5 @@
 /**
- * OpenPay Pro ledger majors — BTC / ETH / SOL / PI + stablecoin balances on wallets.
+ * OpenPay Pro ledger majors — BTC / ETH / SOL / PI + stables + Phantom Solana listings.
  * Swap / buy / send / receive use CoinGecko USD prices (custodial ledger, not on-chain).
  */
 import type { MajorTokenId } from "@/lib/major-tokens";
@@ -18,6 +18,11 @@ export const USDG_SWAP_ID = "__usdg__";
 export const USD1_SWAP_ID = "__usd1__";
 export const CASH_SWAP_ID = "__cash__";
 export const EURC_SWAP_ID = "__eurc__";
+export const HYPE_SWAP_ID = "__hype__";
+export const ZEC_SWAP_ID = "__zec__";
+export const TSLAX_SWAP_ID = "__tslax__";
+export const NFLXX_SWAP_ID = "__nflxx__";
+export const GOOGLX_SWAP_ID = "__googlx__";
 
 export type LedgerMajorId = MajorTokenId;
 
@@ -33,7 +38,12 @@ export type LedgerAssetCode =
   | "USDG"
   | "USD1"
   | "CASH"
-  | "EURC";
+  | "EURC"
+  | "HYPE"
+  | "ZEC"
+  | "TSLAX"
+  | "NFLXX"
+  | "GOOGLX";
 
 export const LEDGER_MAJOR_ASSET_CODES = [
   "BTC",
@@ -47,6 +57,11 @@ export const LEDGER_MAJOR_ASSET_CODES = [
   "USD1",
   "CASH",
   "EURC",
+  "HYPE",
+  "ZEC",
+  "TSLAX",
+  "NFLXX",
+  "GOOGLX",
 ] as const satisfies ReadonlyArray<Exclude<LedgerAssetCode, "OUSD">>;
 
 export const LEDGER_ASSET_CODES = [
@@ -66,6 +81,11 @@ export const LEDGER_MAJOR_SWAP_IDS: Record<LedgerMajorId, string> = {
   usd1: USD1_SWAP_ID,
   cash: CASH_SWAP_ID,
   eurc: EURC_SWAP_ID,
+  hype: HYPE_SWAP_ID,
+  zec: ZEC_SWAP_ID,
+  tslax: TSLAX_SWAP_ID,
+  nflxx: NFLXX_SWAP_ID,
+  googlx: GOOGLX_SWAP_ID,
 };
 
 export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
@@ -80,6 +100,11 @@ export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
   usd1: "usd1_balance",
   cash: "cash_balance",
   eurc: "eurc_balance",
+  hype: "hype_balance",
+  zec: "zec_balance",
+  tslax: "tslax_balance",
+  nflxx: "nflxx_balance",
+  googlx: "googlx_balance",
 };
 
 const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
@@ -94,6 +119,11 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   [USD1_SWAP_ID]: "usd1",
   [CASH_SWAP_ID]: "cash",
   [EURC_SWAP_ID]: "eurc",
+  [HYPE_SWAP_ID]: "hype",
+  [ZEC_SWAP_ID]: "zec",
+  [TSLAX_SWAP_ID]: "tslax",
+  [NFLXX_SWAP_ID]: "nflxx",
+  [GOOGLX_SWAP_ID]: "googlx",
   btc: "btc",
   eth: "eth",
   sol: "sol",
@@ -105,6 +135,11 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   usd1: "usd1",
   cash: "cash",
   eurc: "eurc",
+  hype: "hype",
+  zec: "zec",
+  tslax: "tslax",
+  nflxx: "nflxx",
+  googlx: "googlx",
 };
 
 export function isLedgerMajorSwapId(id: string): boolean {
@@ -120,13 +155,13 @@ export function isLedgerSwapId(id: string): boolean {
 }
 
 export function ledgerAssetFromMajor(id: LedgerMajorId): Exclude<LedgerAssetCode, "OUSD"> {
-  return MAJOR_TOKENS[id].symbol as Exclude<LedgerAssetCode, "OUSD">;
+  return MAJOR_TOKENS[id].symbol.toUpperCase() as Exclude<LedgerAssetCode, "OUSD">;
 }
 
 export function majorIdFromAssetCode(code: string): LedgerMajorId | null {
   const c = code.toUpperCase();
   for (const id of MAJOR_TOKEN_IDS) {
-    if (MAJOR_TOKENS[id].symbol === c) return id;
+    if (MAJOR_TOKENS[id].symbol.toUpperCase() === c) return id;
   }
   return null;
 }
@@ -141,7 +176,12 @@ export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
     id === "pyusd" ||
     id === "usdg" ||
     id === "usd1" ||
-    id === "cash"
+    id === "cash" ||
+    id === "hype" ||
+    id === "zec" ||
+    id === "tslax" ||
+    id === "nflxx" ||
+    id === "googlx"
   ) {
     return "solana";
   }
@@ -161,7 +201,22 @@ export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
 export function majorsForNetwork(network: SwapNetworkId): LedgerMajorId[] {
   if (network === "bitcoin") return ["btc"];
   if (network === "ethereum") return ["eth", "eurc"];
-  if (network === "solana") return ["sol", "usdc", "usdt", "pyusd", "usdg", "usd1", "cash"];
+  if (network === "solana") {
+    return [
+      "sol",
+      "usdc",
+      "usdt",
+      "pyusd",
+      "usdg",
+      "usd1",
+      "cash",
+      "hype",
+      "zec",
+      "tslax",
+      "nflxx",
+      "googlx",
+    ];
+  }
   if (network === "pi") return ["pi"];
   return [];
 }
@@ -178,6 +233,11 @@ const FALLBACK_USD: Record<LedgerMajorId, number> = {
   usd1: 1,
   cash: 1,
   eurc: 1.08,
+  hype: 55,
+  zec: 450,
+  tslax: 308,
+  nflxx: 70,
+  googlx: 200,
 };
 
 /** Live PI/USD used by display currency (π) — refreshed by fetchMajorUsdPrices. */

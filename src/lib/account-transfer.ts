@@ -22,6 +22,11 @@ export const TRANSFER_ASSETS = [
   "BTC",
   "SOL",
   "PI",
+  "HYPE",
+  "ZEC",
+  "TSLAX",
+  "NFLXX",
+  "GOOGLX",
 ] as const;
 export type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 
@@ -59,6 +64,16 @@ export function fundingBalanceColumn(asset: string): string | null {
       return "sol_balance";
     case "PI":
       return "pi_balance";
+    case "HYPE":
+      return "hype_balance";
+    case "ZEC":
+      return "zec_balance";
+    case "TSLAX":
+      return "tslax_balance";
+    case "NFLXX":
+      return "nflxx_balance";
+    case "GOOGLX":
+      return "googlx_balance";
     default:
       return null;
   }

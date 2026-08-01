@@ -59,6 +59,11 @@ const sendSearchSchema = z.object({
     "USD1",
     "CASH",
     "EURC",
+    "HYPE",
+    "ZEC",
+    "TSLAX",
+    "NFLXX",
+    "GOOGLX",
   ]).optional(),
   token: z.string().uuid().optional(),
   rail: z.enum(["wallet", "openpay"]).optional(),
@@ -88,6 +93,11 @@ type SendableAsset = {
     | "USD1"
     | "CASH"
     | "EURC"
+    | "HYPE"
+    | "ZEC"
+    | "TSLAX"
+    | "NFLXX"
+    | "GOOGLX"
     | "TOKEN";
   tokenId?: string;
   name: string;

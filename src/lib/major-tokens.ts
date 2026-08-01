@@ -23,7 +23,12 @@ export type MajorTokenId =
   | "usdg"
   | "usd1"
   | "cash"
-  | "eurc";
+  | "eurc"
+  | "hype"
+  | "zec"
+  | "tslax"
+  | "nflxx"
+  | "googlx";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -255,6 +260,99 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "EURC (Euro Coin) is a euro-backed stablecoin issued by Circle under the same reserve model as USDC — designed to be redeemable 1:1 for euros held in euro-denominated accounts. On Ethereum verify contract 0x1abaea1f7c830bd89acc67ec4af516284b1bc33c. OpenPay Pro marks EURC to USD via live market price when buying with OUSD.",
   },
+  hype: {
+    id: "hype",
+    name: "HYPE",
+    symbol: "HYPE",
+    network: "Solana",
+    category: "Bridged asset",
+    logoUrl: "https://assets.coingecko.com/coins/images/50882/large/hyperliquid.jpg",
+    website: "https://hyperfoundation.org",
+    coingeckoId: "hyperliquid",
+    createdLabel: "Oct 2025",
+    createdAt: "2025-10-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g",
+    about:
+      "HYPE on Solana is a bridged representation of Hyperliquid’s native gas/governance token. OpenPay Pro credits HYPE on your custodial ledger at market price (buy/swap/send with OUSD). Always verify mint 98sMhvDwXj1RQi5c5Mndm3vPe9cBqPrbLaufMXFNMh5g.",
+  },
+  zec: {
+    id: "zec",
+    name: "Zcash",
+    symbol: "ZEC",
+    network: "Solana",
+    category: "Privacy",
+    logoUrl: "https://assets.coingecko.com/coins/images/486/large/circle-zcash-color.png",
+    website: "https://z.cash",
+    coingeckoId: "zcash",
+    createdLabel: "Oct 2025",
+    createdAt: "2025-10-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+    about:
+      "ZEC on Solana is a Phantom-listed Solana representation of Zcash. OpenPay Pro credits ZEC on your custodial ledger at market price. Confirm mint A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS — same-ticker fakes exist.",
+  },
+  tslax: {
+    id: "tslax",
+    name: "Tesla xStock",
+    symbol: "TSLAX",
+    network: "Solana",
+    category: "xStock",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/55638/large/Ticker_TSLA__Company_Name_Tesla_Inc.__size_200x200_2x.png?1746863299",
+    website: "https://assets.backed.fi/products/tesla-xstock",
+    coingeckoId: "tesla-xstock",
+    createdLabel: "Jun 2025",
+    createdAt: "2025-06-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+    about:
+      "Tesla xStock (TSLAX) is a Solana tokenized equity product. OpenPay Pro credits TSLAX on your custodial ledger at market price. Verify mint XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB and issuer terms before buying.",
+  },
+  nflxx: {
+    id: "nflxx",
+    name: "Netflix xStock",
+    symbol: "NFLXX",
+    network: "Solana",
+    category: "xStock",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/55632/large/Ticker_NFLX__Company_Name_Netflix_Inc.__size_200x200_2x.png?1746862692",
+    website: "https://assets.backed.fi/products/netflix-xstock",
+    coingeckoId: "netflix-xstock",
+    createdLabel: "Jun 2025",
+    createdAt: "2025-06-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL",
+    about:
+      "Netflix xStock (NFLXX) is a Solana tokenized equity product. OpenPay Pro credits NFLXX on your custodial ledger at market price. Verify mint XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL before trading.",
+  },
+  googlx: {
+    id: "googlx",
+    name: "Alphabet xStock",
+    symbol: "GOOGLX",
+    network: "Solana",
+    category: "xStock",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/55610/large/Ticker_GOOG__Company_Name_Alphabet_Inc.__size_200x200_2x.png",
+    website: "https://assets.backed.fi/products/alphabet-xstock",
+    coingeckoId: "alphabet-xstock",
+    createdLabel: "Jun 2025",
+    createdAt: "2025-06-01T00:00:00.000Z",
+    native: false,
+    mintAddress: "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+    about:
+      "Alphabet xStock (GOOGLX) is a Solana tokenized equity product. OpenPay Pro credits GOOGLX on your custodial ledger at market price. Verify mint XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN before trading.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
@@ -281,6 +379,11 @@ export const MAJOR_SYMBOLS = new Set([
   "USD1",
   "CASH",
   "EURC",
+  "HYPE",
+  "ZEC",
+  "TSLAX",
+  "NFLXX",
+  "GOOGLX",
   "BITCOIN",
   "ETHEREUM",
   "SOLANA",
@@ -294,6 +397,11 @@ export const MAJOR_SYMBOLS = new Set([
   "WORLD LIBERTY FINANCIAL USD",
   "EURO COIN",
   "EUROC",
+  "Zcash",
+  "ZCASH",
+  "TESLA XSTOCK",
+  "NETFLIX XSTOCK",
+  "ALPHABET XSTOCK",
 ]);
 
 export type MajorMarketSnapshot = {
@@ -337,6 +445,11 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   "global-dollar": "usdg",
   "usd1-wlfi": "usd1",
   "euro-coin": "eurc",
+  hyperliquid: "hype",
+  zcash: "zec",
+  "tesla-xstock": "tslax",
+  "netflix-xstock": "nflxx",
+  "alphabet-xstock": "googlx",
 };
 
 /** Fallback static values if CoinGecko is unreachable. */
@@ -472,6 +585,66 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atl: 1.03,
     athDate: "2023-01-01T00:00:00.000Z",
     atlDate: "2022-06-01T00:00:00.000Z",
+  },
+  hype: {
+    price: 55,
+    change24h: 0,
+    marketCap: 3.8e7,
+    volume24h: 5.1e6,
+    totalSupply: 735_570,
+    circulatingSupply: 735_570,
+    ath: 74.45,
+    atl: 20.97,
+    athDate: "2026-01-01T00:00:00.000Z",
+    atlDate: "2025-10-01T00:00:00.000Z",
+  },
+  zec: {
+    price: 450,
+    change24h: 0,
+    marketCap: 4.0e7,
+    volume24h: 5.7e6,
+    totalSupply: 87_575,
+    circulatingSupply: 87_575,
+    ath: 697.18,
+    atl: 196.79,
+    athDate: "2026-01-01T00:00:00.000Z",
+    atlDate: "2025-10-01T00:00:00.000Z",
+  },
+  tslax: {
+    price: 308,
+    change24h: 0,
+    marketCap: 5.8e7,
+    volume24h: 2.96e5,
+    totalSupply: 229_640,
+    circulatingSupply: 188_560,
+    ath: 484.98,
+    atl: 302.64,
+    athDate: "2025-12-01T00:00:00.000Z",
+    atlDate: "2025-06-01T00:00:00.000Z",
+  },
+  nflxx: {
+    price: 70,
+    change24h: 0,
+    marketCap: 1.1e7,
+    volume24h: 31,
+    totalSupply: 155_060,
+    circulatingSupply: 155_060,
+    ath: 100,
+    atl: 70,
+    athDate: "2025-12-01T00:00:00.000Z",
+    atlDate: "2025-06-01T00:00:00.000Z",
+  },
+  googlx: {
+    price: 200,
+    change24h: 0,
+    marketCap: 2.9e7,
+    volume24h: 7.5e4,
+    totalSupply: 160_410,
+    circulatingSupply: 80_960,
+    ath: 400.26,
+    atl: 176.77,
+    athDate: "2025-12-01T00:00:00.000Z",
+    atlDate: "2025-06-01T00:00:00.000Z",
   },
 };
 

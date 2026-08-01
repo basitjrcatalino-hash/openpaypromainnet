@@ -19,6 +19,11 @@ import {
   USD1_SWAP_ID,
   CASH_SWAP_ID,
   EURC_SWAP_ID,
+  HYPE_SWAP_ID,
+  ZEC_SWAP_ID,
+  TSLAX_SWAP_ID,
+  NFLXX_SWAP_ID,
+  GOOGLX_SWAP_ID,
   LEDGER_MAJOR_SWAP_IDS,
   fetchMajorUsdPrices,
   isLedgerSwapId,
@@ -43,6 +48,11 @@ export {
   USD1_SWAP_ID,
   CASH_SWAP_ID,
   EURC_SWAP_ID,
+  HYPE_SWAP_ID,
+  ZEC_SWAP_ID,
+  TSLAX_SWAP_ID,
+  NFLXX_SWAP_ID,
+  GOOGLX_SWAP_ID,
 } from "@/lib/ledger-majors";
 export { OPENDEX_SWAP_FEE_BPS, applyOpenDexFee, opendexFeePct } from "@/lib/opendex-fee";
 

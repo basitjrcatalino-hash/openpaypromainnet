@@ -47,6 +47,10 @@ const TABS = [
       p.startsWith("/p2p/support") ||
       p.startsWith("/p2p/merchant") ||
       p.startsWith("/p2p/guide") ||
+      p.startsWith("/p2p/rules") ||
+      p.startsWith("/p2p/agreement") ||
+      p.startsWith("/p2p/terms") ||
+      p.startsWith("/p2p/privacy") ||
       p.startsWith("/p2p/api") ||
       p.startsWith("/p2p/security"),
   },

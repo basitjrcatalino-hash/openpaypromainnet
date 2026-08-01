@@ -4,10 +4,12 @@ import {
   BadgeCheck,
   ChevronRight,
   CreditCard,
+  FileText,
   Headset,
   HelpCircle,
   Loader2,
   Lock,
+  Scale,
   Settings,
   Shield,
   Sparkles,
@@ -20,7 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   formatAvgPayTime,
+  formatPositiveRate,
   fetchLockedEscrow,
+  fetchRatingStats,
   fetchTraderStats,
   fmtAmount,
 } from "@/lib/p2p";
@@ -46,9 +50,11 @@ const MENU = [
   { to: "/p2p/reviews", icon: Star, label: "Reviews / Orders", desc: "Stats & completed trades" },
   { to: "/p2p/support", icon: Headset, label: "Customer support", desc: "Disputes & help" },
   { to: "/p2p/merchant", icon: Sparkles, label: "Merchant program", desc: "Apply · badges · featured" },
-  { to: "/p2p/guide", icon: HelpCircle, label: "Learn how P2P works", desc: "Escrow guide" },
+  { to: "/p2p/guide", icon: HelpCircle, label: "How to use P2P", desc: "Step-by-step escrow guide" },
+  { to: "/p2p/rules", icon: Scale, label: "Trading rules", desc: "Notes · payment · prohibited" },
+  { to: "/p2p/security", icon: Lock, label: "Safety & protection", desc: "Buyer/seller scam notes" },
+  { to: "/p2p/agreement", icon: FileText, label: "Agreement · Terms · Privacy", desc: "P2P legal pack" },
   { to: "/p2p/api", icon: Shield, label: "P2P / Ledger API", desc: "Developer endpoints" },
-  { to: "/p2p/security", icon: Lock, label: "Security", desc: "Safety checklist" },
 ] as const;
 
 function P2pProfilePage() {
@@ -99,6 +105,14 @@ function P2pProfilePage() {
       return map[userId as string];
     },
   });
+  const ratingQ = useQuery({
+    queryKey: ["p2p-rating-stats-self", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const map = await fetchRatingStats([userId as string]);
+      return map[userId as string];
+    },
+  });
 
   const name =
     profileQ.data?.display_name ||
@@ -109,6 +123,7 @@ function P2pProfilePage() {
   const ousd = Number(walletQ.data?.ousd_balance ?? 0);
   const lockedOusd = Number(lockedQ.data?.OUSD ?? 0);
   const st = statsQ.data;
+  const rt = ratingQ.data;
   const emailVerified = !!userQ.data?.email_confirmed_at || !!userQ.data?.email;
 
   if (userQ.isLoading || profileQ.isLoading) {
@@ -191,7 +206,7 @@ function P2pProfilePage() {
         <Row label="Avg. payment time" value={formatAvgPayTime(st?.avg_pay_seconds)} />
         <Row
           label="Positive reviews (%)"
-          value={(st?.completed_count ?? 0) > 0 ? "100%" : "N/A"}
+          value={formatPositiveRate(rt?.positive_rate)}
         />
       </section>
 

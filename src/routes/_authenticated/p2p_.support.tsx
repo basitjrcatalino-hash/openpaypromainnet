@@ -93,8 +93,10 @@ function SupportPage() {
       </P2pMenuCard>
 
       <P2pMenuCard className="mb-8">
-        <P2pActionRow to="/p2p/guide" title="Learn how P2P works" desc="Step-by-step escrow guide" />
-        <P2pActionRow to="/p2p/security" title="Safety checklist" desc="Avoid common scams" />
+        <P2pActionRow to="/p2p/guide" title="How to use" desc="Step-by-step escrow guide" />
+        <P2pActionRow to="/p2p/rules" title="Trading rules" desc="Payment notes & prohibited acts" />
+        <P2pActionRow to="/p2p/security" title="Safety & protection" desc="Buyer / seller scam notes" />
+        <P2pActionRow to="/p2p/agreement" title="Agreement · Terms · Privacy" desc="P2P legal pack" />
         {roleQ.data?.admin || roleQ.data?.mod ? (
           <P2pActionRow to="/p2p/admin" title="Support console" desc="Disputes & payment methods" />
         ) : null}

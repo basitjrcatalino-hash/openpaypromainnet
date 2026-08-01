@@ -171,16 +171,18 @@ export function MerchantAvatar({
   );
 }
 
-/** OKX-style merchant meta: orders | completion% · response time */
+/** OKX-style merchant meta: orders | completion% · positive% · response time */
 export function MerchantStatLine({
   completed,
   completionRate,
+  positiveRate,
   online,
   responseMin,
   compact,
 }: {
   completed?: number;
   completionRate?: number | null;
+  positiveRate?: number | null;
   online?: boolean;
   responseMin?: number | null;
   compact?: boolean;
@@ -189,6 +191,9 @@ export function MerchantStatLine({
   if (completed != null) bits.push(`${completed.toLocaleString()} orders`);
   if (completionRate != null && Number.isFinite(completionRate)) {
     bits.push(`${completionRate.toFixed(2)}%`);
+  }
+  if (positiveRate != null && Number.isFinite(positiveRate)) {
+    bits.push(`${positiveRate.toFixed(positiveRate >= 100 ? 0 : 1)}% positive`);
   }
   if (responseMin != null) bits.push(`${responseMin} min`);
 

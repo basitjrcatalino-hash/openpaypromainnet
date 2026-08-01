@@ -80,6 +80,7 @@ import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedP2pAdminRouteImport } from './routes/_authenticated/p2p_.admin'
+import { Route as AuthenticatedP2pAgreementRouteImport } from './routes/_authenticated/p2p_.agreement'
 import { Route as AuthenticatedP2pApiRouteImport } from './routes/_authenticated/p2p_.api'
 import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
 import { Route as AuthenticatedP2pExpressRouteImport } from './routes/_authenticated/p2p_.express'
@@ -90,12 +91,15 @@ import { Route as AuthenticatedP2pOrdersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedP2pPaymentAccountRouteImport } from './routes/_authenticated/p2p_.payment-account'
 import { Route as AuthenticatedP2pPaymentAdsRouteImport } from './routes/_authenticated/p2p_.payment-ads'
 import { Route as AuthenticatedP2pPaymentsRouteImport } from './routes/_authenticated/p2p_.payments'
+import { Route as AuthenticatedP2pPrivacyRouteImport } from './routes/_authenticated/p2p_.privacy'
 import { Route as AuthenticatedP2pProfileRouteImport } from './routes/_authenticated/p2p_.profile'
 import { Route as AuthenticatedP2pReviewsRouteImport } from './routes/_authenticated/p2p_.reviews'
+import { Route as AuthenticatedP2pRulesRouteImport } from './routes/_authenticated/p2p_.rules'
 import { Route as AuthenticatedP2pSecurityRouteImport } from './routes/_authenticated/p2p_.security'
 import { Route as AuthenticatedP2pSelectPaymentRouteImport } from './routes/_authenticated/p2p_.select-payment'
 import { Route as AuthenticatedP2pSettingsRouteImport } from './routes/_authenticated/p2p_.settings'
 import { Route as AuthenticatedP2pSupportRouteImport } from './routes/_authenticated/p2p_.support'
+import { Route as AuthenticatedP2pTermsRouteImport } from './routes/_authenticated/p2p_.terms'
 import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
@@ -506,6 +510,12 @@ const AuthenticatedP2pAdminRoute = AuthenticatedP2pAdminRouteImport.update({
   path: '/p2p/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedP2pAgreementRoute =
+  AuthenticatedP2pAgreementRouteImport.update({
+    id: '/p2p_/agreement',
+    path: '/p2p/agreement',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedP2pApiRoute = AuthenticatedP2pApiRouteImport.update({
   id: '/p2p_/api',
   path: '/p2p/api',
@@ -561,6 +571,11 @@ const AuthenticatedP2pPaymentsRoute =
     path: '/p2p/payments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedP2pPrivacyRoute = AuthenticatedP2pPrivacyRouteImport.update({
+  id: '/p2p_/privacy',
+  path: '/p2p/privacy',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedP2pProfileRoute = AuthenticatedP2pProfileRouteImport.update({
   id: '/p2p_/profile',
   path: '/p2p/profile',
@@ -569,6 +584,11 @@ const AuthenticatedP2pProfileRoute = AuthenticatedP2pProfileRouteImport.update({
 const AuthenticatedP2pReviewsRoute = AuthenticatedP2pReviewsRouteImport.update({
   id: '/p2p_/reviews',
   path: '/p2p/reviews',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pRulesRoute = AuthenticatedP2pRulesRouteImport.update({
+  id: '/p2p_/rules',
+  path: '/p2p/rules',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedP2pSecurityRoute =
@@ -592,6 +612,11 @@ const AuthenticatedP2pSettingsRoute =
 const AuthenticatedP2pSupportRoute = AuthenticatedP2pSupportRouteImport.update({
   id: '/p2p_/support',
   path: '/p2p/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pTermsRoute = AuthenticatedP2pTermsRouteImport.update({
+  id: '/p2p_/terms',
+  path: '/p2p/terms',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedP2pWalletRoute = AuthenticatedP2pWalletRouteImport.update({
@@ -902,6 +927,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/p2p/admin': typeof AuthenticatedP2pAdminRoute
+  '/p2p/agreement': typeof AuthenticatedP2pAgreementRoute
   '/p2p/api': typeof AuthenticatedP2pApiRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/p2p/express': typeof AuthenticatedP2pExpressRoute
@@ -912,12 +938,15 @@ export interface FileRoutesByFullPath {
   '/p2p/payment-account': typeof AuthenticatedP2pPaymentAccountRoute
   '/p2p/payment-ads': typeof AuthenticatedP2pPaymentAdsRoute
   '/p2p/payments': typeof AuthenticatedP2pPaymentsRoute
+  '/p2p/privacy': typeof AuthenticatedP2pPrivacyRoute
   '/p2p/profile': typeof AuthenticatedP2pProfileRoute
   '/p2p/reviews': typeof AuthenticatedP2pReviewsRoute
+  '/p2p/rules': typeof AuthenticatedP2pRulesRoute
   '/p2p/security': typeof AuthenticatedP2pSecurityRoute
   '/p2p/select-payment': typeof AuthenticatedP2pSelectPaymentRoute
   '/p2p/settings': typeof AuthenticatedP2pSettingsRoute
   '/p2p/support': typeof AuthenticatedP2pSupportRoute
+  '/p2p/terms': typeof AuthenticatedP2pTermsRoute
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
@@ -1034,6 +1063,7 @@ export interface FileRoutesByTo {
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/p2p/admin': typeof AuthenticatedP2pAdminRoute
+  '/p2p/agreement': typeof AuthenticatedP2pAgreementRoute
   '/p2p/api': typeof AuthenticatedP2pApiRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/p2p/express': typeof AuthenticatedP2pExpressRoute
@@ -1044,12 +1074,15 @@ export interface FileRoutesByTo {
   '/p2p/payment-account': typeof AuthenticatedP2pPaymentAccountRoute
   '/p2p/payment-ads': typeof AuthenticatedP2pPaymentAdsRoute
   '/p2p/payments': typeof AuthenticatedP2pPaymentsRoute
+  '/p2p/privacy': typeof AuthenticatedP2pPrivacyRoute
   '/p2p/profile': typeof AuthenticatedP2pProfileRoute
   '/p2p/reviews': typeof AuthenticatedP2pReviewsRoute
+  '/p2p/rules': typeof AuthenticatedP2pRulesRoute
   '/p2p/security': typeof AuthenticatedP2pSecurityRoute
   '/p2p/select-payment': typeof AuthenticatedP2pSelectPaymentRoute
   '/p2p/settings': typeof AuthenticatedP2pSettingsRoute
   '/p2p/support': typeof AuthenticatedP2pSupportRoute
+  '/p2p/terms': typeof AuthenticatedP2pTermsRoute
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
@@ -1168,6 +1201,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
   '/_authenticated/p2p_/admin': typeof AuthenticatedP2pAdminRoute
+  '/_authenticated/p2p_/agreement': typeof AuthenticatedP2pAgreementRoute
   '/_authenticated/p2p_/api': typeof AuthenticatedP2pApiRoute
   '/_authenticated/p2p_/create': typeof AuthenticatedP2pCreateRoute
   '/_authenticated/p2p_/express': typeof AuthenticatedP2pExpressRoute
@@ -1178,12 +1212,15 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/payment-account': typeof AuthenticatedP2pPaymentAccountRoute
   '/_authenticated/p2p_/payment-ads': typeof AuthenticatedP2pPaymentAdsRoute
   '/_authenticated/p2p_/payments': typeof AuthenticatedP2pPaymentsRoute
+  '/_authenticated/p2p_/privacy': typeof AuthenticatedP2pPrivacyRoute
   '/_authenticated/p2p_/profile': typeof AuthenticatedP2pProfileRoute
   '/_authenticated/p2p_/reviews': typeof AuthenticatedP2pReviewsRoute
+  '/_authenticated/p2p_/rules': typeof AuthenticatedP2pRulesRoute
   '/_authenticated/p2p_/security': typeof AuthenticatedP2pSecurityRoute
   '/_authenticated/p2p_/select-payment': typeof AuthenticatedP2pSelectPaymentRoute
   '/_authenticated/p2p_/settings': typeof AuthenticatedP2pSettingsRoute
   '/_authenticated/p2p_/support': typeof AuthenticatedP2pSupportRoute
+  '/_authenticated/p2p_/terms': typeof AuthenticatedP2pTermsRoute
   '/_authenticated/p2p_/wallet': typeof AuthenticatedP2pWalletRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
@@ -1302,6 +1339,7 @@ export interface FileRouteTypes {
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
     | '/p2p/admin'
+    | '/p2p/agreement'
     | '/p2p/api'
     | '/p2p/create'
     | '/p2p/express'
@@ -1312,12 +1350,15 @@ export interface FileRouteTypes {
     | '/p2p/payment-account'
     | '/p2p/payment-ads'
     | '/p2p/payments'
+    | '/p2p/privacy'
     | '/p2p/profile'
     | '/p2p/reviews'
+    | '/p2p/rules'
     | '/p2p/security'
     | '/p2p/select-payment'
     | '/p2p/settings'
     | '/p2p/support'
+    | '/p2p/terms'
     | '/p2p/wallet'
     | '/tokens/create'
     | '/wallet/receive'
@@ -1434,6 +1475,7 @@ export interface FileRouteTypes {
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
     | '/p2p/admin'
+    | '/p2p/agreement'
     | '/p2p/api'
     | '/p2p/create'
     | '/p2p/express'
@@ -1444,12 +1486,15 @@ export interface FileRouteTypes {
     | '/p2p/payment-account'
     | '/p2p/payment-ads'
     | '/p2p/payments'
+    | '/p2p/privacy'
     | '/p2p/profile'
     | '/p2p/reviews'
+    | '/p2p/rules'
     | '/p2p/security'
     | '/p2p/select-payment'
     | '/p2p/settings'
     | '/p2p/support'
+    | '/p2p/terms'
     | '/p2p/wallet'
     | '/tokens/create'
     | '/wallet/receive'
@@ -1567,6 +1612,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/portfolio'
     | '/_authenticated/opentoken_/terminal'
     | '/_authenticated/p2p_/admin'
+    | '/_authenticated/p2p_/agreement'
     | '/_authenticated/p2p_/api'
     | '/_authenticated/p2p_/create'
     | '/_authenticated/p2p_/express'
@@ -1577,12 +1623,15 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/payment-account'
     | '/_authenticated/p2p_/payment-ads'
     | '/_authenticated/p2p_/payments'
+    | '/_authenticated/p2p_/privacy'
     | '/_authenticated/p2p_/profile'
     | '/_authenticated/p2p_/reviews'
+    | '/_authenticated/p2p_/rules'
     | '/_authenticated/p2p_/security'
     | '/_authenticated/p2p_/select-payment'
     | '/_authenticated/p2p_/settings'
     | '/_authenticated/p2p_/support'
+    | '/_authenticated/p2p_/terms'
     | '/_authenticated/p2p_/wallet'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
@@ -2192,6 +2241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/p2p_/agreement': {
+      id: '/_authenticated/p2p_/agreement'
+      path: '/p2p/agreement'
+      fullPath: '/p2p/agreement'
+      preLoaderRoute: typeof AuthenticatedP2pAgreementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/p2p_/api': {
       id: '/_authenticated/p2p_/api'
       path: '/p2p/api'
@@ -2262,6 +2318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pPaymentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/p2p_/privacy': {
+      id: '/_authenticated/p2p_/privacy'
+      path: '/p2p/privacy'
+      fullPath: '/p2p/privacy'
+      preLoaderRoute: typeof AuthenticatedP2pPrivacyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/p2p_/profile': {
       id: '/_authenticated/p2p_/profile'
       path: '/p2p/profile'
@@ -2274,6 +2337,13 @@ declare module '@tanstack/react-router' {
       path: '/p2p/reviews'
       fullPath: '/p2p/reviews'
       preLoaderRoute: typeof AuthenticatedP2pReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/rules': {
+      id: '/_authenticated/p2p_/rules'
+      path: '/p2p/rules'
+      fullPath: '/p2p/rules'
+      preLoaderRoute: typeof AuthenticatedP2pRulesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/p2p_/security': {
@@ -2302,6 +2372,13 @@ declare module '@tanstack/react-router' {
       path: '/p2p/support'
       fullPath: '/p2p/support'
       preLoaderRoute: typeof AuthenticatedP2pSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/terms': {
+      id: '/_authenticated/p2p_/terms'
+      path: '/p2p/terms'
+      fullPath: '/p2p/terms'
+      preLoaderRoute: typeof AuthenticatedP2pTermsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/p2p_/wallet': {
@@ -2693,6 +2770,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
   AuthenticatedOpentokenTerminalRoute: typeof AuthenticatedOpentokenTerminalRoute
   AuthenticatedP2pAdminRoute: typeof AuthenticatedP2pAdminRoute
+  AuthenticatedP2pAgreementRoute: typeof AuthenticatedP2pAgreementRoute
   AuthenticatedP2pApiRoute: typeof AuthenticatedP2pApiRoute
   AuthenticatedP2pCreateRoute: typeof AuthenticatedP2pCreateRoute
   AuthenticatedP2pExpressRoute: typeof AuthenticatedP2pExpressRoute
@@ -2703,12 +2781,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedP2pPaymentAccountRoute: typeof AuthenticatedP2pPaymentAccountRoute
   AuthenticatedP2pPaymentAdsRoute: typeof AuthenticatedP2pPaymentAdsRoute
   AuthenticatedP2pPaymentsRoute: typeof AuthenticatedP2pPaymentsRoute
+  AuthenticatedP2pPrivacyRoute: typeof AuthenticatedP2pPrivacyRoute
   AuthenticatedP2pProfileRoute: typeof AuthenticatedP2pProfileRoute
   AuthenticatedP2pReviewsRoute: typeof AuthenticatedP2pReviewsRoute
+  AuthenticatedP2pRulesRoute: typeof AuthenticatedP2pRulesRoute
   AuthenticatedP2pSecurityRoute: typeof AuthenticatedP2pSecurityRoute
   AuthenticatedP2pSelectPaymentRoute: typeof AuthenticatedP2pSelectPaymentRoute
   AuthenticatedP2pSettingsRoute: typeof AuthenticatedP2pSettingsRoute
   AuthenticatedP2pSupportRoute: typeof AuthenticatedP2pSupportRoute
+  AuthenticatedP2pTermsRoute: typeof AuthenticatedP2pTermsRoute
   AuthenticatedP2pWalletRoute: typeof AuthenticatedP2pWalletRoute
   AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
   AuthenticatedBagsTokenMintRoute: typeof AuthenticatedBagsTokenMintRoute
@@ -2759,6 +2840,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
   AuthenticatedOpentokenTerminalRoute: AuthenticatedOpentokenTerminalRoute,
   AuthenticatedP2pAdminRoute: AuthenticatedP2pAdminRoute,
+  AuthenticatedP2pAgreementRoute: AuthenticatedP2pAgreementRoute,
   AuthenticatedP2pApiRoute: AuthenticatedP2pApiRoute,
   AuthenticatedP2pCreateRoute: AuthenticatedP2pCreateRoute,
   AuthenticatedP2pExpressRoute: AuthenticatedP2pExpressRoute,
@@ -2769,12 +2851,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedP2pPaymentAccountRoute: AuthenticatedP2pPaymentAccountRoute,
   AuthenticatedP2pPaymentAdsRoute: AuthenticatedP2pPaymentAdsRoute,
   AuthenticatedP2pPaymentsRoute: AuthenticatedP2pPaymentsRoute,
+  AuthenticatedP2pPrivacyRoute: AuthenticatedP2pPrivacyRoute,
   AuthenticatedP2pProfileRoute: AuthenticatedP2pProfileRoute,
   AuthenticatedP2pReviewsRoute: AuthenticatedP2pReviewsRoute,
+  AuthenticatedP2pRulesRoute: AuthenticatedP2pRulesRoute,
   AuthenticatedP2pSecurityRoute: AuthenticatedP2pSecurityRoute,
   AuthenticatedP2pSelectPaymentRoute: AuthenticatedP2pSelectPaymentRoute,
   AuthenticatedP2pSettingsRoute: AuthenticatedP2pSettingsRoute,
   AuthenticatedP2pSupportRoute: AuthenticatedP2pSupportRoute,
+  AuthenticatedP2pTermsRoute: AuthenticatedP2pTermsRoute,
   AuthenticatedP2pWalletRoute: AuthenticatedP2pWalletRoute,
   AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,
   AuthenticatedBagsTokenMintRoute: AuthenticatedBagsTokenMintRoute,

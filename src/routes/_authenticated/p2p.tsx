@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
@@ -37,6 +37,7 @@ import {
   fetchDisplayNames,
   fetchMerchants,
   fetchPaymentMethods,
+  fetchRatingStats,
   fetchTraderStats,
   fmtAmount,
   isTraderOnline,
@@ -107,6 +108,11 @@ function P2PMarketplace() {
   const stats = useQuery({
     queryKey: ["p2p-stats", traderIds.join(",")],
     queryFn: () => fetchTraderStats(traderIds),
+    enabled: traderIds.length > 0,
+  });
+  const ratings = useQuery({
+    queryKey: ["p2p-rating-stats", traderIds.join(",")],
+    queryFn: () => fetchRatingStats(traderIds),
     enabled: traderIds.length > 0,
   });
   const merchants = useQuery({
@@ -228,6 +234,7 @@ function P2PMarketplace() {
 
           {filtered.map((ad) => {
             const st = stats.data?.[ad.user_id];
+            const rt = ratings.data?.[ad.user_id];
             const name = names.data?.[ad.user_id] ?? "Trader";
             const online = isTraderOnline(st?.last_active_at);
             const merch = merchants.data?.[ad.user_id];
@@ -269,6 +276,7 @@ function P2PMarketplace() {
                         compact
                         completed={st?.completed_count}
                         completionRate={st?.completion_rate}
+                        positiveRate={rt?.positive_rate}
                         responseMin={ad.pay_time_limit_minutes}
                       />
                     </div>
@@ -414,11 +422,13 @@ function BuyDialog({
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<string>("");
   const [balance, setBalance] = useState<number | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     if (!ad) return;
     setAmount(String(ad.min_order));
     setMethod(ad.payment_methods[0] ?? "");
+    setAgreed(false);
   }, [ad]);
 
   useEffect(() => {
@@ -454,6 +464,7 @@ function BuyDialog({
   const invalid =
     !ad ||
     !method ||
+    !agreed ||
     !(amt > 0) ||
     amt < Number(ad.min_order) ||
     amt > Math.min(Number(ad.max_order), Number(ad.available_amount)) ||
@@ -531,6 +542,32 @@ function BuyDialog({
               {formatCurrency(totalUsd, fiat as never, { compact: false })}
             </span>
           </div>
+
+          <label className="flex items-start gap-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#11C66D]"
+            />
+            <span>
+              I have read the{" "}
+              <Link
+                to="/p2p/rules"
+                className="font-semibold text-foreground underline-offset-2 hover:underline"
+              >
+                Trading Rules
+              </Link>{" "}
+              and{" "}
+              <Link
+                to="/p2p/agreement"
+                className="font-semibold text-foreground underline-offset-2 hover:underline"
+              >
+                User Agreement
+              </Link>
+              . Crypto is escrow-protected; fiat transfers are between traders.
+            </span>
+          </label>
 
           <Button
             className={cn(

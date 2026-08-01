@@ -17,6 +17,10 @@ type P2pPath =
   | "/p2p/support"
   | "/p2p/merchant"
   | "/p2p/guide"
+  | "/p2p/rules"
+  | "/p2p/agreement"
+  | "/p2p/terms"
+  | "/p2p/privacy"
   | "/p2p/api"
   | "/p2p/security"
   | "/p2p/create"
@@ -28,7 +32,9 @@ type P2pPath =
   | "/chat"
   | "/ledger"
   | "/docs/openpay"
-  | "/deposit";
+  | "/deposit"
+  | "/terms"
+  | "/privacy";
 
 export function P2pSubpageHeader({
   title,

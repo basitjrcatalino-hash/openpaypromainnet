@@ -237,6 +237,7 @@ function CreateAdDialog({
   const [limitMin, setLimitMin] = useState("15");
   const [terms, setTerms] = useState("");
   const [methods, setMethods] = useState<string[]>([]);
+  const [agreed, setAgreed] = useState(false);
 
   const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
   const userQ = useQuery({
@@ -291,11 +292,12 @@ function CreateAdDialog({
       !(Number(min) > 0) ||
       !(Number(max) >= Number(min)) ||
       methods.length === 0 ||
+      !agreed ||
       (side === "sell" && missingReceive.length > 0) ||
       p2pAmountExceedsLimit(asset, Number(total), Number(price)) ||
       p2pAmountExceedsLimit(asset, Number(max), Number(price)) ||
       p2pAmountExceedsLimit(asset, Number(min), Number(price)),
-    [price, total, min, max, methods, side, missingReceive, asset],
+    [price, total, min, max, methods, agreed, side, missingReceive, asset],
   );
 
   return (
@@ -422,6 +424,30 @@ function CreateAdDialog({
             placeholder="Terms (optional)"
             className="min-h-20"
           />
+
+          <label className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-muted/20 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-[#11C66D]"
+            />
+            <span>
+              I agree to the{" "}
+              <Link to="/p2p/agreement" className="font-semibold text-foreground underline-offset-2 hover:underline">
+                P2P User Agreement
+              </Link>
+              ,{" "}
+              <Link to="/p2p/rules" className="font-semibold text-foreground underline-offset-2 hover:underline">
+                Trading Rules
+              </Link>
+              , and{" "}
+              <Link to="/p2p/terms" className="font-semibold text-foreground underline-offset-2 hover:underline">
+                P2P Terms
+              </Link>
+              .
+            </span>
+          </label>
 
           <Button
             className="h-11 w-full rounded-full font-bold"

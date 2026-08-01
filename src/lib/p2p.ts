@@ -728,3 +728,74 @@ export function formatAvgPayTime(seconds: number | null | undefined): string {
   return `${m}m ${s}s`;
 }
 
+export type P2PRating = Tables<"p2p_ratings">;
+
+export type P2PRatingStats = {
+  id: string;
+  rating_count: number;
+  avg_score: number | null;
+  positive_rate: number | null;
+};
+
+export const P2P_RATING_TAGS = [
+  "Fast payment",
+  "Friendly",
+  "Patient",
+  "Good communication",
+  "Reliable",
+  "Clear instructions",
+] as const;
+
+export async function submitOrderRating(input: {
+  orderId: string;
+  score: number;
+  tags?: string[];
+  comment?: string | null;
+}): Promise<P2PRating> {
+  const { data, error } = await supabase.rpc("p2p_submit_rating", {
+    _order_id: input.orderId,
+    _score: input.score,
+    _tags: input.tags ?? [],
+    _comment: input.comment ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as P2PRating;
+}
+
+export async function fetchMyRatingForOrder(orderId: string): Promise<P2PRating | null> {
+  const { data, error } = await supabase.rpc("p2p_my_rating_for_order", {
+    _order_id: orderId,
+  });
+  if (error) return null;
+  return (data as P2PRating | null) ?? null;
+}
+
+export async function fetchRatingStats(ids: string[]): Promise<Record<string, P2PRatingStats>> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  if (!unique.length) return {};
+  const { data, error } = await supabase.rpc("p2p_rating_stats", { _ids: unique });
+  if (error) {
+    return Object.fromEntries(
+      unique.map((id) => [
+        id,
+        { id, rating_count: 0, avg_score: null, positive_rate: null } satisfies P2PRatingStats,
+      ]),
+    );
+  }
+  const map: Record<string, P2PRatingStats> = {};
+  for (const row of data ?? []) {
+    map[row.id] = {
+      id: row.id,
+      rating_count: Number(row.rating_count ?? 0),
+      avg_score: row.avg_score == null ? null : Number(row.avg_score),
+      positive_rate: row.positive_rate == null ? null : Number(row.positive_rate),
+    };
+  }
+  return map;
+}
+
+export function formatPositiveRate(rate: number | null | undefined): string {
+  if (rate == null || !Number.isFinite(rate)) return "N/A";
+  return `${Number(rate).toFixed(rate >= 100 || rate === 0 ? 0 : 2)}%`;
+}
+

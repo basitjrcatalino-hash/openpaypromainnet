@@ -1472,6 +1472,47 @@ export type Database = {
           },
         ]
       }
+      p2p_ratings: {
+        Row: {
+          id: string
+          order_id: string
+          rater_id: string
+          ratee_id: string
+          score: number
+          tags: string[]
+          comment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          rater_id: string
+          ratee_id: string
+          score: number
+          tags?: string[]
+          comment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          rater_id?: string
+          ratee_id?: string
+          score?: number
+          tags?: string[]
+          comment?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       p2p_orders: {
         Row: {
           ad_id: string
@@ -2794,6 +2835,58 @@ export type Database = {
           completion_rate: number | null
           avg_pay_seconds: number | null
           last_active_at: string | null
+        }[]
+      }
+      p2p_submit_rating: {
+        Args: {
+          _order_id: string
+          _score: number
+          _tags?: string[]
+          _comment?: string | null
+        }
+        Returns: {
+          id: string
+          order_id: string
+          rater_id: string
+          ratee_id: string
+          score: number
+          tags: string[]
+          comment: string | null
+          created_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_ratings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_my_rating_for_order: {
+        Args: { _order_id: string }
+        Returns: {
+          id: string
+          order_id: string
+          rater_id: string
+          ratee_id: string
+          score: number
+          tags: string[]
+          comment: string | null
+          created_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_ratings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_rating_stats: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          rating_count: number
+          avg_score: number | null
+          positive_rate: number | null
         }[]
       }
       p2p_expire_orders: { Args: never; Returns: number }

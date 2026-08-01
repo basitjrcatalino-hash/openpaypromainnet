@@ -57,6 +57,7 @@ function ExpressPage() {
   const [fiatAmt, setFiatAmt] = useState("");
   const [assetOpen, setAssetOpen] = useState(false);
   const [fiatOpen, setFiatOpen] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const { code: fiat, setCode, meta } = useCurrency();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -140,6 +141,7 @@ function ExpressPage() {
   const canTrade =
     amount > 0 &&
     !!matched &&
+    !!agreed &&
     (method || matched.payment_methods[0]) &&
     !p2pAmountExceedsLimit(asset, amount, bestPrice || 1);
 
@@ -273,9 +275,29 @@ function ExpressPage() {
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </button>
 
+      <label className="mt-4 flex items-start gap-2.5 text-[11px] leading-relaxed text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[#11C66D]"
+        />
+        <span>
+          I agree to the{" "}
+          <Link to="/p2p/rules" className="font-semibold text-foreground underline-offset-2 hover:underline">
+            Trading Rules
+          </Link>{" "}
+          and{" "}
+          <Link to="/p2p/agreement" className="font-semibold text-foreground underline-offset-2 hover:underline">
+            User Agreement
+          </Link>
+          .
+        </span>
+      </label>
+
       <Button
         className={cn(
-          "mt-5 h-12 w-full rounded-[8px] text-base font-bold",
+          "mt-3 h-12 w-full rounded-[8px] text-base font-bold",
           canTrade
             ? side === "buy"
               ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"

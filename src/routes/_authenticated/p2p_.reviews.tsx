@@ -11,9 +11,11 @@ import {
   ORDER_STATUS_LABEL,
   fetchDisplayNames,
   fetchMyOrders,
+  fetchRatingStats,
   fetchTraderStats,
   fmtAmount,
   formatAvgPayTime,
+  formatPositiveRate,
 } from "@/lib/p2p";
 
 export const Route = createFileRoute("/_authenticated/p2p_/reviews")({
@@ -43,6 +45,14 @@ function ReviewsPage() {
       return map[userQ.data as string];
     },
   });
+  const ratingQ = useQuery({
+    queryKey: ["p2p-rating-stats-self", userQ.data],
+    enabled: !!userQ.data,
+    queryFn: async () => {
+      const map = await fetchRatingStats([userQ.data as string]);
+      return map[userQ.data as string];
+    },
+  });
   const ordersQ = useQuery({
     queryKey: ["p2p-orders", userQ.data],
     enabled: !!userQ.data,
@@ -64,6 +74,7 @@ function ReviewsPage() {
   });
 
   const st = statsQ.data;
+  const rt = ratingQ.data;
 
   return (
     <div>
@@ -76,17 +87,19 @@ function ReviewsPage() {
         }
       />
 
-      <section className="mx-4 mt-4 grid grid-cols-2 gap-2 md:mx-6">
+      <section className="mx-4 mt-4 grid grid-cols-2 gap-2 md:mx-6 md:grid-cols-3">
         <StatCard label="Completed" value={String(st?.completed_count ?? 0)} />
         <StatCard
           label="Completion"
           value={st?.completion_rate == null ? "N/A" : `${Number(st.completion_rate).toFixed(1)}%`}
         />
         <StatCard label="Avg pay time" value={formatAvgPayTime(st?.avg_pay_seconds)} />
+        <StatCard label="Positive reviews" value={formatPositiveRate(rt?.positive_rate)} />
         <StatCard
-          label="Positive reviews"
-          value={(st?.completed_count ?? 0) > 0 ? "100%" : "N/A"}
+          label="Avg score"
+          value={rt?.avg_score == null ? "N/A" : `${Number(rt.avg_score).toFixed(1)} / 5`}
         />
+        <StatCard label="Ratings received" value={String(rt?.rating_count ?? 0)} />
       </section>
 
       <h2 className="mx-4 mt-5 mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground md:mx-6">

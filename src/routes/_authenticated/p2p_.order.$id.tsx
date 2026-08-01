@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { P2pPayChip } from "@/components/p2p/P2pPayIcon";
+import { P2pRateTradeCard } from "@/components/p2p/P2pRateTradeCard";
+import { P2pTradeCompleteOverlay } from "@/components/p2p/P2pTradeCompleteOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -82,6 +84,8 @@ function TradeRoom() {
   const [chatUploading, setChatUploading] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [resolution, setResolution] = useState("");
+  const [celebrate, setCelebrate] = useState(false);
+  const prevStatusRef = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
   const chatImageRef = useRef<HTMLInputElement>(null);
@@ -159,6 +163,24 @@ function TradeRoom() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [msgQ.data?.length]);
 
+  // Celebrate when the trade flips to completed (buyer or seller).
+  useEffect(() => {
+    const status = order?.status ?? null;
+    const prev = prevStatusRef.current;
+    if (status === "completed") {
+      const seenKey = `p2p-celebrate-${id}`;
+      const justCompleted = prev != null && prev !== "completed";
+      const recent =
+        !!order?.released_at &&
+        Date.now() - new Date(order.released_at).getTime() < 3 * 60_000;
+      if ((justCompleted || recent) && !sessionStorage.getItem(seenKey)) {
+        setCelebrate(true);
+        sessionStorage.setItem(seenKey, "1");
+      }
+    }
+    prevStatusRef.current = status;
+  }, [order?.status, order?.released_at, id]);
+
   const timeLeft = order ? new Date(order.expires_at).getTime() - now : 0;
   useEffect(() => {
     if (order?.status === "pending_payment" && timeLeft <= 0) {
@@ -175,10 +197,14 @@ function TradeRoom() {
     void qc.invalidateQueries({ queryKey: ["active-wallet"] });
     void qc.invalidateQueries({ queryKey: ["wallets"] });
   };
-  const act = (fn: () => Promise<unknown>, ok: string) =>
+  const act = (fn: () => Promise<unknown>, ok: string, opts?: { celebrate?: boolean }) =>
     fn()
       .then(() => {
         toast.success(ok);
+        if (opts?.celebrate) {
+          sessionStorage.setItem(`p2p-celebrate-${id}`, "1");
+          setCelebrate(true);
+        }
         refresh();
       })
       .catch((e: Error) => toast.error(e.message));
@@ -278,6 +304,21 @@ function TradeRoom() {
   const counterparty = names.data?.[isBuyer ? order.seller_id : order.buyer_id] ?? "Trader";
   const live = order.status === "pending_payment" || order.status === "paid";
   const paySnap = parsePaymentSnapshot(order.payment_account_snapshot);
+  // Seller confirm window = same length as the original pay window (min 5m).
+  const payWindowMs = Math.max(
+    5 * 60_000,
+    new Date(order.expires_at).getTime() - new Date(order.created_at).getTime(),
+  );
+  const sellerDeadlineMs = order.paid_at
+    ? new Date(order.paid_at).getTime() + payWindowMs
+    : 0;
+  const sellerTimeLeft = sellerDeadlineMs > 0 ? sellerDeadlineMs - now : 0;
+  const payTimerEnded = order.status === "pending_payment" && timeLeft <= 0;
+  const sellerTimerEnded = order.status === "paid" && sellerTimeLeft <= 0;
+  const canCancel = payTimerEnded || sellerTimerEnded;
+  const waitingForResponse =
+    (order.status === "pending_payment" && timeLeft > 0) ||
+    (order.status === "paid" && sellerTimeLeft > 0);
 
   async function copyField(label: string, value: string) {
     try {
@@ -289,69 +330,128 @@ function TradeRoom() {
   }
 
   return (
-    <div className="mx-auto w-full space-y-4 px-4 pb-8 pt-2 md:px-6">
-      <header className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => void navigate({ to: "/p2p/orders" })}
-          className="grid h-9 w-9 place-items-center rounded-full press"
-          aria-label="Back"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-bold">{order.ref}</h1>
-          <p className="truncate text-[11px] text-muted-foreground">{counterparty}</p>
+    <div className="mx-auto w-full pb-8">
+      {/* OKX-style sticky trade header */}
+      <header
+        className="sticky top-0 z-20 border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl md:px-6"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
+        <div className="flex h-12 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/p2p/orders" })}
+            className="grid h-9 w-9 place-items-center rounded-full press"
+            aria-label="Back"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-extrabold tracking-tight">{order.ref}</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {isBuyer ? "Buying from" : "Selling to"} {counterparty}
+            </p>
+          </div>
+          {order.status === "pending_payment" ? (
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Pay within
+              </p>
+              <p
+                className={cn(
+                  "inline-flex items-center gap-1 text-lg font-extrabold tabular-nums leading-none",
+                  timeLeft < 60_000 ? "text-[#F04438]" : "text-amber-500",
+                )}
+              >
+                <Timer className="h-4 w-4" />
+                {timeLeft > 0 ? formatCountdown(timeLeft) : "00:00"}
+              </p>
+            </div>
+          ) : order.status === "paid" ? (
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Seller confirm
+              </p>
+              <p
+                className={cn(
+                  "inline-flex items-center gap-1 text-lg font-extrabold tabular-nums leading-none",
+                  sellerTimeLeft < 60_000 ? "text-[#F04438]" : "text-amber-500",
+                )}
+              >
+                <Timer className="h-4 w-4" />
+                {sellerTimeLeft > 0 ? formatCountdown(sellerTimeLeft) : "00:00"}
+              </p>
+            </div>
+          ) : null}
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-4">
-          {/* Escrow header */}
-          <div className="rounded-2xl border border-border/60 bg-card/70 p-4 md:p-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-[11px] font-bold",
-                  statusTone(order.status),
-                )}
-              >
-                {ORDER_STATUS_LABEL[order.status]}
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+        <div className="space-y-0 divide-y divide-border/40 border-b border-border/40 lg:border-b-0 lg:border-r">
+          {/* Status strip */}
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 md:px-6">
+            <span
+              className={cn(
+                "rounded-[4px] border px-2 py-0.5 text-[11px] font-bold",
+                statusTone(order.status),
+              )}
+            >
+              {ORDER_STATUS_LABEL[order.status]}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#11C66D]/25 bg-[#11C66D]/10 px-2 py-0.5 text-[11px] font-bold text-[#11C66D]">
+              <Lock className="h-3 w-3" /> {ESCROW_LABEL[order.escrow_status]}
+            </span>
+            {methodCode ? (
+              <span className="ml-auto">
+                <P2pPayChip code={methodCode} label={methodName} />
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-500">
-                <Lock className="h-3 w-3" /> {ESCROW_LABEL[order.escrow_status]}
-              </span>
-              {order.status === "pending_payment" ? (
-                <span className="ml-auto inline-flex items-center gap-1.5 text-sm font-extrabold tabular-nums text-amber-500">
-                  <Timer className="h-4 w-4" /> {formatCountdown(timeLeft)}
-                </span>
-              ) : null}
-            </div>
+            ) : null}
+          </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Stat label={isBuyer ? "You buy" : "You sell"} value={`${fmtAmount(order.amount)} ${order.asset}`} />
-              <Stat
-                label="You pay / receive"
-                value={formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
-              />
-              <Stat
-                label="Price"
-                value={`${formatCurrency(Number(order.price_usd), fiat as never, { compact: false })} / ${order.asset}`}
-              />
-              <Stat
-                label="Payment method"
-                value={
-                  methodCode ? (
-                    <P2pPayChip code={methodCode} label={methodName} className="text-sm font-extrabold text-foreground" />
-                  ) : (
-                    "—"
-                  )
-                }
-              />
-              <Stat label="Counterparty" value={counterparty} />
-              <Stat label="Escrow reference" value={order.escrow_tx_hash ?? "—"} mono />
-              {order.release_tx_hash ? (
-                <Stat label="Release reference" value={order.release_tx_hash} mono />
+          {/* Hero amounts — OKX dominant signal */}
+          <div className="px-4 py-4 md:px-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {isBuyer ? "You buy" : "You sell"}
+            </p>
+            <p className="mt-1 text-[28px] font-extrabold leading-none tabular-nums tracking-tight">
+              {fmtAmount(order.amount)}{" "}
+              <span className="text-lg font-bold text-muted-foreground">{order.asset}</span>
+            </p>
+            <p className="mt-2 text-sm font-semibold tabular-nums text-muted-foreground">
+              {isBuyer ? "You pay" : "You receive"}{" "}
+              <span className="text-foreground">
+                {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
+              </span>
+              <span className="mx-1.5 text-border">·</span>
+              {formatCurrency(Number(order.price_usd), fiat as never, { compact: false })}/{order.asset}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <span className="text-muted-foreground">Counterparty</span>
+                <span className="font-semibold">{counterparty}</span>
+              </div>
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <span className="text-muted-foreground">Order</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold"
+                  onClick={() => void copyField("Order ref", order.ref)}
+                >
+                  {order.ref.slice(-8)}
+                  <Copy className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </div>
+              {order.escrow_tx_hash ? (
+                <div className="col-span-2 flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <span className="text-muted-foreground">Escrow ref</span>
+                  <button
+                    type="button"
+                    className="inline-flex max-w-[60%] items-center gap-1 truncate font-mono text-[11px] font-semibold"
+                    onClick={() => void copyField("Escrow ref", order.escrow_tx_hash!)}
+                  >
+                    <span className="truncate">{order.escrow_tx_hash}</span>
+                    <Copy className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  </button>
+                </div>
               ) : null}
             </div>
 
@@ -360,38 +460,42 @@ function TradeRoom() {
                 href={order.payment_proof_url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 block overflow-hidden rounded-xl border border-border/60"
+                className="mt-3 block overflow-hidden rounded-[8px] border border-border/50"
               >
                 <img
                   src={order.payment_proof_url}
                   alt="Payment proof"
-                  className="max-h-56 w-full object-contain bg-muted/40"
+                  className="max-h-48 w-full object-contain bg-muted/30"
                 />
-                <span className="block px-3 py-2 text-xs font-semibold text-primary">
+                <span className="block bg-muted/20 px-3 py-2 text-[11px] font-bold text-[#11C66D]">
                   View payment proof
                 </span>
               </a>
             ) : null}
           </div>
 
+          {/* Payment account — OKX pay-to block */}
           {paySnap ? (
-            <div className="space-y-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 md:p-5">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-emerald-500">
-                {isBuyer ? "Pay to merchant wallet" : "Your receive account"}
-              </h2>
-              <p className="text-xs text-muted-foreground">
+            <div className="px-4 py-4 md:px-6">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#11C66D]">
+                  {isBuyer ? "Pay to this account" : "Your receive account"}
+                </h2>
+                {methodCode ? <P2pPayChip code={methodCode} label={methodName} /> : null}
+              </div>
+              <p className="mb-3 text-[12px] text-muted-foreground">
                 {isBuyer
-                  ? `Send ${formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via ${methodLabel}.`
-                  : "Buyers will send fiat to these details."}
+                  ? `Transfer exactly ${formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} then upload proof.`
+                  : "Buyer will send fiat to these details."}
               </p>
-              <div className="space-y-2">
+              <div className="overflow-hidden rounded-[8px] border border-border/50">
                 <SnapRow
-                  label="Account name"
+                  label="Name"
                   value={paySnap.account_name}
                   onCopy={() => void copyField("Account name", paySnap.account_name)}
                 />
                 <SnapRow
-                  label="Account number"
+                  label="Account"
                   value={paySnap.account_number}
                   mono
                   onCopy={() => void copyField("Account number", paySnap.account_number)}
@@ -406,33 +510,27 @@ function TradeRoom() {
               </div>
             </div>
           ) : isBuyer && order.status === "pending_payment" ? (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-500">
-              Merchant receive details unavailable. Ask the seller in chat for payment instructions.
+            <div className="mx-4 my-3 rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[12px] font-semibold text-amber-500 md:mx-6">
+              Merchant receive details unavailable. Ask the seller in chat.
             </div>
           ) : null}
 
           {/* Actions */}
-          <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-4 md:p-5">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-3 px-4 py-4 md:px-6">
+            <h2 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               Next step
             </h2>
 
             {isBuyer && order.status === "pending_payment" ? (
               <>
-                <p className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
-                  <span>
-                    After paying{" "}
-                    {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via
-                  </span>
+                <p className="text-[12px] leading-relaxed text-muted-foreground">
+                  Pay via{" "}
                   {methodCode ? (
-                    <P2pPayChip code={methodCode} label={methodName} className="text-foreground" />
+                    <P2pPayChip code={methodCode} label={methodName} className="inline-flex align-middle" />
                   ) : (
                     methodLabel
                   )}
-                  <span>
-                    {paySnap ? ` to ${paySnap.account_name}` : ""}
-                    , upload proof and confirm below.
-                  </span>
+                  {paySnap ? ` to ${paySnap.account_name}` : ""}, then confirm below.
                 </p>
 
                 <input
@@ -447,14 +545,14 @@ function TradeRoom() {
                 />
 
                 {proofPreview || proofUrl ? (
-                  <div className="relative overflow-hidden rounded-xl border border-border/60 bg-muted/30">
+                  <div className="relative overflow-hidden rounded-[8px] border border-border/50 bg-muted/20">
                     <img
                       src={proofPreview || proofUrl || ""}
                       alt="Payment proof preview"
-                      className="max-h-48 w-full object-contain"
+                      className="max-h-44 w-full object-contain"
                     />
-                    <div className="flex items-center justify-between gap-2 border-t border-border/50 px-3 py-2">
-                      <p className="truncate text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 border-t border-border/40 px-3 py-2">
+                      <p className="truncate text-[11px] font-semibold text-muted-foreground">
                         {proofUploading ? "Uploading…" : "Proof ready"}
                       </p>
                       <div className="flex gap-1">
@@ -487,7 +585,7 @@ function TradeRoom() {
                     type="button"
                     disabled={proofUploading}
                     onClick={() => proofInputRef.current?.click()}
-                    className="flex h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 bg-muted/20 text-sm font-semibold text-muted-foreground press hover:bg-muted/40 disabled:opacity-60"
+                    className="flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-border/70 bg-muted/15 text-[13px] font-semibold text-muted-foreground press hover:bg-muted/30 disabled:opacity-60"
                   >
                     {proofUploading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -495,12 +593,12 @@ function TradeRoom() {
                       <ImagePlus className="h-5 w-5" />
                     )}
                     {proofUploading ? "Uploading…" : "Upload payment proof"}
-                    <span className="text-[11px] font-medium opacity-70">JPG, PNG, WEBP · max 8 MB</span>
+                    <span className="text-[10px] font-medium opacity-70">JPG · PNG · max 8 MB</span>
                   </button>
                 )}
 
                 <Button
-                  className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-white hover:bg-emerald-500/90"
+                  className="h-12 w-full rounded-[8px] bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
                   disabled={paid.isPending || proofUploading}
                   onClick={() => act(() => markPaid(id, proofUrl || null), "Marked as paid")}
                 >
@@ -511,12 +609,14 @@ function TradeRoom() {
 
             {isSeller && order.status === "paid" ? (
               <>
-                <p className="text-sm text-muted-foreground">
-                  Verify the money arrived in your {methodLabel} account, then release escrow.
+                <p className="text-[12px] text-muted-foreground">
+                  Verify funds arrived in your {methodLabel} account, then release escrow.
                 </p>
                 <Button
-                  className="h-12 w-full rounded-xl bg-emerald-500 text-base font-bold text-white hover:bg-emerald-500/90"
-                  onClick={() => act(() => confirmReceived(id), "Escrow released to buyer")}
+                  className="h-12 w-full rounded-[8px] bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
+                  onClick={() =>
+                    act(() => confirmReceived(id), "Escrow released to buyer", { celebrate: true })
+                  }
                 >
                   <Check className="mr-1.5 h-4 w-4" /> Payment received — release crypto
                 </Button>
@@ -524,36 +624,49 @@ function TradeRoom() {
             ) : null}
 
             {isSeller && order.status === "pending_payment" ? (
-              <p className="text-sm text-muted-foreground">
-                Waiting for the buyer to pay. You can cancel once the timer expires.
-              </p>
+              <div className="rounded-[8px] bg-muted/30 px-3 py-3 text-[12px] text-muted-foreground">
+                Waiting for buyer payment.
+                {timeLeft > 0
+                  ? ` Cancel unlocks when the timer ends (${formatCountdown(timeLeft)}).`
+                  : " Timer ended — you can cancel if there is no response."}
+              </div>
             ) : null}
             {isBuyer && order.status === "paid" ? (
-              <p className="text-sm text-muted-foreground">
-                Waiting for the seller to confirm your payment.
-              </p>
+              <div className="rounded-[8px] bg-[#11C66D]/10 px-3 py-3 text-[12px] font-semibold text-[#11C66D]">
+                Payment submitted — waiting for seller to release crypto
+                {sellerTimeLeft > 0
+                  ? ` · confirm window ${formatCountdown(sellerTimeLeft)}`
+                  : " · confirm window ended — you may cancel or open a dispute"}.
+              </div>
             ) : null}
 
             {live ? (
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={() => act(() => cancelOrder(id), "Order cancelled")}
-                >
-                  <X className="mr-1.5 h-4 w-4" /> Cancel order
-                </Button>
-                {!disputeQ.data ? (
-                  <div className="flex w-full gap-2">
+              <div className="space-y-2 pt-1">
+                {waitingForResponse && !canCancel ? (
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Cancel order appears after the countdown if there is no response.
+                  </p>
+                ) : null}
+                {canCancel ? (
+                  <Button
+                    variant="outline"
+                    className="h-10 w-full rounded-[8px] border-border/60 text-[13px] font-bold"
+                    onClick={() => act(() => cancelOrder(id), "Order cancelled")}
+                  >
+                    <X className="mr-1.5 h-4 w-4" /> Cancel order
+                  </Button>
+                ) : null}
+                {!disputeQ.data && (order.status === "paid" || canCancel) ? (
+                  <div className="flex gap-2">
                     <Input
                       value={disputeReason}
                       onChange={(e) => setDisputeReason(e.target.value)}
                       placeholder="Reason for dispute"
-                      className="h-10"
+                      className="h-10 rounded-[8px] text-[13px]"
                     />
                     <Button
                       variant="outline"
-                      className="shrink-0 rounded-xl border-rose-500/40 text-rose-500"
+                      className="h-10 shrink-0 rounded-[8px] border-[#F04438]/40 text-[13px] font-bold text-[#F04438]"
                       disabled={disputeReason.trim().length < 4}
                       onClick={() =>
                         act(() => openDispute(id, disputeReason.trim()), "Dispute opened")
@@ -567,18 +680,36 @@ function TradeRoom() {
             ) : null}
 
             {order.status === "completed" ? (
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-500">
-                <ShieldCheck className="h-4 w-4" /> Trade completed — escrow released.
-              </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 rounded-[8px] border border-[#11C66D]/25 bg-[#11C66D]/8 px-3 py-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#11C66D]/20">
+                    <ShieldCheck className="h-5 w-5 text-[#11C66D]" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-extrabold text-[#11C66D]">Trade verified</p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      You {isBuyer ? "bought" : "sold"}{" "}
+                      <span className="font-bold text-foreground">
+                        {fmtAmount(order.amount)} {order.asset}
+                      </span>
+                      {" · "}
+                      {isBuyer ? "paid" : "received"}{" "}
+                      <span className="font-bold text-foreground">
+                        {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <P2pRateTradeCard orderId={id} counterpartyName={counterparty} />
+              </div>
             ) : null}
           </div>
 
-          {/* Dispute / moderator */}
           {disputeQ.data ? (
-            <div className="space-y-3 rounded-3xl border border-rose-500/30 bg-rose-500/5 p-5">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-rose-500">Dispute</h2>
-              <p className="text-sm">{disputeQ.data.reason}</p>
-              <p className="text-xs text-muted-foreground">
+            <div className="space-y-3 px-4 py-4 md:px-6">
+              <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#F04438]">Dispute</h2>
+              <p className="text-[13px]">{disputeQ.data.reason}</p>
+              <p className="text-[11px] text-muted-foreground">
                 Status: {disputeQ.data.status}
                 {disputeQ.data.resolution ? ` · ${disputeQ.data.resolution}` : ""}
               </p>
@@ -588,11 +719,11 @@ function TradeRoom() {
                     value={resolution}
                     onChange={(e) => setResolution(e.target.value)}
                     placeholder="Resolution note"
-                    className="h-10"
+                    className="h-10 rounded-[8px]"
                   />
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      className="rounded-xl bg-emerald-500 text-white hover:bg-emerald-500/90"
+                      className="h-10 rounded-[8px] bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]"
                       onClick={() =>
                         act(
                           () => resolveDispute(id, true, resolution || "Released to buyer"),
@@ -604,7 +735,7 @@ function TradeRoom() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="rounded-xl"
+                      className="h-10 rounded-[8px] font-bold"
                       onClick={() =>
                         act(
                           () => resolveDispute(id, false, resolution || "Refunded to seller"),
@@ -621,30 +752,24 @@ function TradeRoom() {
           ) : null}
         </div>
 
-        {/* Chat */}
-        <div className="flex h-[min(32rem,70dvh)] flex-col rounded-3xl border border-border/60 bg-card/70 lg:sticky lg:top-4 lg:h-[min(40rem,calc(100dvh-6rem))]">
-          <div className="border-b border-border/60 px-5 py-3">
-            <p className="text-sm font-bold">Trade chat · {counterparty}</p>
-            <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] font-semibold">
-              <span className="inline-flex items-center gap-1 text-amber-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Merchant
-              </span>
-              <span className="inline-flex items-center gap-1 text-sky-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Customer
-              </span>
-              <span className="inline-flex items-center gap-1 text-violet-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" /> Support
-              </span>
+        {/* Chat — denser OKX-style panel */}
+        <div className="flex h-[min(28rem,65dvh)] flex-col bg-background lg:sticky lg:top-12 lg:h-[calc(100dvh-3rem)]">
+          <div className="flex items-center justify-between border-b border-border/40 px-4 py-2.5">
+            <div>
+              <p className="text-[13px] font-extrabold">Trade chat</p>
+              <p className="text-[11px] text-muted-foreground">{counterparty}</p>
+            </div>
+            <div className="flex gap-2 text-[9px] font-bold uppercase tracking-wide">
+              <span className="text-amber-500">● Merch</span>
+              <span className="text-sky-400">● Cust</span>
+              <span className="text-violet-400">● Support</span>
             </div>
           </div>
-          <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div ref={scroller} className="flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
             {(msgQ.data ?? []).map((m) =>
               m.is_system ? (
-                <div key={m.id} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/80">
-                    System
-                  </span>
-                  <p className="w-fit rounded-full bg-muted/70 px-3 py-1 text-center text-[11px] text-muted-foreground">
+                <div key={m.id} className="flex justify-center px-4">
+                  <p className="rounded-[4px] bg-muted/60 px-2.5 py-1 text-center text-[10px] leading-snug text-muted-foreground">
                     {m.body}
                   </p>
                 </div>
@@ -665,11 +790,11 @@ function TradeRoom() {
                   return (
                     <div
                       key={m.id}
-                      className={cn("flex flex-col gap-1", mine ? "items-end" : "items-start")}
+                      className={cn("flex flex-col gap-0.5", mine ? "items-end" : "items-start")}
                     >
                       <div
                         className={cn(
-                          "flex max-w-[78%] items-center gap-1.5 px-1 text-[10px] font-bold uppercase tracking-wide",
+                          "flex max-w-[82%] items-center gap-1 px-1 text-[9px] font-bold uppercase tracking-wide",
                           mine ? "flex-row-reverse" : "flex-row",
                           roleMeta.className,
                         )}
@@ -681,12 +806,12 @@ function TradeRoom() {
                       </div>
                       <div
                         className={cn(
-                          "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm",
+                          "max-w-[82%] rounded-[8px] px-3 py-2 text-[13px] leading-snug",
                           mine
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-[#11C66D] text-white"
                             : role === "support"
                               ? "border border-violet-500/30 bg-violet-500/10 text-foreground"
-                              : "bg-muted text-foreground",
+                              : "bg-muted/70 text-foreground",
                         )}
                       >
                         {m.body && m.body !== "📷 Image" ? m.body : null}
@@ -696,7 +821,7 @@ function TradeRoom() {
                               src={m.image_url}
                               alt="Attachment"
                               className={cn(
-                                "mt-1 max-h-52 rounded-lg object-cover",
+                                "mt-1 max-h-44 rounded-[6px] object-cover",
                                 m.body && m.body !== "📷 Image" && "mt-2",
                               )}
                             />
@@ -710,7 +835,7 @@ function TradeRoom() {
             )}
           </div>
           <form
-            className="flex items-center gap-2 border-t border-border/60 p-3"
+            className="flex items-center gap-1.5 border-t border-border/40 px-2 py-2"
             onSubmit={(e) => {
               e.preventDefault();
               const body = draft.trim();
@@ -736,7 +861,7 @@ function TradeRoom() {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-xl"
+              className="h-10 w-10 shrink-0 rounded-[8px]"
               disabled={chatUploading}
               onClick={() => chatImageRef.current?.click()}
               aria-label="Upload image"
@@ -751,13 +876,13 @@ function TradeRoom() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Message…"
-              className="h-11"
+              className="h-10 rounded-[8px] border-0 bg-muted/40 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-foreground/15"
               disabled={chatUploading}
             />
             <Button
               type="submit"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-xl"
+              className="h-10 w-10 shrink-0 rounded-[8px] bg-[#11C66D] text-white hover:bg-[#0FB461]"
               disabled={chatUploading || !draft.trim()}
             >
               <Send className="h-4 w-4" />
@@ -765,25 +890,17 @@ function TradeRoom() {
           </form>
         </div>
       </div>
-    </div>
-  );
-}
 
-function Stat({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: React.ReactNode;
-  mono?: boolean;
-}) {
-  return (
-    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <div className={cn("mt-1 text-sm font-extrabold break-all", mono && "font-mono text-xs")}>
-        {value}
-      </div>
+      <P2pTradeCompleteOverlay
+        open={celebrate}
+        onClose={() => setCelebrate(false)}
+        isBuyer={isBuyer}
+        asset={order.asset}
+        amount={order.amount}
+        totalFiat={Number(order.total_fiat)}
+        fiatCode={fiat}
+        counterparty={counterparty}
+      />
     </div>
   );
 }
@@ -800,23 +917,21 @@ function SnapRow({
   onCopy: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-background/70 px-3 py-2.5">
+    <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-3 py-2.5 last:border-b-0">
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className={cn("truncate text-sm font-bold", mono && "font-mono text-xs")}>{value}</p>
+        <p className={cn("truncate text-[13px] font-bold", mono && "font-mono text-xs")}>{value}</p>
       </div>
-      <Button
+      <button
         type="button"
-        size="icon"
-        variant="ghost"
-        className="h-8 w-8 shrink-0"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[6px] text-muted-foreground press hover:bg-muted/50"
         onClick={onCopy}
         aria-label={`Copy ${label}`}
       >
         <Copy className="h-3.5 w-3.5" />
-      </Button>
+      </button>
     </div>
   );
 }

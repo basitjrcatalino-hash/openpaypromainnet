@@ -153,7 +153,7 @@ export async function openOrder(adId: string, amount: number, paymentMethod: str
 export async function markPaid(orderId: string, proofUrl?: string | null) {
   const { error } = await supabase.rpc("p2p_mark_paid", {
     _order_id: orderId,
-    _proof_url: proofUrl ?? null,
+    _proof_url: proofUrl ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
@@ -166,7 +166,7 @@ export async function confirmReceived(orderId: string) {
 export async function cancelOrder(orderId: string, reason?: string) {
   const { error } = await supabase.rpc("p2p_cancel_order", {
     _order_id: orderId,
-    _reason: reason ?? null,
+    _reason: reason ?? undefined,
   });
   if (error) throw new Error(error.message);
 }

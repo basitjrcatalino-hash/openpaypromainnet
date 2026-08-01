@@ -115,6 +115,7 @@ import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/le
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
+import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
@@ -672,6 +673,11 @@ const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
   path: '/api/public/docs/openpay',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedP2pOrderIdRoute = AuthenticatedP2pOrderIdRouteImport.update({
+  id: '/p2p_/order/$id',
+  path: '/p2p/order/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpentokenCreatorUserIdRoute =
   AuthenticatedOpentokenCreatorUserIdRouteImport.update({
     id: '/opentoken_/creator/$userId',
@@ -808,6 +814,7 @@ export interface FileRoutesByFullPath {
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
+  '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -921,6 +928,7 @@ export interface FileRoutesByTo {
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
+  '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1036,6 +1044,7 @@ export interface FileRoutesById {
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
   '/_authenticated/opentoken_/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
+  '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1151,6 +1160,7 @@ export interface FileRouteTypes {
     | '/openpay/connect/callback'
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
+    | '/p2p/order/$id'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -1264,6 +1274,7 @@ export interface FileRouteTypes {
     | '/openpay/connect/callback'
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
+    | '/p2p/order/$id'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -1378,6 +1389,7 @@ export interface FileRouteTypes {
     | '/_authenticated/openpay/connect/callback'
     | '/_authenticated/opentoken_/$tokenId/chat'
     | '/_authenticated/opentoken_/creator/$userId'
+    | '/_authenticated/p2p_/order/$id'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -2199,6 +2211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/p2p_/order/$id': {
+      id: '/_authenticated/p2p_/order/$id'
+      path: '/p2p/order/$id'
+      fullPath: '/p2p/order/$id'
+      preLoaderRoute: typeof AuthenticatedP2pOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/opentoken_/creator/$userId': {
       id: '/_authenticated/opentoken_/creator/$userId'
       path: '/opentoken/creator/$userId'
@@ -2327,6 +2346,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBagsTokenMintRoute: typeof AuthenticatedBagsTokenMintRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
+  AuthenticatedP2pOrderIdRoute: typeof AuthenticatedP2pOrderIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -2378,6 +2398,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpenpayConnectCallbackRoute,
   AuthenticatedOpentokenCreatorUserIdRoute:
     AuthenticatedOpentokenCreatorUserIdRoute,
+  AuthenticatedP2pOrderIdRoute: AuthenticatedP2pOrderIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

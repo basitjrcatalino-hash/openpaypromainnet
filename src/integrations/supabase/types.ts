@@ -2665,6 +2665,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      p2p_display_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       p2p_expire_orders: { Args: never; Returns: number }
       p2p_mark_paid: {
         Args: { _order_id: string; _proof_url?: string }

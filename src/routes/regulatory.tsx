@@ -63,7 +63,7 @@ function RegulatoryPage() {
     <LegalDocLayout
       navKey="regulatory"
       title="Regulatory Status"
-      dek="Important disclosures about OpenPay, third-party providers, and pricing data — same Phantom editorial surface as Blog and Wiki."
+      dek="Important disclosures about OpenPay, third-party providers, and pricing data."
       updated="July 30, 2026"
       speechId="page:regulatory"
       speechText={REGULATORY_SPEECH}

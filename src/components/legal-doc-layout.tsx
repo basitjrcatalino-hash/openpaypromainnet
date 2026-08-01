@@ -119,7 +119,7 @@ export function LegalDocLayout({
             <div className="mt-14 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-7">
               <h2 className="text-2xl font-bold tracking-tight">Related policies</h2>
               <p className="mt-2 text-[var(--muted-foreground)]">
-                Keep reading the OpenPay Pro legal pack — same Phantom editorial look as Blog and Wiki.
+                Keep reading the OpenPay Pro legal pack.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {LEGAL_NAV.filter((n) => n.key !== navKey).map((n) => (

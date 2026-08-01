@@ -61,7 +61,7 @@ function PrivacyPage() {
     <LegalDocLayout
       navKey="privacy"
       title="Privacy Policy"
-      dek="How OpenPay Pro collects, uses, and protects wallet, payment, and account data — written clearly, designed like our Blog and Wiki."
+      dek="How OpenPay Pro collects, uses, and protects wallet, payment, and account data."
       updated="July 28, 2026"
       speechId="page:privacy"
       speechText={PRIVACY_SPEECH}

@@ -360,24 +360,31 @@ function P2PMarketplace() {
       </Dialog>
 
       <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Payment methods</DialogTitle>
+        <DialogContent className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl">
+          <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
+            <DialogTitle className="text-[17px] font-extrabold tracking-tight">
+              Payment methods
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Filter ads by how you want to pay or get paid
+            </DialogDescription>
           </DialogHeader>
-          <P2pPaymentMethodPicker
-            methods={methodsQ.data ?? []}
-            mode="single"
-            value={methodFilter}
-            showAllOption
-            onSelectAll={() => {
-              setMethodFilter(null);
-              setMethodOpen(false);
-            }}
-            onSelect={(code) => {
-              setMethodFilter(code);
-              setMethodOpen(false);
-            }}
-          />
+          <div className="px-4 py-3">
+            <P2pPaymentMethodPicker
+              methods={methodsQ.data ?? []}
+              mode="single"
+              value={methodFilter}
+              showAllOption
+              onSelectAll={() => {
+                setMethodFilter(null);
+                setMethodOpen(false);
+              }}
+              onSelect={(code) => {
+                setMethodFilter(code);
+                setMethodOpen(false);
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

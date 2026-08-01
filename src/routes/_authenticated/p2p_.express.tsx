@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -300,26 +301,39 @@ function ExpressPage() {
       </Dialog>
 
       <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select payment method</DialogTitle>
+        <DialogContent className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl">
+          <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
+            <DialogTitle className="text-[17px] font-extrabold tracking-tight">
+              Select payment method
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Choose how you want to complete this Express trade
+            </DialogDescription>
           </DialogHeader>
-          <P2pPaymentMethodPicker
-            methods={(methodsQ.data ?? []).filter(
-              (m) => !matched || matched.payment_methods.includes(m.code),
-            )}
-            mode="single"
-            value={method}
-            onSelect={setMethod}
-            maxHeightClass="max-h-56"
-          />
-          <Button
-            className="mt-3 h-11 w-full rounded-full font-bold"
-            disabled={!method || !matched || start.isPending}
-            onClick={() => start.mutate()}
-          >
-            {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
-          </Button>
+          <div className="space-y-3 px-4 py-3">
+            <P2pPaymentMethodPicker
+              methods={(methodsQ.data ?? []).filter(
+                (m) => !matched || matched.payment_methods.includes(m.code),
+              )}
+              mode="single"
+              value={method}
+              onSelect={setMethod}
+            />
+            <Button
+              className={cn(
+                "h-11 w-full rounded-[8px] font-bold",
+                method
+                  ? side === "buy"
+                    ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
+                    : "bg-[#F04438] text-white hover:bg-[#DE3A2F]"
+                  : "bg-secondary text-muted-foreground",
+              )}
+              disabled={!method || !matched || start.isPending}
+              onClick={() => start.mutate()}
+            >
+              {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

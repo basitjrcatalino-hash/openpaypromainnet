@@ -6,10 +6,10 @@ import { logoCandidatesForP2pPayment } from "@/lib/p2p-payment-logos";
 type Size = "xs" | "sm" | "md" | "lg";
 
 const SIZE: Record<Size, { box: string; img: string; text: string }> = {
-  xs: { box: "h-4 w-4 rounded", img: "h-3 w-3", text: "text-[8px]" },
-  sm: { box: "h-5 w-5 rounded-md", img: "h-3.5 w-3.5", text: "text-[9px]" },
-  md: { box: "h-6 w-6 rounded-md", img: "h-4 w-4", text: "text-[10px]" },
-  lg: { box: "h-8 w-8 rounded-lg", img: "h-5 w-5", text: "text-xs" },
+  xs: { box: "h-4 w-4 rounded-[3px]", img: "h-3 w-3", text: "text-[8px]" },
+  sm: { box: "h-5 w-5 rounded-[4px]", img: "h-3.5 w-3.5", text: "text-[9px]" },
+  md: { box: "h-7 w-7 rounded-md", img: "h-[18px] w-[18px]", text: "text-[10px]" },
+  lg: { box: "h-9 w-9 rounded-lg", img: "h-6 w-6", text: "text-xs" },
 };
 
 function initials(name?: string, code?: string) {

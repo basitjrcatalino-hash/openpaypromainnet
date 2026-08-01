@@ -78,7 +78,7 @@ function TransferPage() {
     search.to && isAccountId(search.to) ? search.to : "p2p",
   );
   const [asset, setAsset] = useState<TransferAsset>(() =>
-    search.asset && isTransferAsset(search.asset) ? (search.asset.toUpperCase() as TransferAsset) : "USDT",
+    search.asset && isTransferAsset(search.asset) ? (search.asset.toUpperCase() as TransferAsset) : "OUSD",
   );
   const [amount, setAmount] = useState("");
   const [pickAccount, setPickAccount] = useState<"from" | "to" | null>(null);

@@ -141,6 +141,10 @@ function TermsPage() {
           also our{" "}
           <Link to="/privacy" className="font-semibold underline underline-offset-2">
             Privacy Policy
+          </Link>
+          ,{" "}
+          <Link to="/legal" className="font-semibold underline underline-offset-2">
+            Software License
           </Link>{" "}
           and{" "}
           <Link to="/regulatory" className="font-semibold underline underline-offset-2">

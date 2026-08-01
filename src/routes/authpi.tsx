@@ -919,12 +919,19 @@ function AuthPiPageInner() {
             >
               Privacy Policy
             </Link>
-            , and{" "}
+            ,{" "}
             <Link
               to="/regulatory"
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
               Regulatory Status
+            </Link>
+            , and{" "}
+            <Link
+              to="/legal"
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              Software License
             </Link>
             .
           </p>

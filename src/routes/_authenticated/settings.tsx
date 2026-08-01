@@ -1283,7 +1283,7 @@ function SettingsPage() {
               <span className="text-muted-foreground">›</span>
             </Link>
           </li>
-          <li>
+          <li className="border-b border-border/60">
             <Link
               to="/regulatory"
               className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/40"
@@ -1297,6 +1297,23 @@ function SettingsPage() {
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   Safety disclosures &amp; third-party providers
+                </span>
+              </span>
+              <span className="text-muted-foreground">›</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/legal"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left press hover:bg-muted/40"
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground">
+                <FileText className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">Software License</span>
+                <span className="block text-xs text-muted-foreground">
+                  MRWAIN ORGANIZATION · Pi Network license
                 </span>
               </span>
               <span className="text-muted-foreground">›</span>

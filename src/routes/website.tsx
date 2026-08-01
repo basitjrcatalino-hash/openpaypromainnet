@@ -1025,6 +1025,9 @@ function HomePage() {
               <Link to="/regulatory" className="hover:text-[var(--ink)]">
                 Regulatory
               </Link>
+              <Link to="/legal" className="hover:text-[var(--ink)]">
+                License
+              </Link>
             </div>
           </div>
         </div>

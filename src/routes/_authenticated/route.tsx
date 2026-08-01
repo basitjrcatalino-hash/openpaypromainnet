@@ -41,6 +41,9 @@ import {
   Home,
   ChevronDown,
   ExternalLink,
+  FileText,
+  Shield,
+  Scale,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -568,12 +571,30 @@ function SidebarInner({
       return false;
     }
   });
+  const [legalOpen, setLegalOpen] = useState(() => {
+    try {
+      return localStorage.getItem("sidebar-legal-open") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const toggleDiscover = () =>
     setDiscoverOpen((v) => {
       const next = !v;
       try {
         localStorage.setItem("sidebar-discover-open", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+
+  const toggleLegal = () =>
+    setLegalOpen((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("sidebar-legal-open", next ? "1" : "0");
       } catch {
         /* ignore */
       }
@@ -891,6 +912,51 @@ function SidebarInner({
                   </Link>
                 ),
               )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-0.5">
+          <button
+            type="button"
+            onClick={toggleLegal}
+            className="ph-side-label flex w-full items-center justify-between px-3 pb-1.5 pt-1 press"
+            aria-expanded={legalOpen}
+          >
+            <span>{t("settings.legal")}</span>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 text-muted-foreground/80 transition-transform duration-200",
+                legalOpen && "rotate-180",
+              )}
+            />
+          </button>
+          {legalOpen ? (
+            <div className="space-y-0.5">
+              {(
+                [
+                  { href: "/terms", label: "Terms", Icon: ScrollText },
+                  { href: "/privacy", label: "Privacy", Icon: Shield },
+                  { href: "/legal", label: "License", Icon: FileText },
+                  { href: "/regulatory", label: "Regulatory", Icon: Scale },
+                ] as const
+              ).map(({ href, label, Icon }) => (
+                <Link
+                  key={href}
+                  to={href}
+                  onClick={onClose}
+                  preload="intent"
+                  aria-current={
+                    pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined
+                  }
+                  className={sideItemClass(
+                    pathname === href || pathname.startsWith(`${href}/`),
+                  )}
+                >
+                  <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1 truncate">{label}</span>
+                </Link>
+              ))}
             </div>
           ) : null}
         </div>

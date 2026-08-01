@@ -125,10 +125,14 @@ function RegulatoryPage() {
           Users should carefully review the OpenPay{" "}
           <Link to="/terms" className="font-semibold underline underline-offset-2">
             Terms of Service
-          </Link>{" "}
-          and{" "}
+          </Link>
+          ,{" "}
           <Link to="/privacy" className="font-semibold underline underline-offset-2">
             Privacy Policy
+          </Link>
+          , and{" "}
+          <Link to="/legal" className="font-semibold underline underline-offset-2">
+            Software License
           </Link>{" "}
           for additional disclosures, limitations of liability, and user responsibilities.
         </p>

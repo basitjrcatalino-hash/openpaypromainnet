@@ -51,10 +51,13 @@ import {
 import {
   LEDGER_MAJOR_SWAP_IDS,
   OUSD_SWAP_ID,
+  SOL_SWAP_ID,
+  majorIdFromSwapId,
   readMajorBalance,
   walletMajorSelect,
 } from "@/lib/ledger-majors";
 import { buyMajorWithOusd } from "@/lib/buy-major.functions";
+import { applyOpenDexFee } from "@/lib/opendex-fee";
 import { executeOpenDexSwap } from "@/lib/opendex.functions";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import {
@@ -124,8 +127,10 @@ function OpenTokenHome() {
   const [predictWindow, setPredictWindow] = useState<(typeof PREDICT_WINDOWS)[number]["id"]>("15m");
   const [predictDetail, setPredictDetail] = useState(false);
   const [predictBuyOpen, setPredictBuyOpen] = useState(false);
-  const [payToken, setPayToken] = useState("SOL");
-  const [receiveToken, setReceiveToken] = useState("OUSD");
+  const [payId, setPayId] = useState(SOL_SWAP_ID);
+  const [receiveId, setReceiveId] = useState(OUSD_SWAP_ID);
+  const [payAmount, setPayAmount] = useState("");
+  const [swapBusy, setSwapBusy] = useState(false);
 
   const { data: isStaff } = useQuery({
     queryKey: ["ot-is-staff", user.id],
@@ -345,14 +350,86 @@ function OpenTokenHome() {
           currency={currency}
           tradeFilter={tradeFilter}
           setTradeFilter={setTradeFilter}
-          payToken={payToken}
-          receiveToken={receiveToken}
+          payId={payId}
+          receiveId={receiveId}
+          setPayId={setPayId}
+          setReceiveId={setReceiveId}
+          payAmount={payAmount}
+          setPayAmount={setPayAmount}
           onFlip={() => {
-            setPayToken(receiveToken);
-            setReceiveToken(payToken);
+            setPayId(receiveId);
+            setReceiveId(payId);
+            setPayAmount("");
           }}
           list={tradeList}
           loading={tokensLoading}
+          wallet={wallet}
+          holdings={holdings}
+          majorMarkets={majorMarkets}
+          tokens={tokens as any[]}
+          swapBusy={swapBusy}
+          onSwap={async () => {
+            if (!wallet?.id) {
+              toast.error("Create a wallet first");
+              return;
+            }
+            const amt = Number(payAmount);
+            if (!(amt > 0)) {
+              toast.error("Enter a valid amount");
+              return;
+            }
+            if (payId === receiveId) {
+              toast.error("Select two different tokens");
+              return;
+            }
+            const fromMeta = resolveTradeAsset(payId, tokens as any[], majorMarkets, wallet, holdings);
+            const toMeta = resolveTradeAsset(receiveId, tokens as any[], majorMarkets, wallet, holdings);
+            if (!fromMeta || !toMeta) {
+              toast.error("Token not found");
+              return;
+            }
+            if (fromMeta.price <= 0 || toMeta.price <= 0) {
+              toast.error("Invalid token price");
+              return;
+            }
+            if (amt > fromMeta.balance + 1e-12) {
+              toast.error(`Insufficient ${fromMeta.symbol} balance`);
+              return;
+            }
+            const rawOut = (amt * fromMeta.price) / toMeta.price;
+            const { net: expectedOut } = applyOpenDexFee(rawOut);
+            if (!(expectedOut > 0)) {
+              toast.error("Swap amount too small after fee");
+              return;
+            }
+            setSwapBusy(true);
+            try {
+              const res = await swapFn({
+                data: {
+                  wallet_id: String(wallet.id),
+                  from_id: payId,
+                  to_id: receiveId,
+                  amount: amt,
+                  slippage: 0.5,
+                  expected_out: expectedOut,
+                },
+              });
+              toast.success(
+                `Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`,
+              );
+              setPayAmount("");
+              await Promise.all([
+                qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
+                qc.invalidateQueries({ queryKey: ["ot-home-holdings"] }),
+                qc.invalidateQueries({ queryKey: ["holdings"] }),
+                qc.invalidateQueries({ queryKey: ["recent-txs"] }),
+              ]);
+            } catch (err) {
+              toast.error((err as Error).message);
+            } finally {
+              setSwapBusy(false);
+            }
+          }}
         />
       )}
 
@@ -672,30 +749,128 @@ function HomeTab({
 
 /* ───────────────────────── TRADE ───────────────────────── */
 
+type TradeAssetMeta = {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  balance: number;
+  logoUrl?: string;
+};
+
+function resolveTradeAsset(
+  id: string,
+  tokens: any[],
+  majorMarkets: Awaited<ReturnType<typeof fetchMajorMarkets>>,
+  wallet: Record<string, unknown> | null | undefined,
+  holdings: any[],
+): TradeAssetMeta | null {
+  if (id === OUSD_SWAP_ID) {
+    return {
+      id: OUSD_SWAP_ID,
+      symbol: "OUSD",
+      name: "OpenPay USD",
+      price: 1,
+      balance: Number(wallet?.ousd_balance ?? 0),
+      logoUrl: OUSD_LOGO_URL,
+    };
+  }
+  const major = majorIdFromSwapId(id);
+  if (major) {
+    const def = MAJOR_TOKENS[major];
+    const m = majorMarketById(majorMarkets, major);
+    return {
+      id: LEDGER_MAJOR_SWAP_IDS[major],
+      symbol: def.symbol,
+      name: def.name,
+      price: Number(m.price ?? 0),
+      balance: readMajorBalance(wallet, major),
+      logoUrl: def.logoUrl,
+    };
+  }
+  const tok = tokens.find((t) => t.id === id);
+  if (!tok) return null;
+  const holding = holdings.find((h: any) => h.token_id === id || h.tokens?.id === id);
+  return {
+    id: String(tok.id),
+    symbol: String(tok.symbol ?? "?"),
+    name: String(tok.name ?? tok.symbol ?? "Token"),
+    price: Number(tok.price_usd ?? 0),
+    balance: Number(holding?.balance ?? 0),
+    logoUrl: tok.logo_url ?? undefined,
+  };
+}
+
 function TradeTab({
   currency,
   tradeFilter,
   setTradeFilter,
-  payToken,
-  receiveToken,
+  payId,
+  receiveId,
+  setPayId,
+  setReceiveId,
+  payAmount,
+  setPayAmount,
   onFlip,
   list,
   loading,
+  wallet,
+  holdings,
+  majorMarkets,
+  tokens,
+  swapBusy,
+  onSwap,
 }: {
   currency: CurrencyCode;
   tradeFilter: TradeFilter;
   setTradeFilter: (f: TradeFilter) => void;
-  payToken: string;
-  receiveToken: string;
+  payId: string;
+  receiveId: string;
+  setPayId: (id: string) => void;
+  setReceiveId: (id: string) => void;
+  payAmount: string;
+  setPayAmount: (v: string) => void;
   onFlip: () => void;
   list: any[];
   loading: boolean;
+  wallet: Record<string, unknown> | null | undefined;
+  holdings: any[];
+  majorMarkets: Awaited<ReturnType<typeof fetchMajorMarkets>>;
+  tokens: any[];
+  swapBusy: boolean;
+  onSwap: () => Promise<void>;
 }) {
   const filters: { id: TradeFilter; label: string; icon: LucideIcon }[] = [
     { id: "featured", label: "Featured", icon: Sparkles },
     { id: "trending", label: "Trending", icon: ArrowUp },
     { id: "volume", label: "Top Volume", icon: Wallet },
   ];
+
+  const pay = resolveTradeAsset(payId, tokens, majorMarkets, wallet, holdings);
+  const receive = resolveTradeAsset(receiveId, tokens, majorMarkets, wallet, holdings);
+  const amt = Number(payAmount) || 0;
+  const rawOut =
+    pay && receive && pay.price > 0 && receive.price > 0 && amt > 0
+      ? (amt * pay.price) / receive.price
+      : 0;
+  const { net: netOut } = applyOpenDexFee(rawOut);
+  const canSwap =
+    !!wallet?.id &&
+    !swapBusy &&
+    amt > 0 &&
+    payId !== receiveId &&
+    !!pay &&
+    !!receive &&
+    pay.price > 0 &&
+    receive.price > 0 &&
+    amt <= pay.balance + 1e-12 &&
+    netOut > 0;
+
+  function pickReceive(token: any) {
+    const id = String(token.id);
+    setReceiveId(id);
+    if (payId === id) setPayId(OUSD_SWAP_ID);
+  }
 
   return (
     <div className="space-y-5 px-1 pt-2">
@@ -723,23 +898,64 @@ function TradeTab({
       {/* Swap cards */}
       <div className="relative space-y-2">
         <div className="rounded-[1.35rem] bg-muted/80 p-4">
-          <p className="text-xs font-semibold text-muted-foreground">You Pay</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-muted-foreground">You Pay</p>
+            {pay ? (
+              <button
+                type="button"
+                className="text-[11px] font-semibold text-muted-foreground press"
+                onClick={() => setPayAmount(String(pay.balance))}
+              >
+                Bal {formatNumber(pay.balance, pay.balance < 1 ? 6 : 4)}
+              </button>
+            ) : null}
+          </div>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-3xl font-extrabold tabular-nums text-muted-foreground/80">0</p>
+            <Input
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={payAmount}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.]/g, "");
+                if ((v.match(/\./g) ?? []).length > 1) return;
+                setPayAmount(v);
+              }}
+              className="h-auto border-0 bg-transparent p-0 text-3xl font-extrabold tabular-nums shadow-none focus-visible:ring-0"
+            />
             <Link
               to="/swap"
-              className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
             >
-              <TokenChip symbol={payToken} />
+              <TokenChip symbol={pay?.symbol ?? "SOL"} logoUrl={pay?.logoUrl} />
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </Link>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {[0.25, 0.5, 1].map((pct) => (
+              <button
+                key={pct}
+                type="button"
+                disabled={!pay || pay.balance <= 0}
+                onClick={() =>
+                  setPayAmount(
+                    pct >= 1
+                      ? String(pay?.balance ?? 0)
+                      : String(Math.floor(((pay?.balance ?? 0) * pct) * 1e8) / 1e8),
+                  )
+                }
+                className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-bold text-muted-foreground press disabled:opacity-40"
+              >
+                {pct >= 1 ? "MAX" : `${pct * 100}%`}
+              </button>
+            ))}
           </div>
         </div>
 
         <button
           type="button"
           onClick={onFlip}
-          className="absolute left-1/2 top-1/2 z-10 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
+          className="absolute left-1/2 top-[42%] z-10 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
           aria-label="Flip tokens"
         >
           <ArrowLeftRight className="h-4 w-4 rotate-90" />
@@ -748,17 +964,52 @@ function TradeTab({
         <div className="rounded-[1.35rem] bg-muted/80 p-4">
           <p className="text-xs font-semibold text-muted-foreground">You Receive</p>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-3xl font-extrabold tabular-nums text-muted-foreground/80">0</p>
+            <p
+              className={cn(
+                "text-3xl font-extrabold tabular-nums",
+                netOut > 0 ? "text-foreground" : "text-muted-foreground/80",
+              )}
+            >
+              {netOut > 0 ? formatNumber(netOut, netOut < 1 ? 6 : 4) : "0"}
+            </p>
             <Link
               to="/swap"
-              className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-background px-3 py-2 text-sm font-bold press"
             >
-              <TokenChip symbol={receiveToken} />
+              <TokenChip symbol={receive?.symbol ?? "OUSD"} logoUrl={receive?.logoUrl} />
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </Link>
           </div>
+          {pay && receive && pay.price > 0 && receive.price > 0 ? (
+            <p className="mt-2 text-[11px] font-medium text-muted-foreground">
+              1 {pay.symbol} ≈ {formatNumber(pay.price / receive.price, 6)} {receive.symbol}
+            </p>
+          ) : null}
         </div>
       </div>
+
+      <Button
+        type="button"
+        size="lg"
+        className="h-12 w-full rounded-2xl text-base font-bold"
+        disabled={!canSwap}
+        onClick={() => void onSwap()}
+      >
+        {swapBusy ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Swapping…
+          </>
+        ) : !wallet?.id ? (
+          "Create a wallet to swap"
+        ) : amt <= 0 ? (
+          "Enter amount"
+        ) : pay && amt > pay.balance + 1e-12 ? (
+          `Insufficient ${pay.symbol}`
+        ) : (
+          "Swap"
+        )}
+      </Button>
 
       <div className="flex items-center justify-between px-0.5">
         <div className="flex gap-4">
@@ -779,7 +1030,13 @@ function TradeTab({
           <li className="py-12 text-center text-sm text-muted-foreground">No tokens yet</li>
         ) : (
           list.slice(0, 40).map((t, i) => (
-            <RankedTokenRow key={String(t.id)} token={t} currency={currency} rank={i + 1} />
+            <RankedTokenRow
+              key={String(t.id)}
+              token={t}
+              currency={currency}
+              rank={i + 1}
+              onTrade={() => pickReceive(t)}
+            />
           ))
         )}
       </ul>
@@ -1365,13 +1622,14 @@ function SectionTitle({
   return <div className="inline-flex items-center gap-0.5">{inner}</div>;
 }
 
-function TokenChip({ symbol }: { symbol: string }) {
+function TokenChip({ symbol, logoUrl }: { symbol: string; logoUrl?: string }) {
   const logo =
-    symbol.toUpperCase() === "OUSD"
+    logoUrl ||
+    (symbol.toUpperCase() === "OUSD"
       ? OUSD_LOGO_URL
       : symbol.toUpperCase() === "SOL"
         ? MAJOR_TOKENS.sol.logoUrl
-        : undefined;
+        : undefined);
   return (
     <>
       {logo ? (
@@ -1441,20 +1699,22 @@ function RankedTokenRow({
   token: t,
   currency,
   rank,
+  onTrade,
 }: {
   token: any;
   currency: CurrencyCode;
   rank: number;
+  onTrade?: () => void;
 }) {
   const badge =
     rank === 1 ? "bg-amber-400 text-black" : rank === 2 ? "bg-zinc-300 text-black" : rank === 3 ? "bg-amber-700 text-white" : "bg-muted text-muted-foreground";
   const mc = Number(t.market_cap ?? 0);
   return (
     <li className="flex items-stretch gap-1">
-      <Link
-        to="/opentoken/$tokenId"
-        params={{ tokenId: t.id }}
-        className="ph-row min-w-0 flex-1 press"
+      <button
+        type="button"
+        onClick={onTrade}
+        className="ph-row min-w-0 flex-1 text-left press"
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
@@ -1493,6 +1753,15 @@ function RankedTokenRow({
             {formatPct(Number(t.change_24h ?? 0))}
           </div>
         </div>
+      </button>
+      <Link
+        to="/opentoken/$tokenId"
+        params={{ tokenId: t.id }}
+        className="grid w-11 shrink-0 place-items-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground press"
+        aria-label={`Open ${t.symbol}`}
+        title="Token page"
+      >
+        <ChevronRight className="h-4 w-4" />
       </Link>
       <Link
         to="/opentoken/$tokenId/chat"

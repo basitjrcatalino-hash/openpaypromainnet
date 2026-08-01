@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OpenusdRouteImport } from './routes/openusd'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -155,6 +156,11 @@ const AuthpiRoute = AuthpiRouteImport.update({
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -752,6 +758,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
   '/privacy': typeof PrivacyRoute
@@ -871,6 +878,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
   '/privacy': typeof PrivacyRoute
@@ -992,6 +1000,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
   '/privacy': typeof PrivacyRoute
@@ -1113,6 +1122,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/legal'
     | '/mcp'
     | '/openusd'
     | '/privacy'
@@ -1232,6 +1242,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/legal'
     | '/mcp'
     | '/openusd'
     | '/privacy'
@@ -1352,6 +1363,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/legal'
     | '/mcp'
     | '/openusd'
     | '/privacy'
@@ -1473,6 +1485,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
   BlogRoute: typeof BlogRoute
+  LegalRoute: typeof LegalRoute
   McpRoute: typeof McpRoute
   OpenusdRoute: typeof OpenusdRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -1571,6 +1584,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog'
       preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -2546,6 +2566,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
   BlogRoute: BlogRoute,
+  LegalRoute: LegalRoute,
   McpRoute: McpRoute,
   OpenusdRoute: OpenusdRoute,
   PrivacyRoute: PrivacyRoute,

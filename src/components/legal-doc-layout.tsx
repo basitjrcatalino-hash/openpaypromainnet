@@ -3,12 +3,17 @@ import type { ReactNode } from "react";
 import { PageListenButton } from "@/components/page-listen-button";
 import { cn } from "@/lib/utils";
 
-export type LegalNavKey = "terms" | "privacy" | "regulatory";
+export type LegalNavKey = "terms" | "privacy" | "regulatory" | "legal";
 
-const LEGAL_NAV: { key: LegalNavKey; to: "/terms" | "/privacy" | "/regulatory"; label: string }[] = [
+const LEGAL_NAV: {
+  key: LegalNavKey;
+  to: "/terms" | "/privacy" | "/regulatory" | "/legal";
+  label: string;
+}[] = [
   { key: "terms", to: "/terms", label: "Terms" },
   { key: "privacy", to: "/privacy", label: "Privacy" },
   { key: "regulatory", to: "/regulatory", label: "Regulatory" },
+  { key: "legal", to: "/legal", label: "License" },
 ];
 
 type Props = {

@@ -25,6 +25,7 @@ import {
   History,
   ScrollText,
   BookOpen,
+  Users,
   CircleDollarSign,
   PanelLeftClose,
   PanelLeftOpen,

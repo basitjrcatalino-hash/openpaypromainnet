@@ -40,7 +40,7 @@ export function FilterChipRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch]",
+        "flex items-center gap-2 overflow-x-auto scrollbar-none [-webkit-overflow-scrolling:touch] md:flex-wrap md:overflow-visible",
         className,
       )}
     >

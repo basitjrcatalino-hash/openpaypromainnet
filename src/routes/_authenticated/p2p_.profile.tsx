@@ -103,7 +103,7 @@ function P2pProfilePage() {
   return (
     <div>
       <header
-        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl"
+        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl md:px-6"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <h1 className="text-lg font-bold">Profile</h1>
@@ -112,7 +112,7 @@ function P2pProfilePage() {
         </Link>
       </header>
 
-      <div className="relative overflow-hidden px-4 pb-4 pt-6">
+      <div className="relative overflow-hidden px-4 pb-4 pt-6 md:px-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
         <div className="relative flex items-center gap-3">
           <div className="relative">
@@ -214,7 +214,7 @@ function MenuLink({
   return (
     <Link
       to={to}
-      className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30"
+      className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30 md:px-6"
     >
       <Icon className={cn("h-5 w-5 text-muted-foreground")} strokeWidth={1.75} />
       <span className="flex-1 text-sm font-semibold">{label}</span>

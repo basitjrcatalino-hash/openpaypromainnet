@@ -158,7 +158,7 @@ function TradeRoom() {
   const live = order.status === "pending_payment" || order.status === "paid";
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-8 pt-2">
+    <div className="mx-auto w-full space-y-4 px-4 pb-8 pt-2 md:px-6">
       <header className="flex items-center gap-2">
         <button
           type="button"
@@ -174,10 +174,10 @@ function TradeRoom() {
         </div>
       </header>
 
-      <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <div className="space-y-4">
           {/* Escrow header */}
-          <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
+          <div className="rounded-2xl border border-border/60 bg-card/70 p-4 md:p-5">
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={cn(
@@ -228,7 +228,7 @@ function TradeRoom() {
           </div>
 
           {/* Actions */}
-          <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-4">
+          <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-4 md:p-5">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               Next step
             </h2>
@@ -368,7 +368,7 @@ function TradeRoom() {
         </div>
 
         {/* Chat */}
-        <div className="flex h-[32rem] flex-col rounded-3xl border border-border/60 bg-card/70">
+        <div className="flex h-[min(32rem,70dvh)] flex-col rounded-3xl border border-border/60 bg-card/70 lg:sticky lg:top-4 lg:h-[min(40rem,calc(100dvh-6rem))]">
           <div className="border-b border-border/60 px-5 py-3 text-sm font-bold">
             Trade chat · {counterparty}
           </div>

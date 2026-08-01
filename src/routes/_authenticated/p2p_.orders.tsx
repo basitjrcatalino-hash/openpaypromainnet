@@ -98,11 +98,11 @@ function OrdersPage() {
         className="sticky top-0 z-20 border-b border-border/40 bg-background/95 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <div className="flex h-12 items-center justify-between px-4">
+        <div className="flex h-12 items-center justify-between px-4 md:px-6">
           <h1 className="text-lg font-bold">Orders</h1>
           <Search className="h-5 w-5 text-muted-foreground" />
         </div>
-        <div className="flex items-center gap-6 px-4">
+        <div className="flex items-center gap-6 px-4 md:px-6">
           {(["pending", "completed"] as const).map((tab) => (
             <button
               key={tab}
@@ -122,7 +122,7 @@ function OrdersPage() {
         </div>
       </header>
 
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 md:px-6">
         <FilterChipRow>
           {main === "pending"
             ? (
@@ -213,7 +213,7 @@ function OrderRow({
     <Link
       to="/p2p/order/$id"
       params={{ id: order.id }}
-      className="block px-4 py-4 transition-colors hover:bg-muted/30"
+      className="block px-4 py-4 transition-colors hover:bg-muted/30 md:px-6"
     >
       <div className="flex items-center justify-between gap-3">
         <span

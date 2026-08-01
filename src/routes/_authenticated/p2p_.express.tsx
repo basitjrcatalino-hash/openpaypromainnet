@@ -131,8 +131,8 @@ function ExpressPage() {
   const canTrade = amount > 0 && !!matched && (method || matched.payment_methods[0]);
 
   return (
-    <div className="px-4 pb-8 pt-3">
-      <div className="mb-4 rounded-2xl border border-border/50 bg-card/50 p-4">
+    <div className="mx-auto w-full max-w-lg px-4 pb-8 pt-3 md:max-w-xl lg:max-w-2xl md:px-6">
+      <div className="mb-4 rounded-2xl border border-border/50 bg-card/50 p-4 md:p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold">Hot crypto</h2>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -140,14 +140,14 @@ function ExpressPage() {
         <p className="mt-1 text-xs text-muted-foreground">
           Discover what people are trading now and get them easily on P2P.
         </p>
-        <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
+        <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none md:flex-wrap md:overflow-visible">
           {P2P_ASSETS.slice(0, 4).map((a) => (
             <button
               key={a}
               type="button"
               onClick={() => setAsset(a)}
               className={cn(
-                "min-w-[6.5rem] shrink-0 rounded-xl border px-3 py-2 text-left",
+                "min-w-[6.5rem] shrink-0 rounded-xl border px-3 py-2 text-left md:min-w-0 md:flex-1",
                 asset === a ? "border-foreground bg-secondary" : "border-border/60 bg-background/40",
               )}
             >

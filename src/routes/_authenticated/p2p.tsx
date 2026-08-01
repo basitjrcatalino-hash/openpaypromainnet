@@ -127,7 +127,7 @@ function P2PMarketplace() {
 
   return (
     <div className="min-h-[70dvh]">
-      <div className="flex items-center gap-3 border-b border-border/40 px-4 py-2.5">
+      <div className="flex items-center gap-3 border-b border-border/40 px-4 py-2.5 md:px-6">
         <Gift className="h-4 w-4 text-emerald-500" />
         <p className="flex-1 truncate text-xs text-muted-foreground">
           Escrow-protected P2P · zero platform trading fees
@@ -135,7 +135,7 @@ function P2PMarketplace() {
         <ShieldCheck className="h-4 w-4 text-muted-foreground" />
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6">
         <BuySellToggle value={side} onChange={setSide} />
         <button
           type="button"
@@ -147,7 +147,7 @@ function P2PMarketplace() {
         </button>
       </div>
 
-      <div className="border-b border-border/40 px-3 pb-3">
+      <div className="border-b border-border/40 px-3 pb-3 md:px-5">
         <FilterChipRow>
           <FilterChip
             label={asset}
@@ -186,6 +186,13 @@ function P2PMarketplace() {
         />
       ) : (
         <div className="divide-y divide-border/40">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(7rem,0.7fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 border-b border-border/40 px-6 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
+            <span>Advertisers</span>
+            <span>Price</span>
+            <span>Available / Limit</span>
+            <span>Payment</span>
+            <span className="w-24 text-right">Trade</span>
+          </div>
           {filtered.map((ad, idx) => {
             const st = stats.data?.[ad.user_id];
             const name = names.data?.[ad.user_id] ?? "Trader";
@@ -202,55 +209,63 @@ function P2PMarketplace() {
               <article
                 key={ad.id}
                 className={cn(
-                  "relative px-4 py-4",
+                  "relative px-4 py-4 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(7rem,0.7fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-4 md:px-6",
                   idx === 0 && "border-l-2 border-l-emerald-500/80 bg-emerald-500/3",
                 )}
               >
                 {idx === 0 ? (
-                  <span className="absolute left-4 top-2 text-[10px] font-bold text-emerald-500">
+                  <span className="absolute left-4 top-2 text-[10px] font-bold text-emerald-500 md:left-6">
                     Paid ad
                   </span>
                 ) : null}
-                <div className={cn("flex items-start justify-between gap-3", idx === 0 && "mt-3")}>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate text-sm font-bold">{name}</p>
-                      <span className="text-amber-400" title="Verified">
-                        ◆
-                      </span>
+
+                {/* Merchant */}
+                <div className={cn("min-w-0", idx === 0 && "mt-3 md:mt-0")}>
+                  <div className="flex items-start justify-between gap-3 md:block">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate text-sm font-bold">{name}</p>
+                        <span className="text-amber-400" title="Verified">
+                          ◆
+                        </span>
+                      </div>
+                      <MerchantStatLine
+                        completed={st?.completed_count}
+                        completionRate={st?.completion_rate}
+                        online={isTraderOnline(st?.last_active_at)}
+                      />
                     </div>
-                    <MerchantStatLine
-                      completed={st?.completed_count}
-                      completionRate={st?.completion_rate}
-                      online={isTraderOnline(st?.last_active_at)}
-                    />
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground md:mt-1">
+                      <Clock3 className="h-3 w-3" />
+                      {ad.pay_time_limit_minutes} min
+                    </span>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
-                    <Clock3 className="h-3 w-3" />
-                    {ad.pay_time_limit_minutes} min
-                  </span>
                 </div>
 
-                <p className="mt-3 text-2xl font-extrabold tabular-nums tracking-tight">
+                {/* Price */}
+                <p className="mt-3 text-2xl font-extrabold tabular-nums tracking-tight md:mt-0 md:text-xl">
                   {priceFiat}
                 </p>
-                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+
+                {/* Available / Limit */}
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground md:mt-0">
                   <p>
-                    Available{" "}
+                    <span className="md:hidden">Available </span>
                     <span className="font-semibold text-foreground/80">
                       {fmtAmount(ad.available_amount)} {ad.asset}
                     </span>
                   </p>
                   <p>
-                    Limit{" "}
+                    <span className="md:hidden">Limit </span>
                     <span className="font-semibold text-foreground/80">
                       {minFiat} – {maxFiat}
                     </span>
                   </p>
                 </div>
 
-                <div className="mt-3 flex items-end justify-between gap-3">
-                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                {/* Payment + CTA — side-by-side on mobile; separate grid cells on md+ */}
+                <div className="mt-3 flex items-end justify-between gap-3 md:mt-0 md:contents">
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 md:block md:space-y-1">
                     {ad.payment_methods.slice(0, 3).map((code) => (
                       <span
                         key={code}
@@ -263,7 +278,7 @@ function P2PMarketplace() {
                   <Button
                     onClick={() => setSelected(ad)}
                     className={cn(
-                      "h-9 shrink-0 rounded-full px-5 text-sm font-bold",
+                      "h-9 shrink-0 rounded-full px-5 text-sm font-bold md:w-24",
                       side === "buy"
                         ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
                         : "bg-rose-500 text-white hover:bg-rose-500/90",

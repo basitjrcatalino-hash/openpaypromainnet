@@ -95,7 +95,7 @@ function P2PAdminPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 pb-24">
+    <div className="mx-auto w-full space-y-5 px-4 pb-24 md:px-6">
       <PageHeader title="P2P admin" backTo="/p2p" />
 
       <div className="rounded-3xl border border-border/60 bg-card/70 p-5">

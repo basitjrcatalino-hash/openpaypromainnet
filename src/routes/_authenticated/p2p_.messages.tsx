@@ -65,7 +65,7 @@ function MessagesInboxPage() {
   return (
     <div>
       <header
-        className="sticky top-0 z-20 border-b border-border/40 bg-background/95 px-4 pb-3 backdrop-blur-xl"
+        className="sticky top-0 z-20 border-b border-border/40 bg-background/95 px-4 pb-3 backdrop-blur-xl md:px-6"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="flex h-12 items-center">
@@ -107,7 +107,7 @@ function MessagesInboxPage() {
                 key={t.order.id}
                 to="/p2p/order/$id"
                 params={{ id: t.order.id }}
-                className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30"
+                className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30 md:px-6"
               >
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary text-sm font-black">
                   {name.slice(0, 1).toUpperCase()}

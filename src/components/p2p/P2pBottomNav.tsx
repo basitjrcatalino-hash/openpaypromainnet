@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
+import { P2P_SHELL_WIDTH } from "@/components/p2p/p2p-layout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchInboxUnreadCount } from "@/lib/p2p";
@@ -56,40 +57,47 @@ export function P2pBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40"
       aria-label="P2P"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="mx-auto flex h-14 max-w-lg items-stretch px-1">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = tab.match(pathname);
-          const showBadge = tab.to === "/p2p/messages" && unread > 0;
-          return (
-            <Link
-              key={tab.to}
-              to={tab.to}
-              preload="intent"
-              className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold press",
-                active ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              <span className="relative">
-                <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2.25 : 1.75} />
-                {showBadge ? (
-                  <span className="absolute -right-2.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold leading-4 text-white">
-                    {unread > 99 ? "99+" : unread}
-                  </span>
+      <div
+        className={cn(
+          P2P_SHELL_WIDTH,
+          "pointer-events-auto border-t border-border/50 bg-background/95 backdrop-blur-xl md:border-x md:border-border/40",
+        )}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="flex h-14 items-stretch px-1 sm:px-2 md:px-3">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = tab.match(pathname);
+            const showBadge = tab.to === "/p2p/messages" && unread > 0;
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                preload="intent"
+                className={cn(
+                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold press md:text-[11px]",
+                  active ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                <span className="relative">
+                  <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2.25 : 1.75} />
+                  {showBadge ? (
+                    <span className="absolute -right-2.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold leading-4 text-white">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  ) : null}
+                </span>
+                <span>{tab.label}</span>
+                {active ? (
+                  <span className="absolute top-1 h-1 w-1 rounded-full bg-rose-500" aria-hidden />
                 ) : null}
-              </span>
-              <span>{tab.label}</span>
-              {active ? (
-                <span className="absolute top-1 h-1 w-1 rounded-full bg-rose-500" aria-hidden />
-              ) : null}
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

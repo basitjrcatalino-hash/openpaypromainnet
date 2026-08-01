@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 import { P2pBottomNav } from "@/components/p2p/P2pBottomNav";
+import { P2P_ADMIN_SHELL_WIDTH, P2P_SHELL_WIDTH } from "@/components/p2p/p2p-layout";
 import { cn } from "@/lib/utils";
 
 const MODE_TABS = [
@@ -20,21 +21,32 @@ function showBottomNav(pathname: string) {
   return pathname.startsWith("/p2p") && !pathname.startsWith("/p2p/admin");
 }
 
+function isAdminPath(pathname: string) {
+  return pathname.startsWith("/p2p/admin");
+}
+
 export function P2pShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const modes = showModeTabs(pathname);
   const bottom = showBottomNav(pathname);
+  const admin = isAdminPath(pathname);
   const isExpress = pathname.startsWith("/p2p/express");
 
   return (
-    <div className="relative mx-auto min-h-[100dvh] w-full max-w-lg bg-background text-foreground">
+    <div
+      className={cn(
+        "relative min-h-[100dvh] bg-background text-foreground",
+        admin ? P2P_ADMIN_SHELL_WIDTH : P2P_SHELL_WIDTH,
+        "md:border-x md:border-border/40",
+      )}
+    >
       {modes ? (
         <header
           className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur-xl"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="flex h-12 items-center gap-1 px-2">
+          <div className="flex h-12 items-center gap-1 px-2 sm:px-3 md:px-4">
             <button
               type="button"
               onClick={() => void navigate({ to: "/dashboard" })}
@@ -43,7 +55,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <div className="flex flex-1 items-end justify-center gap-5 pb-0.5">
+            <div className="flex flex-1 items-end justify-center gap-5 pb-0.5 md:gap-8">
               {MODE_TABS.map((tab) => {
                 const active =
                   (tab.id === "p2p" && !isExpress) || (tab.id === "express" && isExpress);

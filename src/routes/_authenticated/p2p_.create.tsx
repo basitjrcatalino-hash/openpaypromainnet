@@ -60,7 +60,7 @@ function AdsHubPage() {
   return (
     <div>
       <header
-        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl"
+        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl md:px-6"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <h1 className="text-lg font-bold">Ads</h1>
@@ -94,7 +94,7 @@ function AdsHubPage() {
       ) : (
         <div className="divide-y divide-border/40">
           {myAdsQ.data.map((ad) => (
-            <div key={ad.id} className="px-4 py-4">
+            <div key={ad.id} className="px-4 py-4 md:px-6">
               <div className="flex items-center justify-between gap-3">
                 <span
                   className={cn(

@@ -41,8 +41,8 @@ export function P2pDocLayout({
   const activeLabel = P2P_LEGAL_NAV.find((n) => n.to === active)?.label ?? title;
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-6 sm:px-8">
+    <div className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto w-full max-w-295 px-5 pb-24 pt-6 sm:px-8">
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/p2p/profile"
@@ -105,7 +105,7 @@ export function P2pDocLayout({
           </div>
 
           <div
-            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
+            className="mt-10 grid aspect-16/7 place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
             style={{
               backgroundImage: `linear-gradient(135deg, ${hero.from}, ${hero.to})`,
             }}
@@ -114,15 +114,13 @@ export function P2pDocLayout({
             {hero.glyph}
           </div>
 
-          <div className="mt-12 max-w-[46rem] space-y-10 text-base leading-relaxed text-foreground/90">
+          <div className="mt-12 max-w-184 space-y-10 text-base leading-relaxed text-foreground/90">
             {children}
           </div>
 
           <div className="mt-14 rounded-3xl border border-border bg-card p-7">
             <h2 className="text-2xl font-bold tracking-tight">Keep reading</h2>
-            <p className="mt-2 text-muted-foreground">
-              More from the OpenPay Pro P2P guide pack.
-            </p>
+            <p className="mt-2 text-muted-foreground">More from the OpenPay Pro P2P guide pack.</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {P2P_LEGAL_NAV.filter((n) => n.to !== active).map((n) => (
                 <Link
@@ -179,11 +177,7 @@ export function P2pDocList({ items }: { items: string[] }) {
   );
 }
 
-export function P2pDocSteps({
-  steps,
-}: {
-  steps: { title: string; detail: string }[];
-}) {
+export function P2pDocSteps({ steps }: { steps: { title: string; detail: string }[] }) {
   return (
     <ol className="space-y-4">
       {steps.map((step, i) => (
@@ -194,7 +188,9 @@ export function P2pDocSteps({
             </span>
             <div className="min-w-0">
               <p className="text-lg font-bold tracking-tight">{step.title}</p>
-              <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">{step.detail}</p>
+              <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">
+                {step.detail}
+              </p>
             </div>
           </div>
         </li>
@@ -206,7 +202,9 @@ export function P2pDocSteps({
 export function P2pDocTips({ items }: { items: string[] }) {
   return (
     <div className="rounded-2xl border-l-4 border-primary bg-accent px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Good to know</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        Good to know
+      </p>
       <ul className="mt-2 space-y-2">
         {items.map((tip) => (
           <li key={tip} className="text-base font-medium leading-relaxed">

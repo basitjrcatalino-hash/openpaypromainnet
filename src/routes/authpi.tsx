@@ -1,5 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2, Mail } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
@@ -69,6 +77,27 @@ function goPostAuth() {
 
 export const Route = createFileRoute("/authpi")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => {
+    const method = typeof s.method === "string" ? s.method.toLowerCase() : undefined;
+    const mode = typeof s.mode === "string" ? s.mode.toLowerCase() : undefined;
+    const next = typeof s.next === "string" ? s.next : undefined;
+    return {
+      method:
+        method === "email" ||
+        method === "openpay" ||
+        method === "telegram" ||
+        method === "solana" ||
+        method === "pi" ||
+        method === "phantom" ||
+        method === "walletconnect" ||
+        method === "metamask" ||
+        method === "privy"
+          ? method
+          : undefined,
+      mode: mode === "signin" || mode === "signup" ? mode : undefined,
+      next: next && next.startsWith("/") && !next.startsWith("//") ? next : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Sign in — OpenPay Pro Wallet" },
@@ -223,10 +252,48 @@ function PrivyLoginButton({ busy, setBusy }: { busy: boolean; setBusy: (v: boole
   );
 }
 
-function EmailAuthPanel({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+function emailAuthRedirectUrl(): string {
+  if (typeof window === "undefined") return "/authpi";
+  const next = postAuthTarget();
+  const u = new URL("/authpi", window.location.origin);
+  if (next && next !== "/dashboard") u.searchParams.set("next", next);
+  return u.toString();
+}
+
+function friendlyEmailAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("email not confirmed") || m.includes("not confirmed")) {
+    return "Confirm your email first — check your inbox, then sign in.";
+  }
+  if (m.includes("invalid login") || m.includes("invalid credentials")) {
+    return "Wrong email or password.";
+  }
+  if (m.includes("user already registered")) {
+    return "That email already has an account — sign in instead.";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return "Too many attempts — wait a moment and try again.";
+  }
+  return message || "Email sign-in failed";
+}
+
+function EmailAuthPanel({
+  busy,
+  setBusy,
+  initialMode = "signin",
+}: {
+  busy: boolean;
+  setBusy: (v: boolean) => void;
+  initialMode?: "signin" | "signup";
+}) {
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -247,7 +314,10 @@ function EmailAuthPanel({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean
         const { data, error } = await supabase.auth.signUp({
           email: trimmed,
           password,
-          options: { data: { provider: "email" } },
+          options: {
+            data: { provider: "email" },
+            emailRedirectTo: emailAuthRedirectUrl(),
+          },
         });
         if (error) throw error;
         if (data.session) {
@@ -268,7 +338,29 @@ function EmailAuthPanel({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean
       if (error) throw error;
       goPostAuth();
     } catch (err) {
-      toast.error((err as Error).message || "Email sign-in failed");
+      toast.error(friendlyEmailAuthError((err as Error).message));
+      setBusy(false);
+    }
+  }
+
+  async function forgotPassword() {
+    if (busy) return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      toast.error("Enter your email above, then tap Forgot password");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: emailAuthRedirectUrl(),
+      });
+      if (error) throw error;
+      setResetSent(true);
+      toast.success("Password reset link sent — check your email");
+    } catch (err) {
+      toast.error(friendlyEmailAuthError((err as Error).message));
+    } finally {
       setBusy(false);
     }
   }
@@ -308,6 +400,16 @@ function EmailAuthPanel({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean
           "Create account"
         )}
       </Button>
+      {mode === "signin" ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void forgotPassword()}
+          className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+        >
+          {resetSent ? "Reset email sent — check your inbox" : "Forgot password?"}
+        </button>
+      ) : null}
       <button
         type="button"
         disabled={busy}
@@ -487,6 +589,7 @@ function AuthPiPage() {
 
 function AuthPiPageInner() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const {
     ready: phantomReady,
     status: phantomStatus,
@@ -494,7 +597,9 @@ function AuthPiPageInner() {
     retry: retryPhantom,
   } = usePhantomClient();
   const [mounted, setMounted] = useState(false);
-  const [selected, setSelected] = useState<AuthMethod | null>(null);
+  const [selected, setSelected] = useState<AuthMethod | null>(
+    () => (search.method as AuthMethod | undefined) ?? null,
+  );
   const [busy, setBusy] = useState(false);
   const [pulseId, setPulseId] = useState<AuthMethod | null>(null);
 
@@ -502,6 +607,10 @@ function AuthPiPageInner() {
     captureNextParam();
     ensureTopLevelAuthWindow();
   }, []);
+
+  useEffect(() => {
+    if (search.method) setSelected(search.method as AuthMethod);
+  }, [search.method]);
 
   useEffect(() => {
     let cancelled = false;
@@ -519,7 +628,7 @@ function AuthPiPageInner() {
 
   const inPiBrowser = isPiBrowser();
   const visibleOptions = inPiBrowser
-    ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi")
+    ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi" || o.id === "email")
     : AUTH_OPTIONS;
 
   function renderFeaturedOption(opt: (typeof AUTH_OPTIONS)[number], delayMs = 0) {
@@ -626,11 +735,7 @@ function AuthPiPageInner() {
   const walletOptions = gridOptions.filter((o) => o.group === "wallet");
   const socialOptions = gridOptions.filter((o) => o.group === "social" || !o.group);
 
-  function renderAuthTile(
-    opt: (typeof AUTH_OPTIONS)[number],
-    i: number,
-    delayBase = 80,
-  ) {
+  function renderAuthTile(opt: (typeof AUTH_OPTIONS)[number], i: number, delayBase = 80) {
     const isOn = selected === opt.id;
     return (
       <button
@@ -873,7 +978,11 @@ function AuthPiPageInner() {
               </div>
             ) : selected === "email" ? (
               <div key="email-panel" className="auth-cta-swap">
-                <EmailAuthPanel busy={busy} setBusy={setBusy} />
+                <EmailAuthPanel
+                  busy={busy}
+                  setBusy={setBusy}
+                  initialMode={search.mode === "signup" ? "signup" : "signin"}
+                />
               </div>
             ) : (
               <Button

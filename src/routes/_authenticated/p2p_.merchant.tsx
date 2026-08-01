@@ -162,14 +162,14 @@ function MerchantPage() {
           <Link
             to="/transfer"
             search={{ from: "funding", to: "p2p" }}
-            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+            className="inline-flex items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground"
           >
             Transfer to P2P
           </Link>
         </>
       }
     >
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--accent)] p-5">
+      <div className="rounded-3xl border border-border bg-accent p-5">
         <p className="inline-flex items-center gap-1.5 text-base font-bold">
           <Sparkles className="h-4 w-4" /> List ads on the P2P marketplace
         </p>
@@ -193,21 +193,21 @@ function MerchantPage() {
             You cannot publish ads until an admin approves your application.
           </p>
         ) : (
-          <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+          <p className="mt-2 text-sm font-semibold text-foreground">
             Approved — you can publish and activate ads.
           </p>
         )}
       </div>
 
       {pending ? (
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+        <div className="rounded-3xl border border-border bg-card p-5">
           <p className="text-base font-bold">
             Pending {pending.requested_tier === "super" ? "Super Merchant" : "Verified Merchant"}{" "}
             review
           </p>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Submitted {new Date(pending.created_at).toLocaleString()}. An admin will approve or reject
-            this request.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Submitted {new Date(pending.created_at).toLocaleString()}. An admin will approve or
+            reject this request.
           </p>
           <Button
             variant="outline"
@@ -224,27 +224,29 @@ function MerchantPage() {
         <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5">
           <p className="text-base font-bold text-rose-700">Last application rejected</p>
           {appQ.data.admin_note ? (
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">{appQ.data.admin_note}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{appQ.data.admin_note}</p>
           ) : (
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">You can fix issues and apply again.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              You can fix issues and apply again.
+            </p>
           )}
         </div>
       ) : null}
 
       <div>
         <h2 className="text-xl font-bold tracking-tight">1. Verified Merchant</h2>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Required to list ads</p>
+        <p className="mt-1 text-sm text-muted-foreground">Required to list ads</p>
         <P2pMenuCard className="mt-4">
           {verifiedChecks.map((c) => (
             <Link
               key={c.label}
               to={c.to}
-              className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0 hover:bg-[var(--muted)]"
+              className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
             >
               <CheckCircle ok={c.ok} />
               <span className="min-w-0 flex-1">
                 <span className="block text-base font-bold tracking-tight">{c.label}</span>
-                <span className="text-sm text-[var(--muted-foreground)]">{c.detail}</span>
+                <span className="text-sm text-muted-foreground">{c.detail}</span>
               </span>
             </Link>
           ))}
@@ -253,18 +255,18 @@ function MerchantPage() {
 
       <div>
         <h2 className="text-xl font-bold tracking-tight">2. Super Merchant</h2>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Badge + ranking boost</p>
+        <p className="mt-1 text-sm text-muted-foreground">Badge + ranking boost</p>
         <P2pMenuCard className="mt-4">
           {superChecks.map((c) => (
             <Link
               key={c.label}
               to={c.to}
-              className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0 hover:bg-[var(--muted)]"
+              className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
             >
               <CheckCircle ok={c.ok} />
               <span className="min-w-0 flex-1">
                 <span className="block text-base font-bold tracking-tight">{c.label}</span>
-                <span className="text-sm text-[var(--muted-foreground)]">{c.detail}</span>
+                <span className="text-sm text-muted-foreground">{c.detail}</span>
               </span>
             </Link>
           ))}
@@ -272,14 +274,14 @@ function MerchantPage() {
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Note to admin (optional)
         </label>
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Trading experience, regions, payment rails…"
-          className="min-h-[72px] rounded-2xl border-[var(--border)] bg-[var(--card)]"
+          className="min-h-18 rounded-2xl border-border bg-card"
           maxLength={500}
         />
       </div>
@@ -287,11 +289,15 @@ function MerchantPage() {
       <div className="flex flex-wrap gap-2">
         {!canList ? (
           <Button
-            className="h-11 rounded-full bg-[var(--primary)] px-6 font-bold text-[var(--primary-foreground)]"
+            className="h-11 rounded-full bg-primary px-6 font-bold text-primary-foreground"
             disabled={!verifiedReady || !!pending || apply.isPending}
             onClick={() => apply.mutate("verified")}
           >
-            {apply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply as Verified Merchant"}
+            {apply.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Apply as Verified Merchant"
+            )}
           </Button>
         ) : merchant?.tier !== "super" ? (
           <Button
@@ -299,7 +305,11 @@ function MerchantPage() {
             disabled={!superReady || !!pending || apply.isPending}
             onClick={() => apply.mutate("super")}
           >
-            {apply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply for Super Merchant"}
+            {apply.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Apply for Super Merchant"
+            )}
           </Button>
         ) : null}
       </div>

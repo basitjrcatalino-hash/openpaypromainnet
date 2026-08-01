@@ -58,8 +58,8 @@ export function P2pHubLayout({
   actions?: ReactNode;
 }) {
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-6 sm:px-8">
+    <div className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto w-full max-w-295 px-5 pb-24 pt-6 sm:px-8">
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to={backTo}
@@ -89,7 +89,7 @@ export function P2pHubLayout({
 
         {hero ? (
           <div
-            className="mt-10 grid aspect-[16/7] place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
+            className="mt-10 grid aspect-16/7 place-items-center rounded-3xl text-6xl font-black text-foreground/25 sm:text-7xl"
             style={{
               backgroundImage: `linear-gradient(135deg, ${hero.from}, ${hero.to})`,
             }}
@@ -118,7 +118,7 @@ export function P2pSubpageHeader({
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-5 backdrop-blur-xl sm:px-8">
       <div
-        className="mx-auto flex h-14 max-w-[1180px] items-center gap-2"
+        className="mx-auto flex h-14 max-w-295 items-center gap-2"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <Link
@@ -128,20 +128,16 @@ export function P2pSubpageHeader({
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-foreground">{title}</h1>
+        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-foreground">
+          {title}
+        </h1>
         {right ? <div>{right}</div> : null}
       </div>
     </header>
   );
 }
 
-export function P2pMenuCard({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function P2pMenuCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <section
       className={cn(

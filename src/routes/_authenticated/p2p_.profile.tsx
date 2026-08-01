@@ -46,15 +46,40 @@ export const Route = createFileRoute("/_authenticated/p2p_/profile")({
 
 const MENU = [
   { to: "/p2p/wallet", icon: Wallet, label: "Merchant wallet", desc: "Funds for escrow" },
-  { to: "/p2p/payment-ads", icon: CreditCard, label: "Payment / Ads", desc: "Receive methods & offers" },
+  {
+    to: "/p2p/payment-ads",
+    icon: CreditCard,
+    label: "Payment / Ads",
+    desc: "Receive methods & offers",
+  },
   { to: "/p2p/settings", icon: Settings, label: "Settings", desc: "Alerts & P2P preferences" },
   { to: "/p2p/reviews", icon: Star, label: "Reviews / Orders", desc: "Stats & completed trades" },
   { to: "/p2p/support", icon: Headset, label: "Customer support", desc: "Disputes & help" },
-  { to: "/p2p/merchant", icon: Sparkles, label: "Merchant program", desc: "Apply · badges · featured" },
-  { to: "/p2p/guide", icon: HelpCircle, label: "How to use P2P", desc: "Step-by-step escrow guide" },
+  {
+    to: "/p2p/merchant",
+    icon: Sparkles,
+    label: "Merchant program",
+    desc: "Apply · badges · featured",
+  },
+  {
+    to: "/p2p/guide",
+    icon: HelpCircle,
+    label: "How to use P2P",
+    desc: "Step-by-step escrow guide",
+  },
   { to: "/p2p/rules", icon: Scale, label: "Trading rules", desc: "Notes · payment · prohibited" },
-  { to: "/p2p/security", icon: Lock, label: "Safety & protection", desc: "Buyer/seller scam notes" },
-  { to: "/p2p/agreement", icon: FileText, label: "Agreement · Terms · Privacy", desc: "P2P legal pack" },
+  {
+    to: "/p2p/security",
+    icon: Lock,
+    label: "Safety & protection",
+    desc: "Buyer/seller scam notes",
+  },
+  {
+    to: "/p2p/agreement",
+    icon: FileText,
+    label: "Agreement · Terms · Privacy",
+    desc: "P2P legal pack",
+  },
   { to: "/p2p/api", icon: Shield, label: "P2P / Ledger API", desc: "Developer endpoints" },
 ] as const;
 
@@ -85,12 +110,35 @@ function P2pProfilePage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wallets")
-        .select("*")
+        .select("id, ousd_balance")
         .eq("user_id", userId as string)
         .order("is_active", { ascending: false })
         .limit(1)
         .maybeSingle();
       return data;
+    },
+  });
+  const p2pBalQ = useQuery({
+    queryKey: ["p2p-account-balances", walletQ.data?.id],
+    enabled: !!walletQ.data?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wallet_account_balances")
+        .select("asset, balance")
+        .eq("wallet_id", walletQ.data!.id)
+        .eq("account", "p2p");
+      if (error) {
+        // Table/RPC not applied yet — fall back to funding OUSD so the page still loads.
+        if (/wallet_account_balances|schema cache|does not exist/i.test(error.message)) {
+          return { OUSD: Number(walletQ.data?.ousd_balance ?? 0) } as Record<string, number>;
+        }
+        throw error;
+      }
+      const map: Record<string, number> = {};
+      for (const row of data ?? []) {
+        map[String(row.asset).toUpperCase()] = Number(row.balance ?? 0) || 0;
+      }
+      return map;
     },
   });
   const lockedQ = useQuery({
@@ -121,7 +169,7 @@ function P2pProfilePage() {
     userQ.data?.email?.split("@")[0] ||
     "Trader";
   const joinedAt = profileQ.data?.created_at || userQ.data?.created_at || null;
-  const ousd = Number(walletQ.data?.ousd_balance ?? 0);
+  const ousd = Number(p2pBalQ.data?.OUSD ?? walletQ.data?.ousd_balance ?? 0);
   const lockedOusd = Number(lockedQ.data?.OUSD ?? 0);
   const st = statsQ.data;
   const rt = ratingQ.data;
@@ -130,7 +178,7 @@ function P2pProfilePage() {
   if (userQ.isLoading || profileQ.isLoading) {
     return (
       <div className="grid min-h-[40vh] place-items-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -152,26 +200,26 @@ function P2pProfilePage() {
           </P2pHubPill>
           <P2pHubPill to="/p2p/wallet">Merchant wallet</P2pHubPill>
           {emailVerified ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-foreground">
               <BadgeCheck className="h-4 w-4" /> Verified
             </span>
           ) : null}
         </>
       }
     >
-      <div className="flex items-center gap-4 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+      <div className="flex items-center gap-4 rounded-3xl border border-border bg-card p-5">
         {profileQ.data?.avatar_url ? (
           <img
             src={profileQ.data.avatar_url}
             alt=""
-            className="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--border)]"
+            className="h-16 w-16 rounded-full object-cover ring-2 ring-border"
           />
         ) : (
           <MerchantAvatar name={name} size="lg" online />
         )}
         <div className="min-w-0">
           <p className="truncate text-xl font-bold tracking-tight">{name}</p>
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <p className="text-sm text-muted-foreground">
             Marketplace reputation, funds, and guides in one place.
           </p>
         </div>
@@ -179,11 +227,11 @@ function P2pProfilePage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <P2pMenuCard>
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               My P2P funds
             </h2>
-            <Link to="/p2p/wallet" className="text-sm font-semibold text-[var(--primary)]">
+            <Link to="/p2p/wallet" className="text-sm font-semibold text-primary">
               View more →
             </Link>
           </div>
@@ -197,11 +245,11 @@ function P2pProfilePage() {
         </P2pMenuCard>
 
         <P2pMenuCard>
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               Info
             </h2>
-            <Link to="/p2p/reviews" className="text-sm font-semibold text-[var(--primary)]">
+            <Link to="/p2p/reviews" className="text-sm font-semibold text-primary">
               View more →
             </Link>
           </div>
@@ -224,17 +272,14 @@ function P2pProfilePage() {
           <Link
             key={item.to}
             to={item.to}
-            className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 transition hover:bg-[var(--muted)] last:border-b-0"
+            className="flex items-center gap-3 border-b border-border px-5 py-4 transition hover:bg-muted last:border-b-0"
           >
-            <item.icon
-              className={cn("h-5 w-5 text-[var(--muted-foreground)]")}
-              strokeWidth={1.75}
-            />
+            <item.icon className={cn("h-5 w-5 text-muted-foreground")} strokeWidth={1.75} />
             <span className="min-w-0 flex-1">
               <span className="block text-base font-bold tracking-tight">{item.label}</span>
-              <span className="block text-sm text-[var(--muted-foreground)]">{item.desc}</span>
+              <span className="block text-sm text-muted-foreground">{item.desc}</span>
             </span>
-            <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         ))}
       </P2pMenuCard>
@@ -245,8 +290,8 @@ function P2pProfilePage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1.5 text-sm">
-      <span className="text-[var(--muted-foreground)]">{label}</span>
-      <span className="font-semibold tabular-nums text-[var(--foreground)]">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold tabular-nums text-foreground">{value}</span>
     </div>
   );
 }

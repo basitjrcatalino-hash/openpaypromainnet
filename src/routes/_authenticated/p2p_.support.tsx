@@ -66,20 +66,20 @@ function SupportPage() {
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--accent)] p-5">
+        <div className="rounded-3xl border border-border bg-accent p-5">
           <p className="inline-flex items-center gap-1.5 text-base font-bold">
             <MessageSquare className="h-4 w-4" /> Trade room chat first
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Most issues resolve in the order chat. Escrow stays locked until you confirm or Support
             decides.
           </p>
         </div>
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <p className="inline-flex items-center gap-1.5 text-base font-bold text-[var(--foreground)]">
+        <div className="rounded-3xl border border-border bg-card p-5">
+          <p className="inline-flex items-center gap-1.5 text-base font-bold text-foreground">
             <ShieldAlert className="h-4 w-4" /> Disputes
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             From an active order, tap Dispute and attach proof. Support reviews escrow, chat, and
             payment evidence.
           </p>
@@ -90,9 +90,9 @@ function SupportPage() {
         <h2 className="text-xl font-bold tracking-tight">Common questions</h2>
         <P2pMenuCard className="mt-4">
           {FAQS.map((f) => (
-            <div key={f.q} className="border-b border-[var(--border)] px-5 py-4 last:border-b-0">
+            <div key={f.q} className="border-b border-border px-5 py-4 last:border-b-0">
               <p className="text-base font-bold tracking-tight">{f.q}</p>
-              <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">{f.a}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
             </div>
           ))}
         </P2pMenuCard>
@@ -100,9 +100,21 @@ function SupportPage() {
 
       <P2pMenuCard>
         <P2pActionRow to="/p2p/guide" title="How to use" desc="Step-by-step escrow guide" />
-        <P2pActionRow to="/p2p/rules" title="Trading rules" desc="Payment notes & prohibited acts" />
-        <P2pActionRow to="/p2p/security" title="Safety & protection" desc="Buyer / seller scam notes" />
-        <P2pActionRow to="/p2p/agreement" title="Agreement · Terms · Privacy" desc="P2P legal pack" />
+        <P2pActionRow
+          to="/p2p/rules"
+          title="Trading rules"
+          desc="Payment notes & prohibited acts"
+        />
+        <P2pActionRow
+          to="/p2p/security"
+          title="Safety & protection"
+          desc="Buyer / seller scam notes"
+        />
+        <P2pActionRow
+          to="/p2p/agreement"
+          title="Agreement · Terms · Privacy"
+          desc="P2P legal pack"
+        />
         {roleQ.data?.admin || roleQ.data?.mod ? (
           <P2pActionRow to="/p2p/admin" title="Support console" desc="Disputes & payment methods" />
         ) : null}

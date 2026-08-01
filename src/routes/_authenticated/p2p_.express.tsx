@@ -7,12 +7,7 @@ import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BuySellToggle, P2pAssetIcon, P2pAssetPickerGrid } from "@/components/p2p/P2pUi";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,10 +142,7 @@ function ExpressPage() {
     !p2pAmountExceedsLimit(asset, amount, bestPrice || 1);
 
   const openPaymentPage = () => {
-    const codes =
-      matched?.payment_methods?.length
-        ? matched.payment_methods.join(",")
-        : undefined;
+    const codes = matched?.payment_methods?.length ? matched.payment_methods.join(",") : undefined;
     void navigate({
       to: "/p2p/select-payment",
       search: {
@@ -188,8 +180,10 @@ function ExpressPage() {
               type="button"
               onClick={() => setAsset(a)}
               className={cn(
-                "min-w-[6.5rem] shrink-0 rounded-xl border px-3 py-2 text-left md:min-w-0 md:flex-1",
-                asset === a ? "border-foreground bg-secondary" : "border-border/60 bg-background/40",
+                "min-w-26 shrink-0 rounded-xl border px-3 py-2 text-left md:min-w-0 md:flex-1",
+                asset === a
+                  ? "border-foreground bg-secondary"
+                  : "border-border/60 bg-background/40",
               )}
             >
               <div className="flex items-center gap-1.5">
@@ -206,9 +200,7 @@ function ExpressPage() {
 
       <div className="space-y-3 rounded-2xl border border-border/50 bg-card/40 p-4">
         <div>
-          <p className="text-xs text-muted-foreground">
-            You {side === "buy" ? "buy" : "sell"}
-          </p>
+          <p className="text-xs text-muted-foreground">You {side === "buy" ? "buy" : "sell"}</p>
           <div className="mt-1 flex items-center gap-2">
             <Input
               inputMode="decimal"
@@ -228,9 +220,7 @@ function ExpressPage() {
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
             Available {fmtAmount(walletQ.data ?? 0)} {asset}
-            {side === "buy" ? (
-              <LinkManage />
-            ) : null}
+            {side === "buy" ? <LinkManage /> : null}
             {" · "}1 {asset} ≈ {formatCurrency(bestPrice, fiat as never, { compact: false })}
           </p>
         </div>
@@ -270,9 +260,9 @@ function ExpressPage() {
           <span className="block text-[11px] text-muted-foreground">Payment method</span>
           <span className="text-sm font-bold">
             {method
-              ? methodLabel[method] ?? method
+              ? (methodLabel[method] ?? method)
               : matched?.payment_methods[0]
-                ? methodLabel[matched.payment_methods[0]] ?? matched.payment_methods[0]
+                ? (methodLabel[matched.payment_methods[0]] ?? matched.payment_methods[0])
                 : "Select"}
           </span>
         </span>
@@ -288,11 +278,17 @@ function ExpressPage() {
         />
         <span>
           I agree to the{" "}
-          <Link to="/p2p/rules" className="font-semibold text-foreground underline-offset-2 hover:underline">
+          <Link
+            to="/p2p/rules"
+            className="font-semibold text-foreground underline-offset-2 hover:underline"
+          >
             Trading Rules
           </Link>{" "}
           and{" "}
-          <Link to="/p2p/agreement" className="font-semibold text-foreground underline-offset-2 hover:underline">
+          <Link
+            to="/p2p/agreement"
+            className="font-semibold text-foreground underline-offset-2 hover:underline"
+          >
             User Agreement
           </Link>
           .
@@ -301,7 +297,7 @@ function ExpressPage() {
 
       <Button
         className={cn(
-          "mt-3 h-12 w-full rounded-[8px] text-base font-bold",
+          "mt-3 h-12 w-full rounded-xl text-base font-bold",
           canTrade
             ? side === "buy"
               ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
@@ -328,7 +324,8 @@ function ExpressPage() {
 
       {matched ? (
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          Matched ad @ {formatCurrency(Number(matched.price_usd), fiat as never, { compact: false })}
+          Matched ad @{" "}
+          {formatCurrency(Number(matched.price_usd), fiat as never, { compact: false })}
         </p>
       ) : amount > 0 ? (
         <p className="mt-3 text-center text-[11px] text-rose-400">No ad matches this amount</p>

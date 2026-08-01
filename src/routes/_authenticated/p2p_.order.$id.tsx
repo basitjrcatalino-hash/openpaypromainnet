@@ -142,7 +142,9 @@ function TradeRoom() {
 
   const merchantId = adQ.data?.user_id ?? null;
 
-  function chatSenderRole(senderId: string | null | undefined): "merchant" | "customer" | "support" {
+  function chatSenderRole(
+    senderId: string | null | undefined,
+  ): "merchant" | "customer" | "support" {
     if (!senderId || !order) return "support";
     if (merchantId) {
       if (senderId === merchantId) return "merchant";
@@ -172,8 +174,7 @@ function TradeRoom() {
       const seenKey = `p2p-celebrate-${id}`;
       const justCompleted = prev != null && prev !== "completed";
       const recent =
-        !!order?.released_at &&
-        Date.now() - new Date(order.released_at).getTime() < 3 * 60_000;
+        !!order?.released_at && Date.now() - new Date(order.released_at).getTime() < 3 * 60_000;
       if ((justCompleted || recent) && !sessionStorage.getItem(seenKey)) {
         setCelebrate(true);
         sessionStorage.setItem(seenKey, "1");
@@ -183,13 +184,13 @@ function TradeRoom() {
   }, [order?.status, order?.released_at, id]);
 
   const timeLeft = order ? new Date(order.expires_at).getTime() - now : 0;
+  const paymentExpired = order?.status === "pending_payment" && timeLeft <= 0;
   useEffect(() => {
-    if (order?.status === "pending_payment" && timeLeft <= 0) {
-      void expireOrders()
-        .then(() => qc.invalidateQueries({ queryKey: ["p2p-order", id] }))
-        .catch(() => {});
-    }
-  }, [order?.status, timeLeft <= 0, id, qc]);
+    if (!paymentExpired) return;
+    void expireOrders()
+      .then(() => qc.invalidateQueries({ queryKey: ["p2p-order", id] }))
+      .catch(() => {});
+  }, [paymentExpired, id, qc]);
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["p2p-order", id] });
@@ -290,7 +291,9 @@ function TradeRoom() {
   if (!order) {
     return (
       <div className="mx-auto max-w-md space-y-4 py-24 text-center">
-        <p className="text-sm text-muted-foreground">Order not found or you don&apos;t have access.</p>
+        <p className="text-sm text-muted-foreground">
+          Order not found or you don&apos;t have access.
+        </p>
         <Link to="/p2p/orders" className="text-sm font-semibold text-primary">
           Back to orders
         </Link>
@@ -310,9 +313,7 @@ function TradeRoom() {
     5 * 60_000,
     new Date(order.expires_at).getTime() - new Date(order.created_at).getTime(),
   );
-  const sellerDeadlineMs = order.paid_at
-    ? new Date(order.paid_at).getTime() + payWindowMs
-    : 0;
+  const sellerDeadlineMs = order.paid_at ? new Date(order.paid_at).getTime() + payWindowMs : 0;
   const sellerTimeLeft = sellerDeadlineMs > 0 ? sellerDeadlineMs - now : 0;
   const payTimerEnded = order.status === "pending_payment" && timeLeft <= 0;
   const sellerTimerEnded = order.status === "paid" && sellerTimeLeft <= 0;
@@ -392,13 +393,13 @@ function TradeRoom() {
           <div className="flex flex-wrap items-center gap-2 px-4 py-3 md:px-6">
             <span
               className={cn(
-                "rounded-[4px] border px-2 py-0.5 text-[11px] font-bold",
+                "rounded-lg border px-2 py-0.5 text-[11px] font-bold",
                 statusTone(order.status),
               )}
             >
               {ORDER_STATUS_LABEL[order.status]}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#11C66D]/25 bg-[#11C66D]/10 px-2 py-0.5 text-[11px] font-bold text-[#11C66D]">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-[#11C66D]/25 bg-[#11C66D]/10 px-2 py-0.5 text-[11px] font-bold text-[#11C66D]">
               <Lock className="h-3 w-3" /> {ESCROW_LABEL[order.escrow_status]}
             </span>
             {methodCode ? (
@@ -423,7 +424,8 @@ function TradeRoom() {
                 {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
               </span>
               <span className="mx-1.5 text-border">·</span>
-              {formatCurrency(Number(order.price_usd), fiat as never, { compact: false })}/{order.asset}
+              {formatCurrency(Number(order.price_usd), fiat as never, { compact: false })}/
+              {order.asset}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
               <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
@@ -461,7 +463,7 @@ function TradeRoom() {
                 href={order.payment_proof_url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 block overflow-hidden rounded-[8px] border border-border/50"
+                className="mt-3 block overflow-hidden rounded-xl border border-border/50"
               >
                 <img
                   src={order.payment_proof_url}
@@ -489,7 +491,7 @@ function TradeRoom() {
                   ? `Transfer exactly ${formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} then upload proof.`
                   : "Buyer will send fiat to these details."}
               </p>
-              <div className="overflow-hidden rounded-[8px] border border-border/50">
+              <div className="overflow-hidden rounded-xl border border-border/50">
                 <SnapRow
                   label="Name"
                   value={paySnap.account_name}
@@ -511,13 +513,13 @@ function TradeRoom() {
               </div>
             </div>
           ) : isBuyer && order.status === "pending_payment" ? (
-            <div className="mx-4 my-3 rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[12px] font-semibold text-amber-500 md:mx-6">
+            <div className="mx-4 my-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-[12px] font-semibold text-amber-500 md:mx-6">
               Merchant receive details unavailable. Ask the seller in chat.
             </div>
           ) : null}
 
           {adQ.data?.terms ? (
-            <div className="mx-4 mb-1 rounded-[8px] border border-border/50 bg-muted/30 px-3 py-3 md:mx-6">
+            <div className="mx-4 mb-1 rounded-xl border border-border/50 bg-muted/30 px-3 py-3 md:mx-6">
               <h2 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#11C66D]">
                 Merchant instructions
               </h2>
@@ -538,7 +540,11 @@ function TradeRoom() {
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
                   Pay via{" "}
                   {methodCode ? (
-                    <P2pPayChip code={methodCode} label={methodName} className="inline-flex align-middle" />
+                    <P2pPayChip
+                      code={methodCode}
+                      label={methodName}
+                      className="inline-flex align-middle"
+                    />
                   ) : (
                     methodLabel
                   )}
@@ -557,7 +563,7 @@ function TradeRoom() {
                 />
 
                 {proofPreview || proofUrl ? (
-                  <div className="relative overflow-hidden rounded-[8px] border border-border/50 bg-muted/20">
+                  <div className="relative overflow-hidden rounded-xl border border-border/50 bg-muted/20">
                     <img
                       src={proofPreview || proofUrl || ""}
                       alt="Payment proof preview"
@@ -597,7 +603,7 @@ function TradeRoom() {
                     type="button"
                     disabled={proofUploading}
                     onClick={() => proofInputRef.current?.click()}
-                    className="flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-border/70 bg-muted/15 text-[13px] font-semibold text-muted-foreground press hover:bg-muted/30 disabled:opacity-60"
+                    className="flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/70 bg-muted/15 text-[13px] font-semibold text-muted-foreground press hover:bg-muted/30 disabled:opacity-60"
                   >
                     {proofUploading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -610,7 +616,7 @@ function TradeRoom() {
                 )}
 
                 <Button
-                  className="h-12 w-full rounded-[8px] bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
+                  className="h-12 w-full rounded-xl bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
                   disabled={paid.isPending || proofUploading}
                   onClick={() => act(() => markPaid(id, proofUrl || null), "Marked as paid")}
                 >
@@ -625,7 +631,7 @@ function TradeRoom() {
                   Verify funds arrived in your {methodLabel} account, then release escrow.
                 </p>
                 <Button
-                  className="h-12 w-full rounded-[8px] bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
+                  className="h-12 w-full rounded-xl bg-[#11C66D] text-base font-bold text-white hover:bg-[#0FB461]"
                   onClick={() =>
                     act(() => confirmReceived(id), "Escrow released to buyer", { celebrate: true })
                   }
@@ -636,7 +642,7 @@ function TradeRoom() {
             ) : null}
 
             {isSeller && order.status === "pending_payment" ? (
-              <div className="rounded-[8px] bg-muted/30 px-3 py-3 text-[12px] text-muted-foreground">
+              <div className="rounded-xl bg-muted/30 px-3 py-3 text-[12px] text-muted-foreground">
                 Waiting for buyer payment.
                 {timeLeft > 0
                   ? ` Cancel unlocks when the timer ends (${formatCountdown(timeLeft)}).`
@@ -644,11 +650,12 @@ function TradeRoom() {
               </div>
             ) : null}
             {isBuyer && order.status === "paid" ? (
-              <div className="rounded-[8px] bg-[#11C66D]/10 px-3 py-3 text-[12px] font-semibold text-[#11C66D]">
+              <div className="rounded-xl bg-[#11C66D]/10 px-3 py-3 text-[12px] font-semibold text-[#11C66D]">
                 Payment submitted — waiting for seller to release crypto
                 {sellerTimeLeft > 0
                   ? ` · confirm window ${formatCountdown(sellerTimeLeft)}`
-                  : " · confirm window ended — you may cancel or open a dispute"}.
+                  : " · confirm window ended — you may cancel or open a dispute"}
+                .
               </div>
             ) : null}
 
@@ -662,7 +669,7 @@ function TradeRoom() {
                 {canCancel ? (
                   <Button
                     variant="outline"
-                    className="h-10 w-full rounded-[8px] border-border/60 text-[13px] font-bold"
+                    className="h-10 w-full rounded-xl border-border/60 text-[13px] font-bold"
                     onClick={() => act(() => cancelOrder(id), "Order cancelled")}
                   >
                     <X className="mr-1.5 h-4 w-4" /> Cancel order
@@ -674,11 +681,11 @@ function TradeRoom() {
                       value={disputeReason}
                       onChange={(e) => setDisputeReason(e.target.value)}
                       placeholder="Reason for dispute"
-                      className="h-10 rounded-[8px] text-[13px]"
+                      className="h-10 rounded-xl text-[13px]"
                     />
                     <Button
                       variant="outline"
-                      className="h-10 shrink-0 rounded-[8px] border-[#F04438]/40 text-[13px] font-bold text-[#F04438]"
+                      className="h-10 shrink-0 rounded-xl border-[#F04438]/40 text-[13px] font-bold text-[#F04438]"
                       disabled={disputeReason.trim().length < 4}
                       onClick={() =>
                         act(() => openDispute(id, disputeReason.trim()), "Dispute opened")
@@ -693,7 +700,7 @@ function TradeRoom() {
 
             {order.status === "completed" ? (
               <div className="space-y-3">
-                <div className="flex items-start gap-3 rounded-[8px] border border-[#11C66D]/25 bg-[#11C66D]/8 px-3 py-3">
+                <div className="flex items-start gap-3 rounded-xl border border-[#11C66D]/25 bg-[#11C66D]/8 px-3 py-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#11C66D]/20">
                     <ShieldCheck className="h-5 w-5 text-[#11C66D]" />
                   </span>
@@ -707,7 +714,9 @@ function TradeRoom() {
                       {" · "}
                       {isBuyer ? "paid" : "received"}{" "}
                       <span className="font-bold text-foreground">
-                        {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })}
+                        {formatCurrency(Number(order.total_fiat), fiat as never, {
+                          compact: false,
+                        })}
                       </span>
                     </p>
                   </div>
@@ -719,7 +728,9 @@ function TradeRoom() {
 
           {disputeQ.data ? (
             <div className="space-y-3 px-4 py-4 md:px-6">
-              <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#F04438]">Dispute</h2>
+              <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#F04438]">
+                Dispute
+              </h2>
               <p className="text-[13px]">{disputeQ.data.reason}</p>
               <p className="text-[11px] text-muted-foreground">
                 Status: {disputeQ.data.status}
@@ -731,11 +742,11 @@ function TradeRoom() {
                     value={resolution}
                     onChange={(e) => setResolution(e.target.value)}
                     placeholder="Resolution note"
-                    className="h-10 rounded-[8px]"
+                    className="h-10 rounded-xl"
                   />
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      className="h-10 rounded-[8px] bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]"
+                      className="h-10 rounded-xl bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]"
                       onClick={() =>
                         act(
                           () => resolveDispute(id, true, resolution || "Released to buyer"),
@@ -747,7 +758,7 @@ function TradeRoom() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-10 rounded-[8px] font-bold"
+                      className="h-10 rounded-xl font-bold"
                       onClick={() =>
                         act(
                           () => resolveDispute(id, false, resolution || "Refunded to seller"),
@@ -781,7 +792,7 @@ function TradeRoom() {
             {(msgQ.data ?? []).map((m) =>
               m.is_system ? (
                 <div key={m.id} className="flex justify-center px-4">
-                  <p className="rounded-[4px] bg-muted/60 px-2.5 py-1 text-center text-[10px] leading-snug text-muted-foreground">
+                  <p className="rounded-lg bg-muted/60 px-2.5 py-1 text-center text-[10px] leading-snug text-muted-foreground">
                     {m.body}
                   </p>
                 </div>
@@ -798,7 +809,7 @@ function TradeRoom() {
                   const displayName =
                     role === "support"
                       ? "Support"
-                      : names.data?.[m.sender_id ?? ""] ?? roleMeta.label;
+                      : (names.data?.[m.sender_id ?? ""] ?? roleMeta.label);
                   return (
                     <div
                       key={m.id}
@@ -818,7 +829,7 @@ function TradeRoom() {
                       </div>
                       <div
                         className={cn(
-                          "max-w-[82%] rounded-[8px] px-3 py-2 text-[13px] leading-snug",
+                          "max-w-[82%] rounded-xl px-3 py-2 text-[13px] leading-snug",
                           mine
                             ? "bg-[#11C66D] text-white"
                             : role === "support"
@@ -873,7 +884,7 @@ function TradeRoom() {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-[8px]"
+              className="h-10 w-10 shrink-0 rounded-xl"
               disabled={chatUploading}
               onClick={() => chatImageRef.current?.click()}
               aria-label="Upload image"
@@ -888,13 +899,13 @@ function TradeRoom() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Message…"
-              className="h-10 rounded-[8px] border-0 bg-muted/40 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-foreground/15"
+              className="h-10 rounded-xl border-0 bg-muted/40 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-foreground/15"
               disabled={chatUploading}
             />
             <Button
               type="submit"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-[8px] bg-[#11C66D] text-white hover:bg-[#0FB461]"
+              className="h-10 w-10 shrink-0 rounded-xl bg-[#11C66D] text-white hover:bg-[#0FB461]"
               disabled={chatUploading || !draft.trim()}
             >
               <Send className="h-4 w-4" />

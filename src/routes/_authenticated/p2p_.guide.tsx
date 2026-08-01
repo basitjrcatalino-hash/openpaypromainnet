@@ -1,11 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import {
-  P2pDocCtas,
-  P2pDocLayout,
-  P2pDocSteps,
-  P2pDocTips,
-} from "@/components/p2p/P2pDocLayout";
+import { P2pDocCtas, P2pDocLayout, P2pDocSteps, P2pDocTips } from "@/components/p2p/P2pDocLayout";
 
 export const Route = createFileRoute("/_authenticated/p2p_/guide")({
   head: () => ({
@@ -84,9 +79,12 @@ function GuidePage() {
           { to: "/p2p/express", label: "Try Express" },
         ]}
       />
-      <p className="text-sm text-[var(--muted-foreground)]">
+      <p className="text-sm text-muted-foreground">
         Prefer a shorter path?{" "}
-        <Link to="/p2p/express" className="font-semibold text-[var(--foreground)] underline-offset-2 hover:underline">
+        <Link
+          to="/p2p/express"
+          className="font-semibold text-foreground underline-offset-2 hover:underline"
+        >
           Express
         </Link>{" "}
         matches you to a live ad automatically.

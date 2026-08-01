@@ -69,7 +69,12 @@ function MerchantWalletPage() {
         .select("asset, balance")
         .eq("wallet_id", walletQ.data!.id)
         .eq("account", "p2p");
-      if (error) throw error;
+      if (error) {
+        if (/wallet_account_balances|schema cache|does not exist/i.test(error.message)) {
+          return {} as Record<string, number>;
+        }
+        throw error;
+      }
       const map: Record<string, number> = {};
       for (const row of data ?? []) {
         map[String(row.asset).toUpperCase()] = Number(row.balance ?? 0) || 0;
@@ -133,14 +138,14 @@ function MerchantWalletPage() {
           <button
             type="button"
             onClick={() => openForm()}
-            className="inline-flex items-center rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)]"
+            className="inline-flex items-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
           >
             <Plus className="mr-1.5 h-4 w-4" /> Add account
           </button>
           <Link
             to="/transfer"
             search={transferSearch}
-            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+            className="inline-flex items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground"
           >
             Transfer to P2P
           </Link>
@@ -161,11 +166,17 @@ function MerchantWalletPage() {
           : "Required: add at least one receive account before publishing sell ads."}
       </div>
 
+      {p2pBalQ.isError ? (
+        <div className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-600 dark:text-rose-400">
+          Couldn’t load P2P balances. Apply the wallet account balances migration, then refresh.
+        </div>
+      ) : null}
+
       <P2pMenuCard>
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
           <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-[var(--muted-foreground)]" />
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               P2P account
             </h2>
           </div>
@@ -177,12 +188,10 @@ function MerchantWalletPage() {
         </div>
         <div className="px-5 py-4">
           {walletQ.isLoading || p2pBalQ.isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[var(--muted-foreground)]" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           ) : !balances.length ? (
-            <div className="space-y-3 text-sm text-[var(--muted-foreground)]">
-              <p>
-                No P2P balance yet. Transfer from Funding to publish sell ads and lock escrow.
-              </p>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>No P2P balance yet. Transfer from Funding to publish sell ads and lock escrow.</p>
               <div className="flex flex-wrap gap-2">
                 <Button asChild size="sm" className="h-8 rounded-full">
                   <Link to="/transfer" search={transferSearch}>
@@ -201,7 +210,7 @@ function MerchantWalletPage() {
                   <span className="font-bold">{b.asset}</span>
                   <div className="text-right">
                     <p className="font-bold tabular-nums">{fmtAmount(b.free)} available</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
+                    <p className="text-xs text-muted-foreground">
                       {fmtAmount(b.bal)} in P2P
                       {b.locked > 0 ? ` · ${fmtAmount(b.locked)} in escrow` : ""}
                       {" · ≈ "}
@@ -216,8 +225,8 @@ function MerchantWalletPage() {
       </P2pMenuCard>
 
       <P2pMenuCard>
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
             Receive accounts
           </h2>
           <Button size="sm" className="h-8 rounded-full" onClick={() => openForm()}>
@@ -226,7 +235,7 @@ function MerchantWalletPage() {
         </div>
         <div className="px-5 py-4">
           {accountsQ.isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[var(--muted-foreground)]" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           ) : !(accountsQ.data ?? []).length ? (
             <P2pEmptyState
               title="No receive accounts"
@@ -250,15 +259,15 @@ function MerchantWalletPage() {
                       />
                       {methodName[acc.method_code] ?? acc.method_code}
                       {!acc.is_active ? (
-                        <span className="text-[10px] font-semibold uppercase text-[var(--muted-foreground)]">
+                        <span className="text-[10px] font-semibold uppercase text-muted-foreground">
                           Off
                         </span>
                       ) : null}
                     </p>
                     <p className="mt-1 truncate text-sm">{acc.account_name}</p>
-                    <p className="font-mono text-xs text-[var(--muted-foreground)]">{acc.account_number}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{acc.account_number}</p>
                     {acc.bank_name ? (
-                      <p className="text-[11px] text-[var(--muted-foreground)]">{acc.bank_name}</p>
+                      <p className="text-[11px] text-muted-foreground">{acc.bank_name}</p>
                     ) : null}
                   </div>
                   <div className="flex shrink-0 flex-col gap-1.5">

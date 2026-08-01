@@ -9,12 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { P2pAssetIcon, P2pEmptyState } from "@/components/p2p/P2pUi";
 import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayChip, P2pPayIcon } from "@/components/p2p/P2pPayIcon";
@@ -106,9 +101,13 @@ function AdsHubPage() {
         <div className="mx-4 mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 md:mx-6">
           <p className="text-sm font-bold text-amber-500">Merchant approval required</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Apply as a Verified Merchant and wait for admin approval — same flow as OKX / Binance P2P.
+            Apply as a Verified Merchant and wait for admin approval — same flow as OKX / Binance
+            P2P.
           </p>
-          <Button asChild className="mt-3 h-9 rounded-[8px] bg-[#11C66D] text-xs font-bold text-white hover:bg-[#0FB461]">
+          <Button
+            asChild
+            className="mt-3 h-9 rounded-xl bg-[#11C66D] text-xs font-bold text-white hover:bg-[#0FB461]"
+          >
             <Link to="/p2p/merchant">Apply now</Link>
           </Button>
         </div>
@@ -146,7 +145,10 @@ function AdsHubPage() {
                 Create ad
               </Button>
             ) : (
-              <Button asChild className="mt-2 h-10 rounded-full bg-[#11C66D] px-6 font-bold text-white">
+              <Button
+                asChild
+                className="mt-2 h-10 rounded-full bg-[#11C66D] px-6 font-bold text-white"
+              >
                 <Link to="/p2p/merchant">Apply as merchant</Link>
               </Button>
             )
@@ -186,13 +188,7 @@ function AdsHubPage() {
                 {ad.payment_methods.length ? (
                   ad.payment_methods.map((code) => {
                     const m = (methodsQ.data ?? []).find((x) => x.code === code);
-                    return (
-                      <P2pPayChip
-                        key={code}
-                        code={code}
-                        label={m?.name ?? code}
-                      />
-                    );
+                    return <P2pPayChip key={code} code={code} label={m?.name ?? code} />;
                   })
                 ) : (
                   <p className="text-xs text-muted-foreground">No methods</p>
@@ -256,10 +252,7 @@ function CreateAdDialog({
   });
 
   const activeMethodCodes = useMemo(
-    () =>
-      new Set(
-        (accountsQ.data ?? []).filter((a) => a.is_active).map((a) => a.method_code),
-      ),
+    () => new Set((accountsQ.data ?? []).filter((a) => a.is_active).map((a) => a.method_code)),
     [accountsQ.data],
   );
   const missingReceive = useMemo(
@@ -419,7 +412,8 @@ function CreateAdDialog({
 
           {missingReceive.length > 0 ? (
             <p className="text-xs font-semibold text-amber-500">
-              Missing receive accounts for: {missingReceive.join(", ")}. Add them in Merchant wallet.
+              Missing receive accounts for: {missingReceive.join(", ")}. Add them in Merchant
+              wallet.
             </p>
           ) : null}
 
@@ -453,15 +447,24 @@ function CreateAdDialog({
             />
             <span>
               I agree to the{" "}
-              <Link to="/p2p/agreement" className="font-semibold text-foreground underline-offset-2 hover:underline">
+              <Link
+                to="/p2p/agreement"
+                className="font-semibold text-foreground underline-offset-2 hover:underline"
+              >
                 P2P User Agreement
               </Link>
               ,{" "}
-              <Link to="/p2p/rules" className="font-semibold text-foreground underline-offset-2 hover:underline">
+              <Link
+                to="/p2p/rules"
+                className="font-semibold text-foreground underline-offset-2 hover:underline"
+              >
                 Trading Rules
               </Link>
               , and{" "}
-              <Link to="/p2p/terms" className="font-semibold text-foreground underline-offset-2 hover:underline">
+              <Link
+                to="/p2p/terms"
+                className="font-semibold text-foreground underline-offset-2 hover:underline"
+              >
                 P2P Terms
               </Link>
               .

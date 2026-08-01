@@ -134,7 +134,9 @@ function P2PMarketplace() {
     const amt = Number(amountFilter);
     if (amt > 0) {
       list = list.filter(
-        (ad) => amt >= Number(ad.min_order) && amt <= Math.min(Number(ad.max_order), Number(ad.available_amount)),
+        (ad) =>
+          amt >= Number(ad.min_order) &&
+          amt <= Math.min(Number(ad.max_order), Number(ad.available_amount)),
       );
     }
     if (methodFilter) {
@@ -164,7 +166,7 @@ function P2PMarketplace() {
           <p className="flex-1 truncate">0 trading fees · Escrow protected</p>
           <button
             type="button"
-            className="grid h-7 w-7 place-items-center rounded-[4px] text-muted-foreground press"
+            className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground press"
             aria-label="Refresh"
             onClick={() => void adsQ.refetch()}
           >
@@ -177,7 +179,7 @@ function P2PMarketplace() {
           <button
             type="button"
             onClick={() => setFiatOpen(true)}
-            className="mb-0.5 inline-flex h-7 items-center gap-1 rounded-[4px] px-1.5 text-[13px] font-bold press"
+            className="mb-0.5 inline-flex h-7 items-center gap-1 rounded-lg px-1.5 text-[13px] font-bold press"
           >
             {meta.code}
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -201,9 +203,7 @@ function P2PMarketplace() {
               }}
             />
             <FilterChip
-              label={
-                methodFilter ? methodLabel[methodFilter] ?? methodFilter : "All payments"
-              }
+              label={methodFilter ? (methodLabel[methodFilter] ?? methodFilter) : "All payments"}
               active={!!methodFilter}
               onClick={() =>
                 void navigate({
@@ -236,7 +236,7 @@ function P2PMarketplace() {
             <span>Price</span>
             <span>Available / Limit</span>
             <span>Payment</span>
-            <span className="w-[4.75rem] text-right">Trade</span>
+            <span className="w-19 text-right">Trade</span>
           </div>
 
           {filtered.map((ad) => {
@@ -261,7 +261,7 @@ function P2PMarketplace() {
                 key={ad.id}
                 className={cn(
                   "relative px-4 py-3 md:grid md:grid-cols-[minmax(0,1.35fr)_minmax(6.5rem,0.65fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-3 md:px-5 lg:px-6",
-                  featured && "bg-[#11C66D]/[0.04]",
+                  featured && "bg-[#11C66D]/4",
                 )}
               >
                 {featured ? (
@@ -316,7 +316,7 @@ function P2PMarketplace() {
                   <div className="min-w-0 flex-1 md:block">
                     <PaymentMethodTags codes={ad.payment_methods} labels={methodLabel} />
                   </div>
-                  <TradeCta side={side} onClick={() => setSelected(ad)} className="md:w-[4.75rem]" />
+                  <TradeCta side={side} onClick={() => setSelected(ad)} className="md:w-19" />
                 </div>
               </article>
             );
@@ -456,9 +456,7 @@ function BuyDialog({
 
   const amt = Number(amount || 0);
   const totalUsd = ad ? amt * Number(ad.price_usd) : 0;
-  const overLimit = ad
-    ? p2pAmountExceedsLimit(ad.asset, amt, Number(ad.price_usd))
-    : false;
+  const overLimit = ad ? p2pAmountExceedsLimit(ad.asset, amt, Number(ad.price_usd)) : false;
   const invalid =
     !ad ||
     !method ||
@@ -477,7 +475,8 @@ function BuyDialog({
             {side === "buy" ? "Buy" : "Sell"} {ad?.asset}
           </DialogTitle>
           <DialogDescription>
-            Price {ad ? formatCurrency(Number(ad.price_usd), fiat as never, { compact: false }) : "—"} ·
+            Price{" "}
+            {ad ? formatCurrency(Number(ad.price_usd), fiat as never, { compact: false }) : "—"} ·
             limits {ad ? `${fmtAmount(ad.min_order)} – ${fmtAmount(ad.max_order)}` : ""}
             {" · "}max {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD
           </DialogDescription>
@@ -512,7 +511,7 @@ function BuyDialog({
                   key={code}
                   type="button"
                   onClick={() => setMethod(code)}
-                    className={cn(
+                  className={cn(
                     "inline-flex h-9 items-center gap-2 rounded-[6px] border px-3 text-xs font-semibold",
                     method === code
                       ? "border-foreground bg-secondary text-foreground"
@@ -569,7 +568,7 @@ function BuyDialog({
 
           <Button
             className={cn(
-              "h-12 w-full rounded-[8px] text-base font-bold",
+              "h-12 w-full rounded-xl text-base font-bold",
               side === "buy"
                 ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
                 : "bg-[#F04438] text-white hover:bg-[#DE3A2F]",

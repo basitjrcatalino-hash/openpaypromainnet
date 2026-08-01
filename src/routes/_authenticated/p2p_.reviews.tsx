@@ -64,7 +64,9 @@ function ReviewsPage() {
     [ordersQ.data],
   );
   const counterpartyIds = useMemo(
-    () => [...new Set(completed.map((o) => (o.buyer_id === userQ.data ? o.seller_id : o.buyer_id)))],
+    () => [
+      ...new Set(completed.map((o) => (o.buyer_id === userQ.data ? o.seller_id : o.buyer_id))),
+    ],
     [completed, userQ.data],
   );
   const namesQ = useQuery({
@@ -83,7 +85,11 @@ function ReviewsPage() {
       crumb="Profile"
       eyebrow="Reputation · Stats"
       hero={{ from: "#fde68a", to: "#ddd6fe", glyph: "★" }}
-      actions={<P2pHubPill to="/p2p/orders" primary>All orders</P2pHubPill>}
+      actions={
+        <P2pHubPill to="/p2p/orders" primary>
+          All orders
+        </P2pHubPill>
+      }
     >
       <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard label="Completed" value={String(st?.completed_count ?? 0)} />
@@ -105,7 +111,7 @@ function ReviewsPage() {
         <div className="mt-4">
           {ordersQ.isLoading ? (
             <div className="grid place-items-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : !completed.length ? (
             <P2pEmptyState
@@ -122,16 +128,16 @@ function ReviewsPage() {
                     key={o.id}
                     to="/p2p/order/$id"
                     params={{ id: o.id }}
-                    className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0 hover:bg-[var(--muted)]"
+                    className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
                   >
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--accent)] text-amber-500">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-amber-500">
                       <Star className="h-4 w-4" fill="currentColor" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-base font-bold tracking-tight">
                         {name} · {fmtAmount(o.amount)} {o.asset}
                       </span>
-                      <span className="text-sm text-[var(--muted-foreground)]">
+                      <span className="text-sm text-muted-foreground">
                         {ORDER_STATUS_LABEL[o.status] ?? o.status} ·{" "}
                         {formatCurrency(Number(o.total_fiat), fiat as never, { compact: false })}
                       </span>
@@ -149,10 +155,8 @@ function ReviewsPage() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-        {label}
-      </p>
+    <div className="rounded-3xl border border-border bg-card px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-2 text-xl font-bold tabular-nums tracking-tight">{value}</p>
     </div>
   );

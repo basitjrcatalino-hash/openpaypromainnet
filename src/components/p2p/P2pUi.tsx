@@ -36,7 +36,7 @@ export function BuySellToggle({
             {active ? (
               <span
                 className={cn(
-                  "absolute inset-x-0 -bottom-0.5 mx-auto h-[2px] w-5 rounded-full",
+                  "absolute inset-x-0 -bottom-0.5 mx-auto h-0.5 w-5 rounded-full",
                   s === "buy" ? "bg-[#11C66D]" : "bg-[#F04438]",
                 )}
               />
@@ -83,14 +83,12 @@ export function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex h-7 shrink-0 items-center gap-1 rounded-[4px] px-2 text-xs font-semibold transition-colors",
-        active
-          ? "bg-foreground/[0.08] text-foreground"
-          : "text-muted-foreground hover:bg-foreground/[0.04]",
+        "inline-flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-semibold transition-colors",
+        active ? "bg-foreground/8 text-foreground" : "text-muted-foreground hover:bg-foreground/4",
       )}
     >
       {icon}
-      <span className="max-w-[7.5rem] truncate">{label}</span>
+      <span className="max-w-30 truncate">{label}</span>
       <span className="text-[9px] opacity-50">▾</span>
     </button>
   );
@@ -145,17 +143,13 @@ export function MerchantAvatar({
 }) {
   const initial = (name.trim()[0] || "T").toUpperCase();
   const dim =
-    size === "lg"
-      ? "h-14 w-14 text-lg"
-      : size === "md"
-        ? "h-9 w-9 text-sm"
-        : "h-7 w-7 text-[11px]";
+    size === "lg" ? "h-14 w-14 text-lg" : size === "md" ? "h-9 w-9 text-sm" : "h-7 w-7 text-[11px]";
   const dot = size === "lg" ? "h-3.5 w-3.5" : "h-2.5 w-2.5";
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
       <span
         className={cn(
-          "grid place-items-center rounded-full bg-gradient-to-br font-bold text-white",
+          "grid place-items-center rounded-full bg-linear-to-br font-bold text-white",
           dim,
           avatarTone(name),
         )}
@@ -238,10 +232,15 @@ export function PaymentMethodTags({
       {shown.map((code) => (
         <span
           key={code}
-          className="inline-flex h-[18px] max-w-[5.5rem] items-center gap-1 rounded-[2px] bg-foreground/[0.06] px-1 text-[10px] font-medium text-muted-foreground"
+          className="inline-flex h-4.5 max-w-22 items-center gap-1 rounded-[2px] bg-foreground/6 px-1 text-[10px] font-medium text-muted-foreground"
           title={labels[code] ?? code}
         >
-          <P2pPayIcon code={code} name={labels[code]} size="xs" className="!h-3.5 !w-3.5 !rounded-[2px]" />
+          <P2pPayIcon
+            code={code}
+            name={labels[code]}
+            size="xs"
+            className="h-3.5! w-3.5! rounded-[2px]!"
+          />
           <span className="truncate">{labels[code] ?? code}</span>
         </span>
       ))}
@@ -268,10 +267,8 @@ export function TradeCta({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-8 min-w-[4.75rem] shrink-0 rounded-[6px] px-3.5 text-[13px] font-bold text-white press",
-        side === "buy"
-          ? "bg-[#11C66D] hover:bg-[#0FB461]"
-          : "bg-[#F04438] hover:bg-[#DE3A2F]",
+        "h-8 min-w-19 shrink-0 rounded-[6px] px-3.5 text-[13px] font-bold text-white press",
+        side === "buy" ? "bg-[#11C66D] hover:bg-[#0FB461]" : "bg-[#F04438] hover:bg-[#DE3A2F]",
         className,
       )}
     >
@@ -280,22 +277,10 @@ export function TradeCta({
   );
 }
 
-export function P2pAssetIcon({
-  asset,
-  className,
-}: {
-  asset: string;
-  className?: string;
-}) {
+export function P2pAssetIcon({ asset, className }: { asset: string; className?: string }) {
   const logo = logoUrlForTokenSymbol(asset);
   if (logo) {
-    return (
-      <img
-        src={logo}
-        alt=""
-        className={cn("h-6 w-6 rounded-full object-cover", className)}
-      />
-    );
+    return <img src={logo} alt="" className={cn("h-6 w-6 rounded-full object-cover", className)} />;
   }
   return (
     <span
@@ -331,7 +316,7 @@ export function P2pAssetPickerGrid({
             type="button"
             onClick={() => onSelect(a)}
             className={cn(
-              "flex h-12 items-center justify-center gap-2 rounded-[8px] border text-sm font-bold press",
+              "flex h-12 items-center justify-center gap-2 rounded-xl border text-sm font-bold press",
               value === a ? "border-foreground bg-secondary" : "border-border hover:bg-muted/50",
             )}
           >

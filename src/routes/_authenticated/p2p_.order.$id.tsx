@@ -111,11 +111,40 @@ function TradeRoom() {
   });
 
   const order = orderQ.data;
+  const adQ = useQuery({
+    queryKey: ["p2p-ad-owner", order?.ad_id],
+    enabled: !!order?.ad_id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("p2p_ads")
+        .select("user_id")
+        .eq("id", order!.ad_id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
   const names = useQuery({
     queryKey: ["p2p-names", order?.buyer_id, order?.seller_id],
     enabled: !!order,
     queryFn: () => fetchDisplayNames([order!.buyer_id, order!.seller_id]),
   });
+
+  const merchantId = adQ.data?.user_id ?? null;
+
+  function chatSenderRole(senderId: string | null | undefined): "merchant" | "customer" | "support" {
+    if (!senderId || !order) return "support";
+    if (merchantId) {
+      if (senderId === merchantId) return "merchant";
+      if (senderId === order.buyer_id || senderId === order.seller_id) return "customer";
+      return "support";
+    }
+    // Ad owner still loading — provisional labels (most ads are sell offers).
+    if (senderId === order.buyer_id) return "customer";
+    if (senderId === order.seller_id) return "merchant";
+    return "support";
+  }
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -521,43 +550,89 @@ function TradeRoom() {
 
         {/* Chat */}
         <div className="flex h-[min(32rem,70dvh)] flex-col rounded-3xl border border-border/60 bg-card/70 lg:sticky lg:top-4 lg:h-[min(40rem,calc(100dvh-6rem))]">
-          <div className="border-b border-border/60 px-5 py-3 text-sm font-bold">
-            Trade chat · {counterparty}
+          <div className="border-b border-border/60 px-5 py-3">
+            <p className="text-sm font-bold">Trade chat · {counterparty}</p>
+            <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] font-semibold">
+              <span className="inline-flex items-center gap-1 text-amber-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Merchant
+              </span>
+              <span className="inline-flex items-center gap-1 text-sky-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Customer
+              </span>
+              <span className="inline-flex items-center gap-1 text-violet-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" /> Support
+              </span>
+            </div>
           </div>
           <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {(msgQ.data ?? []).map((m) =>
               m.is_system ? (
-                <p
-                  key={m.id}
-                  className="mx-auto w-fit rounded-full bg-muted/70 px-3 py-1 text-center text-[11px] text-muted-foreground"
-                >
-                  {m.body}
-                </p>
-              ) : (
-                <div
-                  key={m.id}
-                  className={cn("flex", m.sender_id === uid ? "justify-end" : "justify-start")}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm",
-                      m.sender_id === uid
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground",
-                    )}
-                  >
-                    {m.body && m.body !== "📷 Image" ? m.body : null}
-                    {m.image_url ? (
-                      <a href={m.image_url} target="_blank" rel="noreferrer" className="block">
-                        <img
-                          src={m.image_url}
-                          alt="Attachment"
-                          className={cn("mt-1 max-h-52 rounded-lg object-cover", m.body && m.body !== "📷 Image" && "mt-2")}
-                        />
-                      </a>
-                    ) : null}
-                  </div>
+                <div key={m.id} className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/80">
+                    System
+                  </span>
+                  <p className="w-fit rounded-full bg-muted/70 px-3 py-1 text-center text-[11px] text-muted-foreground">
+                    {m.body}
+                  </p>
                 </div>
+              ) : (
+                (() => {
+                  const mine = m.sender_id === uid;
+                  const role = chatSenderRole(m.sender_id);
+                  const roleMeta =
+                    role === "merchant"
+                      ? { label: "Merchant", className: "text-amber-500" }
+                      : role === "customer"
+                        ? { label: "Customer", className: "text-sky-400" }
+                        : { label: "Support", className: "text-violet-400" };
+                  const displayName =
+                    role === "support"
+                      ? "Support"
+                      : names.data?.[m.sender_id ?? ""] ?? roleMeta.label;
+                  return (
+                    <div
+                      key={m.id}
+                      className={cn("flex flex-col gap-1", mine ? "items-end" : "items-start")}
+                    >
+                      <div
+                        className={cn(
+                          "flex max-w-[78%] items-center gap-1.5 px-1 text-[10px] font-bold uppercase tracking-wide",
+                          mine ? "flex-row-reverse" : "flex-row",
+                          roleMeta.className,
+                        )}
+                      >
+                        <span>{roleMeta.label}</span>
+                        <span className="font-semibold normal-case tracking-normal text-muted-foreground">
+                          · {mine ? "You" : displayName}
+                        </span>
+                      </div>
+                      <div
+                        className={cn(
+                          "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm",
+                          mine
+                            ? "bg-primary text-primary-foreground"
+                            : role === "support"
+                              ? "border border-violet-500/30 bg-violet-500/10 text-foreground"
+                              : "bg-muted text-foreground",
+                        )}
+                      >
+                        {m.body && m.body !== "📷 Image" ? m.body : null}
+                        {m.image_url ? (
+                          <a href={m.image_url} target="_blank" rel="noreferrer" className="block">
+                            <img
+                              src={m.image_url}
+                              alt="Attachment"
+                              className={cn(
+                                "mt-1 max-h-52 rounded-lg object-cover",
+                                m.body && m.body !== "📷 Image" && "mt-2",
+                              )}
+                            />
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })()
               ),
             )}
           </div>

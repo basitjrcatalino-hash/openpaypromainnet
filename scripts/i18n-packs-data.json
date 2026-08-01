@@ -52,7 +52,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Mercado P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Idioma de visualización",
@@ -226,7 +226,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P-Markt"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Anzeigesprache",
@@ -400,7 +400,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Marché P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Langue d'affichage",
@@ -574,7 +574,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Mercato P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Lingua di visualizzazione",
@@ -748,7 +748,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P 市场"
+      "p2p": "P2P"
     },
     "language": {
       "title": "显示语言",
@@ -922,7 +922,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P 市場"
+      "p2p": "P2P"
     },
     "language": {
       "title": "顯示語言",
@@ -1096,7 +1096,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2Pマーケット"
+      "p2p": "P2P"
     },
     "language": {
       "title": "表示言語",
@@ -1270,7 +1270,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P 마켓"
+      "p2p": "P2P"
     },
     "language": {
       "title": "표시 언어",
@@ -1444,7 +1444,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P рынок"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Язык интерфейса",
@@ -1618,7 +1618,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P बाज़ार"
+      "p2p": "P2P"
     },
     "language": {
       "title": "प्रदर्शन भाषा",
@@ -1792,7 +1792,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Pasar P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Bahasa tampilan",
@@ -1966,7 +1966,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Pasar P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Bahasa paparan",
@@ -2140,7 +2140,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "ตลาด P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "ภาษาที่แสดง",
@@ -2314,7 +2314,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Thị trường P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Ngôn ngữ hiển thị",
@@ -2488,7 +2488,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Mercado P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Idioma de exibição",
@@ -2662,7 +2662,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P Piyasası"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Görüntüleme dili",
@@ -2836,7 +2836,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "سوق P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "لغة العرض",
@@ -3010,7 +3010,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P Market"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Wika ng display",
@@ -3184,7 +3184,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P বাজার"
+      "p2p": "P2P"
     },
     "language": {
       "title": "প্রদর্শনের ভাষা",
@@ -3358,7 +3358,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P စျေးကွက်"
+      "p2p": "P2P"
     },
     "language": {
       "title": "ပြသဘာသာစကား",
@@ -3504,7 +3504,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P ገበያ"
+      "p2p": "P2P"
     },
     "language": {
       "title": "የማሳያ ቋንቋ",
@@ -3650,7 +3650,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P બજાર"
+      "p2p": "P2P"
     },
     "language": {
       "title": "પ્રદર્શન ભાષા",
@@ -3796,7 +3796,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Kasuwar P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Harshen nunawa",
@@ -3942,7 +3942,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Ahịa P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Asụsụ ngosi",
@@ -4072,7 +4072,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P ਬਜ਼ਾਰ"
+      "p2p": "P2P"
     },
     "language": {
       "title": "ਡਿਸਪਲੇ ਭਾਸ਼ਾ",
@@ -4127,7 +4127,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Soko la P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Lugha ya Kuonyesha",
@@ -4182,7 +4182,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P சந்தை"
+      "p2p": "P2P"
     },
     "language": {
       "title": "காட்சி மொழி",
@@ -4237,7 +4237,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "P2P మార్కెట్"
+      "p2p": "P2P"
     },
     "language": {
       "title": "డిస్‌ప్లే భాష",
@@ -4292,7 +4292,7 @@
       "developer": "Developer",
       "agentConnect": "Agent Connect",
       "depositGateway": "Deposit gateway",
-      "p2p": "Ọja P2P"
+      "p2p": "P2P"
     },
     "language": {
       "title": "Èdè ìfihàn",

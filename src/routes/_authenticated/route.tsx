@@ -110,6 +110,15 @@ const NAV = [
   { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon },
 ] as const;
 
+/** Resolve nav label; never show raw i18n keys like "nav.p2p". */
+function navLabel(t: (key: string) => string, labelKey: string) {
+  const translated = t(labelKey);
+  if (translated !== labelKey) return translated;
+  if (labelKey === "nav.p2p") return "P2P";
+  const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
+  return leaf.charAt(0).toUpperCase() + leaf.slice(1);
+}
+
 /** Mobile bottom tab bar — Settings & Withdraw stay in the sidebar/menu only. */
 const FOOTER_NAV = NAV.filter((item) => item.to !== "/settings" && item.to !== "/withdraw");
 
@@ -211,7 +220,7 @@ function AuthenticatedLayout() {
         <CurrencyProvider>
         <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
       <div className="relative min-h-screen bg-background text-foreground">
-        {!hideChrome && isHome && (
+        {!hideChrome && (
           <>
             <header
               className={cn(
@@ -226,12 +235,16 @@ function AuthenticatedLayout() {
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link
-                to="/dashboard"
-                className="ph-nav-title truncate text-center text-foreground"
-              >
-                OpenPay Pro
-              </Link>
+              {isHome ? (
+                <Link
+                  to="/dashboard"
+                  className="ph-nav-title truncate text-center text-foreground"
+                >
+                  OpenPay Pro
+                </Link>
+              ) : (
+                <span className="pointer-events-none" aria-hidden />
+              )}
               <div className="justify-self-end">
                 <NotificationBell unread={txNotes.unread} onOpen={() => setNotifOpen(true)} />
               </div>
@@ -360,7 +373,7 @@ function AuthenticatedLayout() {
                       )}
                       strokeWidth={active ? 2.25 : 1.75}
                     />
-                    <span className="px-0.5">{t(item.labelKey)}</span>
+                    <span className="px-0.5">{navLabel(t, item.labelKey)}</span>
                   </Link>
                 );
               })}
@@ -452,7 +465,7 @@ function CollapsedSidebar({
                 ? "bg-primary/12 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
-            title={t(item.labelKey)}
+            title={navLabel(t, item.labelKey)}
           >
             <item.icon
               className={cn("h-5 w-5", active && "ph-tab-icon-active")}
@@ -733,7 +746,7 @@ function SidebarInner({
                   className={cn("h-[1.15rem] w-[1.15rem] shrink-0", active && "ph-tab-icon-active")}
                   strokeWidth={active ? 2.25 : 1.75}
                 />
-                <span className="truncate">{t(item.labelKey)}</span>
+                <span className="truncate">{navLabel(t, item.labelKey)}</span>
               </Link>
             );
           })}

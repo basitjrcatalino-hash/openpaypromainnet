@@ -47,6 +47,7 @@ import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedP2pRouteImport } from './routes/_authenticated/p2p'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
 import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
 import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
@@ -306,6 +307,11 @@ const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pRoute = AuthenticatedP2pRouteImport.update({
+  id: '/p2p',
+  path: '/p2p',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
@@ -721,6 +727,7 @@ export interface FileRoutesByFullPath {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
+  '/p2p': typeof AuthenticatedP2pRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -831,6 +838,7 @@ export interface FileRoutesByTo {
   '/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
+  '/p2p': typeof AuthenticatedP2pRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -943,6 +951,7 @@ export interface FileRoutesById {
   '/_authenticated/nfts': typeof AuthenticatedNftsRouteWithChildren
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
+  '/_authenticated/p2p': typeof AuthenticatedP2pRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -1055,6 +1064,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/opentoken'
     | '/ousd'
+    | '/p2p'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/nfts'
     | '/opentoken'
     | '/ousd'
+    | '/p2p'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -1276,6 +1287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nfts'
     | '/_authenticated/opentoken'
     | '/_authenticated/ousd'
+    | '/_authenticated/p2p'
     | '/_authenticated/profile'
     | '/_authenticated/receive'
     | '/_authenticated/scan'
@@ -1685,6 +1697,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p': {
+      id: '/_authenticated/p2p'
+      path: '/p2p'
+      fullPath: '/p2p'
+      preLoaderRoute: typeof AuthenticatedP2pRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ousd': {
@@ -2238,6 +2257,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNftsRoute: typeof AuthenticatedNftsRouteWithChildren
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
+  AuthenticatedP2pRoute: typeof AuthenticatedP2pRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
@@ -2283,6 +2303,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNftsRoute: AuthenticatedNftsRouteWithChildren,
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
+  AuthenticatedP2pRoute: AuthenticatedP2pRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,

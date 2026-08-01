@@ -18,11 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   P2P_ASSETS,
+  P2P_MAX_AMOUNT_OUSD,
   fetchAds,
   fetchPaymentMethods,
   fmtAmount,
   matchExpressAd,
   openOrder,
+  p2pAmountExceedsLimit,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +118,9 @@ function ExpressPage() {
   const start = useMutation({
     mutationFn: async () => {
       if (!matched) throw new Error("No matching advertisement for this amount");
+      if (p2pAmountExceedsLimit(asset, amount, bestPrice || 1)) {
+        throw new Error(`P2P limit is ${P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD per trade`);
+      }
       const pay = method ?? matched.payment_methods[0];
       if (!pay) throw new Error("Select a payment method");
       return openOrder(matched.id, amount, pay);
@@ -128,10 +133,18 @@ function ExpressPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canTrade = amount > 0 && !!matched && (method || matched.payment_methods[0]);
+  const canTrade =
+    amount > 0 &&
+    !!matched &&
+    (method || matched.payment_methods[0]) &&
+    !p2pAmountExceedsLimit(asset, amount, bestPrice || 1);
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 pb-8 pt-3 md:max-w-xl lg:max-w-2xl md:px-6">
+      <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-500">
+        Limit: up to {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD per trade
+        {asset !== "OUSD" ? " (or $5,000 notional)" : ""}.
+      </div>
       <div className="mb-4 rounded-2xl border border-border/50 bg-card/50 p-4 md:p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold">Hot crypto</h2>

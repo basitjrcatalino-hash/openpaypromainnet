@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   P2P_ASSETS,
+  P2P_MAX_AMOUNT_OUSD,
   expireOrders,
   fetchAds,
   fetchDisplayNames,
@@ -34,6 +35,8 @@ import {
   fmtAmount,
   isTraderOnline,
   openOrder,
+  p2pAmountExceedsLimit,
+  p2pLimitError,
   type P2PAd,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
@@ -435,12 +438,16 @@ function BuyDialog({
 
   const amt = Number(amount || 0);
   const totalUsd = ad ? amt * Number(ad.price_usd) : 0;
+  const overLimit = ad
+    ? p2pAmountExceedsLimit(ad.asset, amt, Number(ad.price_usd))
+    : false;
   const invalid =
     !ad ||
     !method ||
     !(amt > 0) ||
     amt < Number(ad.min_order) ||
     amt > Math.min(Number(ad.max_order), Number(ad.available_amount)) ||
+    overLimit ||
     (side === "sell" && balance != null && amt > balance);
 
   return (
@@ -453,6 +460,7 @@ function BuyDialog({
           <DialogDescription>
             Price {ad ? formatCurrency(Number(ad.price_usd), fiat as never, { compact: false }) : "—"} ·
             limits {ad ? `${fmtAmount(ad.min_order)} – ${fmtAmount(ad.max_order)}` : ""}
+            {" · "}max {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD
           </DialogDescription>
         </DialogHeader>
 
@@ -465,6 +473,11 @@ function BuyDialog({
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
               className="h-12 text-lg font-bold tabular-nums"
             />
+            {overLimit ? (
+              <p className="text-[11px] font-semibold text-rose-500">
+                {ad ? p2pLimitError(ad.asset) : "Amount too large"}
+              </p>
+            ) : null}
             {side === "sell" && balance != null ? (
               <p className="text-[11px] text-muted-foreground">
                 Available {fmtAmount(balance)} {ad?.asset}

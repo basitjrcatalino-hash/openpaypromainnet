@@ -6,9 +6,63 @@ export type P2POrder = Tables<"p2p_orders">;
 export type P2PMessage = Tables<"p2p_messages">;
 export type P2PDispute = Tables<"p2p_disputes">;
 export type P2PPaymentMethod = Tables<"p2p_payment_methods">;
+export type P2PPaymentAccount = Tables<"p2p_payment_accounts">;
+
+export type P2PPaymentAccountSnapshot = {
+  account_id?: string;
+  method_code: string;
+  account_name: string;
+  account_number: string;
+  bank_name?: string | null;
+  extra?: Record<string, unknown>;
+};
+
+export function parsePaymentSnapshot(raw: unknown): P2PPaymentAccountSnapshot | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.account_name !== "string" || typeof o.account_number !== "string") return null;
+  return {
+    account_id: typeof o.account_id === "string" ? o.account_id : undefined,
+    method_code: typeof o.method_code === "string" ? o.method_code : "",
+    account_name: o.account_name,
+    account_number: o.account_number,
+    bank_name: typeof o.bank_name === "string" ? o.bank_name : null,
+    extra: (o.extra && typeof o.extra === "object" ? o.extra : {}) as Record<string, unknown>,
+  };
+}
 
 export const P2P_ASSETS = ["OUSD", "USDT", "USDC", "ETH", "BTC", "SOL"] as const;
 export type P2PAsset = (typeof P2P_ASSETS)[number];
+
+/** Hard cap per P2P ad total / order (OUSD units, or $ notional for other assets). */
+export const P2P_MAX_AMOUNT_OUSD = 5000;
+
+export function p2pAmountExceedsLimit(
+  asset: string,
+  amount: number,
+  priceUsd = 1,
+): boolean {
+  if (!(amount > 0) || !(priceUsd > 0)) return true;
+  const a = asset.toUpperCase();
+  if (a === "OUSD" || a === "USDT" || a === "USDC") {
+    return amount > P2P_MAX_AMOUNT_OUSD + 1e-12;
+  }
+  return amount * priceUsd > P2P_MAX_AMOUNT_OUSD + 1e-12;
+}
+
+export function p2pLimitError(asset: string): string {
+  const a = asset.toUpperCase();
+  if (a === "OUSD" || a === "USDT" || a === "USDC") {
+    return `P2P limit is ${P2P_MAX_AMOUNT_OUSD.toLocaleString()} ${a} per ad/order`;
+  }
+  return `P2P limit is $${P2P_MAX_AMOUNT_OUSD.toLocaleString()} notional (~${P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD) per ad/order`;
+}
+
+export function assertP2pAmountLimit(asset: string, amount: number, priceUsd = 1) {
+  if (p2pAmountExceedsLimit(asset, amount, priceUsd)) {
+    throw new Error(p2pLimitError(asset));
+  }
+}
 
 export const ORDER_STATUS_LABEL: Record<string, string> = {
   pending_payment: "Pending payment",
@@ -65,6 +119,66 @@ export async function fetchPaymentMethods(): Promise<P2PPaymentMethod[]> {
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+export async function fetchMyPaymentAccounts(userId: string): Promise<P2PPaymentAccount[]> {
+  const { data, error } = await supabase
+    .from("p2p_payment_accounts")
+    .select("*")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function upsertPaymentAccount(input: {
+  id?: string;
+  methodCode: string;
+  accountName: string;
+  accountNumber: string;
+  bankName?: string | null;
+}) {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) throw new Error("Not signed in");
+
+  const payload = {
+    user_id: uid,
+    method_code: input.methodCode,
+    account_name: input.accountName.trim(),
+    account_number: input.accountNumber.trim(),
+    bank_name: input.bankName?.trim() || null,
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from("p2p_payment_accounts")
+      .update(payload)
+      .eq("id", input.id)
+      .eq("user_id", uid)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data as P2PPaymentAccount;
+  }
+
+  const { data, error } = await supabase
+    .from("p2p_payment_accounts")
+    .insert(payload)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as P2PPaymentAccount;
+}
+
+export async function setPaymentAccountActive(id: string, isActive: boolean) {
+  const { error } = await supabase
+    .from("p2p_payment_accounts")
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchAds(opts: { side: "sell" | "buy"; asset: string }): Promise<P2PAd[]> {
@@ -151,6 +265,10 @@ export async function createAd(input: {
   payTimeLimitMinutes: number;
   terms?: string | null;
 }) {
+  assertP2pAmountLimit(input.asset, input.totalAmount, input.priceUsd);
+  assertP2pAmountLimit(input.asset, input.maxOrder, input.priceUsd);
+  assertP2pAmountLimit(input.asset, input.minOrder, input.priceUsd);
+
   const { data, error } = await supabase.rpc("p2p_create_ad", {
     _side: input.side,
     _asset: input.asset,
@@ -193,6 +311,15 @@ export async function createAd(input: {
 }
 
 export async function openOrder(adId: string, amount: number, paymentMethod: string) {
+  const { data: adRow } = await supabase
+    .from("p2p_ads")
+    .select("asset, price_usd")
+    .eq("id", adId)
+    .maybeSingle();
+  if (adRow) {
+    assertP2pAmountLimit(String(adRow.asset), amount, Number(adRow.price_usd ?? 1));
+  }
+
   const { data, error } = await supabase.rpc("p2p_open_order", {
     _ad_id: adId,
     _amount: amount,

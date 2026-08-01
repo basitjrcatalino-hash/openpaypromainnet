@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Check,
   ChevronLeft,
+  Copy,
   ImagePlus,
   Loader2,
   Lock,
@@ -34,11 +35,13 @@ import {
   formatCountdown,
   markPaid,
   openDispute,
+  parsePaymentSnapshot,
   resolveDispute,
   sendMessage,
   statusTone,
 } from "@/lib/p2p";
 import { uploadMedia } from "@/lib/upload";
+import { copyText } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/order/$id")({
@@ -271,6 +274,16 @@ function TradeRoom() {
   const isMod = !!modQ.data;
   const counterparty = names.data?.[isBuyer ? order.seller_id : order.buyer_id] ?? "Trader";
   const live = order.status === "pending_payment" || order.status === "paid";
+  const paySnap = parsePaymentSnapshot(order.payment_account_snapshot);
+
+  async function copyField(label: string, value: string) {
+    try {
+      await copyText(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Could not copy");
+    }
+  }
 
   return (
     <div className="mx-auto w-full space-y-4 px-4 pb-8 pt-2 md:px-6">
@@ -349,6 +362,43 @@ function TradeRoom() {
             ) : null}
           </div>
 
+          {paySnap ? (
+            <div className="space-y-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 md:p-5">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-emerald-500">
+                {isBuyer ? "Pay to merchant wallet" : "Your receive account"}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {isBuyer
+                  ? `Send ${formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via ${methodLabel}.`
+                  : "Buyers will send fiat to these details."}
+              </p>
+              <div className="space-y-2">
+                <SnapRow
+                  label="Account name"
+                  value={paySnap.account_name}
+                  onCopy={() => void copyField("Account name", paySnap.account_name)}
+                />
+                <SnapRow
+                  label="Account number"
+                  value={paySnap.account_number}
+                  mono
+                  onCopy={() => void copyField("Account number", paySnap.account_number)}
+                />
+                {paySnap.bank_name ? (
+                  <SnapRow
+                    label="Bank"
+                    value={paySnap.bank_name}
+                    onCopy={() => void copyField("Bank", paySnap.bank_name!)}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ) : isBuyer && order.status === "pending_payment" ? (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-500">
+              Merchant receive details unavailable. Ask the seller in chat for payment instructions.
+            </div>
+          ) : null}
+
           {/* Actions */}
           <div className="space-y-3 rounded-2xl border border-border/60 bg-card/70 p-4 md:p-5">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
@@ -358,8 +408,9 @@ function TradeRoom() {
             {isBuyer && order.status === "pending_payment" ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Send {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via{" "}
-                  {methodLabel}, then confirm below.
+                  After paying {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via{" "}
+                  {methodLabel}
+                  {paySnap ? ` to ${paySnap.account_name}` : ""}, upload proof and confirm below.
                 </p>
 
                 <input
@@ -703,6 +754,39 @@ function Stat({ label, value, mono }: { label: string; value: string; mono?: boo
         {label}
       </p>
       <p className={cn("truncate text-sm font-bold", mono && "font-mono text-xs")}>{value}</p>
+    </div>
+  );
+}
+
+function SnapRow({
+  label,
+  value,
+  mono,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl bg-background/70 px-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className={cn("truncate text-sm font-bold", mono && "font-mono text-xs")}>{value}</p>
+      </div>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className="h-8 w-8 shrink-0"
+        onClick={onCopy}
+        aria-label={`Copy ${label}`}
+      >
+        <Copy className="h-3.5 w-3.5" />
+      </Button>
     </div>
   );
 }

@@ -1086,6 +1086,24 @@ function SettingsPage() {
               />
             </SettingRow>
             <SettingRow
+              label={t("settings.p2pAlerts")}
+              desc={t("settings.p2pAlertsDesc")}
+            >
+              <Switch
+                checked={
+                  (prefs?.notifications as Record<string, boolean> | null)?.p2p_alerts ?? true
+                }
+                onCheckedChange={(v) =>
+                  updatePref({
+                    notifications: {
+                      ...((prefs?.notifications as Record<string, boolean> | null) ?? {}),
+                      p2p_alerts: v,
+                    },
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow
               label={t("settings.lockPush")}
               desc={t("settings.lockPushDesc")}
             >

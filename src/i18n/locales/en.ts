@@ -88,6 +88,8 @@ export const en = {
     priceAlertsDesc: "Notify on big moves",
     txAlerts: "Transaction alerts",
     txAlertsDesc: "Notify on send, receive & top-ups",
+    p2pAlerts: "P2P order alerts",
+    p2pAlertsDesc: "Sound and toast for new orders, status changes, and trade messages",
     lockPush: "Lock-screen push",
     lockPushDesc: "System notifications when phone is locked or app is closed",
     emailAlerts: "Email alerts",

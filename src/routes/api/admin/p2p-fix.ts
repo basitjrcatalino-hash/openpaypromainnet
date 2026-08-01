@@ -34,13 +34,19 @@ export const Route = createFileRoute("/api/admin/p2p-fix")({
             return Response.json({ error: "Supabase admin env missing" }, { status: 503 });
           }
 
-          const sqlPath = join(
-            process.cwd(),
+          const sqlPaths = [
             "supabase/migrations/20260801110000_p2p_fix_escrow_refs.sql",
-          );
+            "supabase/migrations/20260801120000_p2p_trader_stats.sql",
+            "supabase/migrations/20260801130000_p2p_merchant_payment_accounts.sql",
+            "supabase/migrations/20260801140000_p2p_max_amount_limit.sql",
+            "supabase/migrations/20260801150000_p2p_admin_set_support.sql",
+            "supabase/migrations/20260801160000_p2p_realtime_notifications.sql",
+          ];
           let sql: string;
           try {
-            sql = readFileSync(sqlPath, "utf8");
+            sql = sqlPaths
+              .map((rel) => readFileSync(join(process.cwd(), rel), "utf8"))
+              .join("\n\n");
           } catch {
             return Response.json({ error: "Migration file not found on server" }, { status: 500 });
           }

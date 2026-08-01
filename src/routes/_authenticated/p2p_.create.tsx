@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
@@ -17,7 +17,17 @@ import {
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
-import { P2P_ASSETS, createAd, fetchMyAds, fetchPaymentMethods, fmtAmount } from "@/lib/p2p";
+import {
+  P2P_ASSETS,
+  P2P_MAX_AMOUNT_OUSD,
+  createAd,
+  fetchMyAds,
+  fetchMyPaymentAccounts,
+  fetchPaymentMethods,
+  fmtAmount,
+  p2pAmountExceedsLimit,
+  p2pLimitError,
+} from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/create")({
@@ -73,6 +83,13 @@ function AdsHubPage() {
           <Plus className="h-5 w-5" />
         </button>
       </header>
+
+      <div className="border-b border-border/40 px-4 py-2.5 text-xs text-muted-foreground md:px-6">
+        Sell ads need a funded merchant wallet + receive accounts.{" "}
+        <Link to="/p2p/wallet" className="font-semibold text-primary">
+          Set up merchant wallet ›
+        </Link>
+      </div>
 
       {myAdsQ.isLoading ? (
         <div className="grid place-items-center py-24">
@@ -170,6 +187,27 @@ function CreateAdDialog({
   const [methods, setMethods] = useState<string[]>([]);
 
   const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
+  const userQ = useQuery({
+    queryKey: ["auth-user-id"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
+  });
+  const accountsQ = useQuery({
+    queryKey: ["p2p-payment-accounts", userQ.data],
+    enabled: !!userQ.data && open,
+    queryFn: () => fetchMyPaymentAccounts(userQ.data as string),
+  });
+
+  const activeMethodCodes = useMemo(
+    () =>
+      new Set(
+        (accountsQ.data ?? []).filter((a) => a.is_active).map((a) => a.method_code),
+      ),
+    [accountsQ.data],
+  );
+  const missingReceive = useMemo(
+    () => (side === "sell" ? methods.filter((c) => !activeMethodCodes.has(c)) : []),
+    [side, methods, activeMethodCodes],
+  );
 
   const create = useMutation({
     mutationFn: () =>
@@ -200,8 +238,12 @@ function CreateAdDialog({
       !(Number(total) > 0) ||
       !(Number(min) > 0) ||
       !(Number(max) >= Number(min)) ||
-      methods.length === 0,
-    [price, total, min, max, methods],
+      methods.length === 0 ||
+      (side === "sell" && missingReceive.length > 0) ||
+      p2pAmountExceedsLimit(asset, Number(total), Number(price)) ||
+      p2pAmountExceedsLimit(asset, Number(max), Number(price)) ||
+      p2pAmountExceedsLimit(asset, Number(min), Number(price)),
+    [price, total, min, max, methods, side, missingReceive, asset],
   );
 
   return (
@@ -211,6 +253,10 @@ function CreateAdDialog({
           <DialogTitle>Create ad</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-500">
+            Limit: up to {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD per ad / order
+            {asset !== "OUSD" ? " (or $5,000 notional)" : ""}.
+          </div>
           <div className="inline-flex rounded-full bg-muted/60 p-1">
             {(["sell", "buy"] as const).map((s) => (
               <button
@@ -230,6 +276,15 @@ function CreateAdDialog({
               </button>
             ))}
           </div>
+
+          {side === "sell" ? (
+            <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              Sell ads lock crypto from your merchant wallet and show your receive accounts to buyers.{" "}
+              <Link to="/p2p/wallet" className="font-semibold text-primary" onClick={() => onOpenChange(false)}>
+                Manage merchant wallet ›
+              </Link>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-1.5">
             {P2P_ASSETS.map((a) => (
@@ -260,6 +315,7 @@ function CreateAdDialog({
               .filter((m) => m.is_active)
               .map((m) => {
                 const on = methods.includes(m.code);
+                const hasAccount = activeMethodCodes.has(m.code);
                 return (
                   <button
                     key={m.code}
@@ -275,10 +331,22 @@ function CreateAdDialog({
                     )}
                   >
                     {m.icon} {m.name}
+                    {side === "sell" && on ? (hasAccount ? " ✓" : " !") : ""}
                   </button>
                 );
               })}
           </div>
+
+          {missingReceive.length > 0 ? (
+            <p className="text-xs font-semibold text-amber-500">
+              Missing receive accounts for: {missingReceive.join(", ")}. Add them in Merchant wallet.
+            </p>
+          ) : null}
+
+          {(p2pAmountExceedsLimit(asset, Number(total), Number(price)) ||
+            p2pAmountExceedsLimit(asset, Number(max), Number(price))) && (
+            <p className="text-xs font-semibold text-rose-500">{p2pLimitError(asset)}</p>
+          )}
 
           <Textarea
             value={terms}

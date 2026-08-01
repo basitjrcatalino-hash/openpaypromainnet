@@ -1387,6 +1387,53 @@ export type Database = {
           },
         ]
       }
+      p2p_payment_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_name: string | null
+          created_at: string
+          extra: Json
+          id: string
+          is_active: boolean
+          method_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_name?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          is_active?: boolean
+          method_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_name?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          is_active?: boolean
+          method_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_payment_accounts_method_code_fkey"
+            columns: ["method_code"]
+            isOneToOne: false
+            referencedRelation: "p2p_payment_methods"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       p2p_messages: {
         Row: {
           body: string | null
@@ -1440,6 +1487,8 @@ export type Database = {
           id: string
           paid_at: string | null
           payment_method: string
+          payment_account_id: string | null
+          payment_account_snapshot: Json | null
           payment_proof_url: string | null
           price_usd: number
           ref: string
@@ -1464,6 +1513,8 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payment_method: string
+          payment_account_id?: string | null
+          payment_account_snapshot?: Json | null
           payment_proof_url?: string | null
           price_usd: number
           ref?: string
@@ -1488,6 +1539,8 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payment_method?: string
+          payment_account_id?: string | null
+          payment_account_snapshot?: Json | null
           payment_proof_url?: string | null
           price_usd?: number
           ref?: string
@@ -2573,6 +2626,25 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      admin_set_p2p_support: {
+        Args: {
+          _username: string
+          _wallet_address: string
+          _grant?: boolean
+        }
+        Returns: Json
+      }
+      admin_list_p2p_support: {
+        Args: Record<string, never>
+        Returns: {
+          user_id: string
+          username: string | null
+          display_name: string | null
+          wallet_address: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          created_at: string
+        }[]
       }
       has_user_pin: { Args: never; Returns: boolean }
       import_openpay_wallet: {

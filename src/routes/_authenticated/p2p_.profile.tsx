@@ -12,6 +12,7 @@ import {
   Shield,
   Sparkles,
   Star,
+  Wallet,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -180,6 +181,7 @@ function P2pProfilePage() {
       </section>
 
       <div className="mt-4 divide-y divide-border/40 border-y border-border/40">
+        <MenuLink to="/p2p/wallet" icon={Wallet} label="Merchant wallet" />
         <MenuLink to="/p2p/create" icon={CreditCard} label="Payment / Ads" />
         <MenuLink to="/settings" icon={Settings} label="Settings" />
         <MenuLink to="/p2p/orders" icon={Star} label="Reviews / Orders" />

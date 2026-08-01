@@ -67,6 +67,7 @@ import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 import { NotificationBell, NotificationCenter } from "@/components/notification-center";
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
+import { useP2pOrderNotifications } from "@/hooks/use-p2p-order-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import {
   WalletSwitcherDialog,
@@ -176,6 +177,7 @@ function AuthenticatedLayout() {
   const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
   const txNotes = useTransactionNotifications(user.id);
+  useP2pOrderNotifications(user.id);
 
   useEffect(() => {
     setMobileOpen(false);

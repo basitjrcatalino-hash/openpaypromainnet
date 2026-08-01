@@ -87,6 +87,7 @@ import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public
 import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
 import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
@@ -515,6 +516,11 @@ const AuthenticatedTokensCreateRoute =
     path: '/create',
     getParentRoute: () => AuthenticatedTokensRoute,
   } as any)
+const AuthenticatedP2pCreateRoute = AuthenticatedP2pCreateRouteImport.update({
+  id: '/p2p_/create',
+  path: '/p2p/create',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpentokenTerminalRoute =
   AuthenticatedOpentokenTerminalRouteImport.update({
     id: '/opentoken_/terminal',
@@ -766,6 +772,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
@@ -877,6 +884,7 @@ export interface FileRoutesByTo {
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
@@ -990,6 +998,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/_authenticated/p2p_/create': typeof AuthenticatedP2pCreateRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
@@ -1103,6 +1112,7 @@ export interface FileRouteTypes {
     | '/opentoken/create'
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
+    | '/p2p/create'
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/public/banxa-webhook'
@@ -1214,6 +1224,7 @@ export interface FileRouteTypes {
     | '/opentoken/create'
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
+    | '/p2p/create'
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/public/banxa-webhook'
@@ -1326,6 +1337,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/create'
     | '/_authenticated/opentoken_/portfolio'
     | '/_authenticated/opentoken_/terminal'
+    | '/_authenticated/p2p_/create'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
     | '/api/public/banxa-webhook'
@@ -1979,6 +1991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
       parentRoute: typeof AuthenticatedTokensRoute
     }
+    '/_authenticated/p2p_/create': {
+      id: '/_authenticated/p2p_/create'
+      path: '/p2p/create'
+      fullPath: '/p2p/create'
+      preLoaderRoute: typeof AuthenticatedP2pCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/opentoken_/terminal': {
       id: '/_authenticated/opentoken_/terminal'
       path: '/opentoken/terminal'
@@ -2283,6 +2302,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
   AuthenticatedOpentokenTerminalRoute: typeof AuthenticatedOpentokenTerminalRoute
+  AuthenticatedP2pCreateRoute: typeof AuthenticatedP2pCreateRoute
   AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
   AuthenticatedBagsTokenMintRoute: typeof AuthenticatedBagsTokenMintRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -2330,6 +2350,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
   AuthenticatedOpentokenTerminalRoute: AuthenticatedOpentokenTerminalRoute,
+  AuthenticatedP2pCreateRoute: AuthenticatedP2pCreateRoute,
   AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,
   AuthenticatedBagsTokenMintRoute: AuthenticatedBagsTokenMintRoute,
   AuthenticatedOpenpayConnectCallbackRoute:

@@ -97,8 +97,8 @@ function MerchantWalletPage() {
   });
 
   const balances = P2P_ASSETS.map((asset) => {
-    const key = `${asset.toLowerCase()}_balance` as keyof NonNullable<typeof walletQ.data>;
-    const bal = Number(walletQ.data?.[key] ?? 0);
+    const w = walletQ.data as Record<string, number | string | boolean | null> | null | undefined;
+    const bal = Number(w?.[`${asset.toLowerCase()}_balance`] ?? 0);
     const locked = Number(lockedQ.data?.[asset] ?? 0);
     return { asset, bal, locked, free: Math.max(0, bal - locked) };
   }).filter((b) => b.bal > 0 || b.locked > 0);

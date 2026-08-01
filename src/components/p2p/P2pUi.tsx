@@ -136,12 +136,18 @@ export function MerchantAvatar({
   className,
 }: {
   name: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   online?: boolean;
   className?: string;
 }) {
   const initial = (name.trim()[0] || "T").toUpperCase();
-  const dim = size === "md" ? "h-9 w-9 text-sm" : "h-7 w-7 text-[11px]";
+  const dim =
+    size === "lg"
+      ? "h-14 w-14 text-lg"
+      : size === "md"
+        ? "h-9 w-9 text-sm"
+        : "h-7 w-7 text-[11px]";
+  const dot = size === "lg" ? "h-3.5 w-3.5" : "h-2.5 w-2.5";
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
       <span
@@ -154,7 +160,12 @@ export function MerchantAvatar({
         {initial}
       </span>
       {online ? (
-        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-[#11C66D]" />
+        <span
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-background bg-[#11C66D]",
+            dot,
+          )}
+        />
       ) : null}
     </span>
   );

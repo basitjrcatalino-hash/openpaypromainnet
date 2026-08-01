@@ -37,7 +37,17 @@ const TABS = [
     to: "/p2p/profile",
     label: "Profile",
     icon: UserRound,
-    match: (p: string) => p.startsWith("/p2p/profile"),
+    match: (p: string) =>
+      p.startsWith("/p2p/profile") ||
+      p.startsWith("/p2p/wallet") ||
+      p.startsWith("/p2p/payment") ||
+      p.startsWith("/p2p/settings") ||
+      p.startsWith("/p2p/reviews") ||
+      p.startsWith("/p2p/support") ||
+      p.startsWith("/p2p/merchant") ||
+      p.startsWith("/p2p/guide") ||
+      p.startsWith("/p2p/api") ||
+      p.startsWith("/p2p/security"),
   },
 ] as const;
 

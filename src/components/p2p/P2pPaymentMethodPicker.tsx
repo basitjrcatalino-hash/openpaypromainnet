@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Check, Layers, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ function MethodRow({
   selected: boolean;
   onClick: () => void;
   subtitle?: string;
-  leading?: React.ReactNode;
+  leading?: ReactNode;
 }) {
   return (
     <button
@@ -184,8 +184,8 @@ export function P2pPaymentMethodPicker({
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search payment method"
-          className="h-11 rounded-xl border-border/50 bg-muted/40 pl-9 text-sm"
+          placeholder="Search PayPal, GCash, PIX…"
+          className="h-11 rounded-xl border-0 bg-muted/50 pl-9 text-sm shadow-none focus-visible:ring-1 focus-visible:ring-foreground/20"
         />
       </div>
 
@@ -212,7 +212,7 @@ export function P2pPaymentMethodPicker({
 
       <div
         className={cn(
-          "overflow-y-auto overscroll-contain rounded-xl bg-muted/20",
+          "overflow-y-auto overscroll-contain rounded-xl border border-border/40 bg-card/40",
           maxHeightClass,
         )}
       >

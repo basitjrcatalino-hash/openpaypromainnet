@@ -89,6 +89,7 @@ import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authen
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedP2pOrdersRouteImport } from './routes/_authenticated/p2p_.orders'
 import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
+import { Route as AuthenticatedP2pAdminRouteImport } from './routes/_authenticated/p2p_.admin'
 import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
 import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
 import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
@@ -528,6 +529,11 @@ const AuthenticatedP2pCreateRoute = AuthenticatedP2pCreateRouteImport.update({
   path: '/p2p/create',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedP2pAdminRoute = AuthenticatedP2pAdminRouteImport.update({
+  id: '/p2p_/admin',
+  path: '/p2p/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpentokenTerminalRoute =
   AuthenticatedOpentokenTerminalRouteImport.update({
     id: '/opentoken_/terminal',
@@ -784,6 +790,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/p2p/admin': typeof AuthenticatedP2pAdminRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/p2p/orders': typeof AuthenticatedP2pOrdersRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -898,6 +905,7 @@ export interface FileRoutesByTo {
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/opentoken/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/p2p/admin': typeof AuthenticatedP2pAdminRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
   '/p2p/orders': typeof AuthenticatedP2pOrdersRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -1014,6 +1022,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
   '/_authenticated/opentoken_/terminal': typeof AuthenticatedOpentokenTerminalRoute
+  '/_authenticated/p2p_/admin': typeof AuthenticatedP2pAdminRoute
   '/_authenticated/p2p_/create': typeof AuthenticatedP2pCreateRoute
   '/_authenticated/p2p_/orders': typeof AuthenticatedP2pOrdersRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
@@ -1130,6 +1139,7 @@ export interface FileRouteTypes {
     | '/opentoken/create'
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
+    | '/p2p/admin'
     | '/p2p/create'
     | '/p2p/orders'
     | '/tokens/create'
@@ -1244,6 +1254,7 @@ export interface FileRouteTypes {
     | '/opentoken/create'
     | '/opentoken/portfolio'
     | '/opentoken/terminal'
+    | '/p2p/admin'
     | '/p2p/create'
     | '/p2p/orders'
     | '/tokens/create'
@@ -1359,6 +1370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/create'
     | '/_authenticated/opentoken_/portfolio'
     | '/_authenticated/opentoken_/terminal'
+    | '/_authenticated/p2p_/admin'
     | '/_authenticated/p2p_/create'
     | '/_authenticated/p2p_/orders'
     | '/_authenticated/tokens/create'
@@ -2029,6 +2041,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/p2p_/admin': {
+      id: '/_authenticated/p2p_/admin'
+      path: '/p2p/admin'
+      fullPath: '/p2p/admin'
+      preLoaderRoute: typeof AuthenticatedP2pAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/opentoken_/terminal': {
       id: '/_authenticated/opentoken_/terminal'
       path: '/opentoken/terminal'
@@ -2340,6 +2359,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
   AuthenticatedOpentokenTerminalRoute: typeof AuthenticatedOpentokenTerminalRoute
+  AuthenticatedP2pAdminRoute: typeof AuthenticatedP2pAdminRoute
   AuthenticatedP2pCreateRoute: typeof AuthenticatedP2pCreateRoute
   AuthenticatedP2pOrdersRoute: typeof AuthenticatedP2pOrdersRoute
   AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
@@ -2390,6 +2410,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
   AuthenticatedOpentokenTerminalRoute: AuthenticatedOpentokenTerminalRoute,
+  AuthenticatedP2pAdminRoute: AuthenticatedP2pAdminRoute,
   AuthenticatedP2pCreateRoute: AuthenticatedP2pCreateRoute,
   AuthenticatedP2pOrdersRoute: AuthenticatedP2pOrdersRoute,
   AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,

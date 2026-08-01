@@ -1286,6 +1286,261 @@ export type Database = {
           },
         ]
       }
+      p2p_ads: {
+        Row: {
+          asset: string
+          available_amount: number
+          created_at: string
+          id: string
+          max_order: number
+          min_order: number
+          pay_time_limit_minutes: number
+          payment_methods: string[]
+          price_usd: number
+          side: Database["public"]["Enums"]["p2p_ad_side"]
+          status: Database["public"]["Enums"]["p2p_ad_status"]
+          terms: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset?: string
+          available_amount: number
+          created_at?: string
+          id?: string
+          max_order: number
+          min_order?: number
+          pay_time_limit_minutes?: number
+          payment_methods?: string[]
+          price_usd: number
+          side?: Database["public"]["Enums"]["p2p_ad_side"]
+          status?: Database["public"]["Enums"]["p2p_ad_status"]
+          terms?: string | null
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset?: string
+          available_amount?: number
+          created_at?: string
+          id?: string
+          max_order?: number
+          min_order?: number
+          pay_time_limit_minutes?: number
+          payment_methods?: string[]
+          price_usd?: number
+          side?: Database["public"]["Enums"]["p2p_ad_side"]
+          status?: Database["public"]["Enums"]["p2p_ad_status"]
+          terms?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      p2p_disputes: {
+        Row: {
+          created_at: string
+          id: string
+          moderator_id: string | null
+          opened_by: string
+          order_id: string
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["p2p_dispute_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          moderator_id?: string | null
+          opened_by: string
+          order_id: string
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["p2p_dispute_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          moderator_id?: string | null
+          opened_by?: string
+          order_id?: string
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["p2p_dispute_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "p2p_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_messages: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_system: boolean
+          order_id: string
+          sender_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_system?: boolean
+          order_id: string
+          sender_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_system?: boolean
+          order_id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_orders: {
+        Row: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at?: string | null
+          created_at?: string
+          escrow_status?: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash?: string | null
+          expires_at: string
+          fiat_currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_method: string
+          payment_proof_url?: string | null
+          price_usd: number
+          ref?: string
+          release_tx_hash?: string | null
+          released_at?: string | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          amount?: number
+          asset?: string
+          buyer_id?: string
+          cancelled_at?: string | null
+          created_at?: string
+          escrow_status?: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash?: string | null
+          expires_at?: string
+          fiat_currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string
+          payment_proof_url?: string | null
+          price_usd?: number
+          ref?: string
+          release_tx_hash?: string | null
+          released_at?: string | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_orders_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_payment_methods: {
+        Row: {
+          code: string
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_audit_logs: {
         Row: {
           action: string
@@ -2343,6 +2598,202 @@ export type Database = {
         }
         Returns: Json
       }
+      p2p_balance_column: { Args: { _asset: string }; Returns: string }
+      p2p_cancel_order: {
+        Args: { _order_id: string; _reason?: string }
+        Returns: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_confirm_received: {
+        Args: { _order_id: string }
+        Returns: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_expire_orders: { Args: never; Returns: number }
+      p2p_mark_paid: {
+        Args: { _order_id: string; _proof_url?: string }
+        Returns: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_move_balance: {
+        Args: { _asset: string; _delta: number; _user_id: string }
+        Returns: undefined
+      }
+      p2p_open_dispute: {
+        Args: { _order_id: string; _reason: string }
+        Returns: {
+          created_at: string
+          id: string
+          moderator_id: string | null
+          opened_by: string
+          order_id: string
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["p2p_dispute_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_disputes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_open_order: {
+        Args: { _ad_id: string; _amount: number; _payment_method: string }
+        Returns: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      p2p_resolve_dispute: {
+        Args: {
+          _order_id: string
+          _release_to_buyer: boolean
+          _resolution: string
+        }
+        Returns: {
+          ad_id: string
+          amount: number
+          asset: string
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          escrow_status: Database["public"]["Enums"]["p2p_escrow_status"]
+          escrow_tx_hash: string | null
+          expires_at: string
+          fiat_currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string
+          payment_proof_url: string | null
+          price_usd: number
+          ref: string
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["p2p_order_status"]
+          total_fiat: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -2373,6 +2824,21 @@ export type Database = {
         | "community"
       ot_token_status: "curve" | "graduated" | "halted"
       ot_trade_side: "buy" | "sell"
+      p2p_ad_side: "sell" | "buy"
+      p2p_ad_status: "active" | "paused" | "closed"
+      p2p_dispute_status:
+        | "open"
+        | "resolved_buyer"
+        | "resolved_seller"
+        | "cancelled"
+      p2p_escrow_status: "none" | "locked" | "released" | "refunded" | "frozen"
+      p2p_order_status:
+        | "pending_payment"
+        | "paid"
+        | "completed"
+        | "cancelled"
+        | "expired"
+        | "disputed"
       tx_status: "pending" | "confirmed" | "failed"
       tx_type: "send" | "receive" | "swap" | "mint" | "buy" | "sell" | "reward"
     }
@@ -2522,6 +2988,23 @@ export const Constants = {
       ],
       ot_token_status: ["curve", "graduated", "halted"],
       ot_trade_side: ["buy", "sell"],
+      p2p_ad_side: ["sell", "buy"],
+      p2p_ad_status: ["active", "paused", "closed"],
+      p2p_dispute_status: [
+        "open",
+        "resolved_buyer",
+        "resolved_seller",
+        "cancelled",
+      ],
+      p2p_escrow_status: ["none", "locked", "released", "refunded", "frozen"],
+      p2p_order_status: [
+        "pending_payment",
+        "paid",
+        "completed",
+        "cancelled",
+        "expired",
+        "disputed",
+      ],
       tx_status: ["pending", "confirmed", "failed"],
       tx_type: ["send", "receive", "swap", "mint", "buy", "sell", "reward"],
     },

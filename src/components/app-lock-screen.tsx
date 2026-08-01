@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Eye, EyeOff, HelpCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, HelpCircle, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ type Props = {
 };
 
 /**
- * Phantom-style app lock gate.
+ * App lock gate — unlock UI matches Blog / Wiki editorial (`opblog`) surface.
  * When a lock password is set, the wallet stays locked until Unlock succeeds
  * (or the user signs out via Forgot password).
  */
@@ -95,8 +95,8 @@ export function AppLockGate({ userId, children }: Props) {
 
   if (checking) {
     return (
-      <div className="grid min-h-dvh place-items-center bg-black text-white">
-        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+      <div className="opblog grid min-h-dvh place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
       </div>
     );
   }
@@ -171,92 +171,111 @@ function AppLockScreen({
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-black text-white">
-      <header className="flex items-center justify-between border-b border-white/10 px-4 py-3.5">
-        <span className="flex-1" aria-hidden />
-        <span
-          className="text-[15px] font-bold lowercase tracking-tight"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          openpay
-        </span>
-        <Link
-          to="/docs/faq"
-          className="flex flex-1 justify-end"
-          aria-label="Help"
-        >
-          <span className="grid h-8 w-8 place-items-center rounded-full text-white/45 hover:bg-white/10 hover:text-white/80">
-            <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
-          </span>
-        </Link>
-      </header>
-
-      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center px-6 pb-10 pt-16">
-        <img
-          src={OPENPAY_AUTH_LOGO}
-          alt=""
-          className="h-28 w-28 rounded-[2rem] object-contain drop-shadow-[0_20px_50px_rgba(171,159,242,0.35)]"
-        />
-        <h1 className="mt-10 text-center text-[1.65rem] font-bold tracking-tight">
-          Enter your password
-        </h1>
-        <p className="mt-2 max-w-[16rem] text-center text-sm text-white/50">
-          Unlock to open your dashboard
-        </p>
-
-        <form onSubmit={unlock} className="mt-8 w-full space-y-4">
-          <div className="relative">
-            <label htmlFor={inputId} className="sr-only">
-              Password
-            </label>
-            <Input
-              id={inputId}
-              type={show ? "text" : "password"}
-              autoFocus
-              autoComplete="current-password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError(null);
-              }}
-              className={cn(
-                "h-14 rounded-2xl border-white/12 bg-white/8 px-4 pr-12 text-[15px] text-white",
-                "placeholder:text-white/35 focus-visible:ring-white/25",
-              )}
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-white/45 hover:text-white"
-              onClick={() => setShow((v) => !v)}
-              aria-label={show ? "Hide password" : "Show password"}
+    <main className="opblog flex min-h-dvh flex-col">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 pb-16 pt-8 sm:px-8">
+        <nav className="mb-10 flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+            <Link
+              to="/authpi"
+              className="rounded-full bg-[var(--muted)] px-3 py-1.5 text-[var(--foreground)]/80 hover:text-[var(--foreground)]"
             >
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+              OpenPay Pro
+            </Link>
+            <span className="text-[var(--muted-foreground)]">›</span>
+            <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">Unlock</span>
+          </div>
+          <Link
+            to="/docs/faq"
+            className="grid h-9 w-9 place-items-center rounded-full bg-[var(--muted)] text-[var(--muted-foreground)] transition hover:text-[var(--foreground)]"
+            aria-label="Help"
+          >
+            <HelpCircle className="h-4.5 w-4.5" strokeWidth={1.75} />
+          </Link>
+        </nav>
+
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+            Wallet security
+          </p>
+          <h1 className="opblog-title mt-3 text-[clamp(2rem,6vw,2.75rem)]">Enter your password</h1>
+          <p className="opblog-dek mt-4 text-[var(--muted-foreground)]">
+            Unlock to open your dashboard
+          </p>
+
+          <div
+            className="relative mt-8 grid aspect-[16/9] place-items-center overflow-hidden rounded-3xl"
+            style={{
+              backgroundImage: "linear-gradient(135deg, #efeafc, #ddd6fe 55%, #c4b5fd)",
+            }}
+            aria-hidden
+          >
+            <img
+              src={OPENPAY_AUTH_LOGO}
+              alt=""
+              className="h-20 w-20 rounded-[1.35rem] object-contain shadow-[0_16px_40px_rgba(61,46,99,0.18)] sm:h-24 sm:w-24"
+            />
+            <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white/70 text-[var(--foreground)] shadow-sm backdrop-blur-sm">
+              <Lock className="h-4.5 w-4.5" strokeWidth={2} />
+            </span>
           </div>
 
-          {error ? (
-            <p className="text-center text-sm font-medium text-red-400">{error}</p>
-          ) : null}
-
-          <Button
-            type="submit"
-            disabled={busy || password.length < 6}
-            className="mt-2 h-14 w-full rounded-full bg-[#AB9FF2] text-[16px] font-bold text-black hover:bg-[#B8B0FF] disabled:opacity-40"
+          <form
+            onSubmit={unlock}
+            className="mt-8 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 sm:p-6"
           >
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Unlock
-          </Button>
-        </form>
+            <div className="relative">
+              <label htmlFor={inputId} className="sr-only">
+                Password
+              </label>
+              <Input
+                id={inputId}
+                type={show ? "text" : "password"}
+                autoFocus
+                autoComplete="current-password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                className={cn(
+                  "h-14 rounded-2xl border-[var(--border)] bg-[var(--muted)] px-4 pr-12 text-[15px] text-[var(--foreground)]",
+                  "placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-[var(--primary)]/30",
+                )}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)]"
+                onClick={() => setShow((v) => !v)}
+                aria-label={show ? "Hide password" : "Show password"}
+              >
+                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => void forgot()}
-          className="mt-6 text-[15px] font-bold text-white press"
-        >
-          Forgot password
-        </button>
+            {error ? (
+              <p className="text-center text-sm font-semibold text-red-600">{error}</p>
+            ) : null}
+
+            <Button
+              type="submit"
+              disabled={busy || password.length < 6}
+              className="h-14 w-full rounded-full bg-[var(--primary)] text-[16px] font-bold text-[var(--primary-foreground)] hover:brightness-105 disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Unlock
+            </Button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => void forgot()}
+            className="mt-6 text-center text-[15px] font-bold text-[var(--foreground)] underline-offset-4 press hover:underline"
+          >
+            Forgot password
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

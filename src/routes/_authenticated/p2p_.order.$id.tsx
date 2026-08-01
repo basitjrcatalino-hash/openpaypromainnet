@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, ChevronLeft, Loader2, Lock, Send, ShieldCheck, Timer, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronLeft,
+  ImagePlus,
+  Loader2,
+  Lock,
+  Send,
+  ShieldCheck,
+  Timer,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +38,7 @@ import {
   sendMessage,
   statusTone,
 } from "@/lib/p2p";
+import { uploadMedia } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/order/$id")({
@@ -46,6 +58,13 @@ export const Route = createFileRoute("/_authenticated/p2p_/order/$id")({
   component: TradeRoom,
 });
 
+const IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]);
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+function isImageFile(file: File) {
+  return IMAGE_TYPES.has(file.type) || /\.(jpe?g|png|webp|gif)$/i.test(file.name);
+}
+
 function TradeRoom() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
@@ -53,10 +72,15 @@ function TradeRoom() {
   const { code: fiat } = useCurrency();
   const [now, setNow] = useState(() => Date.now());
   const [draft, setDraft] = useState("");
-  const [proof, setProof] = useState("");
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
+  const [chatUploading, setChatUploading] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [resolution, setResolution] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
+  const proofInputRef = useRef<HTMLInputElement>(null);
+  const chatImageRef = useRef<HTMLInputElement>(null);
 
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
@@ -126,11 +150,73 @@ function TradeRoom() {
       })
       .catch((e: Error) => toast.error(e.message));
 
-  const paid = useMutation({ mutationFn: () => markPaid(id, proof || null) });
+  const paid = useMutation({ mutationFn: () => markPaid(id, proofUrl || null) });
   const methodLabel = useMemo(() => {
     const m = (methodsQ.data ?? []).find((x) => x.code === order?.payment_method);
     return m ? `${m.icon ?? ""} ${m.name}`.trim() : (order?.payment_method ?? "");
   }, [methodsQ.data, order?.payment_method]);
+
+  async function uploadProofImage(file: File) {
+    if (!userQ.data) return;
+    if (!isImageFile(file)) {
+      toast.error("Please upload a JPG, PNG, WEBP, or GIF image");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be under 8 MB");
+      return;
+    }
+    setProofUploading(true);
+    try {
+      const local = URL.createObjectURL(file);
+      setProofPreview((prev) => {
+        if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return local;
+      });
+      const url = await uploadMedia(file, userQ.data, `p2p/${id}/proof`);
+      setProofUrl(url);
+      toast.success("Payment proof uploaded");
+    } catch (e) {
+      toast.error((e as Error).message || "Upload failed");
+      setProofPreview(null);
+      setProofUrl(null);
+    } finally {
+      setProofUploading(false);
+    }
+  }
+
+  async function uploadChatImage(file: File) {
+    if (!userQ.data) return;
+    if (!isImageFile(file)) {
+      toast.error("Please upload a JPG, PNG, WEBP, or GIF image");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be under 8 MB");
+      return;
+    }
+    setChatUploading(true);
+    try {
+      const url = await uploadMedia(file, userQ.data, `p2p/${id}/chat`);
+      await sendMessage(id, userQ.data, draft.trim(), url);
+      setDraft("");
+      void qc.invalidateQueries({ queryKey: ["p2p-msgs", id] });
+      toast.success("Image sent");
+    } catch (e) {
+      toast.error((e as Error).message || "Upload failed");
+    } finally {
+      setChatUploading(false);
+    }
+  }
+
+  function clearProof() {
+    setProofPreview((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setProofUrl(null);
+    if (proofInputRef.current) proofInputRef.current.value = "";
+  }
 
   if (orderQ.isLoading || !userQ.data) {
     return (
@@ -220,9 +306,16 @@ function TradeRoom() {
                 href={order.payment_proof_url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-block text-xs font-semibold text-primary underline underline-offset-4"
+                className="mt-3 block overflow-hidden rounded-xl border border-border/60"
               >
-                View payment proof
+                <img
+                  src={order.payment_proof_url}
+                  alt="Payment proof"
+                  className="max-h-56 w-full object-contain bg-muted/40"
+                />
+                <span className="block px-3 py-2 text-xs font-semibold text-primary">
+                  View payment proof
+                </span>
               </a>
             ) : null}
           </div>
@@ -239,18 +332,77 @@ function TradeRoom() {
                   Send {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via{" "}
                   {methodLabel}, then confirm below.
                 </p>
-                <Input
-                  value={proof}
-                  onChange={(e) => setProof(e.target.value)}
-                  placeholder="Payment proof link (optional)"
-                  className="h-11"
+
+                <input
+                  ref={proofInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadProofImage(f);
+                  }}
                 />
+
+                {proofPreview || proofUrl ? (
+                  <div className="relative overflow-hidden rounded-xl border border-border/60 bg-muted/30">
+                    <img
+                      src={proofPreview || proofUrl || ""}
+                      alt="Payment proof preview"
+                      className="max-h-48 w-full object-contain"
+                    />
+                    <div className="flex items-center justify-between gap-2 border-t border-border/50 px-3 py-2">
+                      <p className="truncate text-xs font-semibold text-muted-foreground">
+                        {proofUploading ? "Uploading…" : "Proof ready"}
+                      </p>
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs"
+                          disabled={proofUploading}
+                          onClick={() => proofInputRef.current?.click()}
+                        >
+                          Replace
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={proofUploading}
+                          onClick={clearProof}
+                          aria-label="Remove proof"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={proofUploading}
+                    onClick={() => proofInputRef.current?.click()}
+                    className="flex h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 bg-muted/20 text-sm font-semibold text-muted-foreground press hover:bg-muted/40 disabled:opacity-60"
+                  >
+                    {proofUploading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-5 w-5" />
+                    )}
+                    {proofUploading ? "Uploading…" : "Upload payment proof"}
+                    <span className="text-[11px] font-medium opacity-70">JPG, PNG, WEBP · max 8 MB</span>
+                  </button>
+                )}
+
                 <Button
                   className="h-12 w-full rounded-full bg-emerald-500 text-base font-bold text-white hover:bg-emerald-500/90"
-                  disabled={paid.isPending}
-                  onClick={() => act(() => markPaid(id, proof || null), "Marked as paid")}
+                  disabled={paid.isPending || proofUploading}
+                  onClick={() => act(() => markPaid(id, proofUrl || null), "Marked as paid")}
                 >
-                  I have paid
+                  {paid.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "I have paid"}
                 </Button>
               </>
             ) : null}
@@ -394,9 +546,15 @@ function TradeRoom() {
                         : "bg-muted text-foreground",
                     )}
                   >
-                    {m.body}
+                    {m.body && m.body !== "📷 Image" ? m.body : null}
                     {m.image_url ? (
-                      <img src={m.image_url} alt="Attachment" className="mt-2 rounded-lg" />
+                      <a href={m.image_url} target="_blank" rel="noreferrer" className="block">
+                        <img
+                          src={m.image_url}
+                          alt="Attachment"
+                          className={cn("mt-1 max-h-52 rounded-lg object-cover", m.body && m.body !== "📷 Image" && "mt-2")}
+                        />
+                      </a>
                     ) : null}
                   </div>
                 </div>
@@ -408,20 +566,52 @@ function TradeRoom() {
             onSubmit={(e) => {
               e.preventDefault();
               const body = draft.trim();
-              if (!body) return;
+              if (!body || chatUploading) return;
               setDraft("");
               void sendMessage(id, uid, body)
                 .then(() => qc.invalidateQueries({ queryKey: ["p2p-msgs", id] }))
                 .catch((err: Error) => toast.error(err.message));
             }}
           >
+            <input
+              ref={chatImageRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void uploadChatImage(f);
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 shrink-0 rounded-xl"
+              disabled={chatUploading}
+              onClick={() => chatImageRef.current?.click()}
+              aria-label="Upload image"
+            >
+              {chatUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ImagePlus className="h-4 w-4" />
+              )}
+            </Button>
             <Input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Message or paste a receipt link…"
+              placeholder="Message…"
               className="h-11"
+              disabled={chatUploading}
             />
-            <Button type="submit" size="icon" className="h-11 w-11 shrink-0 rounded-xl">
+            <Button
+              type="submit"
+              size="icon"
+              className="h-11 w-11 shrink-0 rounded-xl"
+              disabled={chatUploading || !draft.trim()}
+            >
               <Send className="h-4 w-4" />
             </Button>
           </form>

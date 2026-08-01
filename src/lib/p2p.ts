@@ -242,10 +242,20 @@ export async function expireOrders() {
   if (error) throw new Error(error.message);
 }
 
-export async function sendMessage(orderId: string, senderId: string, body: string) {
-  const { error } = await supabase
-    .from("p2p_messages")
-    .insert({ order_id: orderId, sender_id: senderId, body });
+export async function sendMessage(
+  orderId: string,
+  senderId: string,
+  body: string,
+  imageUrl?: string | null,
+) {
+  const text = body.trim();
+  if (!text && !imageUrl) throw new Error("Message is empty");
+  const { error } = await supabase.from("p2p_messages").insert({
+    order_id: orderId,
+    sender_id: senderId,
+    body: text || (imageUrl ? "📷 Image" : ""),
+    image_url: imageUrl ?? null,
+  });
   if (error) throw new Error(error.message);
 }
 

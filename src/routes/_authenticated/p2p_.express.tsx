@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BuySellToggle } from "@/components/p2p/P2pUi";
+import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -171,7 +172,7 @@ function ExpressPage() {
         </div>
       </div>
 
-      <BuySellToggle value={side} onChange={setSide} className="mb-4 w-full justify-center [&_button]:flex-1" />
+      <BuySellToggle value={side} onChange={setSide} className="mb-4" />
 
       <div className="space-y-3 rounded-2xl border border-border/50 bg-card/40 p-4">
         <div>
@@ -232,11 +233,11 @@ function ExpressPage() {
 
       <Button
         className={cn(
-          "mt-5 h-12 w-full rounded-full text-base font-bold",
+          "mt-5 h-12 w-full rounded-[8px] text-base font-bold",
           canTrade
             ? side === "buy"
-              ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
-              : "bg-rose-500 text-white hover:bg-rose-500/90"
+              ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
+              : "bg-[#F04438] text-white hover:bg-[#DE3A2F]"
             : "bg-secondary text-muted-foreground",
         )}
         disabled={!canTrade || start.isPending}
@@ -251,7 +252,7 @@ function ExpressPage() {
         {start.isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : method || matched ? (
-          "Start escrow trade"
+          `${side === "buy" ? "Buy" : "Sell"} ${asset}`
         ) : (
           "Select payment method"
         )}
@@ -299,36 +300,19 @@ function ExpressPage() {
       </Dialog>
 
       <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Select payment method</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-wrap gap-2">
-            {(methodsQ.data ?? [])
-              .filter((m) => m.is_active)
-              .filter((m) => !matched || matched.payment_methods.includes(m.code))
-              .map((m) => (
-                <button
-                  key={m.code}
-                  type="button"
-                  onClick={() => {
-                    setMethod(m.code);
-                    setMethodOpen(false);
-                    if (matched && amount > 0) {
-                      // proceed on next click; keep selected
-                    }
-                  }}
-                  className={cn(
-                    "h-9 rounded-xl border px-3 text-xs font-semibold",
-                    method === m.code
-                      ? "border-foreground bg-secondary"
-                      : "border-border text-muted-foreground",
-                  )}
-                >
-                  {m.icon} {m.name}
-                </button>
-              ))}
-          </div>
+          <P2pPaymentMethodPicker
+            methods={(methodsQ.data ?? []).filter(
+              (m) => !matched || matched.payment_methods.includes(m.code),
+            )}
+            mode="single"
+            value={method}
+            onSelect={setMethod}
+            maxHeightClass="max-h-56"
+          />
           <Button
             className="mt-3 h-11 w-full rounded-full font-bold"
             disabled={!method || !matched || start.isPending}

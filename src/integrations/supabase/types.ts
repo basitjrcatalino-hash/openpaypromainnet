@@ -1568,7 +1568,9 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          keywords: string
           name: string
+          region: string
           sort_order: number
           updated_at: string
         }
@@ -1578,7 +1580,9 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          keywords?: string
           name: string
+          region?: string
           sort_order?: number
           updated_at?: string
         }
@@ -1588,7 +1592,9 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          keywords?: string
           name?: string
+          region?: string
           sort_order?: number
           updated_at?: string
         }

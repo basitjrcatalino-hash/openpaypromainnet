@@ -46,7 +46,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
           className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur-xl"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="flex h-12 items-center gap-1 px-2 sm:px-3 md:px-4">
+          <div className="flex h-11 items-center gap-0.5 px-1.5 sm:px-2 md:px-3">
             <button
               type="button"
               onClick={() => void navigate({ to: "/dashboard" })}
@@ -55,7 +55,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <div className="flex flex-1 items-end justify-center gap-5 pb-0.5 md:gap-8">
+            <div className="flex flex-1 items-end justify-center gap-6 pb-0.5 md:gap-10">
               {MODE_TABS.map((tab) => {
                 const active =
                   (tab.id === "p2p" && !isExpress) || (tab.id === "express" && isExpress);
@@ -65,7 +65,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
                       key={tab.id}
                       type="button"
                       onClick={() => toast.message("Block trade coming soon")}
-                      className="pb-2 text-[15px] font-semibold text-muted-foreground/70"
+                      className="pb-2 text-[15px] font-semibold text-muted-foreground/55"
                     >
                       {tab.label}
                     </button>
@@ -76,13 +76,13 @@ export function P2pShell({ children }: { children: ReactNode }) {
                     key={tab.id}
                     to={tab.to}
                     className={cn(
-                      "relative pb-2 text-[15px] font-bold",
-                      active ? "text-foreground" : "text-muted-foreground",
+                      "relative pb-2 text-[15px] font-extrabold tracking-tight",
+                      active ? "text-foreground" : "text-muted-foreground/70",
                     )}
                   >
                     {tab.label}
                     {active ? (
-                      <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-foreground" />
+                      <span className="absolute inset-x-0 -bottom-px mx-auto h-[2px] w-5 rounded-full bg-foreground" />
                     ) : null}
                   </Link>
                 );
@@ -94,7 +94,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
               aria-label="Scan"
               onClick={() => void navigate({ to: "/scan" })}
             >
-              <QrCode className="h-5 w-5" />
+              <QrCode className="h-[1.15rem] w-[1.15rem]" />
             </button>
             <button
               type="button"
@@ -102,13 +102,13 @@ export function P2pShell({ children }: { children: ReactNode }) {
               aria-label="Search"
               onClick={() => toast.message("Search ads by merchant or amount")}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-[1.15rem] w-[1.15rem]" />
             </button>
           </div>
         </header>
       ) : null}
 
-      <div className={cn(bottom && "pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]")}>
+      <div className={cn(bottom && "pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]")}>
         {children}
       </div>
 

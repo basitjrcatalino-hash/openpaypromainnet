@@ -41,6 +41,7 @@ export const Route = createFileRoute("/api/admin/p2p-fix")({
             "supabase/migrations/20260801140000_p2p_max_amount_limit.sql",
             "supabase/migrations/20260801150000_p2p_admin_set_support.sql",
             "supabase/migrations/20260801160000_p2p_realtime_notifications.sql",
+            "supabase/migrations/20260801170000_p2p_global_payment_methods.sql",
           ];
           let sql: string;
           try {

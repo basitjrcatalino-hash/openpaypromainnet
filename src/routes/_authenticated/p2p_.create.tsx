@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
+import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
+import { P2pPayChip, P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -57,6 +59,7 @@ function AdsHubPage() {
     queryFn: () => fetchMyAds(userQ.data as string),
     enabled: !!userQ.data,
   });
+  const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
 
   const toggleStatus = useMutation({
     mutationFn: async (v: { id: string; status: "active" | "paused" }) => {
@@ -138,9 +141,22 @@ function AdsHubPage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Available {fmtAmount(ad.available_amount)} / {fmtAmount(ad.total_amount)} {ad.asset}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {ad.payment_methods.join(", ") || "No methods"}
-              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {ad.payment_methods.length ? (
+                  ad.payment_methods.map((code) => {
+                    const m = (methodsQ.data ?? []).find((x) => x.code === code);
+                    return (
+                      <P2pPayChip
+                        key={code}
+                        code={code}
+                        label={m?.name ?? code}
+                      />
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-muted-foreground">No methods</p>
+                )}
+              </div>
               <div className="mt-3">
                 <Button
                   variant="outline"
@@ -310,31 +326,46 @@ function CreateAdDialog({
             <Field label="Pay window (min)" value={limitMin} onChange={setLimitMin} />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(methodsQ.data ?? [])
-              .filter((m) => m.is_active)
-              .map((m) => {
-                const on = methods.includes(m.code);
-                const hasAccount = activeMethodCodes.has(m.code);
-                return (
-                  <button
-                    key={m.code}
-                    type="button"
-                    onClick={() =>
-                      setMethods((prev) =>
-                        on ? prev.filter((c) => c !== m.code) : [...prev, m.code],
-                      )
-                    }
-                    className={cn(
-                      "h-8 rounded-lg border px-2.5 text-[11px] font-semibold",
-                      on ? "border-foreground bg-secondary" : "border-border text-muted-foreground",
-                    )}
-                  >
-                    {m.icon} {m.name}
-                    {side === "sell" && on ? (hasAccount ? " ✓" : " !") : ""}
-                  </button>
-                );
-              })}
+          <div className="space-y-1.5">
+            <Label>Payment methods</Label>
+            <P2pPaymentMethodPicker
+              methods={methodsQ.data ?? []}
+              mode="multi"
+              values={methods}
+              onToggle={(code) =>
+                setMethods((prev) =>
+                  prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
+                )
+              }
+              maxHeightClass="max-h-56"
+            />
+            {side === "sell" && methods.length > 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                ✓ = receive account ready · ! = add account in Merchant wallet
+              </p>
+            ) : null}
+            {side === "sell" && methods.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {methods.map((code) => {
+                  const m = (methodsQ.data ?? []).find((x) => x.code === code);
+                  const hasAccount = activeMethodCodes.has(code);
+                  return (
+                    <span
+                      key={code}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold",
+                        hasAccount
+                          ? "border-emerald-500/30 text-emerald-500"
+                          : "border-amber-500/30 text-amber-500",
+                      )}
+                    >
+                      <P2pPayIcon code={code} name={m?.name ?? code} size="xs" />
+                      {m?.name ?? code} {hasAccount ? "✓" : "!"}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
 
           {missingReceive.length > 0 ? (

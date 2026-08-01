@@ -1,11 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { P2P_PAYMENT_METHOD_CATALOG } from "@/lib/p2p-payment-methods";
 
 export type P2PAd = Tables<"p2p_ads">;
 export type P2POrder = Tables<"p2p_orders">;
 export type P2PMessage = Tables<"p2p_messages">;
 export type P2PDispute = Tables<"p2p_disputes">;
-export type P2PPaymentMethod = Tables<"p2p_payment_methods">;
+export type P2PPaymentMethod = Tables<"p2p_payment_methods"> & {
+  region?: string | null;
+  keywords?: string | null;
+};
 export type P2PPaymentAccount = Tables<"p2p_payment_accounts">;
 
 export type P2PPaymentAccountSnapshot = {
@@ -118,7 +122,40 @@ export async function fetchPaymentMethods(): Promise<P2PPaymentMethod[]> {
     .select("*")
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
-  return data ?? [];
+
+  const byCode = new Map<string, P2PPaymentMethod>();
+  const now = new Date().toISOString();
+
+  for (const seed of P2P_PAYMENT_METHOD_CATALOG) {
+    byCode.set(seed.code, {
+      id: `catalog-${seed.code}`,
+      code: seed.code,
+      name: seed.name,
+      icon: seed.icon,
+      is_active: true,
+      sort_order: seed.sort_order,
+      region: seed.region,
+      keywords: seed.keywords,
+      created_at: now,
+      updated_at: now,
+    });
+  }
+
+  for (const row of data ?? []) {
+    const prev = byCode.get(row.code);
+    byCode.set(row.code, {
+      ...prev,
+      ...row,
+      region:
+        (row as { region?: string | null }).region ?? prev?.region ?? "Global",
+      keywords:
+        (row as { keywords?: string | null }).keywords ?? prev?.keywords ?? "",
+    });
+  }
+
+  return [...byCode.values()].sort(
+    (a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name),
+  );
 }
 
 export async function fetchMyPaymentAccounts(userId: string): Promise<P2PPaymentAccount[]> {

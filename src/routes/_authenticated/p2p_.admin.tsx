@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { ORDER_STATUS_LABEL, fetchPaymentMethods, fmtAmount, statusTone } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
@@ -336,6 +337,7 @@ function P2PAdminPage() {
           <div className="space-y-3">
             {(methodsQ.data ?? []).map((m) => (
               <div key={m.id} className="flex flex-wrap items-center gap-3">
+                <P2pPayIcon code={m.code} name={m.name} size="md" />
                 <Input
                   defaultValue={m.name}
                   onBlur={(e) =>

@@ -67,7 +67,7 @@ export function P2pBottomNav() {
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="flex h-14 items-stretch px-1 sm:px-2 md:px-3">
+        <div className="flex h-[3.25rem] items-stretch px-1 sm:px-2 md:px-3">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(pathname);
@@ -78,22 +78,19 @@ export function P2pBottomNav() {
                 to={tab.to}
                 preload="intent"
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold press md:text-[11px]",
-                  active ? "text-foreground" : "text-muted-foreground",
+                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold press",
+                  active ? "text-foreground" : "text-muted-foreground/75",
                 )}
               >
                 <span className="relative">
-                  <Icon className="h-[1.35rem] w-[1.35rem]" strokeWidth={active ? 2.25 : 1.75} />
+                  <Icon className="h-5 w-5" strokeWidth={active ? 2.35 : 1.7} />
                   {showBadge ? (
-                    <span className="absolute -right-2.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold leading-4 text-white">
+                    <span className="absolute -right-2.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-[#F04438] px-1 text-[9px] font-bold leading-4 text-white">
                       {unread > 99 ? "99+" : unread}
                     </span>
                   ) : null}
                 </span>
-                <span>{tab.label}</span>
-                {active ? (
-                  <span className="absolute top-1 h-1 w-1 rounded-full bg-rose-500" aria-hidden />
-                ) : null}
+                <span className={cn(active && "font-bold")}>{tab.label}</span>
               </Link>
             );
           })}

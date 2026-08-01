@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
+import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
+import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -25,6 +27,7 @@ import {
   setPaymentAccountActive,
   upsertPaymentAccount,
   type P2PPaymentAccount,
+  type P2PPaymentMethod,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -83,7 +86,7 @@ function MerchantWalletPage() {
 
   const methodName = useMemo(() => {
     const m: Record<string, string> = {};
-    for (const pm of methodsQ.data ?? []) m[pm.code] = `${pm.icon ?? ""} ${pm.name}`.trim();
+    for (const pm of methodsQ.data ?? []) m[pm.code] = pm.name;
     return m;
   }, [methodsQ.data]);
 
@@ -224,10 +227,15 @@ function MerchantWalletPage() {
               {(accountsQ.data ?? []).map((acc) => (
                 <div key={acc.id} className="flex items-start justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold">
+                    <p className="inline-flex items-center gap-2 text-sm font-bold">
+                      <P2pPayIcon
+                        code={acc.method_code}
+                        name={methodName[acc.method_code] ?? acc.method_code}
+                        size="sm"
+                      />
                       {methodName[acc.method_code] ?? acc.method_code}
                       {!acc.is_active ? (
-                        <span className="ml-2 text-[10px] font-semibold uppercase text-muted-foreground">
+                        <span className="ml-1 text-[10px] font-semibold uppercase text-muted-foreground">
                           Off
                         </span>
                       ) : null}
@@ -290,7 +298,7 @@ function AccountFormDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   editing: P2PPaymentAccount | null;
-  methods: { code: string; name: string; icon: string | null }[];
+  methods: P2PPaymentMethod[];
 }) {
   const qc = useQueryClient();
   const [method, setMethod] = useState(editing?.method_code ?? "bank_transfer");
@@ -332,22 +340,15 @@ function AccountFormDialog({
           <DialogTitle>{editing ? "Edit receive account" : "Add receive account"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {methods.map((m) => (
-              <button
-                key={m.code}
-                type="button"
-                onClick={() => setMethod(m.code)}
-                className={cn(
-                  "h-8 rounded-lg border px-2.5 text-[11px] font-semibold",
-                  method === m.code
-                    ? "border-foreground bg-secondary"
-                    : "border-border text-muted-foreground",
-                )}
-              >
-                {m.icon} {m.name}
-              </button>
-            ))}
+          <div className="space-y-1.5">
+            <Label>Payment method</Label>
+            <P2pPaymentMethodPicker
+              methods={methods}
+              mode="single"
+              value={method}
+              onSelect={setMethod}
+              maxHeightClass="max-h-48"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Account name</Label>

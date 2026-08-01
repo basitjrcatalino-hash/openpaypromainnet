@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { P2pPayChip } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -183,10 +184,12 @@ function TradeRoom() {
       .catch((e: Error) => toast.error(e.message));
 
   const paid = useMutation({ mutationFn: () => markPaid(id, proofUrl || null) });
-  const methodLabel = useMemo(() => {
+  const methodName = useMemo(() => {
     const m = (methodsQ.data ?? []).find((x) => x.code === order?.payment_method);
-    return m ? `${m.icon ?? ""} ${m.name}`.trim() : (order?.payment_method ?? "");
+    return m?.name ?? order?.payment_method ?? "";
   }, [methodsQ.data, order?.payment_method]);
+  const methodCode = order?.payment_method ?? "";
+  const methodLabel = methodName;
 
   async function uploadProofImage(file: File) {
     if (!userQ.data) return;
@@ -335,7 +338,16 @@ function TradeRoom() {
                 label="Price"
                 value={`${formatCurrency(Number(order.price_usd), fiat as never, { compact: false })} / ${order.asset}`}
               />
-              <Stat label="Payment method" value={methodLabel} />
+              <Stat
+                label="Payment method"
+                value={
+                  methodCode ? (
+                    <P2pPayChip code={methodCode} label={methodName} className="text-sm font-extrabold text-foreground" />
+                  ) : (
+                    "—"
+                  )
+                }
+              />
               <Stat label="Counterparty" value={counterparty} />
               <Stat label="Escrow reference" value={order.escrow_tx_hash ?? "—"} mono />
               {order.release_tx_hash ? (
@@ -407,10 +419,20 @@ function TradeRoom() {
 
             {isBuyer && order.status === "pending_payment" ? (
               <>
-                <p className="text-sm text-muted-foreground">
-                  After paying {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via{" "}
-                  {methodLabel}
-                  {paySnap ? ` to ${paySnap.account_name}` : ""}, upload proof and confirm below.
+                <p className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+                  <span>
+                    After paying{" "}
+                    {formatCurrency(Number(order.total_fiat), fiat as never, { compact: false })} via
+                  </span>
+                  {methodCode ? (
+                    <P2pPayChip code={methodCode} label={methodName} className="text-foreground" />
+                  ) : (
+                    methodLabel
+                  )}
+                  <span>
+                    {paySnap ? ` to ${paySnap.account_name}` : ""}
+                    , upload proof and confirm below.
+                  </span>
                 </p>
 
                 <input
@@ -747,13 +769,21 @@ function TradeRoom() {
   );
 }
 
-function Stat({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Stat({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
   return (
     <div className="rounded-2xl bg-muted/40 px-4 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className={cn("truncate text-sm font-bold", mono && "font-mono text-xs")}>{value}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className={cn("mt-1 text-sm font-extrabold break-all", mono && "font-mono text-xs")}>
+        {value}
+      </div>
     </div>
   );
 }

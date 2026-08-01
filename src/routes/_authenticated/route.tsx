@@ -101,6 +101,7 @@ const NAV = [
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
   { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen },
+  { to: "/p2p", labelKey: "nav.p2p", icon: Users },
 
   // Bags Cash hidden for now — re-enable via BAGS_CASH_ENABLED above.
   { to: "/activity", labelKey: "nav.history", icon: History },

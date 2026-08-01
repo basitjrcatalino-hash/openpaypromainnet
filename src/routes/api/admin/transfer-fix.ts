@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 /**
- * One-shot internal transfer repair (gen_random_bytes → gen_random_uuid).
+ * Apply account portfolio / transfer-history SQL (or repair internal_account_transfer).
  * POST with header `x-webhook-secret: ${TX_WEBHOOK_SECRET}`.
- * Safe to call repeatedly (CREATE OR REPLACE).
+ * Safe to call repeatedly (CREATE OR REPLACE / IF NOT EXISTS).
  */
-const FIX_SQL = `
--- Fix internal_account_transfer: replace pgcrypto gen_random_bytes with gen_random_uuid
--- (search_path = public hides extensions.gen_random_bytes on Supabase).
 
+const FALLBACK_SQL = `
 create or replace function public.internal_account_transfer(
   _from text,
   _to text,
@@ -28,6 +28,8 @@ declare
   asset_u text := upper(trim(_asset));
   amt numeric := round(_amount::numeric, 8);
   memo_txt text;
+  send_hash text;
+  recv_hash text;
 begin
   if uid is null then raise exception 'Not authenticated'; end if;
   if from_a = to_a then raise exception 'From and To accounts must differ'; end if;
@@ -60,22 +62,32 @@ begin
   end if;
 
   memo_txt := format('acct_xfer:%s→%s', from_a, to_a);
+  send_hash := 'xfer_' || replace(gen_random_uuid()::text, '-', '');
+  recv_hash := 'xfer_' || replace(gen_random_uuid()::text, '-', '');
 
   insert into public.transactions (
     wallet_id, type, status, token_symbol, amount, usd_value, counterparty, memo, tx_hash
   ) values (
     wid, 'send', 'confirmed', asset_u, amt, 0,
-    initcap(to_a), memo_txt,
-    'xfer_' || replace(gen_random_uuid()::text, '-', '')
+    initcap(to_a), memo_txt, send_hash
   );
 
   insert into public.transactions (
     wallet_id, type, status, token_symbol, amount, usd_value, counterparty, memo, tx_hash
   ) values (
     wid, 'receive', 'confirmed', asset_u, amt, 0,
-    initcap(from_a), memo_txt,
-    'xfer_' || replace(gen_random_uuid()::text, '-', '')
+    initcap(from_a), memo_txt, recv_hash
   );
+
+  begin
+    insert into public.account_transfer_events (
+      wallet_id, user_id, from_account, to_account, asset, amount
+    ) values (
+      wid, uid, from_a, to_a, asset_u, amt
+    );
+  exception when undefined_table then
+    null;
+  end;
 
   return jsonb_build_object(
     'ok', true,
@@ -91,6 +103,17 @@ grant execute on function public.internal_account_transfer(text, text, text, num
   to authenticated;
 `;
 
+async function loadFixSql(): Promise<string> {
+  try {
+    return await readFile(
+      join(process.cwd(), "supabase/migrations/20260802060000_account_portfolio_history.sql"),
+      "utf8",
+    );
+  } catch {
+    return FALLBACK_SQL;
+  }
+}
+
 export const Route = createFileRoute("/api/admin/transfer-fix")({
   server: {
     handlers: {
@@ -104,6 +127,8 @@ export const Route = createFileRoute("/api/admin/transfer-fix")({
           if (hdr !== secret) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
           }
+
+          const FIX_SQL = await loadFixSql();
 
           const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(
             /\/$/,
@@ -178,16 +203,15 @@ export const Route = createFileRoute("/api/admin/transfer-fix")({
               return Response.json({
                 ok: true,
                 via: attempt.endpoint,
-                detail: text.slice(0, 1000),
+                detail: text.slice(0, 500),
               });
             }
-            errors.push(`${attempt.endpoint} → ${res.status}: ${text.slice(0, 300)}`);
+            errors.push(`${attempt.endpoint}: ${res.status} ${text.slice(0, 300)}`);
           }
 
-          return Response.json({ error: "All SQL endpoints failed", errors }, { status: 502 });
-        } catch (err) {
-          console.error("[transfer-fix]", err);
-          return Response.json({ error: (err as Error).message }, { status: 500 });
+          return Response.json({ error: "All SQL apply paths failed", errors }, { status: 502 });
+        } catch (e) {
+          return Response.json({ error: (e as Error).message }, { status: 500 });
         }
       },
     },

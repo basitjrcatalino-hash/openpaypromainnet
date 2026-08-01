@@ -39,12 +39,24 @@ function mapWalletTx(tx: Tables<"transactions">): ActivityItem {
   const memo = (tx.memo ?? "").toLowerCase();
   const looksOpenToken = counterparty === "opentoken" || memo.includes("opentoken");
   const looksOpenDex = counterparty === "opendex" || memo.includes("opendex") || tx.type === "swap";
+  const xfer = memo.match(/acct_xfer:([a-z]+)→([a-z]+)/i);
+  const accountLabel = xfer
+    ? tx.type === "receive"
+      ? xfer[1].charAt(0).toUpperCase() + xfer[1].slice(1)
+      : xfer[2].charAt(0).toUpperCase() + xfer[2].slice(1)
+    : null;
 
   return {
     ...tx,
     source: looksOpenToken ? "opentoken" : looksOpenDex ? "wallet" : "wallet",
     logo_url: resolveTokenLogoUrl(null, tx.token_symbol),
-    token_name: looksOpenDex ? "OpenDEX" : looksOpenToken ? "OpenToken" : null,
+    token_name: accountLabel
+      ? accountLabel
+      : looksOpenDex
+        ? "OpenDEX"
+        : looksOpenToken
+          ? "OpenToken"
+          : null,
   };
 }
 

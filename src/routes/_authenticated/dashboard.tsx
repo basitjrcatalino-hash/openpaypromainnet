@@ -47,9 +47,16 @@ import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
+import { PortfolioAccountCard } from "@/components/assets/PortfolioAccountCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
 import { readMajorBalance } from "@/lib/ledger-majors";
+import { useServerFn } from "@tanstack/react-start";
+import { getAccountBalances } from "@/lib/account-transfer.functions";
+import { portfolioUsdTotals } from "@/lib/account-portfolio";
+import { ACCOUNT_IDS } from "@/lib/account-transfer";
+import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
+import type { CurrencyCode } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),
@@ -403,6 +410,8 @@ function Dashboard() {
         ))}
         <ActionCircle label="More" icon={Ellipsis} onClick={() => setMoreOpen(true)} />
       </div>
+
+      <PortfolioStrip hideBalance={hideBalance} currency={currency} />
 
       {needsBackup && (
         <Link
@@ -837,6 +846,58 @@ function TokenRowSkeleton({ delayMs = 0 }: { delayMs?: number }) {
         <Skeleton className="h-3 w-12 rounded-md" />
       </div>
     </div>
+  );
+}
+
+function PortfolioStrip({
+  hideBalance,
+  currency,
+}: {
+  hideBalance: boolean;
+  currency: CurrencyCode;
+}) {
+  const fetchBalances = useServerFn(getAccountBalances);
+  const { data } = useQuery({
+    queryKey: ["account-balances"],
+    queryFn: () => fetchBalances(),
+    staleTime: 20_000,
+  });
+  const { data: majorPrices } = useQuery({
+    queryKey: ["major-usd-prices"],
+    staleTime: 60_000,
+    queryFn: () => fetchMajorUsdPrices(),
+  });
+
+  const totals = useMemo(() => {
+    const priceMap: Record<string, number> = {};
+    if (majorPrices) {
+      for (const [k, v] of Object.entries(majorPrices)) {
+        priceMap[k.toUpperCase()] = Number(v) || 0;
+      }
+    }
+    if (!data?.balances) return { funding: 0, trading: 0, p2p: 0, total: 0 };
+    return portfolioUsdTotals(data.balances, priceMap);
+  }, [data?.balances, majorPrices]);
+
+  return (
+    <section className="mb-5">
+      <div className="mb-2 flex items-center justify-between px-0.5">
+        <h2 className="text-sm font-bold">Portfolio</h2>
+        <Link to="/assets" className="text-xs font-semibold text-primary">
+          See all
+        </Link>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {ACCOUNT_IDS.map((account) => (
+          <PortfolioAccountCard
+            key={account}
+            account={account}
+            hideBalance={hideBalance}
+            valueLabel={formatCurrency(totals[account], currency)}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

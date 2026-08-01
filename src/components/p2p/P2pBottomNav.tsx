@@ -24,7 +24,7 @@ const TABS = [
     to: "/p2p/create",
     label: "Ads",
     icon: Tag,
-    match: (p: string) => p.startsWith("/p2p/create"),
+    match: (p: string) => p.startsWith("/p2p/create") || p.startsWith("/p2p/create-new"),
   },
   {
     to: "/p2p/messages",

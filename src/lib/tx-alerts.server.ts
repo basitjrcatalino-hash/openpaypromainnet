@@ -1,8 +1,11 @@
 /**
- * Server-side transaction alerts — Web Push + email (Resend) for every wallet transaction.
+ * Server-side transaction alerts — Web Push + email via Lovable email queue
+ * (preferred) with Resend fallback.
  *
- * Env: RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL
- * Optional catch-all: Supabase trigger / DB webhook → /api/webhooks/transactions + TX_WEBHOOK_SECRET
+ * Env (Lovable): LOVABLE_API_KEY, LOVABLE_SEND_URL (optional)
+ * Env (fallback): RESEND_API_KEY, RESEND_FROM_EMAIL
+ * Env (links): APP_URL / VITE_APP_URL
+ * Optional catch-all: DB webhook → /api/webhooks/transactions + TX_WEBHOOK_SECRET
  */
 // @ts-expect-error - web-push ships no type declarations
 import webpush from "web-push";
@@ -32,6 +35,14 @@ function appBaseUrl() {
     process.env.VITE_APP_URL?.trim() ||
     "https://openpaypro.space"
   ).replace(/\/$/, "");
+}
+
+function mailFromAddress() {
+  return (
+    process.env.LOVABLE_FROM_EMAIL?.trim() ||
+    process.env.RESEND_FROM_EMAIL?.trim() ||
+    "OpenPay Pro <noreply@openpy.space>"
+  );
 }
 
 function formatAlert(tx: TxLike): {
@@ -93,6 +104,7 @@ function looksLikeEmail(value: unknown): value is string {
 
 type AdminClient = {
   from: (table: string) => any;
+  rpc?: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
   auth: {
     admin: {
       getUserById: (
@@ -231,13 +243,13 @@ async function resolveRecipientEmail(
   const { data: userData } = await admin.auth.admin.getUserById(userId);
   const user = userData?.user;
   const candidates: unknown[] = [
+    notifications.alert_email,
+    notifications.email,
+    (notifications.openpay as { email?: string } | undefined)?.email,
     user?.email,
     user?.user_metadata?.email,
     user?.user_metadata?.preferred_email,
     user?.user_metadata?.contact_email,
-    (notifications.openpay as { email?: string } | undefined)?.email,
-    notifications.alert_email,
-    notifications.email,
   ];
 
   for (const c of candidates) {
@@ -278,33 +290,11 @@ async function markTxEmailSent(
   }
 }
 
-async function sendTxEmail(
-  admin: AdminClient,
-  userId: string,
-  alert: ReturnType<typeof formatAlert>,
-  tx: TxLike,
-  notifications: Record<string, unknown>,
-) {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM_EMAIL?.trim() || "OpenPay Pro <noreply@openpy.space>";
-  if (!apiKey) {
-    console.warn("[tx-alerts] RESEND_API_KEY missing — skip email");
-    return;
-  }
-
-  const email = await resolveRecipientEmail(admin, userId, notifications);
-  if (!email) {
-    // Wallet-only auth (Pi / Phantom SIWS) with no linked inbox
-    return;
-  }
-
-  const messageId = tx.id ? `tx-alert:${tx.id}` : `tx-alert:${walletScopedFallback(tx, userId)}`;
-  if (await alreadySentTxEmail(admin, messageId)) return;
-
+function buildTxEmailHtml(alert: ReturnType<typeof formatAlert>, tx: TxLike) {
   const appUrl = appBaseUrl();
   const accent = alert.kind === "receive" ? "#14F195" : alert.kind === "send" ? "#AB9FF2" : "#38bdf8";
   const status = String(tx.status ?? "confirmed");
-  const html = `
+  return `
     <div style="font-family:Inter,Segoe UI,Arial,sans-serif;background:#0b0b0f;color:#f5f5f7;padding:24px">
       <div style="max-width:480px;margin:0 auto;background:#16161d;border-radius:16px;padding:24px;border:1px solid #2a2a35">
         <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:${accent}">OpenPay Pro</p>
@@ -324,7 +314,89 @@ async function sendTxEmail(
       </div>
     </div>
   `;
+}
 
+function buildTxEmailText(alert: ReturnType<typeof formatAlert>, tx: TxLike) {
+  const appUrl = appBaseUrl();
+  const lines = [
+    alert.title,
+    alert.amountLabel,
+    alert.body,
+    `Status: ${tx.status ?? "confirmed"}`,
+    tx.counterparty ? `Counterparty: ${String(tx.counterparty).slice(0, 64)}` : null,
+    `View: ${appUrl}${alert.url}`,
+  ];
+  return lines.filter(Boolean).join("\n");
+}
+
+async function enqueueLovableEmail(
+  admin: AdminClient,
+  payload: Record<string, unknown>,
+): Promise<boolean> {
+  if (typeof admin.rpc !== "function") return false;
+  try {
+    const { error } = await admin.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload,
+    });
+    if (error) {
+      console.warn("[tx-alerts] enqueue_email failed", error);
+      return false;
+    }
+    // Best-effort wake so mail leaves the queue quickly (cron also processes).
+    try {
+      await admin.rpc("email_queue_dispatch");
+    } catch {
+      /* optional */
+    }
+    return true;
+  } catch (err) {
+    console.warn("[tx-alerts] enqueue_email error", err);
+    return false;
+  }
+}
+
+async function sendViaLovableDirect(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  messageId: string;
+  label: string;
+}): Promise<boolean> {
+  const apiKey = process.env.LOVABLE_API_KEY?.trim();
+  if (!apiKey) return false;
+  try {
+    const { sendLovableEmail } = await import("@lovable.dev/email-js");
+    await sendLovableEmail(
+      {
+        to: opts.to,
+        from: mailFromAddress(),
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text,
+        purpose: "transactional",
+        label: opts.label,
+        idempotency_key: opts.messageId,
+        message_id: opts.messageId,
+      },
+      { apiKey, sendUrl: process.env.LOVABLE_SEND_URL },
+    );
+    return true;
+  } catch (err) {
+    console.warn("[tx-alerts] Lovable direct send failed", err);
+    return false;
+  }
+}
+
+async function sendViaResend(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  messageId: string;
+}): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return false;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -332,19 +404,87 @@ async function sendTxEmail(
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      from,
-      to: [email],
-      subject: `${alert.title} · ${alert.amountLabel}`,
-      html,
-      headers: { "X-Entity-Ref-ID": messageId },
+      from: mailFromAddress(),
+      to: [opts.to],
+      subject: opts.subject,
+      html: opts.html,
+      headers: { "X-Entity-Ref-ID": opts.messageId },
     }),
   });
   if (!res.ok) {
-    console.warn("[tx-alerts] email failed", await res.text());
+    console.warn("[tx-alerts] Resend failed", await res.text());
+    return false;
+  }
+  return true;
+}
+
+async function sendTxEmail(
+  admin: AdminClient,
+  userId: string,
+  alert: ReturnType<typeof formatAlert>,
+  tx: TxLike,
+  notifications: Record<string, unknown>,
+) {
+  const email = await resolveRecipientEmail(admin, userId, notifications);
+  if (!email) {
+    console.warn("[tx-alerts] no real email for user — set alert email in Settings", userId);
     return;
   }
 
-  await markTxEmailSent(admin, messageId, email, `tx-${String(tx.type ?? "activity")}`);
+  const messageId = tx.id ? `tx-alert:${tx.id}` : `tx-alert:${walletScopedFallback(tx, userId)}`;
+  if (await alreadySentTxEmail(admin, messageId)) return;
+
+  const subject = `${alert.title} · ${alert.amountLabel}`;
+  const html = buildTxEmailHtml(alert, tx);
+  const text = buildTxEmailText(alert, tx);
+  const label = `tx-${String(tx.type ?? "activity")}`;
+  const hasLovable = Boolean(process.env.LOVABLE_API_KEY?.trim());
+  const hasResend = Boolean(process.env.RESEND_API_KEY?.trim());
+
+  if (!hasLovable && !hasResend) {
+    console.warn("[tx-alerts] LOVABLE_API_KEY and RESEND_API_KEY both missing — skip email");
+    return;
+  }
+
+  // 1) Prefer immediate Lovable send (same provider as Lovable Cloud email).
+  if (hasLovable) {
+    const ok = await sendViaLovableDirect({
+      to: email,
+      subject,
+      html,
+      text,
+      messageId,
+      label,
+    });
+    if (ok) {
+      await markTxEmailSent(admin, messageId, email, label);
+      return;
+    }
+
+    // 2) Queue for the Lovable worker (`/lovable/email/queue/process`) if direct send fails.
+    const queued = await enqueueLovableEmail(admin, {
+      to: email,
+      from: mailFromAddress(),
+      subject,
+      html,
+      text,
+      purpose: "transactional",
+      label,
+      message_id: messageId,
+      idempotency_key: messageId,
+      queued_at: new Date().toISOString(),
+    });
+    if (queued) {
+      // Worker will mark email_send_log when it actually sends.
+      return;
+    }
+  }
+
+  // 3) Resend fallback when Lovable is unavailable.
+  if (hasResend) {
+    const ok = await sendViaResend({ to: email, subject, html, messageId });
+    if (ok) await markTxEmailSent(admin, messageId, email, label);
+  }
 }
 
 function walletScopedFallback(tx: TxLike, userId: string) {

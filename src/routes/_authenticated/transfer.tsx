@@ -121,11 +121,13 @@ function TransferPage() {
       setAmount("");
       setConfirmOpen(false);
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      void qc.invalidateQueries({ queryKey: ["account-transfers"] });
       void qc.invalidateQueries({ queryKey: ["p2p-account-balances"] });
       void qc.invalidateQueries({ queryKey: ["wallet"] });
       void qc.invalidateQueries({ queryKey: ["active-wallet"] });
       void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
       void qc.invalidateQueries({ queryKey: ["activity"] });
+      void qc.invalidateQueries({ queryKey: ["recent-txs"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

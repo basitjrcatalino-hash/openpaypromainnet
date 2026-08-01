@@ -94,6 +94,8 @@ export const en = {
     lockPushDesc: "System notifications when phone is locked or app is closed",
     emailAlerts: "Email alerts",
     emailAlertsDesc: "Email when you receive or send funds",
+    alertEmail: "Notification email",
+    alertEmailDesc: "Where OpenPay sends receive/send emails. Required for wallet-only logins.",
     terms: "Terms of Service",
     privacy: "Privacy Policy",
     regulatory: "Regulatory",

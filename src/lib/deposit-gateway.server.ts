@@ -493,11 +493,12 @@ export async function syncDeposit(admin: any, depositId: string) {
   const min = Number(token.min_deposit ?? 0);
   const max = token.max_deposit == null ? null : Number(token.max_deposit);
   if (result.amount < min) {
+    const err = `Amount ${result.amount} ${token.symbol} is below the minimum deposit of ${min} ${token.symbol}`;
     await admin
       .from("deposits")
-      .update({ status: "failed", amount: result.amount, error: `Below minimum deposit of ${min} ${token.symbol}` })
+      .update({ status: "failed", amount: result.amount, error: err })
       .eq("id", depositId);
-    return { ...dep, status: "failed" };
+    return { ...dep, status: "failed", error: err };
   }
   if (max != null && result.amount > max) {
     await admin

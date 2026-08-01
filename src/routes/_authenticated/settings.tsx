@@ -1184,6 +1184,47 @@ function SettingsPage() {
                 }
               />
             </SettingRow>
+            {((prefs?.notifications as Record<string, unknown> | null)?.email_alerts ?? true) ? (
+              <div className="space-y-2 border-t border-border/50 px-4 py-3">
+                <Label htmlFor="alert-email" className="text-sm font-semibold">
+                  {t("settings.alertEmail")}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t("settings.alertEmailDesc")}</p>
+                <div className="flex gap-2">
+                  <Input
+                    id="alert-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder={user.email || "you@email.com"}
+                    defaultValue={String(
+                      (prefs?.notifications as Record<string, unknown> | null)?.alert_email ??
+                        user.email ??
+                        "",
+                    )}
+                    key={`alert-email-${String((prefs?.notifications as Record<string, unknown> | null)?.alert_email ?? user.email ?? "")}`}
+                    className="h-10 rounded-xl"
+                    onBlur={(e) => {
+                      const next = e.target.value.trim().toLowerCase();
+                      const prev = String(
+                        (prefs?.notifications as Record<string, unknown> | null)?.alert_email ??
+                          "",
+                      ).trim().toLowerCase();
+                      if (next === prev) return;
+                      if (next && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
+                        toast.error("Enter a valid email address");
+                        return;
+                      }
+                      void updatePref({
+                        notifications: {
+                          ...((prefs?.notifications as Record<string, unknown> | null) ?? {}),
+                          alert_email: next || null,
+                        },
+                      }).then(() => toast.success(next ? "Alert email saved" : "Alert email cleared"));
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

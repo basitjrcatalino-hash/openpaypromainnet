@@ -1,33 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { P2pAssetIcon, P2pEmptyState } from "@/components/p2p/P2pUi";
-import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
-import { P2pPayChip, P2pPayIcon } from "@/components/p2p/P2pPayIcon";
+import { P2pEmptyState } from "@/components/p2p/P2pUi";
+import { P2pPayChip } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
-  P2P_ASSETS,
-  P2P_MAX_AMOUNT_OUSD,
   closeAd,
-  createAd,
   fetchMyAds,
   fetchMyMerchant,
-  fetchMyPaymentAccounts,
   fetchPaymentMethods,
   fmtAmount,
   merchantCanList,
-  p2pAmountExceedsLimit,
-  p2pLimitError,
   setAdStatus,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
@@ -46,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/p2p_/create")({
 });
 
 function AdsHubPage() {
-  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
   const { code: fiat } = useCurrency();
   const qc = useQueryClient();
 
@@ -66,6 +53,14 @@ function AdsHubPage() {
     queryFn: fetchMyMerchant,
   });
   const canList = merchantCanList(merchantQ.data);
+
+  const goCreate = () => {
+    if (!canList) {
+      toast.error("Merchant approval required before listing ads");
+      return;
+    }
+    void navigate({ to: "/p2p/create-new" });
+  };
 
   const toggleStatus = useMutation({
     mutationFn: async (v: { id: string; status: "active" | "paused" }) => setAdStatus(v.id, v.status),
@@ -94,13 +89,7 @@ function AdsHubPage() {
         <h1 className="text-lg font-bold">Ads</h1>
         <button
           type="button"
-          onClick={() => {
-            if (!canList) {
-              toast.error("Merchant approval required before listing ads");
-              return;
-            }
-            setCreating(true);
-          }}
+          onClick={goCreate}
           className="grid h-9 w-9 place-items-center rounded-full text-foreground press"
           aria-label="Create ad"
         >
@@ -151,7 +140,7 @@ function AdsHubPage() {
             canList ? (
               <Button
                 className="mt-2 h-10 rounded-full bg-secondary px-6 font-bold text-foreground"
-                onClick={() => setCreating(true)}
+                onClick={goCreate}
               >
                 Create ad
               </Button>
@@ -238,294 +227,6 @@ function AdsHubPage() {
           ))}
         </div>
       )}
-
-      <CreateAdDialog open={creating && canList} onOpenChange={setCreating} />
-    </div>
-  );
-}
-
-function CreateAdDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [side, setSide] = useState<"sell" | "buy">("sell");
-  const [asset, setAsset] = useState("OUSD");
-  const [price, setPrice] = useState("1.00");
-  const [total, setTotal] = useState("100");
-  const [min, setMin] = useState("10");
-  const [max, setMax] = useState("100");
-  const [limitMin, setLimitMin] = useState("15");
-  const [terms, setTerms] = useState("");
-  const [methods, setMethods] = useState<string[]>([]);
-  const [agreed, setAgreed] = useState(false);
-
-  const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
-  const userQ = useQuery({
-    queryKey: ["auth-user-id"],
-    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
-  });
-  const accountsQ = useQuery({
-    queryKey: ["p2p-payment-accounts", userQ.data],
-    enabled: !!userQ.data && open,
-    queryFn: () => fetchMyPaymentAccounts(userQ.data as string),
-  });
-
-  const activeMethodCodes = useMemo(
-    () => new Set((accountsQ.data ?? []).filter((a) => a.is_active).map((a) => a.method_code)),
-    [accountsQ.data],
-  );
-  const missingReceive = useMemo(
-    () => (side === "sell" ? methods.filter((c) => !activeMethodCodes.has(c)) : []),
-    [side, methods, activeMethodCodes],
-  );
-
-  const create = useMutation({
-    mutationFn: () =>
-      createAd({
-        side,
-        asset,
-        priceUsd: Number(price),
-        totalAmount: Number(total),
-        minOrder: Number(min),
-        maxOrder: Number(max),
-        paymentMethods: methods,
-        payTimeLimitMinutes: Number(limitMin),
-        terms: terms.trim() || null,
-      }),
-    onSuccess: () => {
-      notifySuccess("Advertisement published", { sound: "success" });
-      void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
-      void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
-      onOpenChange(false);
-      void navigate({ to: "/p2p/create" });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const invalid = useMemo(
-    () =>
-      !(Number(price) > 0) ||
-      !(Number(total) > 0) ||
-      !(Number(min) > 0) ||
-      !(Number(max) >= Number(min)) ||
-      methods.length === 0 ||
-      !agreed ||
-      (side === "sell" && missingReceive.length > 0) ||
-      p2pAmountExceedsLimit(asset, Number(total), Number(price)) ||
-      p2pAmountExceedsLimit(asset, Number(max), Number(price)) ||
-      p2pAmountExceedsLimit(asset, Number(min), Number(price)),
-    [price, total, min, max, methods, agreed, side, missingReceive, asset],
-  );
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create ad</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-500">
-            Limit: up to {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD per ad / order
-            {asset !== "OUSD" ? " (or $5,000 notional)" : ""}.
-          </div>
-          <div className="inline-flex rounded-full bg-muted/60 p-1">
-            {(["sell", "buy"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSide(s)}
-                className={cn(
-                  "h-9 rounded-full px-5 text-sm font-bold capitalize",
-                  side === s
-                    ? s === "sell"
-                      ? "bg-rose-500 text-white"
-                      : "bg-emerald-500 text-white"
-                    : "text-muted-foreground",
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {side === "sell" ? (
-            <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Sell ads lock crypto from your P2P account. Transfer from Funding first if needed.{" "}
-              <Link
-                to="/transfer"
-                search={{ from: "funding", to: "p2p" }}
-                className="font-semibold text-primary"
-                onClick={() => onOpenChange(false)}
-              >
-                Transfer to P2P ›
-              </Link>
-            </div>
-          ) : null}
-
-          <div className="flex flex-wrap gap-1.5">
-            {P2P_ASSETS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => setAsset(a)}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-bold",
-                  asset === a ? "border-foreground bg-secondary" : "border-border",
-                )}
-              >
-                <P2pAssetIcon asset={a} className="h-4 w-4" />
-                {a}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Price (USD)" value={price} onChange={setPrice} />
-            <Field label={`Total (${asset})`} value={total} onChange={setTotal} />
-            <Field label="Min order" value={min} onChange={setMin} />
-            <Field label="Max order" value={max} onChange={setMax} />
-            <Field label="Pay window (min)" value={limitMin} onChange={setLimitMin} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Payment methods</Label>
-            <P2pPaymentMethodPicker
-              methods={methodsQ.data ?? []}
-              mode="multi"
-              values={methods}
-              onToggle={(code) =>
-                setMethods((prev) =>
-                  prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-                )
-              }
-              maxHeightClass="max-h-56"
-            />
-            {side === "sell" && methods.length > 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                ✓ = receive account ready · ! = add account in Merchant wallet
-              </p>
-            ) : null}
-            {side === "sell" && methods.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {methods.map((code) => {
-                  const m = (methodsQ.data ?? []).find((x) => x.code === code);
-                  const hasAccount = activeMethodCodes.has(code);
-                  return (
-                    <span
-                      key={code}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold",
-                        hasAccount
-                          ? "border-emerald-500/30 text-emerald-500"
-                          : "border-amber-500/30 text-amber-500",
-                      )}
-                    >
-                      <P2pPayIcon code={code} name={m?.name ?? code} size="xs" />
-                      {m?.name ?? code} {hasAccount ? "✓" : "!"}
-                    </span>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
-
-          {missingReceive.length > 0 ? (
-            <p className="text-xs font-semibold text-amber-500">
-              Missing receive accounts for: {missingReceive.join(", ")}. Add them in Merchant
-              wallet.
-            </p>
-          ) : null}
-
-          {(p2pAmountExceedsLimit(asset, Number(total), Number(price)) ||
-            p2pAmountExceedsLimit(asset, Number(max), Number(price))) && (
-            <p className="text-xs font-semibold text-rose-500">{p2pLimitError(asset)}</p>
-          )}
-
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-              Merchant instructions
-            </label>
-            <Textarea
-              value={terms}
-              maxLength={1000}
-              onChange={(e) => setTerms(e.target.value)}
-              placeholder="Payment notes buyers will see (e.g. include order ref, preferred bank branch…)"
-              className="min-h-20"
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Shown to customers on the trade sheet and order page.
-            </p>
-          </div>
-
-          <label className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-muted/20 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[#11C66D]"
-            />
-            <span>
-              I agree to the{" "}
-              <Link
-                to="/p2p/agreement"
-                className="font-semibold text-foreground underline-offset-2 hover:underline"
-              >
-                P2P User Agreement
-              </Link>
-              ,{" "}
-              <Link
-                to="/p2p/rules"
-                className="font-semibold text-foreground underline-offset-2 hover:underline"
-              >
-                Trading Rules
-              </Link>
-              , and{" "}
-              <Link
-                to="/p2p/terms"
-                className="font-semibold text-foreground underline-offset-2 hover:underline"
-              >
-                P2P Terms
-              </Link>
-              .
-            </span>
-          </label>
-
-          <Button
-            className="h-11 w-full rounded-full font-bold"
-            disabled={invalid || create.isPending}
-            onClick={() => create.mutate()}
-          >
-            {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish ad"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
-      <Input
-        inputMode="decimal"
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
-        className="h-10 tabular-nums"
-      />
     </div>
   );
 }

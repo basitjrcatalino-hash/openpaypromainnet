@@ -29,6 +29,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
+import { Route as AuthenticatedAssetsRouteImport } from './routes/_authenticated/assets'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
@@ -71,6 +72,7 @@ import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
+import { Route as AuthenticatedAssetsAccountRouteImport } from './routes/_authenticated/assets_.$account'
 import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
 import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
 import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
@@ -84,6 +86,7 @@ import { Route as AuthenticatedP2pAdminRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedP2pAgreementRouteImport } from './routes/_authenticated/p2p_.agreement'
 import { Route as AuthenticatedP2pApiRouteImport } from './routes/_authenticated/p2p_.api'
 import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
+import { Route as AuthenticatedP2pCreateNewRouteImport } from './routes/_authenticated/p2p_.create-new'
 import { Route as AuthenticatedP2pExpressRouteImport } from './routes/_authenticated/p2p_.express'
 import { Route as AuthenticatedP2pGuideRouteImport } from './routes/_authenticated/p2p_.guide'
 import { Route as AuthenticatedP2pMerchantRouteImport } from './routes/_authenticated/p2p_.merchant'
@@ -246,6 +249,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
   id: '/ai',
   path: '/ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssetsRoute = AuthenticatedAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
@@ -462,6 +470,12 @@ const AuthenticatedAssetTokenIdRoute =
     path: '/asset/$tokenId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAssetsAccountRoute =
+  AuthenticatedAssetsAccountRouteImport.update({
+    id: '/assets_/$account',
+    path: '/assets/$account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBagsFeesRoute = AuthenticatedBagsFeesRouteImport.update({
   id: '/bags_/fees',
   path: '/bags/fees',
@@ -533,6 +547,12 @@ const AuthenticatedP2pCreateRoute = AuthenticatedP2pCreateRouteImport.update({
   path: '/p2p/create',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedP2pCreateNewRoute =
+  AuthenticatedP2pCreateNewRouteImport.update({
+    id: '/p2p_/create-new',
+    path: '/p2p/create-new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedP2pExpressRoute = AuthenticatedP2pExpressRouteImport.update({
   id: '/p2p_/express',
   path: '/p2p/express',
@@ -888,6 +908,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
@@ -930,6 +951,7 @@ export interface FileRoutesByFullPath {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
+  '/assets/$account': typeof AuthenticatedAssetsAccountRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
@@ -943,6 +965,7 @@ export interface FileRoutesByFullPath {
   '/p2p/agreement': typeof AuthenticatedP2pAgreementRoute
   '/p2p/api': typeof AuthenticatedP2pApiRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
+  '/p2p/create-new': typeof AuthenticatedP2pCreateNewRoute
   '/p2p/express': typeof AuthenticatedP2pExpressRoute
   '/p2p/guide': typeof AuthenticatedP2pGuideRoute
   '/p2p/merchant': typeof AuthenticatedP2pMerchantRoute
@@ -1026,6 +1049,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
   '/connect': typeof AuthenticatedConnectRoute
@@ -1068,6 +1092,7 @@ export interface FileRoutesByTo {
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
+  '/assets/$account': typeof AuthenticatedAssetsAccountRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
@@ -1081,6 +1106,7 @@ export interface FileRoutesByTo {
   '/p2p/agreement': typeof AuthenticatedP2pAgreementRoute
   '/p2p/api': typeof AuthenticatedP2pApiRoute
   '/p2p/create': typeof AuthenticatedP2pCreateRoute
+  '/p2p/create-new': typeof AuthenticatedP2pCreateNewRoute
   '/p2p/express': typeof AuthenticatedP2pExpressRoute
   '/p2p/guide': typeof AuthenticatedP2pGuideRoute
   '/p2p/merchant': typeof AuthenticatedP2pMerchantRoute
@@ -1166,6 +1192,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/assets': typeof AuthenticatedAssetsRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/connect': typeof AuthenticatedConnectRoute
@@ -1208,6 +1235,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
+  '/_authenticated/assets_/$account': typeof AuthenticatedAssetsAccountRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
   '/_authenticated/bags_/launch': typeof AuthenticatedBagsLaunchRoute
   '/_authenticated/bags_/trade': typeof AuthenticatedBagsTradeRoute
@@ -1221,6 +1249,7 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/agreement': typeof AuthenticatedP2pAgreementRoute
   '/_authenticated/p2p_/api': typeof AuthenticatedP2pApiRoute
   '/_authenticated/p2p_/create': typeof AuthenticatedP2pCreateRoute
+  '/_authenticated/p2p_/create-new': typeof AuthenticatedP2pCreateNewRoute
   '/_authenticated/p2p_/express': typeof AuthenticatedP2pExpressRoute
   '/_authenticated/p2p_/guide': typeof AuthenticatedP2pGuideRoute
   '/_authenticated/p2p_/merchant': typeof AuthenticatedP2pMerchantRoute
@@ -1306,6 +1335,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/ai'
+    | '/assets'
     | '/bags'
     | '/chat'
     | '/connect'
@@ -1348,6 +1378,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
+    | '/assets/$account'
     | '/bags/fees'
     | '/bags/launch'
     | '/bags/trade'
@@ -1361,6 +1392,7 @@ export interface FileRouteTypes {
     | '/p2p/agreement'
     | '/p2p/api'
     | '/p2p/create'
+    | '/p2p/create-new'
     | '/p2p/express'
     | '/p2p/guide'
     | '/p2p/merchant'
@@ -1444,6 +1476,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/ai'
+    | '/assets'
     | '/bags'
     | '/chat'
     | '/connect'
@@ -1486,6 +1519,7 @@ export interface FileRouteTypes {
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
+    | '/assets/$account'
     | '/bags/fees'
     | '/bags/launch'
     | '/bags/trade'
@@ -1499,6 +1533,7 @@ export interface FileRouteTypes {
     | '/p2p/agreement'
     | '/p2p/api'
     | '/p2p/create'
+    | '/p2p/create-new'
     | '/p2p/express'
     | '/p2p/guide'
     | '/p2p/merchant'
@@ -1583,6 +1618,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activity'
     | '/_authenticated/ai'
+    | '/_authenticated/assets'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
     | '/_authenticated/connect'
@@ -1625,6 +1661,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
     | '/_authenticated/asset_/$tokenId'
+    | '/_authenticated/assets_/$account'
     | '/_authenticated/bags_/fees'
     | '/_authenticated/bags_/launch'
     | '/_authenticated/bags_/trade'
@@ -1638,6 +1675,7 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/agreement'
     | '/_authenticated/p2p_/api'
     | '/_authenticated/p2p_/create'
+    | '/_authenticated/p2p_/create-new'
     | '/_authenticated/p2p_/express'
     | '/_authenticated/p2p_/guide'
     | '/_authenticated/p2p_/merchant'
@@ -1907,6 +1945,13 @@ declare module '@tanstack/react-router' {
       path: '/ai'
       fullPath: '/ai'
       preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assets': {
+      id: '/_authenticated/assets'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof AuthenticatedAssetsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bags': {
@@ -2203,6 +2248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assets_/$account': {
+      id: '/_authenticated/assets_/$account'
+      path: '/assets/$account'
+      fullPath: '/assets/$account'
+      preLoaderRoute: typeof AuthenticatedAssetsAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bags_/fees': {
       id: '/_authenticated/bags_/fees'
       path: '/bags/fees'
@@ -2292,6 +2344,13 @@ declare module '@tanstack/react-router' {
       path: '/p2p/create'
       fullPath: '/p2p/create'
       preLoaderRoute: typeof AuthenticatedP2pCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/create-new': {
+      id: '/_authenticated/p2p_/create-new'
+      path: '/p2p/create-new'
+      fullPath: '/p2p/create-new'
+      preLoaderRoute: typeof AuthenticatedP2pCreateNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/p2p_/express': {
@@ -2771,6 +2830,7 @@ const AuthenticatedOpentokenTokenIdRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedAssetsRoute: typeof AuthenticatedAssetsRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedConnectRoute: typeof AuthenticatedConnectRoute
@@ -2801,6 +2861,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
+  AuthenticatedAssetsAccountRoute: typeof AuthenticatedAssetsAccountRoute
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
   AuthenticatedBagsLaunchRoute: typeof AuthenticatedBagsLaunchRoute
   AuthenticatedBagsTradeRoute: typeof AuthenticatedBagsTradeRoute
@@ -2813,6 +2874,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedP2pAgreementRoute: typeof AuthenticatedP2pAgreementRoute
   AuthenticatedP2pApiRoute: typeof AuthenticatedP2pApiRoute
   AuthenticatedP2pCreateRoute: typeof AuthenticatedP2pCreateRoute
+  AuthenticatedP2pCreateNewRoute: typeof AuthenticatedP2pCreateNewRoute
   AuthenticatedP2pExpressRoute: typeof AuthenticatedP2pExpressRoute
   AuthenticatedP2pGuideRoute: typeof AuthenticatedP2pGuideRoute
   AuthenticatedP2pMerchantRoute: typeof AuthenticatedP2pMerchantRoute
@@ -2841,6 +2903,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedAssetsRoute: AuthenticatedAssetsRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedConnectRoute: AuthenticatedConnectRoute,
@@ -2871,6 +2934,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
+  AuthenticatedAssetsAccountRoute: AuthenticatedAssetsAccountRoute,
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,
   AuthenticatedBagsLaunchRoute: AuthenticatedBagsLaunchRoute,
   AuthenticatedBagsTradeRoute: AuthenticatedBagsTradeRoute,
@@ -2884,6 +2948,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedP2pAgreementRoute: AuthenticatedP2pAgreementRoute,
   AuthenticatedP2pApiRoute: AuthenticatedP2pApiRoute,
   AuthenticatedP2pCreateRoute: AuthenticatedP2pCreateRoute,
+  AuthenticatedP2pCreateNewRoute: AuthenticatedP2pCreateNewRoute,
   AuthenticatedP2pExpressRoute: AuthenticatedP2pExpressRoute,
   AuthenticatedP2pGuideRoute: AuthenticatedP2pGuideRoute,
   AuthenticatedP2pMerchantRoute: AuthenticatedP2pMerchantRoute,

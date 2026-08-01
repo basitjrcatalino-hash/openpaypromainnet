@@ -21,6 +21,7 @@ export const TRANSFER_ASSETS = [
   "ETH",
   "BTC",
   "SOL",
+  "PI",
 ] as const;
 export type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 

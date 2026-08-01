@@ -44,6 +44,8 @@ export const getDepositConfig = createServerFn({ method: "GET" })
       chains: chains ?? [],
       tokens: (tokens ?? []).filter((t: any) => t.deposit_enabled),
       addresses: addresses ?? [],
+      /** Credits always land in Funding wallet balances. */
+      deposit_account: "funding" as const,
     };
   });
 
@@ -147,6 +149,12 @@ export const submitDeposit = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const probe = await verifyOnChainDeposit(chain, token, addr.address, txHash);
+    if (probe.failed) {
+      throw new Error(
+        probe.reason ||
+          `This transaction does not match the ${token.symbol} deposit address on ${chain.name}`,
+      );
+    }
 
     const { data: created, error: insErr } = await db
       .from("deposits")
@@ -180,9 +188,19 @@ export const submitDeposit = createServerFn({ method: "POST" })
 
     const synced = await syncDeposit(db, created.id);
     if (synced?.status === "credited") {
-      await notify(db, context.userId, "Deposit credited", `${synced.credited_amount} ${token.credit_symbol} added to your wallet.`);
+      await notify(
+        db,
+        context.userId,
+        "Deposit credited",
+        `${synced.credited_amount} ${token.credit_symbol || token.symbol} added to Funding.`,
+      );
     } else if (synced?.status === "failed") {
-      await notify(db, context.userId, "Deposit failed", synced.error || "We could not verify that transaction.");
+      await notify(
+        db,
+        context.userId,
+        "Deposit failed",
+        synced.error || "Transaction did not match deposit address, token, or network on-chain.",
+      );
     }
     return synced;
   });
@@ -197,7 +215,12 @@ export const refreshDeposit = createServerFn({ method: "POST" })
     const { syncDeposit } = await import("./deposit-gateway.server");
     const synced = await syncDeposit(db, dep.id);
     if (synced?.status === "credited" && dep.status !== "credited") {
-      await notify(db, context.userId, "Deposit credited", `${synced.credited_amount} ${synced.token_symbol} added to your wallet.`);
+      await notify(
+        db,
+        context.userId,
+        "Deposit credited",
+        `${synced.credited_amount} ${synced.token_symbol} added to Funding.`,
+      );
     }
     return synced;
   });

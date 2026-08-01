@@ -24,9 +24,11 @@ import {
   P2P_MAX_AMOUNT_OUSD,
   createAd,
   fetchMyAds,
+  fetchMyMerchant,
   fetchMyPaymentAccounts,
   fetchPaymentMethods,
   fmtAmount,
+  merchantCanList,
   p2pAmountExceedsLimit,
   p2pLimitError,
 } from "@/lib/p2p";
@@ -60,6 +62,12 @@ function AdsHubPage() {
     enabled: !!userQ.data,
   });
   const methodsQ = useQuery({ queryKey: ["p2p-methods"], queryFn: fetchPaymentMethods });
+  const merchantQ = useQuery({
+    queryKey: ["p2p-my-merchant", userQ.data],
+    enabled: !!userQ.data,
+    queryFn: fetchMyMerchant,
+  });
+  const canList = merchantCanList(merchantQ.data);
 
   const toggleStatus = useMutation({
     mutationFn: async (v: { id: string; status: "active" | "paused" }) => {
@@ -79,13 +87,31 @@ function AdsHubPage() {
         <h1 className="text-lg font-bold">Ads</h1>
         <button
           type="button"
-          onClick={() => setCreating(true)}
+          onClick={() => {
+            if (!canList) {
+              toast.error("Merchant approval required before listing ads");
+              return;
+            }
+            setCreating(true);
+          }}
           className="grid h-9 w-9 place-items-center rounded-full text-foreground press"
           aria-label="Create ad"
         >
           <Plus className="h-5 w-5" />
         </button>
       </header>
+
+      {!canList ? (
+        <div className="mx-4 mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 md:mx-6">
+          <p className="text-sm font-bold text-amber-500">Merchant approval required</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Apply as a Verified Merchant and wait for admin approval — same flow as OKX / Binance P2P.
+          </p>
+          <Button asChild className="mt-3 h-9 rounded-[8px] bg-[#11C66D] text-xs font-bold text-white hover:bg-[#0FB461]">
+            <Link to="/p2p/merchant">Apply now</Link>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="border-b border-border/40 px-4 py-2.5 text-xs text-muted-foreground md:px-6">
         Sell ads need a funded merchant wallet + receive accounts.{" "}
@@ -101,14 +127,24 @@ function AdsHubPage() {
       ) : !myAdsQ.data?.length ? (
         <P2pEmptyState
           title="No ads found"
-          description="Create an ad to buy or sell crypto."
+          description={
+            canList
+              ? "Create an ad to buy or sell crypto."
+              : "Get merchant approval first, then publish ads."
+          }
           action={
-            <Button
-              className="mt-2 h-10 rounded-full bg-secondary px-6 font-bold text-foreground"
-              onClick={() => setCreating(true)}
-            >
-              Create ad
-            </Button>
+            canList ? (
+              <Button
+                className="mt-2 h-10 rounded-full bg-secondary px-6 font-bold text-foreground"
+                onClick={() => setCreating(true)}
+              >
+                Create ad
+              </Button>
+            ) : (
+              <Button asChild className="mt-2 h-10 rounded-full bg-[#11C66D] px-6 font-bold text-white">
+                <Link to="/p2p/merchant">Apply as merchant</Link>
+              </Button>
+            )
           }
         />
       ) : (
@@ -178,7 +214,7 @@ function AdsHubPage() {
         </div>
       )}
 
-      <CreateAdDialog open={creating} onOpenChange={setCreating} />
+      <CreateAdDialog open={creating && canList} onOpenChange={setCreating} />
     </div>
   );
 }

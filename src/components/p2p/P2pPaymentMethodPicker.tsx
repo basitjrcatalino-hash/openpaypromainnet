@@ -59,12 +59,17 @@ function MethodRow({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-pressed={selected}
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors press",
+        "relative z-0 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
         selected
-          ? "bg-[#11C66D]/12"
-          : "hover:bg-foreground/[0.04] active:bg-foreground/[0.06]",
+          ? "bg-[#11C66D]/15 ring-1 ring-inset ring-[#11C66D]/40"
+          : "hover:bg-foreground/[0.04] active:bg-foreground/[0.08]",
       )}
     >
       {leading ??
@@ -72,11 +77,11 @@ function MethodRow({
       <span className="min-w-0 flex-1">
         <span
           className={cn(
-            "block truncate text-[14px] font-semibold leading-tight",
-            selected ? "text-foreground" : "text-foreground/90",
+            "block truncate text-[14px] font-semibold leading-tight text-foreground",
+            selected && "text-[#0A7A42]",
           )}
         >
-          {name}
+          {name || code || "Payment method"}
         </span>
         {subtitle ? (
           <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
@@ -86,11 +91,12 @@ function MethodRow({
       </span>
       <span
         className={cn(
-          "grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors",
+          "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
           selected
             ? "border-[#11C66D] bg-[#11C66D] text-white"
-            : "border-border/80 bg-transparent",
+            : "border-muted-foreground/35 bg-background",
         )}
+        aria-hidden
       >
         {selected ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
       </span>
@@ -241,7 +247,7 @@ export function P2pPaymentMethodPicker({
             {grouped.map((group) => (
               <div key={group.title ?? "list"} className="mb-1">
                 {group.title ? (
-                  <p className="sticky top-0 z-[1] bg-background/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground backdrop-blur-sm">
+                  <p className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                     {group.title}
                   </p>
                 ) : null}
@@ -249,11 +255,12 @@ export function P2pPaymentMethodPicker({
                   {group.items.map((m) => {
                     const on =
                       mode === "multi" ? selectedSet.has(m.code) : value === m.code;
+                    const label = (m.name || "").trim() || m.code;
                     return (
                       <MethodRow
                         key={m.code}
                         code={m.code}
-                        name={m.name}
+                        name={label}
                         subtitle={
                           m.region && m.region !== "Popular" ? m.region : undefined
                         }

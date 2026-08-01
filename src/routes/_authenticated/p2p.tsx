@@ -25,6 +25,7 @@ import {
   PaymentMethodTags,
   TradeCta,
 } from "@/components/p2p/P2pUi";
+import { MerchantBadge } from "@/components/p2p/MerchantBadge";
 import { P2pPaymentMethodPicker } from "@/components/p2p/P2pPaymentMethodPicker";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +36,7 @@ import {
   expireOrders,
   fetchAds,
   fetchDisplayNames,
+  fetchMerchants,
   fetchPaymentMethods,
   fetchTraderStats,
   fmtAmount,
@@ -42,6 +44,7 @@ import {
   openOrder,
   p2pAmountExceedsLimit,
   p2pLimitError,
+  sortAdsByMerchantRank,
   type P2PAd,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
@@ -102,6 +105,11 @@ function P2PMarketplace() {
     queryFn: () => fetchTraderStats(traderIds),
     enabled: traderIds.length > 0,
   });
+  const merchants = useQuery({
+    queryKey: ["p2p-merchants", traderIds.join(",")],
+    queryFn: () => fetchMerchants(traderIds),
+    enabled: traderIds.length > 0,
+  });
 
   const methodLabel = useMemo(() => {
     const m: Record<string, string> = {};
@@ -120,8 +128,8 @@ function P2PMarketplace() {
     if (methodFilter) {
       list = list.filter((ad) => ad.payment_methods.includes(methodFilter));
     }
-    return list;
-  }, [adsQ.data, amountFilter, methodFilter]);
+    return sortAdsByMerchantRank(list, merchants.data ?? {}, adSide);
+  }, [adsQ.data, amountFilter, methodFilter, merchants.data, adSide]);
 
   const buy = useMutation({
     mutationFn: (v: { adId: string; amount: number; method: string }) =>
@@ -205,10 +213,12 @@ function P2PMarketplace() {
             <span className="w-[4.75rem] text-right">Trade</span>
           </div>
 
-          {filtered.map((ad, idx) => {
+          {filtered.map((ad) => {
             const st = stats.data?.[ad.user_id];
             const name = names.data?.[ad.user_id] ?? "Trader";
             const online = isTraderOnline(st?.last_active_at);
+            const merch = merchants.data?.[ad.user_id];
+            const featured = !!merch?.is_featured;
             const priceFiat = formatCurrency(Number(ad.price_usd), fiat, { compact: false });
             const minFiat = formatCurrency(Number(ad.min_order) * Number(ad.price_usd), fiat, {
               compact: false,
@@ -218,7 +228,6 @@ function P2PMarketplace() {
               fiat,
               { compact: false },
             );
-            const featured = idx === 0 && (st?.completed_count ?? 0) >= 1;
 
             return (
               <article
@@ -230,7 +239,7 @@ function P2PMarketplace() {
               >
                 {featured ? (
                   <span className="mb-1.5 inline-flex rounded-[2px] bg-[#11C66D]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#11C66D] md:absolute md:left-5 md:top-2 lg:left-6">
-                    Recommended
+                    Featured
                   </span>
                 ) : null}
 
@@ -239,11 +248,9 @@ function P2PMarketplace() {
                   <div className="flex items-center gap-2">
                     <MerchantAvatar name={name} online={online} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-1">
                         <p className="truncate text-[13px] font-bold leading-tight">{name}</p>
-                        <span className="text-[11px] text-amber-400" title="Verified">
-                          ◆
-                        </span>
+                        <MerchantBadge merchant={merch} />
                       </div>
                       <MerchantStatLine
                         compact
@@ -360,7 +367,10 @@ function P2PMarketplace() {
       </Dialog>
 
       <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl">
+        <DialogContent
+          className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
             <DialogTitle className="text-[17px] font-extrabold tracking-tight">
               Payment methods
@@ -381,7 +391,8 @@ function P2PMarketplace() {
               }}
               onSelect={(code) => {
                 setMethodFilter(code);
-                setMethodOpen(false);
+                // Let the checkmark paint before the sheet closes.
+                window.setTimeout(() => setMethodOpen(false), 180);
               }}
             />
           </div>

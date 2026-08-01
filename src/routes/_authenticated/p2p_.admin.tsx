@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, ShieldAlert, UserPlus } from "lucide-react";
+import { BadgeCheck, Loader2, ShieldAlert, Sparkles, Star, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -11,7 +11,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { supabase } from "@/integrations/supabase/client";
-import { ORDER_STATUS_LABEL, fetchPaymentMethods, fmtAmount, statusTone } from "@/lib/p2p";
+import {
+  ORDER_STATUS_LABEL,
+  adminListMerchantApplications,
+  adminReviewMerchant,
+  fetchDisplayNames,
+  fetchPaymentMethods,
+  fmtAmount,
+  statusTone,
+  type P2PMerchantApplication,
+} from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/p2p_/admin")({
@@ -85,6 +94,19 @@ function P2PAdminPage() {
     },
   });
 
+  const appsQ = useQuery({
+    queryKey: ["p2p-merchant-apps-pending"],
+    enabled: !!roleQ.data && (roleQ.data.admin || roleQ.data.mod),
+    queryFn: () => adminListMerchantApplications("pending"),
+    refetchInterval: 20_000,
+  });
+  const appUserIds = (appsQ.data ?? []).map((a) => a.user_id);
+  const appNamesQ = useQuery({
+    queryKey: ["p2p-names", appUserIds.join(",")],
+    enabled: appUserIds.length > 0,
+    queryFn: () => fetchDisplayNames(appUserIds),
+  });
+
   const updateMethod = useMutation({
     mutationFn: async (v: {
       id: string;
@@ -140,6 +162,27 @@ function P2PAdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const reviewApp = useMutation({
+    mutationFn: (v: {
+      app: P2PMerchantApplication;
+      approve: boolean;
+      featured?: boolean;
+    }) =>
+      adminReviewMerchant({
+        applicationId: v.app.id,
+        approve: v.approve,
+        tier: v.app.requested_tier === "super" ? "super" : "verified",
+        featured: v.featured ?? false,
+        featuredDays: v.featured ? 30 : null,
+      }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.approve ? "Merchant approved" : "Application rejected");
+      void qc.invalidateQueries({ queryKey: ["p2p-merchant-apps-pending"] });
+      void qc.invalidateQueries({ queryKey: ["p2p-merchants"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (roleQ.isLoading) {
     return (
       <div className="grid place-items-center py-24">
@@ -165,6 +208,93 @@ function P2PAdminPage() {
   return (
     <div className="mx-auto w-full space-y-5 px-4 pb-24 md:px-6">
       <PageHeader title="P2P admin" backTo="/p2p" />
+
+      <div className="rounded-3xl border border-border/60 bg-card/70 p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <BadgeCheck className="h-4 w-4 text-[#11C66D]" />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Merchant applications
+          </h2>
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Approve traders before they can list ads. Mark Featured to pin them at the top of the
+          marketplace (OKX / Binance style).
+        </p>
+        {appsQ.isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        ) : !(appsQ.data ?? []).length ? (
+          <p className="text-sm text-muted-foreground">No pending applications.</p>
+        ) : (
+          <div className="divide-y divide-border/40">
+            {(appsQ.data ?? []).map((app) => {
+              const snap = app.checklist_snapshot ?? {};
+              const name = appNamesQ.data?.[app.user_id] ?? "Trader";
+              return (
+                <div key={app.id} className="space-y-2 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold">{name}</p>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                        app.requested_tier === "super"
+                          ? "bg-amber-500/15 text-amber-500"
+                          : "bg-sky-500/15 text-sky-400",
+                      )}
+                    >
+                      {app.requested_tier === "super" ? (
+                        <Sparkles className="h-3 w-3" />
+                      ) : (
+                        <BadgeCheck className="h-3 w-3" />
+                      )}
+                      {app.requested_tier}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Trades {String(snap.completed_count ?? 0)} · Completion{" "}
+                    {snap.completion_rate == null ? "N/A" : `${snap.completion_rate}%`} · Accounts{" "}
+                    {String(snap.active_accounts ?? 0)}
+                  </p>
+                  {app.applicant_note ? (
+                    <p className="text-xs text-muted-foreground">“{app.applicant_note}”</p>
+                  ) : null}
+                  {roleQ.data.admin ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        className="h-8 rounded-full bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]"
+                        disabled={reviewApp.isPending}
+                        onClick={() => reviewApp.mutate({ app, approve: true })}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-8 rounded-full bg-[#11C66D]/20 font-bold text-[#11C66D] hover:bg-[#11C66D]/30"
+                        disabled={reviewApp.isPending}
+                        onClick={() => reviewApp.mutate({ app, approve: true, featured: true })}
+                      >
+                        <Star className="mr-1 h-3.5 w-3.5" fill="currentColor" />
+                        Approve + Featured
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-full text-rose-500"
+                        disabled={reviewApp.isPending}
+                        onClick={() => reviewApp.mutate({ app, approve: false })}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Admin required to review.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {roleQ.data.admin ? (
         <div className="rounded-3xl border border-border/60 bg-card/70 p-5">

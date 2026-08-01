@@ -143,9 +143,11 @@ export async function fetchPaymentMethods(): Promise<P2PPaymentMethod[]> {
 
   for (const row of data ?? []) {
     const prev = byCode.get(row.code);
+    const rowName = typeof row.name === "string" ? row.name.trim() : "";
     byCode.set(row.code, {
       ...prev,
       ...row,
+      name: rowName || prev?.name || row.code,
       region:
         (row as { region?: string | null }).region ?? prev?.region ?? "Global",
       keywords:
@@ -319,32 +321,8 @@ export async function createAd(input: {
   });
   if (!error) return data as unknown as P2PAd;
 
-  // Fallback while migration is rolling out (or RPC not yet deployed).
-  const missingFn = /p2p_create_ad|schema cache|does not exist/i.test(error.message);
-  if (!missingFn) throw new Error(error.message);
-
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) throw new Error("Not signed in");
-  const { data: inserted, error: insertError } = await supabase
-    .from("p2p_ads")
-    .insert({
-      user_id: uid,
-      side: input.side,
-      asset: input.asset,
-      price_usd: input.priceUsd,
-      total_amount: input.totalAmount,
-      available_amount: input.totalAmount,
-      min_order: input.minOrder,
-      max_order: input.maxOrder,
-      payment_methods: input.paymentMethods,
-      pay_time_limit_minutes: input.payTimeLimitMinutes,
-      terms: input.terms ?? null,
-    })
-    .select("*")
-    .single();
-  if (insertError) throw new Error(insertError.message);
-  return inserted;
+  // Do not fall back to raw insert — merchant approval + limits live in the RPC.
+  throw new Error(error.message);
 }
 
 export async function openOrder(adId: string, amount: number, paymentMethod: string) {
@@ -423,7 +401,190 @@ export async function sendMessage(
   if (error) throw new Error(error.message);
 }
 
-/* ------------------------------- OKX hub helpers ------------------------ */
+/* ------------------------------- merchant program ----------------------- */
+
+export type P2PMerchantTier = "none" | "verified" | "super";
+export type P2PApplicationStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export type P2PMerchant = {
+  user_id: string;
+  tier: P2PMerchantTier;
+  is_featured: boolean;
+  featured_until: string | null;
+  badge_label: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type P2PMerchantApplication = {
+  id: string;
+  user_id: string;
+  requested_tier: P2PMerchantTier;
+  status: P2PApplicationStatus;
+  checklist_snapshot: Record<string, unknown>;
+  applicant_note: string | null;
+  admin_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type P2PMerchantPublic = {
+  user_id: string;
+  tier: P2PMerchantTier;
+  is_featured: boolean;
+  featured_until: string | null;
+  badge_label: string | null;
+};
+
+export function merchantCanList(m: P2PMerchant | null | undefined) {
+  return !!m && (m.tier === "verified" || m.tier === "super");
+}
+
+export function isMerchantFeatured(m: Pick<P2PMerchantPublic, "is_featured" | "featured_until"> | null | undefined) {
+  if (!m?.is_featured) return false;
+  if (!m.featured_until) return true;
+  return new Date(m.featured_until).getTime() > Date.now();
+}
+
+export async function fetchMyMerchant(): Promise<P2PMerchant | null> {
+  const { data, error } = await (supabase as any).rpc("p2p_get_my_merchant");
+  if (error) {
+    if (/p2p_get_my_merchant|schema cache|does not exist/i.test(error.message)) return null;
+    throw new Error(error.message);
+  }
+  return (data as P2PMerchant | null) ?? null;
+}
+
+export async function fetchMerchants(ids: string[]): Promise<Record<string, P2PMerchantPublic>> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  if (!unique.length) return {};
+  const { data, error } = await (supabase as any).rpc("p2p_fetch_merchants", { _ids: unique });
+  if (error) return {};
+  const map: Record<string, P2PMerchantPublic> = {};
+  for (const row of (data ?? []) as P2PMerchantPublic[]) {
+    map[row.user_id] = {
+      ...row,
+      is_featured: isMerchantFeatured(row),
+    };
+  }
+  return map;
+}
+
+export async function fetchMyMerchantApplication(): Promise<P2PMerchantApplication | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return null;
+  const { data, error } = await (supabase as any)
+    .from("p2p_merchant_applications")
+    .select("*")
+    .eq("user_id", uid)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    if (/p2p_merchant_applications|schema cache|does not exist/i.test(error.message)) return null;
+    throw new Error(error.message);
+  }
+  return (data as P2PMerchantApplication | null) ?? null;
+}
+
+export async function applyMerchant(
+  requestedTier: "verified" | "super",
+  note?: string,
+): Promise<P2PMerchantApplication> {
+  const { data, error } = await (supabase as any).rpc("p2p_apply_merchant", {
+    _requested_tier: requestedTier,
+    _note: note ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as P2PMerchantApplication;
+}
+
+export async function cancelMerchantApplication(id: string) {
+  const { data, error } = await (supabase as any).rpc("p2p_cancel_merchant_application", {
+    _id: id,
+  });
+  if (error) throw new Error(error.message);
+  return data as P2PMerchantApplication;
+}
+
+export async function adminListMerchantApplications(
+  status: "pending" | "all" | "approved" | "rejected" = "pending",
+): Promise<P2PMerchantApplication[]> {
+  const { data, error } = await (supabase as any).rpc("admin_list_p2p_merchant_applications", {
+    _status: status,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as P2PMerchantApplication[];
+}
+
+export async function adminReviewMerchant(input: {
+  applicationId: string;
+  approve: boolean;
+  tier?: "verified" | "super";
+  featured?: boolean;
+  featuredDays?: number | null;
+  adminNote?: string;
+}) {
+  const { data, error } = await (supabase as any).rpc("admin_review_p2p_merchant", {
+    _application_id: input.applicationId,
+    _approve: input.approve,
+    _tier: input.tier ?? null,
+    _featured: input.featured ?? false,
+    _admin_note: input.adminNote ?? null,
+    _featured_days: input.featuredDays ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as P2PMerchant;
+}
+
+export async function adminSetMerchant(input: {
+  userId: string;
+  tier: P2PMerchantTier;
+  featured?: boolean;
+  featuredDays?: number | null;
+  note?: string;
+}) {
+  const { data, error } = await (supabase as any).rpc("admin_set_p2p_merchant", {
+    _user_id: input.userId,
+    _tier: input.tier,
+    _featured: input.featured ?? false,
+    _featured_days: input.featuredDays ?? null,
+    _note: input.note ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as P2PMerchant;
+}
+
+/** Sort ads: featured merchants first, then super > verified, then price. */
+export function sortAdsByMerchantRank(
+  ads: P2PAd[],
+  merchants: Record<string, P2PMerchantPublic>,
+  side: "sell" | "buy",
+): P2PAd[] {
+  const tierRank = (t?: P2PMerchantTier) =>
+    t === "super" ? 2 : t === "verified" ? 1 : 0;
+
+  return [...ads].sort((a, b) => {
+    const ma = merchants[a.user_id];
+    const mb = merchants[b.user_id];
+    const fa = ma?.is_featured ? 1 : 0;
+    const fb = mb?.is_featured ? 1 : 0;
+    if (fa !== fb) return fb - fa;
+    const ta = tierRank(ma?.tier);
+    const tb = tierRank(mb?.tier);
+    if (ta !== tb) return tb - ta;
+    const pa = Number(a.price_usd);
+    const pb = Number(b.price_usd);
+    return side === "sell" ? pa - pb : pb - pa;
+  });
+}
+
 
 export type P2PTraderStats = {
   id: string;

@@ -301,7 +301,10 @@ function ExpressPage() {
       </Dialog>
 
       <Dialog open={methodOpen} onOpenChange={setMethodOpen}>
-        <DialogContent className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl">
+        <DialogContent
+          className="max-h-[85dvh] max-w-md gap-0 overflow-hidden border-border/50 p-0 sm:rounded-2xl"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader className="border-b border-border/40 px-5 py-4 text-left">
             <DialogTitle className="text-[17px] font-extrabold tracking-tight">
               Select payment method

@@ -45,7 +45,7 @@ const MENU = [
   { to: "/p2p/settings", icon: Settings, label: "Settings", desc: "Alerts & P2P preferences" },
   { to: "/p2p/reviews", icon: Star, label: "Reviews / Orders", desc: "Stats & completed trades" },
   { to: "/p2p/support", icon: Headset, label: "Customer support", desc: "Disputes & help" },
-  { to: "/p2p/merchant", icon: Sparkles, label: "Become a Super Merchant", desc: "Merchant program" },
+  { to: "/p2p/merchant", icon: Sparkles, label: "Merchant program", desc: "Apply · badges · featured" },
   { to: "/p2p/guide", icon: HelpCircle, label: "Learn how P2P works", desc: "Escrow guide" },
   { to: "/p2p/api", icon: Shield, label: "P2P / Ledger API", desc: "Developer endpoints" },
   { to: "/p2p/security", icon: Lock, label: "Security", desc: "Safety checklist" },

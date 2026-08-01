@@ -61,7 +61,10 @@ function P2PAdminPage() {
   });
 
   const updateMethod = useMutation({
-    mutationFn: async (v: { id: string; patch: Record<string, unknown> }) => {
+    mutationFn: async (v: {
+      id: string;
+      patch: { name?: string; sort_order?: number; is_active?: boolean; icon?: string | null };
+    }) => {
       const { error } = await supabase.from("p2p_payment_methods").update(v.patch).eq("id", v.id);
       if (error) throw new Error(error.message);
     },

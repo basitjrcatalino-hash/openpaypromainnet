@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ExternalLink, ImageIcon, Link2, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -202,7 +203,7 @@ function BagsLaunchPage() {
       setResultMint(info.tokenMint);
       setResultSig(sig ?? null);
       setConfirmOpen(false);
-      toast.success("Token launched on Bags!");
+      notifySuccess("Token launched on Bags!", { sound: "success" });
     } catch (err) {
       const msg = (err as Error).message || "Launch failed";
       toast.error(

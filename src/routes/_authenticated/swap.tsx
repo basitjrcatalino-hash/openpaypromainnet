@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -432,9 +433,7 @@ function OpenDexPage() {
           expected_out: netOutput,
         },
       });
-      toast.success(
-        `Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`,
-      );
+      notifySuccess(`Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`, { sound: "swap" });
       setAmount("");
       setConfirmOpen(false);
       await refreshBalances();

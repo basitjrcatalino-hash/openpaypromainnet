@@ -334,7 +334,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-lg animate-page-in md:max-w-2xl">
+    <div className="mx-auto w-full animate-page-in">
       {/* Mobile header */}
       <div className="mb-1 flex items-center justify-between md:hidden">
         <button

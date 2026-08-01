@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { Copy, ExternalLink, Loader2, QrCode } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,7 +111,7 @@ export function CashPayDepositPanel({
       const r = await spendCash({
         data: { amount: amountUsd, walletId },
       });
-      toast.success(`${r.amount.toFixed(2)} OUSD credited from CASH`);
+      notifySuccess(`${r.amount.toFixed(2)} OUSD credited from CASH`, { sound: "receive" });
       void qc.invalidateQueries({ queryKey: ["active-wallet"] });
       void qc.invalidateQueries({ queryKey: ["wallets"] });
       void qc.invalidateQueries({ queryKey: ["txs"] });
@@ -138,7 +139,7 @@ export function CashPayDepositPanel({
       if (r.alreadyCredited) {
         toast.message("This CASH payment was already credited");
       } else {
-        toast.success(`${r.amount.toFixed(2)} OUSD credited`);
+        notifySuccess(`${r.amount.toFixed(2)} OUSD credited`, { sound: "receive" });
       }
       void qc.invalidateQueries({ queryKey: ["active-wallet"] });
       void qc.invalidateQueries({ queryKey: ["wallets"] });

@@ -14,6 +14,7 @@ import {
   Link2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { copyText } from "@/lib/clipboard";
 import { buildReceivePayUri, buildReceiveQrPayload, walletQrDataUrl } from "@/lib/receive-qr";
 
@@ -196,7 +197,7 @@ function ReceivePage() {
     try {
       const r = await claimInbound({ data: { note: opLink?.note } });
       if (r.credited > 0) {
-        toast.success(`Received ${formatUSD(r.amount)} from OpenPay`);
+        notifySuccess(`Received ${formatUSD(r.amount)} from OpenPay`, { sound: "receive" });
         await refreshBalances();
       } else if (r.already > 0) {
         if (!opts.silent) toast.info("Payment already credited");
@@ -229,7 +230,7 @@ function ReceivePage() {
           const c = await claimInbound({ data: { note: search.openpay_ref } });
           if (cancelled) return;
           if (c.credited > 0) {
-            toast.success(`Received ${formatUSD(c.amount)} from OpenPay`);
+            notifySuccess(`Received ${formatUSD(c.amount)} from OpenPay`, { sound: "receive" });
             done = true;
           } else if (c.already > 0) {
             toast.info("Already credited");
@@ -250,9 +251,12 @@ function ReceivePage() {
           });
           if (cancelled) return;
           if (r.credited) {
-            toast.success(
-              r.already ? "Already credited" : `Received ${formatUSD(Number(amt || 0))} from OpenPay`,
-            );
+            if (r.already) toast.info("Already credited");
+            else {
+              notifySuccess(`Received ${formatUSD(Number(amt || 0))} from OpenPay`, {
+                sound: "receive",
+              });
+            }
           }
         }
         if (!cancelled) await refreshBalances();

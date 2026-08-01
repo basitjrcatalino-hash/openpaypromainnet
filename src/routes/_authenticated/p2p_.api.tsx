@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { P2pMenuCard, P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 
 export const Route = createFileRoute("/_authenticated/p2p_/api")({
   head: () => ({
@@ -40,22 +39,29 @@ function ApiPage() {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
 
   return (
-    <div>
-      <P2pSubpageHeader title="P2P / Ledger API" />
-
-      <p className="px-4 py-3 text-xs text-muted-foreground md:px-6">
-        Build on OpenPay Pro balances and partner rails. P2P escrow RPCs stay authenticated inside the app;
-        public ledger endpoints are for partners.
-      </p>
-
-      <P2pMenuCard className="mb-3">
+    <P2pHubLayout
+      title="P2P / Ledger API"
+      dek="Build on OpenPay Pro balances and partner rails. P2P escrow RPCs stay authenticated inside the app; public ledger endpoints are for partners."
+      crumb="Developers"
+      eyebrow="API · Partners"
+      hero={{ from: "#e9d5ff", to: "#bfdbfe", glyph: "{ }" }}
+      actions={
+        <>
+          <P2pHubPill to="/ledger" primary>
+            Open ledger
+          </P2pHubPill>
+          <P2pHubPill to="/docs/openpay">Developer docs</P2pHubPill>
+        </>
+      }
+    >
+      <P2pMenuCard>
         {ENDPOINTS.map((e) => (
-          <div key={e.name} className="border-b border-border/40 px-4 py-3.5 last:border-b-0">
-            <p className="text-sm font-bold">{e.name}</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">{e.desc}</p>
+          <div key={e.name} className="border-b border-[var(--border)] px-5 py-4 last:border-b-0">
+            <p className="text-lg font-bold tracking-tight">{e.name}</p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">{e.desc}</p>
             <button
               type="button"
-              className="mt-2 break-all text-left font-mono text-[11px] text-primary"
+              className="mt-3 break-all text-left font-mono text-xs font-semibold text-[var(--primary)]"
               onClick={async () => {
                 const url = e.path.startsWith("http") ? e.path : `${origin}${e.path}`;
                 try {
@@ -72,14 +78,13 @@ function ApiPage() {
         ))}
       </P2pMenuCard>
 
-      <div className="mx-4 mb-8 flex flex-col gap-2 md:mx-6">
-        <Button asChild className="h-11 rounded-[8px] font-bold">
-          <Link to="/ledger">Open ledger</Link>
-        </Button>
-        <Button asChild variant="outline" className="h-11 rounded-[8px] font-bold">
-          <Link to="/docs/openpay">OpenPay developer docs</Link>
-        </Button>
-      </div>
-    </div>
+      <p className="text-sm text-[var(--muted-foreground)]">
+        Need escrow help instead?{" "}
+        <Link to="/p2p/guide" className="font-semibold text-[var(--foreground)] underline-offset-2 hover:underline">
+          Read how P2P works
+        </Link>
+        .
+      </p>
+    </P2pHubLayout>
   );
 }

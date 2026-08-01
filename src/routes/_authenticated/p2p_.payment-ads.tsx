@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CreditCard, Megaphone } from "lucide-react";
 
-import { P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pHubLayout, P2pHubPill } from "@/components/p2p/P2pSubpage";
 
 export const Route = createFileRoute("/_authenticated/p2p_/payment-ads")({
   head: () => ({
@@ -18,50 +18,54 @@ export const Route = createFileRoute("/_authenticated/p2p_/payment-ads")({
 
 function PaymentAdsHub() {
   return (
-    <div>
-      <P2pSubpageHeader title="Payment / Ads" />
-
-      <p className="px-4 py-3 text-xs text-muted-foreground md:px-6">
-        Two separate tools — payment methods for receiving fiat, and ads for publishing offers.
-      </p>
-
-      <div className="mx-4 space-y-3 md:mx-6">
+    <P2pHubLayout
+      title="Payment / Ads"
+      dek="Two separate tools — payment methods for receiving fiat, and ads for publishing offers."
+      crumb="Profile"
+      eyebrow="Merchant tools"
+      hero={{ from: "#bbf7d0", to: "#ddd6fe", glyph: "₿" }}
+      actions={
+        <>
+          <P2pHubPill to="/p2p/payments" primary>
+            Manage payments
+          </P2pHubPill>
+          <P2pHubPill to="/p2p/create">My ads</P2pHubPill>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
         <Link
           to="/p2p/payments"
-          className="flex items-start gap-3 rounded-2xl border border-border/50 bg-card/40 p-4 hover:bg-muted/30"
+          className="group flex flex-col rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-[var(--primary)]"
         >
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#11C66D]/15 text-[#11C66D]">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent)] text-[var(--foreground)]">
             <CreditCard className="h-5 w-5" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-extrabold">Payment methods</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Add GCash, bank, PIX, UPI, and more. Required for sell ads.
-            </span>
-            <span className="mt-3 inline-flex h-9 items-center rounded-[8px] bg-[#11C66D] px-4 text-xs font-bold text-white">
-              Manage payments
-            </span>
+          <span className="mt-4 text-xl font-bold tracking-tight group-hover:underline">
+            Payment methods
           </span>
+          <span className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
+            Add GCash, bank, PIX, UPI, and more. Required for sell ads.
+          </span>
+          <span className="mt-5 text-sm font-semibold text-[var(--primary)]">Manage payments →</span>
         </Link>
 
         <Link
           to="/p2p/create"
-          className="flex items-start gap-3 rounded-2xl border border-border/50 bg-card/40 p-4 hover:bg-muted/30"
+          className="group flex flex-col rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-[var(--primary)]"
         >
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-sky-500/15 text-sky-400">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent)] text-[var(--foreground)]">
             <Megaphone className="h-5 w-5" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-extrabold">My ads</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Publish buy/sell offers, set price, limits, and pay window.
-            </span>
-            <span className="mt-3 inline-flex h-9 items-center rounded-[8px] border border-border px-4 text-xs font-bold">
-              Manage ads
-            </span>
+          <span className="mt-4 text-xl font-bold tracking-tight group-hover:underline">
+            My advertisements
           </span>
+          <span className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
+            Publish buy or sell offers. Escrow locks crypto when a trade starts.
+          </span>
+          <span className="mt-5 text-sm font-semibold text-[var(--primary)]">Open ads →</span>
         </Link>
       </div>
-    </div>
+    </P2pHubLayout>
   );
 }

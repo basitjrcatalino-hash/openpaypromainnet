@@ -111,6 +111,7 @@ export function useP2pOrderNotifications(userId: string) {
       toast(titleForOrder(order, isSeller), {
         id: `p2p-order-${order.id}-${order.status}`,
         description: `${order.ref} · ${Number(order.amount)} ${order.asset}`,
+        duration: 5600,
         action: {
           label: "Open",
           onClick: () => {
@@ -142,6 +143,7 @@ export function useP2pOrderNotifications(userId: string) {
       toast("P2P message", {
         id: `p2p-msg-${msg.id}`,
         description: (msg.body || "New message").slice(0, 80),
+        duration: 5600,
         action: {
           label: "Open",
           onClick: () => {

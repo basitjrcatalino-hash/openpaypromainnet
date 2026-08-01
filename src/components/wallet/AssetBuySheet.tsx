@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, X } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -301,9 +302,7 @@ export function AssetBuySheet({
         usd_amount: usdAmount,
       },
     });
-    toast.success(
-      `Bought ${formatNumber(res.token_amount, 6)} ${res.symbol} for ${formatUSD(res.usd_spent)}`,
-    );
+    notifySuccess(`Bought ${formatNumber(res.token_amount, 6)} ${res.symbol} for ${formatUSD(res.usd_spent)}`, { sound: "receive" });
     await invalidateAfterBuy();
     onClose();
   }
@@ -323,9 +322,7 @@ export function AssetBuySheet({
         slippage: 1,
       },
     });
-    toast.success(
-      `Bought ${formatNumber(res.amount_out, 4)} $${token.symbol} for ${formatUSD(res.amount_in)} OUSD`,
-    );
+    notifySuccess(`Bought ${formatNumber(res.amount_out, 4)} $${token.symbol} for ${formatUSD(res.amount_in)} OUSD`, { sound: "receive" });
     await invalidateAfterBuy();
     onClose();
   }
@@ -335,8 +332,8 @@ export function AssetBuySheet({
     const res = await buyFn({
       data: { token_id: token.id, wallet_id: walletId, pi_amount: piAmount },
     });
-    toast.success(`Bought ${formatNumber(res.token_amount, 4)} $${token.symbol}`);
-    if (res.graduated) toast.success("Token graduated to OpenDEX!");
+    notifySuccess(`Bought ${formatNumber(res.token_amount, 4)} $${token.symbol}`, { sound: "receive" });
+    if (res.graduated) notifySuccess("Token graduated to OpenDEX!", { sound: "success" });
     await invalidateAfterBuy();
     onClose();
   }
@@ -458,7 +455,7 @@ export function AssetBuySheet({
       if (isOusd) {
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
+          notifySuccess(`${formatUSD(amt)} OUSD credited from Pi (live price)`, { sound: "receive" });
           await invalidateAfterTopup();
           setConfirmOpen(false);
           onClose();
@@ -496,7 +493,7 @@ export function AssetBuySheet({
         }
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
+          notifySuccess(`${formatUSD(amt)} OUSD credited from Pi (live price)`, { sound: "receive" });
           await executeMajorBuy(amt);
           setConfirmOpen(false);
           return;
@@ -540,7 +537,7 @@ export function AssetBuySheet({
         }
         if (method === "pi") {
           await topUpWithPi(amt);
-          toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
+          notifySuccess(`${formatUSD(amt)} OUSD credited from Pi (live price)`, { sound: "receive" });
           await executeDexBuy(amt);
           return;
         }
@@ -573,7 +570,7 @@ export function AssetBuySheet({
 
       if (method === "pi") {
         await topUpWithPi(amt);
-        toast.success(`${formatUSD(amt)} OUSD credited from Pi (live price)`);
+        notifySuccess(`${formatUSD(amt)} OUSD credited from Pi (live price)`, { sound: "receive" });
         await executeTokenBuy(amt);
         return;
       }
@@ -1208,7 +1205,7 @@ export function AssetBuySheet({
                   walletId: walletId!,
                 },
               });
-              toast.success(`${formatUSD(paid)} OUSD credited from MoonPay`);
+              notifySuccess(`${formatUSD(paid)} OUSD credited from MoonPay`, { sound: "receive" });
               if (isMajor && token.majorId) {
                 await executeMajorBuy(paid);
               } else if (graduated) {

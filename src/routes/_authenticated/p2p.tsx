@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,7 +146,7 @@ function P2PMarketplace() {
     mutationFn: (v: { adId: string; amount: number; method: string }) =>
       openOrder(v.adId, v.amount, v.method),
     onSuccess: (order) => {
-      toast.success("Escrow locked — trade started");
+      notifySuccess("Escrow locked — trade started", { sound: "order" });
       void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
       setSelected(null);
       void navigate({ to: "/p2p/order/$id", params: { id: order.id } });

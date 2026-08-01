@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -204,7 +205,7 @@ export function SolanaPaymentButton({
         }}
         onPaymentSuccess={(signature) => {
           setSolanaPayOpen(false);
-          toast.success("Solana payment confirmed");
+          notifySuccess("Solana payment confirmed", { sound: "receive" });
           onPaymentSuccess?.(signature);
         }}
         onPaymentError={(error) => {

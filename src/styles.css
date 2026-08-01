@@ -591,6 +591,17 @@
   max-width: 32rem;
 }
 
+@media (min-width: 768px) {
+  .ph-page {
+    max-width: none;
+  }
+
+  /* Desktop: let authenticated app pages fill the main column (dialogs portaled outside main). */
+  main.ot-phantom :is(.max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl) {
+    max-width: none !important;
+  }
+}
+
 @utility ph-group {
   overflow: hidden;
   border-radius: 1.25rem;

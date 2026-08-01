@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { copyText } from "@/lib/clipboard";
 import { z } from "zod";
 
@@ -553,7 +554,7 @@ function SendPage() {
         await sendOpenPay({
           data: { to: to.trim(), amount: amountNum, note: memo || null },
         });
-        toast.success(`Sent ${formatNumber(amountNum, 4)} OUSD via OpenPay`);
+        notifySuccess(`Sent ${formatNumber(amountNum, 4)} OUSD via OpenPay`, { sound: "send" });
       } else {
         if (to.trim().toLowerCase() === wallet.address.toLowerCase()) {
           toast.error("Cannot send to your own address");
@@ -575,10 +576,11 @@ function SendPage() {
                 memo: memo || null,
               };
         const res = await send({ data: payload });
-        toast.success(
+        notifySuccess(
           res.credited
             ? `Sent ${formatNumber(amountNum, 6)} ${res.symbol ?? selected.symbol} — recipient credited`
             : `Sent ${formatNumber(amountNum, 6)} ${res.symbol ?? selected.symbol}`,
+          { sound: "send" },
         );
       }
 

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { MerchantAvatar } from "@/components/p2p/P2pUi";
+import { P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -128,113 +129,124 @@ function P2pProfilePage() {
 
   if (userQ.isLoading || profileQ.isLoading) {
     return (
-      <div className="grid place-items-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="opblog grid min-h-[40vh] place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
       </div>
     );
   }
 
   return (
-    <div>
-      <header
-        className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-xl md:px-6"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-      >
-        <h1 className="text-lg font-extrabold tracking-tight">Profile</h1>
-        <Link to="/p2p/orders" className="text-xs font-semibold text-muted-foreground">
-          History
-        </Link>
-      </header>
-
-      <div className="relative overflow-hidden px-4 pb-4 pt-6 md:px-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-        <div className="relative flex items-center gap-3">
-          {profileQ.data?.avatar_url ? (
-            <div className="relative">
-              <img
-                src={profileQ.data.avatar_url}
-                alt=""
-                className="h-14 w-14 rounded-full object-cover ring-2 ring-border/40"
-              />
-              <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-background bg-[#11C66D]" />
-            </div>
-          ) : (
-            <MerchantAvatar name={name} size="lg" online />
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-xl font-extrabold">{name}</p>
-            <p className="text-xs text-muted-foreground">
-              Joined {joinedAt ? new Date(joinedAt).toLocaleDateString() : "—"}
-            </p>
-            {emailVerified ? (
-              <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#11C66D]">
-                <BadgeCheck className="h-3.5 w-3.5" /> Email verified
-              </p>
-            ) : null}
-          </div>
+    <P2pHubLayout
+      title={name}
+      dek={`Joined ${joinedAt ? new Date(joinedAt).toLocaleDateString() : "—"}${
+        emailVerified ? " · Email verified" : ""
+      }`}
+      backTo="/p2p"
+      crumb="Profile"
+      eyebrow="Your P2P hub"
+      hero={{ from: "#ddd6fe", to: "#c4b5fd", glyph: name.slice(0, 1).toUpperCase() }}
+      actions={
+        <>
+          <P2pHubPill to="/p2p/orders" primary>
+            Order history
+          </P2pHubPill>
+          <P2pHubPill to="/p2p/wallet">Merchant wallet</P2pHubPill>
+          {emailVerified ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]">
+              <BadgeCheck className="h-4 w-4" /> Verified
+            </span>
+          ) : null}
+        </>
+      }
+    >
+      <div className="flex items-center gap-4 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+        {profileQ.data?.avatar_url ? (
+          <img
+            src={profileQ.data.avatar_url}
+            alt=""
+            className="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--border)]"
+          />
+        ) : (
+          <MerchantAvatar name={name} size="lg" online />
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-xl font-bold tracking-tight">{name}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Marketplace reputation, funds, and guides in one place.
+          </p>
         </div>
       </div>
 
-      <section className="mx-4 rounded-2xl border border-border/50 bg-card/40 p-4 md:mx-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold">My P2P funds</h2>
-          <Link to="/p2p/wallet" className="text-xs font-semibold text-muted-foreground">
-            View more ›
-          </Link>
-        </div>
-        <Row
-          label="Available"
-          value={`≈ ${formatCurrency(ousd, fiat as never, { compact: false })}`}
-        />
-        <Row label="Locked" value={`${fmtAmount(lockedOusd)} OUSD`} />
-      </section>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <P2pMenuCard>
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+              My P2P funds
+            </h2>
+            <Link to="/p2p/wallet" className="text-sm font-semibold text-[var(--primary)]">
+              View more →
+            </Link>
+          </div>
+          <div className="space-y-1 px-5 py-3">
+            <Row
+              label="Available"
+              value={`≈ ${formatCurrency(ousd, fiat as never, { compact: false })}`}
+            />
+            <Row label="Locked" value={`${fmtAmount(lockedOusd)} OUSD`} />
+          </div>
+        </P2pMenuCard>
 
-      <section className="mx-4 mt-3 rounded-2xl border border-border/50 bg-card/40 p-4 md:mx-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold">Info</h2>
-          <Link to="/p2p/reviews" className="text-xs font-semibold text-muted-foreground">
-            View more ›
-          </Link>
-        </div>
-        <Row label="Total completed orders" value={String(st?.completed_count ?? 0)} />
-        <Row
-          label="Completion rate (%)"
-          value={
-            st?.completion_rate == null ? "N/A" : `${Number(st.completion_rate).toFixed(2)}%`
-          }
-        />
-        <Row label="Avg. payment time" value={formatAvgPayTime(st?.avg_pay_seconds)} />
-        <Row
-          label="Positive reviews (%)"
-          value={formatPositiveRate(rt?.positive_rate)}
-        />
-      </section>
+        <P2pMenuCard>
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+              Info
+            </h2>
+            <Link to="/p2p/reviews" className="text-sm font-semibold text-[var(--primary)]">
+              View more →
+            </Link>
+          </div>
+          <div className="space-y-1 px-5 py-3">
+            <Row label="Completed orders" value={String(st?.completed_count ?? 0)} />
+            <Row
+              label="Completion rate"
+              value={
+                st?.completion_rate == null ? "N/A" : `${Number(st.completion_rate).toFixed(2)}%`
+              }
+            />
+            <Row label="Avg. payment time" value={formatAvgPayTime(st?.avg_pay_seconds)} />
+            <Row label="Positive reviews" value={formatPositiveRate(rt?.positive_rate)} />
+          </div>
+        </P2pMenuCard>
+      </div>
 
-      <div className="mt-4 divide-y divide-border/40 border-y border-border/40">
+      <P2pMenuCard>
         {MENU.map((item) => (
           <Link
             key={item.to}
             to={item.to}
-            className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30 md:px-6"
+            className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 transition hover:bg-[var(--muted)] last:border-b-0"
           >
-            <item.icon className={cn("h-5 w-5 text-muted-foreground")} strokeWidth={1.75} />
+            <item.icon
+              className={cn("h-5 w-5 text-[var(--muted-foreground)]")}
+              strokeWidth={1.75}
+            />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{item.label}</span>
-              <span className="block text-[11px] text-muted-foreground">{item.desc}</span>
+              <span className="block text-base font-bold tracking-tight">{item.label}</span>
+              <span className="block text-sm text-[var(--muted-foreground)]">{item.desc}</span>
             </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
           </Link>
         ))}
-      </div>
-    </div>
+      </P2pMenuCard>
+    </P2pHubLayout>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1.5 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums text-foreground">{value}</span>
+      <span className="text-[var(--muted-foreground)]">{label}</span>
+      <span className="font-semibold tabular-nums text-[var(--foreground)]">{value}</span>
     </div>
   );
 }

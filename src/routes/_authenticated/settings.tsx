@@ -28,6 +28,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
+import {
+  getSoundEffectsEnabled,
+  playUiSound,
+  setSoundEffectsEnabled,
+  unlockUiSounds,
+} from "@/lib/p2p-sounds";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -136,6 +142,7 @@ function SettingsPage() {
   const { code: displayCurrency, setCode: setDisplayCurrency } = useCurrency();
   const { code: displayLanguage, setCode: setDisplayLanguage } = useLanguage();
   const [signingOut, setSigningOut] = useState(false);
+  const [soundEffects, setSoundEffects] = useState(() => getSoundEffectsEnabled());
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -1101,6 +1108,22 @@ function SettingsPage() {
                     },
                   })
                 }
+              />
+            </SettingRow>
+            <SettingRow
+              label="Sound effects"
+              desc="Phantom-style chime on top-up, swap, send, withdraw, and alerts"
+            >
+              <Switch
+                checked={soundEffects}
+                onCheckedChange={(v) => {
+                  setSoundEffectsEnabled(v);
+                  setSoundEffects(v);
+                  if (v) {
+                    unlockUiSounds();
+                    playUiSound("success");
+                  }
+                }}
               />
             </SettingRow>
             <SettingRow

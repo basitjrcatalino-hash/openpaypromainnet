@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
@@ -132,7 +133,7 @@ export function CircleMintDepositPanel({
             setStatus("credited");
             setCreditedAmount(res.amount);
             if (!res.alreadyCredited) {
-              toast.success(`${formatUSD(res.amount)} OUSD credited via Circle`);
+              notifySuccess(`${formatUSD(res.amount)} OUSD credited via Circle`, { sound: "receive" });
             }
             onSuccessRef.current?.();
           }
@@ -163,11 +164,10 @@ export function CircleMintDepositPanel({
       if (synced.status === "credited") {
         setStatus("credited");
         setCreditedAmount(synced.amount);
-        toast.success(
-          synced.alreadyCredited
-            ? "Already credited"
-            : `${formatUSD(synced.amount)} OUSD credited`,
-        );
+        if (synced.alreadyCredited) toast.message("Already credited");
+        else {
+          notifySuccess(`${formatUSD(synced.amount)} OUSD credited`, { sound: "receive" });
+        }
         onSuccessRef.current?.();
       } else {
         toast.message(

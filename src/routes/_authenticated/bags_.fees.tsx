@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
@@ -77,7 +78,7 @@ function BagsFeesPage() {
       toast.message(`Sign ${res.transactions.length} claim transaction(s)…`);
       const sigs = await withSign(res.transactions);
       setLastSigs(sigs);
-      toast.success("Fee claim submitted");
+      notifySuccess("Fee claim submitted", { sound: "receive" });
     } catch (err) {
       const msg = (err as Error).message || "Claim failed";
       toast.error(
@@ -155,7 +156,7 @@ function BagsFeesPage() {
       toast.message(`Sign ${res.transactions.length} partner claim(s)…`);
       const sigs = await withSign(res.transactions);
       setLastSigs(sigs);
-      toast.success("Partner fees claimed");
+      notifySuccess("Partner fees claimed", { sound: "receive" });
     } catch (err) {
       const msg = (err as Error).message || "Partner claim failed";
       toast.error(

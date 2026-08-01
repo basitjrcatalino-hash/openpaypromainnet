@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { Wallet as WalletIcon } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { SolanaPaymentButton } from "@/components/solana-payment-button";
 import { SolanaPayQrPanel } from "@/components/solana-pay-qr-panel";
@@ -57,7 +58,7 @@ export function SolanaReceivePanelBody({
       if (r.alreadyCredited) {
         toast.message("This Solana payment was already credited");
       } else {
-        toast.success(`${r.amount.toFixed(2)} OUSD credited`);
+        notifySuccess(`${r.amount.toFixed(2)} OUSD credited`, { sound: "receive" });
       }
       void qc.invalidateQueries({ queryKey: ["active-wallet"] });
       void qc.invalidateQueries({ queryKey: ["wallets"] });

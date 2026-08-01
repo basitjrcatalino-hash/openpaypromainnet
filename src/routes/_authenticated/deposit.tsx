@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -123,9 +124,9 @@ function DepositPage() {
     onSuccess: (row: Row) => {
       setTxHash("");
       void qc.invalidateQueries({ queryKey: ["my-deposits"] });
-      if (row?.status === "credited") toast.success("Deposit credited to your wallet");
+      if (row?.status === "credited") notifySuccess("Deposit credited to your wallet", { sound: "receive" });
       else if (row?.status === "failed") toast.error(row.error || "Deposit could not be verified");
-      else toast.success("Deposit detected — waiting for confirmations");
+      else notifySuccess("Deposit detected — waiting for confirmations", { sound: "notify" });
     },
     onError: (e: Error) => toast.error(e.message),
   });

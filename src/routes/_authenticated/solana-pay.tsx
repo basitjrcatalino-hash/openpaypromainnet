@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronRight, Heart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
@@ -116,7 +117,7 @@ function DonatePage() {
       const res = await runDonateOusd({
         data: { amount: amtNum, walletId: wallet?.id },
       });
-      toast.success(`Donated ${formatOUSD(res.amount)} — thank you!`);
+      notifySuccess(`Donated ${formatOUSD(res.amount)} — thank you!`, { sound: "send" });
       void qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       void qc.invalidateQueries({ queryKey: ["wallets", user.id] });
       setConfirmOpen(false);
@@ -132,9 +133,7 @@ function DonatePage() {
     setBusy(true);
     try {
       const res = await donateWithPi(amtNum);
-      toast.success(
-        `Donated ~${formatOUSD(amtNum)} via ${res.piAmount.toFixed(4)} π — thank you!`,
-      );
+      notifySuccess(`Donated ~${formatOUSD(amtNum)} via ${res.piAmount.toFixed(4)} π — thank you!`, { sound: "send" });
       setStep("amount");
     } catch (e) {
       toast.error((e as Error).message || "Pi donation cancelled");
@@ -424,7 +423,7 @@ function DonatePage() {
                   product="usdc"
                   amountUsd={amtNum}
                   onSuccess={() => {
-                    toast.success("USDC donation received — thank you!");
+                    notifySuccess("USDC donation received — thank you!", { sound: "receive" });
                     setStep("amount");
                   }}
                 />

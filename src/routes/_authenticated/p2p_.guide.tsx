@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { Button } from "@/components/ui/button";
-import { P2pDocLayout, P2pDocList, P2pDocSection } from "@/components/p2p/P2pDocLayout";
-import { P2pMenuCard } from "@/components/p2p/P2pSubpage";
+import {
+  P2pDocCtas,
+  P2pDocLayout,
+  P2pDocSteps,
+  P2pDocTips,
+} from "@/components/p2p/P2pDocLayout";
 
 export const Route = createFileRoute("/_authenticated/p2p_/guide")({
   head: () => ({
@@ -19,66 +22,75 @@ export const Route = createFileRoute("/_authenticated/p2p_/guide")({
 
 const STEPS = [
   {
-    t: "1. Pick an ad",
-    d: "Filter by Buy/Sell, asset, amount, and payment method. Check merchant badges, orders, completion %, and positive reviews.",
+    title: "Pick an ad",
+    detail:
+      "Filter by Buy/Sell, asset, amount, and payment method. Check merchant badges, orders, completion %, and positive reviews.",
   },
   {
-    t: "2. Escrow locks crypto",
-    d: "When a trade opens, seller crypto is locked in escrow. Buyers only pay after seeing the merchant receive details in the trade room.",
+    title: "Escrow locks crypto",
+    detail:
+      "When a trade opens, seller crypto is locked in escrow. Buyers only pay after seeing the merchant receive details in the trade room.",
   },
   {
-    t: "3. Pay with local rails",
-    d: "Send fiat via GCash, bank, PIX, UPI, etc. Upload payment proof — never leave the app for “better rates.”",
+    title: "Pay with local rails",
+    detail:
+      "Send fiat via GCash, bank, PIX, UPI, and more. Upload payment proof — never leave the app for “better rates.”",
   },
   {
-    t: "4. Confirm & release",
-    d: "Seller verifies funds arrived, then releases escrow. Buyer receives crypto. Disputes go to Support if needed.",
+    title: "Confirm & release",
+    detail:
+      "Seller verifies funds arrived, then releases escrow. Buyer receives crypto. Disputes go to Support if needed.",
   },
   {
-    t: "5. Rate your counterparty",
-    d: "After completion, leave a 1–5★ rating (like OKX / Bitget). Positive reviews help good merchants rank trust.",
+    title: "Rate your counterparty",
+    detail:
+      "After completion, leave a 1–5★ rating. Positive reviews help good merchants build trust on the marketplace.",
   },
 ];
+
+const TIPS = [
+  "Platform trading fee is 0 — only bank/network fees may apply.",
+  "Max size is 5,000 OUSD (or $5,000 notional) per trade.",
+  "Sell ads need a funded merchant wallet + receive accounts.",
+  "Never release escrow before money clears in your own account.",
+  "Read Trading rules and Safety before your first large trade.",
+];
+
+const SPEECH = [
+  "How to use OpenPay Pro P2P.",
+  "OpenPay Pro P2P matches you with other users. We hold crypto in escrow until fiat payment is confirmed.",
+  ...STEPS.map((s, i) => `Step ${i + 1}. ${s.title}. ${s.detail}`),
+  "Good to know.",
+  ...TIPS,
+].join(" ");
 
 function GuidePage() {
   return (
     <P2pDocLayout
       title="How to use"
-      dek="OpenPay Pro P2P matches you with other users. We hold crypto in escrow until fiat payment is confirmed — the same safety model as OKX / Bitget P2P."
+      dek="OpenPay Pro P2P matches you with other users. We hold crypto in escrow until fiat payment is confirmed — the same safety model as major exchange P2P desks."
       active="/p2p/guide"
+      speechId="p2p-doc:guide"
+      speechText={SPEECH}
+      hero={{ from: "#ddd6fe", to: "#a7f3d0", glyph: "P2P" }}
+      eyebrow="Tutorial · Beginner · 4 min"
     >
-      <P2pMenuCard className="mb-1">
-        {STEPS.map((s) => (
-          <div key={s.t} className="border-b border-border/40 px-4 py-3.5 last:border-b-0">
-            <p className="text-sm font-bold text-foreground">{s.t}</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{s.d}</p>
-          </div>
-        ))}
-      </P2pMenuCard>
-
-      <P2pDocSection title="Good to know">
-        <P2pDocList
-          items={[
-            "Platform trading fee is 0 — only bank/network fees may apply.",
-            "Max size is 5,000 OUSD (or $5,000 notional) per trade.",
-            "Sell ads need a funded merchant wallet + receive accounts.",
-            "Never release escrow before money clears in your own account.",
-            "Read Trading rules and Safety before your first large trade.",
-          ]}
-        />
-      </P2pDocSection>
-
-      <div className="mx-4 mb-2 flex flex-col gap-2 md:mx-6">
-        <Button asChild className="h-11 rounded-[8px] bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]">
-          <Link to="/p2p">Browse marketplace</Link>
-        </Button>
-        <Button asChild variant="outline" className="h-11 rounded-[8px] font-bold">
-          <Link to="/p2p/rules">Trading rules ›</Link>
-        </Button>
-        <Button asChild variant="outline" className="h-11 rounded-[8px] font-bold">
-          <Link to="/p2p/express">Try Express</Link>
-        </Button>
-      </div>
+      <P2pDocSteps steps={STEPS} />
+      <P2pDocTips items={TIPS} />
+      <P2pDocCtas
+        primary={{ to: "/p2p", label: "Browse marketplace" }}
+        secondary={[
+          { to: "/p2p/rules", label: "Trading rules →" },
+          { to: "/p2p/express", label: "Try Express" },
+        ]}
+      />
+      <p className="text-sm text-[var(--muted-foreground)]">
+        Prefer a shorter path?{" "}
+        <Link to="/p2p/express" className="font-semibold text-[var(--foreground)] underline-offset-2 hover:underline">
+          Express
+        </Link>{" "}
+        matches you to a live ad automatically.
+      </p>
     </P2pDocLayout>
   );
 }

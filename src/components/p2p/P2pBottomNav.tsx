@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-import { P2P_SHELL_WIDTH } from "@/components/p2p/p2p-layout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchInboxUnreadCount } from "@/lib/p2p";
@@ -77,8 +76,7 @@ export function P2pBottomNav() {
     >
       <div
         className={cn(
-          P2P_SHELL_WIDTH,
-          "pointer-events-auto border-t border-border/50 bg-background/95 backdrop-blur-xl md:border-x md:border-border/40",
+          "pointer-events-auto w-full border-t border-border/50 bg-background/95 backdrop-blur-xl",
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >

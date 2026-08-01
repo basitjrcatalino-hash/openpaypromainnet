@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, X, Link2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { Button } from "@/components/ui/button";
 import { buyOpenToken, sellOpenToken } from "@/lib/opentoken.functions";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
@@ -161,13 +162,13 @@ export function TradePanel({
             const r = await settlePayLink({
               data: { reference, txId: openpayTx || undefined, fromReturn: true },
             });
-            if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+            if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
             else toast.message((r as { message?: string }).message || "Confirming payment…");
           }
         }
         if (chargeId) {
           const r = await settleCharge({ data: { chargeId } });
-          if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+          if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
           else if (r.status) toast.message(`OpenPay charge status: ${r.status}`);
         }
         await Promise.all([
@@ -279,12 +280,12 @@ export function TradePanel({
     try {
       if (payMethod === "pi") {
         await topUpWithPi(amt);
-        toast.success(`${formatNumber(amt, 2)} OUSD credited from Pi`);
+        notifySuccess(`${formatNumber(amt, 2)} OUSD credited from Pi`, { sound: "receive" });
       }
 
       const res = await buyFn({ data: { token_id: token.id, wallet_id: walletId, pi_amount: amt } });
-      toast.success(`Bought ${formatNumber(res.token_amount, 4)} $${token.symbol}`);
-      if (res.graduated) toast.success("Token graduated to OpenDEX!");
+      notifySuccess(`Bought ${formatNumber(res.token_amount, 4)} $${token.symbol}`, { sound: "receive" });
+      if (res.graduated) notifySuccess("Token graduated to OpenDEX!", { sound: "success" });
       setAmount("");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ot-token", token.id] }),
@@ -320,7 +321,7 @@ export function TradePanel({
       const res = await sellFn({
         data: { token_id: token.id, wallet_id: walletId, token_amount: amt },
       });
-      toast.success(`Sold for ${formatNumber(res.pi_amount, 4)} OUSD`);
+      notifySuccess(`Sold for ${formatNumber(res.pi_amount, 4)} OUSD`, { sound: "send" });
       setAmount("");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ot-token", token.id] }),

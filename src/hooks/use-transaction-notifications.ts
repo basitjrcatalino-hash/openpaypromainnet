@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -13,6 +12,11 @@ import {
   showBrowserNotification,
   type AppNotification,
 } from "@/lib/tx-notifications";
+import {
+  ensureUiSoundUnlockListeners,
+  soundForTxType,
+} from "@/lib/p2p-sounds";
+import { notifyInfo } from "@/lib/notify-success";
 
 type TxRow = Tables<"transactions">;
 type PrefsNotifications = Record<string, unknown>;
@@ -77,7 +81,11 @@ export function useTransactionNotifications(userId: string) {
         (tx.type === "send" || tx.type === "sell" || tx.type === "swap");
 
       if (!opts?.silent && !likelyLocalAction) {
-        toast(note.title, { id: `tx-${note.txId}`, description: note.body });
+        notifyInfo(note.title, {
+          id: `tx-${note.txId}`,
+          description: note.body,
+          sound: soundForTxType(tx.type),
+        });
       }
       if (pushOn) void showBrowserNotification(note);
       void qc.invalidateQueries({ queryKey: ["recent-txs"] });
@@ -90,6 +98,10 @@ export function useTransactionNotifications(userId: string) {
   );
 
   // Seed seen set from recent txs so we don't spam on first load
+  useEffect(() => {
+    ensureUiSoundUnlockListeners();
+  }, []);
+
   useEffect(() => {
     if (!walletIds.length) return;
     let cancelled = false;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
 import { BagsWalletBar } from "@/components/bags/BagsWalletBar";
@@ -108,7 +109,7 @@ function BagsTradePage() {
       );
       setSignature(sig ?? null);
       setConfirmOpen(false);
-      toast.success("Swap submitted");
+      notifySuccess("Swap submitted", { sound: "swap" });
     } catch (err) {
       const msg = (err as Error).message || "Swap failed";
       toast.error(

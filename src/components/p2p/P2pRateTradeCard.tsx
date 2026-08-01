@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Star } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,7 @@ export function P2pRateTradeCard({
         comment: comment.trim() || null,
       }),
     onSuccess: () => {
-      toast.success("Thanks for your rating");
+      notifySuccess("Thanks for your rating", { sound: "success" });
       void qc.invalidateQueries({ queryKey: ["p2p-my-rating", orderId] });
       void qc.invalidateQueries({ queryKey: ["p2p-rating-stats"] });
       void qc.invalidateQueries({ queryKey: ["p2p-stats-self"] });

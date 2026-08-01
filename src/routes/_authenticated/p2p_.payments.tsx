@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
-import { P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchMyPaymentAccounts,
@@ -68,30 +68,28 @@ function PaymentsPage() {
     });
 
   return (
-    <div>
-      <P2pSubpageHeader
-        title="Payment methods"
-        right={
+    <P2pHubLayout
+      title="Payment methods"
+      dek="Buyers pay to these accounts when you sell. Add every method you list on your ads."
+      crumb="Profile"
+      eyebrow="Receive accounts"
+      hero={{ from: "#a7f3d0", to: "#bfdbfe", glyph: "💳" }}
+      actions={
+        <>
           <button
             type="button"
-            className="text-xs font-bold text-[#11C66D]"
             onClick={() => openForm()}
+            className="inline-flex items-center rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)]"
           >
-            Add
+            <Plus className="mr-1.5 h-4 w-4" /> Add method
           </button>
-        }
-      />
-
-      <p className="px-4 py-3 text-xs text-muted-foreground md:px-6">
-        Buyers pay to these accounts when you sell. Add every method you list on your ads.{" "}
-        <Link to="/p2p/create" className="font-semibold text-primary">
-          Manage ads ›
-        </Link>
-      </p>
-
+          <P2pHubPill to="/p2p/create">Manage ads</P2pHubPill>
+        </>
+      }
+    >
       {accountsQ.isLoading ? (
         <div className="grid place-items-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
         </div>
       ) : !(accountsQ.data ?? []).length ? (
         <P2pEmptyState
@@ -99,7 +97,7 @@ function PaymentsPage() {
           description="Add GCash, bank, PIX, or other receive details before publishing sell ads."
           action={
             <Button
-              className="mt-2 h-10 rounded-[8px] bg-[#11C66D] px-5 font-bold text-white hover:bg-[#0FB461]"
+              className="mt-2 h-10 rounded-full bg-[var(--primary)] px-5 font-bold text-[var(--primary-foreground)]"
               onClick={() => openForm()}
             >
               <Plus className="mr-1.5 h-4 w-4" /> Add method
@@ -107,11 +105,14 @@ function PaymentsPage() {
           }
         />
       ) : (
-        <div className="divide-y divide-border/40 border-y border-border/40">
+        <P2pMenuCard>
           {(accountsQ.data ?? []).map((acc) => (
-            <div key={acc.id} className="flex items-start justify-between gap-3 px-4 py-3.5 md:px-6">
+            <div
+              key={acc.id}
+              className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0"
+            >
               <div className="min-w-0">
-                <p className="inline-flex items-center gap-2 text-sm font-bold">
+                <p className="inline-flex items-center gap-2 text-base font-bold tracking-tight">
                   <P2pPayIcon
                     code={acc.method_code}
                     name={methodName[acc.method_code] ?? acc.method_code}
@@ -119,15 +120,15 @@ function PaymentsPage() {
                   />
                   {methodName[acc.method_code] ?? acc.method_code}
                   {!acc.is_active ? (
-                    <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    <span className="text-[10px] font-semibold uppercase text-[var(--muted-foreground)]">
                       Off
                     </span>
                   ) : null}
                 </p>
                 <p className="mt-1 truncate text-sm">{acc.account_name}</p>
-                <p className="font-mono text-xs text-muted-foreground">{acc.account_number}</p>
+                <p className="font-mono text-xs text-[var(--muted-foreground)]">{acc.account_number}</p>
                 {acc.bank_name ? (
-                  <p className="text-[11px] text-muted-foreground">{acc.bank_name}</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">{acc.bank_name}</p>
                 ) : null}
               </div>
               <div className="flex shrink-0 flex-col gap-1.5">
@@ -151,8 +152,8 @@ function PaymentsPage() {
               </div>
             </div>
           ))}
-        </div>
+        </P2pMenuCard>
       )}
-    </div>
+    </P2pHubLayout>
   );
 }

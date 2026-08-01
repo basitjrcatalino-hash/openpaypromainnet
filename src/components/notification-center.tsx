@@ -86,20 +86,28 @@ export function NotificationBell({
   onOpen: () => void;
   className?: string;
 }) {
+  const label = unread > 99 ? "99+" : String(unread);
   return (
     <button
       type="button"
       onClick={onOpen}
       className={cn(
         "relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted/70 text-foreground press hover:bg-muted",
+        unread > 0 && "ring-1 ring-primary/25",
         className,
       )}
       aria-label={unread ? `${unread} unread notifications` : "Notifications"}
     >
-      <Bell className="h-4.5 w-4.5" strokeWidth={2} />
-      {unread > 0 && (
-        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
-      )}
+      <Bell
+        className={cn("h-4.5 w-4.5", unread > 0 && "text-foreground")}
+        strokeWidth={2}
+      />
+      {unread > 0 ? (
+        <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground shadow-sm ring-2 ring-background">
+          <span className="absolute inset-0 animate-ping rounded-full bg-primary/50" aria-hidden />
+          <span className="relative tabular-nums">{label}</span>
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -140,7 +148,7 @@ export function NotificationCenter({
             </SheetDescription>
             {unread > 0 ? (
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {unread} unread
+                <span className="font-semibold text-primary">{unread}</span> unread
               </p>
             ) : (
               <p className="mt-0.5 text-sm text-muted-foreground">You&apos;re all caught up</p>
@@ -291,7 +299,7 @@ function NotificationRow({
       onClick={onOpen}
       className={cn(
         "flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition-colors press hover:bg-muted/40",
-        !note.read && "bg-primary/4",
+        !note.read && "bg-primary/[0.06] ring-1 ring-inset ring-primary/10",
       )}
     >
       <span className="relative shrink-0">
@@ -318,7 +326,10 @@ function NotificationRow({
             {displayTitle(note)}
           </span>
           {!note.read ? (
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+            <span
+              className="h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_0_3px] shadow-primary/20"
+              aria-label="Unread"
+            />
           ) : null}
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">

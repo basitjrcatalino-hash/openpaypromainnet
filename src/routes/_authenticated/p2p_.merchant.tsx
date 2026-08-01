@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MerchantBadge, MerchantTierLabel } from "@/components/p2p/MerchantBadge";
-import { P2pMenuCard, P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pMenuCard, P2pHubLayout, P2pHubPill } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 import {
   applyMerchant,
@@ -147,16 +147,24 @@ function MerchantPage() {
   });
 
   return (
-    <div>
-      <P2pSubpageHeader title="Merchant program" />
-
-      <div className="mx-4 mt-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 to-transparent p-5 md:mx-6">
-        <p className="inline-flex items-center gap-1.5 text-sm font-extrabold text-amber-400">
-          <Sparkles className="h-4 w-4" /> List ads like OKX / Binance P2P
-        </p>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Apply as a merchant, wait for admin approval, then publish buy/sell ads. Verified and Super
-          badges appear on the marketplace; Featured merchants float to the top.
+    <P2pHubLayout
+      title="Merchant program"
+      dek="Apply as a merchant, wait for admin approval, then publish buy/sell ads. Verified and Super badges appear on the marketplace; Featured merchants float to the top."
+      crumb="Profile"
+      eyebrow="Apply · Badges · Featured"
+      hero={{ from: "#fde68a", to: "#c4b5fd", glyph: "✦" }}
+      actions={
+        <>
+          <P2pHubPill to="/p2p/create" primary>
+            {canList ? "Create / manage ads" : "Ads (locked)"}
+          </P2pHubPill>
+          <P2pHubPill to="/p2p/wallet">Fund wallet</P2pHubPill>
+        </>
+      }
+    >
+      <div className="rounded-3xl border border-[var(--border)] bg-[var(--accent)] p-5">
+        <p className="inline-flex items-center gap-1.5 text-base font-bold">
+          <Sparkles className="h-4 w-4" /> List ads on the P2P marketplace
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <p className="text-sm font-bold">{MerchantTierLabel(merchant?.tier ?? "none")}</p>
@@ -174,29 +182,29 @@ function MerchantPage() {
           ) : null}
         </div>
         {!canList ? (
-          <p className="mt-2 text-xs font-semibold text-amber-500">
+          <p className="mt-2 text-sm font-semibold text-amber-700">
             You cannot publish ads until an admin approves your application.
           </p>
         ) : (
-          <p className="mt-2 text-xs font-semibold text-[#11C66D]">
+          <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
             Approved — you can publish and activate ads.
           </p>
         )}
       </div>
 
       {pending ? (
-        <div className="mx-4 mt-3 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4 md:mx-6">
-          <p className="text-sm font-bold text-sky-400">
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <p className="text-base font-bold">
             Pending {pending.requested_tier === "super" ? "Super Merchant" : "Verified Merchant"}{" "}
             review
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Submitted {new Date(pending.created_at).toLocaleString()}. An admin will approve or reject
             this request.
           </p>
           <Button
             variant="outline"
-            className="mt-3 h-9 rounded-[8px] text-xs font-bold"
+            className="mt-3 h-9 rounded-full text-xs font-bold"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate()}
           >
@@ -206,69 +214,73 @@ function MerchantPage() {
       ) : null}
 
       {appQ.data?.status === "rejected" ? (
-        <div className="mx-4 mt-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 md:mx-6">
-          <p className="text-sm font-bold text-rose-400">Last application rejected</p>
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5">
+          <p className="text-base font-bold text-rose-700">Last application rejected</p>
           {appQ.data.admin_note ? (
-            <p className="mt-1 text-xs text-muted-foreground">{appQ.data.admin_note}</p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">{appQ.data.admin_note}</p>
           ) : (
-            <p className="mt-1 text-xs text-muted-foreground">You can fix issues and apply again.</p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">You can fix issues and apply again.</p>
           )}
         </div>
       ) : null}
 
-      <h2 className="mx-4 mt-5 mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground md:mx-6">
-        1. Verified Merchant (required to list)
-      </h2>
-      <P2pMenuCard className="mb-3">
-        {verifiedChecks.map((c) => (
-          <Link
-            key={c.label}
-            to={c.to}
-            className="flex items-center gap-3 border-b border-border/40 px-4 py-3.5 last:border-b-0 hover:bg-muted/30"
-          >
-            <CheckCircle ok={c.ok} />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{c.label}</span>
-              <span className="text-[12px] text-muted-foreground">{c.detail}</span>
-            </span>
-          </Link>
-        ))}
-      </P2pMenuCard>
+      <div>
+        <h2 className="opblog-h2">1. Verified Merchant</h2>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Required to list ads</p>
+        <P2pMenuCard className="mt-4">
+          {verifiedChecks.map((c) => (
+            <Link
+              key={c.label}
+              to={c.to}
+              className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0 hover:bg-[var(--muted)]"
+            >
+              <CheckCircle ok={c.ok} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-bold tracking-tight">{c.label}</span>
+                <span className="text-sm text-[var(--muted-foreground)]">{c.detail}</span>
+              </span>
+            </Link>
+          ))}
+        </P2pMenuCard>
+      </div>
 
-      <h2 className="mx-4 mt-4 mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground md:mx-6">
-        2. Super Merchant (badge + ranking boost)
-      </h2>
-      <P2pMenuCard className="mb-4">
-        {superChecks.map((c) => (
-          <Link
-            key={c.label}
-            to={c.to}
-            className="flex items-center gap-3 border-b border-border/40 px-4 py-3.5 last:border-b-0 hover:bg-muted/30"
-          >
-            <CheckCircle ok={c.ok} />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{c.label}</span>
-              <span className="text-[12px] text-muted-foreground">{c.detail}</span>
-            </span>
-          </Link>
-        ))}
-      </P2pMenuCard>
+      <div>
+        <h2 className="opblog-h2">2. Super Merchant</h2>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Badge + ranking boost</p>
+        <P2pMenuCard className="mt-4">
+          {superChecks.map((c) => (
+            <Link
+              key={c.label}
+              to={c.to}
+              className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4 last:border-b-0 hover:bg-[var(--muted)]"
+            >
+              <CheckCircle ok={c.ok} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-bold tracking-tight">{c.label}</span>
+                <span className="text-sm text-[var(--muted-foreground)]">{c.detail}</span>
+              </span>
+            </Link>
+          ))}
+        </P2pMenuCard>
+      </div>
 
-      <div className="mx-4 mb-3 space-y-1.5 md:mx-6">
-        <label className="text-xs font-semibold text-muted-foreground">Note to admin (optional)</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+          Note to admin (optional)
+        </label>
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Trading experience, regions, payment rails…"
-          className="min-h-[72px] rounded-xl"
+          className="min-h-[72px] rounded-2xl border-[var(--border)] bg-[var(--card)]"
           maxLength={500}
         />
       </div>
 
-      <div className="mx-4 mb-8 space-y-2 md:mx-6">
+      <div className="flex flex-wrap gap-2">
         {!canList ? (
           <Button
-            className="h-11 w-full rounded-[8px] bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]"
+            className="h-11 rounded-full bg-[var(--primary)] px-6 font-bold text-[var(--primary-foreground)]"
             disabled={!verifiedReady || !!pending || apply.isPending}
             onClick={() => apply.mutate("verified")}
           >
@@ -276,29 +288,15 @@ function MerchantPage() {
           </Button>
         ) : merchant?.tier !== "super" ? (
           <Button
-            className="h-11 w-full rounded-[8px] bg-amber-500 font-bold text-white hover:bg-amber-500/90"
+            className="h-11 rounded-full bg-amber-500 px-6 font-bold text-white hover:bg-amber-500/90"
             disabled={!superReady || !!pending || apply.isPending}
             onClick={() => apply.mutate("super")}
           >
             {apply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply for Super Merchant"}
           </Button>
         ) : null}
-
-        <Button
-          asChild
-          variant={canList ? "default" : "outline"}
-          className={cn(
-            "h-11 w-full rounded-[8px] font-bold",
-            canList && "bg-foreground text-background hover:bg-foreground/90",
-          )}
-        >
-          <Link to="/p2p/create">{canList ? "Create / manage ads" : "Ads (locked until approved)"}</Link>
-        </Button>
-        <Button asChild variant="outline" className="h-11 w-full rounded-[8px] font-bold">
-          <Link to="/p2p/wallet">Fund merchant wallet</Link>
-        </Button>
       </div>
-    </div>
+    </P2pHubLayout>
   );
 }
 

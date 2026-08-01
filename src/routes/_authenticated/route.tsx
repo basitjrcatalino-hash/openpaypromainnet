@@ -264,7 +264,7 @@ function AuthenticatedLayout() {
           </>
         )}
 
-        <div className={cn("mx-auto flex w-full", hideChrome ? "max-w-none" : "max-w-350")}>
+        <div className="mx-auto flex w-full max-w-none">
           {!hideChrome && (
             <aside
               className={cn(

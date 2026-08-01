@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,7 +132,7 @@ function ExpressPage() {
       return openOrder(matched.id, amount, pay);
     },
     onSuccess: (order) => {
-      toast.success("Escrow locked — trade started");
+      notifySuccess("Escrow locked — trade started", { sound: "order" });
       void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
       void navigate({ to: "/p2p/order/$id", params: { id: order.id } });
     },
@@ -167,7 +168,7 @@ function ExpressPage() {
   }, [methodsQ.data]);
 
   return (
-    <div className="mx-auto w-full max-w-lg px-4 pb-8 pt-3 md:max-w-xl lg:max-w-2xl md:px-6">
+    <div className="mx-auto w-full px-4 pb-8 pt-3 md:px-6 lg:px-8">
       <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-500">
         Limit: up to {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD per trade
         {asset !== "OUSD" ? " (or $5,000 notional)" : ""}.

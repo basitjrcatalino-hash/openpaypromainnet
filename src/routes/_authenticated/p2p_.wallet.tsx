@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Loader2, Plus, Wallet } from "lucide-react";
+import { Loader2, Plus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { P2pEmptyState } from "@/components/p2p/P2pUi";
 import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
+import { P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
@@ -102,67 +103,66 @@ function MerchantWalletPage() {
     });
 
   return (
-    <div>
-      <header
-        className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-border/40 bg-background/95 px-3 backdrop-blur-xl md:px-5"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    <P2pHubLayout
+      title="Merchant wallet"
+      dek="Fund crypto for P2P escrow and add receive accounts so buyers know where to send payment."
+      crumb="Profile"
+      eyebrow="Escrow · Receive"
+      hero={{ from: "#bbf7d0", to: "#a5b4fc", glyph: "◈" }}
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => openForm()}
+            className="inline-flex items-center rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)]"
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Add account
+          </button>
+          <P2pHubPill to="/deposit">Fund wallet</P2pHubPill>
+          <P2pHubPill to="/p2p/create">Go to ads</P2pHubPill>
+        </>
+      }
+    >
+      <div
+        className={cn(
+          "rounded-3xl border px-5 py-4 text-sm font-semibold",
+          ready
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+            : "border-amber-200 bg-amber-50 text-amber-800",
+        )}
       >
-        <Link
-          to="/p2p/profile"
-          className="grid h-9 w-9 place-items-center rounded-full press"
-          aria-label="Back"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 text-lg font-bold">Merchant wallet</h1>
-        <button
-          type="button"
-          onClick={() => openForm()}
-          className="grid h-9 w-9 place-items-center rounded-full press"
-          aria-label="Add receive account"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
-      </header>
+        {ready
+          ? "Ready for P2P — crypto funds and receive accounts are set."
+          : "Required: add at least one receive account before publishing sell ads."}
+      </div>
 
-      <div className="space-y-4 px-4 py-4 md:px-6">
-        <div
-          className={cn(
-            "rounded-2xl border px-4 py-3 text-sm",
-            ready
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-500",
-          )}
-        >
-          {ready
-            ? "Ready for P2P — crypto funds and receive accounts are set."
-            : "Required: add at least one receive account before publishing sell ads."}
-        </div>
-
-        <section className="rounded-2xl border border-border/50 bg-card/40 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-bold">Crypto funds (escrow)</h2>
-            </div>
-            <Button asChild size="sm" variant="secondary" className="h-8 rounded-full">
-              <Link to="/deposit">Fund wallet</Link>
-            </Button>
+      <P2pMenuCard>
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-[var(--muted-foreground)]" />
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+              Crypto funds (escrow)
+            </h2>
           </div>
+          <Button asChild size="sm" variant="secondary" className="h-8 rounded-full">
+            <Link to="/deposit">Fund wallet</Link>
+          </Button>
+        </div>
+        <div className="px-5 py-4">
           {walletQ.isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--muted-foreground)]" />
           ) : !balances.length ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[var(--muted-foreground)]">
               No crypto balance yet. Deposit funds so you can publish sell ads and lock escrow.
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {balances.map((b) => (
                 <div key={b.asset} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-semibold">{b.asset}</span>
+                  <span className="font-bold">{b.asset}</span>
                   <div className="text-right">
                     <p className="font-bold tabular-nums">{fmtAmount(b.free)} free</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-[var(--muted-foreground)]">
                       {fmtAmount(b.bal)} wallet
                       {b.locked > 0 ? ` · ${fmtAmount(b.locked)} locked` : ""}
                       {" · ≈ "}
@@ -173,17 +173,21 @@ function MerchantWalletPage() {
               ))}
             </div>
           )}
-        </section>
+        </div>
+      </P2pMenuCard>
 
-        <section className="rounded-2xl border border-border/50 bg-card/40 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-bold">Receive accounts</h2>
-            <Button size="sm" className="h-8 rounded-full" onClick={() => openForm()}>
-              Add
-            </Button>
-          </div>
+      <P2pMenuCard>
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+            Receive accounts
+          </h2>
+          <Button size="sm" className="h-8 rounded-full" onClick={() => openForm()}>
+            Add
+          </Button>
+        </div>
+        <div className="px-5 py-4">
           {accountsQ.isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--muted-foreground)]" />
           ) : !(accountsQ.data ?? []).length ? (
             <P2pEmptyState
               title="No receive accounts"
@@ -195,7 +199,7 @@ function MerchantWalletPage() {
               }
             />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {(accountsQ.data ?? []).map((acc) => (
                 <div key={acc.id} className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -207,15 +211,15 @@ function MerchantWalletPage() {
                       />
                       {methodName[acc.method_code] ?? acc.method_code}
                       {!acc.is_active ? (
-                        <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                        <span className="text-[10px] font-semibold uppercase text-[var(--muted-foreground)]">
                           Off
                         </span>
                       ) : null}
                     </p>
                     <p className="mt-1 truncate text-sm">{acc.account_name}</p>
-                    <p className="font-mono text-xs text-muted-foreground">{acc.account_number}</p>
+                    <p className="font-mono text-xs text-[var(--muted-foreground)]">{acc.account_number}</p>
                     {acc.bank_name ? (
-                      <p className="text-[11px] text-muted-foreground">{acc.bank_name}</p>
+                      <p className="text-[11px] text-[var(--muted-foreground)]">{acc.bank_name}</p>
                     ) : null}
                   </div>
                   <div className="flex shrink-0 flex-col gap-1.5">
@@ -241,12 +245,8 @@ function MerchantWalletPage() {
               ))}
             </div>
           )}
-        </section>
-
-        <Button asChild variant="secondary" className="h-11 w-full rounded-full font-bold">
-          <Link to="/p2p/create">Go to ads</Link>
-        </Button>
-      </div>
-    </div>
+        </div>
+      </P2pMenuCard>
+    </P2pHubLayout>
   );
 }

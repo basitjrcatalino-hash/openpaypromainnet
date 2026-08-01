@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { getHelioDepositSession } from "@/lib/helio-deposit.functions";
 import type { HelioDepositProduct } from "@/lib/helio-deposit";
@@ -204,10 +205,11 @@ export function HelioDepositPanel({
               /* widget mounted */
             },
             onSuccess: () => {
-              toast.success(
+              notifySuccess(
                 product === "usdc"
                   ? `${payLabel} USDC submitted — OUSD credits when confirmed`
                   : `${payLabel} deposit submitted — OUSD credits when confirmed`,
+                { sound: "notify" },
               );
               onSuccess?.();
             },

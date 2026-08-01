@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Switch } from "@/components/ui/switch";
-import { P2pActionRow, P2pMenuCard, P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pActionRow, P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/lib/currency";
 import type { Json } from "@/integrations/supabase/types";
@@ -79,18 +79,19 @@ function P2pSettingsPage() {
   });
 
   return (
-    <div>
-      <P2pSubpageHeader title="P2P settings" />
-
-      <p className="px-4 py-3 text-xs text-muted-foreground md:px-6">
-        Controls that only affect P2P trading. App-wide settings stay in Settings.
-      </p>
-
-      <P2pMenuCard className="mb-3">
-        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+    <P2pHubLayout
+      title="P2P settings"
+      dek="Controls that only affect P2P trading. App-wide language and theme stay in Settings."
+      crumb="Profile"
+      eyebrow="Preferences"
+      hero={{ from: "#f1eef9", to: "#ddd6fe", glyph: "⚙" }}
+      actions={<P2pHubPill to="/settings">Open app settings</P2pHubPill>}
+    >
+      <P2pMenuCard>
+        <div className="flex items-center justify-between gap-3 px-5 py-4">
           <div>
-            <p className="text-sm font-semibold">Order alert sounds</p>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-base font-bold tracking-tight">Order alert sounds</p>
+            <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
               Toast + sound for new orders, status changes, and messages
             </p>
           </div>
@@ -102,7 +103,7 @@ function P2pSettingsPage() {
         </div>
       </P2pMenuCard>
 
-      <P2pMenuCard className="mb-3">
+      <P2pMenuCard>
         <P2pActionRow
           to="/p2p/payments"
           title="Payment methods"
@@ -116,21 +117,15 @@ function P2pSettingsPage() {
         />
       </P2pMenuCard>
 
-      <P2pMenuCard className="mb-3">
+      <P2pMenuCard>
         <P2pActionRow
           to="/settings"
           title={`Display currency · ${meta.code}`}
           desc="Used for P2P prices and limits"
         />
-        <P2pActionRow to="/p2p/security" title="Security" desc="Escrow safety & account lock" />
+        <P2pActionRow to="/p2p/security" title="Safety & protection" desc="Escrow safety checklist" />
+        <P2pActionRow to="/p2p/guide" title="How to use" desc="Escrow walkthrough" />
       </P2pMenuCard>
-
-      <p className="px-4 pb-8 text-center text-[11px] text-muted-foreground md:px-6">
-        Need app language or theme?{" "}
-        <Link to="/settings" className="font-semibold text-primary">
-          Open app settings
-        </Link>
-      </p>
-    </div>
+    </P2pHubLayout>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import {
   ArrowLeft,
   Loader2,
@@ -146,7 +147,7 @@ function MintNFT() {
       void qc.invalidateQueries({ queryKey: ["openpay-collectibles"] });
       void qc.invalidateQueries({ queryKey: ["txs", wallet.id] });
       void qc.invalidateQueries({ queryKey: ["ledger-entries"] });
-      toast.success("Minted on OpenPay OpenNFT");
+      notifySuccess("Minted on OpenPay OpenNFT", { sound: "success" });
     } catch (err) {
       const msg = (err as Error).message || "Mint failed";
       if (/not deployed|coming soon|404/i.test(msg)) {

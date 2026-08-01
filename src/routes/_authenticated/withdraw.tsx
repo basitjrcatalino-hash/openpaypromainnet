@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -116,7 +117,7 @@ function WithdrawPage() {
         },
       }),
     onSuccess: () => {
-      toast.success("Withdrawal submitted — OUSD locked pending admin payout");
+      notifySuccess("Withdrawal submitted — OUSD locked pending admin payout", { sound: "send" });
       setAmount("");
       setNote("");
       void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
@@ -130,7 +131,7 @@ function WithdrawPage() {
   const cancelM = useMutation({
     mutationFn: (id: string) => cancelW({ data: { id } }),
     onSuccess: () => {
-      toast.success("Withdrawal cancelled — OUSD refunded");
+      notifySuccess("Withdrawal cancelled — OUSD refunded", { sound: "receive" });
       void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
       void qc.invalidateQueries({ queryKey: ["my-withdrawals"] });
       void qc.invalidateQueries({ queryKey: ["wallet"] });

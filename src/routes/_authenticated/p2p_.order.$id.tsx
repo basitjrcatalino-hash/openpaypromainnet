@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -200,7 +201,7 @@ function TradeRoom() {
   const act = (fn: () => Promise<unknown>, ok: string, opts?: { celebrate?: boolean }) =>
     fn()
       .then(() => {
-        toast.success(ok);
+        notifySuccess(ok, { sound: opts?.celebrate ? "success" : "paid" });
         if (opts?.celebrate) {
           sessionStorage.setItem(`p2p-celebrate-${id}`, "1");
           setCelebrate(true);
@@ -236,7 +237,7 @@ function TradeRoom() {
       });
       const url = await uploadMedia(file, userQ.data, `p2p/${id}/proof`);
       setProofUrl(url);
-      toast.success("Payment proof uploaded");
+      notifySuccess("Payment proof uploaded", { sound: "notify" });
     } catch (e) {
       toast.error((e as Error).message || "Upload failed");
       setProofPreview(null);

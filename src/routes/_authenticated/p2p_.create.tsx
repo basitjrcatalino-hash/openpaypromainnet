@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,7 +277,7 @@ function CreateAdDialog({
         terms: terms.trim() || null,
       }),
     onSuccess: () => {
-      toast.success("Advertisement published");
+      notifySuccess("Advertisement published", { sound: "success" });
       void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
       void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
       onOpenChange(false);

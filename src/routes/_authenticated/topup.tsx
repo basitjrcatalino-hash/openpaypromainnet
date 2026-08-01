@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -321,7 +322,7 @@ function TopUpPage() {
             },
           });
           if (r.credited) {
-            toast.success("OpenPay payment complete · OUSD credited");
+            notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
             setPendingPayLink(null);
             try {
               sessionStorage.removeItem(PENDING_PAYLINK_KEY);
@@ -366,7 +367,7 @@ function TopUpPage() {
     (async () => {
       try {
         const r = await settleCharge({ data: { chargeId } });
-        if (r.credited) toast.success("OpenPay payment complete · OUSD credited");
+        if (r.credited) notifySuccess("OpenPay payment complete · OUSD credited", { sound: "receive" });
         else toast.message(`OpenPay charge status: ${r.status}`);
         qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
         qc.invalidateQueries({ queryKey: ["wallets", user.id] });
@@ -405,7 +406,9 @@ function TopUpPage() {
         },
       });
       if (r.credited) {
-        toast.success(`Topped up ${formatUSD(pendingPayLink.amount)} from OpenPay`);
+        notifySuccess(`Topped up ${formatUSD(pendingPayLink.amount)} from OpenPay`, {
+          sound: "receive",
+        });
         setPendingPayLink(null);
         try {
           sessionStorage.removeItem(PENDING_PAYLINK_KEY);
@@ -440,7 +443,9 @@ function TopUpPage() {
       if (r.alreadyCredited) {
         toast.message("This MoonPay payment was already credited");
       } else {
-        toast.success(`MoonPay complete · ${formatUSD(r.amount)} OUSD credited`);
+        notifySuccess(`MoonPay complete · ${formatUSD(r.amount)} OUSD credited`, {
+          sound: "receive",
+        });
       }
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["wallets", user.id] });
@@ -549,8 +554,9 @@ function TopUpPage() {
       }
       // pi
       const { paymentId } = await topUpWithPi(parsed.data.amount);
-      toast.success(
+      notifySuccess(
         `Pi payment complete · ${parsed.data.amount} OUSD at live π price (${paymentId.slice(0, 8)}…)`,
+        { sound: "receive" },
       );
       qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
       qc.invalidateQueries({ queryKey: ["wallets", user.id] });

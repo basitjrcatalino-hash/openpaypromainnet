@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ExploreDock } from "@/components/wallet/ExploreDock";
@@ -414,9 +415,7 @@ function OpenTokenHome() {
                   expected_out: expectedOut,
                 },
               });
-              toast.success(
-                `Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`,
-              );
+              notifySuccess(`Swapped ${formatNumber(res.amount_in, 6)} ${res.from_symbol} → ${formatNumber(res.amount_out, 6)} ${res.to_symbol}`, { sound: "swap" });
               setPayAmount("");
               await Promise.all([
                 qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
@@ -469,9 +468,12 @@ function OpenTokenHome() {
                     usd_amount: stakeUsd,
                   },
                 });
-                toast.success(
+                notifySuccess(
                   `Bought ${formatNumber(Number(res.token_amount ?? 0), 6)} ${predictDef.symbol}`,
-                  { description: `Spent ${formatOUSD(stakeUsd)} at live $${formatNumber(price, price < 1 ? 4 : 2)}` },
+                  {
+                    sound: "receive",
+                    description: `Spent ${formatOUSD(stakeUsd)} at live $${formatNumber(price, price < 1 ? 4 : 2)}`,
+                  },
                 );
               } else {
                 const tokenAmt = stakeUsd / price;
@@ -490,12 +492,7 @@ function OpenTokenHome() {
                     slippage: 2,
                   },
                 });
-                toast.success(
-                  `Sold ${formatNumber(tokenAmt, 6)} ${predictDef.symbol}`,
-                  {
-                    description: `Received ${formatOUSD(Number(res.amount_out ?? stakeUsd))} OUSD`,
-                  },
-                );
+                notifySuccess(`Sold ${formatNumber(tokenAmt, 6)} ${predictDef.symbol}`, { sound: "send", description: `Received ${formatOUSD(Number(res.amount_out ?? stakeUsd))} OUSD` });
               }
               await refreshPredictBalances();
             }}

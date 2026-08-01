@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { ArrowLeft, CheckCircle2, Copy, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,7 +164,7 @@ export function ScanToPayDepositPanel({
       if (r.alreadyCredited) {
         toast.message("This transaction was already credited");
       } else {
-        toast.success(`${r.amount.toFixed(2)} OUSD credited to OpenLedger`);
+        notifySuccess(`${r.amount.toFixed(2)} OUSD credited to OpenLedger`, { sound: "receive" });
       }
       setDone({ amount: r.amount });
       onSuccess?.();

@@ -1,9 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, ShieldAlert } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { P2pActionRow, P2pMenuCard, P2pSubpageHeader } from "@/components/p2p/P2pSubpage";
+import { P2pActionRow, P2pHubLayout, P2pHubPill, P2pMenuCard } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/p2p_/support")({
@@ -51,48 +50,55 @@ function SupportPage() {
   });
 
   return (
-    <div>
-      <P2pSubpageHeader title="Customer support" />
-
-      <div className="mx-4 mt-4 space-y-3 md:mx-6">
-        <div className="rounded-2xl border border-[#11C66D]/25 bg-[#11C66D]/8 p-4">
-          <p className="text-sm font-bold">Trade room chat first</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Most issues resolve in the order chat. Keep all payment talk inside OpenPay Pro — never move to WhatsApp or Telegram mid-trade.
+    <P2pHubLayout
+      title="Customer support"
+      dek="Trade-room chat first. Keep payment talk inside OpenPay Pro — never move to WhatsApp or Telegram mid-trade."
+      crumb="Help"
+      eyebrow="Support · Disputes"
+      hero={{ from: "#ddd6fe", to: "#a7f3d0", glyph: "?" }}
+      actions={
+        <>
+          <P2pHubPill to="/p2p/messages" primary>
+            Open messages
+          </P2pHubPill>
+          <P2pHubPill to="/p2p/orders">Go to orders</P2pHubPill>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--accent)] p-5">
+          <p className="inline-flex items-center gap-1.5 text-base font-bold">
+            <MessageSquare className="h-4 w-4" /> Trade room chat first
           </p>
-          <Button asChild className="mt-3 h-10 rounded-[8px] bg-[#11C66D] font-bold text-white hover:bg-[#0FB461]">
-            <Link to="/p2p/messages">
-              <MessageSquare className="mr-1.5 h-4 w-4" /> Open messages
-            </Link>
-          </Button>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+            Most issues resolve in the order chat. Escrow stays locked until you confirm or Support
+            decides.
+          </p>
         </div>
-
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4">
-          <p className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-500">
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <p className="inline-flex items-center gap-1.5 text-base font-bold text-[var(--foreground)]">
             <ShieldAlert className="h-4 w-4" /> Disputes
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            From an active order, tap Dispute and attach proof. Support reviews escrow, chat, and payment evidence.
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+            From an active order, tap Dispute and attach proof. Support reviews escrow, chat, and
+            payment evidence.
           </p>
-          <Button asChild variant="outline" className="mt-3 h-10 rounded-[8px] font-bold">
-            <Link to="/p2p/orders">Go to orders</Link>
-          </Button>
         </div>
       </div>
 
-      <h2 className="mx-4 mt-5 mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground md:mx-6">
-        Common questions
-      </h2>
-      <P2pMenuCard className="mb-3">
-        {FAQS.map((f) => (
-          <div key={f.q} className="border-b border-border/40 px-4 py-3.5 last:border-b-0">
-            <p className="text-sm font-semibold">{f.q}</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{f.a}</p>
-          </div>
-        ))}
-      </P2pMenuCard>
+      <div>
+        <h2 className="opblog-h2">Common questions</h2>
+        <P2pMenuCard className="mt-4">
+          {FAQS.map((f) => (
+            <div key={f.q} className="border-b border-[var(--border)] px-5 py-4 last:border-b-0">
+              <p className="text-base font-bold tracking-tight">{f.q}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">{f.a}</p>
+            </div>
+          ))}
+        </P2pMenuCard>
+      </div>
 
-      <P2pMenuCard className="mb-8">
+      <P2pMenuCard>
         <P2pActionRow to="/p2p/guide" title="How to use" desc="Step-by-step escrow guide" />
         <P2pActionRow to="/p2p/rules" title="Trading rules" desc="Payment notes & prohibited acts" />
         <P2pActionRow to="/p2p/security" title="Safety & protection" desc="Buyer / seller scam notes" />
@@ -102,6 +108,6 @@ function SupportPage() {
         ) : null}
         <P2pActionRow to="/chat" title="In-app help chat" desc="General OpenPay assistance" />
       </P2pMenuCard>
-    </div>
+    </P2pHubLayout>
   );
 }

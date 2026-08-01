@@ -25,20 +25,42 @@ function isAdminPath(pathname: string) {
   return pathname.startsWith("/p2p/admin");
 }
 
+function isOpblogPath(pathname: string) {
+  return (
+    pathname.startsWith("/p2p/guide") ||
+    pathname.startsWith("/p2p/rules") ||
+    pathname.startsWith("/p2p/security") ||
+    pathname.startsWith("/p2p/agreement") ||
+    pathname.startsWith("/p2p/terms") ||
+    pathname.startsWith("/p2p/privacy") ||
+    pathname.startsWith("/p2p/profile") ||
+    pathname.startsWith("/p2p/wallet") ||
+    pathname.startsWith("/p2p/payment") ||
+    pathname.startsWith("/p2p/select-payment") ||
+    pathname.startsWith("/p2p/settings") ||
+    pathname.startsWith("/p2p/reviews") ||
+    pathname.startsWith("/p2p/support") ||
+    pathname.startsWith("/p2p/merchant") ||
+    pathname.startsWith("/p2p/api")
+  );
+}
+
 export function P2pShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const modes = showModeTabs(pathname);
   const bottom = showBottomNav(pathname);
   const admin = isAdminPath(pathname);
+  const opblog = isOpblogPath(pathname);
   const isExpress = pathname.startsWith("/p2p/express");
 
   return (
     <div
       className={cn(
-        "relative min-h-[100dvh] bg-background text-foreground",
-        admin ? P2P_ADMIN_SHELL_WIDTH : P2P_SHELL_WIDTH,
-        "md:border-x md:border-border/40",
+        "relative min-h-[100dvh]",
+        opblog ? "opblog" : "bg-background text-foreground",
+        admin || opblog ? P2P_ADMIN_SHELL_WIDTH : P2P_SHELL_WIDTH,
+        !opblog && "md:border-0",
       )}
     >
       {modes ? (

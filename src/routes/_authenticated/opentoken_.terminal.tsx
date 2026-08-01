@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, ChevronDown, Loader2, Search, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { notifySuccess } from "@/lib/notify-success";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -273,7 +274,9 @@ function TerminalPage() {
         const res = await buyFn({
           data: { token_id: selectedToken.id, wallet_id: wallet.id, pi_amount: tradeAmtNum },
         });
-        toast.success(`Bought ${formatNumber(res.token_amount, 4)} $${selectedToken.symbol}`);
+        notifySuccess(`Bought ${formatNumber(res.token_amount, 4)} $${selectedToken.symbol}`, {
+          sound: "receive",
+        });
       } else {
         if (tradeAmtNum > holding) {
           toast.error("Insufficient token balance");
@@ -282,7 +285,7 @@ function TerminalPage() {
         const res = await sellFn({
           data: { token_id: selectedToken.id, wallet_id: wallet.id, token_amount: tradeAmtNum },
         });
-        toast.success(`Sold for ${formatNumber(res.pi_amount, 4)} OUSD`);
+        notifySuccess(`Sold for ${formatNumber(res.pi_amount, 4)} OUSD`, { sound: "send" });
       }
       setTradeAmount("");
       await Promise.all([

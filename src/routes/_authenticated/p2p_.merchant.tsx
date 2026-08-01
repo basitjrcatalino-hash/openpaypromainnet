@@ -1,25 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Check, Gift, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MerchantBadge, MerchantTierLabel } from "@/components/p2p/MerchantBadge";
 import { P2pMenuCard, P2pHubLayout, P2pHubPill } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
+import { getKycStatus } from "@/lib/kyc.functions";
 import {
   applyMerchant,
   cancelMerchantApplication,
+  claimMerchantMilestones,
+  fetchMerchantProgramStatus,
   fetchMyMerchant,
   fetchMyMerchantApplication,
-  fetchMyPaymentAccounts,
-  fetchTraderStats,
-  formatAvgPayTime,
   merchantCanList,
+  merchantHasVerifiedBadge,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
+
+const MIN_P2P_OUSD = 100;
 
 export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
   head: () => ({
@@ -28,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
       {
         name: "description",
         content:
-          "Apply to list P2P ads. Admin approval required — Verified and Super Merchant badges like OKX / Binance.",
+          "Become a P2P merchant with KYC, merchant details, and 100 OUSD in P2P. Earn Verified badge and order bonuses.",
       },
       { property: "og:title", content: "Merchant program — OpenPay Pro P2P" },
       { property: "og:type", content: "website" },
@@ -40,7 +45,10 @@ export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
 
 function MerchantPage() {
   const qc = useQueryClient();
+  const fetchKyc = useServerFn(getKycStatus);
   const [note, setNote] = useState("");
+  const [merchantName, setMerchantName] = useState("");
+  const [merchantRegion, setMerchantRegion] = useState("");
 
   const userQ = useQuery({
     queryKey: ["auth-user-id"],
@@ -56,83 +64,74 @@ function MerchantPage() {
     enabled: !!userQ.data,
     queryFn: fetchMyMerchantApplication,
   });
-  const statsQ = useQuery({
-    queryKey: ["p2p-stats-self", userQ.data],
+  const programQ = useQuery({
+    queryKey: ["p2p-merchant-program", userQ.data],
     enabled: !!userQ.data,
-    queryFn: async () => {
-      const map = await fetchTraderStats([userQ.data as string]);
-      return map[userQ.data as string];
-    },
+    queryFn: fetchMerchantProgramStatus,
   });
-  const accountsQ = useQuery({
-    queryKey: ["p2p-payment-accounts", userQ.data],
+  const kycQ = useQuery({
+    queryKey: ["kyc-status", userQ.data],
     enabled: !!userQ.data,
-    queryFn: () => fetchMyPaymentAccounts(userQ.data as string),
+    queryFn: () => fetchKyc(),
   });
 
-  const completed = stNum(statsQ.data?.completed_count);
-  const rate = statsQ.data?.completion_rate == null ? 0 : Number(statsQ.data.completion_rate);
-  const avgPay = statsQ.data?.avg_pay_seconds;
-  const accounts = (accountsQ.data ?? []).filter((a) => a.is_active).length;
   const merchant = merchantQ.data;
   const canList = merchantCanList(merchant);
+  const hasVerified = merchantHasVerifiedBadge(merchant) || !!programQ.data?.has_verified_badge;
   const pending = appQ.data?.status === "pending" ? appQ.data : null;
+  const kycOk = (kycQ.data as { kyc_status?: string } | undefined)?.kyc_status === "verified";
+  const p2pOusd = Number(programQ.data?.p2p_ousd ?? 0);
+  const fundedOk = p2pOusd >= MIN_P2P_OUSD;
+  const detailsOk = merchantName.trim().length >= 2 && merchantRegion.trim().length >= 2;
+  const applyReady = kycOk && fundedOk && detailsOk;
+  const daysLeft = Number(programQ.data?.verified_badge_days_left ?? 0);
+  const milestones = programQ.data?.milestones ?? [];
+  const claimable = milestones.some((m) => m.reached && !m.claimed);
 
-  const verifiedChecks = [
+  useEffect(() => {
+    if (merchant?.merchant_name && !merchantName) setMerchantName(merchant.merchant_name);
+    if (merchant?.merchant_region && !merchantRegion) setMerchantRegion(merchant.merchant_region);
+  }, [merchant?.merchant_name, merchant?.merchant_region, merchantName, merchantRegion]);
+
+  const applyChecks = [
     {
-      ok: accounts >= 1,
-      label: "Add 1+ receive payment method",
-      detail: `${accounts} active`,
-      to: "/p2p/payments" as const,
+      ok: kycOk,
+      label: "Complete KYC verification",
+      detail: kycOk ? "Verified" : "Required for merchant approval",
+      to: "/kyc" as const,
     },
     {
-      ok: true,
+      ok: detailsOk,
+      label: "Merchant details",
+      detail: detailsOk ? `${merchantName.trim()} · ${merchantRegion.trim()}` : "Name + region below",
+      to: "/p2p/merchant" as const,
+    },
+    {
+      ok: fundedOk,
+      label: `Minimum ${MIN_P2P_OUSD} OUSD in P2P account`,
+      detail: `${p2pOusd.toLocaleString(undefined, { maximumFractionDigits: 2 })} / ${MIN_P2P_OUSD} OUSD`,
+      to: "/transfer" as const,
+    },
+    {
+      ok: canList,
       label: "Admin review",
-      detail: "Required before your ads appear",
+      detail: canList ? "Approved — you can create ads" : "Required before your ads appear",
       to: "/p2p/support" as const,
     },
   ];
 
-  const superChecks = [
-    {
-      ok: completed >= 10,
-      label: "Complete 10+ trades",
-      detail: `${completed} / 10`,
-      to: "/p2p" as const,
-    },
-    {
-      ok: completed > 0 && rate >= 95,
-      label: "Keep ≥ 95% completion",
-      detail: completed === 0 ? "No trades yet" : `${rate.toFixed(1)}%`,
-      to: "/p2p/reviews" as const,
-    },
-    {
-      ok: accounts >= 2,
-      label: "Add 2+ receive methods",
-      detail: `${accounts} active`,
-      to: "/p2p/payments" as const,
-    },
-    {
-      ok: avgPay == null || avgPay <= 15 * 60,
-      label: "Respond / pay within 15 min avg",
-      detail: formatAvgPayTime(avgPay),
-      to: "/p2p/orders" as const,
-    },
-  ];
-
-  const verifiedReady = accounts >= 1;
-  const superReady = superChecks.every((c) => c.ok) && canList;
-
   const apply = useMutation({
-    mutationFn: (tier: "verified" | "super") => applyMerchant(tier, note.trim() || undefined),
-    onSuccess: (_d, tier) => {
-      toast.success(
-        tier === "super"
-          ? "Super Merchant application submitted — awaiting admin"
-          : "Merchant application submitted — awaiting admin",
-      );
+    mutationFn: () =>
+      applyMerchant({
+        note: note.trim() || undefined,
+        merchantName: merchantName.trim(),
+        merchantRegion: merchantRegion.trim(),
+      }),
+    onSuccess: () => {
+      toast.success("Merchant application submitted — awaiting admin");
       setNote("");
       void qc.invalidateQueries({ queryKey: ["p2p-my-merchant-app"] });
+      void qc.invalidateQueries({ queryKey: ["p2p-merchant-program"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -146,12 +145,23 @@ function MerchantPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const claim = useMutation({
+    mutationFn: claimMerchantMilestones,
+    onSuccess: (res) => {
+      const amt = Number(res.claimed_ousd ?? 0);
+      if (amt > 0) toast.success(`Claimed ${amt} OUSD bonus to your P2P account`);
+      else toast.message("No new bonuses to claim");
+      void qc.invalidateQueries({ queryKey: ["p2p-merchant-program"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <P2pHubLayout
       title="Merchant program"
-      dek="Apply as a merchant, wait for admin approval, then publish buy/sell ads. Verified and Super badges appear on the marketplace; Featured merchants float to the top."
+      dek="Become a merchant with KYC, your details, and 100 OUSD in P2P. Admin approves before you create ads. Stay active 30 days for Verified — hit order milestones for OUSD bonuses."
       crumb="Profile"
-      eyebrow="Apply · Badges · Featured"
+      eyebrow="Apply · Verified · Bonuses"
       hero={{ from: "#fde68a", to: "#c4b5fd", glyph: "✦" }}
       actions={
         <>
@@ -174,7 +184,9 @@ function MerchantPage() {
           <Sparkles className="h-4 w-4" /> List ads on the P2P marketplace
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <p className="text-sm font-bold">{MerchantTierLabel(merchant?.tier ?? "none")}</p>
+          <p className="text-sm font-bold">
+            {MerchantTierLabel(merchant?.tier ?? "none", { hasVerifiedBadge: hasVerified })}
+          </p>
           {merchant && merchant.tier !== "none" ? (
             <MerchantBadge
               merchant={{
@@ -183,6 +195,7 @@ function MerchantPage() {
                 is_featured: merchant.is_featured,
                 featured_until: merchant.featured_until,
                 badge_label: merchant.badge_label,
+                has_verified_badge: hasVerified,
               }}
               size="md"
             />
@@ -201,14 +214,16 @@ function MerchantPage() {
 
       {pending ? (
         <div className="rounded-3xl border border-border bg-card p-5">
-          <p className="text-base font-bold">
-            Pending {pending.requested_tier === "super" ? "Super Merchant" : "Verified Merchant"}{" "}
-            review
-          </p>
+          <p className="text-base font-bold">Pending merchant review</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Submitted {new Date(pending.created_at).toLocaleString()}. An admin will approve or
             reject this request.
           </p>
+          {(pending.merchant_name || pending.merchant_region) && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {[pending.merchant_name, pending.merchant_region].filter(Boolean).join(" · ")}
+            </p>
+          )}
           <Button
             variant="outline"
             className="mt-3 h-9 rounded-full text-xs font-bold"
@@ -234,13 +249,16 @@ function MerchantPage() {
       ) : null}
 
       <div>
-        <h2 className="text-xl font-bold tracking-tight">1. Verified Merchant</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Required to list ads</p>
+        <h2 className="text-xl font-bold tracking-tight">1. Become a merchant</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          KYC + details + {MIN_P2P_OUSD} OUSD in P2P, then admin review
+        </p>
         <P2pMenuCard className="mt-4">
-          {verifiedChecks.map((c) => (
+          {applyChecks.map((c) => (
             <Link
               key={c.label}
               to={c.to}
+              search={c.to === "/transfer" ? { from: "funding", to: "p2p" } : undefined}
               className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
             >
               <CheckCircle ok={c.ok} />
@@ -250,68 +268,139 @@ function MerchantPage() {
               </span>
             </Link>
           ))}
+        </P2pMenuCard>
+      </div>
+
+      {!canList ? (
+        <div className="space-y-3 rounded-3xl border border-border bg-card p-5">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Merchant details
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Display name</label>
+              <Input
+                value={merchantName}
+                onChange={(e) => setMerchantName(e.target.value)}
+                placeholder="How buyers see you"
+                className="h-11 rounded-2xl"
+                maxLength={80}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Region / country</label>
+              <Input
+                value={merchantRegion}
+                onChange={(e) => setMerchantRegion(e.target.value)}
+                placeholder="e.g. Philippines"
+                className="h-11 rounded-2xl"
+                maxLength={80}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              Note to admin (optional)
+            </label>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Trading experience, payment rails…"
+              className="min-h-18 rounded-2xl border-border bg-background"
+              maxLength={500}
+            />
+          </div>
+          <Button
+            className="h-11 rounded-full bg-primary px-6 font-bold text-primary-foreground"
+            disabled={!applyReady || !!pending || apply.isPending}
+            onClick={() => apply.mutate()}
+          >
+            {apply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply as merchant"}
+          </Button>
+        </div>
+      ) : null}
+
+      <div>
+        <h2 className="text-xl font-bold tracking-tight">2. Verified badge</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Stay an approved merchant for 30 continuous days on P2P
+        </p>
+        <P2pMenuCard className="mt-4">
+          <div className="flex items-center gap-3 px-5 py-4">
+            <CheckCircle ok={hasVerified} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-bold tracking-tight">30 days continuous</span>
+              <span className="text-sm text-muted-foreground">
+                {hasVerified
+                  ? "Verified badge unlocked"
+                  : canList
+                    ? daysLeft > 0
+                      ? `${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining`
+                      : "Almost there — keep your merchant status active"
+                    : "Become an approved merchant first"}
+              </span>
+            </span>
+          </div>
         </P2pMenuCard>
       </div>
 
       <div>
-        <h2 className="text-xl font-bold tracking-tight">2. Super Merchant</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Badge + ranking boost</p>
-        <P2pMenuCard className="mt-4">
-          {superChecks.map((c) => (
-            <Link
-              key={c.label}
-              to={c.to}
-              className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">3. Order bonuses</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Reach order milestones and claim OUSD into your P2P account
+            </p>
+          </div>
+          {canList ? (
+            <Button
+              className="h-9 rounded-full bg-[#11C66D] px-4 text-xs font-bold text-white hover:bg-[#0FB461]"
+              disabled={!claimable || claim.isPending}
+              onClick={() => claim.mutate()}
             >
-              <CheckCircle ok={c.ok} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-bold tracking-tight">{c.label}</span>
-                <span className="text-sm text-muted-foreground">{c.detail}</span>
-              </span>
-            </Link>
-          ))}
+              {claim.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Gift className="mr-1.5 h-3.5 w-3.5" />
+                  Claim bonuses
+                </>
+              )}
+            </Button>
+          ) : null}
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Completed orders:{" "}
+          <span className="font-semibold text-foreground">
+            {Number(programQ.data?.completed_orders ?? 0)}
+          </span>
+        </p>
+        <P2pMenuCard className="mt-4">
+          {milestones.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-muted-foreground">
+              Bonus tiers load after the merchant program migration is applied.
+            </p>
+          ) : (
+            milestones.map((m) => (
+              <div
+                key={m.id}
+                className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0"
+              >
+                <CheckCircle ok={m.claimed || m.reached} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-bold tracking-tight">{m.label}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {m.claimed
+                      ? `Claimed ${m.bonus_ousd} OUSD`
+                      : m.reached
+                        ? `${m.bonus_ousd} OUSD ready to claim`
+                        : `${Number(programQ.data?.completed_orders ?? 0)} / ${m.order_count} · +${m.bonus_ousd} OUSD`}
+                  </span>
+                </span>
+              </div>
+            ))
+          )}
         </P2pMenuCard>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Note to admin (optional)
-        </label>
-        <Textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Trading experience, regions, payment rails…"
-          className="min-h-18 rounded-2xl border-border bg-card"
-          maxLength={500}
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {!canList ? (
-          <Button
-            className="h-11 rounded-full bg-primary px-6 font-bold text-primary-foreground"
-            disabled={!verifiedReady || !!pending || apply.isPending}
-            onClick={() => apply.mutate("verified")}
-          >
-            {apply.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Apply as Verified Merchant"
-            )}
-          </Button>
-        ) : merchant?.tier !== "super" ? (
-          <Button
-            className="h-11 rounded-full bg-amber-500 px-6 font-bold text-white hover:bg-amber-500/90"
-            disabled={!superReady || !!pending || apply.isPending}
-            onClick={() => apply.mutate("super")}
-          >
-            {apply.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Apply for Super Merchant"
-            )}
-          </Button>
-        ) : null}
       </div>
     </P2pHubLayout>
   );
@@ -328,8 +417,4 @@ function CheckCircle({ ok }: { ok: boolean }) {
       <Check className="h-3.5 w-3.5" strokeWidth={3} />
     </span>
   );
-}
-
-function stNum(v: number | null | undefined) {
-  return Number(v ?? 0);
 }

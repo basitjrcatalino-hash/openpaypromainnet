@@ -341,6 +341,42 @@ export async function createAd(input: {
   throw new Error(error.message);
 }
 
+export async function setAdStatus(
+  adId: string,
+  status: "active" | "paused" | "closed",
+): Promise<P2PAd> {
+  const { data, error } = await (supabase as any).rpc("p2p_set_ad_status", {
+    _ad_id: adId,
+    _status: status,
+  });
+  if (error) {
+    if (/p2p_set_ad_status|schema cache|does not exist/i.test(error.message)) {
+      const { data: row, error: uErr } = await supabase
+        .from("p2p_ads")
+        .update({ status })
+        .eq("id", adId)
+        .select("*")
+        .maybeSingle();
+      if (uErr) throw new Error(uErr.message);
+      if (!row) throw new Error("Ad not found");
+      return row as P2PAd;
+    }
+    throw new Error(error.message);
+  }
+  return data as P2PAd;
+}
+
+export async function closeAd(adId: string): Promise<P2PAd> {
+  const { data, error } = await (supabase as any).rpc("p2p_close_ad", { _ad_id: adId });
+  if (error) {
+    if (/p2p_close_ad|schema cache|does not exist/i.test(error.message)) {
+      return setAdStatus(adId, "closed");
+    }
+    throw new Error(error.message);
+  }
+  return data as P2PAd;
+}
+
 export async function openOrder(adId: string, amount: number, paymentMethod: string) {
   const { data: adRow } = await supabase
     .from("p2p_ads")
@@ -431,6 +467,10 @@ export type P2PMerchant = {
   approved_at: string | null;
   approved_by: string | null;
   notes: string | null;
+  merchant_name?: string | null;
+  merchant_region?: string | null;
+  verified_badge_at?: string | null;
+  has_verified_badge?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -445,6 +485,8 @@ export type P2PMerchantApplication = {
   admin_note: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
+  merchant_name?: string | null;
+  merchant_region?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -455,10 +497,43 @@ export type P2PMerchantPublic = {
   is_featured: boolean;
   featured_until: string | null;
   badge_label: string | null;
+  has_verified_badge?: boolean;
+  merchant_name?: string | null;
+};
+
+export type P2PMerchantMilestone = {
+  id: string;
+  order_count: number;
+  bonus_ousd: number;
+  label: string;
+  sort_order: number;
+  reached: boolean;
+  claimed: boolean;
+  claimed_at: string | null;
+};
+
+export type P2PMerchantProgramStatus = {
+  completed_orders: number;
+  can_list: boolean;
+  has_verified_badge: boolean;
+  approved_at: string | null;
+  verified_badge_days_left: number;
+  p2p_ousd: number;
+  milestones: P2PMerchantMilestone[];
 };
 
 export function merchantCanList(m: P2PMerchant | null | undefined) {
   return !!m && (m.tier === "verified" || m.tier === "super");
+}
+
+export function merchantHasVerifiedBadge(
+  m: Pick<P2PMerchant, "has_verified_badge" | "approved_at" | "tier"> | null | undefined,
+) {
+  if (!m || (m.tier !== "verified" && m.tier !== "super")) return false;
+  if (m.has_verified_badge) return true;
+  if (!m.approved_at) return false;
+  const approved = new Date(m.approved_at).getTime();
+  return Number.isFinite(approved) && Date.now() - approved >= 30 * 24 * 60 * 60 * 1000;
 }
 
 export function isMerchantFeatured(m: Pick<P2PMerchantPublic, "is_featured" | "featured_until"> | null | undefined) {
@@ -473,7 +548,12 @@ export async function fetchMyMerchant(): Promise<P2PMerchant | null> {
     if (/p2p_get_my_merchant|schema cache|does not exist/i.test(error.message)) return null;
     throw new Error(error.message);
   }
-  return (data as P2PMerchant | null) ?? null;
+  if (!data) return null;
+  const row = data as P2PMerchant;
+  return {
+    ...row,
+    has_verified_badge: merchantHasVerifiedBadge(row),
+  };
 }
 
 export async function fetchMerchants(ids: string[]): Promise<Record<string, P2PMerchantPublic>> {
@@ -486,6 +566,7 @@ export async function fetchMerchants(ids: string[]): Promise<Record<string, P2PM
     map[row.user_id] = {
       ...row,
       is_featured: isMerchantFeatured(row),
+      has_verified_badge: !!row.has_verified_badge,
     };
   }
   return map;
@@ -509,13 +590,16 @@ export async function fetchMyMerchantApplication(): Promise<P2PMerchantApplicati
   return (data as P2PMerchantApplication | null) ?? null;
 }
 
-export async function applyMerchant(
-  requestedTier: "verified" | "super",
-  note?: string,
-): Promise<P2PMerchantApplication> {
+export async function applyMerchant(input: {
+  note?: string;
+  merchantName: string;
+  merchantRegion: string;
+}): Promise<P2PMerchantApplication> {
   const { data, error } = await (supabase as any).rpc("p2p_apply_merchant", {
-    _requested_tier: requestedTier,
-    _note: note ?? null,
+    _requested_tier: "verified",
+    _note: input.note ?? null,
+    _merchant_name: input.merchantName,
+    _merchant_region: input.merchantRegion,
   });
   if (error) throw new Error(error.message);
   return data as P2PMerchantApplication;
@@ -527,6 +611,34 @@ export async function cancelMerchantApplication(id: string) {
   });
   if (error) throw new Error(error.message);
   return data as P2PMerchantApplication;
+}
+
+export async function fetchMerchantProgramStatus(): Promise<P2PMerchantProgramStatus | null> {
+  const { data, error } = await (supabase as any).rpc("p2p_merchant_program_status");
+  if (error) {
+    if (/p2p_merchant_program_status|schema cache|does not exist/i.test(error.message)) return null;
+    throw new Error(error.message);
+  }
+  const row = data as P2PMerchantProgramStatus;
+  return {
+    ...row,
+    completed_orders: Number(row.completed_orders ?? 0),
+    verified_badge_days_left: Number(row.verified_badge_days_left ?? 0),
+    p2p_ousd: Number(row.p2p_ousd ?? 0),
+    milestones: (row.milestones ?? []).map((m) => ({
+      ...m,
+      order_count: Number(m.order_count),
+      bonus_ousd: Number(m.bonus_ousd),
+      reached: !!m.reached,
+      claimed: !!m.claimed,
+    })),
+  };
+}
+
+export async function claimMerchantMilestones() {
+  const { data, error } = await (supabase as any).rpc("p2p_claim_merchant_milestones");
+  if (error) throw new Error(error.message);
+  return data as { ok: boolean; completed_orders: number; claimed_ousd: number; claimed_milestones: string[] };
 }
 
 export async function adminListMerchantApplications(
@@ -808,6 +920,52 @@ export async function fetchRatingStats(ids: string[]): Promise<Record<string, P2
     };
   }
   return map;
+}
+
+export type P2PReceivedRating = {
+  id: string;
+  order_id: string;
+  rater_id: string;
+  score: number;
+  tags: string[];
+  comment: string | null;
+  created_at: string;
+  asset: string;
+  amount: number;
+};
+
+export async function fetchMyReceivedRatings(limit = 30): Promise<P2PReceivedRating[]> {
+  const { data, error } = await (supabase as any).rpc("p2p_list_my_ratings", {
+    _limit: limit,
+  });
+  if (error) {
+    if (/p2p_list_my_ratings|schema cache|does not exist/i.test(error.message)) {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return [];
+      const { data: rows, error: qErr } = await (supabase as any)
+        .from("p2p_ratings")
+        .select("id, order_id, rater_id, score, tags, comment, created_at")
+        .eq("ratee_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (qErr) return [];
+      return ((rows ?? []) as P2PReceivedRating[]).map((r) => ({
+        ...r,
+        score: Number(r.score),
+        tags: r.tags ?? [],
+        asset: "",
+        amount: 0,
+      }));
+    }
+    return [];
+  }
+  return ((data ?? []) as P2PReceivedRating[]).map((r) => ({
+    ...r,
+    score: Number(r.score),
+    amount: Number(r.amount ?? 0),
+    tags: r.tags ?? [],
+  }));
 }
 
 export function formatPositiveRate(rate: number | null | undefined): string {

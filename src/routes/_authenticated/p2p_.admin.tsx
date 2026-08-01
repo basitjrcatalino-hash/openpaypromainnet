@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { BadgeCheck, Loader2, ShieldAlert, Sparkles, Star, UserPlus } from "lucide-react";
+import { BadgeCheck, Loader2, ShieldAlert, Star, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -15,11 +15,13 @@ import {
   ORDER_STATUS_LABEL,
   adminListMerchantApplications,
   adminReviewMerchant,
+  adminSetMerchant,
   fetchDisplayNames,
   fetchPaymentMethods,
   fmtAmount,
   statusTone,
   type P2PMerchantApplication,
+  type P2PMerchantTier,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +55,9 @@ function P2PAdminPage() {
   const qc = useQueryClient();
   const [supportUser, setSupportUser] = useState("");
   const [supportWallet, setSupportWallet] = useState("");
+  const [merchantUser, setMerchantUser] = useState("");
+  const [merchantTier, setMerchantTier] = useState<P2PMerchantTier>("verified");
+  const [merchantFeatured, setMerchantFeatured] = useState(false);
 
   const roleQ = useQuery({
     queryKey: ["p2p-admin-role"],
@@ -183,6 +188,39 @@ function P2PAdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const setMerchant = useMutation({
+    mutationFn: async () => {
+      const uname = merchantUser.trim().replace(/^@/, "");
+      if (uname.length < 2) throw new Error("Enter a username");
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .ilike("username", uname)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!profile?.id) throw new Error("User not found");
+      return adminSetMerchant({
+        userId: profile.id,
+        tier: merchantTier,
+        featured: merchantFeatured,
+        featuredDays: merchantFeatured ? 30 : null,
+        note: `Manual set by admin (@${profile.username ?? uname})`,
+      });
+    },
+    onSuccess: () => {
+      toast.success(
+        merchantTier === "none"
+          ? "Merchant revoked — active ads paused"
+          : `Merchant set to ${merchantTier}${merchantFeatured ? " + featured" : ""}`,
+      );
+      setMerchantUser("");
+      setMerchantFeatured(false);
+      void qc.invalidateQueries({ queryKey: ["p2p-merchants"] });
+      void qc.invalidateQueries({ queryKey: ["p2p-my-merchant"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (roleQ.isLoading) {
     return (
       <div className="grid place-items-center py-24">
@@ -217,8 +255,8 @@ function P2PAdminPage() {
           </h2>
         </div>
         <p className="mb-4 text-xs text-muted-foreground">
-          Approve traders before they can list ads. Mark Featured to pin them at the top of the
-          marketplace (OKX / Binance style).
+          Approve merchants before they can list ads. Requirements: KYC verified, merchant details,
+          and ≥100 OUSD in P2P. Mark Featured to pin them at the top of the marketplace.
         </p>
         {appsQ.isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -233,26 +271,18 @@ function P2PAdminPage() {
                 <div key={app.id} className="space-y-2 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-bold">{name}</p>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                        app.requested_tier === "super"
-                          ? "bg-amber-500/15 text-amber-500"
-                          : "bg-sky-500/15 text-sky-400",
-                      )}
-                    >
-                      {app.requested_tier === "super" ? (
-                        <Sparkles className="h-3 w-3" />
-                      ) : (
-                        <BadgeCheck className="h-3 w-3" />
-                      )}
-                      {app.requested_tier}
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-500">
+                      <BadgeCheck className="h-3 w-3" />
+                      merchant
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Trades {String(snap.completed_count ?? 0)} · Completion{" "}
-                    {snap.completion_rate == null ? "N/A" : `${snap.completion_rate}%`} · Accounts{" "}
-                    {String(snap.active_accounts ?? 0)}
+                    {[app.merchant_name, app.merchant_region].filter(Boolean).join(" · ") ||
+                      "No merchant details"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    KYC {String(snap.kyc_status ?? "—")} · P2P OUSD {String(snap.p2p_ousd ?? "—")} ·
+                    Trades {String(snap.completed_count ?? 0)}
                   </p>
                   {app.applicant_note ? (
                     <p className="text-xs text-muted-foreground">“{app.applicant_note}”</p>
@@ -295,6 +325,61 @@ function P2PAdminPage() {
           </div>
         )}
       </div>
+
+      {roleQ.data.admin ? (
+        <div className="rounded-3xl border border-border/60 bg-card/70 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-sky-400" />
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              Set merchant status
+            </h2>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Manually approve, upgrade to Super, feature, or revoke a merchant by username (pauses
+            their ads when revoked).
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Username</Label>
+              <Input
+                value={merchantUser}
+                onChange={(e) => setMerchantUser(e.target.value)}
+                placeholder="@username"
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tier</Label>
+              <select
+                value={merchantTier}
+                onChange={(e) => setMerchantTier(e.target.value as P2PMerchantTier)}
+                className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="verified">Merchant (can list ads)</option>
+                <option value="super">Super Merchant</option>
+                <option value="none">Revoke (none)</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={merchantFeatured}
+                onCheckedChange={setMerchantFeatured}
+                disabled={merchantTier === "none"}
+              />
+              <Label className="text-sm">Featured 30 days</Label>
+            </div>
+            <Button
+              className="h-10 rounded-full font-bold"
+              disabled={setMerchant.isPending || merchantUser.trim().length < 2}
+              onClick={() => setMerchant.mutate()}
+            >
+              {setMerchant.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {roleQ.data.admin ? (
         <div className="rounded-3xl border border-border/60 bg-card/70 p-5">

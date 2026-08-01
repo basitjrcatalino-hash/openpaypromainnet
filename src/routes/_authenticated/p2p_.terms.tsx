@@ -24,6 +24,8 @@ const ELIGIBILITY = [
   "You must have an OpenPay Pro account in good standing.",
   "Merchants listing sell ads must hold sufficient merchant-wallet balance and verified receive methods.",
   "Featured / Super Merchant status is granted at our discretion under the Merchant Program.",
+  "Verified Merchant badge requires 30 continuous days as an approved P2P merchant.",
+  "Merchant Program order milestones may award OUSD bonuses subject to program rules and eligibility.",
 ];
 
 const ADS = [

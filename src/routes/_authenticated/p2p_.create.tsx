@@ -18,6 +18,7 @@ import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
   P2P_ASSETS,
   P2P_MAX_AMOUNT_OUSD,
+  closeAd,
   createAd,
   fetchMyAds,
   fetchMyMerchant,
@@ -27,6 +28,7 @@ import {
   merchantCanList,
   p2pAmountExceedsLimit,
   p2pLimitError,
+  setAdStatus,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -66,11 +68,20 @@ function AdsHubPage() {
   const canList = merchantCanList(merchantQ.data);
 
   const toggleStatus = useMutation({
-    mutationFn: async (v: { id: string; status: "active" | "paused" }) => {
-      const { error } = await supabase.from("p2p_ads").update({ status: v.status }).eq("id", v.id);
-      if (error) throw new Error(error.message);
+    mutationFn: async (v: { id: string; status: "active" | "paused" }) => setAdStatus(v.id, v.status),
+    onSuccess: () => {
+      toast.success("Ad updated");
+      void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const close = useMutation({
+    mutationFn: (id: string) => closeAd(id),
+    onSuccess: () => {
+      toast.success("Ad closed");
+      void qc.invalidateQueries({ queryKey: ["p2p-my-ads"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -101,8 +112,8 @@ function AdsHubPage() {
         <div className="mx-4 mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 md:mx-6">
           <p className="text-sm font-bold text-amber-500">Merchant approval required</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Apply as a Verified Merchant and wait for admin approval — same flow as OKX / Binance
-            P2P.
+            Apply as a merchant (KYC + 100 OUSD in P2P) and wait for admin approval before listing
+            ads.
           </p>
           <Button
             asChild
@@ -194,21 +205,34 @@ function AdsHubPage() {
                   <p className="text-xs text-muted-foreground">No methods</p>
                 )}
               </div>
-              <div className="mt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 rounded-full"
-                  disabled={toggleStatus.isPending || ad.status === "closed"}
-                  onClick={() =>
-                    toggleStatus.mutate({
-                      id: ad.id,
-                      status: ad.status === "active" ? "paused" : "active",
-                    })
-                  }
-                >
-                  {ad.status === "active" ? "Pause" : "Activate"}
-                </Button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {ad.status !== "closed" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-full"
+                    disabled={toggleStatus.isPending || close.isPending}
+                    onClick={() =>
+                      toggleStatus.mutate({
+                        id: ad.id,
+                        status: ad.status === "active" ? "paused" : "active",
+                      })
+                    }
+                  >
+                    {ad.status === "active" ? "Pause" : "Activate"}
+                  </Button>
+                ) : null}
+                {ad.status !== "closed" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-full text-rose-500"
+                    disabled={toggleStatus.isPending || close.isPending}
+                    onClick={() => close.mutate(ad.id)}
+                  >
+                    Close
+                  </Button>
+                ) : null}
               </div>
             </div>
           ))}

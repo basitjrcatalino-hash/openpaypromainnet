@@ -77,6 +77,11 @@ grant execute on function public.internal_account_transfer(text, text, text, num
             "supabase/migrations/20260801160000_p2p_realtime_notifications.sql",
             "supabase/migrations/20260801170000_p2p_global_payment_methods.sql",
             "supabase/migrations/20260801180000_p2p_merchant_applications.sql",
+            "supabase/migrations/20260801190000_p2p_ratings.sql",
+            "supabase/migrations/20260802010000_wallet_account_balances.sql",
+            "supabase/migrations/20260802030000_fix_internal_transfer_gen_random.sql",
+            "supabase/migrations/20260802040000_p2p_merchant_program_v2.sql",
+            "supabase/migrations/20260802050000_p2p_feature_completeness.sql",
           ];
           let sql = transferFixInline;
           try {
@@ -85,7 +90,7 @@ grant execute on function public.internal_account_transfer(text, text, text, num
               .join("\n\n");
             sql = `${fromFiles}\n\n${transferFixInline}`;
           } catch {
-            // Files missing on server — inline transfer fix alone is enough for this error.
+            // Files missing on server — inline transfer fix alone is enough for transfer error.
           }
 
           const projectId =

@@ -59,7 +59,7 @@ const MENU = [
     to: "/p2p/merchant",
     icon: Sparkles,
     label: "Merchant program",
-    desc: "Apply · badges · featured",
+    desc: "KYC · 100 OUSD · bonuses",
   },
   {
     to: "/p2p/guide",

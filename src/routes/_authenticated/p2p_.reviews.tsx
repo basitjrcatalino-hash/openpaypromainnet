@@ -11,6 +11,7 @@ import {
   ORDER_STATUS_LABEL,
   fetchDisplayNames,
   fetchMyOrders,
+  fetchMyReceivedRatings,
   fetchRatingStats,
   fetchTraderStats,
   fmtAmount,
@@ -58,6 +59,11 @@ function ReviewsPage() {
     enabled: !!userQ.data,
     queryFn: () => fetchMyOrders(userQ.data as string),
   });
+  const receivedQ = useQuery({
+    queryKey: ["p2p-ratings-received", userQ.data],
+    enabled: !!userQ.data,
+    queryFn: () => fetchMyReceivedRatings(30),
+  });
 
   const completed = useMemo(
     () => (ordersQ.data ?? []).filter((o) => o.status === "completed").slice(0, 20),
@@ -65,9 +71,12 @@ function ReviewsPage() {
   );
   const counterpartyIds = useMemo(
     () => [
-      ...new Set(completed.map((o) => (o.buyer_id === userQ.data ? o.seller_id : o.buyer_id))),
+      ...new Set([
+        ...completed.map((o) => (o.buyer_id === userQ.data ? o.seller_id : o.buyer_id)),
+        ...(receivedQ.data ?? []).map((r) => r.rater_id),
+      ]),
     ],
-    [completed, userQ.data],
+    [completed, receivedQ.data, userQ.data],
   );
   const namesQ = useQuery({
     queryKey: ["p2p-names", counterpartyIds.join(",")],
@@ -105,6 +114,51 @@ function ReviewsPage() {
         />
         <StatCard label="Ratings received" value={String(rt?.rating_count ?? 0)} />
       </section>
+
+      <div>
+        <h2 className="text-xl font-bold tracking-tight">Ratings received</h2>
+        <div className="mt-4">
+          {receivedQ.isLoading ? (
+            <div className="grid place-items-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !(receivedQ.data ?? []).length ? (
+            <P2pEmptyState
+              title="No ratings yet"
+              description="After completed trades, counterparties can leave a score and tags."
+            />
+          ) : (
+            <P2pMenuCard>
+              {(receivedQ.data ?? []).map((r) => {
+                const name = namesQ.data?.[r.rater_id] ?? "Trader";
+                return (
+                  <Link
+                    key={r.id}
+                    to="/p2p/order/$id"
+                    params={{ id: r.order_id }}
+                    className="flex items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 hover:bg-muted"
+                  >
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-amber-500">
+                      <Star className="h-4 w-4" fill="currentColor" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-base font-bold tracking-tight">
+                        {name} · {r.score}/5
+                        {r.asset ? ` · ${fmtAmount(r.amount)} ${r.asset}` : ""}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {(r.tags ?? []).slice(0, 3).join(" · ") ||
+                          r.comment ||
+                          new Date(r.created_at).toLocaleDateString()}
+                      </span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </P2pMenuCard>
+          )}
+        </div>
+      </div>
 
       <div>
         <h2 className="text-xl font-bold tracking-tight">Recent completed trades</h2>

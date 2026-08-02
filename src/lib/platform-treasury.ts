@@ -10,18 +10,37 @@ export const PLATFORM_FEE_TREASURY_USERNAME = "openpay";
 export const PLATFORM_FEE_TREASURY_ADDRESS =
   "0xc847682465ea537c3957cd46eff2c7229faefde1";
 
-/** Platform trade fee (Spot majors / OpenToken / OpenDEX / Perps) — 30 bps = 0.30%. */
-export const PLATFORM_TRADE_FEE_BPS = 30;
+/**
+ * Launch CEX fee schedule (basis points).
+ * Spot maker/taker 0.10% · Perp maker 0.02% · Perp taker 0.05%.
+ */
+export const SPOT_MAKER_FEE_BPS = 10;
+export const SPOT_TAKER_FEE_BPS = 10;
+export const PERP_MAKER_FEE_BPS = 2;
+export const PERP_TAKER_FEE_BPS = 5;
+
+/** @deprecated Prefer SPOT_TAKER_FEE_BPS / PERP_* — kept as Spot default for legacy call sites. */
+export const PLATFORM_TRADE_FEE_BPS = SPOT_TAKER_FEE_BPS;
+
+export type TradeFeeRole = "maker" | "taker";
+
+export function spotFeeBps(role: TradeFeeRole = "taker"): number {
+  return role === "maker" ? SPOT_MAKER_FEE_BPS : SPOT_TAKER_FEE_BPS;
+}
+
+export function perpFeeBps(role: TradeFeeRole = "taker"): number {
+  return role === "maker" ? PERP_MAKER_FEE_BPS : PERP_TAKER_FEE_BPS;
+}
 
 export function platformTradeFeePct(feeBps = PLATFORM_TRADE_FEE_BPS) {
   return feeBps / 100;
 }
 
-/** Perp fee on notional (margin × leverage), same bps as Spot. */
+/** Perp fee on notional (margin × leverage). Market opens/closes use taker by default. */
 export function applyPerpNotionalFee(
   margin: number,
   leverage: number,
-  feeBps = PLATFORM_TRADE_FEE_BPS,
+  feeBps = PERP_TAKER_FEE_BPS,
 ): { notional: number; fee: number; totalDebit: number; feeBps: number } {
   const notional = round8(Math.max(0, margin) * Math.max(0, leverage));
   const { fee } = applyPlatformTradeFee(notional, feeBps);

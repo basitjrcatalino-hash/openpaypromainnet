@@ -43,9 +43,10 @@ export function portfolioUsdTotals(
   prices?: AssetPriceMap | null,
 ): Record<AccountId, number> & { total: number } {
   const funding = accountUsdTotal(balances.funding, prices);
+  const spot = accountUsdTotal(balances.spot, prices);
   const trading = accountUsdTotal(balances.trading, prices);
   const p2p = accountUsdTotal(balances.p2p, prices);
-  return { funding, trading, p2p, total: funding + trading + p2p };
+  return { funding, spot, trading, p2p, total: funding + spot + trading + p2p };
 }
 
 export type PortfolioAssetRow = {
@@ -78,6 +79,7 @@ export function accountAssetRows(
 
 export const ACCOUNT_ICONS: Record<AccountId, string> = {
   funding: "funding",
+  spot: "spot",
   trading: "trading",
   p2p: "p2p",
 };

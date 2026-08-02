@@ -238,9 +238,9 @@ export function TradeBottomDock({
           {tab === "positions" ? (
             mode === "spot" ? (
               <Empty>
-                Spot balances live in Funding.{" "}
-                <Link to="/assets" className="font-semibold text-primary">
-                  View Assets
+                Spot balances live in Spot. Transfer Funding → Spot to trade.{" "}
+                <Link to="/transfer" search={{ from: "funding", to: "spot" }} className="font-semibold text-primary">
+                  Transfer
                 </Link>
               </Empty>
             ) : !open.length ? (
@@ -331,9 +331,10 @@ export function TradeBottomDock({
                 <li className="pt-1">
                   <Link
                     to="/transfer"
+                    search={{ from: "funding", to: "spot" }}
                     className="text-[11px] font-semibold text-primary"
                   >
-                    Transfer Funding ↔ Trading
+                    Transfer Funding → Spot
                   </Link>
                 </li>
               </ul>

@@ -12,7 +12,7 @@ import { MAJOR_TOKENS, isMajorTokenId } from "@/lib/major-tokens";
 import {
   applyPlatformTradeFee,
   creditPlatformFeeOusd,
-  PLATFORM_TRADE_FEE_BPS,
+  SPOT_TAKER_FEE_BPS,
   resolvePlatformTreasuryWallet,
 } from "@/lib/platform-treasury";
 
@@ -123,7 +123,7 @@ async function creditPlatformFeePayAsset(
 
 /**
  * Spend OUSD / USDT / USDC / SOL from the Pro wallet and credit a major ledger balance
- * at live CoinGecko price. Deducts PLATFORM_TRADE_FEE_BPS and credits the fee wallet.
+ * at live CoinGecko price. Deducts SPOT_TAKER_FEE_BPS (0.10%) and credits the fee wallet.
  */
 export const buyMajorWithOusd = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -136,7 +136,7 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
     const def = MAJOR_TOKENS[major];
     const { fee: feeUsd, net: netUsd, feeBps } = applyPlatformTradeFee(
       grossUsd,
-      PLATFORM_TRADE_FEE_BPS,
+      SPOT_TAKER_FEE_BPS,
     );
     if (!(netUsd > 0)) throw new Error("Amount too small after fee");
 

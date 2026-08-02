@@ -1,5 +1,5 @@
-/** Platform swap fee — keep in sync with PLATFORM_TRADE_FEE_BPS (Spot / Perps / OpenDEX). */
-export const OPENDEX_SWAP_FEE_BPS = 30;
+/** Spot sell settlement via OpenDEX — keep in sync with SPOT_TAKER_FEE_BPS (0.10%). */
+export const OPENDEX_SWAP_FEE_BPS = 10;
 
 export function opendexFeePct(feeBps = OPENDEX_SWAP_FEE_BPS) {
   return feeBps / 100;

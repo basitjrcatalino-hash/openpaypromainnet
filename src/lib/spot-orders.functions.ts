@@ -14,7 +14,7 @@ import {
   USDT_SWAP_ID,
 } from "@/lib/opendex.functions";
 import { PERP_MARKETS, marketToMajorId, type PerpMarket } from "@/lib/perp";
-import { PLATFORM_TRADE_FEE_BPS } from "@/lib/platform-treasury";
+import { SPOT_TAKER_FEE_BPS } from "@/lib/platform-treasury";
 import { fetchPerpLiveQuote } from "@/lib/tradingview-perps";
 import {
   limitIsMarketable,
@@ -48,6 +48,38 @@ const PlaceSchema = z.object({
 });
 
 const IdSchema = z.object({ id: z.string().uuid() });
+
+async function spotFundingBridge(
+  supabase: any,
+  direction: "spot_to_funding" | "funding_to_spot",
+  asset: string,
+  amount: number,
+) {
+  const amt = Math.round(Number(amount) * 1e8) / 1e8;
+  if (!(amt > 0)) return;
+
+  const { error } = await supabase.rpc("spot_funding_bridge", {
+    _direction: direction,
+    _asset: asset.toUpperCase(),
+    _amount: amt,
+  });
+  if (!error) return;
+
+  // Fallback when migration not yet applied: use internal transfer.
+  if (/spot_funding_bridge|does not exist|schema cache/i.test(error.message)) {
+    const from = direction === "spot_to_funding" ? "spot" : "funding";
+    const to = direction === "spot_to_funding" ? "funding" : "spot";
+    const { error: e2 } = await supabase.rpc("internal_account_transfer", {
+      _from: from,
+      _to: to,
+      _asset: asset.toUpperCase(),
+      _amount: amt,
+    });
+    if (e2) throw new Error(e2.message);
+    return;
+  }
+  throw new Error(error.message);
+}
 
 async function markUsd(market: PerpMarket): Promise<number> {
   const q = await fetchPerpLiveQuote(market);
@@ -202,27 +234,56 @@ async function settleAndCompleteFill(
 
   if (order.side === "buy") {
     const usd = Math.round(fillAmount * fillPrice * 1e8) / 1e8;
-    await buyMajorWithOusd({
-      data: {
-        wallet_id: order.wallet_id,
-        major_id: marketToMajorId(order.market),
-        usd_amount: usd,
-        pay_asset: order.pay_asset,
-      },
-    });
+    // Spot account → Funding for settlement, then credit Spot with base.
+    await spotFundingBridge(supabase, "spot_to_funding", order.pay_asset, usd);
+    try {
+      const bought = await buyMajorWithOusd({
+        data: {
+          wallet_id: order.wallet_id,
+          major_id: marketToMajorId(order.market),
+          usd_amount: usd,
+          pay_asset: order.pay_asset,
+        },
+      });
+      const tokenAmt = Number((bought as { token_amount?: number })?.token_amount ?? 0);
+      if (tokenAmt > 0) {
+        await spotFundingBridge(supabase, "funding_to_spot", order.market, tokenAmt);
+      }
+    } catch (err) {
+      try {
+        await spotFundingBridge(supabase, "funding_to_spot", order.pay_asset, usd);
+      } catch {
+        /* best-effort rollback */
+      }
+      throw err;
+    }
   } else {
-    await executeOpenDexSwap({
-      data: {
-        wallet_id: order.wallet_id,
-        from_id: MAJOR_SWAP[order.market],
-        to_id: PAY_SWAP[order.pay_asset],
-        amount: fillAmount,
-        slippage: 1,
-      },
-    });
+    await spotFundingBridge(supabase, "spot_to_funding", order.market, fillAmount);
+    try {
+      const swapped = await executeOpenDexSwap({
+        data: {
+          wallet_id: order.wallet_id,
+          from_id: MAJOR_SWAP[order.market],
+          to_id: PAY_SWAP[order.pay_asset],
+          amount: fillAmount,
+          slippage: 1,
+        },
+      });
+      const outAmt = Number((swapped as { amount_out?: number })?.amount_out ?? 0);
+      if (outAmt > 0) {
+        await spotFundingBridge(supabase, "funding_to_spot", order.pay_asset, outAmt);
+      }
+    } catch (err) {
+      try {
+        await spotFundingBridge(supabase, "funding_to_spot", order.market, fillAmount);
+      } catch {
+        /* best-effort rollback */
+      }
+      throw err;
+    }
   }
 
-  const feeUsd = Math.round(fillAmount * fillPrice * (PLATFORM_TRADE_FEE_BPS / 10_000) * 1e8) / 1e8;
+  const feeUsd = Math.round(fillAmount * fillPrice * (SPOT_TAKER_FEE_BPS / 10_000) * 1e8) / 1e8;
 
   const { data: row, error } = await supabase.rpc("spot_complete_fill", {
     _order_id: order.id,
@@ -256,6 +317,77 @@ async function settleAndCompleteFill(
   }
   return mapSpotOrder(row);
 }
+
+const MarketTradeSchema = z.object({
+  wallet_id: z.string().uuid(),
+  market: z.enum(PERP_MARKETS),
+  side: z.enum(["buy", "sell"]),
+  amount: z.number().positive().max(1e12),
+  price: z.number().positive().max(1e12),
+  pay_asset: z.enum(["USDT", "OUSD", "USDC"]),
+});
+
+/** Market Spot buy/sell settled against the Spot account bucket. */
+export const executeSpotMarketTrade = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => MarketTradeSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const qty = data.amount;
+    const px = data.price;
+
+    if (data.side === "buy") {
+      const usd = Math.round(qty * px * 1e8) / 1e8;
+      await spotFundingBridge(supabase, "spot_to_funding", data.pay_asset, usd);
+      try {
+        const bought = await buyMajorWithOusd({
+          data: {
+            wallet_id: data.wallet_id,
+            major_id: marketToMajorId(data.market),
+            usd_amount: usd,
+            pay_asset: data.pay_asset,
+          },
+        });
+        const tokenAmt = Number((bought as { token_amount?: number })?.token_amount ?? 0);
+        if (tokenAmt > 0) {
+          await spotFundingBridge(supabase, "funding_to_spot", data.market, tokenAmt);
+        }
+        return { kind: "buy" as const, result: bought };
+      } catch (err) {
+        try {
+          await spotFundingBridge(supabase, "funding_to_spot", data.pay_asset, usd);
+        } catch {
+          /* best-effort rollback */
+        }
+        throw err;
+      }
+    }
+
+    await spotFundingBridge(supabase, "spot_to_funding", data.market, qty);
+    try {
+      const swapped = await executeOpenDexSwap({
+        data: {
+          wallet_id: data.wallet_id,
+          from_id: MAJOR_SWAP[data.market],
+          to_id: PAY_SWAP[data.pay_asset],
+          amount: qty,
+          slippage: 1,
+        },
+      });
+      const outAmt = Number((swapped as { amount_out?: number })?.amount_out ?? 0);
+      if (outAmt > 0) {
+        await spotFundingBridge(supabase, "funding_to_spot", data.pay_asset, outAmt);
+      }
+      return { kind: "sell" as const, result: swapped };
+    } catch (err) {
+      try {
+        await spotFundingBridge(supabase, "funding_to_spot", data.market, qty);
+      } catch {
+        /* best-effort rollback */
+      }
+      throw err;
+    }
+  });
 
 /** Try to fill one open limit if mark is marketable. */
 export const fillSpotLimitOrder = createServerFn({ method: "POST" })

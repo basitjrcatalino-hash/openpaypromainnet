@@ -27,6 +27,7 @@ function emptyBalances(): AccountBalances {
   >;
   return {
     funding: { ...zero },
+    spot: { ...zero },
     trading: { ...zero },
     p2p: { ...zero },
   };
@@ -62,18 +63,19 @@ export const getAccountBalances = createServerFn({ method: "GET" })
     if (wErr) throw new Error(wErr.message);
     if (!wallet) return { walletId: null, balances };
 
-    // Funding = wallet ledger columns (Spot spends these).
+    // Funding = wallet ledger columns.
     for (const asset of TRANSFER_ASSETS) {
       balances.funding[asset] = readFundingBalance(wallet as Record<string, unknown>, asset);
     }
 
-    // Prefer RPC for Trading / P2P buckets when available.
+    // Prefer RPC for Spot / Futures / P2P buckets when available.
     try {
       const { data: portfolio, error: pErr } = await (supabase as any).rpc("get_account_portfolio");
       if (!pErr && portfolio && typeof portfolio === "object") {
         const p = portfolio as Record<string, unknown>;
         const trading = parseBucket(p.trading);
         const p2p = parseBucket(p.p2p);
+        const spot = parseBucket(p.spot);
         // Overlay funding from RPC only when it has positive balances (keeps wallet columns authoritative).
         const rpcFunding = parseBucket(p.funding);
         const rpcFundingTotal = TRANSFER_ASSETS.reduce((s, a) => s + (rpcFunding[a] ?? 0), 0);
@@ -88,6 +90,7 @@ export const getAccountBalances = createServerFn({ method: "GET" })
           walletId: (p.wallet_id as string) ?? (wallet.id as string),
           balances: {
             funding: balances.funding,
+            spot,
             trading,
             p2p,
           },
@@ -101,13 +104,16 @@ export const getAccountBalances = createServerFn({ method: "GET" })
       .from("wallet_account_balances")
       .select("account, asset, balance")
       .eq("wallet_id", wallet.id)
-      .in("account", ["trading", "p2p"]);
+      .in("account", ["trading", "p2p", "spot"]);
     if (bErr) throw new Error(bErr.message);
 
     for (const row of rows ?? []) {
       const acct = String(row.account).toLowerCase() as AccountId;
       const asset = String(row.asset).toUpperCase() as TransferAsset;
-      if ((acct === "trading" || acct === "p2p") && TRANSFER_ASSETS.includes(asset)) {
+      if (
+        (acct === "trading" || acct === "p2p" || acct === "spot") &&
+        TRANSFER_ASSETS.includes(asset)
+      ) {
         balances[acct][asset] = Number(row.balance ?? 0) || 0;
       }
     }

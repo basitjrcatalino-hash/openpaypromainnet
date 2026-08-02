@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Briefcase, Landmark, Users, ChevronRight, type LucideIcon } from "lucide-react";
+import { Briefcase, CandlestickChart, Landmark, Users, ChevronRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ACCOUNT_LABELS, type AccountId } from "@/lib/account-transfer";
 
 const ICONS: Record<AccountId, LucideIcon> = {
   funding: Briefcase,
+  spot: CandlestickChart,
   trading: Landmark,
   p2p: Users,
 };

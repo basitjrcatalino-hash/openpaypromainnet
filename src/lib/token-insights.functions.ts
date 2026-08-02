@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type {
+  TokenInsightList,
+  TokenInsightNews,
+  TokenInsightsPayload,
+} from "./token-insights.server";
+
 const InputSchema = z.object({
   name: z.string().min(1).max(80),
   symbol: z.string().min(1).max(24),

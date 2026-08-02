@@ -30,19 +30,9 @@ import {
 } from "@/lib/perp.functions";
 import { getPerpLiveQuotes } from "@/lib/perp-market.functions";
 import { getExchangeDepth, getRecentTrades } from "@/lib/exchange-depth.functions";
-import { buyMajorWithOusd } from "@/lib/buy-major.functions";
-import {
-  BTC_SWAP_ID,
-  ETH_SWAP_ID,
-  executeOpenDexSwap,
-  PI_SWAP_ID,
-  SOL_SWAP_ID,
-  USDT_SWAP_ID,
-  OUSD_SWAP_ID,
-  USDC_SWAP_ID,
-} from "@/lib/opendex.functions";
 import {
   cancelSpotOrder,
+  executeSpotMarketTrade,
   fillSpotLimitOrder,
   listSpotOrders,
   listSpotTradeHistory,
@@ -77,7 +67,7 @@ import {
   tvSymbolForMode,
   type TradeMode,
 } from "@/lib/exchange-depth";
-import { applyPerpNotionalFee, PLATFORM_TRADE_FEE_BPS } from "@/lib/platform-treasury";
+import { applyPerpNotionalFee, PERP_TAKER_FEE_BPS, SPOT_TAKER_FEE_BPS } from "@/lib/platform-treasury";
 import { formatNumber } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -104,19 +94,6 @@ type ViewTab = "chart" | "trade" | "info";
 type InfoTab = "overview" | "news" | "alerts";
 type SpotPay = "USDT" | "OUSD" | "USDC";
 
-const MAJOR_SWAP: Record<PerpMarket, string> = {
-  BTC: BTC_SWAP_ID,
-  ETH: ETH_SWAP_ID,
-  SOL: SOL_SWAP_ID,
-  PI: PI_SWAP_ID,
-};
-
-const PAY_SWAP: Record<SpotPay, string> = {
-  USDT: USDT_SWAP_ID,
-  OUSD: OUSD_SWAP_ID,
-  USDC: USDC_SWAP_ID,
-};
-
 function TradePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -129,8 +106,7 @@ function TradePage() {
   const fetchQuotes = useServerFn(getPerpLiveQuotes);
   const fetchDepth = useServerFn(getExchangeDepth);
   const fetchTrades = useServerFn(getRecentTrades);
-  const buyMajor = useServerFn(buyMajorWithOusd);
-  const dexSwap = useServerFn(executeOpenDexSwap);
+  const spotMarket = useServerFn(executeSpotMarketTrade);
   const placeLimit = useServerFn(placeSpotLimitOrder);
   const fillLimit = useServerFn(fillSpotLimitOrder);
   const cancelLimit = useServerFn(cancelSpotOrder);
@@ -327,22 +303,22 @@ function TradePage() {
   const walletId = balQ.data?.walletId ?? null;
 
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
+  const spotQuote = Number(balQ.data?.balances?.spot?.[payAsset] ?? 0) || 0;
+  const spotBase = Number(balQ.data?.balances?.spot?.[market] ?? 0) || 0;
   const fundingQuote = Number(balQ.data?.balances?.funding?.[payAsset] ?? 0) || 0;
   const fundingBase = Number(balQ.data?.balances?.funding?.[market] ?? 0) || 0;
-  const tradingQuote = Number(balQ.data?.balances?.trading?.[payAsset] ?? 0) || 0;
-  const tradingBase = Number(balQ.data?.balances?.trading?.[market] ?? 0) || 0;
 
-  // Prefer a Spot pay asset that actually has Funding balance
+  // Prefer a pay asset that already has Spot balance
   useEffect(() => {
-    if (mode !== "spot" || !balQ.data?.balances?.funding) return;
-    const funding = balQ.data.balances.funding;
-    const current = Number(funding[payAsset] ?? 0) || 0;
+    if (mode !== "spot" || !balQ.data?.balances?.spot) return;
+    const spot = balQ.data.balances.spot;
+    const current = Number(spot[payAsset] ?? 0) || 0;
     if (current > 0) return;
     const preferred = (["USDT", "OUSD", "USDC"] as const).find(
-      (a) => (Number(funding[a] ?? 0) || 0) > 0,
+      (a) => (Number(spot[a] ?? 0) || 0) > 0,
     );
     if (preferred && preferred !== payAsset) setPayAsset(preferred);
-  }, [mode, balQ.data?.balances?.funding, payAsset]);
+  }, [mode, balQ.data?.balances?.spot, payAsset]);
 
   const positions: PerpPosition[] = Array.isArray(posQ.data) ? posQ.data : [];
   const openPositions = positions.filter((p: PerpPosition) => p.status === "open");
@@ -354,18 +330,18 @@ function TradePage() {
     setPct(p);
     if (mode === "futures") {
       // Reserve platform fee on notional so 100% doesn't overdraw Trading
-      const feeRate = PLATFORM_TRADE_FEE_BPS / 10_000;
+      const feeRate = PERP_TAKER_FEE_BPS / 10_000;
       const maxMargin = tradingBal / (1 + leverage * feeRate);
       const m = (maxMargin * p) / 100;
       setAmount(m > 0 ? String(Math.floor(m * 1e4) / 1e4) : "");
       return;
     }
     if (spotSide === "buy") {
-      const maxBase = price > 0 ? fundingQuote / price : 0;
+      const maxBase = price > 0 ? spotQuote / price : 0;
       const m = (maxBase * p) / 100;
       setAmount(m > 0 ? String(Math.floor(m * 1e6) / 1e6) : "");
     } else {
-      const m = (fundingBase * p) / 100;
+      const m = (spotBase * p) / 100;
       setAmount(m > 0 ? String(Math.floor(m * 1e6) / 1e6) : "");
     }
   }
@@ -433,26 +409,14 @@ function TradePage() {
         return { kind: "limit" as const, order };
       }
 
-      if (spotSide === "buy") {
-        const usd = Math.round(qty * px * 1e8) / 1e8;
-        const res = await buyMajor({
-          data: {
-            wallet_id: walletId,
-            major_id: majorId,
-            usd_amount: usd,
-            pay_asset: payAsset,
-          },
-        });
-        return { kind: "market" as const, res };
-      }
-
-      const res = await dexSwap({
+      const res = await spotMarket({
         data: {
           wallet_id: walletId,
-          from_id: MAJOR_SWAP[market],
-          to_id: PAY_SWAP[payAsset],
+          market,
+          side: spotSide,
           amount: qty,
-          slippage: 1,
+          price: px,
+          pay_asset: payAsset,
         },
       });
       return { kind: "market" as const, res };
@@ -699,10 +663,10 @@ function TradePage() {
                   }}
                   payAsset={payAsset}
                   onPayAsset={setPayAsset}
-                  availableQuote={fundingQuote}
-                  availableBase={fundingBase}
-                  tradingQuote={tradingQuote}
-                  tradingBase={tradingBase}
+                  availableQuote={spotQuote}
+                  availableBase={spotBase}
+                  fundingQuote={fundingQuote}
+                  fundingBase={fundingBase}
                   onSubmit={() => spotM.mutate()}
                 />
               )}
@@ -809,8 +773,8 @@ function TradePage() {
                   </div>
                 ) : (
                   <p className="text-[11px] leading-relaxed text-muted-foreground">
-                    Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via
-                    OpenDEX at live mark.
+                    Spot {pairLabel(market, "spot")} uses Spot account balances. Transfer Funding →
+                    Spot, then Buy/Sell at live mark.
                   </p>
                 )}
                 {mode === "futures" ? (
@@ -899,15 +863,15 @@ function TradePage() {
         orderHistory={orderHistQ.data ?? []}
         tradeHistory={tradeHistQ.data ?? []}
         assets={[
-          { symbol: "USDT", amount: Number(balQ.data?.balances?.funding?.USDT ?? 0) },
-          { symbol: "OUSD", amount: Number(balQ.data?.balances?.funding?.OUSD ?? 0) },
-          { symbol: "USDC", amount: Number(balQ.data?.balances?.funding?.USDC ?? 0) },
-          { symbol: market, amount: fundingBase },
+          { symbol: "USDT (Spot)", amount: Number(balQ.data?.balances?.spot?.USDT ?? 0) },
+          { symbol: "OUSD (Spot)", amount: Number(balQ.data?.balances?.spot?.OUSD ?? 0) },
+          { symbol: "USDC (Spot)", amount: Number(balQ.data?.balances?.spot?.USDC ?? 0) },
+          { symbol: `${market} (Spot)`, amount: spotBase },
           {
-            symbol: `${marginAsset} (Trading)`,
+            symbol: `${marginAsset} (Futures)`,
             amount: tradingBal,
           },
-        ].filter((a) => a.amount > 0 || a.symbol === "USDT" || a.symbol === "OUSD")}
+        ].filter((a) => a.amount > 0 || a.symbol.includes("OUSD") || a.symbol.includes("USDT"))}
         onCancelOrder={(id) => cancelM.mutate(id)}
         cancellingId={cancelM.isPending ? cancelM.variables : null}
       />
@@ -988,7 +952,7 @@ function TradePage() {
                   mono: true,
                 },
                 {
-                  label: `Fee (${PLATFORM_TRADE_FEE_BPS / 100}%)`,
+                  label: `Fee (${PERP_TAKER_FEE_BPS / 100}% taker)`,
                   value: `${formatNumber(closePreview.fee, 4)} ${closeTarget.margin_asset}`,
                   mono: true,
                 },

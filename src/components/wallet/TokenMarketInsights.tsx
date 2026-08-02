@@ -6,6 +6,10 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 import { getTokenMarketInsights } from "@/lib/token-insights.functions";
+import type {
+  TokenInsightList,
+  TokenInsightNews,
+} from "@/lib/token-insights.functions";
 import { useChromeVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 import { formatUSD } from "@/lib/wallet-utils";
@@ -93,49 +97,58 @@ function pctClass(n: number) {
 export function TokenMarketInsights(props: TokenMarketInsightsProps) {
   const fetchInsights = useServerFn(getTokenMarketInsights);
 
+  const priceUsd = Number.isFinite(props.priceUsd) ? props.priceUsd : 0;
+  const change24h = Number.isFinite(props.change24h) ? props.change24h : 0;
+  const marketCap =
+    props.marketCap != null && Number.isFinite(props.marketCap) ? props.marketCap : null;
+  const volume24h =
+    props.volume24h != null && Number.isFinite(props.volume24h) ? props.volume24h : null;
+  const description = (props.description ?? "").trim().slice(0, 600) || null;
+
   const { data, isLoading, isError } = useQuery({
     queryKey: [
       "token-market-insights",
       props.tokenKey,
-      Math.round(props.priceUsd * 100),
-      Math.round(props.change24h * 100),
+      Math.round(priceUsd * 100),
+      Math.round(change24h * 100),
     ],
     staleTime: 5 * 60_000,
+    retry: 1,
     queryFn: () =>
       fetchInsights({
         data: {
-          tokenKey: props.tokenKey,
-          name: props.name,
-          symbol: props.symbol,
-          network: props.network,
-          category: props.category ?? null,
-          priceUsd: props.priceUsd,
-          change24h: props.change24h,
-          marketCap: props.marketCap ?? null,
-          volume24h: props.volume24h ?? null,
-          description: props.description ?? null,
+          tokenKey: props.tokenKey.slice(0, 80),
+          name: props.name.slice(0, 80) || props.symbol,
+          symbol: props.symbol.slice(0, 24) || "TOKEN",
+          network: props.network.slice(0, 40) || "Unknown",
+          category: props.category?.slice(0, 40) ?? null,
+          priceUsd,
+          change24h,
+          marketCap,
+          volume24h,
+          description,
         },
       }),
   });
 
   const summary = data?.summary;
-  const news = data?.news ?? [];
-  const lists = data?.lists ?? [];
+  const news: TokenInsightNews[] = Array.isArray(data?.news) ? data.news : [];
+  const lists: TokenInsightList[] = Array.isArray(data?.lists) ? data.lists : [];
 
   const metrics = useMemo(() => {
     const rows: { label: string; value: string }[] = [];
-    if (props.volume24h != null && props.volume24h > 0) {
-      rows.push({ label: "24h Volume", value: formatUSD(props.volume24h) });
+    if (volume24h != null && volume24h > 0) {
+      rows.push({ label: "24h Volume", value: formatUSD(volume24h) });
     }
-    if (props.marketCap != null && props.marketCap > 0) {
-      rows.push({ label: "Market cap", value: formatUSD(props.marketCap) });
+    if (marketCap != null && marketCap > 0) {
+      rows.push({ label: "Market cap", value: formatUSD(marketCap) });
     }
     rows.push({ label: "Network", value: props.network });
     if (props.category) {
       rows.push({ label: "Category", value: props.category });
     }
     return rows;
-  }, [props.volume24h, props.marketCap, props.network, props.category]);
+  }, [volume24h, marketCap, props.network, props.category]);
 
   return (
     <div className="space-y-7">
@@ -227,8 +240,8 @@ export function TokenMarketInsights(props: TokenMarketInsightsProps) {
             </div>
           ) : (
             <ul className="space-y-5">
-              {news.map((item) => (
-                <li key={item.headline}>
+              {news.map((item: TokenInsightNews, idx) => (
+                <li key={`${item.headline}-${idx}`}>
                   <div className="mb-1 text-[13px] text-muted-foreground">
                     {item.sources} Source{item.sources === 1 ? "" : "s"} ·{" "}
                     <span
@@ -269,7 +282,7 @@ export function TokenMarketInsights(props: TokenMarketInsightsProps) {
                   { name: "Trending", changePct: 0 },
                   { name: "Top Losers", changePct: 0 },
                 ]
-            ).map((list) => (
+            ).map((list: TokenInsightList) => (
               <div
                 key={list.name}
                 className="flex items-center justify-between gap-2 rounded-full bg-muted/70 px-3.5 py-2.5"

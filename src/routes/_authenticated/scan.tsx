@@ -98,88 +98,92 @@ function ScanPage() {
     },
   });
 
-  finishRef.current = async (text: string) => {
-    setFlash(true);
-    try {
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate?.(30);
-      }
-    } catch {
-      /* ignore */
-    }
+  const unlockScanner = scanner.unlock;
 
-    if (isWalletConnectPayLink(text)) {
-      if (alive.current) toast.success("WalletConnect Pay link scanned");
+  useEffect(() => {
+    finishRef.current = async (text: string) => {
+      setFlash(true);
+      try {
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          navigator.vibrate?.(30);
+        }
+      } catch {
+        /* ignore */
+      }
+
+      if (isWalletConnectPayLink(text)) {
+        if (alive.current) toast.success("WalletConnect Pay link scanned");
+        void navigate({
+          to: "/wc-pay",
+          search: { link: normalizeWalletConnectPayLink(text) },
+        });
+        return;
+      }
+
+      const parsed = parsePaymentQr(text);
+      if (!parsed.to) {
+        handled.current = false;
+        unlockScanner();
+        setFlash(false);
+        const preview = text.trim().slice(0, 48);
+        if (alive.current) {
+          toast.error(
+            preview
+              ? `QR has no payment address (${preview}${text.trim().length > 48 ? "…" : ""})`
+              : "QR decoded empty — try Photos or hold steadier",
+          );
+        }
+        return;
+      }
+
+      // Accept Pro wallet receive QRs (bare 0x, openpay:, /pay/0x links).
+      const isPro =
+        parsed.kind === "pro_wallet" || /^0x[a-fA-F0-9]{40}$/i.test(parsed.to.trim());
+      if (!isPro) {
+        handled.current = false;
+        unlockScanner();
+        setFlash(false);
+        if (alive.current) {
+          toast.error(
+            "Scan an OpenPay Pro wallet receive QR (any token). OpenPay @handles use Send → OpenPay.",
+          );
+        }
+        return;
+      }
+
+      if (alive.current) {
+        const label = parsed.token
+          ? "OpenPay Pro token QR scanned"
+          : parsed.asset
+            ? `OpenPay Pro ${parsed.asset} QR scanned`
+            : "OpenPay Pro wallet scanned";
+        toast.success(label);
+      }
+
+      const sendSearch: {
+        to: string;
+        rail: "wallet";
+        amount?: string;
+        token?: string;
+        asset?: import("@/lib/ledger-majors").LedgerAssetCode;
+      } = {
+        to: parsed.to,
+        rail: "wallet",
+        ...(parsed.amount ? { amount: parsed.amount } : {}),
+      };
+
+      if (parsed.token) {
+        sendSearch.token = parsed.token;
+      } else {
+        sendSearch.asset = parsed.asset ?? "OUSD";
+      }
+
       void navigate({
-        to: "/wc-pay",
-        search: { link: normalizeWalletConnectPayLink(text) },
+        to: "/send",
+        search: sendSearch,
       });
-      return;
-    }
-
-    const parsed = parsePaymentQr(text);
-    if (!parsed.to) {
-      handled.current = false;
-      scanner.unlock();
-      setFlash(false);
-      const preview = text.trim().slice(0, 48);
-      if (alive.current) {
-        toast.error(
-          preview
-            ? `QR has no payment address (${preview}${text.trim().length > 48 ? "…" : ""})`
-            : "QR decoded empty — try Photos or hold steadier",
-        );
-      }
-      return;
-    }
-
-    // Accept Pro wallet receive QRs (bare 0x, openpay:, /pay/0x links).
-    const isPro =
-      parsed.kind === "pro_wallet" || /^0x[a-fA-F0-9]{40}$/i.test(parsed.to.trim());
-    if (!isPro) {
-      handled.current = false;
-      scanner.unlock();
-      setFlash(false);
-      if (alive.current) {
-        toast.error(
-          "Scan an OpenPay Pro wallet receive QR (any token). OpenPay @handles use Send → OpenPay.",
-        );
-      }
-      return;
-    }
-
-    if (alive.current) {
-      const label = parsed.token
-        ? "OpenPay Pro token QR scanned"
-        : parsed.asset
-          ? `OpenPay Pro ${parsed.asset} QR scanned`
-          : "OpenPay Pro wallet scanned";
-      toast.success(label);
-    }
-
-    const sendSearch: {
-      to: string;
-      rail: "wallet";
-      amount?: string;
-      token?: string;
-      asset?: import("@/lib/ledger-majors").LedgerAssetCode;
-    } = {
-      to: parsed.to,
-      rail: "wallet",
-      ...(parsed.amount ? { amount: parsed.amount } : {}),
     };
-
-    if (parsed.token) {
-      sendSearch.token = parsed.token;
-    } else {
-      sendSearch.asset = parsed.asset ?? "OUSD";
-    }
-
-    void navigate({
-      to: "/send",
-      search: sendSearch,
-    });
-  };
+  }, [navigate, unlockScanner]);
 
   useEffect(() => {
     alive.current = true;

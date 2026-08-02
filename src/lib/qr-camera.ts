@@ -530,7 +530,18 @@ export function usePhantomQrScanner({
         video.setAttribute("playsinline", "true");
         video.setAttribute("webkit-playsinline", "true");
         video.muted = true;
-        await video.play();
+        try {
+          await video.play();
+        } catch (playErr) {
+          if (cancelled) return;
+          const playName =
+            playErr && typeof playErr === "object" && "name" in playErr
+              ? String((playErr as { name: string }).name)
+              : "";
+          // AbortError is normal when unmounting / switching streams.
+          if (playName === "AbortError") return;
+          throw playErr;
+        }
 
         if (cancelled) return;
 
@@ -607,7 +618,6 @@ export function usePhantomQrScanner({
         setUseFallback(true);
         setError(null);
         setStarting(true);
-        console.warn("[scan] native camera failed, using fallback", e);
       }
     })();
 

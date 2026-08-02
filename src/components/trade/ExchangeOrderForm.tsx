@@ -10,10 +10,16 @@ import {
   type PerpSide,
 } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
-import { PLATFORM_TRADE_FEE_BPS, applyPerpNotionalFee } from "@/lib/platform-treasury";
+import {
+  PERP_MAKER_FEE_BPS,
+  PERP_TAKER_FEE_BPS,
+  SPOT_MAKER_FEE_BPS,
+  SPOT_TAKER_FEE_BPS,
+  applyPerpNotionalFee,
+} from "@/lib/platform-treasury";
 
 const PCTS = [0, 25, 50, 75, 100] as const;
-const FEE_RATE = PLATFORM_TRADE_FEE_BPS / 10_000;
+const SPOT_FEE_RATE = SPOT_TAKER_FEE_BPS / 10_000;
 
 export type SpotSide = "buy" | "sell";
 export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
@@ -57,9 +63,9 @@ type SpotProps = SharedProps & {
   onPayAsset: (a: SpotPayAsset) => void;
   availableQuote: number;
   availableBase: number;
-  /** Trading-account surplus for selected pay asset (hint to Transfer). */
-  tradingQuote?: number;
-  tradingBase?: number;
+  /** Funding surplus — hint to Transfer into Spot. */
+  fundingQuote?: number;
+  fundingBase?: number;
   onSubmit: () => void;
 };
 
@@ -73,15 +79,15 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
   const amt = Number(props.amount) || 0;
   const priceDigits = props.markPrice >= 1000 ? 1 : props.markPrice >= 1 ? 2 : 4;
   const total = amt > 0 && price > 0 ? amt * price : 0;
-  const fee = total > 0 ? total * FEE_RATE : 0;
+  const fee = total > 0 ? total * SPOT_FEE_RATE : 0;
   const receive =
     props.mode === "spot"
       ? props.side === "buy"
         ? amt > 0
-          ? amt * (1 - FEE_RATE)
+          ? amt * (1 - SPOT_FEE_RATE)
           : 0
         : total > 0
-          ? total * (1 - FEE_RATE)
+          ? total * (1 - SPOT_FEE_RATE)
           : 0
       : 0;
   const perpFee =
@@ -233,8 +239,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.mode === "spot" ? (
         <p className="text-[10px] leading-snug text-muted-foreground">
-          Spot uses <span className="font-semibold text-foreground">Funding</span> balances.
-          Futures uses Trading.
+          Spot uses <span className="font-semibold text-foreground">Spot</span> balances.
+          Futures uses Futures. Transfer Funding → Spot to trade.
         </p>
       ) : null}
 
@@ -307,12 +313,12 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
               )}{" "}
               {props.side === "buy" ? props.payAsset : props.market}
             </span>{" "}
-            <span className="text-muted-foreground/80">· Funding</span>{" "}
+            <span className="text-muted-foreground/80">· Spot</span>{" "}
             <Link
               to="/transfer"
               search={{
-                from: "trading",
-                to: "funding",
+                from: "funding",
+                to: "spot",
                 asset: props.side === "buy" ? props.payAsset : props.market,
               }}
               className="text-primary"
@@ -331,30 +337,30 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           </p>
           {props.side === "buy" &&
           props.availableQuote <= 0 &&
-          (props.tradingQuote ?? 0) > 0 ? (
+          (props.fundingQuote ?? 0) > 0 ? (
             <p className="text-[#ffad0a]">
-              {formatNumber(props.tradingQuote ?? 0, 4)} {props.payAsset} in Trading —{" "}
+              {formatNumber(props.fundingQuote ?? 0, 4)} {props.payAsset} in Funding —{" "}
               <Link
                 to="/transfer"
-                search={{ from: "trading", to: "funding", asset: props.payAsset }}
+                search={{ from: "funding", to: "spot", asset: props.payAsset }}
                 className="font-semibold underline-offset-2 hover:underline"
               >
-                move to Funding
+                move to Spot
               </Link>{" "}
-              to Spot trade
+              to trade
             </p>
           ) : null}
           {props.side === "sell" &&
           props.availableBase <= 0 &&
-          (props.tradingBase ?? 0) > 0 ? (
+          (props.fundingBase ?? 0) > 0 ? (
             <p className="text-[#ffad0a]">
-              {formatNumber(props.tradingBase ?? 0, 6)} {props.market} in Trading —{" "}
+              {formatNumber(props.fundingBase ?? 0, 6)} {props.market} in Funding —{" "}
               <Link
                 to="/transfer"
-                search={{ from: "trading", to: "funding", asset: props.market }}
+                search={{ from: "funding", to: "spot", asset: props.market }}
                 className="font-semibold underline-offset-2 hover:underline"
               >
-                move to Funding
+                move to Spot
               </Link>{" "}
               to sell
             </p>
@@ -362,7 +368,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           {total > 0 ? (
             <>
               <p>
-                Est. fee ({PLATFORM_TRADE_FEE_BPS / 100}%){" "}
+                Est. fee ({SPOT_TAKER_FEE_BPS / 100}%){" "}
                 <span className="font-semibold text-foreground">
                   {formatNumber(fee, 4)} {props.payAsset}
                 </span>
@@ -374,6 +380,9 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                     ? `${formatNumber(receive, 6)} ${props.market}`
                     : `${formatNumber(receive, 2)} ${props.payAsset}`}
                 </span>
+              </p>
+              <p className="text-muted-foreground/80">
+                Spot maker {SPOT_MAKER_FEE_BPS / 100}% · taker {SPOT_TAKER_FEE_BPS / 100}%
               </p>
             </>
           ) : null}
@@ -389,7 +398,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
             </span>
           </p>
           <p>
-            Est. fee ({PLATFORM_TRADE_FEE_BPS / 100}% of notional){" "}
+            Est. fee ({PERP_TAKER_FEE_BPS / 100}% taker of notional){" "}
             <span className="font-semibold text-foreground">
               {formatNumber(perpFee.fee, 4)} {props.marginAsset}
             </span>
@@ -409,7 +418,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.mode === "futures" && !(amt > 0) ? (
         <p className="text-[10px] text-muted-foreground">
-          Platform fee {PLATFORM_TRADE_FEE_BPS / 100}% on notional (open & close)
+          Perp maker {PERP_MAKER_FEE_BPS / 100}% · taker {PERP_TAKER_FEE_BPS / 100}% on notional
+          (open & close)
         </p>
       ) : null}
 

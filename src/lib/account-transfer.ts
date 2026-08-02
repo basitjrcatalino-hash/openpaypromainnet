@@ -1,11 +1,12 @@
-/** Funding / Trading / P2P internal account transfer helpers. */
+/** Funding / Spot / Futures / P2P internal account transfer helpers. */
 
-export const ACCOUNT_IDS = ["funding", "trading", "p2p"] as const;
+export const ACCOUNT_IDS = ["funding", "spot", "trading", "p2p"] as const;
 export type AccountId = (typeof ACCOUNT_IDS)[number];
 
 export const ACCOUNT_LABELS: Record<AccountId, string> = {
   funding: "Funding",
-  trading: "Trading",
+  spot: "Spot",
+  trading: "Futures",
   p2p: "P2P",
 };
 

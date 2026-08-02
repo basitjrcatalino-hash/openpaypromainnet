@@ -169,6 +169,11 @@ function TokensPage() {
           return (mb.marketCap ?? 0) - (ma.marketCap ?? 0);
       }
     });
+
+    // Pin PI directly under OUSD (OUSD is rendered above this list).
+    if (ids.includes("pi")) {
+      ids = ["pi", ...ids.filter((id) => id !== "pi")];
+    }
     return ids;
   }, [q, sort, majorMarkets, curatedOnly, activeNetwork]);
 

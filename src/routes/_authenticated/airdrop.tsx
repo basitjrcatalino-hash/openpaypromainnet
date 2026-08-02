@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -42,6 +42,7 @@ function assetLogo(asset: string) {
 
 function AirdropPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const listFn = useServerFn(listLiveAirdrops);
   const claimsFn = useServerFn(getAirdropClaimStatus);
   const claimFn = useServerFn(claimAirdrop);
@@ -81,7 +82,21 @@ function AirdropPage() {
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
       void qc.invalidateQueries({ queryKey: ["wallets"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      const msg = e.message || "Claim failed";
+      if (/kyc/i.test(msg)) {
+        toast.error(msg, {
+          action: {
+            label: "Verify identity",
+            onClick: () => {
+              void navigate({ to: "/kyc" });
+            },
+          },
+        });
+        return;
+      }
+      toast.error(msg);
+    },
     onSettled: () => setBusyId(null),
   });
 
@@ -228,11 +243,21 @@ function AirdropCard({
           </ul>
         ) : null}
 
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Wallet className="h-3.5 w-3.5" />
-          OpenPay Pro wallet required
-          {c.require_kyc ? " · KYC verified" : ""}
-          {remaining != null ? ` · ${remaining} left` : ""}
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-2">
+            <Wallet className="h-3.5 w-3.5" />
+            OpenPay Pro wallet required
+            {c.require_kyc ? " · KYC verified" : ""}
+            {remaining != null ? ` · ${remaining} left` : ""}
+          </span>
+          {c.require_kyc ? (
+            <Link
+              to="/kyc"
+              className="font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              Set up KYC
+            </Link>
+          ) : null}
         </div>
 
         {claimed ? (

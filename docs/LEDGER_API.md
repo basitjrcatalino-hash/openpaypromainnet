@@ -26,8 +26,8 @@ Admins can run **Sync all transactions** on `/ledger` (or RPC `backfill_ledger_e
 ## Base URL
 
 ```
-Production : https://openpaypromainnet.lovable.app/api/public/ledger
-Preview    : https://id-preview--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app/api/public/ledger
+Production : https://openpaypro.space/api/public/ledger
+Preview    : https://openpaypro.space/api/public/ledger
 ```
 
 ## Authentication

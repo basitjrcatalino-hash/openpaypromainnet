@@ -1,20 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
-  Bell,
-  ChevronDown,
+  AlertTriangle,
+  ExternalLink,
   Loader2,
   Sparkles,
   X,
+  ChevronDown,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 
-import { PhantomPerpChart } from "@/components/trade/PhantomPerpChart";
+import { TradingViewEmbed } from "@/components/trade/TradingViewEmbed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -24,6 +26,7 @@ import {
   listPerpPositions,
   openPerpPosition,
 } from "@/lib/perp.functions";
+import { getPerpLiveQuotes } from "@/lib/perp-market.functions";
 import {
   PERP_LEVERAGE_OPTIONS,
   PERP_MARGIN_ASSETS,
@@ -35,17 +38,13 @@ import {
   type PerpMarket,
   type PerpSide,
 } from "@/lib/perp";
+import { MAJOR_TOKENS, PERP_CHART_PERIODS, type PerpChartPeriod } from "@/lib/major-tokens";
 import {
-  MAJOR_TOKENS,
-  PERP_CHART_PERIODS,
-  fetchMajorMarkets,
-  fetchMajorPriceSeries,
-  majorMarketById,
-  sliceSparklineForPeriod,
-  type PerpChartPeriod,
-} from "@/lib/major-tokens";
+  PERP_TV,
+  periodToTvInterval,
+  quoteByMarket,
+} from "@/lib/tradingview-perps";
 import { formatNumber } from "@/lib/wallet-utils";
-import { formatCurrency, useCurrency } from "@/lib/currency";
 import { useChromeForceHidden, useChromeVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +59,8 @@ export const Route = createFileRoute("/_authenticated/trade")({
       { title: "Trade — OpenPay Pro" },
       {
         name: "description",
-        content: "Phantom-style perpetual trading for BTC, ETH, SOL, and PI using Trading balances.",
+        content:
+          "Trade BTC, ETH, SOL, and PI perpetuals with live TradingView charts, news, and exchange mark prices.",
       },
     ],
   }),
@@ -70,13 +70,13 @@ export const Route = createFileRoute("/_authenticated/trade")({
 function TradePage() {
   const search = Route.useSearch();
   const qc = useQueryClient();
-  const { code: currency } = useCurrency();
   const chromeVisible = useChromeVisible();
   const setChromeForceHidden = useChromeForceHidden();
   const fetchBalances = useServerFn(getAccountBalances);
   const listPos = useServerFn(listPerpPositions);
   const openPos = useServerFn(openPerpPosition);
   const closePos = useServerFn(closePerpPosition);
+  const fetchQuotes = useServerFn(getPerpLiveQuotes);
 
   const initialMarket: PerpMarket =
     search.market && isPerpMarket(search.market)
@@ -92,6 +92,7 @@ function TradePage() {
   const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("USDT");
   const [margin, setMargin] = useState("");
   const [barMounted, setBarMounted] = useState(false);
+  const [tab, setTab] = useState<"chart" | "news" | "alerts">("chart");
 
   useEffect(() => setBarMounted(true), []);
 
@@ -100,11 +101,11 @@ function TradePage() {
     return () => setChromeForceHidden(false);
   }, [menuOpen, setChromeForceHidden]);
 
-  const { data: majorMarkets, isLoading: marketsLoading } = useQuery({
-    queryKey: ["major-markets"],
-    staleTime: 30_000,
-    refetchInterval: 45_000,
-    queryFn: () => fetchMajorMarkets(),
+  const quotesQ = useQuery({
+    queryKey: ["perp-live-quotes"],
+    staleTime: 8_000,
+    refetchInterval: 12_000,
+    queryFn: () => fetchQuotes(),
   });
 
   const balQ = useQuery({
@@ -120,19 +121,14 @@ function TradePage() {
   });
 
   const majorId = marketToMajorId(market);
-  const snap = majorMarketById(majorMarkets, majorId);
   const def = MAJOR_TOKENS[majorId];
-  const price = Number(snap.price ?? 0);
-  const change = Number(snap.change24h ?? 0);
+  const tv = PERP_TV[market];
+  const quote = quoteByMarket(quotesQ.data, market);
+  const price = Number(quote?.markPrice ?? quote?.price ?? 0);
+  const change = Number(quote?.change24h ?? 0);
+  const changeAbs = Number(quote?.changeAbs ?? 0);
   const up = change >= 0;
-  const spark = snap.sparkline ?? [];
-
-  const chartQ = useQuery({
-    queryKey: ["perp-chart", majorId, period],
-    staleTime: 60_000,
-    refetchInterval: period === "LIVE" ? 45_000 : 120_000,
-    queryFn: () => fetchMajorPriceSeries(majorId, period),
-  });
+  const tvInterval = periodToTvInterval(period);
 
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
   const openPositions = (posQ.data ?? []).filter((p) => p.status === "open");
@@ -156,6 +152,7 @@ function TradePage() {
       setMenuOpen(false);
       void qc.invalidateQueries({ queryKey: ["perp-positions"] });
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      void qc.invalidateQueries({ queryKey: ["perp-live-quotes"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -166,14 +163,10 @@ function TradePage() {
       notifySuccess("Position closed — PnL to Trading", { sound: "receive" });
       void qc.invalidateQueries({ queryKey: ["perp-positions"] });
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      void qc.invalidateQueries({ queryKey: ["perp-live-quotes"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
-  const chartPrices = useMemo(() => {
-    if (chartQ.data && chartQ.data.length >= 4) return chartQ.data;
-    return sliceSparklineForPeriod(spark, period);
-  }, [chartQ.data, spark, period]);
 
   const marginNum = Number(margin);
   const marginOk = Number.isFinite(marginNum) && marginNum > 0 && marginNum <= tradingBal + 1e-12;
@@ -201,9 +194,11 @@ function TradePage() {
       >
         <div className="mx-auto flex max-w-lg items-end justify-between gap-3">
           <div className="min-w-0 pb-1">
-            <p className="text-[11px] text-muted-foreground">Market cap</p>
+            <p className="text-[11px] text-muted-foreground">Mark · {quote?.source ?? "…"}</p>
             <p className="text-sm font-bold tabular-nums">
-              {formatCurrency(Number(snap.marketCap ?? 0), currency)}
+              {price > 0
+                ? `$${formatNumber(price, price >= 1000 ? 0 : price >= 1 ? 2 : 4)}`
+                : "—"}
             </p>
           </div>
           {!menuOpen ? (
@@ -267,12 +262,13 @@ function TradePage() {
               {def.name}
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
-            {marketsLoading ? (
+            {quotesQ.isLoading && !quote ? (
               <Loader2 className="mt-1 h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <>
                 <p className="text-3xl font-bold tracking-tight tabular-nums">
-                  ${formatNumber(price, price >= 1000 ? 0 : price >= 1 ? 2 : 4)}
+                  $
+                  {formatNumber(price, price >= 1000 ? 0 : price >= 1 ? 2 : 4)}
                 </p>
                 <p
                   className={cn(
@@ -281,56 +277,125 @@ function TradePage() {
                   )}
                 >
                   {up ? "+" : ""}
-                  {formatNumber(price * (change / 100), 2)} ({up ? "+" : ""}
+                  {formatNumber(changeAbs, price >= 100 ? 2 : 4)} ({up ? "+" : ""}
                   {formatNumber(change, 2)}%)
                 </p>
               </>
             )}
           </div>
         </button>
-        <Link
-          to="/activity"
+        <a
+          href={tv.tvUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:text-foreground"
-          aria-label="Alerts"
+          aria-label="TradingView alerts & full chart"
+          title="Open on TradingView"
         >
           <Bell className="h-5 w-5" />
-        </Link>
+        </a>
       </div>
 
-      {/* Chart */}
-      <div className="mt-2 px-1">
-        <PhantomPerpChart
-          prices={chartPrices}
-          markPrice={price}
-          period={period}
-          height={260}
-        />
-      </div>
+      <p className="mt-1 px-4 text-[11px] text-muted-foreground">
+        {tv.tvSymbol} · live mark from {quote?.source ?? tv.exchangeLabel}
+      </p>
 
-      {/* Periods */}
-      <div className="mt-1 flex gap-1 overflow-x-auto px-4 pb-2 scrollbar-none">
-        {PERP_CHART_PERIODS.map((p) => (
+      {/* Chart / News / Alerts tabs */}
+      <div className="mt-3 flex gap-1 px-4">
+        {(
+          [
+            ["chart", "Chart"],
+            ["news", "News"],
+            ["alerts", "Alerts"],
+          ] as const
+        ).map(([id, label]) => (
           <button
-            key={p}
+            key={id}
             type="button"
-            onClick={() => setPeriod(p)}
+            onClick={() => setTab(id)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold press",
-              period === p
+              "rounded-full px-3 py-1.5 text-xs font-bold press",
+              tab === id
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {p === "LIVE" ? "· LIVE" : p}
+            {label}
           </button>
         ))}
       </div>
+
+      {tab === "chart" ? (
+        <>
+          <div className="mt-2 px-2">
+            <TradingViewEmbed
+              key={`${tv.tvSymbol}-${tvInterval}`}
+              kind="advanced-chart"
+              symbol={tv.tvSymbol}
+              interval={tvInterval}
+              height={300}
+            />
+          </div>
+          <div className="mt-1 flex gap-1 overflow-x-auto px-4 pb-2 scrollbar-none">
+            {PERP_CHART_PERIODS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold press",
+                  period === p
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p === "LIVE" ? "· LIVE" : p}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1 px-4">
+            <TradingViewEmbed kind="symbol-info" symbol={tv.tvSymbol} height={120} />
+          </div>
+        </>
+      ) : null}
+
+      {tab === "news" ? (
+        <div className="mt-2 px-2">
+          <TradingViewEmbed kind="timeline" symbol={tv.tvSymbol} height={460} />
+          <a
+            href={tv.tvUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1 px-2 text-xs font-semibold text-primary"
+          >
+            More on TradingView <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      ) : null}
+
+      {tab === "alerts" ? (
+        <div className="mt-2 space-y-3 px-2">
+          <TradingViewEmbed kind="technical-analysis" symbol={tv.tvSymbol} height={420} />
+          <p className="px-2 text-[11px] leading-relaxed text-muted-foreground">
+            Technicals summarize oscillator / MA signals from TradingView. For price alerts, open{" "}
+            <a
+              href={tv.tvUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              {tv.tvSymbol}
+            </a>{" "}
+            on TradingView and create an alert on the full chart.
+          </p>
+        </div>
+      ) : null}
 
       {/* Live chat teaser */}
       <Link
         to="/asset/$tokenId/chat"
         params={{ tokenId: market.toLowerCase() }}
-        className="mx-4 mt-2 flex items-center justify-between rounded-2xl border border-border/60 bg-card/70 px-3.5 py-3 press"
+        className="mx-4 mt-3 flex items-center justify-between rounded-2xl border border-border/60 bg-card/70 px-3.5 py-3 press"
       >
         <div>
           <p className="text-sm font-bold">Live Chat ›</p>
@@ -339,16 +404,40 @@ function TradePage() {
         <span className="text-xs font-semibold text-emerald-500">· online</span>
       </Link>
 
-      {/* Insights */}
+      {/* Insights + risk */}
       <div className="mx-4 mt-3 rounded-2xl border border-border/60 bg-card/50 px-3.5 py-3">
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Recent {def.name} market activity · funded from your{" "}
-          <span className="font-semibold text-foreground">Trading</span> account. Transfer margin
-          (USDT / OUSD) from Funding before opening Long or Short.
+          Recent {def.name} perpetual activity · Long / Short / Buy use the live{" "}
+          <span className="font-semibold text-foreground">{quote?.source ?? "exchange"}</span> mark
+          (same markets as{" "}
+          <a
+            href={tv.tvUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary"
+          >
+            TradingView {market}USDT.P
+          </a>
+          ). Margin is funded from your{" "}
+          <span className="font-semibold text-foreground">Trading</span> account (USDT / OUSD /
+          USDC).
         </p>
         <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           <Sparkles className="h-3 w-3" /> Perps · non-stables only
         </p>
+      </div>
+
+      <div className="mx-4 mt-3 flex gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="min-w-0 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="font-semibold text-foreground">Trade is risky</p>
+          <p className="mt-1">
+            Perpetual trading involves substantial risk of loss. Leverage can amplify gains and
+            losses; you may lose your entire margin. Charts, news, and technicals are for
+            information only — not investment advice. Past performance does not guarantee future
+            results. Only trade with funds you can afford to lose.
+          </p>
+        </div>
       </div>
 
       {/* Positions */}
@@ -429,6 +518,18 @@ function TradePage() {
         )}
       </section>
 
+      <p className="mx-4 mt-4 pb-2 text-center text-[10px] text-muted-foreground">
+        Charts &amp; news by{" "}
+        <a
+          href="https://www.tradingview.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline-offset-2 hover:underline"
+        >
+          TradingView
+        </a>
+      </p>
+
       {tradeBar}
 
       {/* Market picker */}
@@ -441,7 +542,8 @@ function TradePage() {
             {PERP_MARKETS.map((m) => {
               const id = marketToMajorId(m);
               const d = MAJOR_TOKENS[id];
-              const s = majorMarketById(majorMarkets, id);
+              const s = quoteByMarket(quotesQ.data, m);
+              const px = Number(s?.markPrice ?? s?.price ?? 0);
               return (
                 <button
                   key={m}
@@ -450,15 +552,19 @@ function TradePage() {
                   onClick={() => {
                     setMarket(m);
                     setPickerOpen(false);
+                    setTab("chart");
                   }}
                 >
                   <img src={d.logoUrl} alt="" className="h-9 w-9 rounded-full" />
                   <span className="min-w-0 flex-1 text-left">
                     <span className="block font-bold">{d.name}</span>
-                    <span className="block text-xs text-muted-foreground">{m} perpetual</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {PERP_TV[m].tvSymbol}
+                    </span>
                   </span>
                   <span className="text-sm font-semibold tabular-nums">
-                    ${formatNumber(s.price, s.price >= 1000 ? 0 : 2)}
+                    $
+                    {formatNumber(px, px >= 1000 ? 0 : px >= 1 ? 2 : 4)}
                   </span>
                 </button>
               );
@@ -477,12 +583,24 @@ function TradePage() {
           </SheetHeader>
           <div className="mt-3 space-y-4 pb-8">
             <p className="text-sm text-muted-foreground">
-              Margin is taken from your <span className="font-semibold text-foreground">Trading</span>{" "}
-              balance. Available {formatNumber(tradingBal, 4)} {marginAsset}.
+              Entry uses live {quote?.source ?? "exchange"} mark ~$
+              {formatNumber(price, price >= 1 ? 2 : 4)}. Margin from your{" "}
+              <span className="font-semibold text-foreground">Trading</span> balance. Available{" "}
+              {formatNumber(tradingBal, 4)} {marginAsset}.
             </p>
 
+            <div className="flex gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+              <span>
+                Trade is risky — leveraged perps can liquidate your margin. Confirm only if you
+                accept that risk.
+              </span>
+            </div>
+
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase text-muted-foreground">Margin asset</p>
+              <p className="mb-1.5 text-xs font-semibold uppercase text-muted-foreground">
+                Margin asset
+              </p>
               <div className="flex gap-1 rounded-2xl bg-muted/40 p-1">
                 {PERP_MARGIN_ASSETS.map((a) => (
                   <button
@@ -502,7 +620,9 @@ function TradePage() {
 
             {sheetSide !== null && leverage > 1 ? (
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase text-muted-foreground">Leverage</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase text-muted-foreground">
+                  Leverage
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {PERP_LEVERAGE_OPTIONS.map((l) => (
                     <button
@@ -553,7 +673,10 @@ function TradePage() {
 
             {tradingBal <= 0 ? (
               <Button asChild variant="outline" className="h-11 w-full rounded-full">
-                <Link to="/transfer" search={{ from: "funding", to: "trading", asset: marginAsset }}>
+                <Link
+                  to="/transfer"
+                  search={{ from: "funding", to: "trading", asset: marginAsset }}
+                >
                   Transfer {marginAsset} to Trading
                 </Link>
               </Button>
@@ -562,7 +685,7 @@ function TradePage() {
             <Button
               type="button"
               className="h-12 w-full rounded-full text-base font-bold"
-              disabled={!marginOk || openM.isPending || !sheetSide}
+              disabled={!marginOk || openM.isPending || !sheetSide || !(price > 0)}
               onClick={() => openM.mutate()}
             >
               {openM.isPending ? (

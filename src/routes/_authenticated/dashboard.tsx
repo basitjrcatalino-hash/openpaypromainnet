@@ -7,11 +7,7 @@ import {
   ArrowLeftRight,
   TrendingUp,
   DollarSign,
-  ChevronsUpDown,
   QrCode,
-  Eye,
-  EyeOff,
-  ScanLine,
   Blocks,
   Ellipsis,
   Shield,
@@ -26,7 +22,7 @@ import { copyText } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { formatNumber, formatPct, createFreshRecoveryWallet, fetchActiveWallet, listUserWallets, shortAddress, stashRecoveryPhrase } from "@/lib/wallet-utils";
+import { formatNumber, formatPct, createFreshRecoveryWallet, fetchActiveWallet, shortAddress, stashRecoveryPhrase } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTokenPrice, useCurrency } from "@/lib/currency";
 import {
@@ -45,7 +41,6 @@ import { ExploreDock } from "@/components/wallet/ExploreDock";
 import { SegmentedTabs } from "@/components/wallet/SegmentedTabs";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
-import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { PortfolioAccountCard } from "@/components/assets/PortfolioAccountCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,8 +92,6 @@ function Dashboard() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [switchOpen, setSwitchOpen] = useState(false);
-  const [switching, setSwitching] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [tab, setTab] = useState<"tokens" | "collectibles">("tokens");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -123,11 +116,6 @@ function Dashboard() {
       ).data,
   });
   const needsBackup = prefs !== undefined && !prefs?.recovery_backed_up;
-
-  const { data: wallets = [] } = useQuery({
-    queryKey: ["wallets", user.id],
-    queryFn: (): Promise<WalletRow[]> => listUserWallets<WalletRow>(supabase, user.id, "*"),
-  });
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -314,78 +302,8 @@ function Dashboard() {
     }
   }
 
-  async function switchWallet(id: string) {
-    if (id === wallet?.id) {
-      setSwitchOpen(false);
-      return;
-    }
-    setSwitching(true);
-    try {
-      await supabase.from("wallets").update({ is_active: false }).eq("user_id", user.id);
-      await supabase.from("wallets").update({ is_active: true }).eq("id", id);
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["wallets", user.id] }),
-        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] }),
-        qc.invalidateQueries({ queryKey: ["holdings"] }),
-        qc.invalidateQueries({ queryKey: ["recent-txs"] }),
-        qc.invalidateQueries({ queryKey: ["my-nfts"] }),
-        qc.invalidateQueries({ queryKey: ["openpay-collectibles"] }),
-      ]);
-      toast.success("Wallet switched");
-      setSwitchOpen(false);
-    } catch (err) {
-      toast.error((err as Error).message || "Could not switch wallet");
-    } finally {
-      setSwitching(false);
-    }
-  }
-
   return (
     <div className="mx-auto w-full animate-page-in">
-      {/* Mobile header */}
-      <div className="mb-1 flex items-center justify-between md:hidden">
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/scan" })}
-          className="rounded-full p-2 text-primary hover:bg-primary/10 press"
-          aria-label="Scan QR code"
-        >
-          <ScanLine className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setSwitchOpen(true)}
-          className="inline-flex items-center gap-1 text-[15px] font-semibold press"
-        >
-          {walletLoading && !wallet ? (
-            <Skeleton className="h-5 w-28 rounded-full" />
-          ) : (
-            <>
-              {wallet?.name ?? "Main Wallet"}
-              <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </>
-          )}
-        </button>
-        <div className="flex items-center">
-          <button
-            type="button"
-            onClick={() => setCurrencyOpen(true)}
-            className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 press"
-            aria-label="Change currency"
-          >
-            {currency}
-          </button>
-          <button
-            type="button"
-            onClick={() => setHideBalance((v) => !v)}
-            className="rounded-full p-2 text-primary hover:bg-primary/10 press"
-            aria-label="Toggle balance"
-          >
-            {hideBalance ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-
       {/* Flat balance hero */}
       {walletLoading && !wallet ? (
         <div className="flex flex-col items-center gap-3 py-6">
@@ -399,6 +317,7 @@ function Dashboard() {
           hideBalance={hideBalance}
           copied={copied}
           onCycleCurrency={() => setCurrencyOpen(true)}
+          onToggleHide={() => setHideBalance((v) => !v)}
           onCopyAddress={copyAddress}
         />
       )}
@@ -796,17 +715,6 @@ function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      <WalletSwitcherDialog
-        open={switchOpen}
-        onOpenChange={setSwitchOpen}
-        wallets={wallets}
-        activeWalletId={wallet?.id}
-        onSelect={switchWallet}
-        switching={switching}
-        currency={currency}
-        hideBalance={hideBalance}
-      />
-
       <CurrencyPickerSheet
         open={currencyOpen}
         onOpenChange={setCurrencyOpen}
@@ -823,6 +731,7 @@ function Dashboard() {
           if (open) setTab("tokens");
         }}
         placeholder="Search tokens"
+        showFab={false}
       />
     </div>
   );

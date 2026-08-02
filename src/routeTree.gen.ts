@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OpenusdRouteImport } from './routes/openusd'
@@ -64,9 +65,14 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as DocsApiRouteImport } from './routes/docs.api'
 import { Route as DocsExchangeRouteImport } from './routes/docs.exchange'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
+import { Route as DocsLedgerRouteImport } from './routes/docs.ledger'
+import { Route as DocsMcpRouteImport } from './routes/docs.mcp'
+import { Route as DocsMoneyRouteImport } from './routes/docs.money'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
+import { Route as DocsTokensRouteImport } from './routes/docs.tokens'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as PayToRouteImport } from './routes/pay.$to'
 import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
@@ -144,8 +150,12 @@ import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './route
 import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
 import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
 import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
+import { Route as ApiPublicDocsLedgerRouteImport } from './routes/api/public/docs/ledger'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
+import { Route as ApiPublicDocsOpenpayToProRouteImport } from './routes/api/public/docs/openpay-to-pro'
+import { Route as ApiPublicDocsPartnerTransferRouteImport } from './routes/api/public/docs/partner-transfer'
+import { Route as ApiPublicDocsPortalRouteImport } from './routes/api/public/docs/portal'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
 import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
@@ -186,6 +196,11 @@ const AuthpiRoute = AuthpiRouteImport.update({
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalRoute = LegalRouteImport.update({
@@ -435,20 +450,45 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsApiRoute = DocsApiRouteImport.update({
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsExchangeRoute = DocsExchangeRouteImport.update({
-  id: '/docs/exchange',
-  path: '/docs/exchange',
-  getParentRoute: () => rootRouteImport,
+  id: '/exchange',
+  path: '/exchange',
+  getParentRoute: () => DocsRoute,
 } as any)
 const DocsFaqRoute = DocsFaqRouteImport.update({
-  id: '/docs/faq',
-  path: '/docs/faq',
-  getParentRoute: () => rootRouteImport,
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsLedgerRoute = DocsLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsMcpRoute = DocsMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsMoneyRoute = DocsMoneyRouteImport.update({
+  id: '/money',
+  path: '/money',
+  getParentRoute: () => DocsRoute,
 } as any)
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
-  id: '/docs/openpay',
-  path: '/docs/openpay',
-  getParentRoute: () => rootRouteImport,
+  id: '/openpay',
+  path: '/openpay',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsTokensRoute = DocsTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => DocsRoute,
 } as any)
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
   id: '/guides/transfer-pi',
@@ -866,6 +906,11 @@ const ApiPublicDocsExchangeRoute = ApiPublicDocsExchangeRouteImport.update({
   path: '/api/public/docs/exchange',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDocsLedgerRoute = ApiPublicDocsLedgerRouteImport.update({
+  id: '/api/public/docs/ledger',
+  path: '/api/public/docs/ledger',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
   id: '/api/public/docs/openpay',
   path: '/api/public/docs/openpay',
@@ -877,6 +922,23 @@ const ApiPublicDocsOpenpayAuthRoute =
     path: '/api/public/docs/openpay-auth',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDocsOpenpayToProRoute =
+  ApiPublicDocsOpenpayToProRouteImport.update({
+    id: '/api/public/docs/openpay-to-pro',
+    path: '/api/public/docs/openpay-to-pro',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsPartnerTransferRoute =
+  ApiPublicDocsPartnerTransferRouteImport.update({
+    id: '/api/public/docs/partner-transfer',
+    path: '/api/public/docs/partner-transfer',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsPortalRoute = ApiPublicDocsPortalRouteImport.update({
+  id: '/api/public/docs/portal',
+  path: '/api/public/docs/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
   id: '/api/public/ledger/entries',
   path: '/api/public/ledger/entries',
@@ -952,6 +1014,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/docs': typeof DocsRouteWithChildren
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1001,9 +1064,14 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/api': typeof DocsApiRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/ledger': typeof DocsLedgerRoute
+  '/docs/mcp': typeof DocsMcpRoute
+  '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/wiki/$slug': typeof WikiSlugRoute
@@ -1081,8 +1149,12 @@ export interface FileRoutesByFullPath {
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
+  '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
+  '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
+  '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
@@ -1102,6 +1174,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/docs': typeof DocsRouteWithChildren
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1151,9 +1224,14 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/api': typeof DocsApiRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/ledger': typeof DocsLedgerRoute
+  '/docs/mcp': typeof DocsMcpRoute
+  '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/wiki/$slug': typeof WikiSlugRoute
@@ -1231,8 +1309,12 @@ export interface FileRoutesByTo {
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
+  '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
+  '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
+  '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
@@ -1254,6 +1336,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
+  '/docs': typeof DocsRouteWithChildren
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1303,9 +1386,14 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog_/$slug': typeof BlogSlugRoute
+  '/docs/api': typeof DocsApiRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/ledger': typeof DocsLedgerRoute
+  '/docs/mcp': typeof DocsMcpRoute
+  '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/wiki_/$slug': typeof WikiSlugRoute
@@ -1383,8 +1471,12 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/_authenticated/p2p_/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
+  '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
+  '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
+  '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
@@ -1406,6 +1498,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/docs'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -1455,9 +1548,14 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/api'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/ledger'
+    | '/docs/mcp'
+    | '/docs/money'
     | '/docs/openpay'
+    | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/wiki/$slug'
@@ -1535,8 +1633,12 @@ export interface FileRouteTypes {
     | '/p2p/order/$id'
     | '/p2p/take/$adId'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/ledger'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
+    | '/api/public/docs/openpay-to-pro'
+    | '/api/public/docs/partner-transfer'
+    | '/api/public/docs/portal'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
@@ -1556,6 +1658,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/docs'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -1605,9 +1708,14 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/api'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/ledger'
+    | '/docs/mcp'
+    | '/docs/money'
     | '/docs/openpay'
+    | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/wiki/$slug'
@@ -1685,8 +1793,12 @@ export interface FileRouteTypes {
     | '/p2p/order/$id'
     | '/p2p/take/$adId'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/ledger'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
+    | '/api/public/docs/openpay-to-pro'
+    | '/api/public/docs/partner-transfer'
+    | '/api/public/docs/portal'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
@@ -1707,6 +1819,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/authpi'
     | '/blog'
+    | '/docs'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -1756,9 +1869,14 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog_/$slug'
+    | '/docs/api'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/ledger'
+    | '/docs/mcp'
+    | '/docs/money'
     | '/docs/openpay'
+    | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/wiki_/$slug'
@@ -1836,8 +1954,12 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/order/$id'
     | '/_authenticated/p2p_/take/$adId'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/ledger'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
+    | '/api/public/docs/openpay-to-pro'
+    | '/api/public/docs/partner-transfer'
+    | '/api/public/docs/portal'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
@@ -1859,6 +1981,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
   BlogRoute: typeof BlogRoute
+  DocsRoute: typeof DocsRouteWithChildren
   LegalRoute: typeof LegalRoute
   McpRoute: typeof McpRoute
   OpenusdRoute: typeof OpenusdRoute
@@ -1875,9 +1998,6 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
   BlogSlugRoute: typeof BlogSlugRoute
-  DocsExchangeRoute: typeof DocsExchangeRoute
-  DocsFaqRoute: typeof DocsFaqRoute
-  DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
   PayToRoute: typeof PayToRoute
   WikiSlugRoute: typeof WikiSlugRoute
@@ -1905,8 +2025,12 @@ export interface RootRouteChildren {
   ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
   ApiPublicDocsExchangeRoute: typeof ApiPublicDocsExchangeRoute
+  ApiPublicDocsLedgerRoute: typeof ApiPublicDocsLedgerRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
+  ApiPublicDocsOpenpayToProRoute: typeof ApiPublicDocsOpenpayToProRoute
+  ApiPublicDocsPartnerTransferRoute: typeof ApiPublicDocsPartnerTransferRoute
+  ApiPublicDocsPortalRoute: typeof ApiPublicDocsPortalRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicOpenpayInboundRoute: typeof ApiPublicOpenpayInboundRoute
@@ -1962,6 +2086,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog'
       preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal': {
@@ -2307,26 +2438,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/api': {
+      id: '/docs/api'
+      path: '/api'
+      fullPath: '/docs/api'
+      preLoaderRoute: typeof DocsApiRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/exchange': {
       id: '/docs/exchange'
-      path: '/docs/exchange'
+      path: '/exchange'
       fullPath: '/docs/exchange'
       preLoaderRoute: typeof DocsExchangeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/docs/faq': {
       id: '/docs/faq'
-      path: '/docs/faq'
+      path: '/faq'
       fullPath: '/docs/faq'
       preLoaderRoute: typeof DocsFaqRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/ledger': {
+      id: '/docs/ledger'
+      path: '/ledger'
+      fullPath: '/docs/ledger'
+      preLoaderRoute: typeof DocsLedgerRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/mcp': {
+      id: '/docs/mcp'
+      path: '/mcp'
+      fullPath: '/docs/mcp'
+      preLoaderRoute: typeof DocsMcpRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/money': {
+      id: '/docs/money'
+      path: '/money'
+      fullPath: '/docs/money'
+      preLoaderRoute: typeof DocsMoneyRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/docs/openpay': {
       id: '/docs/openpay'
-      path: '/docs/openpay'
+      path: '/openpay'
       fullPath: '/docs/openpay'
       preLoaderRoute: typeof DocsOpenpayRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/tokens': {
+      id: '/docs/tokens'
+      path: '/tokens'
+      fullPath: '/docs/tokens'
+      preLoaderRoute: typeof DocsTokensRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/guides/transfer-pi': {
       id: '/guides/transfer-pi'
@@ -2867,6 +3033,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDocsExchangeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/docs/ledger': {
+      id: '/api/public/docs/ledger'
+      path: '/api/public/docs/ledger'
+      fullPath: '/api/public/docs/ledger'
+      preLoaderRoute: typeof ApiPublicDocsLedgerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/docs/openpay': {
       id: '/api/public/docs/openpay'
       path: '/api/public/docs/openpay'
@@ -2879,6 +3052,27 @@ declare module '@tanstack/react-router' {
       path: '/api/public/docs/openpay-auth'
       fullPath: '/api/public/docs/openpay-auth'
       preLoaderRoute: typeof ApiPublicDocsOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay-to-pro': {
+      id: '/api/public/docs/openpay-to-pro'
+      path: '/api/public/docs/openpay-to-pro'
+      fullPath: '/api/public/docs/openpay-to-pro'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayToProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/partner-transfer': {
+      id: '/api/public/docs/partner-transfer'
+      path: '/api/public/docs/partner-transfer'
+      fullPath: '/api/public/docs/partner-transfer'
+      preLoaderRoute: typeof ApiPublicDocsPartnerTransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/portal': {
+      id: '/api/public/docs/portal'
+      path: '/api/public/docs/portal'
+      fullPath: '/api/public/docs/portal'
+      preLoaderRoute: typeof ApiPublicDocsPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries': {
@@ -3197,6 +3391,30 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface DocsRouteChildren {
+  DocsApiRoute: typeof DocsApiRoute
+  DocsExchangeRoute: typeof DocsExchangeRoute
+  DocsFaqRoute: typeof DocsFaqRoute
+  DocsLedgerRoute: typeof DocsLedgerRoute
+  DocsMcpRoute: typeof DocsMcpRoute
+  DocsMoneyRoute: typeof DocsMoneyRoute
+  DocsOpenpayRoute: typeof DocsOpenpayRoute
+  DocsTokensRoute: typeof DocsTokensRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsApiRoute: DocsApiRoute,
+  DocsExchangeRoute: DocsExchangeRoute,
+  DocsFaqRoute: DocsFaqRoute,
+  DocsLedgerRoute: DocsLedgerRoute,
+  DocsMcpRoute: DocsMcpRoute,
+  DocsMoneyRoute: DocsMoneyRoute,
+  DocsOpenpayRoute: DocsOpenpayRoute,
+  DocsTokensRoute: DocsTokensRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 interface ApiPublicLedgerEntriesRouteChildren {
   ApiPublicLedgerEntriesIdRoute: typeof ApiPublicLedgerEntriesIdRoute
 }
@@ -3218,6 +3436,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
   BlogRoute: BlogRoute,
+  DocsRoute: DocsRouteWithChildren,
   LegalRoute: LegalRoute,
   McpRoute: McpRoute,
   OpenusdRoute: OpenusdRoute,
@@ -3235,9 +3454,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
   BlogSlugRoute: BlogSlugRoute,
-  DocsExchangeRoute: DocsExchangeRoute,
-  DocsFaqRoute: DocsFaqRoute,
-  DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
   PayToRoute: PayToRoute,
   WikiSlugRoute: WikiSlugRoute,
@@ -3265,8 +3481,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
   ApiPublicDocsExchangeRoute: ApiPublicDocsExchangeRoute,
+  ApiPublicDocsLedgerRoute: ApiPublicDocsLedgerRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,
+  ApiPublicDocsOpenpayToProRoute: ApiPublicDocsOpenpayToProRoute,
+  ApiPublicDocsPartnerTransferRoute: ApiPublicDocsPartnerTransferRoute,
+  ApiPublicDocsPortalRoute: ApiPublicDocsPortalRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicOpenpayInboundRoute: ApiPublicOpenpayInboundRoute,

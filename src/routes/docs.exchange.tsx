@@ -104,9 +104,14 @@ function ExchangeDocsPage() {
     <div className="min-h-svh bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <Link to="/" className="text-sm font-semibold tracking-tight text-foreground">
-            OpenPay Pro
-          </Link>
+          <div className="flex min-w-0 flex-col">
+            <Link to="/docs" className="text-[11px] font-semibold text-primary hover:underline">
+              Developer Portal
+            </Link>
+            <Link to="/" className="text-sm font-semibold tracking-tight text-foreground">
+              OpenPay Pro · Exchange
+            </Link>
+          </div>
           <div className="flex items-center gap-1.5">
             <PageListenButton id="docs-exchange" text={DOCS_SPEECH} label="Listen" />
             <Button

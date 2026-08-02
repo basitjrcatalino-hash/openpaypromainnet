@@ -49,6 +49,8 @@ import {
   FileText,
   Shield,
   Scale,
+  ScanLine,
+  LayoutGrid,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -61,6 +63,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -129,14 +138,30 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.transfer") return "Transfer";
   if (labelKey === "nav.assets") return "Assets";
   if (labelKey === "nav.trade") return "Trade";
+  if (labelKey === "nav.more") return "More";
+  if (labelKey === "nav.discover") return "Discover";
+  if (labelKey === "nav.withdraw") return "Withdraw";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
 
-/** Mobile bottom tab bar — Settings & Withdraw stay in the sidebar/menu only. */
-const FOOTER_NAV = NAV.filter(
-  (item) => item.to !== "/settings" && item.to !== "/withdraw" && item.to !== "/transfer",
-);
+/** Primary mobile tabs — 5 max. Deposit / P2P / History / OpenToken live in More. */
+const FOOTER_TABS = [
+  { to: "/dashboard", labelKey: "nav.home", icon: Compass },
+  { to: "/assets", labelKey: "nav.assets", icon: Layers },
+  { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
+  { to: "/tokens", labelKey: "nav.discover", icon: Sparkles },
+] as const;
+
+const MORE_NAV = [
+  { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
+  { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
+  { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
+  { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },
+  { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight, desc: "Move between accounts" },
+  { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
+  { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon, desc: "Security & preferences" },
+] as const;
 
 function navActive(pathname: string, to: string) {
   return (
@@ -151,29 +176,43 @@ function navActive(pathname: string, to: string) {
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
       !pathname.startsWith("/opentoken/create")) ||
-    (to === "/p2p" && pathname.startsWith("/p2p"))
+    (to === "/p2p" && pathname.startsWith("/p2p")) ||
+    (to === "/deposit" && pathname.startsWith("/deposit")) ||
+    (to === "/activity" && pathname.startsWith("/activity")) ||
+    (to === "/withdraw" && pathname.startsWith("/withdraw")) ||
+    (to === "/settings" && pathname.startsWith("/settings"))
   );
 }
 
-/** Mobile top bar — uses context so Trade force-hide / scroll hide stay in sync. */
+function moreNavActive(pathname: string) {
+  return MORE_NAV.some((item) => navActive(pathname, item.to));
+}
+
+/** Mobile top bar — Home: Menu · Wallet · Scan · Bell */
 function MobileAppHeader({
   isHome,
   mobileOpen,
   onToggleMenu,
   unread,
   onOpenNotifications,
+  walletName,
+  walletLoading,
+  onOpenWalletSwitcher,
 }: {
   isHome: boolean;
   mobileOpen: boolean;
   onToggleMenu: () => void;
   unread: number;
   onOpenNotifications: () => void;
+  walletName?: string | null;
+  walletLoading?: boolean;
+  onOpenWalletSwitcher?: () => void;
 }) {
   const chromeVisible = useChromeVisible();
   return (
     <header
       className={cn(
-        "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center px-2 py-2.5 transition-transform duration-300 ease-out md:hidden",
+        "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1 px-2 py-2 transition-transform duration-300 ease-out md:hidden",
         chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
       )}
     >
@@ -185,20 +224,40 @@ function MobileAppHeader({
         {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
       {isHome ? (
-        <Link to="/dashboard" className="ph-nav-title truncate text-center text-foreground">
-          OpenPay Pro
-        </Link>
+        <button
+          type="button"
+          onClick={onOpenWalletSwitcher}
+          className="justify-self-center inline-flex max-w-full items-center gap-1 truncate rounded-full px-2 py-1.5 text-[15px] font-semibold press hover:bg-muted/50"
+        >
+          {walletLoading && !walletName ? (
+            <span className="h-4 w-24 animate-pulse rounded-full bg-muted" />
+          ) : (
+            <>
+              <span className="truncate">{walletName ?? "Main Wallet"}</span>
+              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </>
+          )}
+        </button>
       ) : (
         <span className="pointer-events-none" aria-hidden />
       )}
-      <div className="justify-self-end">
+      <div className="flex items-center justify-self-end gap-0.5">
+        {isHome ? (
+          <Link
+            to="/scan"
+            className="rounded-full p-2 text-primary press hover:bg-primary/10"
+            aria-label="Scan QR code"
+          >
+            <ScanLine className="h-5 w-5" />
+          </Link>
+        ) : null}
         <NotificationBell unread={unread} onOpen={onOpenNotifications} />
       </div>
     </header>
   );
 }
 
-/** Mobile tabbar — hides with scroll / Trade menu force-hide. */
+/** Mobile tabbar — 5 destinations: Home · Assets · Trade · Discover · More */
 function MobileTabBar({
   pathname,
   mobileOpen,
@@ -209,46 +268,125 @@ function MobileTabBar({
   t: (key: string) => string;
 }) {
   const chromeVisible = useChromeVisible();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreActive = moreNavActive(pathname);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
   return (
-    <nav
-      className={cn(
-        "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
-        chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
-        mobileOpen && "pointer-events-none opacity-0",
-      )}
-      aria-label="Primary"
-      aria-hidden={mobileOpen || !chromeVisible}
-    >
-      <div
-        className="mx-auto flex max-w-md items-center gap-0 overflow-x-auto overscroll-x-contain px-1.5 scrollbar-none [-webkit-overflow-scrolling:touch]"
-        style={{ height: "var(--ph-tabbar-content)" }}
+    <>
+      <nav
+        className={cn(
+          "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
+          chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
+          mobileOpen && "pointer-events-none opacity-0",
+        )}
+        aria-label="Primary"
+        aria-hidden={mobileOpen || !chromeVisible}
       >
-        {FOOTER_NAV.map((item) => {
-          const Icon = item.icon;
-          const active = navActive(pathname, item.to);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              preload="intent"
-              className={cn(
-                "flex h-full min-w-14 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
-                active ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              <Icon
+        <div
+          className="mx-auto flex max-w-md items-center justify-around px-1"
+          style={{ height: "var(--ph-tabbar-content)" }}
+        >
+          {FOOTER_TABS.map((item) => {
+            const Icon = item.icon;
+            const active = navActive(pathname, item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                preload="intent"
                 className={cn(
-                  "h-5 w-5 transition-[filter,opacity]",
-                  active && "ph-tab-icon-active",
+                  "flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
+                  active ? "text-primary" : "text-muted-foreground",
                 )}
-                strokeWidth={active ? 2.25 : 1.75}
-              />
-              <span className="px-0.5">{navLabel(t, item.labelKey)}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-[filter,opacity]",
+                    active && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
+                <span className="px-0.5">{navLabel(t, item.labelKey)}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              "flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 ph-tab-label press",
+              moreActive || moreOpen ? "text-primary" : "text-muted-foreground",
+            )}
+            aria-label={navLabel(t, "nav.more")}
+            aria-expanded={moreOpen}
+          >
+            <LayoutGrid
+              className={cn(
+                "h-5 w-5 transition-[filter,opacity]",
+                (moreActive || moreOpen) && "ph-tab-icon-active",
+              )}
+              strokeWidth={moreActive || moreOpen ? 2.25 : 1.75}
+            />
+            <span className="px-0.5">{navLabel(t, "nav.more")}</span>
+          </button>
+        </div>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[min(78vh,560px)] rounded-t-3xl border-border/60 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 md:hidden"
+        >
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/25" aria-hidden />
+          <SheetHeader className="mb-3 space-y-1 text-left">
+            <SheetTitle className="text-lg font-bold tracking-tight">
+              {navLabel(t, "nav.more")}
+            </SheetTitle>
+            <SheetDescription>Deposit, P2P, history, and settings</SheetDescription>
+          </SheetHeader>
+          <ul className="grid gap-1.5 pb-2">
+            {MORE_NAV.map((item) => {
+              const Icon = item.icon;
+              const active = navActive(pathname, item.to);
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    preload="intent"
+                    onClick={() => setMoreOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl px-3.5 py-3 press",
+                      active
+                        ? "bg-primary/12 text-primary"
+                        : "bg-muted/40 text-foreground hover:bg-muted/70",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                        active ? "bg-primary/15" : "bg-background/80",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.85} />
+                    </span>
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block text-sm font-bold tracking-tight">
+                        {navLabel(t, item.labelKey)}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">{item.desc}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
@@ -289,6 +427,8 @@ function AuthenticatedLayout() {
     pathname === "";
   const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [headerSwitchOpen, setHeaderSwitchOpen] = useState(false);
+  const [headerSwitching, setHeaderSwitching] = useState(false);
   const txNotes = useTransactionNotifications(user.id);
   useP2pOrderNotifications(user.id);
 
@@ -296,7 +436,7 @@ function AuthenticatedLayout() {
     setMobileOpen(false);
   }, [pathname]);
 
-  const { data: wallets = [] } = useQuery({
+  const { data: wallets = [], isLoading: walletsLoading } = useQuery({
     queryKey: ["wallets", user.id],
     queryFn: () => listUserWallets<Tables<"wallets">>(supabase, user.id, "*"),
   });
@@ -331,6 +471,24 @@ function AuthenticatedLayout() {
     toast.success("Wallet switched");
   }
 
+  async function switchWalletFromHeader(id: string) {
+    if (id === activeWallet?.id) {
+      setHeaderSwitchOpen(false);
+      return;
+    }
+    setHeaderSwitching(true);
+    try {
+      await switchWallet(id);
+      setHeaderSwitchOpen(false);
+    } catch (err) {
+      toast.error((err as Error).message || "Could not switch wallet");
+    } finally {
+      setHeaderSwitching(false);
+    }
+  }
+
+  const { code: headerCurrency } = useCurrency();
+
   return (
     <AppLockGate userId={user.id}>
     <AppMoonPayProvider>
@@ -346,6 +504,9 @@ function AuthenticatedLayout() {
               onToggleMenu={() => setMobileOpen((v) => !v)}
               unread={txNotes.unread}
               onOpenNotifications={() => setNotifOpen(true)}
+              walletName={activeWallet?.name}
+              walletLoading={walletsLoading}
+              onOpenWalletSwitcher={() => setHeaderSwitchOpen(true)}
             />
 
             {/* Spacer matches fixed mobile header height */}
@@ -452,6 +613,16 @@ function AuthenticatedLayout() {
           onMarkAll={txNotes.markAll}
           onClear={txNotes.clearAll}
           onMarkOne={txNotes.markOneRead}
+        />
+
+        <WalletSwitcherDialog
+          open={headerSwitchOpen}
+          onOpenChange={setHeaderSwitchOpen}
+          wallets={wallets}
+          activeWalletId={activeWallet?.id}
+          onSelect={switchWalletFromHeader}
+          switching={headerSwitching}
+          currency={headerCurrency}
         />
       </div>
     </ChromeVisibleProvider>
@@ -938,6 +1109,7 @@ function SidebarInner({
           </Link>
           <Link
             to="/solana-pay"
+            search={{ donate_return: undefined, donate_cancel: undefined }}
             onClick={onClose}
             preload="intent"
             aria-current={pathname === "/solana-pay" ? "page" : undefined}
@@ -1129,7 +1301,7 @@ function SidebarInner({
                   <span className="truncate">{t("nav.agentConnect")}</span>
                 </Link>
                 <a
-                  href="/docs/openpay"
+                  href="/docs"
                   target="_blank"
                   rel="noreferrer"
                   onClick={onClose}

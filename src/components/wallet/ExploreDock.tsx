@@ -13,6 +13,8 @@ type ExploreDockProps = {
   searchOpen: boolean;
   onSearchOpenChange: (open: boolean) => void;
   placeholder?: string;
+  /** Mint FAB — hide on Home so it doesn’t crowd the tab bar. */
+  showFab?: boolean;
   className?: string;
 };
 
@@ -26,6 +28,7 @@ export function ExploreDock({
   searchOpen,
   onSearchOpenChange,
   placeholder = "Search OpenPay",
+  showFab = true,
   className,
 }: ExploreDockProps) {
   const [mounted, setMounted] = useState(false);
@@ -78,13 +81,15 @@ export function ExploreDock({
               <Search className="h-4 w-4 shrink-0" />
               <span className="truncate">{query || placeholder}</span>
             </button>
-            <Link
-              to="/opentoken/create"
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
-              aria-label="Mint / create coin"
-            >
-              <Plus className="h-6 w-6" strokeWidth={2.5} />
-            </Link>
+            {showFab ? (
+              <Link
+                to="/opentoken/create"
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg press"
+                aria-label="Mint / create coin"
+              >
+                <Plus className="h-6 w-6" strokeWidth={2.5} />
+              </Link>
+            ) : null}
           </>
         )}
       </div>

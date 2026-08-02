@@ -6,9 +6,10 @@ import {
   PERP_LEVERAGE_OPTIONS,
   PERP_MARGIN_ASSETS,
   PERP_MARKETS,
+  type PerpMarket,
   type PerpPosition,
 } from "@/lib/perp";
-import { fetchMajorMarkets, majorMarketById, type MajorTokenId } from "@/lib/major-tokens";
+import { fetchPerpLiveQuote } from "@/lib/tradingview-perps";
 
 const OpenSchema = z.object({
   market: z.enum(PERP_MARKETS),
@@ -23,10 +24,8 @@ const CloseSchema = z.object({
 });
 
 async function markPriceUsd(market: string): Promise<number> {
-  const id = market.toLowerCase() as MajorTokenId;
-  const markets = await fetchMajorMarkets();
-  const m = majorMarketById(markets, id);
-  const px = Number(m.price ?? 0);
+  const quote = await fetchPerpLiveQuote(market.toUpperCase() as PerpMarket);
+  const px = quote.markPrice || quote.price;
   if (!Number.isFinite(px) || px <= 0) throw new Error(`No mark price for ${market}`);
   return px;
 }

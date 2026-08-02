@@ -92,10 +92,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Developers",
     items: [
-      { label: "Docs", href: "/docs/openpay", desc: "Integrate OpenPay Pro" },
+      { label: "Developer Portal", href: "/docs", desc: "Full integration hub" },
+      { label: "Docs", href: "/docs/openpay", desc: "Connect & payments" },
       { label: "Exchange · OUSD", href: "/docs/exchange", desc: "Deposit, withdraw, network API" },
+      { label: "Money rails", href: "/docs/money", desc: "Send, receive, deposit, swap" },
       { label: "Partner API", href: "https://openpy.space/partner-api", desc: "Apps & keys" },
-      { label: "Agent Connect", href: "/docs/openpay", desc: "MCP for agents" },
+      { label: "Agent Connect", href: "/docs/mcp", desc: "MCP for agents" },
     ],
   },
 ];
@@ -381,21 +383,55 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
     if (!nodes.length) return;
+
+    const reveal = (el: Element) => {
+      el.classList.add("is-in");
+    };
+
+    // Tall sections (e.g. #features) can be many viewports high. A ratio
+    // threshold like 0.12 never fires on mobile — content stays opacity:0.
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-in");
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            reveal(entry.target);
             io.unobserve(entry.target);
           }
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+      { rootMargin: "80px 0px 80px 0px", threshold: 0 },
     );
-    nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+
+    for (const n of nodes) {
+      const rect = n.getBoundingClientRect();
+      const vh = window.innerHeight || 0;
+      // Already on screen (or near) — reveal immediately so scroll can't lag behind.
+      if (rect.top < vh + 80 && rect.bottom > -80) {
+        reveal(n);
+        continue;
+      }
+      io.observe(n);
+    }
+
+    // Safety net for iOS Safari IO quirks while scrolling.
+    const onScroll = () => {
+      for (const n of nodes) {
+        if (n.classList.contains("is-in")) continue;
+        const rect = n.getBoundingClientRect();
+        const vh = window.innerHeight || 0;
+        if (rect.top < vh + 40 && rect.bottom > -40) reveal(n);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -762,13 +798,9 @@ function HomePage() {
           />
         </div>
 
-        {/* Full product showcase */}
-        <section
-          id="features"
-          data-reveal
-          className="ophome-section-reveal mt-16 scroll-mt-28 sm:mt-24"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-4 px-1">
+        {/* Full product showcase — reveal header + bands separately (tall wrapper broke IO on mobile) */}
+        <section id="features" className="mt-16 scroll-mt-28 sm:mt-24">
+          <div data-reveal className="ophome-section-reveal flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Product
@@ -804,7 +836,7 @@ function HomePage() {
           </div>
 
           {/* Bento highlight row */}
-          <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul data-reveal className="ophome-section-reveal mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURE_BENTO.map((card) => {
               const Icon = card.icon;
               return (
@@ -832,7 +864,10 @@ function HomePage() {
             })}
           </ul>
 
-          <div className="mt-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none [-webkit-overflow-scrolling:touch]">
+          <div
+            data-reveal
+            className="ophome-section-reveal mt-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none [-webkit-overflow-scrolling:touch]"
+          >
             {FEATURE_SHOWCASE.map((cat) => (
               <a
                 key={cat.id}
@@ -846,11 +881,13 @@ function HomePage() {
 
           <div className="mt-6 space-y-16 sm:space-y-20">
             {FEATURE_SHOWCASE.map((cat, i) => (
-              <ShowcaseBand key={cat.id} category={cat} reverse={i % 2 === 1} />
+              <div key={cat.id} data-reveal className="ophome-section-reveal">
+                <ShowcaseBand category={cat} reverse={i % 2 === 1} />
+              </div>
             ))}
           </div>
 
-          <div className="mt-12 flex flex-wrap gap-3">
+          <div data-reveal className="ophome-section-reveal mt-12 flex flex-wrap gap-3">
             <Link to="/authpi" className="ophome-cta-pill">
               <Wallet className="h-4 w-4" />
               Open wallet
@@ -995,6 +1032,7 @@ function HomePage() {
           <FooterCol
             title="Developers"
             links={[
+              { label: "Developer Portal", href: "/docs" },
               { label: "Docs", href: "/docs/openpay" },
               { label: "Exchange · OUSD", href: "/docs/exchange" },
               { label: "FAQ", href: "/docs/faq" },

@@ -131,7 +131,12 @@ function OpenPayDocsPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
             <BookOpen className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate text-sm font-semibold">OpenPay Integration Docs</span>
+            <div className="min-w-0">
+              <Link to="/docs" className="block truncate text-[11px] font-semibold text-primary hover:underline">
+                Developer Portal
+              </Link>
+              <span className="truncate text-sm font-semibold">OpenPay Integration Docs</span>
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <PageListenButton

@@ -30,6 +30,8 @@ export const en = {
   nav: {
     home: "Home",
     wallet: "Wallet",
+    assets: "Assets",
+    trade: "Trade",
     tokens: "Tokens",
     openToken: "OpenToken",
     p2p: "P2P",
@@ -47,6 +49,9 @@ export const en = {
     buy: "Buy",
     scan: "Scan",
     deposit: "Deposit",
+    transfer: "Transfer",
+    withdraw: "Withdraw",
+    more: "More",
     blog: "Blog",
     wiki: "Wiki",
     about: "About",

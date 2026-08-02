@@ -33,6 +33,8 @@ export const localePacks = {
     "nav": {
       "home": "Home",
       "wallet": "Wallet",
+      "assets": "Assets",
+      "trade": "Trade",
       "tokens": "Tokens",
       "openToken": "OpenToken",
       "p2p": "P2P",
@@ -51,6 +53,8 @@ export const localePacks = {
       "scan": "Scan",
       "deposit": "Deposit",
       "withdraw": "Withdraw",
+      "transfer": "Transfer",
+      "more": "More",
       "blog": "Blog",
       "wiki": "Wiki",
       "about": "About",

@@ -1685,15 +1685,28 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 
 .ophome-section-reveal {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(20px);
   transition:
-    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .ophome-section-reveal.is-in {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+}
+
+/*
+ * Mobile / coarse pointer: never start hidden.
+ * Tall opacity:0 + transform sections often stay blank on iOS Safari when
+ * IntersectionObserver thresholds fail or backdrop-filter children composite badly.
+ */
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .ophome-section-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

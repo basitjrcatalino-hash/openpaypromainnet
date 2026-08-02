@@ -872,7 +872,7 @@ function SettingsPage() {
                     value={importPhrase}
                     onChange={(e) => setImportPhrase(e.target.value)}
                     placeholder="word1 word2 word3 …"
-                    className="mt-1.5 min-h-[88px] rounded-2xl font-mono text-sm"
+                    className="mt-1.5 min-h-22 rounded-2xl font-mono text-sm"
                     autoComplete="off"
                     spellCheck={false}
                   />
@@ -1063,7 +1063,7 @@ function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setCurrencyOpen(true)}
-                className="flex h-9 max-w-[14rem] items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
+                className="flex h-9 max-w-56 items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
               >
                 <span className="truncate">
                   {currencyListLabel(getCurrencyMeta(prefs?.currency || displayCurrency || "USD"))}
@@ -1075,7 +1075,7 @@ function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setLanguageOpen(true)}
-                className="flex h-9 max-w-[14rem] items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
+                className="flex h-9 max-w-56 items-center gap-2 rounded-full border border-border bg-background px-3 text-left text-sm font-medium press"
               >
                 <span className="truncate">
                   {getLanguageMeta(prefs?.language || displayLanguage || "en").nativeName}

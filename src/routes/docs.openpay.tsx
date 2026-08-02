@@ -770,7 +770,7 @@ curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" 
 
         <Section id="api" eyebrow="Step 6" title="API cheat sheet">
           <div className="overflow-x-auto rounded-3xl border border-border">
-            <table className="w-full min-w-[520px] text-left text-sm">
+            <table className="w-full min-w-130 text-left text-sm">
               <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Method</th>

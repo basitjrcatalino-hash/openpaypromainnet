@@ -491,7 +491,7 @@ function KycPage() {
                   <Textarea
                     value={form.residential_address}
                     onChange={(e) => patch("residential_address", e.target.value)}
-                    className="min-h-[72px] rounded-xl"
+                    className="min-h-18 rounded-xl"
                   />
                 </Field>
               </div>

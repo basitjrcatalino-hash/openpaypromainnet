@@ -186,7 +186,7 @@ function TakeOrderPage() {
   const receiveLabel = side === "buy" ? "You'll pay" : "You'll receive";
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col bg-background">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-background">
       <header
         className="sticky top-0 z-20 border-b border-border/30 bg-background/95 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}

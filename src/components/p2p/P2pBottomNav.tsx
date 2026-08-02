@@ -89,7 +89,7 @@ export function P2pBottomNav() {
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="flex h-[3.25rem] items-stretch px-1 sm:px-2 md:px-3">
+        <div className="flex h-13 items-stretch px-1 sm:px-2 md:px-3">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(pathname);

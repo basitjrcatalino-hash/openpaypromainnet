@@ -425,7 +425,7 @@ function HomePage() {
   }, []);
 
   return (
-    <main className="ophome min-h-screen text-[var(--foreground)]">
+    <main className="ophome min-h-screen text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
         <div className="ophome-sky absolute inset-0" />
       </div>
@@ -437,14 +437,14 @@ function HomePage() {
           headerScrolled && "ophome-header-scrolled pb-2",
         )}
       >
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
+        <div className="mx-auto flex max-w-295 items-center justify-between gap-3">
           <Link to="/website" className="flex items-center gap-2.5 press">
             <img
               src={OPENPAY_AUTH_LOGO}
               alt=""
               className="h-8 w-8 rounded-xl object-contain drop-shadow-sm"
             />
-            <span className="font-[family-name:var(--font-display)] text-[1.05rem] font-extrabold tracking-[-0.03em] text-[var(--ink)]">
+            <span className="font-(family-name:--font-display) text-[1.05rem] font-extrabold tracking-[-0.03em] text-(--ink)">
               OpenPay Pro
             </span>
           </Link>
@@ -455,8 +455,8 @@ function HomePage() {
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[13px] font-semibold text-[var(--ink)]/80 transition hover:bg-black/[0.04] hover:text-[var(--ink)]",
-                    openNav === group.label && "bg-black/[0.05] text-[var(--ink)]",
+                    "inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[13px] font-semibold text-(--ink)/80 transition hover:bg-black/4 hover:text-(--ink)",
+                    openNav === group.label && "bg-black/5 text-(--ink)",
                   )}
                   aria-expanded={openNav === group.label}
                   onClick={() => setOpenNav((v) => (v === group.label ? null : group.label))}
@@ -470,7 +470,7 @@ function HomePage() {
                   />
                 </button>
                 {openNav === group.label ? (
-                  <div className="ophome-dropdown absolute left-1/2 top-[calc(100%+10px)] z-50 w-[280px] -translate-x-1/2 p-2">
+                  <div className="ophome-dropdown absolute left-1/2 top-[calc(100%+10px)] z-50 w-70 -translate-x-1/2 p-2">
                     {group.items.map((item) =>
                       item.href.startsWith("http") || item.href.includes("#") ? (
                         <a
@@ -479,24 +479,24 @@ function HomePage() {
                           {...(item.href.startsWith("http")
                             ? { target: "_blank", rel: "noreferrer" }
                             : {})}
-                          className="block rounded-2xl px-3.5 py-2.5 hover:bg-[var(--lavender-soft)]"
+                          className="block rounded-2xl px-3.5 py-2.5 hover:bg-(--lavender-soft)"
                           onClick={() => setOpenNav(null)}
                         >
-                          <p className="text-sm font-bold text-[var(--ink)]">{item.label}</p>
+                          <p className="text-sm font-bold text-(--ink)">{item.label}</p>
                           {item.desc ? (
-                            <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{item.desc}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
                           ) : null}
                         </a>
                       ) : (
                         <Link
                           key={item.href + item.label}
                           to={item.href}
-                          className="block rounded-2xl px-3.5 py-2.5 hover:bg-[var(--lavender-soft)]"
+                          className="block rounded-2xl px-3.5 py-2.5 hover:bg-(--lavender-soft)"
                           onClick={() => setOpenNav(null)}
                         >
-                          <p className="text-sm font-bold text-[var(--ink)]">{item.label}</p>
+                          <p className="text-sm font-bold text-(--ink)">{item.label}</p>
                           {item.desc ? (
-                            <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{item.desc}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
                           ) : null}
                         </Link>
                       ),
@@ -507,7 +507,7 @@ function HomePage() {
             ))}
             <Link
               to="/docs/faq"
-              className="rounded-full px-3.5 py-2 text-[13px] font-semibold text-[var(--ink)]/80 transition hover:bg-black/[0.04] hover:text-[var(--ink)]"
+              className="rounded-full px-3.5 py-2 text-[13px] font-semibold text-(--ink)/80 transition hover:bg-black/4 hover:text-(--ink)"
             >
               Support
             </Link>
@@ -521,8 +521,8 @@ function HomePage() {
               className={cn(
                 "inline-flex items-center gap-2 rounded-full px-3.5 py-2.5 text-sm font-bold press",
                 isSpeaking
-                  ? "bg-[var(--ink)] text-white"
-                  : "bg-white/80 text-[var(--ink)] shadow-sm ring-1 ring-black/5 hover:bg-white",
+                  ? "bg-(--ink) text-white"
+                  : "bg-white/80 text-(--ink) shadow-sm ring-1 ring-black/5 hover:bg-white",
               )}
               aria-label={isSpeaking ? "Stop listening" : "Listen to this page"}
             >
@@ -546,18 +546,18 @@ function HomePage() {
               onClick={() => setMenuOpen((v) => !v)}
             >
               <div className="space-y-1.5">
-                <span className="block h-0.5 w-4 bg-[var(--ink)]" />
-                <span className="block h-0.5 w-4 bg-[var(--ink)]" />
+                <span className="block h-0.5 w-4 bg-(--ink)" />
+                <span className="block h-0.5 w-4 bg-(--ink)" />
               </div>
             </button>
           </div>
         </div>
 
         {menuOpen ? (
-          <div className="ophome-dropdown mx-auto mt-2 max-w-[1180px] p-3 lg:hidden">
+          <div className="ophome-dropdown mx-auto mt-2 max-w-295 p-3 lg:hidden">
             {NAV_GROUPS.map((group) => (
               <div key={group.label} className="mb-3">
-                <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+                <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   {group.label}
                 </p>
                 {group.items.map((item) =>
@@ -597,17 +597,17 @@ function HomePage() {
         ) : null}
       </header>
 
-      <div className="mx-auto w-full max-w-[1180px] px-3 pb-10 sm:px-5">
+      <div className="mx-auto w-full max-w-295 px-3 pb-10 sm:px-5">
         {/* Hero — brand-first composition */}
         <section ref={heroRef} className="ophome-hero relative mt-3 overflow-hidden sm:mt-4">
           <div className="ophome-hero-glow" aria-hidden />
           <div className="ophome-hero-mesh" aria-hidden />
           <div
-            className="pointer-events-none absolute -left-8 top-16 h-40 w-40 rounded-full bg-[var(--lavender)]/25 blur-3xl ophome-float"
+            className="pointer-events-none absolute -left-8 top-16 h-40 w-40 rounded-full bg-(--lavender)/25 blur-3xl ophome-float"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -right-6 bottom-24 h-48 w-48 rounded-full bg-[var(--brand)]/20 blur-3xl ophome-float-delay"
+            className="pointer-events-none absolute -right-6 bottom-24 h-48 w-48 rounded-full bg-(--brand)/20 blur-3xl ophome-float-delay"
             aria-hidden
           />
           <div className="relative z-10 mx-auto flex min-h-[min(88vh,820px)] max-w-3xl flex-col items-center px-6 pb-[min(42vh,340px)] pt-16 text-center sm:px-10 sm:pt-20">
@@ -620,7 +620,7 @@ function HomePage() {
             </div>
             <h1
               data-rise
-              className="ophome-rise mt-6 font-[family-name:var(--font-display)] text-[clamp(2.85rem,8vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.05em] text-white"
+              className="ophome-rise mt-6 font-(family-name:--font-display) text-[clamp(2.85rem,8vw,5rem)] font-extrabold leading-[0.98] tracking-tighter text-white"
             >
               OpenPay Pro
             </h1>
@@ -668,7 +668,7 @@ function HomePage() {
                 </span>
               </div>
               <p className="mt-4 text-left text-[11px] font-semibold text-white/55">Total balance</p>
-              <p className="mt-0.5 bg-linear-to-r from-white via-[var(--lavender)] to-white bg-clip-text text-left text-3xl font-extrabold tracking-tight text-transparent ophome-shimmer">
+              <p className="mt-0.5 bg-linear-to-r from-white via-(--lavender) to-white bg-clip-text text-left text-3xl font-extrabold tracking-tight text-transparent ophome-shimmer">
                 $4,820.40
               </p>
               <div className="mt-4 grid grid-cols-3 gap-1.5">
@@ -681,7 +681,7 @@ function HomePage() {
                     key={label}
                     className="flex flex-col items-center gap-1 rounded-xl bg-white/12 px-1.5 py-2.5"
                   >
-                    <Icon className="h-3.5 w-3.5 text-[var(--lavender)]" />
+                    <Icon className="h-3.5 w-3.5 text-(--lavender)" />
                     <span className="text-[9px] font-bold text-white/90">{label}</span>
                   </div>
                 ))}
@@ -719,7 +719,7 @@ function HomePage() {
             {[...ECO_MARKS, ...ECO_MARKS].map((item, i) => (
               <span
                 key={`${item.label}-${i}`}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-[var(--ink)] shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full border border-(--ink)/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-(--ink) shadow-sm"
               >
                 <img src={item.logo} alt="" className="h-4 w-4 rounded-md object-cover" />
                 {item.label}
@@ -770,13 +770,13 @@ function HomePage() {
         >
           <div className="flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Product
               </p>
-              <h2 className="mt-2 max-w-3xl font-[family-name:var(--font-display)] text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
+              <h2 className="mt-2 max-w-3xl font-(family-name:--font-display) text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
                 Everything in OpenPay Pro
               </h2>
-              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
                 One money app — wallet, OpenUSD, OpenToken, deposits, and AI on the same rails.
               </p>
             </div>
@@ -787,8 +787,8 @@ function HomePage() {
               className={cn(
                 "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold press",
                 isSpeaking
-                  ? "bg-[var(--ink)] text-white"
-                  : "bg-[var(--lavender)] text-[var(--ink)] hover:brightness-105",
+                  ? "bg-(--ink) text-white"
+                  : "bg-(--lavender) text-(--ink) hover:brightness-105",
               )}
               aria-label={isSpeaking ? "Stop listening" : "Listen to all features"}
             >
@@ -811,18 +811,18 @@ function HomePage() {
                 <li key={card.title}>
                   <a href={card.href} className="ophome-bento block h-full p-5 press">
                     <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--lavender-soft)] text-[var(--brand)]">
+                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-(--lavender-soft) text-(--brand)">
                         <Icon className="h-5 w-5" strokeWidth={2.1} />
                       </div>
-                      <span className="rounded-full bg-[var(--ink)]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+                      <span className="rounded-full bg-(--ink)/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                         {card.tag}
                       </span>
                     </div>
-                    <p className="text-lg font-extrabold tracking-tight text-[var(--ink)]">{card.title}</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    <p className="text-lg font-extrabold tracking-tight text-(--ink)">{card.title}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                       {card.body}
                     </p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-[var(--brand)]">
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-(--brand)">
                       Explore
                       <ArrowRight className="h-3.5 w-3.5" />
                     </span>
@@ -837,7 +837,7 @@ function HomePage() {
               <a
                 key={cat.id}
                 href={`#feature-${cat.id}`}
-                className="shrink-0 rounded-full border border-[var(--ink)]/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-[var(--ink)] press hover:bg-white"
+                className="shrink-0 rounded-full border border-(--ink)/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-(--ink) press hover:bg-white"
               >
                 {cat.title}
               </a>
@@ -857,14 +857,14 @@ function HomePage() {
             </Link>
             <Link
               to="/openusd"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
+              className="inline-flex items-center gap-2 rounded-full border border-(--ink)/12 bg-white/70 px-5 py-3 text-sm font-bold text-(--ink) press"
             >
               Meet OpenUSD
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/wiki"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
+              className="inline-flex items-center gap-2 rounded-full border border-(--ink)/12 bg-white/70 px-5 py-3 text-sm font-bold text-(--ink) press"
             >
               Read the Wiki
             </Link>
@@ -877,8 +877,8 @@ function HomePage() {
           className="ophome-section-reveal ophome-trust mt-6 overflow-hidden px-6 py-14 sm:mt-8 sm:px-12 sm:py-16"
         >
           <div className="mx-auto max-w-3xl text-center">
-            <Lock className="mx-auto h-8 w-8 text-[var(--lavender)]" strokeWidth={1.75} />
-            <h2 className="mt-6 font-[family-name:var(--font-display)] text-[clamp(1.7rem,4vw,2.75rem)] font-extrabold tracking-[-0.035em] text-white">
+            <Lock className="mx-auto h-8 w-8 text-(--lavender)" strokeWidth={1.75} />
+            <h2 className="mt-6 font-(family-name:--font-display) text-[clamp(1.7rem,4vw,2.75rem)] font-extrabold tracking-[-0.035em] text-white">
               Built for open money — not a closed bank silo.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/65">
@@ -904,10 +904,10 @@ function HomePage() {
         <section data-reveal className="ophome-section-reveal mt-16 sm:mt-20">
           <div className="flex flex-wrap items-end justify-between gap-4 px-1">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Ecosystem
               </p>
-              <h2 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold tracking-[-0.04em]">
+              <h2 className="mt-2 font-(family-name:--font-display) text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold tracking-[-0.04em]">
                 Everything in the OpenPay network
               </h2>
             </div>
@@ -944,11 +944,11 @@ function HomePage() {
           data-reveal
           className="ophome-section-reveal ophome-start mt-16 overflow-hidden px-6 py-14 text-center sm:mt-20 sm:px-12 sm:py-20"
         >
-          <p className="text-sm font-medium text-[var(--ink)]/55">Get started</p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(2.2rem,6vw,3.8rem)] font-extrabold tracking-[-0.045em] text-[var(--ink)]">
+          <p className="text-sm font-medium text-(--ink)/55">Get started</p>
+          <h2 className="mt-3 font-(family-name:--font-display) text-[clamp(2.2rem,6vw,3.8rem)] font-extrabold tracking-[-0.045em] text-(--ink)">
             Open OpenPay Pro.
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
             Sign in with OpenPay, Phantom, Pi, Telegram, or email — then hold OUSD, send, swap, and
             build.
           </p>
@@ -959,7 +959,7 @@ function HomePage() {
             </Link>
             <Link
               to="/openusd"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)]/12 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--ink)] press"
+              className="inline-flex items-center gap-2 rounded-full border border-(--ink)/12 bg-white/70 px-5 py-3 text-sm font-bold text-(--ink) press"
             >
               Meet OpenUSD
               <ArrowRight className="h-4 w-4" />
@@ -969,16 +969,16 @@ function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-8 border-t border-[var(--ink)]/8 bg-white/40">
-        <div className="mx-auto grid max-w-[1180px] gap-10 px-5 py-14 sm:px-8 md:grid-cols-4">
+      <footer className="mt-8 border-t border-(--ink)/8 bg-white/40">
+        <div className="mx-auto grid max-w-295 gap-10 px-5 py-14 sm:px-8 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2.5">
               <img src={OPENPAY_AUTH_LOGO} alt="" className="h-8 w-8 object-contain" />
-              <span className="font-[family-name:var(--font-display)] text-lg font-extrabold tracking-tight">
+              <span className="font-(family-name:--font-display) text-lg font-extrabold tracking-tight">
                 OpenPay Pro
               </span>
             </div>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[var(--muted-foreground)]">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
               Self-custody money app for the OpenPay ecosystem — OUSD, Pi, OpenTokens, and open rails.
             </p>
           </div>
@@ -1014,20 +1014,20 @@ function HomePage() {
             ]}
           />
         </div>
-        <div className="border-t border-[var(--ink)]/8">
-          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-xs text-[var(--muted-foreground)] sm:px-8">
+        <div className="border-t border-(--ink)/8">
+          <div className="mx-auto flex max-w-295 flex-wrap items-center justify-between gap-3 px-5 py-6 text-xs text-muted-foreground sm:px-8">
             <p>© {new Date().getFullYear()} OpenPay Pro</p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/terms" className="hover:text-[var(--ink)]">
+              <Link to="/terms" className="hover:text-(--ink)">
                 Terms
               </Link>
-              <Link to="/privacy" className="hover:text-[var(--ink)]">
+              <Link to="/privacy" className="hover:text-(--ink)">
                 Privacy
               </Link>
-              <Link to="/regulatory" className="hover:text-[var(--ink)]">
+              <Link to="/regulatory" className="hover:text-(--ink)">
                 Regulatory
               </Link>
-              <Link to="/legal" className="hover:text-[var(--ink)]">
+              <Link to="/legal" className="hover:text-(--ink)">
                 License
               </Link>
             </div>
@@ -1059,14 +1059,14 @@ function ShowcaseBand({
     <div id={`feature-${category.id}`} className="scroll-mt-28">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-1">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             {category.blurb}
           </p>
-          <h3 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.7rem,3.5vw,2.6rem)] font-extrabold tracking-[-0.035em]">
+          <h3 className="mt-2 font-(family-name:--font-display) text-[clamp(1.7rem,3.5vw,2.6rem)] font-extrabold tracking-[-0.035em]">
             {category.title}
           </h3>
         </div>
-        <span className="rounded-full bg-[var(--lavender)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[var(--ink)]">
+        <span className="rounded-full bg-(--lavender) px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-(--ink)">
           {category.items.length} live
         </span>
       </div>
@@ -1086,20 +1086,20 @@ function ShowcaseBand({
                 className={cn(
                   "w-full rounded-2xl px-4 py-3.5 text-left transition press",
                   i === idx
-                    ? "bg-white shadow-[0_16px_48px_-28px_rgba(40,30,80,0.45)] ring-1 ring-black/[0.05]"
+                    ? "bg-white shadow-[0_16px_48px_-28px_rgba(40,30,80,0.45)] ring-1 ring-black/5"
                     : "hover:bg-white/60",
                 )}
               >
                 <p
                   className={cn(
                     "text-[15px] font-bold tracking-tight",
-                    i === idx ? "text-[var(--ink)]" : "text-[var(--ink)]/70",
+                    i === idx ? "text-(--ink)" : "text-(--ink)/70",
                   )}
                 >
                   {item.name}
                 </p>
                 {i === idx ? (
-                  <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                     {item.desc}
                   </p>
                 ) : null}
@@ -1108,7 +1108,7 @@ function ShowcaseBand({
           ))}
         </ul>
 
-        <div className="ophome-feature-stage relative min-h-[340px] p-5 sm:min-h-[400px] sm:p-7">
+        <div className="ophome-feature-stage relative min-h-85 p-5 sm:min-h-100 sm:p-7">
           <div key={`${category.id}-${active.name}`} className="ophome-stage-in relative z-10 h-full">
             <ShowcaseVisual categoryId={category.id} item={active} />
           </div>
@@ -1129,18 +1129,18 @@ function ShowcaseVisual({
     return (
       <StageCard>
         <div className="relative">
-          <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-[var(--lavender)]/30 ophome-pulse-ring" />
+          <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-(--lavender)/30 ophome-pulse-ring" />
           <div className="flex items-center gap-3">
             <img src={OUSD_LOGO_URL} alt="" className="h-12 w-12 rounded-2xl object-cover" />
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 {item.name}
               </p>
               <p className="text-2xl font-extrabold tracking-tight">$4,820.40</p>
             </div>
           </div>
         </div>
-        <p className="mt-4 text-sm leading-relaxed text-[var(--muted-foreground)]">{item.desc}</p>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
         <div className="mt-5 grid grid-cols-3 gap-2">
           {[
             { label: "Send", Icon: Send },
@@ -1149,9 +1149,9 @@ function ShowcaseVisual({
           ].map(({ label, Icon }) => (
             <div
               key={label}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-[var(--lavender-soft)] px-2 py-3"
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-(--lavender-soft) px-2 py-3"
             >
-              <Icon className="h-4 w-4 text-[var(--brand)]" />
+              <Icon className="h-4 w-4 text-(--brand)" />
               <span className="text-[10px] font-bold">{label}</span>
             </div>
           ))}
@@ -1168,25 +1168,25 @@ function ShowcaseVisual({
   if (categoryId === "trading") {
     return (
       <StageCard>
-        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           {item.name}
         </p>
         <p className="mt-2 text-2xl font-extrabold tracking-tight">OUSD ↔ Markets</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
         <div className="mt-6 flex h-24 items-end gap-1.5">
           {[40, 62, 48, 78, 55, 88, 70, 95, 72, 84].map((h, i) => (
             <div
               key={i}
-              className="flex-1 rounded-t-md bg-linear-to-t from-[var(--brand)] to-[var(--lavender)] opacity-80"
+              className="flex-1 rounded-t-md bg-linear-to-t from-(--brand) to-(--lavender) opacity-80"
               style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
             />
           ))}
         </div>
-        <div className="mt-5 flex items-center gap-3 rounded-2xl bg-[var(--lavender-soft)] px-4 py-3">
-          <ArrowLeftRight className="h-5 w-5 text-[var(--brand)]" />
+        <div className="mt-5 flex items-center gap-3 rounded-2xl bg-(--lavender-soft) px-4 py-3">
+          <ArrowLeftRight className="h-5 w-5 text-(--brand)" />
           <div>
             <p className="text-sm font-bold">OpenDEX · OpenToken</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Live curve · clear fees</p>
+            <p className="text-xs text-muted-foreground">Live curve · clear fees</p>
           </div>
         </div>
       </StageCard>
@@ -1196,16 +1196,16 @@ function ShowcaseVisual({
   if (categoryId === "move") {
     return (
       <StageCard>
-        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           {item.name}
         </p>
         <p className="mt-2 text-2xl font-extrabold tracking-tight">Move value in</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
         <div className="relative mx-auto mt-8 grid h-36 w-36 place-items-center">
-          <div className="absolute inset-0 rounded-full border border-dashed border-[var(--brand)]/30 ophome-orbit" />
-          <div className="absolute inset-3 rounded-full border border-[var(--lavender)]/40" />
-          <div className="relative z-10 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--lavender-soft)]">
-            <Send className="h-7 w-7 text-[var(--brand)]" />
+          <div className="absolute inset-0 rounded-full border border-dashed border-(--brand)/30 ophome-orbit" />
+          <div className="absolute inset-3 rounded-full border border-(--lavender)/40" />
+          <div className="relative z-10 grid h-16 w-16 place-items-center rounded-2xl bg-(--lavender-soft)">
+            <Send className="h-7 w-7 text-(--brand)" />
           </div>
           {["ETH", "SOL", "BNB", "BASE"].map((c, i) => (
             <span
@@ -1224,7 +1224,7 @@ function ShowcaseVisual({
           {["Solana Pay", "Circle Mint", "QR", "WC Pay"].map((t) => (
             <span
               key={t}
-              className="rounded-full bg-[var(--lavender-soft)] px-2.5 py-1 text-[10px] font-bold"
+              className="rounded-full bg-(--lavender-soft) px-2.5 py-1 text-[10px] font-bold"
             >
               {t}
             </span>
@@ -1238,8 +1238,8 @@ function ShowcaseVisual({
     return (
       <StageCard dark>
         <div className="relative inline-grid place-items-center">
-          <div className="absolute h-20 w-20 rounded-full border border-[var(--lavender)]/40 ophome-pulse-ring" />
-          <ShieldCheck className="relative h-10 w-10 text-[var(--lavender)]" />
+          <div className="absolute h-20 w-20 rounded-full border border-(--lavender)/40 ophome-pulse-ring" />
+          <ShieldCheck className="relative h-10 w-10 text-(--lavender)" />
         </div>
         <p className="mt-6 text-2xl font-extrabold tracking-tight text-white">{item.name}</p>
         <p className="mt-2 text-sm text-white/65">{item.desc}</p>
@@ -1253,7 +1253,7 @@ function ShowcaseVisual({
               key={label}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white"
             >
-              <Icon className="h-3.5 w-3.5 text-[var(--lavender)]" />
+              <Icon className="h-3.5 w-3.5 text-(--lavender)" />
               {label}
             </span>
           ))}
@@ -1276,12 +1276,12 @@ function ShowcaseVisual({
           <div className="rounded-2xl rounded-tl-md bg-white/10 px-3.5 py-2.5 text-sm text-white/85">
             How do I top up OUSD with Pi?
           </div>
-          <div className="ml-4 rounded-2xl rounded-tr-md bg-[var(--lavender)]/25 px-3.5 py-2.5 text-sm text-white">
+          <div className="ml-4 rounded-2xl rounded-tr-md bg-(--lavender)/25 px-3.5 py-2.5 text-sm text-white">
             Open Top up → choose Pi → confirm live π price. I’ll walk you through it.
           </div>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-white/55">{item.desc}</p>
-        <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[var(--lavender)]">
+        <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-(--lavender)">
           <MessageCircle className="h-3.5 w-3.5" />
           Speak · MCP · Wiki listen
         </div>
@@ -1293,7 +1293,7 @@ function ShowcaseVisual({
     return (
       <StageCard dark>
         <p className="text-xs font-bold uppercase tracking-wide text-white/50">{item.name}</p>
-        <p className="mt-2 font-mono text-sm text-[var(--lavender)]">POST /v1/transfers</p>
+        <p className="mt-2 font-mono text-sm text-(--lavender)">POST /v1/transfers</p>
         <p className="mt-3 text-2xl font-extrabold text-white">Build on OUSD</p>
         <p className="mt-2 text-sm text-white/65">{item.desc}</p>
         <div className="mt-6 space-y-2 font-mono text-[11px] text-white/70">
@@ -1301,7 +1301,7 @@ function ShowcaseVisual({
             <span className="text-emerald-400">200</span> charge.created
           </p>
           <p>
-            <span className="text-[var(--lavender)]">ok</span> ledger.synced
+            <span className="text-(--lavender)">ok</span> ledger.synced
           </p>
           <p>
             <span className="text-sky-300">mcp</span> tools.ready
@@ -1314,11 +1314,11 @@ function ShowcaseVisual({
   // auth
   return (
     <StageCard>
-      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
         {item.name}
       </p>
       <p className="mt-2 text-2xl font-extrabold tracking-tight">Sign in your way</p>
-      <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.desc}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
       <div className="mt-6 grid grid-cols-2 gap-2">
         {["OpenPay", "Phantom", "Pi", "Telegram", "Solana", "MetaMask", "Email", "WC"].map(
           (label, i) => (
@@ -1327,8 +1327,8 @@ function ShowcaseVisual({
               className={cn(
                 "rounded-2xl px-3 py-3 text-center text-xs font-extrabold",
                 i === 0
-                  ? "bg-[var(--lavender)] text-[var(--ink)]"
-                  : "bg-[var(--lavender-soft)] text-[var(--ink)]/80",
+                  ? "bg-(--lavender) text-(--ink)"
+                  : "bg-(--lavender-soft) text-(--ink)/80",
               )}
             >
               {label}
@@ -1369,16 +1369,16 @@ function FeatureBand<T extends string>({
     <section className="mt-16 sm:mt-24">
       <div className="flex flex-wrap items-end justify-between gap-4 px-1">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             {eyebrow}
           </p>
-          <h2 className="mt-2 max-w-2xl font-[family-name:var(--font-display)] text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
+          <h2 className="mt-2 max-w-2xl font-(family-name:--font-display) text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
             {title}
           </h2>
         </div>
         <Link
           to={moreHref}
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--brand)] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-(--brand) hover:underline"
         >
           See more
           <ArrowRight className="h-4 w-4" />
@@ -1392,8 +1392,8 @@ function FeatureBand<T extends string>({
         )}
       >
         <div>
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--muted-foreground)] shadow-sm ring-1 ring-black/[0.04]">
-            <Sparkles className="h-3.5 w-3.5 text-[var(--brand)]" />
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground shadow-sm ring-1 ring-black/4">
+            <Sparkles className="h-3.5 w-3.5 text-(--brand)" />
             {eyebrow}
           </div>
           <ul className="space-y-1">
@@ -1405,8 +1405,8 @@ function FeatureBand<T extends string>({
                   className={cn(
                     "w-full rounded-2xl px-4 py-3.5 text-left text-[15px] leading-snug transition",
                     i === idx
-                      ? "bg-white font-bold text-[var(--ink)] shadow-[0_12px_40px_-24px_rgba(40,30,80,0.35)] ring-1 ring-black/[0.04]"
-                      : "font-medium text-[var(--muted-foreground)] hover:bg-white/50 hover:text-[var(--ink)]",
+                      ? "bg-white font-bold text-(--ink) shadow-[0_12px_40px_-24px_rgba(40,30,80,0.35)] ring-1 ring-black/4"
+                      : "font-medium text-muted-foreground hover:bg-white/50 hover:text-(--ink)",
                   )}
                 >
                   {slide.title}
@@ -1415,7 +1415,7 @@ function FeatureBand<T extends string>({
             ))}
           </ul>
         </div>
-        <div className="ophome-stage relative min-h-[320px] overflow-hidden p-6 sm:min-h-[380px] sm:p-8">
+        <div className="ophome-stage relative min-h-80 overflow-hidden p-6 sm:min-h-95 sm:p-8">
           <div key={active.visual} className="ophome-stage-in h-full">
             {renderVisual(active.visual)}
           </div>
@@ -1429,16 +1429,16 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
   if (kind === "mint") {
     return (
       <StageCard>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           OpenToken
         </p>
         <p className="mt-3 text-2xl font-extrabold tracking-tight">Launch · bonding curve</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Graduate at 100k OUSD</p>
-        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-[var(--lavender-soft)] px-4 py-3">
+        <p className="mt-1 text-sm text-muted-foreground">Graduate at 100k OUSD</p>
+        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-(--lavender-soft) px-4 py-3">
           <img src={OPENPAY_NETWORK_BADGE_URL} alt="" className="h-9 w-9 object-contain" />
           <div>
             <p className="text-sm font-bold">$OPEN sample</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Mint · trade · list</p>
+            <p className="text-xs text-muted-foreground">Mint · trade · list</p>
           </div>
         </div>
       </StageCard>
@@ -1447,7 +1447,7 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
   if (kind === "deposit") {
     return (
       <StageCard>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Multi-chain deposit
         </p>
         <p className="mt-3 text-2xl font-extrabold tracking-tight">Credit OUSD</p>
@@ -1455,7 +1455,7 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
           {["Ethereum", "Base", "BNB", "Polygon", "Solana"].map((c) => (
             <span
               key={c}
-              className="rounded-full bg-[var(--lavender-soft)] px-3 py-1.5 text-xs font-bold text-[var(--ink)]"
+              className="rounded-full bg-(--lavender-soft) px-3 py-1.5 text-xs font-bold text-(--ink)"
             >
               {c}
             </span>
@@ -1467,12 +1467,12 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
   if (kind === "api") {
     return (
       <StageCard>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Builders
         </p>
         <p className="mt-3 text-2xl font-extrabold tracking-tight">Partner API</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Connect · OpenLedger · MCP</p>
-        <div className="mt-6 rounded-2xl bg-[var(--ink)] px-4 py-3 font-mono text-xs text-[var(--lavender)]">
+        <p className="mt-1 text-sm text-muted-foreground">Connect · OpenLedger · MCP</p>
+        <div className="mt-6 rounded-2xl bg-(--ink) px-4 py-3 font-mono text-xs text-(--lavender)">
           POST /v1/transfers
         </div>
       </StageCard>
@@ -1481,7 +1481,7 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
   if (kind === "watch") {
     return (
       <StageCard>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Watchlist
         </p>
         <p className="mt-3 text-2xl font-extrabold tracking-tight">Trending now</p>
@@ -1495,19 +1495,19 @@ function TradeVisual({ kind }: { kind: (typeof TRADE_SLIDES)[number]["visual"] }
   }
   return (
     <StageCard>
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         OpenDEX · Swap
       </p>
       <p className="mt-3 text-2xl font-extrabold tracking-tight">OUSD → SOL</p>
-      <p className="mt-1 text-sm text-[var(--muted-foreground)]">Instant · open network fee</p>
-      <div className="mt-6 h-2 overflow-hidden rounded-full bg-[var(--lavender-soft)]">
-        <div className="ophome-bar h-full w-2/3 rounded-full bg-[var(--brand)]" />
+      <p className="mt-1 text-sm text-muted-foreground">Instant · open network fee</p>
+      <div className="mt-6 h-2 overflow-hidden rounded-full bg-(--lavender-soft)">
+        <div className="ophome-bar h-full w-2/3 rounded-full bg-(--brand)" />
       </div>
-      <div className="mt-6 flex items-center gap-3 rounded-2xl bg-[var(--lavender-soft)] px-4 py-3">
-        <ArrowLeftRight className="h-5 w-5 text-[var(--brand)]" />
+      <div className="mt-6 flex items-center gap-3 rounded-2xl bg-(--lavender-soft) px-4 py-3">
+        <ArrowLeftRight className="h-5 w-5 text-(--brand)" />
         <div>
           <p className="text-sm font-bold">Swap majors</p>
-          <p className="text-xs text-[var(--muted-foreground)]">Against OUSD liquidity</p>
+          <p className="text-xs text-muted-foreground">Against OUSD liquidity</p>
         </div>
       </div>
     </StageCard>
@@ -1518,13 +1518,13 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
   if (kind === "send") {
     return (
       <StageCard>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Send OUSD
         </p>
         <p className="mt-3 text-2xl font-extrabold tracking-tight">To @alice</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">$42.00 · Instant ledger settle</p>
+        <p className="mt-1 text-sm text-muted-foreground">$42.00 · Instant ledger settle</p>
         <div className="mt-6 flex items-center justify-between rounded-2xl bg-[#eefbf5] px-4 py-3">
-          <span className="text-sm font-semibold text-[var(--muted-foreground)]">You send</span>
+          <span className="text-sm font-semibold text-muted-foreground">You send</span>
           <span className="text-lg font-extrabold">42.00 OUSD</span>
         </div>
         <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-600">
@@ -1540,18 +1540,18 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
         <div className="flex items-center gap-3">
           <img src={OUSD_LOGO_URL} alt="" className="h-12 w-12 rounded-2xl object-cover" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               OpenUSD
             </p>
             <p className="text-2xl font-extrabold tracking-tight">$1 ledger dollar</p>
           </div>
         </div>
-        <p className="mt-5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+        <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
           Hold, send, and settle with the power of crypto and the ease of cash — on the open network.
         </p>
         <Link
           to="/openusd"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--brand)]"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-(--brand)"
         >
           Learn about OpenUSD
           <ArrowRight className="h-4 w-4" />
@@ -1565,11 +1565,11 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
         <div className="flex items-center gap-2.5">
           <img src={OUSD_LOGO_URL} alt="" className="h-10 w-10 rounded-2xl object-cover" />
           <div>
-            <p className="text-[11px] font-semibold text-[var(--muted-foreground)]">Home balance</p>
+            <p className="text-[11px] font-semibold text-muted-foreground">Home balance</p>
             <p className="text-xl font-extrabold tracking-tight">$4,820.40</p>
           </div>
         </div>
-        <Sparkles className="h-5 w-5 text-[var(--brand)]" strokeWidth={1.75} />
+        <Sparkles className="h-5 w-5 text-(--brand)" strokeWidth={1.75} />
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {[
@@ -1579,9 +1579,9 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
         ].map(({ label, Icon }) => (
           <div
             key={label}
-            className="flex flex-col items-center gap-1.5 rounded-2xl bg-[var(--lavender-soft)] px-2 py-3"
+            className="flex flex-col items-center gap-1.5 rounded-2xl bg-(--lavender-soft) px-2 py-3"
           >
-            <Icon className="h-4 w-4 text-[var(--brand)]" strokeWidth={2.1} />
+            <Icon className="h-4 w-4 text-(--brand)" strokeWidth={2.1} />
             <span className="text-[10px] font-bold">{label}</span>
           </div>
         ))}
@@ -1598,7 +1598,7 @@ function SecurityVisual({ kind }: { kind: (typeof SECURITY_SLIDES)[number]["visu
   if (kind === "pin") {
     return (
       <StageCard dark>
-        <ShieldCheck className="h-8 w-8 text-[var(--lavender)]" />
+        <ShieldCheck className="h-8 w-8 text-(--lavender)" />
         <p className="mt-5 text-2xl font-extrabold tracking-tight text-white">PIN & biometrics</p>
         <p className="mt-2 text-sm text-white/65">Device lock stays on your hardware — not ours.</p>
       </StageCard>
@@ -1607,7 +1607,7 @@ function SecurityVisual({ kind }: { kind: (typeof SECURITY_SLIDES)[number]["visu
   if (kind === "ledger") {
     return (
       <StageCard dark>
-        <BookOpen className="h-8 w-8 text-[var(--lavender)]" />
+        <BookOpen className="h-8 w-8 text-(--lavender)" />
         <p className="mt-5 text-2xl font-extrabold tracking-tight text-white">OpenLedger</p>
         <p className="mt-2 text-sm text-white/65">Inspect every credit and debit on the public rails.</p>
       </StageCard>
@@ -1624,12 +1624,12 @@ function SecurityVisual({ kind }: { kind: (typeof SECURITY_SLIDES)[number]["visu
   }
   return (
     <StageCard dark>
-      <Lock className="h-8 w-8 text-[var(--lavender)]" />
+      <Lock className="h-8 w-8 text-(--lavender)" />
       <p className="mt-5 text-2xl font-extrabold tracking-tight text-white">Your keys</p>
       <p className="mt-2 text-sm text-white/65">
         Self-custody wallet. Recovery phrase under your control. We never hold your funds.
       </p>
-      <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-[var(--lavender)]">
+      <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-(--lavender)">
         <Globe2 className="h-4 w-4" />
         Open network · not a closed bank app
       </div>
@@ -1642,7 +1642,7 @@ function StageCard({ children, dark }: { children: ReactNode; dark?: boolean }) 
     <div
       className={cn(
         "relative h-full rounded-[1.75rem] p-6 sm:p-7",
-        dark ? "bg-[#1a1528] text-white" : "bg-white text-[var(--ink)]",
+        dark ? "bg-[#1a1528] text-white" : "bg-white text-(--ink)",
       )}
     >
       {children}
@@ -1669,7 +1669,7 @@ function FooterCol({
 }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
         {title}
       </p>
       <ul className="mt-4 space-y-2.5">
@@ -1680,14 +1680,14 @@ function FooterCol({
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm font-semibold text-[var(--ink)]/85 hover:text-[var(--brand)]"
+                className="text-sm font-semibold text-(--ink)/85 hover:text-(--brand)"
               >
                 {link.label}
               </a>
             ) : (
               <Link
                 to={link.href}
-                className="text-sm font-semibold text-[var(--ink)]/85 hover:text-[var(--brand)]"
+                className="text-sm font-semibold text-(--ink)/85 hover:text-(--brand)"
               >
                 {link.label}
               </Link>

@@ -630,7 +630,7 @@ function AuthPiPageInner() {
 
   const inPiBrowser = isPiBrowser();
   const visibleOptions = inPiBrowser
-    ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi" || o.id === "email")
+    ? AUTH_OPTIONS.filter((o) => o.id === "openpay" || o.id === "pi")
     : AUTH_OPTIONS;
 
   function renderFeaturedOption(opt: (typeof AUTH_OPTIONS)[number], delayMs = 0) {
@@ -978,7 +978,7 @@ function AuthPiPageInner() {
               <div key="privy-panel" className="auth-cta-swap">
                 <PrivyLoginButton busy={busy} setBusy={setBusy} />
               </div>
-            ) : selected === "email" ? (
+            ) : selectedOpt?.id === "email" ? (
               <div key="email-panel" className="auth-cta-swap">
                 <EmailAuthPanel
                   busy={busy}

@@ -69,8 +69,8 @@ export function buildOpenPaySchemeUri(opts: ReceiveQrOptions): string {
 export async function walletQrDataUrl(payload: string, size = 280): Promise<string> {
   return QRCode.toDataURL(payload, {
     width: size,
-    margin: 3,
-    color: { dark: "#111111", light: "#ffffff" },
-    errorCorrectionLevel: "H",
+    margin: 4,
+    color: { dark: "#000000", light: "#ffffff" },
+    errorCorrectionLevel: "M",
   });
 }

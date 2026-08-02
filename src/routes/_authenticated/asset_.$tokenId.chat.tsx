@@ -35,7 +35,9 @@ function AssetLiveChatPage() {
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
-  const roomId = (isOusd ? "ousd" : tokenId).toLowerCase();
+  // Majors / OUSD → asset_chat_messages.room_id (one room per asset).
+  // OpenToken UUIDs omit roomId so TokenLiveChat uses ot_token_chat_messages (per token).
+  const roomId = isOusd ? "ousd" : isMajor ? tokenId.toLowerCase() : undefined;
 
   const { data: majorMarkets } = useQuery({
     queryKey: ["major-markets"],

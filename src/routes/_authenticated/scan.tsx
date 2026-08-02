@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ClipboardPaste,
@@ -39,9 +40,17 @@ function ScanPage() {
   const alive = useRef(true);
   const finishRef = useRef<(text: string) => Promise<void>>(async () => undefined);
   const [flash, setFlash] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [entered, setEntered] = useState(false);
   /** My QR overlay — stay on /scan (avoids receive showing under scanner). */
   const [showMyQr, setShowMyQr] = useState(false);
   const [myQrUrl, setMyQrUrl] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+    const t = window.setTimeout(() => setEntered(true), 16);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -68,7 +77,7 @@ function ScanPage() {
       setMyQrUrl("");
       return;
     }
-    void walletQrDataUrl(qrPayload, 280).then((url) => {
+    void walletQrDataUrl(qrPayload, 320).then((url) => {
       if (!cancelled) setMyQrUrl(url);
     });
     return () => {
@@ -76,11 +85,12 @@ function ScanPage() {
     };
   }, [qrPayload]);
 
-  // Pause camera while My QR sheet is open so it doesn't fight the overlay.
+  // Keep camera warm under My QR — pause decode only (no restart flash).
   const scanner = usePhantomQrScanner({
     videoRef,
     fallbackElId: FALLBACK_EL_ID,
-    active: !showMyQr,
+    active: true,
+    paused: showMyQr,
     onResult: (text) => {
       if (handled.current || showMyQr) return;
       handled.current = true;
@@ -123,8 +133,7 @@ function ScanPage() {
       return;
     }
 
-    // /scan is for OpenPay Pro wallet receive QRs (0x…) across all Pro tokens.
-    // Also accept legacy HTTPS /pay/ links that still decode to a Pro address.
+    // Accept Pro wallet receive QRs (bare 0x, openpay:, /pay/0x links).
     const isPro =
       parsed.kind === "pro_wallet" || /^0x[a-fA-F0-9]{40}$/i.test(parsed.to.trim());
     if (!isPro) {
@@ -227,14 +236,22 @@ function ScanPage() {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black text-white">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className={cn(
+        "ph-scan-shell fixed inset-0 z-[100] overflow-hidden bg-black text-white",
+        entered ? "ph-scan-shell-in" : "opacity-0",
+      )}
+    >
       <video
         ref={videoRef}
         className={cn(
-          "absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-300",
+          "absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-500 ease-out",
           scanner.mode !== "native" && "invisible",
           (scanner.starting || showMyQr) && "opacity-0",
+          !scanner.starting && !showMyQr && scanner.mode === "native" && "opacity-100",
         )}
         playsInline
         muted
@@ -244,8 +261,9 @@ function ScanPage() {
       <div
         id={FALLBACK_EL_ID}
         className={cn(
-          "absolute inset-0 z-0 h-full w-full overflow-hidden bg-black [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover",
-          (scanner.mode !== "fallback" || showMyQr) && "invisible pointer-events-none",
+          "absolute inset-0 z-0 h-full w-full overflow-hidden bg-black transition-opacity duration-500 ease-out [&_video]:absolute [&_video]:inset-0 [&_video]:h-full [&_video]:w-full [&_video]:max-w-none [&_video]:object-cover",
+          (scanner.mode !== "fallback" || showMyQr) && "invisible pointer-events-none opacity-0",
+          scanner.mode === "fallback" && !showMyQr && !scanner.starting && "opacity-100",
         )}
         aria-hidden
       />
@@ -261,21 +279,21 @@ function ScanPage() {
       {/* Dim mask with square cutout */}
       {!showMyQr && (
         <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
-          <div className="w-full flex-1 bg-black/60" />
+          <div className="w-full flex-1 bg-black/55" />
           <div className="flex w-full items-stretch">
-            <div className="flex-1 bg-black/60" />
+            <div className="flex-1 bg-black/55" />
             <div className="relative h-[min(72vw,18.5rem)] w-[min(72vw,18.5rem)] shrink-0">
-              <span className="ph-scan-bracket absolute -left-0.5 -top-0.5 h-11 w-11 rounded-tl-[1.15rem] border-l-[3.5px] border-t-[3.5px] border-white" />
-              <span className="ph-scan-bracket absolute -right-0.5 -top-0.5 h-11 w-11 rounded-tr-[1.15rem] border-r-[3.5px] border-t-[3.5px] border-white [animation-delay:60ms]" />
-              <span className="ph-scan-bracket absolute -bottom-0.5 -left-0.5 h-11 w-11 rounded-bl-[1.15rem] border-b-[3.5px] border-l-[3.5px] border-white [animation-delay:120ms]" />
-              <span className="ph-scan-bracket absolute -bottom-0.5 -right-0.5 h-11 w-11 rounded-br-[1.15rem] border-b-[3.5px] border-r-[3.5px] border-white [animation-delay:180ms]" />
+              <span className="ph-scan-bracket absolute -left-0.5 -top-0.5 h-11 w-11 rounded-tl-[1.15rem] border-l-[3px] border-t-[3px] border-white/95" />
+              <span className="ph-scan-bracket absolute -right-0.5 -top-0.5 h-11 w-11 rounded-tr-[1.15rem] border-r-[3px] border-t-[3px] border-white/95" />
+              <span className="ph-scan-bracket absolute -bottom-0.5 -left-0.5 h-11 w-11 rounded-bl-[1.15rem] border-b-[3px] border-l-[3px] border-white/95" />
+              <span className="ph-scan-bracket absolute -bottom-0.5 -right-0.5 h-11 w-11 rounded-br-[1.15rem] border-b-[3px] border-r-[3px] border-white/95" />
               {!scanner.error && !scanner.starting && (
-                <div className="ph-scan-line absolute inset-x-3 h-0.5 rounded-full bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.85)]" />
+                <div className="ph-scan-line absolute inset-x-4 h-px rounded-full bg-white/80" />
               )}
             </div>
-            <div className="flex-1 bg-black/60" />
+            <div className="flex-1 bg-black/55" />
           </div>
-          <div className="w-full flex-1 bg-black/60" />
+          <div className="w-full flex-1 bg-black/55" />
         </div>
       )}
 
@@ -301,19 +319,19 @@ function ScanPage() {
         <div className="w-11" />
       </div>
 
-      {/* Starting */}
+      {/* Starting — soft, no hard black flash */}
       {!showMyQr && scanner.starting && !scanner.error && (
-        <div className="absolute inset-0 z-20 grid place-items-center bg-black/55">
+        <div className="absolute inset-0 z-20 grid place-items-center bg-black/40">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-white" />
-            <p className="text-sm font-medium text-white/80">Starting camera…</p>
+            <Loader2 className="h-7 w-7 animate-spin text-white/90" />
+            <p className="text-sm font-medium text-white/70">Starting camera…</p>
           </div>
         </div>
       )}
 
-      {/* My QR overlay — Phantom-style sheet over paused scan */}
+      {/* My QR overlay */}
       {showMyQr && (
-        <div className="absolute inset-0 z-[25] flex flex-col items-center justify-center bg-black px-6 pb-28 pt-20">
+        <div className="absolute inset-0 z-[25] flex flex-col items-center justify-center bg-black/95 px-6 pb-28 pt-20 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-[1.75rem] bg-white p-6 text-center text-black shadow-2xl">
             <p className="text-sm font-semibold text-neutral-500">Receive on OpenPay Pro</p>
             <p className="mt-1 text-lg font-bold">OpenPay Pro</p>
@@ -345,16 +363,16 @@ function ScanPage() {
             </button>
           </div>
           <p className="mt-5 max-w-xs text-center text-[13px] text-white/60">
-            This QR is your wallet address. Scan it in OpenPay Pro → Send, or copy the address below
+            This QR is your wallet address. Scan it in OpenPay Pro → Scan to fill Send
           </p>
         </div>
       )}
 
-      {/* Bottom chrome — Phantom: Photos · My QR · Light · Paste */}
+      {/* Bottom chrome */}
       <div className="absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         {!showMyQr && (
           <p className="mx-auto mb-7 max-w-xs text-center text-[13px] font-medium leading-snug text-white/65">
-            Scan a wallet address QR — opens Send with the address filled in
+            Point at a Receive wallet QR — opens Send with the address filled in
           </p>
         )}
 
@@ -422,7 +440,6 @@ function ScanPage() {
             </div>
           </div>
         )}
-
       </div>
 
       <input
@@ -436,7 +453,8 @@ function ScanPage() {
           e.target.value = "";
         }}
       />
-    </div>
+    </div>,
+    document.body,
   );
 }
 

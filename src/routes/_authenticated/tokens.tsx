@@ -2,7 +2,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, BadgeCheck, CircleDollarSign, Plus, Shield } from "lucide-react";
+import { ArrowUpDown, BadgeCheck, CircleDollarSign, MessageCircle, Plus, Shield } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -373,12 +373,12 @@ function TokensPage() {
 
       <ul className="pb-4">
         {showOusd && (
-          <li>
+          <li className="flex items-stretch">
             <Link
               to="/asset/$tokenId"
               params={{ tokenId: "ousd" }}
               search={{}}
-              className="ph-row press"
+              className="ph-row min-w-0 flex-1 press"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative h-11 w-11 shrink-0">
@@ -391,6 +391,14 @@ function TokensPage() {
                 </div>
               </div>
               <TokenPriceRate price={1} change={0} currency={currency} />
+            </Link>
+            <Link
+              to="/asset/$tokenId/chat"
+              params={{ tokenId: "ousd" }}
+              className="grid w-11 shrink-0 place-items-center text-primary press hover:bg-muted/40"
+              aria-label="OUSD live chat"
+            >
+              <MessageCircle className="h-4 w-4" />
             </Link>
           </li>
         )}
@@ -451,12 +459,12 @@ function MajorTokenRow({
   const def = MAJOR_TOKENS[id];
   const m = majorMarketById(markets, id);
   return (
-    <li>
+    <li className="flex items-stretch">
       <Link
         to="/asset/$tokenId"
         params={{ tokenId: id }}
         search={{}}
-        className="ph-row press"
+        className="ph-row min-w-0 flex-1 press"
       >
         <div className="flex min-w-0 items-center gap-3">
           <TokenAvatar
@@ -474,6 +482,15 @@ function MajorTokenRow({
         </div>
         <TokenPriceRate price={m.price} change={m.change24h} currency={currency} />
       </Link>
+      <Link
+        to="/asset/$tokenId/chat"
+        params={{ tokenId: id }}
+        className="grid w-11 shrink-0 place-items-center text-primary press hover:bg-muted/40"
+        aria-label={`${def.symbol} live chat`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <MessageCircle className="h-4 w-4" />
+      </Link>
     </li>
   );
 }
@@ -482,12 +499,12 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
   const change = Number(t.change_24h ?? 0);
   const price = Number(t.price_usd ?? 0);
   return (
-    <li>
+    <li className="flex items-stretch">
       <Link
         to="/asset/$tokenId"
         params={{ tokenId: t.id }}
         search={{}}
-        className="ph-row press"
+        className="ph-row min-w-0 flex-1 press"
       >
         <div className="flex min-w-0 items-center gap-3">
           <TokenAvatar
@@ -502,6 +519,15 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
           </div>
         </div>
         <TokenPriceRate price={price} change={change} currency={currency} />
+      </Link>
+      <Link
+        to="/opentoken/$tokenId/chat"
+        params={{ tokenId: t.id }}
+        className="grid w-11 shrink-0 place-items-center text-primary press hover:bg-muted/40"
+        aria-label={`${t.symbol} live chat`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <MessageCircle className="h-4 w-4" />
       </Link>
     </li>
   );

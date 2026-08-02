@@ -120,7 +120,24 @@ async function listCameraConfigs(): Promise<MediaTrackConstraints[]> {
 
 /** Decode QR from a video frame via canvas + jsQR (handles screen moiré better than some BarcodeDetectors). */
 function decodeQrFromVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): string | null {
-  const image = sampleVideoFrame(video, canvas);
+  const attempts = [
+    decodeQrRegion(video, canvas, 1),
+    decodeQrRegion(video, canvas, 0.62),
+    decodeQrRegion(video, canvas, 0.42),
+  ];
+  for (const text of attempts) {
+    if (text) return text;
+  }
+  return null;
+}
+
+/** Sample full frame or a centered crop (viewfinder) — dense wallet QRs need the center pass. */
+function decodeQrRegion(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  cropRatio: number,
+): string | null {
+  const image = sampleVideoFrame(video, canvas, cropRatio);
   if (!image) return null;
   const code = jsQR(image.data, image.width, image.height, {
     inversionAttempts: "attemptBoth",
@@ -132,28 +149,44 @@ function decodeQrFromVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): 
 function sampleVideoFrame(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
+  cropRatio = 1,
 ): ImageData | null {
   const w = video.videoWidth;
   const h = video.videoHeight;
   if (!w || !h) return null;
 
+  const ratio = Math.min(1, Math.max(0.25, cropRatio));
+  const srcW = Math.floor(w * ratio);
+  const srcH = Math.floor(h * ratio);
+  const sx = Math.floor((w - srcW) / 2);
+  const sy = Math.floor((h - srcH) / 2);
+
   // Cap work size for mobile CPU while keeping enough detail for dense address QRs.
-  const maxSide = 960;
-  const scale = Math.min(1, maxSide / Math.max(w, h));
-  const cw = Math.max(1, Math.floor(w * scale));
-  const ch = Math.max(1, Math.floor(h * scale));
+  const maxSide = ratio < 1 ? 720 : 1080;
+  const scale = Math.min(1, maxSide / Math.max(srcW, srcH));
+  const cw = Math.max(1, Math.floor(srcW * scale));
+  const ch = Math.max(1, Math.floor(srcH * scale));
   if (canvas.width !== cw) canvas.width = cw;
   if (canvas.height !== ch) canvas.height = ch;
 
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
-  ctx.drawImage(video, 0, 0, cw, ch);
+  ctx.drawImage(video, sx, sy, srcW, srcH, 0, 0, cw, ch);
   return ctx.getImageData(0, 0, cw, ch);
 }
 
 /** Return the canvas after drawing the current video frame (for BarcodeDetector). */
 function canvasFromVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): HTMLCanvasElement {
-  sampleVideoFrame(video, canvas);
+  sampleVideoFrame(video, canvas, 1);
+  return canvas;
+}
+
+function canvasFromVideoCrop(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  cropRatio: number,
+): HTMLCanvasElement {
+  sampleVideoFrame(video, canvas, cropRatio);
   return canvas;
 }
 
@@ -365,11 +398,14 @@ export function usePhantomQrScanner({
   videoRef,
   fallbackElId,
   active,
+  paused = false,
   onResult,
 }: {
   videoRef: RefObject<HTMLVideoElement | null>;
   fallbackElId: string;
   active: boolean;
+  /** Keep camera warm but stop decoding (e.g. My QR overlay). */
+  paused?: boolean;
   onResult: (text: string) => void;
 }): PhantomQrScannerControls {
   const [starting, setStarting] = useState(true);
@@ -383,10 +419,13 @@ export function usePhantomQrScanner({
   const trackRef = useRef<MediaStreamTrack | null>(null);
   const handledRef = useRef(false);
   const nativeReadyRef = useRef(false);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
   const emit = useCallback((text: string) => {
+    if (pausedRef.current) return;
     const t = text.trim();
     if (!t || handledRef.current) return;
     handledRef.current = true;
@@ -509,29 +548,36 @@ export function usePhantomQrScanner({
           raf = requestAnimationFrame(() => {
             void tick();
           });
-          if (busy || video.readyState < 2) return;
+          if (pausedRef.current || busy || video.readyState < 2) return;
           busy = true;
           frame += 1;
           try {
-            // Prefer canvas samples — more reliable than raw <video> on many Android WebViews,
-            // especially when scanning another phone's screen.
             let value: string | undefined;
 
-            if (frame % 2 === 1) {
+            // jsQR first on most frames — better for phone-screen receive QRs
+            if (frame % 2 === 0) {
+              value = decodeQrFromVideo(video, canvas) ?? undefined;
+            }
+
+            if (!value) {
               try {
-                const codes = await detector.detect(canvasFromVideo(video, canvas));
+                const codes = await detector.detect(canvasFromVideoCrop(video, canvas, 0.62));
                 value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
               } catch {
                 /* frame miss */
               }
             }
 
-            // jsQR every other frame — stronger on screen→camera / moiré than some BD builds
-            if (!value && frame % 2 === 0) {
-              value = decodeQrFromVideo(video, canvas) ?? undefined;
+            if (!value && frame % 3 === 0) {
+              try {
+                const codes = await detector.detect(canvasFromVideo(video, canvas));
+                value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
+              } catch {
+                /* ignore */
+              }
             }
 
-            if (!value && frame % 5 === 0) {
+            if (!value && frame % 7 === 0) {
               try {
                 const codes = await detector.detect(video);
                 value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
@@ -542,7 +588,7 @@ export function usePhantomQrScanner({
 
             if (value) emit(value);
           } catch {
-            /* frame miss — some engines throw until first decodeable frame */
+            /* frame miss */
           } finally {
             busy = false;
           }
@@ -553,7 +599,6 @@ export function usePhantomQrScanner({
       } catch (e) {
         if (cancelled) return;
         const name = e && typeof e === "object" && "name" in e ? String((e as { name: string }).name) : "";
-        // A denied permission won't be fixed by the html5-qrcode fallback — surface it now.
         if (name === "NotAllowedError" || name === "SecurityError" || isInsecureContext()) {
           setError(friendlyCameraError(e));
           setStarting(false);
@@ -563,11 +608,9 @@ export function usePhantomQrScanner({
         setError(null);
         setStarting(true);
         console.warn("[scan] native camera failed, using fallback", e);
-
       }
     })();
 
-    // Only fall back if native never became ready (do not thrash a working camera).
     const timeout = setTimeout(() => {
       if (!cancelled && !nativeReadyRef.current) {
         setUseFallback(true);
@@ -594,7 +637,10 @@ export function usePhantomQrScanner({
   const fallbackScanner = useQrCamera({
     elementId: fallbackElId,
     active: active && useFallback,
-    onResult: emit,
+    onResult: (text) => {
+      if (pausedRef.current) return;
+      emit(text);
+    },
     onError: (message) => {
       setError(message);
       setStarting(false);

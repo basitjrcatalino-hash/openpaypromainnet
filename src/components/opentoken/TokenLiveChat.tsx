@@ -453,7 +453,7 @@ export function TokenLiveChat({
               {name}
             </div>
             <div className="truncate text-[12px] leading-tight text-white/45">
-              {chattingLabel(uniqueChatters)}
+              {symbol} room · {chattingLabel(uniqueChatters)}
             </div>
           </div>
         </div>

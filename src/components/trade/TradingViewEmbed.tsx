@@ -1,12 +1,10 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 export type TradingViewWidgetKind = "advanced-chart" | "technical-analysis" | "timeline" | "symbol-info";
 
-const SCRIPT_SRC: Record<TradingViewWidgetKind, string> = {
-  "advanced-chart":
-    "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js",
+const SCRIPT_SRC: Record<Exclude<TradingViewWidgetKind, "advanced-chart">, string> = {
   "technical-analysis":
     "https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js",
   timeline: "https://s3.tradingview.com/external-embedding/embed-widget-timeline.js",
@@ -20,12 +18,12 @@ type Props = {
   interval?: string;
   height?: number | string;
   className?: string;
-  /** Hide TradingView "allow symbol change" on chart */
   allowSymbolChange?: boolean;
 };
 
 /**
- * Client-only TradingView embed. Remounts when symbol / theme / interval change.
+ * Client-only TradingView embed.
+ * Advanced chart uses the stable widgetembed iframe (script widgets often render blank in app shells).
  * @see https://www.tradingview.com/widget-docs/
  */
 export function TradingViewEmbed({
@@ -40,49 +38,58 @@ export function TradingViewEmbed({
   const hostRef = useRef<HTMLDivElement>(null);
   const reactId = useId().replace(/:/g, "");
   const [ready, setReady] = useState(false);
+  const pxHeight = typeof height === "number" ? height : 320;
 
   useEffect(() => setReady(true), []);
 
+  const chartSrc = useMemo(() => {
+    if (kind !== "advanced-chart") return "";
+    const colorTheme = theme === "light" ? "light" : "dark";
+    const params = new URLSearchParams({
+      frameElementId: `tv_chart_${reactId}`,
+      symbol,
+      interval: String(interval),
+      hidesidetoolbar: "1",
+      hidetoptoolbar: "0",
+      symboledit: allowSymbolChange ? "1" : "0",
+      saveimage: "0",
+      toolbarbg: colorTheme === "dark" ? "0a0a0a" : "ffffff",
+      studies: "[]",
+      theme: colorTheme,
+      style: "1",
+      timezone: "Etc/UTC",
+      withdateranges: "1",
+      hideideas: "1",
+      hidevolume: "0",
+      locale: "en",
+      utm_source: typeof window !== "undefined" ? window.location.hostname : "openpay",
+      utm_medium: "widget",
+      utm_campaign: "chart",
+      utm_term: symbol,
+    });
+    return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+  }, [kind, symbol, interval, theme, allowSymbolChange, reactId]);
+
   useEffect(() => {
-    if (!ready || !hostRef.current) return;
+    if (!ready || kind === "advanced-chart" || !hostRef.current) return;
     const host = hostRef.current;
     host.innerHTML = "";
 
     const widgetMount = document.createElement("div");
     widgetMount.className = "tradingview-widget-container__widget";
-    widgetMount.style.height = typeof height === "number" ? `${height}px` : height;
+    widgetMount.style.height = `${pxHeight}px`;
     widgetMount.style.width = "100%";
     host.appendChild(widgetMount);
 
     const colorTheme = theme === "light" ? "light" : "dark";
     let config: Record<string, unknown>;
 
-    if (kind === "advanced-chart") {
-      config = {
-        autosize: true,
-        symbol,
-        interval,
-        timezone: "Etc/UTC",
-        theme: colorTheme,
-        style: "1",
-        locale: "en",
-        backgroundColor: colorTheme === "dark" ? "#0a0a0a" : "#ffffff",
-        gridColor: colorTheme === "dark" ? "rgba(242, 242, 242, 0.06)" : "rgba(0,0,0,0.06)",
-        hide_top_toolbar: false,
-        hide_legend: false,
-        withdateranges: true,
-        hide_side_toolbar: true,
-        allow_symbol_change: allowSymbolChange,
-        calendar: false,
-        support_host: "https://www.tradingview.com",
-        container_id: `tv_${kind}_${reactId}`,
-      };
-    } else if (kind === "technical-analysis") {
+    if (kind === "technical-analysis") {
       config = {
         interval: "1h",
         width: "100%",
         isTransparent: true,
-        height: typeof height === "number" ? height : 400,
+        height: pxHeight,
         symbol,
         showIntervalTabs: true,
         displayMode: "single",
@@ -97,7 +104,7 @@ export function TradingViewEmbed({
         isTransparent: true,
         displayMode: "regular",
         width: "100%",
-        height: typeof height === "number" ? height : 420,
+        height: pxHeight,
         locale: "en",
       };
     } else {
@@ -114,29 +121,46 @@ export function TradingViewEmbed({
     script.type = "text/javascript";
     script.src = SCRIPT_SRC[kind];
     script.async = true;
-    script.innerHTML = JSON.stringify(config);
+    script.textContent = JSON.stringify(config);
     host.appendChild(script);
 
     return () => {
       host.innerHTML = "";
     };
-  }, [ready, kind, symbol, interval, theme, height, allowSymbolChange, reactId]);
-
-  const h = typeof height === "number" ? height : undefined;
+  }, [ready, kind, symbol, theme, pxHeight]);
 
   if (!ready) {
     return (
       <div
         className={cn("animate-pulse rounded-2xl bg-muted/40", className)}
-        style={{ height: h ?? 280 }}
+        style={{ height: pxHeight }}
       />
+    );
+  }
+
+  if (kind === "advanced-chart") {
+    return (
+      <div
+        className={cn("overflow-hidden rounded-2xl bg-background", className)}
+        style={{ height: pxHeight, width: "100%" }}
+      >
+        <iframe
+          id={`tv_chart_${reactId}`}
+          title={`${symbol} chart`}
+          src={chartSrc}
+          style={{ width: "100%", height: pxHeight, border: 0 }}
+          allow="fullscreen"
+          loading="lazy"
+          referrerPolicy="origin-when-cross-origin"
+        />
+      </div>
     );
   }
 
   return (
     <div
       className={cn("tradingview-widget-container overflow-hidden rounded-2xl", className)}
-      style={{ height: h, width: "100%" }}
+      style={{ height: pxHeight, width: "100%" }}
     >
       <div ref={hostRef} className="h-full w-full" />
     </div>

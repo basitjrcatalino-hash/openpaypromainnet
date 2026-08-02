@@ -10,10 +10,14 @@ export type PerpTvConfig = {
   exchangeLabel: string;
   /** Binance USDT-M futures ticker (BTC/ETH/SOL) */
   binanceFutures?: string;
+  /** Gate.io USDT futures contract — works in more regions than Binance */
+  gateFutures?: string;
+  /** Bybit linear symbol */
+  bybitLinear?: string;
   /** OKX swap instrument (PI) */
   okxSwap?: string;
-  /** Gate.io USDT futures contract (PI fallback) */
-  gateFutures?: string;
+  /** CoinGecko id for last-resort mark */
+  coingeckoId: string;
 };
 
 export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
@@ -23,6 +27,9 @@ export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
     tvUrl: "https://www.tradingview.com/symbols/BTCUSDT.P/",
     exchangeLabel: "Binance",
     binanceFutures: "BTCUSDT",
+    gateFutures: "BTC_USDT",
+    bybitLinear: "BTCUSDT",
+    coingeckoId: "bitcoin",
   },
   ETH: {
     market: "ETH",
@@ -30,6 +37,9 @@ export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
     tvUrl: "https://www.tradingview.com/symbols/ETHUSDT.P/",
     exchangeLabel: "Binance",
     binanceFutures: "ETHUSDT",
+    gateFutures: "ETH_USDT",
+    bybitLinear: "ETHUSDT",
+    coingeckoId: "ethereum",
   },
   SOL: {
     market: "SOL",
@@ -37,6 +47,9 @@ export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
     tvUrl: "https://www.tradingview.com/symbols/SOLUSDT.P/",
     exchangeLabel: "Binance",
     binanceFutures: "SOLUSDT",
+    gateFutures: "SOL_USDT",
+    bybitLinear: "SOLUSDT",
+    coingeckoId: "solana",
   },
   PI: {
     market: "PI",
@@ -44,8 +57,8 @@ export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
     tvUrl: "https://www.tradingview.com/symbols/PIUSDT.P/",
     exchangeLabel: "OKX / Gate",
     okxSwap: "PI-USDT-SWAP",
-    /** Fallback when OKX is unreachable (region/DNS) */
     gateFutures: "PI_USDT",
+    coingeckoId: "pi-network",
   },
 };
 
@@ -67,71 +80,79 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-async function fetchBinanceFuturesQuote(
-  market: PerpMarket,
-  symbol: string,
-): Promise<PerpLiveQuote> {
+function quoteBase(market: PerpMarket): Pick<PerpLiveQuote, "market" | "tvSymbol" | "tvUrl" | "updatedAt"> {
   const cfg = PERP_TV[market];
-  const [tickerRes, premiumRes] = await Promise.all([
-    fetch(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}`, {
-      headers: { Accept: "application/json" },
-    }),
-    fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`, {
-      headers: { Accept: "application/json" },
-    }),
-  ]);
-  if (!tickerRes.ok) throw new Error(`Binance ticker ${symbol}: ${tickerRes.status}`);
-  const ticker = (await tickerRes.json()) as Record<string, unknown>;
-  const last = num(ticker.lastPrice);
-  const changePct = num(ticker.priceChangePercent);
-  const changeAbs = num(ticker.priceChange);
-  let mark = last;
-  if (premiumRes.ok) {
-    const premium = (await premiumRes.json()) as Record<string, unknown>;
-    const mp = num(premium.markPrice);
-    if (mp > 0) mark = mp;
-  }
-  if (!(last > 0) && !(mark > 0)) throw new Error(`No Binance price for ${symbol}`);
-  const price = mark > 0 ? mark : last;
   return {
     market,
-    price,
-    markPrice: mark > 0 ? mark : price,
-    change24h: Number.isFinite(changePct) ? changePct : 0,
-    changeAbs: Number.isFinite(changeAbs) ? changeAbs : price * ((changePct || 0) / 100),
-    source: "Binance Futures",
     tvSymbol: cfg.tvSymbol,
     tvUrl: cfg.tvUrl,
     updatedAt: Date.now(),
   };
 }
 
+async function fetchJson(url: string, ms = 8_000): Promise<unknown> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function fetchBinanceFuturesQuote(
+  market: PerpMarket,
+  symbol: string,
+): Promise<PerpLiveQuote> {
+  const [ticker, premium] = await Promise.all([
+    fetchJson(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}`) as Promise<
+      Record<string, unknown>
+    >,
+    fetchJson(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`)
+      .then((j) => j as Record<string, unknown>)
+      .catch(() => null),
+  ]);
+  const last = num(ticker.lastPrice);
+  const changePct = num(ticker.priceChangePercent);
+  const changeAbs = num(ticker.priceChange);
+  const mp = premium ? num(premium.markPrice) : NaN;
+  const mark = mp > 0 ? mp : last;
+  if (!(mark > 0)) throw new Error(`No Binance price for ${symbol}`);
+  return {
+    ...quoteBase(market),
+    price: mark,
+    markPrice: mark,
+    change24h: Number.isFinite(changePct) ? changePct : 0,
+    changeAbs: Number.isFinite(changeAbs) ? changeAbs : mark * ((changePct || 0) / 100),
+    source: "Binance Futures",
+  };
+}
+
 async function fetchOkxSwapQuote(market: PerpMarket, instId: string): Promise<PerpLiveQuote> {
-  const cfg = PERP_TV[market];
-  const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`, {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`OKX ticker ${instId}: ${res.status}`);
-  const body = (await res.json()) as { data?: Array<Record<string, unknown>> };
+  const body = (await fetchJson(
+    `https://www.okx.com/api/v5/market/ticker?instId=${instId}`,
+  )) as { data?: Array<Record<string, unknown>> };
   const row = body.data?.[0];
   if (!row) throw new Error(`No OKX data for ${instId}`);
   const last = num(row.last);
   const open24h = num(row.open24h);
-  const mark = num(row.markPx);
-  if (!(last > 0) && !(mark > 0)) throw new Error(`No OKX price for ${instId}`);
-  const price = mark > 0 ? mark : last;
-  const changeAbs = open24h > 0 ? price - open24h : 0;
+  const markRaw = num(row.markPx);
+  const mark = markRaw > 0 ? markRaw : last;
+  if (!(mark > 0)) throw new Error(`No OKX price for ${instId}`);
+  const changeAbs = open24h > 0 ? mark - open24h : 0;
   const change24h = open24h > 0 ? (changeAbs / open24h) * 100 : 0;
   return {
-    market,
-    price,
-    markPrice: mark > 0 ? mark : price,
+    ...quoteBase(market),
+    price: mark,
+    markPrice: mark,
     change24h,
     changeAbs,
     source: "OKX Swap",
-    tvSymbol: cfg.tvSymbol,
-    tvUrl: cfg.tvUrl,
-    updatedAt: Date.now(),
   };
 }
 
@@ -139,58 +160,124 @@ async function fetchGateFuturesQuote(
   market: PerpMarket,
   contract: string,
 ): Promise<PerpLiveQuote> {
-  const cfg = PERP_TV[market];
-  const res = await fetch(
+  const rows = (await fetchJson(
     `https://api.gateio.ws/api/v4/futures/usdt/tickers?contract=${contract}`,
-    { headers: { Accept: "application/json" } },
-  );
-  if (!res.ok) throw new Error(`Gate ticker ${contract}: ${res.status}`);
-  const rows = (await res.json()) as Array<Record<string, unknown>>;
+  )) as Array<Record<string, unknown>>;
   const row = rows[0];
   if (!row) throw new Error(`No Gate data for ${contract}`);
   const last = num(row.last);
-  const mark = num(row.mark_price);
+  const markRaw = num(row.mark_price);
   const changePct = num(row.change_percentage);
   const changeAbs = num(row.change_price);
-  if (!(last > 0) && !(mark > 0)) throw new Error(`No Gate price for ${contract}`);
-  const price = mark > 0 ? mark : last;
+  const mark = markRaw > 0 ? markRaw : last;
+  if (!(mark > 0)) throw new Error(`No Gate price for ${contract}`);
   return {
-    market,
-    price,
-    markPrice: mark > 0 ? mark : price,
+    ...quoteBase(market),
+    price: mark,
+    markPrice: mark,
     change24h: Number.isFinite(changePct) ? changePct : 0,
     changeAbs: Number.isFinite(changeAbs) ? changeAbs : 0,
     source: "Gate Futures",
-    tvSymbol: cfg.tvSymbol,
-    tvUrl: cfg.tvUrl,
-    updatedAt: Date.now(),
   };
 }
 
+async function fetchBybitLinearQuote(
+  market: PerpMarket,
+  symbol: string,
+): Promise<PerpLiveQuote> {
+  const body = (await fetchJson(
+    `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${symbol}`,
+  )) as { result?: { list?: Array<Record<string, unknown>> } };
+  const row = body.result?.list?.[0];
+  if (!row) throw new Error(`No Bybit data for ${symbol}`);
+  const last = num(row.lastPrice);
+  const markRaw = num(row.markPrice);
+  const changePct = num(row.price24hPcnt) * 100; // Bybit returns fraction
+  const mark = markRaw > 0 ? markRaw : last;
+  if (!(mark > 0)) throw new Error(`No Bybit price for ${symbol}`);
+  const prev = mark / (1 + (Number.isFinite(changePct) ? changePct : 0) / 100);
+  const changeAbs = Number.isFinite(prev) && prev > 0 ? mark - prev : 0;
+  return {
+    ...quoteBase(market),
+    price: mark,
+    markPrice: mark,
+    change24h: Number.isFinite(changePct) ? changePct : 0,
+    changeAbs,
+    source: "Bybit Perps",
+  };
+}
+
+async function fetchCoinGeckoQuote(market: PerpMarket, id: string): Promise<PerpLiveQuote> {
+  const body = (await fetchJson(
+    `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=usd&include_24hr_change=true`,
+  )) as Record<string, { usd?: number; usd_24h_change?: number }>;
+  const row = body[id];
+  const mark = num(row?.usd);
+  const changePct = num(row?.usd_24h_change);
+  if (!(mark > 0)) throw new Error(`No CoinGecko price for ${id}`);
+  const changeAbs = Number.isFinite(changePct) ? mark * (changePct / 100) : 0;
+  return {
+    ...quoteBase(market),
+    price: mark,
+    markPrice: mark,
+    change24h: Number.isFinite(changePct) ? changePct : 0,
+    changeAbs,
+    source: "CoinGecko",
+  };
+}
+
+/** Try exchange feeds in order — Binance is geo-blocked on many serverless regions. */
 export async function fetchPerpLiveQuote(market: PerpMarket): Promise<PerpLiveQuote> {
   const cfg = PERP_TV[market];
-  if (cfg.binanceFutures) return fetchBinanceFuturesQuote(market, cfg.binanceFutures);
-  if (cfg.okxSwap) {
+  const errors: string[] = [];
+
+  const tryOne = async (label: string, fn: () => Promise<PerpLiveQuote>) => {
     try {
-      return await fetchOkxSwapQuote(market, cfg.okxSwap);
-    } catch {
-      if (cfg.gateFutures) return fetchGateFuturesQuote(market, cfg.gateFutures);
-      throw new Error(`Unable to load ${market} perpetual mark`);
+      return await fn();
+    } catch (e) {
+      errors.push(`${label}: ${e instanceof Error ? e.message : String(e)}`);
+      return null;
     }
+  };
+
+  // Prefer venues that match TradingView listing, then resilient fallbacks
+  if (cfg.binanceFutures) {
+    const q = await tryOne("binance", () => fetchBinanceFuturesQuote(market, cfg.binanceFutures!));
+    if (q) return q;
   }
-  if (cfg.gateFutures) return fetchGateFuturesQuote(market, cfg.gateFutures);
-  throw new Error(`No exchange feed for ${market}`);
+  if (cfg.okxSwap) {
+    const q = await tryOne("okx", () => fetchOkxSwapQuote(market, cfg.okxSwap!));
+    if (q) return q;
+  }
+  if (cfg.gateFutures) {
+    const q = await tryOne("gate", () => fetchGateFuturesQuote(market, cfg.gateFutures!));
+    if (q) return q;
+  }
+  if (cfg.bybitLinear) {
+    const q = await tryOne("bybit", () => fetchBybitLinearQuote(market, cfg.bybitLinear!));
+    if (q) return q;
+  }
+  {
+    const q = await tryOne("coingecko", () => fetchCoinGeckoQuote(market, cfg.coingeckoId));
+    if (q) return q;
+  }
+
+  throw new Error(`Unable to load ${market} mark (${errors.join("; ")})`);
 }
 
 export async function fetchAllPerpLiveQuotes(): Promise<PerpLiveQuote[]> {
-  const results = await Promise.allSettled(
-    (Object.keys(PERP_TV) as PerpMarket[]).map((m) => fetchPerpLiveQuote(m)),
-  );
+  const markets = Object.keys(PERP_TV) as PerpMarket[];
+  const results = await Promise.allSettled(markets.map((m) => fetchPerpLiveQuote(m)));
   const out: PerpLiveQuote[] = [];
-  for (const r of results) {
+  const errors: string[] = [];
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]!;
     if (r.status === "fulfilled") out.push(r.value);
+    else errors.push(`${markets[i]}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
   }
-  if (!out.length) throw new Error("Unable to load perpetual market data");
+  if (!out.length) {
+    throw new Error(`Unable to load perpetual market data (${errors.join("; ")})`);
+  }
   return out;
 }
 

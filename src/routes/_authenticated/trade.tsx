@@ -38,7 +38,13 @@ import {
   type PerpMarket,
   type PerpSide,
 } from "@/lib/perp";
-import { MAJOR_TOKENS, PERP_CHART_PERIODS, type PerpChartPeriod } from "@/lib/major-tokens";
+import {
+  MAJOR_TOKENS,
+  PERP_CHART_PERIODS,
+  fetchMajorMarkets,
+  majorMarketById,
+  type PerpChartPeriod,
+} from "@/lib/major-tokens";
 import {
   PERP_TV,
   periodToTvInterval,
@@ -106,6 +112,15 @@ function TradePage() {
     staleTime: 8_000,
     refetchInterval: 12_000,
     queryFn: () => fetchQuotes(),
+    retry: 2,
+  });
+
+  /** Spot fallback so Trade never sticks at $0 if a futures venue is blocked */
+  const majorsQ = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 30_000,
+    refetchInterval: 45_000,
+    queryFn: () => fetchMajorMarkets(),
   });
 
   const balQ = useQuery({
@@ -124,11 +139,37 @@ function TradePage() {
   const def = MAJOR_TOKENS[majorId];
   const tv = PERP_TV[market];
   const quote = quoteByMarket(quotesQ.data, market);
-  const price = Number(quote?.markPrice ?? quote?.price ?? 0);
-  const change = Number(quote?.change24h ?? 0);
-  const changeAbs = Number(quote?.changeAbs ?? 0);
+  const majorSnap = majorMarketById(majorsQ.data, majorId);
+  const price = Number(
+    quote?.markPrice && quote.markPrice > 0
+      ? quote.markPrice
+      : quote?.price && quote.price > 0
+        ? quote.price
+        : majorSnap.price > 0
+          ? majorSnap.price
+          : 0,
+  );
+  const change = Number(
+    quote != null && Number.isFinite(quote.change24h)
+      ? quote.change24h
+      : (majorSnap.change24h ?? 0),
+  );
+  const changeAbs = Number(
+    quote?.changeAbs != null && Number.isFinite(quote.changeAbs)
+      ? quote.changeAbs
+      : price > 0
+        ? price * (change / 100)
+        : 0,
+  );
   const up = change >= 0;
+  const markSource =
+    quote?.markPrice && quote.markPrice > 0
+      ? quote.source
+      : price > 0
+        ? "CoinGecko"
+        : tv.exchangeLabel;
   const tvInterval = periodToTvInterval(period);
+  const priceLoading = quotesQ.isLoading && majorsQ.isLoading && !(price > 0);
 
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
   const openPositions = (posQ.data ?? []).filter((p) => p.status === "open");
@@ -194,7 +235,7 @@ function TradePage() {
       >
         <div className="mx-auto flex max-w-lg items-end justify-between gap-3">
           <div className="min-w-0 pb-1">
-            <p className="text-[11px] text-muted-foreground">Mark · {quote?.source ?? "…"}</p>
+            <p className="text-[11px] text-muted-foreground">Mark · {markSource}</p>
             <p className="text-sm font-bold tabular-nums">
               {price > 0
                 ? `$${formatNumber(price, price >= 1000 ? 0 : price >= 1 ? 2 : 4)}`
@@ -262,7 +303,7 @@ function TradePage() {
               {def.name}
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
-            {quotesQ.isLoading && !quote ? (
+            {priceLoading ? (
               <Loader2 className="mt-1 h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <>
@@ -297,7 +338,7 @@ function TradePage() {
       </div>
 
       <p className="mt-1 px-4 text-[11px] text-muted-foreground">
-        {tv.tvSymbol} · live mark from {quote?.source ?? tv.exchangeLabel}
+        {tv.tvSymbol} · live mark from {markSource}
       </p>
 
       {/* Chart / News / Alerts tabs */}
@@ -408,7 +449,7 @@ function TradePage() {
       <div className="mx-4 mt-3 rounded-2xl border border-border/60 bg-card/50 px-3.5 py-3">
         <p className="text-sm leading-relaxed text-muted-foreground">
           Recent {def.name} perpetual activity · Long / Short / Buy use the live{" "}
-          <span className="font-semibold text-foreground">{quote?.source ?? "exchange"}</span> mark
+          <span className="font-semibold text-foreground">{markSource}</span> mark
           (same markets as{" "}
           <a
             href={tv.tvUrl}
@@ -543,7 +584,16 @@ function TradePage() {
               const id = marketToMajorId(m);
               const d = MAJOR_TOKENS[id];
               const s = quoteByMarket(quotesQ.data, m);
-              const px = Number(s?.markPrice ?? s?.price ?? 0);
+              const snap = majorMarketById(majorsQ.data, id);
+              const px = Number(
+                s?.markPrice && s.markPrice > 0
+                  ? s.markPrice
+                  : s?.price && s.price > 0
+                    ? s.price
+                    : snap.price > 0
+                      ? snap.price
+                      : 0,
+              );
               return (
                 <button
                   key={m}
@@ -583,7 +633,7 @@ function TradePage() {
           </SheetHeader>
           <div className="mt-3 space-y-4 pb-8">
             <p className="text-sm text-muted-foreground">
-              Entry uses live {quote?.source ?? "exchange"} mark ~$
+              Entry uses live {markSource} mark ~$
               {formatNumber(price, price >= 1 ? 2 : 4)}. Margin from your{" "}
               <span className="font-semibold text-foreground">Trading</span> balance. Available{" "}
               {formatNumber(tradingBal, 4)} {marginAsset}.

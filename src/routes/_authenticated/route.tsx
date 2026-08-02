@@ -339,16 +339,16 @@ function MobileTabBar({
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent
           side="bottom"
-          className="max-h-[min(78vh,560px)] rounded-t-3xl border-border/60 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 md:hidden"
+          className="flex max-h-[min(92dvh,640px)] flex-col gap-0 overflow-hidden rounded-t-3xl border-border/60 px-4 pb-0 pt-3 md:hidden"
         >
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/25" aria-hidden />
-          <SheetHeader className="mb-3 space-y-1 text-left">
+          <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/25" aria-hidden />
+          <SheetHeader className="mb-3 shrink-0 space-y-1 pr-8 text-left">
             <SheetTitle className="text-lg font-bold tracking-tight">
               {navLabel(t, "nav.more")}
             </SheetTitle>
             <SheetDescription>Deposit, P2P, history, and settings</SheetDescription>
           </SheetHeader>
-          <ul className="grid gap-1.5 pb-2">
+          <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             {MORE_NAV.map((item) => {
               const Icon = item.icon;
               const active = navActive(pathname, item.to);

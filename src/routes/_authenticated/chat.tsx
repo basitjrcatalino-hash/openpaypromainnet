@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, MessageCircle, Users } from "lucide-react";
+import { ChevronRight, MessageCircle, Search, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/chat")({
       {
         name: "description",
         content:
-          "Global OpenPay chat plus a separate live room for every token — OUSD, majors, and OpenTokens.",
+          "Global OpenPay chat plus a separate live room for every token — OUSD, all majors, and OpenTokens.",
       },
     ],
   }),
@@ -33,15 +33,37 @@ export const Route = createFileRoute("/_authenticated/chat")({
 
 type HubTab = "rooms" | "global";
 
-/** Pin order: OUSD then PI then remaining majors by catalog order. */
+type OpenTokenRoom = {
+  id: string;
+  name: string;
+  symbol: string;
+  logo_url: string | null;
+  is_verified: boolean | null;
+  is_hidden?: boolean | null;
+};
+
+/** Featured trade majors first, then every other major in catalog order. */
+const FEATURED_MAJOR_IDS: MajorTokenId[] = ["btc", "eth", "sol", "pi"];
+
 function orderedMajorRooms(): MajorTokenId[] {
-  const rest = MAJOR_TOKEN_IDS.filter((id) => id !== "pi");
-  return ["pi", ...rest];
+  const featured = FEATURED_MAJOR_IDS.filter((id) => MAJOR_TOKEN_IDS.includes(id));
+  const rest = MAJOR_TOKEN_IDS.filter((id) => !FEATURED_MAJOR_IDS.includes(id));
+  return [...featured, ...rest];
+}
+
+function matchesQuery(q: string, name: string, symbol: string): boolean {
+  if (!q) return true;
+  const needle = q.trim().toLowerCase();
+  return (
+    name.toLowerCase().includes(needle) ||
+    symbol.toLowerCase().includes(needle)
+  );
 }
 
 function LiveChatHubPage() {
   const { user } = Route.useRouteContext();
   const [tab, setTab] = useState<HubTab>("rooms");
+  const [query, setQuery] = useState("");
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user.id],
@@ -55,25 +77,25 @@ function LiveChatHubPage() {
       ).data,
   });
 
-  const { data: openTokens = [] } = useQuery({
-    queryKey: ["ot-tokens", "chat-rooms"],
+  const { data: openTokens = [] } = useQuery<OpenTokenRoom[]>({
+    queryKey: ["ot-tokens", "chat-rooms-all"],
     staleTime: 60_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<OpenTokenRoom[]> => {
       const { data, error } = await supabase
         .from("tokens")
         .select("id, name, symbol, logo_url, is_verified, is_hidden")
         .eq("is_hidden", false)
         .order("created_at", { ascending: false })
-        .limit(80);
+        .limit(500);
       if (error) {
         const { data: fallback } = await supabase
           .from("tokens")
           .select("id, name, symbol, logo_url, is_verified")
           .order("created_at", { ascending: false })
-          .limit(80);
-        return fallback ?? [];
+          .limit(500);
+        return (fallback ?? []) as OpenTokenRoom[];
       }
-      return (data ?? []).filter((t) => {
+      return ((data ?? []) as OpenTokenRoom[]).filter((t: OpenTokenRoom) => {
         const sym = String(t.symbol ?? "").toUpperCase();
         const name = String(t.name ?? "").toUpperCase();
         return !MAJOR_SYMBOLS.has(sym) && !MAJOR_SYMBOLS.has(name);
@@ -82,6 +104,28 @@ function LiveChatHubPage() {
   });
 
   const majorRooms = useMemo(() => orderedMajorRooms(), []);
+
+  const filteredMajors = useMemo(
+    () =>
+      majorRooms.filter((id) => {
+        const def = MAJOR_TOKENS[id];
+        return matchesQuery(query, def.name, def.symbol);
+      }),
+    [majorRooms, query],
+  );
+
+  const showOusd = matchesQuery(query, "OpenUSD", "OUSD");
+
+  const filteredOpenTokens = useMemo(
+    () =>
+      openTokens.filter((t: OpenTokenRoom) =>
+        matchesQuery(query, String(t.name ?? ""), String(t.symbol ?? "")),
+      ),
+    [openTokens, query],
+  );
+
+  const roomCount =
+    (showOusd ? 1 : 0) + filteredMajors.length + filteredOpenTokens.length;
 
   const displayName = profile?.display_name?.trim() || "You";
   const username = profile?.username?.trim()
@@ -158,10 +202,20 @@ function LiveChatHubPage() {
         ) : (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
             <p className="px-0.5 text-xs leading-relaxed text-muted-foreground">
-              Each token has its own room at{" "}
+              Every token has its own live room at{" "}
               <span className="font-medium text-foreground">/asset/&lt;token&gt;/chat</span> —
-              live price in the header, messages stay in that room only.
+              price in the header, messages stay in that room only.
             </p>
+
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search all token rooms"
+                className="h-11 w-full rounded-2xl border border-border/60 bg-card/80 pl-10 pr-3 text-sm outline-none ring-primary/30 placeholder:text-muted-foreground focus:ring-2"
+              />
+            </div>
 
             <button
               type="button"
@@ -182,68 +236,62 @@ function LiveChatHubPage() {
 
             <section>
               <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                OpenPay · Majors
+                All tokens · {roomCount} room{roomCount === 1 ? "" : "s"}
               </h2>
-              <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card/60">
-                <li>
-                  <Link
-                    to="/asset/$tokenId/chat"
-                    params={{ tokenId: "ousd" }}
-                    className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
-                  >
-                    <OusdIcon className="h-11 w-11" />
-                    <span className="min-w-0 flex-1 text-left">
-                      <span className="block text-sm font-bold">OpenUSD</span>
-                      <span className="block text-xs text-muted-foreground">
-                        OUSD room · separated
-                      </span>
-                    </span>
-                    <MessageCircle className="h-4 w-4 text-primary" />
-                  </Link>
-                </li>
-                {majorRooms.map((id) => {
-                  const def = MAJOR_TOKENS[id];
-                  return (
-                    <li key={id}>
+              {!showOusd && filteredMajors.length === 0 && filteredOpenTokens.length === 0 ? (
+                <p className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                  No rooms match “{query.trim()}”.
+                </p>
+              ) : (
+                <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card/60">
+                  {showOusd ? (
+                    <li>
                       <Link
                         to="/asset/$tokenId/chat"
-                        params={{ tokenId: id }}
-                        className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 last:border-b-0 press hover:bg-muted/40"
+                        params={{ tokenId: "ousd" }}
+                        className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
                       >
-                        <TokenAvatar
-                          logoUrl={def.logoUrl}
-                          name={def.name}
-                          symbol={def.symbol}
-                          verified
-                        />
+                        <OusdIcon className="h-11 w-11" />
                         <span className="min-w-0 flex-1 text-left">
-                          <span className="block truncate text-sm font-bold">{def.name}</span>
+                          <span className="block text-sm font-bold">OpenUSD</span>
                           <span className="block text-xs text-muted-foreground">
-                            {def.symbol} room · separated
+                            OUSD room · /asset/ousd/chat
                           </span>
                         </span>
                         <MessageCircle className="h-4 w-4 text-primary" />
                       </Link>
                     </li>
-                  );
-                })}
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                OpenTokens
-              </h2>
-              {!openTokens.length ? (
-                <p className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                  No OpenTokens yet. Launch one to open its chat room.
-                </p>
-              ) : (
-                <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card/60">
-                  {openTokens.map((t) => (
+                  ) : null}
+                  {filteredMajors.map((id) => {
+                    const def = MAJOR_TOKENS[id];
+                    return (
+                      <li key={id}>
+                        <Link
+                          to="/asset/$tokenId/chat"
+                          params={{ tokenId: id }}
+                          className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
+                        >
+                          <TokenAvatar
+                            logoUrl={def.logoUrl}
+                            name={def.name}
+                            symbol={def.symbol}
+                            verified
+                          />
+                          <span className="min-w-0 flex-1 text-left">
+                            <span className="block truncate text-sm font-bold">{def.name}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              {def.symbol} room · /asset/{id}/chat
+                            </span>
+                          </span>
+                          <MessageCircle className="h-4 w-4 text-primary" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                  {filteredOpenTokens.map((t: OpenTokenRoom) => (
                     <li key={t.id}>
                       <Link
-                        to="/asset/$tokenId/chat"
+                        to="/opentoken/$tokenId/chat"
                         params={{ tokenId: t.id }}
                         className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 last:border-b-0 press hover:bg-muted/40"
                       >
@@ -256,7 +304,7 @@ function LiveChatHubPage() {
                         <span className="min-w-0 flex-1 text-left">
                           <span className="block truncate text-sm font-bold">{t.name}</span>
                           <span className="block text-xs text-muted-foreground">
-                            {t.symbol} room · Phantom-style
+                            {t.symbol} room · OpenToken
                           </span>
                         </span>
                         <MessageCircle className="h-4 w-4 text-primary" />

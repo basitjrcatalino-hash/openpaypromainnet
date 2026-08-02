@@ -142,10 +142,10 @@ import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhoo
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
-import { Route as AuthenticatedAssetTokenIdChatRouteImport } from './routes/_authenticated/asset_.$tokenId.chat'
+import { Route as AuthenticatedAssetTokenIdChatRouteImport } from './routes/_authenticated/asset_.$tokenId_.chat'
 import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
-import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
+import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId_.chat'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
 import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
@@ -862,9 +862,9 @@ const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
 } as any)
 const AuthenticatedAssetTokenIdChatRoute =
   AuthenticatedAssetTokenIdChatRouteImport.update({
-    id: '/chat',
-    path: '/chat',
-    getParentRoute: () => AuthenticatedAssetTokenIdRoute,
+    id: '/asset_/$tokenId_/chat',
+    path: '/asset/$tokenId/chat',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBagsTokenMintRoute =
   AuthenticatedBagsTokenMintRouteImport.update({
@@ -880,9 +880,9 @@ const AuthenticatedOpenpayConnectCallbackRoute =
   } as any)
 const AuthenticatedOpentokenTokenIdChatRoute =
   AuthenticatedOpentokenTokenIdChatRouteImport.update({
-    id: '/chat',
-    path: '/chat',
-    getParentRoute: () => AuthenticatedOpentokenTokenIdRoute,
+    id: '/opentoken_/$tokenId_/chat',
+    path: '/opentoken/$tokenId/chat',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpentokenCreatorUserIdRoute =
   AuthenticatedOpentokenCreatorUserIdRouteImport.update({
@@ -1081,13 +1081,13 @@ export interface FileRoutesByFullPath {
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
-  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRouteWithChildren
+  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/assets/$account': typeof AuthenticatedAssetsAccountRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
+  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -1241,13 +1241,13 @@ export interface FileRoutesByTo {
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
-  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRouteWithChildren
+  '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/assets/$account': typeof AuthenticatedAssetsAccountRoute
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
+  '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
   '/opentoken/create': typeof AuthenticatedOpentokenCreateRoute
   '/opentoken/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -1403,13 +1403,13 @@ export interface FileRoutesById {
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
-  '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRouteWithChildren
+  '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
   '/_authenticated/assets_/$account': typeof AuthenticatedAssetsAccountRoute
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
   '/_authenticated/bags_/launch': typeof AuthenticatedBagsLaunchRoute
   '/_authenticated/bags_/trade': typeof AuthenticatedBagsTradeRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
-  '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRouteWithChildren
+  '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
   '/_authenticated/opentoken_/create': typeof AuthenticatedOpentokenCreateRoute
   '/_authenticated/opentoken_/portfolio': typeof AuthenticatedOpentokenPortfolioRoute
@@ -1463,10 +1463,10 @@ export interface FileRoutesById {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
-  '/_authenticated/asset_/$tokenId/chat': typeof AuthenticatedAssetTokenIdChatRoute
+  '/_authenticated/asset_/$tokenId_/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/_authenticated/bags_/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
-  '/_authenticated/opentoken_/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
+  '/_authenticated/opentoken_/$tokenId_/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/_authenticated/p2p_/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
@@ -1946,10 +1946,10 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
-    | '/_authenticated/asset_/$tokenId/chat'
+    | '/_authenticated/asset_/$tokenId_/chat'
     | '/_authenticated/bags_/token/$mint'
     | '/_authenticated/openpay/connect/callback'
-    | '/_authenticated/opentoken_/$tokenId/chat'
+    | '/_authenticated/opentoken_/$tokenId_/chat'
     | '/_authenticated/opentoken_/creator/$userId'
     | '/_authenticated/p2p_/order/$id'
     | '/_authenticated/p2p_/take/$adId'
@@ -2977,12 +2977,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthTelegramCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_authenticated/asset_/$tokenId/chat': {
-      id: '/_authenticated/asset_/$tokenId/chat'
-      path: '/chat'
+    '/_authenticated/asset_/$tokenId_/chat': {
+      id: '/_authenticated/asset_/$tokenId_/chat'
+      path: '/asset/$tokenId/chat'
       fullPath: '/asset/$tokenId/chat'
       preLoaderRoute: typeof AuthenticatedAssetTokenIdChatRouteImport
-      parentRoute: typeof AuthenticatedAssetTokenIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bags_/token/$mint': {
       id: '/_authenticated/bags_/token/$mint'
@@ -2998,12 +2998,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/$tokenId/chat': {
-      id: '/_authenticated/opentoken_/$tokenId/chat'
-      path: '/chat'
+    '/_authenticated/opentoken_/$tokenId_/chat': {
+      id: '/_authenticated/opentoken_/$tokenId_/chat'
+      path: '/opentoken/$tokenId/chat'
       fullPath: '/opentoken/$tokenId/chat'
       preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
-      parentRoute: typeof AuthenticatedOpentokenTokenIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/opentoken_/creator/$userId': {
       id: '/_authenticated/opentoken_/creator/$userId'
@@ -3184,35 +3184,6 @@ const AuthenticatedTokensRouteChildren: AuthenticatedTokensRouteChildren = {
 const AuthenticatedTokensRouteWithChildren =
   AuthenticatedTokensRoute._addFileChildren(AuthenticatedTokensRouteChildren)
 
-interface AuthenticatedAssetTokenIdRouteChildren {
-  AuthenticatedAssetTokenIdChatRoute: typeof AuthenticatedAssetTokenIdChatRoute
-}
-
-const AuthenticatedAssetTokenIdRouteChildren: AuthenticatedAssetTokenIdRouteChildren =
-  {
-    AuthenticatedAssetTokenIdChatRoute: AuthenticatedAssetTokenIdChatRoute,
-  }
-
-const AuthenticatedAssetTokenIdRouteWithChildren =
-  AuthenticatedAssetTokenIdRoute._addFileChildren(
-    AuthenticatedAssetTokenIdRouteChildren,
-  )
-
-interface AuthenticatedOpentokenTokenIdRouteChildren {
-  AuthenticatedOpentokenTokenIdChatRoute: typeof AuthenticatedOpentokenTokenIdChatRoute
-}
-
-const AuthenticatedOpentokenTokenIdRouteChildren: AuthenticatedOpentokenTokenIdRouteChildren =
-  {
-    AuthenticatedOpentokenTokenIdChatRoute:
-      AuthenticatedOpentokenTokenIdChatRoute,
-  }
-
-const AuthenticatedOpentokenTokenIdRouteWithChildren =
-  AuthenticatedOpentokenTokenIdRoute._addFileChildren(
-    AuthenticatedOpentokenTokenIdRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
@@ -3250,12 +3221,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
-  AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRouteWithChildren
+  AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
   AuthenticatedAssetsAccountRoute: typeof AuthenticatedAssetsAccountRoute
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
   AuthenticatedBagsLaunchRoute: typeof AuthenticatedBagsLaunchRoute
   AuthenticatedBagsTradeRoute: typeof AuthenticatedBagsTradeRoute
-  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRouteWithChildren
+  AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
   AuthenticatedOpentokenPortfolioRoute: typeof AuthenticatedOpentokenPortfolioRoute
@@ -3284,8 +3255,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedP2pTermsRoute: typeof AuthenticatedP2pTermsRoute
   AuthenticatedP2pWalletRoute: typeof AuthenticatedP2pWalletRoute
   AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
+  AuthenticatedAssetTokenIdChatRoute: typeof AuthenticatedAssetTokenIdChatRoute
   AuthenticatedBagsTokenMintRoute: typeof AuthenticatedBagsTokenMintRoute
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
+  AuthenticatedOpentokenTokenIdChatRoute: typeof AuthenticatedOpentokenTokenIdChatRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
   AuthenticatedP2pOrderIdRoute: typeof AuthenticatedP2pOrderIdRoute
   AuthenticatedP2pTakeAdIdRoute: typeof AuthenticatedP2pTakeAdIdRoute
@@ -3328,13 +3301,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
-  AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRouteWithChildren,
+  AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,
   AuthenticatedAssetsAccountRoute: AuthenticatedAssetsAccountRoute,
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,
   AuthenticatedBagsLaunchRoute: AuthenticatedBagsLaunchRoute,
   AuthenticatedBagsTradeRoute: AuthenticatedBagsTradeRoute,
-  AuthenticatedOpentokenTokenIdRoute:
-    AuthenticatedOpentokenTokenIdRouteWithChildren,
+  AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
   AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,
   AuthenticatedOpentokenPortfolioRoute: AuthenticatedOpentokenPortfolioRoute,
@@ -3363,9 +3335,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedP2pTermsRoute: AuthenticatedP2pTermsRoute,
   AuthenticatedP2pWalletRoute: AuthenticatedP2pWalletRoute,
   AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,
+  AuthenticatedAssetTokenIdChatRoute: AuthenticatedAssetTokenIdChatRoute,
   AuthenticatedBagsTokenMintRoute: AuthenticatedBagsTokenMintRoute,
   AuthenticatedOpenpayConnectCallbackRoute:
     AuthenticatedOpenpayConnectCallbackRoute,
+  AuthenticatedOpentokenTokenIdChatRoute:
+    AuthenticatedOpentokenTokenIdChatRoute,
   AuthenticatedOpentokenCreatorUserIdRoute:
     AuthenticatedOpentokenCreatorUserIdRoute,
   AuthenticatedP2pOrderIdRoute: AuthenticatedP2pOrderIdRoute,

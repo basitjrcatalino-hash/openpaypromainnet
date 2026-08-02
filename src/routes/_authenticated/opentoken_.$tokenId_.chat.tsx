@@ -9,7 +9,7 @@ import { TokenLiveChat, TradePanel } from "@/components/opentoken";
 import { TokenTradeSheet } from "@/components/opentoken/TokenTradeBar";
 import { fetchActiveWallet } from "@/lib/wallet-utils";
 
-export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId/chat")({
+export const Route = createFileRoute("/_authenticated/opentoken_/$tokenId_/chat")({
   head: () => ({ meta: [{ title: "Live Chat — OpenToken" }] }),
   component: TokenLiveChatPage,
 });
@@ -102,7 +102,7 @@ function TokenLiveChatPage() {
         change24h={change}
         changeAbs={changeAbs}
         onClose={() => {
-          void router.navigate({ to: "/opentoken/$tokenId", params: { tokenId } });
+          void router.navigate({ to: "/chat" });
         }}
         onTrade={() => setShowBuy(true)}
       />

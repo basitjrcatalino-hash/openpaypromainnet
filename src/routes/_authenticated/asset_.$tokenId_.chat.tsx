@@ -18,7 +18,7 @@ import { isPerpMarket } from "@/lib/perp";
 import { quoteByMarket } from "@/lib/tradingview-perps";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 
-export const Route = createFileRoute("/_authenticated/asset_/$tokenId/chat")({
+export const Route = createFileRoute("/_authenticated/asset_/$tokenId_/chat")({
   head: ({ params }) => ({
     meta: [{ title: `Live Chat · ${params.tokenId} — OpenPay Pro` }],
   }),
@@ -169,10 +169,7 @@ function AssetLiveChatPage() {
         change24h={meta.change24h}
         changeAbs={meta.changeAbs}
         onClose={() => {
-          void router.navigate({
-            to: "/asset/$tokenId",
-            params: { tokenId },
-          });
+          void router.navigate({ to: "/chat" });
         }}
         onTrade={() => {
           if (canPerp) {

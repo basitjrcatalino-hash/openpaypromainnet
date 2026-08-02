@@ -20,6 +20,7 @@ import {
   Code2,
   FileText,
   Shield,
+  BadgeCheck,
   LogOut,
   Pencil,
   AlertTriangle,
@@ -973,6 +974,25 @@ function SettingsPage() {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t("settings.security")}
         </h2>
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <BadgeCheck className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">Identity verification</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Submit KYC to OpenPay for review. Required for full access (P2P merchant,
+                  airdrops, and more).
+                </p>
+              </div>
+            </div>
+            <Button asChild className="rounded-full">
+              <Link to="/kyc">Verify identity</Link>
+            </Button>
+          </div>
+        </div>
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
             <BiometricCard

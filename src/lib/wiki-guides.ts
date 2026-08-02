@@ -523,7 +523,7 @@ export const WIKI_GUIDES: WikiGuide[] = [
         heading: "Start KYC",
         steps: [
           { title: "Open KYC", detail: "From Settings or the KYC route." },
-          { title: "Follow Pi Verify", detail: "Complete the session until status shows verified." },
+          { title: "Complete OpenPay KYC", detail: "Submit your ID and selfie on /kyc. OpenPay reviews the application and updates your status." },
         ],
       },
     ],

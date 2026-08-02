@@ -1833,6 +1833,45 @@ export type Database = {
         }
         Relationships: []
       }
+      openpay_kyc_links: {
+        Row: {
+          id: string
+          user_id: string
+          application_id: string | null
+          external_ref: string
+          status: string
+          rejection_reason: string | null
+          admin_notes: string | null
+          last_event_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          application_id?: string | null
+          external_ref: string
+          status?: string
+          rejection_reason?: string | null
+          admin_notes?: string | null
+          last_event_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          application_id?: string | null
+          external_ref?: string
+          status?: string
+          rejection_reason?: string | null
+          admin_notes?: string | null
+          last_event_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       p2p_payment_methods: {
         Row: {
           code: string

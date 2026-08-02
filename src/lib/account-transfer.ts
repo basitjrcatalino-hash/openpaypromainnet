@@ -35,6 +35,27 @@ export const TRANSFER_ASSETS = [
   "CAKE",
   "JUP",
   "RON",
+  "XRP",
+  "TRX",
+  "DOGE",
+  "ADA",
+  "LINK",
+  "XLM",
+  "BCH",
+  "GRAM",
+  "AVAX",
+  "SUI",
+  "XAUT",
+  "ONDO",
+  "NEAR",
+  "USDY",
+  "PAXG",
+  "WLFI",
+  "ASTER",
+  "RLUSD",
+  "AAVE",
+  "DOT",
+  "PUMP",
 ] as const;
 export type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 
@@ -98,6 +119,48 @@ export function fundingBalanceColumn(asset: string): string | null {
       return "jup_balance";
     case "RON":
       return "ron_balance";
+    case "XRP":
+      return "xrp_balance";
+    case "TRX":
+      return "trx_balance";
+    case "DOGE":
+      return "doge_balance";
+    case "ADA":
+      return "ada_balance";
+    case "LINK":
+      return "link_balance";
+    case "XLM":
+      return "xlm_balance";
+    case "BCH":
+      return "bch_balance";
+    case "GRAM":
+      return "gram_balance";
+    case "AVAX":
+      return "avax_balance";
+    case "SUI":
+      return "sui_balance";
+    case "XAUT":
+      return "xaut_balance";
+    case "ONDO":
+      return "ondo_balance";
+    case "NEAR":
+      return "near_balance";
+    case "USDY":
+      return "usdy_balance";
+    case "PAXG":
+      return "paxg_balance";
+    case "WLFI":
+      return "wlfi_balance";
+    case "ASTER":
+      return "aster_balance";
+    case "RLUSD":
+      return "rlusd_balance";
+    case "AAVE":
+      return "aave_balance";
+    case "DOT":
+      return "dot_balance";
+    case "PUMP":
+      return "pump_balance";
     default:
       return null;
   }

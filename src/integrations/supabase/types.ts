@@ -2893,104 +2893,167 @@ export type Database = {
       wallets: {
         Row: {
           address: string
+          aave_balance: number
+          ada_balance: number
+          aster_balance: number
+          avax_balance: number
+          bch_balance: number
           bgb_balance: number
           bnb_balance: number
           btc_balance: number
           cake_balance: number
           cash_balance: number
           created_at: string
+          doge_balance: number
+          dot_balance: number
           eth_balance: number
           eurc_balance: number
           googlx_balance: number
+          gram_balance: number
           gt_balance: number
           hype_balance: number
           id: string
           is_active: boolean
           jup_balance: number
+          link_balance: number
           name: string
+          near_balance: number
           nflxx_balance: number
           okb_balance: number
+          ondo_balance: number
           ousd_balance: number
+          paxg_balance: number
           pi_balance: number
+          pump_balance: number
           pyusd_balance: number
           recovery_hash: string | null
+          rlusd_balance: number
           ron_balance: number
           sol_balance: number
+          sui_balance: number
+          trx_balance: number
           tslax_balance: number
           uni_balance: number
           usd1_balance: number
           usdc_balance: number
           usdg_balance: number
           usdt_balance: number
+          usdy_balance: number
           user_id: string
+          wlfi_balance: number
+          xaut_balance: number
+          xlm_balance: number
+          xrp_balance: number
           zec_balance: number
         }
         Insert: {
           address: string
+          aave_balance?: number
+          ada_balance?: number
+          aster_balance?: number
+          avax_balance?: number
+          bch_balance?: number
           bgb_balance?: number
           bnb_balance?: number
           btc_balance?: number
           cake_balance?: number
           cash_balance?: number
           created_at?: string
+          doge_balance?: number
+          dot_balance?: number
           eth_balance?: number
           eurc_balance?: number
           googlx_balance?: number
+          gram_balance?: number
           gt_balance?: number
           hype_balance?: number
           id?: string
           is_active?: boolean
           jup_balance?: number
+          link_balance?: number
           name: string
+          near_balance?: number
           nflxx_balance?: number
           okb_balance?: number
+          ondo_balance?: number
           ousd_balance?: number
+          paxg_balance?: number
           pi_balance?: number
+          pump_balance?: number
           pyusd_balance?: number
           recovery_hash?: string | null
+          rlusd_balance?: number
           ron_balance?: number
           sol_balance?: number
+          sui_balance?: number
+          trx_balance?: number
           tslax_balance?: number
           uni_balance?: number
           usd1_balance?: number
           usdc_balance?: number
           usdg_balance?: number
           usdt_balance?: number
+          usdy_balance?: number
           user_id: string
+          wlfi_balance?: number
+          xaut_balance?: number
+          xlm_balance?: number
+          xrp_balance?: number
           zec_balance?: number
         }
         Update: {
           address?: string
+          aave_balance?: number
+          ada_balance?: number
+          aster_balance?: number
+          avax_balance?: number
+          bch_balance?: number
           bgb_balance?: number
           bnb_balance?: number
           btc_balance?: number
           cake_balance?: number
           cash_balance?: number
           created_at?: string
+          doge_balance?: number
+          dot_balance?: number
           eth_balance?: number
           eurc_balance?: number
           googlx_balance?: number
+          gram_balance?: number
           gt_balance?: number
           hype_balance?: number
           id?: string
           is_active?: boolean
           jup_balance?: number
+          link_balance?: number
           name?: string
+          near_balance?: number
           nflxx_balance?: number
           okb_balance?: number
+          ondo_balance?: number
           ousd_balance?: number
+          paxg_balance?: number
           pi_balance?: number
+          pump_balance?: number
           pyusd_balance?: number
           recovery_hash?: string | null
+          rlusd_balance?: number
           ron_balance?: number
           sol_balance?: number
+          sui_balance?: number
+          trx_balance?: number
           tslax_balance?: number
           uni_balance?: number
           usd1_balance?: number
           usdc_balance?: number
           usdg_balance?: number
           usdt_balance?: number
+          usdy_balance?: number
           user_id?: string
+          wlfi_balance?: number
+          xaut_balance?: number
+          xlm_balance?: number
+          xrp_balance?: number
           zec_balance?: number
         }
         Relationships: []

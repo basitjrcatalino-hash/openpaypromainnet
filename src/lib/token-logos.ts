@@ -1,3 +1,5 @@
+import { MAJOR_TOKEN_IDS, MAJOR_TOKENS } from "@/lib/major-tokens";
+
 /** Official OpenPay / OUSD brand mark */
 export const OUSD_LOGO_URL = "https://i.ibb.co/DPYPzVdN/app-icon-ios.png";
 
@@ -16,38 +18,35 @@ export const PI_NETWORK_LOGO_URL =
 export const USDC_LOGO_URL =
   "https://assets.coingecko.com/coins/images/6319/large/usdc.png";
 
-/** Canonical logos for ledger majors + OUSD (history, pickers, fallbacks). */
-const KNOWN_TOKEN_LOGOS: Record<string, string> = {
-  OUSD: OUSD_LOGO_URL,
-  OPENUSD: OUSD_LOGO_URL,
-  OPENPAY: OUSD_LOGO_URL,
-  BTC: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-  BITCOIN: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-  ETH: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-  ETHEREUM: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-  SOL: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-  SOLANA: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-  USDC: USDC_LOGO_URL,
-  USDCOIN: USDC_LOGO_URL,
-  "USD COIN": USDC_LOGO_URL,
-  USDT: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
-  TETHER: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
-  PYUSD: "https://424565.fs1.hubspotusercontent-na1.net/hubfs/424565/PYUSDLOGO.png",
-  "PAYPAL USD": "https://424565.fs1.hubspotusercontent-na1.net/hubfs/424565/PYUSDLOGO.png",
-  USDG: "https://424565.fs1.hubspotusercontent-na1.net/hubfs/424565/GDN-USDG-Token-512x512.png",
-  "GLOBAL DOLLAR": "https://424565.fs1.hubspotusercontent-na1.net/hubfs/424565/GDN-USDG-Token-512x512.png",
-  USD1: "https://raw.githubusercontent.com/worldliberty/usd1-metadata/refs/heads/main/logo.png",
-  CASH: "https://token-metadata.bridge.xyz/images/cash.png",
-  EURC:
-    "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png",
-  "EURO COIN":
-    "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png",
-  EUROC:
-    "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png",
-  PI: PI_NETWORK_LOGO_URL,
-  PINETWORK: PI_NETWORK_LOGO_URL,
-  "PI NETWORK": PI_NETWORK_LOGO_URL,
-};
+/** Canonical logos for ledger majors + OUSD (history, notifications, pickers). */
+function buildKnownTokenLogos(): Record<string, string> {
+  const logos: Record<string, string> = {
+    OUSD: OUSD_LOGO_URL,
+    OPENUSD: OUSD_LOGO_URL,
+    OPENPAY: OUSD_LOGO_URL,
+  };
+
+  for (const id of MAJOR_TOKEN_IDS) {
+    const def = MAJOR_TOKENS[id];
+    const logo = def.logoUrl;
+    if (!logo) continue;
+    logos[def.symbol.toUpperCase()] = logo;
+    logos[def.name.toUpperCase()] = logo;
+    logos[def.name.toUpperCase().replace(/\s+/g, "")] = logo;
+  }
+
+  // Prefer OpenPay/Pi brand marks where they exist.
+  logos.PI = PI_NETWORK_LOGO_URL;
+  logos.PINETWORK = PI_NETWORK_LOGO_URL;
+  logos["PI NETWORK"] = PI_NETWORK_LOGO_URL;
+  logos.USDC = USDC_LOGO_URL;
+  logos.USDCOIN = USDC_LOGO_URL;
+  logos["USD COIN"] = USDC_LOGO_URL;
+
+  return logos;
+}
+
+const KNOWN_TOKEN_LOGOS = buildKnownTokenLogos();
 
 function normalizeSymbolToken(raw: string): string {
   return raw
@@ -86,4 +85,13 @@ export function resolveTokenLogoUrl(
 ): string | null {
   if (logoUrl) return logoUrl;
   return logoUrlForTokenSymbol(symbol);
+}
+
+/** Symbols that already have a built-in logo (skip OpenToken DB lookup). */
+export function isKnownTokenLogoSymbol(symbol: string | null | undefined): boolean {
+  if (!symbol) return false;
+  const key = normalizeSymbolToken(symbol);
+  if (KNOWN_TOKEN_LOGOS[key]) return true;
+  const first = key.split(" ")[0];
+  return Boolean(first && KNOWN_TOKEN_LOGOS[first]);
 }

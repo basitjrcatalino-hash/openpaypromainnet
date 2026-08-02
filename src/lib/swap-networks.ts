@@ -4,8 +4,19 @@ export type SwapNetworkId =
   | "solana"
   | "ethereum"
   | "bitcoin"
+  | "bitcoin-cash"
   | "bnb"
   | "ronin"
+  | "xrp"
+  | "tron"
+  | "dogecoin"
+  | "cardano"
+  | "stellar"
+  | "ton"
+  | "avalanche"
+  | "sui"
+  | "near"
+  | "polkadot"
   | "pi";
 
 export type SwapNetwork = {
@@ -47,6 +58,13 @@ export const SWAP_NETWORKS: SwapNetwork[] = [
     accent: "#F7931A",
   },
   {
+    id: "bitcoin-cash",
+    label: "Bitcoin Cash",
+    short: "BCH",
+    status: "live",
+    accent: "#0AC18E",
+  },
+  {
     id: "bnb",
     label: "BNB Smart Chain",
     short: "BNB",
@@ -59,6 +77,76 @@ export const SWAP_NETWORKS: SwapNetwork[] = [
     short: "RON",
     status: "live",
     accent: "#1273EA",
+  },
+  {
+    id: "xrp",
+    label: "XRP Ledger",
+    short: "XRP",
+    status: "live",
+    accent: "#23292F",
+  },
+  {
+    id: "tron",
+    label: "TRON",
+    short: "TRX",
+    status: "live",
+    accent: "#FF0013",
+  },
+  {
+    id: "dogecoin",
+    label: "Dogecoin",
+    short: "DOGE",
+    status: "live",
+    accent: "#C2A633",
+  },
+  {
+    id: "cardano",
+    label: "Cardano",
+    short: "ADA",
+    status: "live",
+    accent: "#0033AD",
+  },
+  {
+    id: "stellar",
+    label: "Stellar",
+    short: "XLM",
+    status: "live",
+    accent: "#000000",
+  },
+  {
+    id: "ton",
+    label: "TON",
+    short: "TON",
+    status: "live",
+    accent: "#0098EA",
+  },
+  {
+    id: "avalanche",
+    label: "Avalanche",
+    short: "AVAX",
+    status: "live",
+    accent: "#E84142",
+  },
+  {
+    id: "sui",
+    label: "Sui",
+    short: "SUI",
+    status: "live",
+    accent: "#4DA2FF",
+  },
+  {
+    id: "near",
+    label: "NEAR",
+    short: "NEAR",
+    status: "live",
+    accent: "#000000",
+  },
+  {
+    id: "polkadot",
+    label: "Polkadot",
+    short: "DOT",
+    status: "live",
+    accent: "#E6007A",
   },
   {
     id: "pi",

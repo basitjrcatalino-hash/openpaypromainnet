@@ -215,7 +215,7 @@ function isMissingRemovedAtColumn(message?: string | null): boolean {
 export async function listUserWallets<T = Record<string, unknown>>(
   supabase: WalletQueryClient,
   userId: string,
-  columns = "id,user_id,name,address,is_active,ousd_balance,pi_balance,btc_balance,eth_balance,sol_balance,usdc_balance,usdt_balance,pyusd_balance,usdg_balance,usd1_balance,cash_balance,eurc_balance,hype_balance,zec_balance,tslax_balance,nflxx_balance,googlx_balance,bnb_balance,uni_balance,okb_balance,gt_balance,bgb_balance,cake_balance,jup_balance,ron_balance,created_at",
+  columns = "id,user_id,name,address,is_active,ousd_balance,pi_balance,btc_balance,eth_balance,sol_balance,usdc_balance,usdt_balance,pyusd_balance,usdg_balance,usd1_balance,cash_balance,eurc_balance,hype_balance,zec_balance,tslax_balance,nflxx_balance,googlx_balance,bnb_balance,uni_balance,okb_balance,gt_balance,bgb_balance,cake_balance,jup_balance,ron_balance,xrp_balance,trx_balance,doge_balance,ada_balance,link_balance,xlm_balance,bch_balance,gram_balance,avax_balance,sui_balance,xaut_balance,ondo_balance,near_balance,usdy_balance,paxg_balance,wlfi_balance,aster_balance,rlusd_balance,aave_balance,dot_balance,pump_balance,created_at",
 ): Promise<T[]> {
   const primary = await supabase
     .from("wallets")

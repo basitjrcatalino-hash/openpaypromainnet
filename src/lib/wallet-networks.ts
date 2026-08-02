@@ -9,11 +9,21 @@ export type WalletNetworkId =
   | "solana"
   | "ethereum"
   | "bitcoin"
+  | "bitcoin-cash"
   | "bnb"
   | "ronin"
+  | "xrp"
+  | "tron"
+  | "dogecoin"
+  | "cardano"
+  | "stellar"
+  | "ton"
+  | "avalanche"
   | "base"
   | "polygon"
   | "sui"
+  | "near"
+  | "polkadot"
   | "monad"
   | "hyperevm"
   | "pi";
@@ -76,6 +86,15 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     accent: "#F7931A",
   },
   {
+    id: "bitcoin-cash",
+    label: "Bitcoin Cash",
+    short: "BCH",
+    match: "Bitcoin Cash",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/780/large/bitcoin-cash-circle.png",
+    accent: "#0AC18E",
+  },
+  {
     id: "bnb",
     label: "BNB Smart Chain",
     short: "BNB",
@@ -93,6 +112,70 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     logoUrl:
       "https://coin-images.coingecko.com/coins/images/20009/large/photo_2024-04-06_22-52-24.jpg",
     accent: "#1273EA",
+  },
+  {
+    id: "xrp",
+    label: "XRP Ledger",
+    short: "XRP",
+    match: "XRP Ledger",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png",
+    accent: "#23292F",
+  },
+  {
+    id: "tron",
+    label: "TRON",
+    short: "TRON",
+    match: "TRON",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/1094/large/photo_2026-04-13_09-59-16.png",
+    accent: "#FF0013",
+  },
+  {
+    id: "dogecoin",
+    label: "Dogecoin",
+    short: "DOGE",
+    match: "Dogecoin",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/5/large/dogecoin.png",
+    accent: "#C2A633",
+  },
+  {
+    id: "cardano",
+    label: "Cardano",
+    short: "ADA",
+    match: "Cardano",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/975/large/cardano.png",
+    accent: "#0033AD",
+  },
+  {
+    id: "stellar",
+    label: "Stellar",
+    short: "XLM",
+    match: "Stellar",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/100/large/fmpFRHHQ_400x400.jpg",
+    accent: "#7D00FF",
+  },
+  {
+    id: "ton",
+    label: "TON",
+    short: "TON",
+    match: "TON",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/17980/large/Gram_Circular_Badge.png",
+    accent: "#0098EA",
+  },
+  {
+    id: "avalanche",
+    label: "Avalanche",
+    short: "AVAX",
+    match: "Avalanche",
+    status: "live",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png",
+    accent: "#E84142",
   },
   {
     id: "base",
@@ -117,9 +200,27 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     label: "Sui",
     short: "Sui",
     match: "Sui",
-    status: "soon",
+    status: "live",
     logoUrl: "https://assets.coingecko.com/coins/images/26375/large/sui-ocean-square.png",
     accent: "#4DA2FF",
+  },
+  {
+    id: "near",
+    label: "NEAR",
+    short: "NEAR",
+    match: "NEAR",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/10365/large/near.jpg",
+    accent: "#000000",
+  },
+  {
+    id: "polkadot",
+    label: "Polkadot",
+    short: "DOT",
+    match: "Polkadot",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/12171/large/polkadot.jpg",
+    accent: "#E6007A",
   },
   {
     id: "monad",

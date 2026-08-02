@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
-import { resolveTokenLogoUrl } from "@/lib/token-logos";
+import { isKnownTokenLogoSymbol, resolveTokenLogoUrl } from "@/lib/token-logos";
 
 export type ActivityItem = Tables<"transactions"> & {
   logo_url?: string | null;
@@ -170,13 +170,12 @@ export async function fetchWalletActivity(
     );
   }
 
-  const knownBuiltIn = new Set(["OUSD", "BTC", "ETH", "SOL", "PI", "BITCOIN", "ETHEREUM", "SOLANA"]);
   const needSymbolLookup = [
     ...new Set(
       allItems
         .filter((t) => !t.logo_url)
         .map((t) => symbolLookupKey(t.token_symbol))
-        .filter((s): s is string => !!s && !knownBuiltIn.has(s)),
+        .filter((s): s is string => !!s && !isKnownTokenLogoSymbol(s)),
     ),
   ];
   let logoBySymbol = new Map<string, string>();

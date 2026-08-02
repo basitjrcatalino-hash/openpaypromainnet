@@ -1,4 +1,5 @@
 import type { Tables } from "@/integrations/supabase/types";
+import { OUSD_LOGO_URL, resolveTokenLogoUrl } from "@/lib/token-logos";
 
 export type TxRow = Tables<"transactions">;
 
@@ -129,11 +130,12 @@ export async function showBrowserNotification(note: AppNotification) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
 
+  const icon = resolveTokenLogoUrl(null, note.tokenSymbol) || OUSD_LOGO_URL;
   const opts: NotificationOptions & { vibrate?: number[] } = {
     body: note.body,
     tag: note.txId,
-    icon: "/ousd-logo.svg",
-    badge: "/ousd-logo.svg",
+    icon,
+    badge: OUSD_LOGO_URL,
     data: { url: "/activity", txId: note.txId },
     vibrate: [120, 40, 120],
   };

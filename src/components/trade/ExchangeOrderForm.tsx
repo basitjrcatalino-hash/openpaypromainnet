@@ -10,7 +10,7 @@ import {
   type PerpSide,
 } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
-import { PLATFORM_TRADE_FEE_BPS } from "@/lib/platform-treasury";
+import { PLATFORM_TRADE_FEE_BPS, applyPerpNotionalFee } from "@/lib/platform-treasury";
 
 const PCTS = [0, 25, 50, 75, 100] as const;
 const FEE_RATE = PLATFORM_TRADE_FEE_BPS / 10_000;
@@ -81,6 +81,10 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           ? total * (1 - FEE_RATE)
           : 0
       : 0;
+  const perpFee =
+    props.mode === "futures" && amt > 0
+      ? applyPerpNotionalFee(amt, props.leverage)
+      : null;
 
   return (
     <div className="flex min-h-0 flex-col gap-2 text-[12px]">
@@ -303,7 +307,9 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
             <>
               <p>
                 Est. fee ({PLATFORM_TRADE_FEE_BPS / 100}%){" "}
-                <span className="font-semibold text-foreground">{formatNumber(fee, 4)} USDT</span>
+                <span className="font-semibold text-foreground">
+                  {formatNumber(fee, 4)} {props.payAsset}
+                </span>
               </p>
               <p>
                 {props.side === "buy" ? "You receive ≈" : "You receive ≈"}{" "}
@@ -318,12 +324,36 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         </div>
       )}
 
-      {props.mode === "futures" && amt > 0 ? (
+      {props.mode === "futures" && amt > 0 && perpFee ? (
+        <div className="space-y-0.5 text-[10px] text-muted-foreground">
+          <p>
+            Notional ≈{" "}
+            <span className="font-semibold text-foreground">
+              {formatNumber(perpFee.notional, 2)} {props.marginAsset}
+            </span>
+          </p>
+          <p>
+            Est. fee ({PLATFORM_TRADE_FEE_BPS / 100}% of notional){" "}
+            <span className="font-semibold text-foreground">
+              {formatNumber(perpFee.fee, 4)} {props.marginAsset}
+            </span>
+          </p>
+          {props.action === "open" ? (
+            <p>
+              Margin + fee ≈{" "}
+              <span className="font-semibold text-foreground">
+                {formatNumber(perpFee.totalDebit, 4)} {props.marginAsset}
+              </span>
+            </p>
+          ) : (
+            <p>Close fee deducted from returned equity</p>
+          )}
+        </div>
+      ) : null}
+
+      {props.mode === "futures" && !(amt > 0) ? (
         <p className="text-[10px] text-muted-foreground">
-          Notional ≈{" "}
-          <span className="font-semibold text-foreground">
-            {formatNumber(amt * props.leverage, 2)} USD
-          </span>
+          Platform fee {PLATFORM_TRADE_FEE_BPS / 100}% on notional (open & close)
         </p>
       ) : null}
 

@@ -16,6 +16,7 @@ import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
 import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
 import {
   closePerpPosition,
@@ -47,6 +48,7 @@ import { limitIsMarketable, type SpotOrder } from "@/lib/spot-orders";
 import {
   isPerpMarket,
   marketToMajorId,
+  unrealizedPnl,
   type PerpMarginAsset,
   type PerpMarket,
   type PerpPosition,
@@ -55,6 +57,7 @@ import {
 import {
   PERP_CHART_PERIODS,
   fetchMajorMarkets,
+  getMajorToken,
   majorMarketById,
   type PerpChartPeriod,
 } from "@/lib/major-tokens";
@@ -68,6 +71,7 @@ import {
   tvSymbolForMode,
   type TradeMode,
 } from "@/lib/exchange-depth";
+import { applyPerpNotionalFee, PLATFORM_TRADE_FEE_BPS } from "@/lib/platform-treasury";
 import { formatNumber } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 
@@ -161,6 +165,8 @@ function TradePage() {
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
   const [payAsset, setPayAsset] = useState<SpotPay>("USDT");
+  /** Confirm close position (Phantom-style TxConfirmModal). */
+  const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
 
   useEffect(() => {
     const marketMatch =
@@ -327,7 +333,10 @@ function TradePage() {
   function applyPct(p: number) {
     setPct(p);
     if (mode === "futures") {
-      const m = (tradingBal * p) / 100;
+      // Reserve platform fee on notional so 100% doesn't overdraw Trading
+      const feeRate = PLATFORM_TRADE_FEE_BPS / 10_000;
+      const maxMargin = tradingBal / (1 + leverage * feeRate);
+      const m = (maxMargin * p) / 100;
       setAmount(m > 0 ? String(Math.floor(m * 1e4) / 1e4) : "");
       return;
     }
@@ -366,6 +375,7 @@ function TradePage() {
     mutationFn: (id: string) => closePos({ data: { id } }),
     onSuccess: () => {
       notifySuccess("Position closed — PnL to Trading", { sound: "receive" });
+      setCloseTarget(null);
       void qc.invalidateQueries({ queryKey: ["perp-positions"] });
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
     },
@@ -462,6 +472,18 @@ function TradePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  function requestClosePosition(id: string) {
+    const pos =
+      marketPositions.find((p: PerpPosition) => p.id === id) ??
+      openPositions.find((p: PerpPosition) => p.id === id) ??
+      null;
+    if (!pos) {
+      toast.error("Position not found");
+      return;
+    }
+    setCloseTarget(pos);
+  }
+
   function onFuturesSubmit(side: PerpSide) {
     if (futAction === "close") {
       const pos = marketPositions.find((p: PerpPosition) => p.side === side);
@@ -469,11 +491,29 @@ function TradePage() {
         toast.error(`No open ${side} to close`);
         return;
       }
-      closeM.mutate(pos.id);
+      setCloseTarget(pos);
       return;
     }
     openM.mutate(side);
   }
+
+  const closePreview = (() => {
+    if (!closeTarget) return null;
+    const mark = price > 0 ? price : closeTarget.entry_price;
+    const pnl = unrealizedPnl({
+      side: closeTarget.side,
+      sizeUsd: closeTarget.size_usd,
+      entryPrice: closeTarget.entry_price,
+      markPrice: mark,
+      margin: closeTarget.margin,
+    });
+    const feeInfo = applyPerpNotionalFee(closeTarget.margin, closeTarget.leverage);
+    const gross = Math.max(0, closeTarget.margin + pnl);
+    const fee = Math.min(feeInfo.fee, gross);
+    const receive = Math.max(0, gross - fee);
+    const major = getMajorToken(closeTarget.market.toLowerCase());
+    return { mark, pnl, fee, receive, logoUrl: major?.logoUrl };
+  })();
 
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
@@ -807,7 +847,7 @@ function TradePage() {
         onTab={setDockTab}
         positions={mode === "futures" ? marketPositions : []}
         markPrice={price}
-        onClosePosition={(id) => closeM.mutate(id)}
+        onClosePosition={requestClosePosition}
         closingId={closeM.isPending ? closeM.variables : null}
         onGoTrade={view !== "trade" ? () => setView("trade") : undefined}
         expanded={dockExpanded}
@@ -850,6 +890,87 @@ function TradePage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <TxConfirmModal
+        open={Boolean(closeTarget)}
+        onOpenChange={(open) => {
+          if (!open && !closeM.isPending) setCloseTarget(null);
+        }}
+        title="Confirm close"
+        description={
+          closeTarget
+            ? `${closeTarget.market}USDT · ${closeTarget.side.toUpperCase()} ${closeTarget.leverage}×`
+            : undefined
+        }
+        icon={
+          closePreview?.logoUrl ? (
+            <img
+              src={closePreview.logoUrl}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover ring-4 ring-card"
+            />
+          ) : (
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-muted text-lg font-bold ring-4 ring-card">
+              {closeTarget?.market?.slice(0, 1) ?? "?"}
+            </div>
+          )
+        }
+        amount={
+          closePreview ? (
+            <span className={closePreview.pnl >= 0 ? "text-emerald-500" : "text-rose-500"}>
+              {closePreview.pnl >= 0 ? "+" : ""}
+              {formatNumber(closePreview.pnl, 4)} {closeTarget?.margin_asset}
+            </span>
+          ) : undefined
+        }
+        subtitle={closePreview ? "Est. unrealized PnL at mark" : undefined}
+        rows={
+          closeTarget && closePreview
+            ? [
+                { label: "Side", value: closeTarget.side.toUpperCase() },
+                { label: "Leverage", value: `${closeTarget.leverage}×` },
+                {
+                  label: "Entry",
+                  value: formatNumber(closeTarget.entry_price, closeTarget.entry_price >= 1000 ? 1 : 2),
+                  mono: true,
+                },
+                {
+                  label: "Mark",
+                  value: formatNumber(closePreview.mark, closePreview.mark >= 1000 ? 1 : 2),
+                  mono: true,
+                },
+                {
+                  label: "Margin",
+                  value: `${formatNumber(closeTarget.margin, 4)} ${closeTarget.margin_asset}`,
+                  mono: true,
+                },
+                {
+                  label: `Fee (${PLATFORM_TRADE_FEE_BPS / 100}%)`,
+                  value: `${formatNumber(closePreview.fee, 4)} ${closeTarget.margin_asset}`,
+                  mono: true,
+                },
+                {
+                  label: "You receive ≈",
+                  value: `${formatNumber(closePreview.receive, 4)} ${closeTarget.margin_asset}`,
+                  mono: true,
+                },
+              ]
+            : []
+        }
+        notice={
+          <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+            Closing returns margin ± PnL to Trading after the platform fee. Mark may move before
+            confirm.
+          </p>
+        }
+        confirmLabel={closeM.isPending ? "Closing…" : "Confirm close"}
+        busy={closeM.isPending}
+        variant={closePreview && closePreview.pnl < 0 ? "destructive" : "success"}
+        onConfirm={() => {
+          if (!closeTarget) return;
+          closeM.mutate(closeTarget.id);
+        }}
+      />
     </div>
   );
 }

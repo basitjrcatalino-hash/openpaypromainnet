@@ -1,4 +1,4 @@
-/** OpenDEX platform swap fee in basis points (30 = 0.30%). */
+/** Platform swap fee — keep in sync with PLATFORM_TRADE_FEE_BPS (Spot / Perps / OpenDEX). */
 export const OPENDEX_SWAP_FEE_BPS = 30;
 
 export function opendexFeePct(feeBps = OPENDEX_SWAP_FEE_BPS) {

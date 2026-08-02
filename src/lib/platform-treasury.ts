@@ -10,8 +10,28 @@ export const PLATFORM_FEE_TREASURY_USERNAME = "openpay";
 export const PLATFORM_FEE_TREASURY_ADDRESS =
   "0xc847682465ea537c3957cd46eff2c7229faefde1";
 
-/** Platform trade fee (buy majors / OpenToken / OpenDEX) — 30 bps = 0.30%. */
+/** Platform trade fee (Spot majors / OpenToken / OpenDEX / Perps) — 30 bps = 0.30%. */
 export const PLATFORM_TRADE_FEE_BPS = 30;
+
+export function platformTradeFeePct(feeBps = PLATFORM_TRADE_FEE_BPS) {
+  return feeBps / 100;
+}
+
+/** Perp fee on notional (margin × leverage), same bps as Spot. */
+export function applyPerpNotionalFee(
+  margin: number,
+  leverage: number,
+  feeBps = PLATFORM_TRADE_FEE_BPS,
+): { notional: number; fee: number; totalDebit: number; feeBps: number } {
+  const notional = round8(Math.max(0, margin) * Math.max(0, leverage));
+  const { fee } = applyPlatformTradeFee(notional, feeBps);
+  return {
+    notional,
+    fee,
+    totalDebit: round8(Math.max(0, margin) + fee),
+    feeBps,
+  };
+}
 
 function round8(n: number) {
   return Math.round(n * 1e8) / 1e8;

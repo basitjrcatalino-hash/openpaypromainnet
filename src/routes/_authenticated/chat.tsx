@@ -158,7 +158,9 @@ function LiveChatHubPage() {
         ) : (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
             <p className="px-0.5 text-xs leading-relaxed text-muted-foreground">
-              Each token has its own live chat room — messages stay in that room only.
+              Each token has its own room at{" "}
+              <span className="font-medium text-foreground">/asset/&lt;token&gt;/chat</span> —
+              live price in the header, messages stay in that room only.
             </p>
 
             <button
@@ -241,7 +243,7 @@ function LiveChatHubPage() {
                   {openTokens.map((t) => (
                     <li key={t.id}>
                       <Link
-                        to="/opentoken/$tokenId/chat"
+                        to="/asset/$tokenId/chat"
                         params={{ tokenId: t.id }}
                         className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 last:border-b-0 press hover:bg-muted/40"
                       >
@@ -254,7 +256,7 @@ function LiveChatHubPage() {
                         <span className="min-w-0 flex-1 text-left">
                           <span className="block truncate text-sm font-bold">{t.name}</span>
                           <span className="block text-xs text-muted-foreground">
-                            {t.symbol} room · separated
+                            {t.symbol} room · Phantom-style
                           </span>
                         </span>
                         <MessageCircle className="h-4 w-4 text-primary" />

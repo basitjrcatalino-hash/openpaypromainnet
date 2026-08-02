@@ -521,7 +521,7 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
         <TokenPriceRate price={price} change={change} currency={currency} />
       </Link>
       <Link
-        to="/opentoken/$tokenId/chat"
+        to="/asset/$tokenId/chat"
         params={{ tokenId: t.id }}
         className="grid w-11 shrink-0 place-items-center text-primary press hover:bg-muted/40"
         aria-label={`${t.symbol} live chat`}

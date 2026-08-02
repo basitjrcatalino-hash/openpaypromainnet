@@ -68,6 +68,8 @@ export const openPerpPosition = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => OpenSchema.parse(d))
   .handler(async ({ context, data }) => {
     const entry = await markPriceUsd(data.market);
+    const { applyPerpNotionalFee } = await import("@/lib/platform-treasury");
+    const feePreview = applyPerpNotionalFee(data.margin, data.leverage);
     const { data: pos, error } = await (context.supabase as any).rpc("perp_open_position", {
       _market: data.market,
       _side: data.side,
@@ -77,7 +79,12 @@ export const openPerpPosition = createServerFn({ method: "POST" })
       _entry_price: entry,
     });
     if (error) throw new Error(error.message);
-    return pos;
+    return {
+      ...pos,
+      fee_bps: feePreview.feeBps,
+      fee: feePreview.fee,
+      notional: feePreview.notional,
+    };
   });
 
 export const closePerpPosition = createServerFn({ method: "POST" })

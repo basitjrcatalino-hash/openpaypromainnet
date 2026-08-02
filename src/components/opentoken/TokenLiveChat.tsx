@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ImageIcon, Loader2, Search, SendHorizonal, Smile, X } from "lucide-react";
+import { ImageIcon, Loader2, Search, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { formatOUSD, formatPct } from "@/lib/wallet-utils";
+import { formatNumber, formatPct } from "@/lib/wallet-utils";
 import { searchKlipyMedia, type KlipyMediaItem } from "@/lib/klipy";
 
 type ChatKind = "text" | "gif" | "sticker" | "emoji";
@@ -56,6 +56,8 @@ export type TokenLiveChatProps = {
   logoUrl?: string | null;
   priceUsd: number;
   change24h: number;
+  /** Absolute 24h move in USD (Phantom shows +$2 under %). */
+  changeAbs?: number | null;
   /** Opens trade / buy sheet (Phantom "Trade" CTA). */
   onTrade?: () => void;
   /** When set, shows close (X) — Phantom dismiss. */
@@ -115,6 +117,31 @@ function formatTradeUsd(n: number) {
   return abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatPriceHeader(n: number) {
+  if (!(n > 0)) return "—";
+  if (n >= 1000) return `$${formatNumber(n, 2)}`;
+  if (n >= 1) return `$${formatNumber(n, n >= 100 ? 2 : 4)}`;
+  return `$${formatNumber(n, n < 0.01 ? 6 : 4)}`;
+}
+
+function dayKey(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "unknown";
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startMsg = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startToday - startMsg) / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 async function loadProfiles(ids: string[]): Promise<Record<string, ProfileBits>> {
   const profiles: Record<string, ProfileBits> = {};
   if (!ids.length) return profiles;
@@ -152,6 +179,16 @@ function AvatarBubble({
   );
 }
 
+function DateSeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <div className="h-px flex-1 bg-white/10" />
+      <span className="shrink-0 text-[11px] font-medium text-white/40">{label}</span>
+      <div className="h-px flex-1 bg-white/10" />
+    </div>
+  );
+}
+
 export function TokenLiveChat({
   tokenId,
   roomId,
@@ -161,6 +198,7 @@ export function TokenLiveChat({
   logoUrl,
   priceUsd,
   change24h,
+  changeAbs,
   onTrade,
   onClose,
   variant = "panel",
@@ -288,6 +326,12 @@ export function TokenLiveChat({
   }, [messages, trades]);
 
   const up = change24h >= 0;
+  const absMove =
+    changeAbs != null && Number.isFinite(changeAbs)
+      ? changeAbs
+      : priceUsd > 0 && Number.isFinite(change24h)
+        ? (priceUsd * change24h) / 100
+        : null;
 
   const mediaQuery = useQuery({
     queryKey: ["klipy", pickerTab, debouncedQuery || symbol],
@@ -415,10 +459,82 @@ export function TokenLiveChat({
 
   const missingTable = Boolean(loadError && isMissingChatTable(loadError));
 
+  let lastDay: string | null = null;
+  const feedNodes: ReactNode[] = [];
+  for (const item of feed) {
+    const dk = dayKey(item.created_at);
+    if (dk !== lastDay) {
+      lastDay = dk;
+      feedNodes.push(<DateSeparator key={`day-${dk}`} label={dayLabel(item.created_at)} />);
+    }
+    if (item.type === "trade") {
+      const buy = item.side === "buy";
+      feedNodes.push(
+        <div
+          key={item.id}
+          className={cn(
+            "flex items-center gap-2.5 rounded-xl px-2.5 py-2",
+            buy ? "bg-[#0D2A1A]" : "bg-[#2A1212]",
+          )}
+        >
+          <AvatarBubble profile={item.profile} userId={item.user_id} className="h-7 w-7" />
+          <Link
+            to="/opentoken/creator/$userId"
+            params={{ userId: item.user_id }}
+            className="min-w-0 flex-1 truncate text-[13px] font-medium text-white/90"
+          >
+            {handleLabel(item.profile, item.user_id)}
+          </Link>
+          <span
+            className={cn(
+              "shrink-0 text-[13px] font-semibold tabular-nums",
+              buy ? "text-[#14F195]" : "text-[#FF6B6B]",
+            )}
+          >
+            {buy ? "+" : "-"}${formatTradeUsd(item.usdAmount)}
+          </span>
+        </div>,
+      );
+      continue;
+    }
+
+    const m = item;
+    feedNodes.push(
+      <div key={m.id} className="flex gap-2.5 px-0.5">
+        <AvatarBubble profile={m.profile} userId={m.user_id} className="mt-0.5 h-8 w-8" />
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/opentoken/creator/$userId"
+            params={{ userId: m.user_id }}
+            className="text-[13px] font-medium leading-none text-white/55"
+          >
+            {handleLabel(m.profile, m.user_id)}
+          </Link>
+          {m.kind === "emoji" || m.kind === "sticker" ? (
+            <p className="mt-1 text-3xl leading-none">{m.body}</p>
+          ) : m.media_url ? (
+            <div className="mt-1.5 space-y-1">
+              {m.body && m.kind === "text" ? (
+                <p className="whitespace-pre-wrap text-[15px] leading-snug text-white">{m.body}</p>
+              ) : null}
+              <img
+                src={m.media_url}
+                alt=""
+                className="max-h-52 max-w-[min(100%,18rem)] rounded-2xl object-cover"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <p className="mt-0.5 whitespace-pre-wrap text-[15px] leading-snug text-white">{m.body}</p>
+          )}
+        </div>
+      </div>,
+    );
+  }
+
   const shell = (
     <div
       className={cn(
-        /* Force Phantom dark chat surface */
         "flex flex-col bg-black text-white",
         variant === "overlay" || variant === "page"
           ? "h-full min-h-0"
@@ -426,8 +542,8 @@ export function TokenLiveChat({
         className,
       )}
     >
-      {/* Phantom header — no divider hairline on pure black */}
-      <header className="flex shrink-0 items-center gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+      {/* Phantom header — logo + name + live price */}
+      <header className="flex shrink-0 items-center gap-2 px-3 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
         {onClose ? (
           <button
             type="button"
@@ -449,17 +565,15 @@ export function TokenLiveChat({
             )}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[15px] font-semibold leading-tight text-white">
-              {name}
-            </div>
+            <div className="truncate text-[15px] font-semibold leading-tight text-white">{name}</div>
             <div className="truncate text-[12px] leading-tight text-white/45">
-              {symbol} room · {chattingLabel(uniqueChatters)}
+              {chattingLabel(uniqueChatters)}
             </div>
           </div>
         </div>
         <div className="shrink-0 pr-1 text-right">
           <div className="text-[15px] font-semibold tabular-nums leading-tight text-white">
-            {formatOUSD(priceUsd, { price: true, suffix: false })}
+            {formatPriceHeader(priceUsd)}
           </div>
           <div
             className={cn(
@@ -468,98 +582,37 @@ export function TokenLiveChat({
             )}
           >
             {formatPct(change24h)}
+            {absMove != null && Math.abs(absMove) >= 0.005 ? (
+              <span className="ml-1.5">
+                {absMove >= 0 ? "+" : "−"}$
+                {formatNumber(Math.abs(absMove), Math.abs(absMove) >= 1 ? 2 : 2)}
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
 
-      {/* Message feed */}
+      {/* Message + trade feed */}
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-2">
         {isLoading ? (
           <p className="px-1 py-6 text-sm text-white/40">Loading chat…</p>
         ) : missingTable ? (
           <p className="px-1 py-6 text-sm text-white/40">
-            Chat is unavailable until the live-chat migration is applied.
+            Chat is unavailable until the live-chat migration is applied on Supabase (
+            <code className="text-white/55">asset_chat_messages</code>).
           </p>
         ) : loadError ? (
           <p className="px-1 py-6 text-sm text-white/40">Could not load chat. Try again later.</p>
         ) : feed.length === 0 ? (
           <p className="px-1 py-6 text-sm text-white/40">
-            Say something — text, GIFs, or memes welcome.
+            Be the first in the {symbol} room — say something.
           </p>
         ) : (
-          feed.map((item) => {
-            if (item.type === "trade") {
-              const buy = item.side === "buy";
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-xl px-2.5 py-2",
-                    buy ? "bg-[#0D2A1A]" : "bg-[#2A1212]",
-                  )}
-                >
-                  <AvatarBubble profile={item.profile} userId={item.user_id} className="h-7 w-7" />
-                  <Link
-                    to="/opentoken/creator/$userId"
-                    params={{ userId: item.user_id }}
-                    className="min-w-0 flex-1 truncate text-[13px] font-medium text-white"
-                  >
-                    {handleLabel(item.profile, item.user_id)}
-                  </Link>
-                  <span
-                    className={cn(
-                      "shrink-0 text-[13px] font-semibold tabular-nums",
-                      buy ? "text-[#14F195]" : "text-[#FF6B6B]",
-                    )}
-                  >
-                    {buy ? "+" : "-"}${formatTradeUsd(item.usdAmount)}
-                  </span>
-                </div>
-              );
-            }
-
-            const m = item;
-            return (
-              <div key={m.id} className="flex gap-2.5 px-0.5">
-                <AvatarBubble profile={m.profile} userId={m.user_id} className="mt-0.5 h-8 w-8" />
-                <div className="min-w-0 flex-1">
-                  <Link
-                    to="/opentoken/creator/$userId"
-                    params={{ userId: m.user_id }}
-                    className="text-[13px] font-medium leading-none text-white"
-                  >
-                    {handleLabel(m.profile, m.user_id)}
-                  </Link>
-                  {m.kind === "emoji" || m.kind === "sticker" ? (
-                    <p className="mt-1 text-3xl leading-none">{m.body}</p>
-                  ) : m.media_url ? (
-                    <div className="mt-1.5 space-y-1">
-                      {m.body && m.kind === "text" ? (
-                        <p className="whitespace-pre-wrap text-[15px] leading-snug text-white">
-                          {m.body}
-                        </p>
-                      ) : null}
-                      <img
-                        src={m.media_url}
-                        alt=""
-                        className="max-h-52 max-w-[min(100%,18rem)] rounded-2xl object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  ) : (
-                    <p className="mt-0.5 whitespace-pre-wrap text-[15px] leading-snug text-white">
-                      {m.body}
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          feedNodes
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick emoji row */}
       {emojiRow && !pickerOpen ? (
         <div className="flex shrink-0 gap-1 overflow-x-auto px-2 py-2">
           {EMOJI_QUICK.map((e) => (
@@ -576,7 +629,6 @@ export function TokenLiveChat({
         </div>
       ) : null}
 
-      {/* KLIPY GIF / Meme sheet */}
       {pickerOpen ? (
         <div className="relative flex max-h-[48%] min-h-56 shrink-0 flex-col rounded-t-3xl border-t border-white/10 bg-[#121212] shadow-[0_-8px_40px_rgba(0,0,0,0.55)]">
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/25" />
@@ -652,7 +704,7 @@ export function TokenLiveChat({
         </div>
       ) : null}
 
-      {/* Composer — Write message + smile + Send + Trade */}
+      {/* Composer — Write message + smile + Trade (Phantom) */}
       <div className="flex shrink-0 items-center gap-2 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
         <div className="relative flex min-w-0 flex-1 items-center">
           <input
@@ -675,33 +727,27 @@ export function TokenLiveChat({
               (pickerOpen || emojiRow) && "text-white",
             )}
             onClick={() => {
+              if (body.trim()) {
+                void send({ kind: "text", body });
+                return;
+              }
               if (pickerOpen) {
                 setPickerOpen(false);
                 return;
               }
+              setEmojiRow((v) => !v);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
               setEmojiRow(false);
               setPickerOpen(true);
               setPickerQuery(symbol || name);
             }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setPickerOpen(false);
-              setEmojiRow((v) => !v);
-            }}
-            aria-label="GIFs and memes"
+            aria-label={body.trim() ? "Send message" : "Emoji and GIFs"}
           >
-            <Smile className="h-5 w-5" />
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smile className="h-5 w-5" />}
           </button>
         </div>
-        <button
-          type="button"
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/10 text-white press disabled:opacity-40"
-          onClick={() => void send({ kind: "text", body })}
-          disabled={busy || missingTable || !body.trim()}
-          aria-label="Send message"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
-        </button>
         <button
           type="button"
           className={cn(

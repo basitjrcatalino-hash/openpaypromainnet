@@ -85,6 +85,7 @@ function TokenLiveChatPage() {
 
   const price = Number(token.price_usd ?? 0);
   const change = Number(token.change_24h ?? 0);
+  const changeAbs = price > 0 ? (price * change) / 100 : 0;
   const backTo = `/opentoken/${tokenId}`;
 
   return (
@@ -99,6 +100,7 @@ function TokenLiveChatPage() {
         logoUrl={token.logo_url}
         priceUsd={price}
         change24h={change}
+        changeAbs={changeAbs}
         onClose={() => {
           void router.navigate({ to: "/opentoken/$tokenId", params: { tokenId } });
         }}

@@ -2,6 +2,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,9 @@ import {
   isMajorTokenId,
   majorMarketById,
 } from "@/lib/major-tokens";
+import { getPerpLiveQuotes } from "@/lib/perp-market.functions";
 import { isPerpMarket } from "@/lib/perp";
+import { quoteByMarket } from "@/lib/tradingview-perps";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId/chat")({
@@ -24,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/asset_/$tokenId/chat")({
 
 /**
  * Phantom-style live chat for every asset: majors, OUSD, OpenTokens.
+ * Route: `/asset/$tokenId/chat` — one room per token (room_id = major id / ousd / OT uuid).
  * Header shows live price + 24h change; Trade opens /trade (perps) or asset page.
  */
 function AssetLiveChatPage() {
@@ -31,6 +35,7 @@ function AssetLiveChatPage() {
   const tokenId = decodeURIComponent(rawId);
   const { user } = Route.useRouteContext();
   const router = useRouter();
+  const fetchQuotes = useServerFn(getPerpLiveQuotes);
 
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
@@ -41,15 +46,26 @@ function AssetLiveChatPage() {
 
   const { data: majorMarkets } = useQuery({
     queryKey: ["major-markets"],
-    staleTime: 30_000,
-    refetchInterval: 45_000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
     enabled: isMajor || isOusd,
     queryFn: () => fetchMajorMarkets(),
+  });
+
+  const perpSym = majorDef?.symbol && isPerpMarket(majorDef.symbol) ? majorDef.symbol : null;
+  const { data: perpQuotes } = useQuery({
+    queryKey: ["perp-live-quotes"],
+    staleTime: 8_000,
+    refetchInterval: 12_000,
+    enabled: Boolean(perpSym),
+    queryFn: () => fetchQuotes(),
+    retry: 1,
   });
 
   const { data: otToken, isLoading: otLoading } = useQuery({
     queryKey: ["ot-token", tokenId],
     enabled: !isOusd && !isMajor,
+    refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tokens")
@@ -69,29 +85,49 @@ function AssetLiveChatPage() {
         logoUrl: OUSD_LOGO_URL,
         priceUsd: 1,
         change24h: 0,
+        changeAbs: 0,
       };
     }
     if (isMajor && majorDef) {
       const m = majorMarketById(majorMarkets, majorDef.id);
+      const q = perpSym ? quoteByMarket(perpQuotes, perpSym) : null;
+      const price =
+        q?.markPrice && q.markPrice > 0
+          ? q.markPrice
+          : q?.price && q.price > 0
+            ? q.price
+            : Number(m.price ?? 0);
+      const change =
+        q != null && Number.isFinite(q.change24h) ? q.change24h : Number(m.change24h ?? 0);
+      const changeAbs =
+        q?.changeAbs != null && Number.isFinite(q.changeAbs)
+          ? q.changeAbs
+          : price > 0
+            ? (price * change) / 100
+            : 0;
       return {
         name: majorDef.name,
         symbol: majorDef.symbol,
         logoUrl: majorDef.logoUrl,
-        priceUsd: Number(m.price ?? 0),
-        change24h: Number(m.change24h ?? 0),
+        priceUsd: price,
+        change24h: change,
+        changeAbs,
       };
     }
     if (otToken) {
+      const price = Number(otToken.price_usd ?? 0);
+      const change = Number(otToken.change_24h ?? 0);
       return {
         name: otToken.name,
         symbol: otToken.symbol,
         logoUrl: otToken.logo_url,
-        priceUsd: Number(otToken.price_usd ?? 0),
-        change24h: Number(otToken.change_24h ?? 0),
+        priceUsd: price,
+        change24h: change,
+        changeAbs: price > 0 ? (price * change) / 100 : 0,
       };
     }
     return null;
-  }, [isOusd, isMajor, majorDef, majorMarkets, otToken]);
+  }, [isOusd, isMajor, majorDef, majorMarkets, otToken, perpQuotes, perpSym]);
 
   if (!isOusd && !isMajor && otLoading) {
     return (
@@ -131,6 +167,7 @@ function AssetLiveChatPage() {
         logoUrl={meta.logoUrl}
         priceUsd={meta.priceUsd}
         change24h={meta.change24h}
+        changeAbs={meta.changeAbs}
         onClose={() => {
           void router.navigate({
             to: "/asset/$tokenId",
@@ -141,7 +178,7 @@ function AssetLiveChatPage() {
           if (canPerp) {
             void router.navigate({
               to: "/trade",
-              search: { market: meta.symbol },
+              search: { market: meta.symbol, mode: "futures" },
             });
             return;
           }

@@ -93,6 +93,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Developers",
     items: [
       { label: "Docs", href: "/docs/openpay", desc: "Integrate OpenPay Pro" },
+      { label: "Exchange · OUSD", href: "/docs/exchange", desc: "Deposit, withdraw, network API" },
       { label: "Partner API", href: "https://openpy.space/partner-api", desc: "Apps & keys" },
       { label: "Agent Connect", href: "/docs/openpay", desc: "MCP for agents" },
     ],
@@ -995,6 +996,7 @@ function HomePage() {
             title="Developers"
             links={[
               { label: "Docs", href: "/docs/openpay" },
+              { label: "Exchange · OUSD", href: "/docs/exchange" },
               { label: "FAQ", href: "/docs/faq" },
               { label: "Partner API", href: "https://openpy.space/partner-api" },
               { label: "OpenLedger", href: "https://openpyledger.space" },

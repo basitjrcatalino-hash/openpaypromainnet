@@ -38,6 +38,7 @@ import {
   Bot,
   Sparkles,
   Code2,
+  Gift,
   Newspaper,
   BookMarked,
   Globe2,
@@ -879,6 +880,29 @@ function SidebarInner({
             <span className="truncate">{t("nav.watchlist")}</span>
           </Link>
           <Link
+            to="/airdrop"
+            onClick={onClose}
+            preload="intent"
+            aria-current={
+              pathname === "/airdrop" || pathname.startsWith("/airdrop/") ? "page" : undefined
+            }
+            className={sideItemClass(
+              pathname === "/airdrop" || pathname.startsWith("/airdrop/"),
+            )}
+          >
+            <Gift
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                (pathname === "/airdrop" || pathname.startsWith("/airdrop/")) &&
+                  "ph-tab-icon-active",
+              )}
+              strokeWidth={
+                pathname === "/airdrop" || pathname.startsWith("/airdrop/") ? 2.25 : 1.75
+              }
+            />
+            <span className="truncate">Airdrops</span>
+          </Link>
+          <Link
             to="/ai"
             onClick={onClose}
             preload="intent"
@@ -1126,6 +1150,22 @@ function SidebarInner({
                 strokeWidth={pathname === "/admin/topup" ? 2.25 : 1.75}
               />
               <span className="truncate">Admin · Top Up &amp; Buy</span>
+            </Link>
+            <Link
+              to="/admin/airdrops"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/airdrops" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/airdrops")}
+            >
+              <Gift
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/airdrops" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/airdrops" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Airdrops</span>
             </Link>
             <Link
               to="/admin/withdrawals"

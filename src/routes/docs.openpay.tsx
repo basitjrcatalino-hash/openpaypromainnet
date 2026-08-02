@@ -316,6 +316,7 @@ function OpenPayDocsPage() {
         <nav className="grid gap-2 rounded-3xl border border-border bg-card p-4 text-sm sm:grid-cols-2">
           {[
             ["#partner-portal", "0. Partner API portal"],
+            ["#exchange", "Exchange · OUSD network"],
             ["#setup", "1. Partner app setup"],
             ["#connect", "2. Connect (OAuth)"],
             ["#auth", "3. Pro auth methods (full)"],
@@ -388,6 +389,52 @@ function OpenPayDocsPage() {
                 Create app on openpy.space
                 <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
               </a>
+            </Button>
+          </Card>
+        </Section>
+
+        <Section id="exchange" eyebrow="Exchanges" title="List OUSD on OpenPay Network">
+          <Card className="space-y-3 rounded-3xl border-border bg-card p-5 text-sm text-muted-foreground shadow-none">
+            <p className="text-foreground">
+              Exchanges and wallets integrate <strong>OUSD</strong> like another network asset:
+              network id <code className="rounded bg-muted px-1">openpay</code>, Partner Transfer
+              for deposit / withdraw, Pro inbound for Pro wallets, Ledger for audit. OUSD is a
+              ledger dollar (no public ERC-20 mint).
+            </p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>
+                Live guide:{" "}
+                <Link
+                  to="/docs/exchange"
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  /docs/exchange
+                </Link>
+              </li>
+              <li>
+                Raw markdown:{" "}
+                <a
+                  href="/api/public/docs/exchange"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  /api/public/docs/exchange
+                </a>
+              </li>
+              <li>
+                Wiki:{" "}
+                <Link
+                  to="/wiki/$slug"
+                  params={{ slug: "ousd-exchange-integration" }}
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  Integrate OUSD on OpenPay Network
+                </Link>
+              </li>
+            </ul>
+            <Button asChild variant="outline" className="rounded-full">
+              <Link to="/docs/exchange">Open exchange integration docs</Link>
             </Button>
           </Card>
         </Section>

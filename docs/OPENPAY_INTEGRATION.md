@@ -9,6 +9,7 @@ Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance
 | **Auth docs**                     | [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)                                                                                   |
 | **Partner API**                   | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`                                                                             |
 | **Live docs (this site)**         | [/docs/openpay](/docs/openpay)                                                                                                                           |
+| **Exchange / OUSD network**       | [/docs/exchange](/docs/exchange) · [EXCHANGE_INTEGRATION.md](./EXCHANGE_INTEGRATION.md) · [/api/public/docs/exchange](/api/public/docs/exchange)         |
 | **Pro auth methods (full setup)** | [/docs/openpay#auth](/docs/openpay#auth) · [OPENPAY_PRO_AUTH.md](./OPENPAY_PRO_AUTH.md) · [/api/public/docs/openpay-auth](/api/public/docs/openpay-auth) |
 
 ---

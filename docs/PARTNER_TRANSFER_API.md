@@ -4,7 +4,11 @@ Integration reference for OpenPay Pro (and other partner apps).
 
 For the full **Connect + Payments** guide for third-party apps, see
 [`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
-[`/docs/openpay`](https://openpaypromainnet.lovable.app/docs/openpay).
+[`/docs/openpay`](https://openpaypro.space/docs/openpay).
+
+For **exchanges listing OUSD** (deposit / withdraw / network metadata), see
+[`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) or
+[`/docs/exchange`](https://openpaypro.space/docs/exchange).
 
 **Partner API portal:** [https://openpy.space/partner-api](https://openpy.space/partner-api)  
 **Auth docs:** [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  

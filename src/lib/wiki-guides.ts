@@ -557,6 +557,56 @@ export const WIKI_GUIDES: WikiGuide[] = [
     ],
   },
   {
+    slug: "ousd-exchange-integration",
+    title: "Integrate OUSD on OpenPay Network",
+    dek: "List OpenPay like a network: deposit, withdraw, and reconcile OUSD via Partner APIs.",
+    category: "Developers",
+    level: "Advanced",
+    minutes: 8,
+    hero: { from: "#0f766e", to: "#ccfbf1", glyph: "OX" },
+    tryPath: "/docs/exchange",
+    intro:
+      "Exchanges and apps treat OpenPay as network id openpay with asset OUSD — Partner Transfer for deposit/withdraw, Pro inbound for Pro wallets, Ledger for audit. OUSD is a ledger dollar, not a public ERC-20.",
+    sections: [
+      {
+        id: "setup",
+        heading: "Register and fund",
+        steps: [
+          {
+            title: "Create a partner app",
+            detail: "openpy.space/partner-api → copy opk_live_ (server only) and client_id.",
+          },
+          {
+            title: "Fund the hot wallet",
+            detail: "The OpenPay account that owns the API key pays transfers and receives deposits.",
+          },
+        ],
+      },
+      {
+        id: "rails",
+        heading: "Deposit, withdraw, swap",
+        steps: [
+          {
+            title: "Deposit",
+            detail: "POST /charges → checkout → poll until paid, then credit your books.",
+          },
+          {
+            title: "Withdraw",
+            detail: "POST /transfers with Idempotency-Key to @user or OP… after validating /accounts.",
+          },
+          {
+            title: "Swap",
+            detail: "List OUSD pairs on your exchange, or deep-link users to OpenPay Pro /swap.",
+          },
+        ],
+        tips: [
+          "Full guide: /docs/exchange and /api/public/docs/exchange",
+          "Never expose partner keys in the browser.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "agent-connect-mcp",
     title: "Agent Connect and MCP",
     dek: "Expose a read surface to ChatGPT or Claude through Model Context Protocol.",

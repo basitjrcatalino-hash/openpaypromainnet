@@ -29,6 +29,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
+import { Route as AuthenticatedAirdropRouteImport } from './routes/_authenticated/airdrop'
 import { Route as AuthenticatedAssetsRouteImport } from './routes/_authenticated/assets'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -62,6 +63,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as DocsExchangeRouteImport } from './routes/docs.exchange'
 import { Route as DocsFaqRouteImport } from './routes/docs.faq'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
@@ -69,6 +71,7 @@ import { Route as PayToRouteImport } from './routes/pay.$to'
 import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
@@ -138,6 +141,7 @@ import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './route
 import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
+import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
@@ -251,6 +255,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
   id: '/ai',
   path: '/ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAirdropRoute = AuthenticatedAirdropRouteImport.update({
+  id: '/airdrop',
+  path: '/airdrop',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAssetsRoute = AuthenticatedAssetsRouteImport.update({
@@ -418,6 +427,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsExchangeRoute = DocsExchangeRouteImport.update({
+  id: '/docs/exchange',
+  path: '/docs/exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsFaqRoute = DocsFaqRouteImport.update({
   id: '/docs/faq',
   path: '/docs/faq',
@@ -453,6 +467,12 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAdminAirdropsRoute =
+  AuthenticatedAdminAirdropsRouteImport.update({
+    id: '/admin/airdrops',
+    path: '/admin/airdrops',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminDepositsRoute =
   AuthenticatedAdminDepositsRouteImport.update({
@@ -827,6 +847,11 @@ const AuthenticatedP2pOrderIdRoute = AuthenticatedP2pOrderIdRouteImport.update({
   path: '/p2p/order/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicDocsExchangeRoute = ApiPublicDocsExchangeRouteImport.update({
+  id: '/api/public/docs/exchange',
+  path: '/api/public/docs/exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
   id: '/api/public/docs/openpay',
   path: '/api/public/docs/openpay',
@@ -921,6 +946,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/airdrop': typeof AuthenticatedAirdropRoute
   '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -954,6 +980,7 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -961,6 +988,7 @@ export interface FileRoutesByFullPath {
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1030,6 +1058,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1064,6 +1093,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/airdrop': typeof AuthenticatedAirdropRoute
   '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -1097,6 +1127,7 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -1104,6 +1135,7 @@ export interface FileRoutesByTo {
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1173,6 +1205,7 @@ export interface FileRoutesByTo {
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1209,6 +1242,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/airdrop': typeof AuthenticatedAirdropRoute
   '/_authenticated/assets': typeof AuthenticatedAssetsRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
@@ -1242,6 +1276,7 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog_/$slug': typeof BlogSlugRoute
+  '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
   '/docs/openpay': typeof DocsOpenpayRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
@@ -1249,6 +1284,7 @@ export interface FileRoutesById {
   '/wiki_/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1318,6 +1354,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1354,6 +1391,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/ai'
+    | '/airdrop'
     | '/assets'
     | '/bags'
     | '/chat'
@@ -1387,6 +1425,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/exchange'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1394,6 +1433,7 @@ export interface FileRouteTypes {
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/airdrops'
     | '/admin/deposits'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -1463,6 +1503,7 @@ export interface FileRouteTypes {
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
+    | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -1497,6 +1538,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/activity'
     | '/ai'
+    | '/airdrop'
     | '/assets'
     | '/bags'
     | '/chat'
@@ -1530,6 +1572,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/exchange'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1537,6 +1580,7 @@ export interface FileRouteTypes {
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/airdrops'
     | '/admin/deposits'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -1606,6 +1650,7 @@ export interface FileRouteTypes {
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
+    | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -1641,6 +1686,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activity'
     | '/_authenticated/ai'
+    | '/_authenticated/airdrop'
     | '/_authenticated/assets'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
@@ -1674,6 +1720,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog_/$slug'
+    | '/docs/exchange'
     | '/docs/faq'
     | '/docs/openpay'
     | '/guides/transfer-pi'
@@ -1681,6 +1728,7 @@ export interface FileRouteTypes {
     | '/wiki_/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/admin/airdrops'
     | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
@@ -1750,6 +1798,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/$tokenId/chat'
     | '/_authenticated/opentoken_/creator/$userId'
     | '/_authenticated/p2p_/order/$id'
+    | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/ledger/entries'
@@ -1788,6 +1837,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  DocsExchangeRoute: typeof DocsExchangeRoute
   DocsFaqRoute: typeof DocsFaqRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
@@ -1816,6 +1866,7 @@ export interface RootRouteChildren {
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
   ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
+  ApiPublicDocsExchangeRoute: typeof ApiPublicDocsExchangeRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
@@ -1970,6 +2021,13 @@ declare module '@tanstack/react-router' {
       path: '/ai'
       fullPath: '/ai'
       preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/airdrop': {
+      id: '/_authenticated/airdrop'
+      path: '/airdrop'
+      fullPath: '/airdrop'
+      preLoaderRoute: typeof AuthenticatedAirdropRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/assets': {
@@ -2203,6 +2261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/exchange': {
+      id: '/docs/exchange'
+      path: '/docs/exchange'
+      fullPath: '/docs/exchange'
+      preLoaderRoute: typeof DocsExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs/faq': {
       id: '/docs/faq'
       path: '/docs/faq'
@@ -2251,6 +2316,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/.mcp/invoke-tool/$tool'
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/airdrops': {
+      id: '/_authenticated/admin/airdrops'
+      path: '/admin/airdrops'
+      fullPath: '/admin/airdrops'
+      preLoaderRoute: typeof AuthenticatedAdminAirdropsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/deposits': {
       id: '/_authenticated/admin/deposits'
@@ -2735,6 +2807,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/docs/exchange': {
+      id: '/api/public/docs/exchange'
+      path: '/api/public/docs/exchange'
+      fullPath: '/api/public/docs/exchange'
+      preLoaderRoute: typeof ApiPublicDocsExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/docs/openpay': {
       id: '/api/public/docs/openpay'
       path: '/api/public/docs/openpay'
@@ -2883,6 +2962,7 @@ const AuthenticatedOpentokenTokenIdRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedAirdropRoute: typeof AuthenticatedAirdropRoute
   AuthenticatedAssetsRoute: typeof AuthenticatedAssetsRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
@@ -2911,6 +2991,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
   AuthenticatedWithdrawRoute: typeof AuthenticatedWithdrawRoute
+  AuthenticatedAdminAirdropsRoute: typeof AuthenticatedAdminAirdropsRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
@@ -2957,6 +3038,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedAirdropRoute: AuthenticatedAirdropRoute,
   AuthenticatedAssetsRoute: AuthenticatedAssetsRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
@@ -2985,6 +3067,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
   AuthenticatedWithdrawRoute: AuthenticatedWithdrawRoute,
+  AuthenticatedAdminAirdropsRoute: AuthenticatedAdminAirdropsRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
@@ -3088,6 +3171,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
   BlogSlugRoute: BlogSlugRoute,
+  DocsExchangeRoute: DocsExchangeRoute,
   DocsFaqRoute: DocsFaqRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
@@ -3116,6 +3200,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
   ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
+  ApiPublicDocsExchangeRoute: ApiPublicDocsExchangeRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,

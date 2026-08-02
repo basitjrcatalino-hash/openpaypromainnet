@@ -345,17 +345,16 @@
 /* Phantom-style route enter (fade + soft rise). Cleared after animationend. */
 @keyframes ph-route-enter {
   from {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
+    opacity: 0.92;
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: none;
   }
 }
 @utility ph-route-enter {
-  animation: ph-route-enter .42s cubic-bezier(.22, 1, .36, 1) both;
-  will-change: opacity, transform;
+  animation: ph-route-enter .28s cubic-bezier(.22, 1, .36, 1) both;
   transform-origin: 50% 0%;
 }
 

@@ -9,7 +9,7 @@ export function TradeModeTabs({
   onChange: (m: TradeMode) => void;
 }) {
   return (
-    <div className="flex items-end gap-4 border-b border-border/50 px-4">
+    <div className="flex items-end gap-5 border-b border-border/40 px-4">
       {(
         [
           ["spot", "Spot"],
@@ -21,13 +21,13 @@ export function TradeModeTabs({
           type="button"
           onClick={() => onChange(id)}
           className={cn(
-            "relative pb-2.5 pt-3 text-[15px] font-semibold press",
-            mode === id ? "text-foreground" : "text-muted-foreground",
+            "relative pb-2.5 pt-3 text-[15px] font-semibold tracking-tight press",
+            mode === id ? "text-foreground" : "text-muted-foreground/80",
           )}
         >
           {label}
           {mode === id ? (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-foreground" />
+            <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-[#ffad0a]" />
           ) : null}
         </button>
       ))}

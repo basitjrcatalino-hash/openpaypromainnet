@@ -81,7 +81,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 "rounded-md py-1.5 text-xs font-bold capitalize press",
                 props.action === a
                   ? a === "open"
-                    ? "bg-emerald-500 text-black"
+                    ? "bg-[#0ecb81] text-black"
                     : "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground",
               )}
@@ -101,8 +101,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 "rounded-md py-1.5 text-xs font-bold capitalize press",
                 props.side === s
                   ? s === "buy"
-                    ? "bg-emerald-500 text-black"
-                    : "bg-rose-500 text-white"
+                    ? "bg-[#0ecb81] text-black"
+                    : "bg-[#f6465d] text-white"
                   : "text-muted-foreground",
               )}
             >
@@ -289,7 +289,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 type="button"
                 disabled={props.busy || !(amt > 0)}
                 onClick={props.onSubmitLong}
-                className="flex h-10 w-full items-center justify-center rounded-xl bg-emerald-500 text-sm font-bold text-black press disabled:opacity-40"
+                className="flex h-10 w-full items-center justify-center rounded-lg bg-[#0ecb81] text-sm font-bold text-black press disabled:opacity-40"
               >
                 {props.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Open long ${props.leverage}x`}
               </button>
@@ -297,7 +297,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 type="button"
                 disabled={props.busy || !(amt > 0)}
                 onClick={props.onSubmitShort}
-                className="flex h-10 w-full items-center justify-center rounded-xl bg-rose-500 text-sm font-bold text-white press disabled:opacity-40"
+                className="flex h-10 w-full items-center justify-center rounded-lg bg-[#f6465d] text-sm font-bold text-white press disabled:opacity-40"
               >
                 {props.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Open short ${props.leverage}x`}
               </button>
@@ -308,7 +308,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 type="button"
                 disabled={props.busy || !props.hasLong}
                 onClick={props.onSubmitLong}
-                className="flex h-10 w-full items-center justify-center rounded-xl bg-emerald-500/90 text-sm font-bold text-black press disabled:opacity-40"
+                className="flex h-10 w-full items-center justify-center rounded-lg bg-[#0ecb81]/90 text-sm font-bold text-black press disabled:opacity-40"
               >
                 Close long
               </button>
@@ -316,7 +316,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 type="button"
                 disabled={props.busy || !props.hasShort}
                 onClick={props.onSubmitShort}
-                className="flex h-10 w-full items-center justify-center rounded-xl bg-rose-500/90 text-sm font-bold text-white press disabled:opacity-40"
+                className="flex h-10 w-full items-center justify-center rounded-lg bg-[#f6465d]/90 text-sm font-bold text-white press disabled:opacity-40"
               >
                 Close short
               </button>
@@ -329,8 +329,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           disabled={props.busy || !(amt > 0)}
           onClick={props.onSubmit}
           className={cn(
-            "mt-1 flex h-10 w-full items-center justify-center rounded-xl text-sm font-bold press disabled:opacity-40",
-            props.side === "buy" ? "bg-emerald-500 text-black" : "bg-rose-500 text-white",
+            "mt-1 flex h-10 w-full items-center justify-center rounded-lg text-sm font-bold press disabled:opacity-40",
+            props.side === "buy" ? "bg-[#0ecb81] text-black" : "bg-[#f6465d] text-white",
           )}
         >
           {props.busy ? (

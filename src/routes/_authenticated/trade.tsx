@@ -82,7 +82,7 @@ export const Route = createFileRoute("/_authenticated/trade")({
 });
 
 type ViewTab = "chart" | "trade" | "info";
-type InfoTab = "news" | "alerts";
+type InfoTab = "overview" | "news" | "alerts";
 type SpotPay = "USDT" | "OUSD" | "USDC";
 
 const MAJOR_SWAP: Record<PerpMarket, string> = {
@@ -120,8 +120,9 @@ function TradePage() {
 
   const [mode, setMode] = useState<TradeMode>(initialMode);
   const [market, setMarket] = useState<PerpMarket>(initialMarket);
-  const [view, setView] = useState<ViewTab>("trade");
-  const [infoTab, setInfoTab] = useState<InfoTab>("news");
+  /** Futures opens on Chart (OKX-style); Spot on Trade. */
+  const [view, setView] = useState<ViewTab>(initialMode === "futures" ? "chart" : "trade");
+  const [infoTab, setInfoTab] = useState<InfoTab>("overview");
   const [period, setPeriod] = useState<PerpChartPeriod>("LIVE");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dockTab, setDockTab] = useState<"orders" | "positions">("positions");
@@ -142,11 +143,25 @@ function TradePage() {
   const [payAsset, setPayAsset] = useState<SpotPay>("USDT");
 
   useEffect(() => {
+    if (search.market === market && search.mode === mode) return;
     void navigate({
       search: (prev) => ({ ...prev, market, mode }),
       replace: true,
     });
-  }, [market, mode, navigate]);
+  }, [market, mode, navigate, search.market, search.mode]);
+
+  useEffect(() => {
+    return () => {
+      setPickerOpen(false);
+      try {
+        document.body.style.pointerEvents = "";
+        document.body.style.overflow = "";
+        document.body.removeAttribute("data-scroll-locked");
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
 
   const quotesQ = useQuery({
     queryKey: ["perp-live-quotes"],
@@ -334,14 +349,14 @@ function TradePage() {
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;
 
   return (
-    <div className="ot-phantom mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col bg-background pb-8">
+    <div className="ot-phantom mx-auto flex w-full max-w-lg flex-col bg-background pb-[calc(var(--ph-tabbar-content,3.75rem)+2rem)]">
       <TradeModeTabs
         mode={mode}
         onChange={(m) => {
           setMode(m);
           setAmount("");
           setPct(0);
-          setView("trade");
+          setView(m === "futures" ? "chart" : "trade");
         }}
       />
 
@@ -352,11 +367,16 @@ function TradePage() {
         change24h={change}
         changeAbs={changeAbs}
         onOpenPicker={() => setPickerOpen(true)}
-        high24h={majorSnap.price > 0 ? majorSnap.price * (1 + Math.abs(change) / 200) : undefined}
-        low24h={majorSnap.price > 0 ? majorSnap.price * (1 - Math.abs(change) / 200) : undefined}
+        high24h={quote?.high24h}
+        low24h={quote?.low24h}
+        volume24h={quote?.volume24h ?? majorSnap.volume24h}
+        markPrice={quote?.markPrice ?? price}
+        indexPrice={quote?.indexPrice}
+        fundingRate={mode === "futures" ? quote?.fundingRate : undefined}
+        source={quote?.source}
       />
 
-      <div className="mt-2 flex gap-1 overflow-x-auto px-4 scrollbar-none">
+      <div className="mt-1 flex gap-4 overflow-x-auto border-b border-border/40 px-4 scrollbar-none">
         {(
           [
             ["chart", "Chart"],
@@ -369,36 +389,30 @@ function TradePage() {
             type="button"
             onClick={() => setView(id)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold press",
-              view === id
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground",
+              "relative shrink-0 pb-2.5 pt-1 text-[13px] font-semibold press",
+              view === id ? "text-foreground" : "text-muted-foreground",
             )}
           >
             {label}
+            {view === id ? (
+              <span className="absolute inset-x-0 bottom-0 h-[2px] bg-foreground" />
+            ) : null}
           </button>
         ))}
       </div>
 
       {view === "chart" ? (
-        <div className="mt-2 px-2">
-          <TradingViewEmbed
-            key={`${tvSymbol}-${tvInterval}`}
-            kind="advanced-chart"
-            symbol={tvSymbol}
-            interval={tvInterval}
-            height={320}
-          />
-          <div className="mt-1 flex gap-1 overflow-x-auto px-2 pb-2 scrollbar-none">
+        <div className="mt-0">
+          <div className="flex gap-1 overflow-x-auto border-b border-border/30 px-3 py-1.5 scrollbar-none">
             {PERP_CHART_PERIODS.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold press",
+                  "shrink-0 px-2.5 py-1 text-[11px] font-semibold press",
                   period === p
-                    ? "bg-muted text-foreground"
+                    ? "rounded text-foreground bg-muted/70"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -406,6 +420,28 @@ function TradePage() {
               </button>
             ))}
           </div>
+          <TradingViewEmbed
+            key={`${tvSymbol}-${tvInterval}`}
+            kind="advanced-chart"
+            symbol={tvSymbol}
+            interval={tvInterval}
+            height={320}
+            className="rounded-none"
+          />
+          <p className="mt-2 px-4 text-[11px] text-muted-foreground">
+            News &amp; analysis live on the{" "}
+            <button
+              type="button"
+              className="font-semibold text-foreground underline-offset-2 press hover:underline"
+              onClick={() => {
+                setView("info");
+                setInfoTab("news");
+              }}
+            >
+              Info
+            </button>{" "}
+            tab.
+          </p>
         </div>
       ) : null}
 
@@ -472,6 +508,7 @@ function TradePage() {
               baseSymbol={market}
               midOverride={mid}
               loading={depthQ.isLoading}
+              change24h={change}
             />
           </div>
         </div>
@@ -479,11 +516,12 @@ function TradePage() {
 
       {view === "info" ? (
         <div className="mt-3 space-y-3 px-3">
-          <div className="flex gap-1">
+          <div className="flex gap-4 border-b border-border/40">
             {(
               [
+                ["overview", "Overview"],
                 ["news", "News"],
-                ["alerts", "Alerts"],
+                ["alerts", "Analysis"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -491,21 +529,64 @@ function TradePage() {
                 type="button"
                 onClick={() => setInfoTab(id)}
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-bold press",
-                  infoTab === id
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground",
+                  "relative pb-2 text-[12px] font-semibold press",
+                  infoTab === id ? "text-foreground" : "text-muted-foreground",
                 )}
               >
                 {label}
+                {infoTab === id ? (
+                  <span className="absolute inset-x-0 bottom-0 h-[2px] bg-[#ffad0a]" />
+                ) : null}
               </button>
             ))}
           </div>
+          {infoTab === "overview" ? (
+            <div className="space-y-3">
+              <TradingViewEmbed kind="symbol-info" symbol={tvSymbol} height={200} />
+              <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-[11px]">
+                <div>
+                  <p className="text-muted-foreground">Contract</p>
+                  <p className="mt-0.5 font-semibold">{pairLabel(market, mode)} Perp</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Quote</p>
+                  <p className="mt-0.5 font-semibold">USDT</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Mark</p>
+                  <p className="mt-0.5 font-semibold tabular-nums">
+                    {price > 0 ? formatNumber(price, price >= 1000 ? 1 : 2) : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Funding</p>
+                  <p className="mt-0.5 font-semibold tabular-nums">
+                    {quote?.fundingRate != null
+                      ? `${quote.fundingRate >= 0 ? "+" : ""}${formatNumber(quote.fundingRate, 4)}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">24h high</p>
+                  <p className="mt-0.5 font-semibold tabular-nums">
+                    {quote?.high24h ? formatNumber(quote.high24h, price >= 1000 ? 1 : 2) : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">24h low</p>
+                  <p className="mt-0.5 font-semibold tabular-nums">
+                    {quote?.low24h ? formatNumber(quote.low24h, price >= 1000 ? 1 : 2) : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {infoTab === "news" ? (
-            <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={420} />
-          ) : (
-            <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={400} />
-          )}
+            <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={440} />
+          ) : null}
+          {infoTab === "alerts" ? (
+            <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={420} />
+          ) : null}
           <a
             href={PERP_TV[market].tvUrl}
             target="_blank"
@@ -520,30 +601,28 @@ function TradePage() {
       <Link
         to="/asset/$tokenId/chat"
         params={{ tokenId: market.toLowerCase() }}
-        className="mx-4 mt-4 flex items-center justify-between rounded-2xl border border-border/60 bg-card/70 px-3.5 py-3 press"
+        className="mx-4 mt-3 flex items-center justify-between border-y border-border/40 bg-transparent px-1 py-3 press"
       >
         <div className="flex items-center gap-2">
-          <MessageCircle className="h-4 w-4 text-primary" />
+          <MessageCircle className="h-4 w-4 text-[#ffad0a]" />
           <div>
-            <p className="text-sm font-bold">Live Chat ›</p>
-            <p className="text-xs text-muted-foreground">Talk {market} with the room</p>
+            <p className="text-sm font-semibold">Live Chat</p>
+            <p className="text-[11px] text-muted-foreground">{market} perpetual room</p>
           </div>
         </div>
-        <span className="text-xs font-semibold text-emerald-500">· online</span>
+        <span className="text-[11px] font-semibold text-[#0ecb81]">Online</span>
       </Link>
 
       {mode === "futures" ? (
-        <div className="mx-4 mt-3 flex gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-          <div className="min-w-0 text-[12px] leading-relaxed text-muted-foreground">
-            <p className="font-semibold text-foreground">Trade is risky</p>
-            <p className="mt-1">
-              Perpetuals can liquidate your margin. Charts and depth are informational — not advice.
-            </p>
-          </div>
+        <div className="mx-4 mt-2 flex gap-2 rounded-lg border border-[#ffad0a]/25 bg-[#ffad0a]/8 px-3 py-2.5">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ffad0a]" />
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Trade is risky.</span> Perpetuals can
+            liquidate your margin. Charts and depth are informational — not advice.
+          </p>
         </div>
       ) : (
-        <p className="mx-4 mt-3 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mx-4 mt-2 text-[11px] leading-relaxed text-muted-foreground">
           Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via OpenDEX at live mark.
         </p>
       )}

@@ -4,6 +4,33 @@ import { formatNumber } from "@/lib/wallet-utils";
 import { pairLabel, type TradeMode } from "@/lib/exchange-depth";
 import type { PerpMarket } from "@/lib/perp";
 
+function formatVol(v: number): string {
+  if (!(v > 0)) return "—";
+  if (v >= 1e9) return `${formatNumber(v / 1e9, 2)}B`;
+  if (v >= 1e6) return `${formatNumber(v / 1e6, 2)}M`;
+  if (v >= 1e3) return `${formatNumber(v / 1e3, 1)}K`;
+  return formatNumber(v, 0);
+}
+
+function Stat({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] leading-none text-muted-foreground">{label}</p>
+      <p className={cn("mt-1 truncate text-[11px] font-semibold tabular-nums text-foreground", valueClass)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export function TradePairHeader({
   market,
   mode,
@@ -13,6 +40,11 @@ export function TradePairHeader({
   onOpenPicker,
   high24h,
   low24h,
+  volume24h,
+  markPrice,
+  indexPrice,
+  fundingRate,
+  source,
 }: {
   market: PerpMarket;
   mode: TradeMode;
@@ -22,66 +54,88 @@ export function TradePairHeader({
   onOpenPicker: () => void;
   high24h?: number;
   low24h?: number;
+  volume24h?: number;
+  markPrice?: number;
+  indexPrice?: number;
+  fundingRate?: number;
+  source?: string;
 }) {
   const up = change24h >= 0;
   const digits = price >= 1000 ? 1 : price >= 1 ? 2 : 4;
+  const mark = markPrice && markPrice > 0 ? markPrice : price;
+  const index = indexPrice && indexPrice > 0 ? indexPrice : undefined;
+  const funding =
+    fundingRate != null && Number.isFinite(fundingRate)
+      ? `${fundingRate >= 0 ? "+" : ""}${formatNumber(fundingRate, 4)}%`
+      : "—";
 
   return (
-    <div className="space-y-2 px-4 pt-3">
+    <div className="space-y-3 px-4 pt-3">
       <div className="flex items-start justify-between gap-3">
         <button type="button" onClick={onOpenPicker} className="min-w-0 text-left press">
           <div className="inline-flex items-center gap-1.5">
-            <span className="text-lg font-bold tracking-tight">{pairLabel(market, mode)}</span>
+            <span className="text-[17px] font-bold tracking-tight">{pairLabel(market, mode)}</span>
             <span
               className={cn(
-                "rounded px-1.5 py-0.5 text-[10px] font-bold uppercase",
+                "rounded-[3px] px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide",
                 mode === "futures"
-                  ? "bg-amber-500/15 text-amber-400"
+                  ? "bg-[#ffad0a]/15 text-[#ffad0a]"
                   : "bg-sky-500/15 text-sky-400",
               )}
             >
               {mode === "futures" ? "Perp" : "Spot"}
             </span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <p
             className={cn(
-              "mt-1 text-2xl font-bold tabular-nums leading-none",
-              up ? "text-emerald-400" : "text-rose-400",
+              "mt-1.5 text-[28px] font-bold tabular-nums leading-none tracking-tight",
+              up ? "text-[#0ecb81]" : "text-[#f6465d]",
             )}
           >
             {price > 0 ? formatNumber(price, digits) : "—"}
           </p>
           <p
             className={cn(
-              "mt-1 text-xs font-semibold tabular-nums",
-              up ? "text-emerald-400" : "text-rose-400",
+              "mt-1.5 text-[12px] font-semibold tabular-nums",
+              up ? "text-[#0ecb81]" : "text-[#f6465d]",
             )}
           >
             {up ? "+" : ""}
             {formatNumber(changeAbs, price >= 100 ? 2 : 4)} ({up ? "+" : ""}
             {formatNumber(change24h, 2)}%)
           </p>
+          {source ? (
+            <p className="mt-1 text-[10px] text-muted-foreground">{source}</p>
+          ) : null}
         </button>
 
-        <div className="shrink-0 space-y-1 text-right text-[11px] text-muted-foreground">
-          {high24h != null && high24h > 0 ? (
-            <p>
-              24h high{" "}
-              <span className="font-semibold text-foreground tabular-nums">
-                {formatNumber(high24h, digits)}
-              </span>
-            </p>
-          ) : null}
-          {low24h != null && low24h > 0 ? (
-            <p>
-              24h low{" "}
-              <span className="font-semibold text-foreground tabular-nums">
-                {formatNumber(low24h, digits)}
-              </span>
-            </p>
-          ) : null}
-          <p className="text-[10px]">Mark {price > 0 ? formatNumber(price, digits) : "—"}</p>
+        <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-2.5 text-right">
+          <Stat label="24h high" value={high24h && high24h > 0 ? formatNumber(high24h, digits) : "—"} />
+          <Stat label="24h low" value={low24h && low24h > 0 ? formatNumber(low24h, digits) : "—"} />
+          <Stat label="Mark" value={mark > 0 ? formatNumber(mark, digits) : "—"} />
+          <Stat
+            label="Index"
+            value={index != null ? formatNumber(index, digits) : mark > 0 ? formatNumber(mark, digits) : "—"}
+          />
+          {mode === "futures" ? (
+            <>
+              <Stat
+                label="Funding"
+                value={funding}
+                valueClass={
+                  fundingRate != null
+                    ? fundingRate >= 0
+                      ? "text-[#0ecb81]"
+                      : "text-[#f6465d]"
+                    : undefined
+                }
+              />
+              <Stat label="24h vol" value={formatVol(volume24h ?? 0)} />
+            </>
+          ) : (
+            <Stat label="24h vol" value={formatVol(volume24h ?? 0)} />
+          )}
         </div>
       </div>
     </div>

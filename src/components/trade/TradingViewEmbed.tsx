@@ -24,6 +24,7 @@ type Props = {
 /**
  * Client-only TradingView embed.
  * Advanced chart uses the stable widgetembed iframe (script widgets often render blank in app shells).
+ * Widgets are isolated and torn down on unmount so they cannot block other routes.
  * @see https://www.tradingview.com/widget-docs/
  */
 export function TradingViewEmbed({
@@ -73,6 +74,7 @@ export function TradingViewEmbed({
   useEffect(() => {
     if (!ready || kind === "advanced-chart" || !hostRef.current) return;
     const host = hostRef.current;
+    let cancelled = false;
     host.innerHTML = "";
 
     const widgetMount = document.createElement("div");
@@ -111,6 +113,7 @@ export function TradingViewEmbed({
       config = {
         symbol,
         width: "100%",
+        height: pxHeight,
         locale: "en",
         colorTheme,
         isTransparent: true,
@@ -122,10 +125,15 @@ export function TradingViewEmbed({
     script.src = SCRIPT_SRC[kind];
     script.async = true;
     script.textContent = JSON.stringify(config);
-    host.appendChild(script);
+    if (!cancelled) host.appendChild(script);
 
     return () => {
-      host.innerHTML = "";
+      cancelled = true;
+      try {
+        host.innerHTML = "";
+      } catch {
+        /* ignore */
+      }
     };
   }, [ready, kind, symbol, theme, pxHeight]);
 
@@ -141,7 +149,10 @@ export function TradingViewEmbed({
   if (kind === "advanced-chart") {
     return (
       <div
-        className={cn("overflow-hidden rounded-2xl bg-background", className)}
+        className={cn(
+          "relative isolate overflow-hidden rounded-2xl bg-background [contain:layout_paint]",
+          className,
+        )}
         style={{ height: pxHeight, width: "100%" }}
       >
         <iframe
@@ -159,7 +170,10 @@ export function TradingViewEmbed({
 
   return (
     <div
-      className={cn("tradingview-widget-container overflow-hidden rounded-2xl", className)}
+      className={cn(
+        "tradingview-widget-container relative isolate overflow-hidden rounded-2xl [contain:layout_paint]",
+        className,
+      )}
       style={{ height: pxHeight, width: "100%" }}
     >
       <div ref={hostRef} className="h-full w-full" />

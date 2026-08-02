@@ -23,30 +23,33 @@ export type PerpTvConfig = {
 export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
   BTC: {
     market: "BTC",
-    tvSymbol: "BINANCE:BTCUSDT.P",
+    tvSymbol: "OKX:BTCUSDT.P",
     tvUrl: "https://www.tradingview.com/symbols/BTCUSDT.P/",
-    exchangeLabel: "Binance",
+    exchangeLabel: "OKX",
     binanceFutures: "BTCUSDT",
+    okxSwap: "BTC-USDT-SWAP",
     gateFutures: "BTC_USDT",
     bybitLinear: "BTCUSDT",
     coingeckoId: "bitcoin",
   },
   ETH: {
     market: "ETH",
-    tvSymbol: "BINANCE:ETHUSDT.P",
+    tvSymbol: "OKX:ETHUSDT.P",
     tvUrl: "https://www.tradingview.com/symbols/ETHUSDT.P/",
-    exchangeLabel: "Binance",
+    exchangeLabel: "OKX",
     binanceFutures: "ETHUSDT",
+    okxSwap: "ETH-USDT-SWAP",
     gateFutures: "ETH_USDT",
     bybitLinear: "ETHUSDT",
     coingeckoId: "ethereum",
   },
   SOL: {
     market: "SOL",
-    tvSymbol: "BINANCE:SOLUSDT.P",
+    tvSymbol: "OKX:SOLUSDT.P",
     tvUrl: "https://www.tradingview.com/symbols/SOLUSDT.P/",
-    exchangeLabel: "Binance",
+    exchangeLabel: "OKX",
     binanceFutures: "SOLUSDT",
+    okxSwap: "SOL-USDT-SWAP",
     gateFutures: "SOL_USDT",
     bybitLinear: "SOLUSDT",
     coingeckoId: "solana",
@@ -69,6 +72,14 @@ export type PerpLiveQuote = {
   /** Absolute USD change over ~24h when available */
   changeAbs: number;
   markPrice: number;
+  /** Index / spot reference when venue provides it */
+  indexPrice?: number;
+  high24h?: number;
+  low24h?: number;
+  /** Quote-currency volume over 24h when available */
+  volume24h?: number;
+  /** Current funding rate as percent (e.g. 0.01 = 0.01%) */
+  fundingRate?: number;
   source: string;
   tvSymbol: string;
   tvUrl: string;
@@ -120,13 +131,23 @@ async function fetchBinanceFuturesQuote(
   const last = num(ticker.lastPrice);
   const changePct = num(ticker.priceChangePercent);
   const changeAbs = num(ticker.priceChange);
+  const high = num(ticker.highPrice);
+  const low = num(ticker.lowPrice);
+  const vol = num(ticker.quoteVolume);
   const mp = premium ? num(premium.markPrice) : NaN;
+  const index = premium ? num(premium.indexPrice) : NaN;
+  const funding = premium ? num(premium.lastFundingRate) : NaN;
   const mark = mp > 0 ? mp : last;
   if (!(mark > 0)) throw new Error(`No Binance price for ${symbol}`);
   return {
     ...quoteBase(market),
     price: mark,
     markPrice: mark,
+    indexPrice: index > 0 ? index : undefined,
+    high24h: high > 0 ? high : undefined,
+    low24h: low > 0 ? low : undefined,
+    volume24h: vol > 0 ? vol : undefined,
+    fundingRate: Number.isFinite(funding) ? funding * 100 : undefined,
     change24h: Number.isFinite(changePct) ? changePct : 0,
     changeAbs: Number.isFinite(changeAbs) ? changeAbs : mark * ((changePct || 0) / 100),
     source: "Binance Futures",
@@ -134,22 +155,37 @@ async function fetchBinanceFuturesQuote(
 }
 
 async function fetchOkxSwapQuote(market: PerpMarket, instId: string): Promise<PerpLiveQuote> {
-  const body = (await fetchJson(
-    `https://www.okx.com/api/v5/market/ticker?instId=${instId}`,
-  )) as { data?: Array<Record<string, unknown>> };
-  const row = body.data?.[0];
+  const [tickerBody, fundingBody] = await Promise.all([
+    fetchJson(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`) as Promise<{
+      data?: Array<Record<string, unknown>>;
+    }>,
+    fetchJson(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`)
+      .then((j) => j as { data?: Array<Record<string, unknown>> })
+      .catch(() => null),
+  ]);
+  const row = tickerBody.data?.[0];
   if (!row) throw new Error(`No OKX data for ${instId}`);
   const last = num(row.last);
   const open24h = num(row.open24h);
   const markRaw = num(row.markPx);
+  const index = num(row.idxPx);
+  const high = num(row.high24h);
+  const low = num(row.low24h);
+  const vol = num(row.volCcy24h);
   const mark = markRaw > 0 ? markRaw : last;
   if (!(mark > 0)) throw new Error(`No OKX price for ${instId}`);
   const changeAbs = open24h > 0 ? mark - open24h : 0;
   const change24h = open24h > 0 ? (changeAbs / open24h) * 100 : 0;
+  const fundingRaw = fundingBody?.data?.[0] ? num(fundingBody.data[0].fundingRate) : NaN;
   return {
     ...quoteBase(market),
     price: mark,
     markPrice: mark,
+    indexPrice: index > 0 ? index : undefined,
+    high24h: high > 0 ? high : undefined,
+    low24h: low > 0 ? low : undefined,
+    volume24h: vol > 0 ? vol : undefined,
+    fundingRate: Number.isFinite(fundingRaw) ? fundingRaw * 100 : undefined,
     change24h,
     changeAbs,
     source: "OKX Swap",
@@ -167,14 +203,24 @@ async function fetchGateFuturesQuote(
   if (!row) throw new Error(`No Gate data for ${contract}`);
   const last = num(row.last);
   const markRaw = num(row.mark_price);
+  const index = num(row.index_price);
   const changePct = num(row.change_percentage);
   const changeAbs = num(row.change_price);
+  const high = num(row.high_24h);
+  const low = num(row.low_24h);
+  const vol = num(row.volume_24h_quote);
+  const funding = num(row.funding_rate);
   const mark = markRaw > 0 ? markRaw : last;
   if (!(mark > 0)) throw new Error(`No Gate price for ${contract}`);
   return {
     ...quoteBase(market),
     price: mark,
     markPrice: mark,
+    indexPrice: index > 0 ? index : undefined,
+    high24h: high > 0 ? high : undefined,
+    low24h: low > 0 ? low : undefined,
+    volume24h: vol > 0 ? vol : undefined,
+    fundingRate: Number.isFinite(funding) ? funding * 100 : undefined,
     change24h: Number.isFinite(changePct) ? changePct : 0,
     changeAbs: Number.isFinite(changeAbs) ? changeAbs : 0,
     source: "Gate Futures",
@@ -192,6 +238,11 @@ async function fetchBybitLinearQuote(
   if (!row) throw new Error(`No Bybit data for ${symbol}`);
   const last = num(row.lastPrice);
   const markRaw = num(row.markPrice);
+  const index = num(row.indexPrice);
+  const high = num(row.highPrice24h);
+  const low = num(row.lowPrice24h);
+  const vol = num(row.turnover24h);
+  const funding = num(row.fundingRate);
   const changePct = num(row.price24hPcnt) * 100; // Bybit returns fraction
   const mark = markRaw > 0 ? markRaw : last;
   if (!(mark > 0)) throw new Error(`No Bybit price for ${symbol}`);
@@ -201,6 +252,11 @@ async function fetchBybitLinearQuote(
     ...quoteBase(market),
     price: mark,
     markPrice: mark,
+    indexPrice: index > 0 ? index : undefined,
+    high24h: high > 0 ? high : undefined,
+    low24h: low > 0 ? low : undefined,
+    volume24h: vol > 0 ? vol : undefined,
+    fundingRate: Number.isFinite(funding) ? funding * 100 : undefined,
     change24h: Number.isFinite(changePct) ? changePct : 0,
     changeAbs,
     source: "Bybit Perps",
@@ -240,13 +296,13 @@ export async function fetchPerpLiveQuote(market: PerpMarket): Promise<PerpLiveQu
     }
   };
 
-  // Prefer venues that match TradingView listing, then resilient fallbacks
-  if (cfg.binanceFutures) {
-    const q = await tryOne("binance", () => fetchBinanceFuturesQuote(market, cfg.binanceFutures!));
-    if (q) return q;
-  }
+  // Prefer OKX (matches chart symbols), then Binance / Gate / Bybit
   if (cfg.okxSwap) {
     const q = await tryOne("okx", () => fetchOkxSwapQuote(market, cfg.okxSwap!));
+    if (q) return q;
+  }
+  if (cfg.binanceFutures) {
+    const q = await tryOne("binance", () => fetchBinanceFuturesQuote(market, cfg.binanceFutures!));
     if (q) return q;
   }
   if (cfg.gateFutures) {

@@ -4,9 +4,9 @@ import { useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 /**
- * Phantom-style page enter: soft fade + rise on every route change.
- * Animation class is cleared on end so transform does not stick and break
- * position:fixed sheets / docks inside the page.
+ * Phantom-style page enter: soft fade + rise on pathname change only.
+ * Search-param updates (e.g. Trade ?market=&mode=) must NOT remount or re-animate,
+ * or transforms stick and break fixed chrome / navigation.
  */
 export function PageTransition({
   children,
@@ -19,25 +19,26 @@ export function PageTransition({
   disabled?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const search = useRouterState({ select: (s) => s.location.searchStr });
-  const routeKey = `${pathname}${search}`;
   const [enter, setEnter] = useState(!disabled);
-  const prevKey = useRef(routeKey);
+  const prevPath = useRef(pathname);
 
   useEffect(() => {
     if (disabled) {
       setEnter(false);
-      prevKey.current = routeKey;
+      prevPath.current = pathname;
       return;
     }
-    if (prevKey.current === routeKey) return;
-    prevKey.current = routeKey;
+    if (prevPath.current === pathname) return;
+    prevPath.current = pathname;
     setEnter(true);
     if (typeof window !== "undefined") {
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     }
-  }, [routeKey, disabled]);
+    // Failsafe: never leave enter class stuck if animationend is skipped
+    const t = window.setTimeout(() => setEnter(false), 500);
+    return () => window.clearTimeout(t);
+  }, [pathname, disabled]);
 
   if (disabled) {
     return <div className={cn("min-h-0", className)}>{children}</div>;
@@ -45,7 +46,7 @@ export function PageTransition({
 
   return (
     <div
-      key={routeKey}
+      key={pathname}
       className={cn("min-h-0", enter && "ph-route-enter", className)}
       onAnimationEnd={(e) => {
         if (e.target !== e.currentTarget) return;

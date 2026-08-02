@@ -10,11 +10,13 @@ export function OrderBook({
   baseSymbol,
   midOverride,
   loading,
+  change24h,
 }: {
   book?: ExchangeDepthBook;
   baseSymbol: string;
   midOverride?: number;
   loading?: boolean;
+  change24h?: number;
 }) {
   const mid = midOverride && midOverride > 0 ? midOverride : book?.mid ?? 0;
   const asks = [...(book?.asks ?? [])].slice(0, 8).reverse();
@@ -28,12 +30,13 @@ export function OrderBook({
 
   const priceDigits = mid >= 1000 ? 1 : mid >= 1 ? 2 : 4;
   const amtDigits = mid >= 100 ? 4 : 2;
+  const up = (change24h ?? 0) >= 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col text-[11px]">
       <div className="mb-1 flex items-center justify-between px-0.5 text-[10px] text-muted-foreground">
-        <span>Price (USDT)</span>
-        <span>Amount ({baseSymbol})</span>
+        <span>Price</span>
+        <span>Qty ({baseSymbol})</span>
       </div>
 
       <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
@@ -62,13 +65,13 @@ export function OrderBook({
         <p
           className={cn(
             "text-base font-bold tabular-nums leading-none",
-            "text-foreground",
+            up ? "text-[#0ecb81]" : "text-[#f6465d]",
           )}
         >
           {mid > 0 ? formatNumber(mid, priceDigits) : "—"}
         </p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">
-          {book?.source ?? "…"}
+          ≈ {mid > 0 ? formatNumber(mid, priceDigits) : "—"}
         </p>
       </div>
 
@@ -86,13 +89,13 @@ export function OrderBook({
         ))}
       </div>
 
-      <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className="bg-emerald-500" style={{ width: `${buyPct}%` }} />
-        <div className="bg-rose-500" style={{ width: `${sellPct}%` }} />
+      <div className="mt-2 flex h-1 overflow-hidden rounded-sm bg-muted">
+        <div className="bg-[#0ecb81]" style={{ width: `${buyPct}%` }} />
+        <div className="bg-[#f6465d]" style={{ width: `${sellPct}%` }} />
       </div>
       <div className="mt-1 flex justify-between text-[10px] font-semibold">
-        <span className="text-emerald-500">B {buyPct}%</span>
-        <span className="text-rose-500">{sellPct}% S</span>
+        <span className="text-[#0ecb81]">B {buyPct}%</span>
+        <span className="text-[#f6465d]">{sellPct}% S</span>
       </div>
     </div>
   );
@@ -117,16 +120,16 @@ function DepthRow({
   return (
     <div className="relative flex items-center justify-between px-0.5 py-[2px] tabular-nums">
       <span
-        className="absolute inset-y-0 right-0 rounded-sm opacity-25"
+        className="absolute inset-y-0 right-0 rounded-sm opacity-20"
         style={{
           width: `${pct}%`,
-          backgroundColor: side === "ask" ? "rgb(244 63 94)" : "rgb(16 185 129)",
+          backgroundColor: side === "ask" ? "#f6465d" : "#0ecb81",
         }}
       />
       <span
         className={cn(
           "relative z-[1] font-medium",
-          side === "ask" ? "text-rose-400" : "text-emerald-400",
+          side === "ask" ? "text-[#f6465d]" : "text-[#0ecb81]",
         )}
       >
         {formatNumber(price, priceDigits)}

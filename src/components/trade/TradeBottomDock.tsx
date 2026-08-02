@@ -49,7 +49,7 @@ export function TradeBottomDock({
           <Button
             type="button"
             size="sm"
-            className="h-8 rounded-full bg-foreground px-4 text-xs font-bold text-background"
+            className="h-8 rounded-md bg-[#ffad0a] px-4 text-xs font-bold text-black hover:bg-[#ffad0a]/90"
             onClick={onGoTrade}
           >
             Trade

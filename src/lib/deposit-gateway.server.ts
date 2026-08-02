@@ -57,12 +57,20 @@ export function isSolanaAddress(v: string): boolean {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v.trim());
 }
 
+/** Pi Network runs a Stellar-derived chain: G… public keys, M… muxed accounts. */
+export function isPiAddress(v: string): boolean {
+  const a = v.trim().toUpperCase();
+  return /^G[A-Z2-7]{55}$/.test(a) || /^M[A-Z2-7]{68}$/.test(a);
+}
+
 export function isValidAddressFor(family: string, address: string): boolean {
+  if (family === "pi" || family === "stellar") return isPiAddress(address);
   return family === "solana" ? isSolanaAddress(address) : isEvmAddress(address);
 }
 
 export function isValidTxHash(family: string, hash: string): boolean {
   const h = hash.trim();
+  if (family === "pi" || family === "stellar") return /^[a-fA-F0-9]{64}$/.test(h);
   if (family === "solana") return /^[1-9A-HJ-NP-Za-km-z]{80,100}$/.test(h);
   return /^0x[a-fA-F0-9]{64}$/.test(h);
 }
@@ -70,7 +78,8 @@ export function isValidTxHash(family: string, hash: string): boolean {
 export function explorerTxUrl(chain: Pick<ChainRow, "explorer_url" | "family">, hash: string) {
   const base = (chain.explorer_url || "").replace(/\/+$/, "");
   if (!base) return null;
-  return chain.family === "solana" ? `${base}/tx/${hash}` : `${base}/tx/${hash}`;
+  if (chain.family === "pi" || chain.family === "stellar") return `${base}/transactions/${hash}`;
+  return `${base}/tx/${hash}`;
 }
 
 const DEFAULT_EVM_RPC: Record<string, string> = {
@@ -83,9 +92,13 @@ const DEFAULT_EVM_RPC: Record<string, string> = {
   avalanche: "https://api.avax.network/ext/bc/C/rpc",
 };
 const DEFAULT_SOLANA_RPC = "https://api.mainnet-beta.solana.com";
+const DEFAULT_PI_HORIZON = "https://api.mainnet.minepi.com";
 
 export function resolveRpc(chain: ChainRow): string | null {
-  if (chain.rpc_url?.trim()) return chain.rpc_url.trim();
+  if (chain.rpc_url?.trim()) return chain.rpc_url.trim().replace(/\/+$/, "");
+  if (chain.family === "pi" || chain.family === "stellar") {
+    return (process.env.PI_HORIZON_URL || DEFAULT_PI_HORIZON).replace(/\/+$/, "");
+  }
   if (chain.family === "solana") return process.env.SOLANA_RPC_URL || DEFAULT_SOLANA_RPC;
   return DEFAULT_EVM_RPC[chain.key] ?? null;
 }

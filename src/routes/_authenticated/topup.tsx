@@ -24,7 +24,7 @@ import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
 import { topUpWithPi, quotePiTopup } from "@/lib/pi-network";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, SOL_LOGO_URL, USDC_LOGO_URL, USDT_LOGO_URL } from "@/lib/token-logos";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
 import { isBanxaTopupMethod, type BanxaTopupMethodKey } from "@/lib/topup-methods";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
@@ -36,6 +36,11 @@ import {
 } from "@/lib/openpay-pro.functions";
 import { getPublicTopupInfo, listTopupMethods } from "@/lib/topup-admin.functions";
 import { calcTopupFee } from "@/lib/topup-fee";
+import {
+  topupWithLedgerAsset,
+  type LedgerTopupAsset,
+} from "@/lib/ledger-topup.functions";
+import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -60,8 +65,24 @@ type Method =
   | "solana_pay"
   | "circle_mint"
   | "cash_pay"
+  | "wallet_usdt"
+  | "wallet_usdc"
+  | "wallet_sol"
   | BanxaTopupMethodKey
   | "scan_pay";
+
+type WalletLedgerMethod = "wallet_usdt" | "wallet_usdc" | "wallet_sol";
+
+const WALLET_LEDGER_ASSET: Record<WalletLedgerMethod, LedgerTopupAsset> = {
+  wallet_usdt: "USDT",
+  wallet_usdc: "USDC",
+  wallet_sol: "SOL",
+};
+
+function isWalletLedgerMethod(m: Method): m is WalletLedgerMethod {
+  return m === "wallet_usdt" || m === "wallet_usdc" || m === "wallet_sol";
+}
+
 type BuyStep = "amount" | "method" | "deposit";
 const methods: {
   id: Method;
@@ -79,6 +100,24 @@ const methods: {
     label: "OpenPay Balance",
     logoUrl: OUSD_LOGO_URL,
     desc: "Pay from your connected OpenPay account · real debit",
+  },
+  {
+    id: "wallet_usdt",
+    label: "Wallet USDT",
+    logoUrl: USDT_LOGO_URL,
+    desc: "Pay with your OpenPay Pro USDT · → OUSD 1:1",
+  },
+  {
+    id: "wallet_usdc",
+    label: "Wallet USDC",
+    logoUrl: USDC_LOGO_URL,
+    desc: "Pay with your OpenPay Pro USDC · → OUSD 1:1",
+  },
+  {
+    id: "wallet_sol",
+    label: "Wallet SOL",
+    logoUrl: SOL_LOGO_URL,
+    desc: "Pay with your OpenPay Pro SOL · live Solana price → OUSD",
   },
   {
     id: "scan_pay",
@@ -200,6 +239,7 @@ function TopUpPage() {
   const settlePayLink = useServerFn(settleOpenPayPayLinkTopup);
   const getLink = useServerFn(getOpenPayLinkStatus);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
+  const ledgerTopupFn = useServerFn(topupWithLedgerAsset);
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -247,6 +287,8 @@ function TopUpPage() {
     // Hide only when admin explicitly disabled (maintenance). Missing row → still show.
     return methods
       .filter((m) => {
+        // Wallet ledger spend is always available (not a third-party deposit rail).
+        if (isWalletLedgerMethod(m.id)) return true;
         const c = byKey.get(m.id);
         return !c || c.enabled !== false;
       })
@@ -281,6 +323,41 @@ function TopUpPage() {
     enabled: method === "pi" && amountValid,
     staleTime: 30_000,
   });
+
+  const { data: solUsdPrice = 0 } = useQuery({
+    queryKey: ["major-usd-price", "sol"],
+    queryFn: async () => {
+      const prices = await fetchMajorUsdPrices(["sol"]);
+      return Number(prices.sol) || 0;
+    },
+    enabled: method === "wallet_sol" && amountValid,
+    staleTime: 60_000,
+  });
+
+  const usdtBal = Number(wallet?.usdt_balance ?? 0);
+  const usdcBal = Number(wallet?.usdc_balance ?? 0);
+  const solBal = Number(wallet?.sol_balance ?? 0);
+  const walletLedgerBal =
+    method === "wallet_usdt"
+      ? usdtBal
+      : method === "wallet_usdc"
+        ? usdcBal
+        : method === "wallet_sol"
+          ? solBal
+          : 0;
+  const walletLedgerNeed =
+    method === "wallet_sol"
+      ? solUsdPrice > 0
+        ? amtNum / solUsdPrice
+        : 0
+      : isWalletLedgerMethod(method)
+        ? amtNum
+        : 0;
+  const walletLedgerShort =
+    isWalletLedgerMethod(method) &&
+    amountValid &&
+    walletLedgerNeed > 0 &&
+    walletLedgerBal + 1e-12 < walletLedgerNeed;
 
   useEffect(() => {
     try {
@@ -569,6 +646,34 @@ function TopUpPage() {
         window.location.href = res.pay_url;
         return;
       }
+      if (isWalletLedgerMethod(method)) {
+        if (!wallet?.id) {
+          toast.error("Select an active wallet first");
+          return;
+        }
+        const payAsset = WALLET_LEDGER_ASSET[method];
+        const res = await ledgerTopupFn({
+          data: {
+            amount: parsed.data.amount,
+            pay_asset: payAsset,
+            walletId: wallet.id,
+          },
+        });
+        notifySuccess(
+          `${formatOUSD(res.amount)} OUSD credited from ${payAsset}`,
+          { sound: "receive" },
+        );
+        qc.invalidateQueries({ queryKey: ["active-wallet", user.id] });
+        qc.invalidateQueries({ queryKey: ["wallets", user.id] });
+        qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
+        qc.invalidateQueries({ queryKey: ["account-balances"] });
+        qc.invalidateQueries({ queryKey: ["ledger-entries"] });
+        qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+        setAmount("");
+        setConfirmOpen(false);
+        setStep("amount");
+        return;
+      }
       // pi
       const { paymentId } = await topUpWithPi(parsed.data.amount);
       notifySuccess(
@@ -635,7 +740,19 @@ function TopUpPage() {
         ? linked
           ? `Pay with OpenPay`
           : "Connect OpenPay to continue"
-        : method === "helio"
+        : method === "wallet_usdt"
+          ? walletLedgerShort
+            ? "Insufficient USDT"
+            : `Top up with USDT`
+          : method === "wallet_usdc"
+            ? walletLedgerShort
+              ? "Insufficient USDC"
+              : `Top up with USDC`
+            : method === "wallet_sol"
+              ? walletLedgerShort
+                ? "Insufficient SOL"
+                : `Top up with SOL`
+              : method === "helio"
           ? `Continue with crypto`
           : method === "usdc"
             ? `Continue with USDC`
@@ -662,7 +779,13 @@ function TopUpPage() {
       ? "Card (MoonPay)"
       : method === "pi"
         ? "Pi Network"
-        : method === "usdc"
+        : method === "wallet_usdt"
+          ? "Wallet USDT"
+          : method === "wallet_usdc"
+            ? "Wallet USDC"
+            : method === "wallet_sol"
+              ? "Wallet SOL"
+              : method === "usdc"
           ? "USDC Pay"
           : method === "helio"
             ? "Crypto Deposit (SOL)"
@@ -951,6 +1074,7 @@ function TopUpPage() {
                       m.id === "solana_pay" && "bg-[#14F195]/20 text-[#0ea5e9]",
                       m.id === "circle_mint" && "bg-[#00BFFF]/15 text-[#0088cc]",
                       m.id === "cash_pay" && "bg-emerald-500/15",
+                      isWalletLedgerMethod(m.id) && "bg-primary/10",
                       m.id.startsWith("banxa_") && "bg-[#0B5FFF]/12 text-[#0B5FFF]",
                       m.id === "usdc" && "bg-[#2775CA]/15",
                     )}
@@ -1057,13 +1181,32 @@ function TopUpPage() {
             </p>
           )}
 
+          {isWalletLedgerMethod(method) ? (
+            <p
+              className={cn(
+                "mt-2 px-1 text-center text-xs tabular-nums",
+                walletLedgerShort ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              Balance:{" "}
+              {formatNumber(walletLedgerBal, method === "wallet_sol" ? 6 : 2)}{" "}
+              {WALLET_LEDGER_ASSET[method]}
+              {method === "wallet_sol" && solUsdPrice > 0
+                ? ` · need ${formatNumber(walletLedgerNeed, 6)} SOL`
+                : amountValid
+                  ? ` · need ${formatNumber(walletLedgerNeed, 2)}`
+                  : ""}
+            </p>
+          ) : null}
+
           <div className="sticky bottom-0 mt-auto space-y-2 bg-linear-to-t from-background via-background to-transparent pb-2 pt-6">
             <Button
               type="button"
               disabled={
                 busy ||
                 !amountValid ||
-                (method === "openpay_balance" && !linked)
+                (method === "openpay_balance" && !linked) ||
+                walletLedgerShort
               }
               onClick={() => openConfirm()}
               className={cn(
@@ -1250,9 +1393,13 @@ function TopUpPage() {
         subtitle={
           method === "pi" && piQuote
             ? `Pay ${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π · 1 OUSD = $1.00`
-            : hasFee
-              ? `You receive ${formatOUSD(feeBreakdown.net)}`
-              : `≈ ${formatUSD(amtNum)} · 1 OUSD = $1.00`
+            : method === "wallet_sol" && solUsdPrice > 0
+              ? `Pay ${formatNumber(walletLedgerNeed, 6)} SOL · ≈ ${formatUSD(amtNum)}`
+              : isWalletLedgerMethod(method)
+                ? `Pay ${formatUSD(amtNum)} ${WALLET_LEDGER_ASSET[method]}`
+                : hasFee
+                  ? `You receive ${formatOUSD(feeBreakdown.net)}`
+                  : `≈ ${formatUSD(amtNum)} · 1 OUSD = $1.00`
         }
         rows={[
           { label: "You buy", value: formatOUSD(amtNum) },
@@ -1261,7 +1408,11 @@ function TopUpPage() {
             value:
               method === "pi" && piQuote
                 ? `${formatNumber(piQuote.piAmount, piQuote.piAmount < 1 ? 6 : 4)} π`
-                : `$${amtNum.toFixed(2)} USD`,
+                : method === "wallet_sol" && solUsdPrice > 0
+                  ? `${formatNumber(walletLedgerNeed, 6)} SOL`
+                  : isWalletLedgerMethod(method)
+                    ? `${formatUSD(amtNum)} ${WALLET_LEDGER_ASSET[method]}`
+                    : `$${amtNum.toFixed(2)} USD`,
           },
           ...(method === "pi" && piQuote
             ? [
@@ -1272,6 +1423,17 @@ function TopUpPage() {
                 {
                   label: "Memo",
                   value: piQuote.memo,
+                },
+              ]
+            : []),
+          ...(isWalletLedgerMethod(method)
+            ? [
+                {
+                  label: `${WALLET_LEDGER_ASSET[method]} balance`,
+                  value:
+                    method === "wallet_sol"
+                      ? `${formatNumber(walletLedgerBal, 6)} SOL`
+                      : formatUSD(walletLedgerBal),
                 },
               ]
             : []),

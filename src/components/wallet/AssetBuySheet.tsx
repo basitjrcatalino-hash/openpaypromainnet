@@ -36,6 +36,7 @@ import {
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import { listTopupMethods } from "@/lib/topup-admin.functions";
 import { buyMajorWithOusd, type BuyPayAsset } from "@/lib/buy-major.functions";
+import { topupWithLedgerAsset, type LedgerTopupAsset } from "@/lib/ledger-topup.functions";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { fetchMajorUsdPrices, LEDGER_MAJOR_SWAP_IDS } from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
@@ -251,6 +252,7 @@ export function AssetBuySheet({
   const [depositReady, setDepositReady] = useState(false);
   const creditMoonPay = useServerFn(creditMoonPayTopup);
   const buyMajorFn = useServerFn(buyMajorWithOusd);
+  const ledgerTopupFn = useServerFn(topupWithLedgerAsset);
   const swapFn = useServerFn(executeOpenDexSwap);
 
   const isOusd = !!token.isOusd;
@@ -286,8 +288,9 @@ export function AssetBuySheet({
   const methods = useMemo(() => {
     const base = ALL_METHODS.filter((m) => {
       if (isWalletPayMethod(m.id)) {
-        if (isOusd) return false;
-        // Don't offer paying with the same stable you're buying.
+        // OUSD top-up: allow USDT / USDC / SOL (not OUSD paying for itself).
+        if (isOusd) return m.id !== "wallet_ousd";
+        // Don't offer paying with the same asset you're buying.
         if (WALLET_PAY_ASSET[m.id] === targetSymbol) return false;
         return true;
       }
@@ -592,6 +595,31 @@ export function AssetBuySheet({
     setBusy(true);
     try {
       if (isOusd) {
+        if (isWalletPayMethod(method) && method !== "wallet_ousd") {
+          if (!walletId) throw new Error("Select an active wallet first");
+          const payAsset = WALLET_PAY_ASSET[method] as LedgerTopupAsset;
+          const need = payUnitsForUsd(amt, payAsset);
+          const bal = walletBalances[payAsset];
+          if (bal + 1e-12 < need) {
+            throw new Error(
+              `Need ${formatPaySpend(amt, payAsset)} (balance ${formatNumber(bal, bal < 1 ? 6 : 4)} ${payAsset})`,
+            );
+          }
+          const res = await ledgerTopupFn({
+            data: {
+              amount: amt,
+              pay_asset: payAsset,
+              walletId,
+            },
+          });
+          notifySuccess(`${formatUSD(res.amount)} OUSD credited from ${payAsset}`, {
+            sound: "receive",
+          });
+          await invalidateAfterTopup();
+          setConfirmOpen(false);
+          onClose();
+          return;
+        }
         if (method === "pi") {
           await topUpWithPi(amt);
           notifySuccess(`${formatUSD(amt)} OUSD credited from Pi (live price)`, { sound: "receive" });
@@ -740,7 +768,9 @@ export function AssetBuySheet({
     : null;
 
   const ctaLabel = isOusd
-    ? method === "pi"
+    ? isWalletPayMethod(method) && method !== "wallet_ousd"
+      ? `Top up OUSD with ${WALLET_PAY_ASSET[method]}`
+      : method === "pi"
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
       : method === "moonpay"
         ? `Buy with Card`
@@ -1168,6 +1198,20 @@ export function AssetBuySheet({
               </p>
             )}
 
+            {isOusd && isWalletPayMethod(method) && method !== "wallet_ousd" && (
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Balance:{" "}
+                {formatNumber(
+                  walletBalances[WALLET_PAY_ASSET[method]],
+                  WALLET_PAY_ASSET[method] === "SOL" ? 6 : 2,
+                )}{" "}
+                {WALLET_PAY_ASSET[method]}
+                {WALLET_PAY_ASSET[method] === "SOL" && solUsdPrice > 0 && valid
+                  ? ` · spend ≈ ${formatNumber(amtNum / solUsdPrice, 6)} SOL`
+                  : ""}
+              </p>
+            )}
+
             {actionError ? (
               <div className="mt-3 rounded-2xl bg-destructive/15 px-3 py-2.5 text-xs text-destructive">
                 {actionError}
@@ -1289,7 +1333,7 @@ export function AssetBuySheet({
                         ? "Crypto Deposit"
                         : "OpenPay",
           },
-          ...(!isOusd && isWalletPayMethod(method)
+          ...((isWalletPayMethod(method) && !(isOusd && method === "wallet_ousd"))
             ? [
                 {
                   label: `${WALLET_PAY_ASSET[method]} balance`,

@@ -11,6 +11,9 @@ export type TopupMethodKey =
   | "solana_pay"
   | "circle_mint"
   | "cash_pay"
+  | "wallet_usdt"
+  | "wallet_usdc"
+  | "wallet_sol"
   | "banxa_apple_pay"
   | "banxa_google_pay"
   | "banxa_card"
@@ -82,6 +85,27 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     description:
       "Phantom CASH (Solana SPL) · ledger balance or Solana Pay QR → OUSD 1:1",
     sort_order: 8,
+    enabled: true,
+  },
+  {
+    method_key: "wallet_usdt",
+    label: "Wallet USDT",
+    description: "Pay with your OpenPay Pro USDT balance → OUSD 1:1",
+    sort_order: 14,
+    enabled: true,
+  },
+  {
+    method_key: "wallet_usdc",
+    label: "Wallet USDC",
+    description: "Pay with your OpenPay Pro USDC balance → OUSD 1:1",
+    sort_order: 15,
+    enabled: true,
+  },
+  {
+    method_key: "wallet_sol",
+    label: "Wallet SOL",
+    description: "Pay with your OpenPay Pro SOL balance · live Solana price → OUSD",
+    sort_order: 16,
     enabled: true,
   },
   {

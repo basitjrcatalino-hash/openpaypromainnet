@@ -142,8 +142,8 @@ const PROVIDER: Record<
   },
   wallet_sol: {
     name: "Wallet SOL",
-    blurb: "Paid from your OpenPay Pro SOL balance at the live Solana price — no third-party checkout.",
-    fees: "No third-party processing fee. Platform trading rules for the asset still apply.",
+    blurb: "Paid from your OpenPay Pro SOL balance at the live Solana price — credited as OUSD.",
+    fees: "No third-party processing fee. A platform top-up fee may be deducted from the OUSD credited.",
   },
 };
 

@@ -51,24 +51,6 @@ export const getAccountBalances = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const balances = emptyBalances();
 
-    // Prefer RPC portfolio when available (single round-trip).
-    try {
-      const { data: portfolio, error: pErr } = await (supabase as any).rpc("get_account_portfolio");
-      if (!pErr && portfolio && typeof portfolio === "object") {
-        const p = portfolio as Record<string, unknown>;
-        return {
-          walletId: (p.wallet_id as string) ?? null,
-          balances: {
-            funding: parseBucket(p.funding),
-            trading: parseBucket(p.trading),
-            p2p: parseBucket(p.p2p),
-          },
-        };
-      }
-    } catch {
-      /* fall through to manual read */
-    }
-
     const { data: wallet, error: wErr } = await supabase
       .from("wallets")
       .select("*")
@@ -80,8 +62,39 @@ export const getAccountBalances = createServerFn({ method: "GET" })
     if (wErr) throw new Error(wErr.message);
     if (!wallet) return { walletId: null, balances };
 
+    // Funding = wallet ledger columns (Spot spends these).
     for (const asset of TRANSFER_ASSETS) {
       balances.funding[asset] = readFundingBalance(wallet as Record<string, unknown>, asset);
+    }
+
+    // Prefer RPC for Trading / P2P buckets when available.
+    try {
+      const { data: portfolio, error: pErr } = await (supabase as any).rpc("get_account_portfolio");
+      if (!pErr && portfolio && typeof portfolio === "object") {
+        const p = portfolio as Record<string, unknown>;
+        const trading = parseBucket(p.trading);
+        const p2p = parseBucket(p.p2p);
+        // Overlay funding from RPC only when it has positive balances (keeps wallet columns authoritative).
+        const rpcFunding = parseBucket(p.funding);
+        const rpcFundingTotal = TRANSFER_ASSETS.reduce((s, a) => s + (rpcFunding[a] ?? 0), 0);
+        if (rpcFundingTotal > 0) {
+          for (const asset of TRANSFER_ASSETS) {
+            const rpc = rpcFunding[asset] ?? 0;
+            const local = balances.funding[asset] ?? 0;
+            balances.funding[asset] = Math.max(rpc, local);
+          }
+        }
+        return {
+          walletId: (p.wallet_id as string) ?? (wallet.id as string),
+          balances: {
+            funding: balances.funding,
+            trading,
+            p2p,
+          },
+        };
+      }
+    } catch {
+      /* fall through */
     }
 
     const { data: rows, error: bErr } = await supabase

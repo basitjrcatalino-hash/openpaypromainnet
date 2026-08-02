@@ -100,7 +100,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2009-01-03T00:00:00.000Z",
     native: true,
     about:
-      "Bitcoin is the world's first decentralized cryptocurrency, created in 2009 by the pseudonymous Satoshi Nakamoto. It enables peer-to-peer electronic cash without intermediaries, secured by Proof of Work on a public blockchain with a hard cap of 21 million coins. Often called digital gold, BTC is the reserve asset of crypto — with US spot ETFs since 2024 carrying institutional flows.",
+      "Bitcoin is the world's first decentralized cryptocurrency, created in 2009 by the pseudonymous Satoshi Nakamoto. It enables peer-to-peer electronic cash without intermediaries, secured by Proof of Work on a public blockchain with a hard cap of 21 million coins. Often called digital gold, BTC is the reserve asset of crypto. Market reference: CoinMarketCap.",
   },
   eth: {
     id: "eth",
@@ -117,7 +117,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2015-07-30T00:00:00.000Z",
     native: true,
     about:
-      "Ether (ETH) is Ethereum's native token — the fuel for smart contracts, DeFi, NFTs, and Layer-2 networks like Base and Polygon. Proposed by Vitalik Buterin and launched in 2015, Ethereum moved to Proof of Stake in the 2022 Merge. ETH pays gas, secures the network via staking, and powers the largest application ecosystem in crypto.",
+      "Ether (ETH) is Ethereum's native token — the fuel for smart contracts, DeFi, NFTs, and Layer-2 networks. Proposed by Vitalik Buterin and launched in 2015, Ethereum moved to Proof of Stake in the 2022 Merge. ETH pays gas, secures the network via staking, and powers the largest application ecosystem in crypto. Market reference: CoinMarketCap.",
   },
   sol: {
     id: "sol",
@@ -134,7 +134,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2020-03-16T00:00:00.000Z",
     native: true,
     about:
-      "SOL is the native token of the Solana blockchain — a high-throughput Layer 1 launched in 2020. Proof of History plus Proof of Stake delivers fast finality and sub-cent fees. SOL pays every network fee, funds smart-contract execution, and is the staking asset for validators. Solana hosts a major ecosystem across DeFi, NFTs, payments, and consumer apps.",
+      "SOL is the native token of the Solana blockchain — a high-throughput Layer 1 launched in 2020. Proof of History plus Proof of Stake delivers fast finality and sub-cent fees. SOL pays every network fee, funds smart-contract execution, and is the staking asset for validators. Solana hosts a major ecosystem across DeFi, NFTs, payments, and consumer apps. Market reference: CoinMarketCap.",
   },
   pi: {
     id: "pi",
@@ -150,7 +150,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2019-03-14T00:00:00.000Z",
     native: true,
     about:
-      "Pi Network is a mobile-first cryptocurrency project that lets users mine PI from their phones with a social consensus model. The open mainnet listed PI for trading in 2025. PI is the native asset of the Pi blockchain — used for transfers, ecosystem apps, and network participation. Market data is sourced from CoinGecko.",
+      "Pi Network is a social cryptocurrency, developer platform, and ecosystem designed for widespread accessibility and real-world utility. It enables users to mine and transact Pi with a mobile-friendly interface while supporting applications on its blockchain. Max supply is 100 billion PI. Market reference: CoinMarketCap.",
   },
   usdc: {
     id: "usdc",

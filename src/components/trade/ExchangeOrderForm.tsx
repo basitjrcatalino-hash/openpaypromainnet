@@ -57,6 +57,9 @@ type SpotProps = SharedProps & {
   onPayAsset: (a: SpotPayAsset) => void;
   availableQuote: number;
   availableBase: number;
+  /** Trading-account surplus for selected pay asset (hint to Transfer). */
+  tradingQuote?: number;
+  tradingBase?: number;
   onSubmit: () => void;
 };
 
@@ -228,6 +231,13 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         </div>
       )}
 
+      {props.mode === "spot" ? (
+        <p className="text-[10px] leading-snug text-muted-foreground">
+          Spot uses <span className="font-semibold text-foreground">Funding</span> balances.
+          Futures uses Trading.
+        </p>
+      ) : null}
+
       <label className="block">
         <span className="mb-1 block text-[10px] text-muted-foreground">
           {props.mode === "futures" ? "Margin" : `Quantity (${props.market})`}
@@ -291,8 +301,24 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           <p>
             Available{" "}
             <span className="font-semibold text-foreground">
-              {formatNumber(props.availableQuote, 4)} {props.payAsset}
-            </span>
+              {formatNumber(
+                props.side === "buy" ? props.availableQuote : props.availableBase,
+                props.side === "buy" ? 4 : 6,
+              )}{" "}
+              {props.side === "buy" ? props.payAsset : props.market}
+            </span>{" "}
+            <span className="text-muted-foreground/80">· Funding</span>{" "}
+            <Link
+              to="/transfer"
+              search={{
+                from: "trading",
+                to: "funding",
+                asset: props.side === "buy" ? props.payAsset : props.market,
+              }}
+              className="text-primary"
+            >
+              Transfer
+            </Link>
           </p>
           <p>
             Max {props.side === "buy" ? "buy" : "sell"}{" "}
@@ -303,6 +329,36 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
               {props.market}
             </span>
           </p>
+          {props.side === "buy" &&
+          props.availableQuote <= 0 &&
+          (props.tradingQuote ?? 0) > 0 ? (
+            <p className="text-[#ffad0a]">
+              {formatNumber(props.tradingQuote ?? 0, 4)} {props.payAsset} in Trading —{" "}
+              <Link
+                to="/transfer"
+                search={{ from: "trading", to: "funding", asset: props.payAsset }}
+                className="font-semibold underline-offset-2 hover:underline"
+              >
+                move to Funding
+              </Link>{" "}
+              to Spot trade
+            </p>
+          ) : null}
+          {props.side === "sell" &&
+          props.availableBase <= 0 &&
+          (props.tradingBase ?? 0) > 0 ? (
+            <p className="text-[#ffad0a]">
+              {formatNumber(props.tradingBase ?? 0, 6)} {props.market} in Trading —{" "}
+              <Link
+                to="/transfer"
+                search={{ from: "trading", to: "funding", asset: props.market }}
+                className="font-semibold underline-offset-2 hover:underline"
+              >
+                move to Funding
+              </Link>{" "}
+              to sell
+            </p>
+          ) : null}
           {total > 0 ? (
             <>
               <p>

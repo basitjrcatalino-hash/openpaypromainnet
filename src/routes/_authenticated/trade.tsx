@@ -15,6 +15,7 @@ import { RecentTrades } from "@/components/trade/RecentTrades";
 import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
 import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
+import { TradeTokenInfo } from "@/components/trade/TradeTokenInfo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
@@ -66,6 +67,7 @@ import {
   periodToTvInterval,
   quoteByMarket,
 } from "@/lib/tradingview-perps";
+import { cmcInfoForMarket } from "@/lib/coinmarketcap-trade";
 import {
   pairLabel,
   tvSymbolForMode,
@@ -323,6 +325,20 @@ function TradePage() {
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
   const fundingQuote = Number(balQ.data?.balances?.funding?.[payAsset] ?? 0) || 0;
   const fundingBase = Number(balQ.data?.balances?.funding?.[market] ?? 0) || 0;
+  const tradingQuote = Number(balQ.data?.balances?.trading?.[payAsset] ?? 0) || 0;
+  const tradingBase = Number(balQ.data?.balances?.trading?.[market] ?? 0) || 0;
+
+  // Prefer a Spot pay asset that actually has Funding balance
+  useEffect(() => {
+    if (mode !== "spot" || !balQ.data?.balances?.funding) return;
+    const funding = balQ.data.balances.funding;
+    const current = Number(funding[payAsset] ?? 0) || 0;
+    if (current > 0) return;
+    const preferred = (["USDT", "OUSD", "USDC"] as const).find(
+      (a) => (Number(funding[a] ?? 0) || 0) > 0,
+    );
+    if (preferred && preferred !== payAsset) setPayAsset(preferred);
+  }, [mode, balQ.data?.balances?.funding, payAsset]);
 
   const positions: PerpPosition[] = Array.isArray(posQ.data) ? posQ.data : [];
   const openPositions = positions.filter((p: PerpPosition) => p.status === "open");
@@ -681,6 +697,8 @@ function TradePage() {
                   onPayAsset={setPayAsset}
                   availableQuote={fundingQuote}
                   availableBase={fundingBase}
+                  tradingQuote={tradingQuote}
+                  tradingBase={tradingBase}
                   onSubmit={() => spotM.mutate()}
                 />
               )}
@@ -753,43 +771,44 @@ function TradePage() {
             </div>
             {infoTab === "overview" ? (
               <div className="space-y-3">
-                <TradingViewEmbed kind="symbol-info" symbol={tvSymbol} height={180} />
-                <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-[11px]">
-                  <div>
-                    <p className="text-muted-foreground">Contract</p>
-                    <p className="mt-0.5 font-semibold">{pairLabel(market, mode)} Perp</p>
+                <TradeTokenInfo
+                  market={market}
+                  mode={mode}
+                  price={price}
+                  change24h={change}
+                  mark={majorSnap}
+                />
+                {mode === "futures" ? (
+                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-[11px]">
+                    <div>
+                      <p className="text-muted-foreground">Contract</p>
+                      <p className="mt-0.5 font-semibold">{pairLabel(market, mode)} Perp</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Quote</p>
+                      <p className="mt-0.5 font-semibold">USDT</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Mark</p>
+                      <p className="mt-0.5 font-semibold tabular-nums">
+                        {price > 0 ? formatNumber(price, price >= 1000 ? 1 : 2) : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Funding</p>
+                      <p className="mt-0.5 font-semibold tabular-nums">
+                        {quote?.fundingRate != null
+                          ? `${quote.fundingRate >= 0 ? "+" : ""}${formatNumber(quote.fundingRate, 4)}%`
+                          : "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Quote</p>
-                    <p className="mt-0.5 font-semibold">USDT</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Mark</p>
-                    <p className="mt-0.5 font-semibold tabular-nums">
-                      {price > 0 ? formatNumber(price, price >= 1000 ? 1 : 2) : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Funding</p>
-                    <p className="mt-0.5 font-semibold tabular-nums">
-                      {quote?.fundingRate != null
-                        ? `${quote.fundingRate >= 0 ? "+" : ""}${formatNumber(quote.fundingRate, 4)}%`
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">24h high</p>
-                    <p className="mt-0.5 font-semibold tabular-nums">
-                      {quote?.high24h ? formatNumber(quote.high24h, price >= 1000 ? 1 : 2) : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">24h low</p>
-                    <p className="mt-0.5 font-semibold tabular-nums">
-                      {quote?.low24h ? formatNumber(quote.low24h, price >= 1000 ? 1 : 2) : "—"}
-                    </p>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via
+                    OpenDEX at live mark.
+                  </p>
+                )}
                 {mode === "futures" ? (
                   <div className="flex gap-2 rounded-lg border border-[#ffad0a]/25 bg-[#ffad0a]/8 px-3 py-2.5">
                     <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ffad0a]" />
@@ -799,12 +818,7 @@ function TradePage() {
                       not advice.
                     </p>
                   </div>
-                ) : (
-                  <p className="text-[11px] leading-relaxed text-muted-foreground">
-                    Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via
-                    OpenDEX at live mark.
-                  </p>
-                )}
+                ) : null}
                 <Link
                   to="/asset/$tokenId/chat"
                   params={{ tokenId: market.toLowerCase() }}
@@ -819,21 +833,44 @@ function TradePage() {
               </div>
             ) : null}
             {infoTab === "news" ? (
-              <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={420} />
+              <div className="space-y-3">
+                <a
+                  href={`${cmcInfoForMarket(market).url}#news`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-border/50 bg-card/40 px-3 py-3 press"
+                >
+                  <span className="text-sm font-semibold">
+                    {cmcInfoForMarket(market).name} news on CoinMarketCap
+                  </span>
+                  <ExternalLink className="h-4 w-4 text-primary" />
+                </a>
+                <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={420} />
+              </div>
             ) : null}
             {infoTab === "alerts" ? (
               <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={400} />
             ) : null}
-            <a
-              href={PERP_TV[market].tvUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
-            >
-              Open on TradingView <ExternalLink className="h-3 w-3" />
-            </a>
+            <div className="flex flex-wrap items-center gap-3">
+              <a
+                href={cmcInfoForMarket(market).url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#3861FB]"
+              >
+                Open on CoinMarketCap <ExternalLink className="h-3 w-3" />
+              </a>
+              <a
+                href={PERP_TV[market].tvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
+              >
+                TradingView <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
             <p className="pb-2 text-center text-[10px] text-muted-foreground">
-              Charts by TradingView
+              Token info via CoinMarketCap · Charts by TradingView
               {depthQ.data?.source ? ` · Depth ${depthQ.data.source}` : null}
             </p>
           </div>

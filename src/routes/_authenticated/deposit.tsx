@@ -659,7 +659,13 @@ function DepositDetail({
             value={txHash}
             maxLength={120}
             onChange={(e) => setTxHash(e.target.value)}
-            placeholder={chain.family === "solana" ? "Signature" : "0x…"}
+            placeholder={
+              chain.family === "solana"
+                ? "Signature"
+                : chain.family === "pi" || chain.family === "stellar"
+                  ? "Pi transaction ID (64 hex characters)"
+                  : "0x…"
+            }
             className="h-11 rounded-xl font-mono text-xs"
           />
           <Button

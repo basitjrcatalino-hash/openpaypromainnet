@@ -254,7 +254,7 @@ const chainSchema = z.object({
   key: z.string().trim().min(2).max(40).regex(/^[a-z0-9_-]+$/),
   name: z.string().trim().min(2).max(60),
   chain_id: z.number().int().nullable().optional(),
-  family: z.enum(["evm", "solana", "bitcoin", "other"]),
+  family: z.enum(["evm", "solana", "pi", "stellar", "bitcoin", "other"]),
   rpc_url: z.string().trim().url().max(300).nullable().optional(),
   explorer_url: z.string().trim().url().max(300).nullable().optional(),
   required_confirmations: z.number().int().min(1).max(1000),

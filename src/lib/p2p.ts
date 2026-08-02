@@ -884,7 +884,7 @@ export async function submitOrderRating(input: {
     _order_id: input.orderId,
     _score: input.score,
     _tags: input.tags ?? [],
-    _comment: input.comment ?? null,
+    _comment: input.comment ?? undefined,
   });
   if (error) throw new Error(error.message);
   return data as P2PRating;

@@ -15,7 +15,11 @@ import { RecentTrades } from "@/components/trade/RecentTrades";
 import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
 import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
-import { TradeTokenInfo } from "@/components/trade/TradeTokenInfo";
+import {
+  TradeTokenAnalysis,
+  TradeTokenInfo,
+  TradeTokenNews,
+} from "@/components/trade/TradeTokenInfo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
@@ -833,23 +837,25 @@ function TradePage() {
               </div>
             ) : null}
             {infoTab === "news" ? (
-              <div className="space-y-3">
-                <a
-                  href={`${cmcInfoForMarket(market).url}#news`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-xl border border-border/50 bg-card/40 px-3 py-3 press"
-                >
-                  <span className="text-sm font-semibold">
-                    {cmcInfoForMarket(market).name} news on CoinMarketCap
-                  </span>
-                  <ExternalLink className="h-4 w-4 text-primary" />
-                </a>
-                <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={420} />
-              </div>
+              <TradeTokenNews
+                market={market}
+                mode={mode}
+                price={price}
+                change24h={change}
+                mark={majorSnap}
+              />
             ) : null}
             {infoTab === "alerts" ? (
-              <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={400} />
+              <div className="space-y-3">
+                <TradeTokenAnalysis
+                  market={market}
+                  mode={mode}
+                  price={price}
+                  change24h={change}
+                  mark={majorSnap}
+                />
+                <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={400} />
+              </div>
             ) : null}
             <div className="flex flex-wrap items-center gap-3">
               <a

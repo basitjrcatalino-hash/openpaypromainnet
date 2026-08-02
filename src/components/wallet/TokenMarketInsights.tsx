@@ -44,6 +44,8 @@ export type TokenMarketInsightsProps = {
   chatTokenId?: string | null;
   chatPreview?: string | null;
   chatHereCount?: number;
+  /** Hide Live Chat teaser (e.g. Trade Info already has its own chat link) */
+  hideChat?: boolean;
 };
 
 function relativeAgo(iso: string | undefined): string {
@@ -138,7 +140,7 @@ export function TokenMarketInsights(props: TokenMarketInsightsProps) {
   return (
     <div className="space-y-7">
       {/* Live Chat teaser — Phantom */}
-      {props.chatTokenId && (
+      {!props.hideChat && props.chatTokenId && (
         <section>
           <Link
             to="/asset/$tokenId/chat"

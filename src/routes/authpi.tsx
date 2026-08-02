@@ -77,7 +77,9 @@ function goPostAuth() {
 
 export const Route = createFileRoute("/authpi")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => {
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { method?: string; mode?: "signin" | "signup"; next?: string } => {
     const method = typeof s.method === "string" ? s.method.toLowerCase() : undefined;
     const mode = typeof s.mode === "string" ? s.mode.toLowerCase() : undefined;
     const next = typeof s.next === "string" ? s.next : undefined;

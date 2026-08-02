@@ -1,3 +1,6 @@
+import { Link } from "@tanstack/react-router";
+import { ChevronRight } from "lucide-react";
+
 import { OusdIcon } from "@/components/ousd-icon";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
 import { cn } from "@/lib/utils";
@@ -24,25 +27,34 @@ function AssetMark({ asset, className }: { asset: TransferAsset; className?: str
   );
 }
 
+function assetDetailTokenId(asset: TransferAsset): string {
+  return asset.toLowerCase();
+}
+
 export function AccountAssetList({
   rows,
   valueFormatter,
   hideBalance,
   amountLabel = "Available",
   emptyText = "No assets in this account yet.",
+  hideHeader,
 }: {
   rows: PortfolioAssetRow[];
   valueFormatter: (usd: number) => string;
   hideBalance?: boolean;
   amountLabel?: string;
   emptyText?: string;
+  /** When parent already renders Name / Value labels. */
+  hideHeader?: boolean;
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <span>Name</span>
-        <span>{amountLabel}</span>
-      </div>
+      {!hideHeader ? (
+        <div className="mb-2 flex items-center justify-between px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span>Name</span>
+          <span>{amountLabel}</span>
+        </div>
+      ) : null}
       {!rows.length ? (
         <p className="rounded-2xl border border-border/50 bg-muted/25 px-4 py-10 text-center text-sm text-muted-foreground">
           {emptyText}
@@ -50,10 +62,13 @@ export function AccountAssetList({
       ) : (
         <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/70">
           {rows.map((row, i) => (
-            <div
+            <Link
               key={row.asset}
+              to="/asset/$tokenId"
+              params={{ tokenId: assetDetailTokenId(row.asset) }}
+              search={{}}
               className={cn(
-                "flex items-center gap-3 px-4 py-3.5",
+                "flex items-center gap-3 px-4 py-3.5 press hover:bg-muted/40",
                 i < rows.length - 1 && "border-b border-border/50",
               )}
             >
@@ -69,7 +84,8 @@ export function AccountAssetList({
                   {hideBalance ? "••••" : valueFormatter(row.valueUsd)}
                 </p>
               </div>
-            </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70" aria-hidden />
+            </Link>
           ))}
         </div>
       )}

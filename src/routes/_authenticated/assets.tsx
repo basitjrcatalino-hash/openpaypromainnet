@@ -186,6 +186,7 @@ function AssetsOverviewPage() {
           hideBalance={hideBalance}
           valueFormatter={fmt}
           amountLabel="Value"
+          hideHeader
           emptyText="No crypto balances yet. Deposit into Funding to get started."
         />
       </section>

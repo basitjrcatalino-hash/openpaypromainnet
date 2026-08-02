@@ -517,6 +517,9 @@ function OpenTokenHome() {
         userId={user.id}
         walletId={wallet?.id ? String(wallet.id) : undefined}
         ousdBalance={ousdBal}
+        usdtBalance={Number(wallet?.usdt_balance ?? 0)}
+        usdcBalance={Number(wallet?.usdc_balance ?? 0)}
+        solBalance={Number(wallet?.sol_balance ?? 0)}
         returnPath="/opentoken"
         token={{
           id: predictAsset,

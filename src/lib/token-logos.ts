@@ -18,6 +18,14 @@ export const PI_NETWORK_LOGO_URL =
 export const USDC_LOGO_URL =
   "https://assets.coingecko.com/coins/images/6319/large/usdc.png";
 
+/** USDT mark for payment method rows */
+export const USDT_LOGO_URL =
+  "https://assets.coingecko.com/coins/images/325/large/Tether.png";
+
+/** SOL mark for payment method rows */
+export const SOL_LOGO_URL =
+  "https://assets.coingecko.com/coins/images/4128/large/solana.png";
+
 /** Canonical logos for ledger majors + OUSD (history, notifications, pickers). */
 function buildKnownTokenLogos(): Record<string, string> {
   const logos: Record<string, string> = {
@@ -42,6 +50,10 @@ function buildKnownTokenLogos(): Record<string, string> {
   logos.USDC = USDC_LOGO_URL;
   logos.USDCOIN = USDC_LOGO_URL;
   logos["USD COIN"] = USDC_LOGO_URL;
+  logos.USDT = USDT_LOGO_URL;
+  logos.TETHER = USDT_LOGO_URL;
+  logos.SOL = SOL_LOGO_URL;
+  logos.SOLANA = SOL_LOGO_URL;
 
   return logos;
 }

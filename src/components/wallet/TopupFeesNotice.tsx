@@ -18,7 +18,10 @@ export type TopupProvider =
   | "banxa_card"
   | "banxa_bank"
   | "scan_pay"
-  | "wallet_ousd";
+  | "wallet_ousd"
+  | "wallet_usdt"
+  | "wallet_usdc"
+  | "wallet_sol";
 
 type Props = {
   method: TopupProvider;
@@ -125,6 +128,21 @@ const PROVIDER: Record<
   wallet_ousd: {
     name: "Wallet OUSD",
     blurb: "Paid from your OpenPay Pro wallet balance — no third-party checkout.",
+    fees: "No third-party processing fee. Platform trading rules for the asset still apply.",
+  },
+  wallet_usdt: {
+    name: "Wallet USDT",
+    blurb: "Paid from your OpenPay Pro USDT balance — no third-party checkout.",
+    fees: "No third-party processing fee. Platform trading rules for the asset still apply.",
+  },
+  wallet_usdc: {
+    name: "Wallet USDC",
+    blurb: "Paid from your OpenPay Pro USDC balance — no third-party checkout.",
+    fees: "No third-party processing fee. Platform trading rules for the asset still apply.",
+  },
+  wallet_sol: {
+    name: "Wallet SOL",
+    blurb: "Paid from your OpenPay Pro SOL balance at the live Solana price — no third-party checkout.",
     fees: "No third-party processing fee. Platform trading rules for the asset still apply.",
   },
 };

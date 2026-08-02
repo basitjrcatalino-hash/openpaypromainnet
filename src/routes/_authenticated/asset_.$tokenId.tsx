@@ -147,6 +147,9 @@ function PhantomAssetDetail() {
         id: string;
         address: string;
         ousd_balance: number;
+        usdt_balance?: number;
+        usdc_balance?: number;
+        sol_balance?: number;
         name: string | null;
       }>(
         supabase,
@@ -892,6 +895,9 @@ function PhantomAssetDetail() {
         userId={user.id}
         walletId={wallet?.id}
         ousdBalance={Number(wallet?.ousd_balance ?? 0)}
+        usdtBalance={Number(wallet?.usdt_balance ?? 0)}
+        usdcBalance={Number(wallet?.usdc_balance ?? 0)}
+        solBalance={Number(wallet?.sol_balance ?? 0)}
         token={{
           id: isOusd ? "ousd" : isMajor && majorDef ? majorDef.id : tokenId,
           symbol: meta.symbol,

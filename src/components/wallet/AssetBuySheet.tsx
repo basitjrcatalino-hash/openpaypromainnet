@@ -35,11 +35,18 @@ import {
 } from "@/lib/openpay-pro.functions";
 import { creditMoonPayTopup } from "@/lib/moonpay-topup.functions";
 import { listTopupMethods } from "@/lib/topup-admin.functions";
-import { buyMajorWithOusd } from "@/lib/buy-major.functions";
+import { buyMajorWithOusd, type BuyPayAsset } from "@/lib/buy-major.functions";
 import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
+import { fetchMajorUsdPrices, LEDGER_MAJOR_SWAP_IDS } from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
+import {
+  OUSD_LOGO_URL,
+  PI_NETWORK_LOGO_URL,
+  SOL_LOGO_URL,
+  USDC_LOGO_URL,
+  USDT_LOGO_URL,
+} from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -57,9 +64,38 @@ export type AssetBuyTarget = {
   status?: string | null;
 };
 
-type PaymentMethod = "wallet_ousd" | "pi" | "openpay_checkout" | "moonpay" | "helio" | "usdc";
+type PaymentMethod =
+  | "wallet_ousd"
+  | "wallet_usdt"
+  | "wallet_usdc"
+  | "wallet_sol"
+  | "pi"
+  | "openpay_checkout"
+  | "moonpay"
+  | "helio"
+  | "usdc";
 type BuyStep = "amount" | "method" | "deposit";
+type WalletPayMethod = "wallet_ousd" | "wallet_usdt" | "wallet_usdc" | "wallet_sol";
 
+const WALLET_PAY_ASSET: Record<WalletPayMethod, BuyPayAsset> = {
+  wallet_ousd: "OUSD",
+  wallet_usdt: "USDT",
+  wallet_usdc: "USDC",
+  wallet_sol: "SOL",
+};
+
+function isWalletPayMethod(m: PaymentMethod): m is WalletPayMethod {
+  return (
+    m === "wallet_ousd" ||
+    m === "wallet_usdt" ||
+    m === "wallet_usdc" ||
+    m === "wallet_sol"
+  );
+}
+
+function isStablePayAsset(asset: BuyPayAsset): boolean {
+  return asset === "OUSD" || asset === "USDT" || asset === "USDC";
+}
 const PRESETS = [10, 25, 50, 100, 250];
 const PENDING_CHARGE_KEY = "openpay_pending_charge";
 const PENDING_PAYLINK_KEY = "openpay_pending_paylink";
@@ -94,6 +130,24 @@ const ALL_METHODS: {
     label: "Wallet OUSD",
     logoUrl: OUSD_LOGO_URL,
     desc: "Pay with your OpenPay Pro OUSD · buy any token",
+  },
+  {
+    id: "wallet_usdt",
+    label: "Wallet USDT",
+    logoUrl: USDT_LOGO_URL,
+    desc: "Pay with your OpenPay Pro USDT · buy any token",
+  },
+  {
+    id: "wallet_usdc",
+    label: "Wallet USDC",
+    logoUrl: USDC_LOGO_URL,
+    desc: "Pay with your OpenPay Pro USDC · buy any token",
+  },
+  {
+    id: "wallet_sol",
+    label: "Wallet SOL",
+    logoUrl: SOL_LOGO_URL,
+    desc: "Pay with your OpenPay Pro SOL · live Solana price",
   },
   {
     id: "openpay_checkout",
@@ -133,6 +187,9 @@ type Props = {
   userId: string;
   walletId?: string;
   ousdBalance: number;
+  usdtBalance?: number;
+  usdcBalance?: number;
+  solBalance?: number;
   token: AssetBuyTarget;
   returnPath: string;
   onNavigateSwap?: () => void;
@@ -162,6 +219,9 @@ export function AssetBuySheet({
   userId,
   walletId,
   ousdBalance,
+  usdtBalance = 0,
+  usdcBalance = 0,
+  solBalance = 0,
   token,
   returnPath,
 }: Props) {
@@ -197,19 +257,40 @@ export function AssetBuySheet({
   const isMajor = !!token.majorId;
   const graduated = !isOusd && !isMajor && isOpenTokenGraduated(token);
   const tokenLogo = token.logoUrl || (isOusd ? OUSD_LOGO_URL : null);
-  /** Wallet OUSD for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
+  const targetSymbol = token.symbol.toUpperCase();
+  const walletBalances: Record<BuyPayAsset, number> = {
+    OUSD: ousdBalance,
+    USDT: usdtBalance,
+    USDC: usdcBalance,
+    SOL: solBalance,
+  };
+  /** Wallet OUSD/USDT/USDC/SOL for every buyable token (OpenTokens, majors). Not for OUSD top-up. */
   const listMethodsFn = useServerFn(listTopupMethods);
   const { data: methodConfig } = useQuery({
     queryKey: ["topup-methods"],
     queryFn: () => listMethodsFn(),
     enabled: open,
   });
+  const { data: solUsdPrice = 0 } = useQuery({
+    queryKey: ["major-usd-price", "sol"],
+    queryFn: async () => {
+      const prices = await fetchMajorUsdPrices(["sol"]);
+      return Number(prices.sol) || 0;
+    },
+    enabled: open,
+    staleTime: 60_000,
+  });
   /** Admin config keys use `openpay_balance` for the OpenPay checkout method. */
   const configKey = (id: PaymentMethod) =>
     id === "openpay_checkout" ? "openpay_balance" : id;
   const methods = useMemo(() => {
     const base = ALL_METHODS.filter((m) => {
-      if (m.id === "wallet_ousd") return !isOusd;
+      if (isWalletPayMethod(m.id)) {
+        if (isOusd) return false;
+        // Don't offer paying with the same stable you're buying.
+        if (WALLET_PAY_ASSET[m.id] === targetSymbol) return false;
+        return true;
+      }
       return true;
     });
     type MethodCfg = {
@@ -224,8 +305,8 @@ export function AssetBuySheet({
     const byKey = new Map(cfg.map((c) => [c.method_key, c]));
     return base
       .filter((m) => {
-        // Wallet OUSD spend is not a deposit rail — always available for buys.
-        if (m.id === "wallet_ousd") return true;
+        // Wallet spend is not a deposit rail — always available for buys.
+        if (isWalletPayMethod(m.id)) return true;
         const c = byKey.get(configKey(m.id));
         // Missing admin row → still show; only hide when explicitly disabled.
         return !c || c.enabled !== false;
@@ -239,8 +320,7 @@ export function AssetBuySheet({
           Number(byKey.get(configKey(a.id))?.sort_order ?? 0) -
           Number(byKey.get(configKey(b.id))?.sort_order ?? 0),
       );
-  }, [methodConfig, isOusd]);
-
+  }, [methodConfig, isOusd, targetSymbol]);
   const methodIdsKey = useMemo(() => methods.map((m) => m.id).join(","), [methods]);
 
   useEffect(() => {
@@ -293,44 +373,103 @@ export function AssetBuySheet({
     amtNum > opSpendable + 1e-9;
   const linked = !!openpayLink?.linked;
 
-  async function executeMajorBuy(usdAmount: number) {
+  function payUnitsForUsd(usdAmount: number, payAsset: BuyPayAsset): number {
+    if (isStablePayAsset(payAsset)) return usdAmount;
+    if (!(solUsdPrice > 0)) throw new Error("Could not price SOL — try again");
+    return usdAmount / solUsdPrice;
+  }
+
+  function formatPaySpend(usdAmount: number, payAsset: BuyPayAsset): string {
+    if (isStablePayAsset(payAsset)) return `${formatUSD(usdAmount)} ${payAsset}`;
+    const units = payUnitsForUsd(usdAmount, payAsset);
+    return `${formatNumber(units, units < 1 ? 6 : 4)} SOL (≈ ${formatUSD(usdAmount)})`;
+  }
+
+  async function executeMajorBuy(usdAmount: number, payAsset: BuyPayAsset = "OUSD") {
     if (!walletId || !token.majorId) throw new Error("Create a wallet first");
+    const need = payUnitsForUsd(usdAmount, payAsset);
+    const bal = walletBalances[payAsset];
+    if (bal + 1e-12 < need) {
+      throw new Error(
+        `Need ${formatPaySpend(usdAmount, payAsset)} (balance ${formatNumber(bal, bal < 1 ? 6 : 4)} ${payAsset})`,
+      );
+    }
     const res = await buyMajorFn({
       data: {
         wallet_id: walletId,
         major_id: token.majorId,
         usd_amount: usdAmount,
+        pay_asset: payAsset,
       },
     });
-    notifySuccess(`Bought ${formatNumber(res.token_amount, 6)} ${res.symbol} for ${formatUSD(res.usd_spent)}`, { sound: "receive" });
+    notifySuccess(
+      `Bought ${formatNumber(res.token_amount, 6)} ${res.symbol} for ${formatPaySpend(res.usd_spent, payAsset)}`,
+      { sound: "receive" },
+    );
     await invalidateAfterBuy();
     onClose();
   }
 
-  /** Graduated OpenTokens: spend OUSD on OpenDEX for the token. */
-  async function executeDexBuy(usdAmount: number) {
+  /** Graduated OpenTokens: spend OUSD / USDT / USDC / SOL on OpenDEX for the token. */
+  async function executeDexBuy(usdAmount: number, payAsset: BuyPayAsset = "OUSD") {
     if (!walletId) throw new Error("Create a wallet first");
-    if (ousdBalance < usdAmount) {
-      throw new Error(`Need ${formatUSD(usdAmount)} OUSD (balance ${formatUSD(ousdBalance)})`);
+    const need = payUnitsForUsd(usdAmount, payAsset);
+    const bal = walletBalances[payAsset];
+    if (bal + 1e-12 < need) {
+      throw new Error(
+        `Need ${formatPaySpend(usdAmount, payAsset)} (balance ${formatNumber(bal, bal < 1 ? 6 : 4)} ${payAsset})`,
+      );
     }
+    const fromId =
+      payAsset === "OUSD"
+        ? OUSD_SWAP_ID
+        : LEDGER_MAJOR_SWAP_IDS[payAsset.toLowerCase() as "usdt" | "usdc" | "sol"];
     const res = await swapFn({
       data: {
         wallet_id: walletId,
-        from_id: OUSD_SWAP_ID,
+        from_id: fromId,
         to_id: token.id,
-        amount: usdAmount,
+        amount: need,
         slippage: 1,
       },
     });
-    notifySuccess(`Bought ${formatNumber(res.amount_out, 4)} $${token.symbol} for ${formatUSD(res.amount_in)} OUSD`, { sound: "receive" });
+    notifySuccess(
+      `Bought ${formatNumber(res.amount_out, 4)} $${token.symbol} for ${formatPaySpend(usdAmount, payAsset)}`,
+      { sound: "receive" },
+    );
     await invalidateAfterBuy();
     onClose();
   }
 
-  async function executeTokenBuy(piAmount: number) {
+  async function executeTokenBuy(usdAmount: number, payAsset: BuyPayAsset = "OUSD") {
     if (!walletId) throw new Error("Create a wallet first");
+    let ousdToSpend = usdAmount;
+    if (payAsset !== "OUSD") {
+      // Bonding curve spends OUSD — convert USDT/USDC/SOL → OUSD via OpenDEX first.
+      const fromId = LEDGER_MAJOR_SWAP_IDS[payAsset.toLowerCase() as "usdt" | "usdc" | "sol"];
+      const need = payUnitsForUsd(usdAmount, payAsset);
+      const bal = walletBalances[payAsset];
+      if (bal + 1e-12 < need) {
+        throw new Error(
+          `Need ${formatPaySpend(usdAmount, payAsset)} (balance ${formatNumber(bal, bal < 1 ? 6 : 4)} ${payAsset})`,
+        );
+      }
+      const swapped = await swapFn({
+        data: {
+          wallet_id: walletId,
+          from_id: fromId,
+          to_id: OUSD_SWAP_ID,
+          amount: need,
+          slippage: 1,
+        },
+      });
+      ousdToSpend = Number(swapped.amount_out) || 0;
+      if (!(ousdToSpend > 0)) throw new Error(`Swap to OUSD failed`);
+    } else if (ousdBalance < usdAmount) {
+      throw new Error(`Need ${formatUSD(usdAmount)} OUSD (balance ${formatUSD(ousdBalance)})`);
+    }
     const res = await buyFn({
-      data: { token_id: token.id, wallet_id: walletId, pi_amount: piAmount },
+      data: { token_id: token.id, wallet_id: walletId, pi_amount: ousdToSpend },
     });
     notifySuccess(`Bought ${formatNumber(res.token_amount, 4)} $${token.symbol}`, { sound: "receive" });
     if (res.graduated) notifySuccess("Token graduated to OpenDEX!", { sound: "success" });
@@ -483,11 +622,8 @@ export function AssetBuySheet({
       }
 
       if (isMajor && token.majorId) {
-        if (method === "wallet_ousd") {
-          if (ousdBalance < amt) {
-            throw new Error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
-          }
-          await executeMajorBuy(amt);
+        if (isWalletPayMethod(method)) {
+          await executeMajorBuy(amt, WALLET_PAY_ASSET[method]);
           setConfirmOpen(false);
           return;
         }
@@ -531,8 +667,8 @@ export function AssetBuySheet({
       }
 
       if (graduated) {
-        if (method === "wallet_ousd") {
-          await executeDexBuy(amt);
+        if (isWalletPayMethod(method)) {
+          await executeDexBuy(amt, WALLET_PAY_ASSET[method]);
           return;
         }
         if (method === "pi") {
@@ -560,11 +696,8 @@ export function AssetBuySheet({
       }
 
       // Bonding curve token buy
-      if (method === "wallet_ousd") {
-        if (ousdBalance < amt) {
-          throw new Error(`Need ${formatUSD(amt)} OUSD (balance ${formatUSD(ousdBalance)})`);
-        }
-        await executeTokenBuy(amt);
+      if (isWalletPayMethod(method)) {
+        await executeTokenBuy(amt, WALLET_PAY_ASSET[method]);
         return;
       }
 
@@ -602,6 +735,10 @@ export function AssetBuySheet({
     }
   }
 
+  const walletPayCta = isWalletPayMethod(method)
+    ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with ${WALLET_PAY_ASSET[method]}`
+    : null;
+
   const ctaLabel = isOusd
     ? method === "pi"
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
@@ -614,45 +751,27 @@ export function AssetBuySheet({
             : openpayShort
               ? `Amount exceeds OpenPay balance`
               : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
-    : isMajor
-      ? method === "wallet_ousd"
-        ? `Buy ${token.symbol} with OUSD`
-        : method === "moonpay"
-          ? `Buy ${token.symbol} with Card`
-          : method === "pi"
+    : walletPayCta
+      ? walletPayCta
+      : method === "moonpay"
+        ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with Card`
+        : method === "pi"
+          ? isMajor
             ? `Buy ${token.symbol} with Pi`
-            : method === "usdc"
-              ? `Pay with USDC`
-              : method === "helio"
-                ? `Deposit crypto`
-                : `Buy ${token.symbol}`
-    : graduated
-      ? method === "wallet_ousd"
-        ? `Buy $${token.symbol} with OUSD`
-        : method === "pi"
-          ? `Buy $${token.symbol} with Pi`
-          : method === "moonpay"
-            ? `Buy $${token.symbol} with Card`
-            : method === "usdc"
-              ? `Pay with USDC`
-              : method === "helio"
-                ? `Deposit crypto`
-                : openpayShort
-                  ? `Amount exceeds OpenPay balance`
-                  : `Buy $${token.symbol}`
-      : method === "wallet_ousd"
-        ? `Buy $${token.symbol}`
-        : method === "pi"
-          ? `Pay with Pi & Buy`
-          : method === "moonpay"
-            ? `Buy with Card`
-            : method === "usdc"
-              ? `Pay with USDC`
-              : method === "helio"
-                ? `Deposit crypto`
-                : openpayShort
-                  ? `Amount exceeds OpenPay balance`
-                  : `Pay with OpenPay & Buy`;
+            : graduated
+              ? `Buy $${token.symbol} with Pi`
+              : `Pay with Pi & Buy`
+          : method === "usdc"
+            ? `Pay with USDC`
+            : method === "helio"
+              ? `Deposit crypto`
+              : openpayShort
+                ? `Amount exceeds OpenPay balance`
+                : isMajor
+                  ? `Buy ${token.symbol}`
+                  : graduated
+                    ? `Buy $${token.symbol}`
+                    : `Pay with OpenPay & Buy`;
 
   function goToMethod() {
     setActionError(null);
@@ -928,7 +1047,7 @@ export function AssetBuySheet({
                           "bg-linear-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",
                         m.id === "usdc" && "bg-[#2775CA]/15",
                         m.id === "openpay_checkout" && "bg-[#0070BA]/10",
-                        m.id === "wallet_ousd" && "bg-primary/10",
+                        isWalletPayMethod(m.id) && "bg-primary/10",
                       )}
                     >
                       {m.logoUrl ? (
@@ -1035,9 +1154,17 @@ export function AssetBuySheet({
               </div>
             )}
 
-            {!isOusd && method === "wallet_ousd" && (
+            {!isOusd && isWalletPayMethod(method) && (
               <p className="mt-3 text-center text-xs text-muted-foreground">
-                Balance: {formatNumber(ousdBalance, 2)} OUSD
+                Balance:{" "}
+                {formatNumber(
+                  walletBalances[WALLET_PAY_ASSET[method]],
+                  WALLET_PAY_ASSET[method] === "SOL" ? 6 : 2,
+                )}{" "}
+                {WALLET_PAY_ASSET[method]}
+                {WALLET_PAY_ASSET[method] === "SOL" && solUsdPrice > 0
+                  ? ` · ≈ ${formatUSD(walletBalances.SOL * solUsdPrice)}`
+                  : ""}
               </p>
             )}
 
@@ -1150,8 +1277,8 @@ export function AssetBuySheet({
           {
             label: "Pay with",
             value:
-              method === "wallet_ousd"
-                ? "OUSD balance"
+              isWalletPayMethod(method)
+                ? `${WALLET_PAY_ASSET[method]} balance`
                 : method === "pi"
                   ? "Pi Network"
                   : method === "moonpay"
@@ -1162,13 +1289,27 @@ export function AssetBuySheet({
                         ? "Crypto Deposit"
                         : "OpenPay",
           },
-          ...(!isOusd && method === "wallet_ousd"
-            ? [{ label: "OUSD balance", value: formatUSD(ousdBalance) }]
+          ...(!isOusd && isWalletPayMethod(method)
+            ? [
+                {
+                  label: `${WALLET_PAY_ASSET[method]} balance`,
+                  value:
+                    WALLET_PAY_ASSET[method] === "SOL"
+                      ? `${formatNumber(walletBalances.SOL, 6)} SOL`
+                      : formatUSD(walletBalances[WALLET_PAY_ASSET[method]]),
+                },
+                ...(method === "wallet_sol" && valid && solUsdPrice > 0
+                  ? [
+                      {
+                        label: "You spend",
+                        value: formatPaySpend(amtNum, "SOL"),
+                      },
+                    ]
+                  : []),
+              ]
             : []),
         ]}
-        notice={
-          method !== "wallet_ousd" ? <TopupFeesNotice method={method} /> : undefined
-        }
+        notice={<TopupFeesNotice method={method} />}
         confirmLabel={ctaLabel}
         busy={busy}
         variant={method === "openpay_checkout" ? "openpay" : "default"}

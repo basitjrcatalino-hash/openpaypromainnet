@@ -27,6 +27,14 @@ export const TRANSFER_ASSETS = [
   "TSLAX",
   "NFLXX",
   "GOOGLX",
+  "BNB",
+  "UNI",
+  "OKB",
+  "GT",
+  "BGB",
+  "CAKE",
+  "JUP",
+  "RON",
 ] as const;
 export type TransferAsset = (typeof TRANSFER_ASSETS)[number];
 
@@ -74,6 +82,22 @@ export function fundingBalanceColumn(asset: string): string | null {
       return "nflxx_balance";
     case "GOOGLX":
       return "googlx_balance";
+    case "BNB":
+      return "bnb_balance";
+    case "UNI":
+      return "uni_balance";
+    case "OKB":
+      return "okb_balance";
+    case "GT":
+      return "gt_balance";
+    case "BGB":
+      return "bgb_balance";
+    case "CAKE":
+      return "cake_balance";
+    case "JUP":
+      return "jup_balance";
+    case "RON":
+      return "ron_balance";
     default:
       return null;
   }

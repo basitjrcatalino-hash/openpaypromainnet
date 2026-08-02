@@ -9,6 +9,8 @@ export type WalletNetworkId =
   | "solana"
   | "ethereum"
   | "bitcoin"
+  | "bnb"
+  | "ronin"
   | "base"
   | "polygon"
   | "sui"
@@ -72,6 +74,25 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     status: "live",
     logoUrl: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
     accent: "#F7931A",
+  },
+  {
+    id: "bnb",
+    label: "BNB Smart Chain",
+    short: "BNB",
+    match: "BNB Smart Chain",
+    status: "live",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png",
+    accent: "#F0B90B",
+  },
+  {
+    id: "ronin",
+    label: "Ronin",
+    short: "Ronin",
+    match: "Ronin",
+    status: "live",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/20009/large/photo_2024-04-06_22-52-24.jpg",
+    accent: "#1273EA",
   },
   {
     id: "base",

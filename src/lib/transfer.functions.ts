@@ -7,33 +7,17 @@ import {
   majorIdFromAssetCode,
   readMajorBalance,
   walletMajorSelect,
+  LEDGER_ASSET_CODES,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
+
+const SEND_ASSETS = [...LEDGER_ASSET_CODES, "TOKEN"] as const;
 
 const SendSchema = z
   .object({
     to: z.string().trim().min(2).max(120),
     amount: z.number().positive().max(1e15),
-    asset: z.enum([
-      "OUSD",
-      "PI",
-      "BTC",
-      "ETH",
-      "SOL",
-      "USDC",
-      "USDT",
-      "PYUSD",
-      "USDG",
-      "USD1",
-      "CASH",
-      "EURC",
-      "HYPE",
-      "ZEC",
-      "TSLAX",
-      "NFLXX",
-      "GOOGLX",
-      "TOKEN",
-    ]),
+    asset: z.enum(SEND_ASSETS),
     tokenId: z.string().uuid().optional().nullable(),
     memo: z.string().max(140).optional().nullable(),
   })

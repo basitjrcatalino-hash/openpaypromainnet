@@ -35,7 +35,7 @@ import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { readMajorBalance } from "@/lib/ledger-majors";
+import { LEDGER_ASSET_CODES, readMajorBalance, type LedgerAssetCode } from "@/lib/ledger-majors";
 import {
   isSystemCounterparty,
   loadRecentRecipients,
@@ -46,25 +46,7 @@ import {
 const sendSearchSchema = z.object({
   to: z.string().optional(),
   amount: z.string().optional(),
-  asset: z.enum([
-    "OUSD",
-    "PI",
-    "BTC",
-    "ETH",
-    "SOL",
-    "USDC",
-    "USDT",
-    "PYUSD",
-    "USDG",
-    "USD1",
-    "CASH",
-    "EURC",
-    "HYPE",
-    "ZEC",
-    "TSLAX",
-    "NFLXX",
-    "GOOGLX",
-  ]).optional(),
+  asset: z.enum(LEDGER_ASSET_CODES).optional(),
   token: z.string().uuid().optional(),
   rail: z.enum(["wallet", "openpay"]).optional(),
 });
@@ -80,25 +62,7 @@ type Step = "asset" | "recipient" | "amount";
 
 type SendableAsset = {
   key: string;
-  kind:
-    | "OUSD"
-    | "PI"
-    | "BTC"
-    | "ETH"
-    | "SOL"
-    | "USDC"
-    | "USDT"
-    | "PYUSD"
-    | "USDG"
-    | "USD1"
-    | "CASH"
-    | "EURC"
-    | "HYPE"
-    | "ZEC"
-    | "TSLAX"
-    | "NFLXX"
-    | "GOOGLX"
-    | "TOKEN";
+  kind: LedgerAssetCode | "TOKEN";
   tokenId?: string;
   name: string;
   symbol: string;

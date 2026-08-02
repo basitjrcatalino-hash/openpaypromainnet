@@ -52,6 +52,7 @@ import {
 } from "@/lib/opendex.functions";
 import {
   LEDGER_MAJOR_SWAP_IDS,
+  LEDGER_ASSET_CODES,
   majorIdFromSwapId,
   majorsForNetwork,
   networkForMajor,
@@ -81,27 +82,7 @@ const FEE_PCT = opendexFeePct();
 
 const searchSchema = z.object({
   token: z.string().optional(),
-  asset: z
-    .enum([
-      "OUSD",
-      "PI",
-      "BTC",
-      "ETH",
-      "SOL",
-      "USDC",
-      "USDT",
-      "PYUSD",
-      "USDG",
-      "USD1",
-      "CASH",
-      "EURC",
-      "HYPE",
-      "ZEC",
-      "TSLAX",
-      "NFLXX",
-      "GOOGLX",
-    ])
-    .optional(),
+  asset: z.enum(LEDGER_ASSET_CODES).optional(),
 });
 
 type SwapToken = {
@@ -269,23 +250,10 @@ function OpenDexPage() {
 
     const assetToId: Record<string, string> = {
       OUSD: OUSD_SWAP_ID,
-      PI: PI_SWAP_ID,
-      BTC: BTC_SWAP_ID,
-      ETH: ETH_SWAP_ID,
-      SOL: SOL_SWAP_ID,
-      USDC: USDC_SWAP_ID,
-      USDT: USDT_SWAP_ID,
-      PYUSD: PYUSD_SWAP_ID,
-      USDG: USDG_SWAP_ID,
-      USD1: USD1_SWAP_ID,
-      CASH: CASH_SWAP_ID,
-      EURC: EURC_SWAP_ID,
-      HYPE: HYPE_SWAP_ID,
-      ZEC: ZEC_SWAP_ID,
-      TSLAX: TSLAX_SWAP_ID,
-      NFLXX: NFLXX_SWAP_ID,
-      GOOGLX: GOOGLX_SWAP_ID,
     };
+    for (const id of MAJOR_TOKEN_IDS) {
+      assetToId[MAJOR_TOKENS[id].symbol] = LEDGER_MAJOR_SWAP_IDS[id];
+    }
 
     const prefFromAsset =
       assetParam && assetToId[assetParam]

@@ -1,5 +1,12 @@
 /** Networks available in OpenDEX token pickers. */
-export type SwapNetworkId = "openpay" | "solana" | "ethereum" | "bitcoin" | "pi";
+export type SwapNetworkId =
+  | "openpay"
+  | "solana"
+  | "ethereum"
+  | "bitcoin"
+  | "bnb"
+  | "ronin"
+  | "pi";
 
 export type SwapNetwork = {
   id: SwapNetworkId;
@@ -38,6 +45,20 @@ export const SWAP_NETWORKS: SwapNetwork[] = [
     short: "BTC",
     status: "live",
     accent: "#F7931A",
+  },
+  {
+    id: "bnb",
+    label: "BNB Smart Chain",
+    short: "BNB",
+    status: "live",
+    accent: "#F0B90B",
+  },
+  {
+    id: "ronin",
+    label: "Ronin",
+    short: "RON",
+    status: "live",
+    accent: "#1273EA",
   },
   {
     id: "pi",

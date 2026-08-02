@@ -23,6 +23,14 @@ export const ZEC_SWAP_ID = "__zec__";
 export const TSLAX_SWAP_ID = "__tslax__";
 export const NFLXX_SWAP_ID = "__nflxx__";
 export const GOOGLX_SWAP_ID = "__googlx__";
+export const BNB_SWAP_ID = "__bnb__";
+export const UNI_SWAP_ID = "__uni__";
+export const OKB_SWAP_ID = "__okb__";
+export const GT_SWAP_ID = "__gt__";
+export const BGB_SWAP_ID = "__bgb__";
+export const CAKE_SWAP_ID = "__cake__";
+export const JUP_SWAP_ID = "__jup__";
+export const RON_SWAP_ID = "__ron__";
 
 export type LedgerMajorId = MajorTokenId;
 
@@ -43,7 +51,15 @@ export type LedgerAssetCode =
   | "ZEC"
   | "TSLAX"
   | "NFLXX"
-  | "GOOGLX";
+  | "GOOGLX"
+  | "BNB"
+  | "UNI"
+  | "OKB"
+  | "GT"
+  | "BGB"
+  | "CAKE"
+  | "JUP"
+  | "RON";
 
 export const LEDGER_MAJOR_ASSET_CODES = [
   "BTC",
@@ -62,6 +78,14 @@ export const LEDGER_MAJOR_ASSET_CODES = [
   "TSLAX",
   "NFLXX",
   "GOOGLX",
+  "BNB",
+  "UNI",
+  "OKB",
+  "GT",
+  "BGB",
+  "CAKE",
+  "JUP",
+  "RON",
 ] as const satisfies ReadonlyArray<Exclude<LedgerAssetCode, "OUSD">>;
 
 export const LEDGER_ASSET_CODES = [
@@ -86,6 +110,14 @@ export const LEDGER_MAJOR_SWAP_IDS: Record<LedgerMajorId, string> = {
   tslax: TSLAX_SWAP_ID,
   nflxx: NFLXX_SWAP_ID,
   googlx: GOOGLX_SWAP_ID,
+  bnb: BNB_SWAP_ID,
+  uni: UNI_SWAP_ID,
+  okb: OKB_SWAP_ID,
+  gt: GT_SWAP_ID,
+  bgb: BGB_SWAP_ID,
+  cake: CAKE_SWAP_ID,
+  jup: JUP_SWAP_ID,
+  ron: RON_SWAP_ID,
 };
 
 export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
@@ -105,6 +137,14 @@ export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
   tslax: "tslax_balance",
   nflxx: "nflxx_balance",
   googlx: "googlx_balance",
+  bnb: "bnb_balance",
+  uni: "uni_balance",
+  okb: "okb_balance",
+  gt: "gt_balance",
+  bgb: "bgb_balance",
+  cake: "cake_balance",
+  jup: "jup_balance",
+  ron: "ron_balance",
 };
 
 const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
@@ -124,6 +164,14 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   [TSLAX_SWAP_ID]: "tslax",
   [NFLXX_SWAP_ID]: "nflxx",
   [GOOGLX_SWAP_ID]: "googlx",
+  [BNB_SWAP_ID]: "bnb",
+  [UNI_SWAP_ID]: "uni",
+  [OKB_SWAP_ID]: "okb",
+  [GT_SWAP_ID]: "gt",
+  [BGB_SWAP_ID]: "bgb",
+  [CAKE_SWAP_ID]: "cake",
+  [JUP_SWAP_ID]: "jup",
+  [RON_SWAP_ID]: "ron",
   btc: "btc",
   eth: "eth",
   sol: "sol",
@@ -140,6 +188,14 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   tslax: "tslax",
   nflxx: "nflxx",
   googlx: "googlx",
+  bnb: "bnb",
+  uni: "uni",
+  okb: "okb",
+  gt: "gt",
+  bgb: "bgb",
+  cake: "cake",
+  jup: "jup",
+  ron: "ron",
 };
 
 export function isLedgerMajorSwapId(id: string): boolean {
@@ -168,7 +224,11 @@ export function majorIdFromAssetCode(code: string): LedgerMajorId | null {
 
 export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
   if (id === "btc") return "bitcoin";
-  if (id === "eth" || id === "eurc") return "ethereum";
+  if (id === "eth" || id === "eurc" || id === "uni" || id === "okb" || id === "gt" || id === "bgb") {
+    return "ethereum";
+  }
+  if (id === "bnb" || id === "cake") return "bnb";
+  if (id === "ron") return "ronin";
   if (
     id === "sol" ||
     id === "usdc" ||
@@ -181,7 +241,8 @@ export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
     id === "zec" ||
     id === "tslax" ||
     id === "nflxx" ||
-    id === "googlx"
+    id === "googlx" ||
+    id === "jup"
   ) {
     return "solana";
   }
@@ -193,6 +254,8 @@ export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
   if (network === "bitcoin") return "btc";
   if (network === "ethereum") return "eth";
   if (network === "solana") return "sol";
+  if (network === "bnb") return "bnb";
+  if (network === "ronin") return "ron";
   if (network === "pi") return "pi";
   return null;
 }
@@ -200,7 +263,9 @@ export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
 /** All ledger majors that belong on a swap network. */
 export function majorsForNetwork(network: SwapNetworkId): LedgerMajorId[] {
   if (network === "bitcoin") return ["btc"];
-  if (network === "ethereum") return ["eth", "eurc"];
+  if (network === "ethereum") return ["eth", "eurc", "uni", "okb", "gt", "bgb"];
+  if (network === "bnb") return ["bnb", "cake"];
+  if (network === "ronin") return ["ron"];
   if (network === "solana") {
     return [
       "sol",
@@ -215,6 +280,7 @@ export function majorsForNetwork(network: SwapNetworkId): LedgerMajorId[] {
       "tslax",
       "nflxx",
       "googlx",
+      "jup",
     ];
   }
   if (network === "pi") return ["pi"];
@@ -238,6 +304,14 @@ const FALLBACK_USD: Record<LedgerMajorId, number> = {
   tslax: 308,
   nflxx: 70,
   googlx: 200,
+  bnb: 584,
+  uni: 4.21,
+  okb: 87.36,
+  gt: 6.46,
+  bgb: 1.63,
+  cake: 1.42,
+  jup: 0.197,
+  ron: 0.0487,
 };
 
 /** Live PI/USD used by display currency (π) — refreshed by fetchMajorUsdPrices. */

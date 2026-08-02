@@ -1,40 +1,4 @@
--- Perpetual positions funded from Trading account (wallet_account_balances).
--- Markets: non-stable majors only (BTC, ETH, SOL, PI). Margin: USDT / OUSD / USDC.
-
-create table if not exists public.perp_positions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  wallet_id uuid not null references public.wallets(id) on delete cascade,
-  market text not null check (market in ('BTC', 'ETH', 'SOL', 'PI')),
-  side text not null check (side in ('long', 'short')),
-  leverage numeric(8, 2) not null check (leverage >= 1 and leverage <= 20),
-  margin_asset text not null check (margin_asset in ('USDT', 'OUSD', 'USDC')),
-  margin numeric(38, 8) not null check (margin > 0),
-  entry_price numeric(38, 8) not null check (entry_price > 0),
-  size_usd numeric(38, 8) not null check (size_usd > 0),
-  status text not null default 'open' check (status in ('open', 'closed', 'liquidated')),
-  exit_price numeric(38, 8),
-  realized_pnl numeric(38, 8),
-  closed_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create index if not exists perp_positions_user_open_idx
-  on public.perp_positions (user_id, status, created_at desc);
-
-create index if not exists perp_positions_wallet_idx
-  on public.perp_positions (wallet_id, status);
-
-alter table public.perp_positions enable row level security;
-
-drop policy if exists "perp_owner_select" on public.perp_positions;
-create policy "perp_owner_select" on public.perp_positions
-  for select to authenticated
-  using (user_id = auth.uid());
-
-grant select on public.perp_positions to authenticated;
-grant all on public.perp_positions to service_role;
+-- Fix perp tx inserts: CASE/'text' literals must cast to tx_type / tx_status.
 
 create or replace function public.perp_open_position(
   _market text,
@@ -81,7 +45,6 @@ begin
   for update;
   if wid is null then raise exception 'No wallet found'; end if;
 
-  -- Debit Trading account
   perform public.account_bucket_move(wid, 'trading', asset_u, -margin_n);
 
   size_n := round(margin_n * lev, 8);
@@ -98,7 +61,12 @@ begin
   insert into public.transactions (
     wallet_id, type, status, token_symbol, amount, usd_value, counterparty, memo, tx_hash
   ) values (
-    wid, 'send'::public.tx_type, 'confirmed'::public.tx_status, asset_u, margin_n, margin_n,
+    wid,
+    'send'::public.tx_type,
+    'confirmed'::public.tx_status,
+    asset_u,
+    margin_n,
+    margin_n,
     'Perp ' || initcap(side_l),
     format('perp_open:%s:%s:%sx', market_u, side_l, lev),
     'perp_' || replace(gen_random_uuid()::text, '-', '')
@@ -143,7 +111,6 @@ begin
     pnl := round(pos.size_usd * ((pos.entry_price - exit_px) / pos.entry_price), 8);
   end if;
 
-  -- Isolated margin: loss capped at margin
   if pnl < -pos.margin then pnl := -pos.margin; end if;
 
   credit := round(pos.margin + pnl, 8);

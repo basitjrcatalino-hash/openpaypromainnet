@@ -28,7 +28,15 @@ export type MajorTokenId =
   | "zec"
   | "tslax"
   | "nflxx"
-  | "googlx";
+  | "googlx"
+  | "bnb"
+  | "uni"
+  | "okb"
+  | "gt"
+  | "bgb"
+  | "cake"
+  | "jup"
+  | "ron";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -353,6 +361,145 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "Alphabet xStock (GOOGLX) is a Solana tokenized equity product. OpenPay Pro credits GOOGLX on your custodial ledger at market price. Verify mint XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN before trading.",
   },
+  bnb: {
+    id: "bnb",
+    name: "BNB",
+    symbol: "BNB",
+    network: "BNB Smart Chain",
+    category: "Layer 1",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png",
+    website: "https://www.bnbchain.org",
+    twitter: "https://x.com/BNBCHAIN",
+    coingeckoId: "binancecoin",
+    createdLabel: "Jul 2017",
+    createdAt: "2017-07-25T00:00:00.000Z",
+    native: true,
+    about:
+      "BNB is the native asset of BNB Smart Chain (BSC) — used for gas, staking, and ecosystem apps across Binance’s multi-chain stack. OpenPay Pro credits BNB on your custodial ledger at CoinGecko market price.",
+  },
+  uni: {
+    id: "uni",
+    name: "Uniswap",
+    symbol: "UNI",
+    network: "Ethereum",
+    category: "DeFi",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/12504/large/uniswap-logo.png",
+    website: "https://uniswap.org",
+    twitter: "https://x.com/Uniswap",
+    coingeckoId: "uniswap",
+    createdLabel: "Sep 2020",
+    createdAt: "2020-09-17T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    about:
+      "UNI is the governance token of Uniswap, the leading Ethereum DEX protocol. OpenPay Pro credits UNI on your custodial ledger at market price. Verify Ethereum contract 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.",
+  },
+  okb: {
+    id: "okb",
+    name: "OKB",
+    symbol: "OKB",
+    network: "Ethereum",
+    category: "Exchange",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/4463/large/WeChat_Image_20220118095654.png",
+    website: "https://www.okx.com",
+    twitter: "https://x.com/okx",
+    coingeckoId: "okb",
+    createdLabel: "May 2019",
+    createdAt: "2019-05-01T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x75231f58b43240c9718dd58b4967c5114342a86c",
+    about:
+      "OKB is the utility token of the OKX exchange ecosystem. OpenPay Pro credits OKB on your custodial ledger at market price. Verify Ethereum contract 0x75231f58b43240c9718dd58b4967c5114342a86c.",
+  },
+  gt: {
+    id: "gt",
+    name: "Gate",
+    symbol: "GT",
+    network: "Ethereum",
+    category: "Exchange",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/8183/large/200X200.png",
+    website: "https://www.gate.io",
+    twitter: "https://x.com/Gate",
+    coingeckoId: "gatechain-token",
+    createdLabel: "Apr 2019",
+    createdAt: "2019-04-01T00:00:00.000Z",
+    native: false,
+    contractAddress: "0xe28b3b32b6c345a34ff64674606124dd5aceca30",
+    about:
+      "GT (GateToken) is the utility token of the Gate exchange and GateChain ecosystem. OpenPay Pro credits GT on your custodial ledger at market price. Verify Ethereum contract 0xe28b3b32b6c345a34ff64674606124dd5aceca30.",
+  },
+  bgb: {
+    id: "bgb",
+    name: "Bitget Token",
+    symbol: "BGB",
+    network: "Ethereum",
+    category: "Exchange",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/11610/large/Bitget_logo.png",
+    website: "https://www.bitget.com",
+    twitter: "https://x.com/bitgetglobal",
+    coingeckoId: "bitget-token",
+    createdLabel: "Jul 2021",
+    createdAt: "2021-07-01T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x54d2252757e1672eead234d27b1270728ff90581",
+    about:
+      "BGB is the utility token of the Bitget exchange. OpenPay Pro credits BGB on your custodial ledger at market price. Verify Ethereum contract 0x54d2252757e1672eead234d27b1270728ff90581.",
+  },
+  cake: {
+    id: "cake",
+    name: "PancakeSwap",
+    symbol: "CAKE",
+    network: "BNB Smart Chain",
+    category: "DeFi",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/12632/large/pancakeswap-cake-logo_%281%29.png",
+    website: "https://pancakeswap.finance",
+    twitter: "https://x.com/PancakeSwap",
+    coingeckoId: "pancakeswap-token",
+    createdLabel: "Sep 2020",
+    createdAt: "2020-09-29T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82",
+    about:
+      "CAKE is the governance and incentive token of PancakeSwap, the leading DEX on BNB Smart Chain. OpenPay Pro credits CAKE on your custodial ledger at market price. Verify BSC contract 0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82.",
+  },
+  jup: {
+    id: "jup",
+    name: "Jupiter",
+    symbol: "JUP",
+    network: "Solana",
+    category: "DeFi",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/34188/large/jup.png",
+    website: "https://jup.ag",
+    twitter: "https://x.com/JupiterExchange",
+    coingeckoId: "jupiter-exchange-solana",
+    createdLabel: "Jan 2024",
+    createdAt: "2024-01-31T00:00:00.000Z",
+    native: false,
+    mintAddress: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    phantomUrl:
+      "https://phantom.com/tokens/solana/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    about:
+      "JUP is the governance token of Jupiter, Solana’s leading DEX aggregator. OpenPay Pro credits JUP on your custodial ledger at market price. Verify mint JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN.",
+  },
+  ron: {
+    id: "ron",
+    name: "Ronin",
+    symbol: "RON",
+    network: "Ronin",
+    category: "Layer 1",
+    logoUrl:
+      "https://coin-images.coingecko.com/coins/images/20009/large/photo_2024-04-06_22-52-24.jpg",
+    website: "https://roninchain.com",
+    twitter: "https://x.com/Ronin_Network",
+    coingeckoId: "ronin",
+    createdLabel: "Feb 2022",
+    createdAt: "2022-02-01T00:00:00.000Z",
+    native: true,
+    about:
+      "RON is the native gas and staking token of the Ronin blockchain — the gaming-focused chain behind Axie Infinity and other titles. OpenPay Pro credits RON on your custodial ledger at CoinGecko market price.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
@@ -384,6 +531,14 @@ export const MAJOR_SYMBOLS = new Set([
   "TSLAX",
   "NFLXX",
   "GOOGLX",
+  "BNB",
+  "UNI",
+  "OKB",
+  "GT",
+  "BGB",
+  "CAKE",
+  "JUP",
+  "RON",
   "BITCOIN",
   "ETHEREUM",
   "SOLANA",
@@ -402,6 +557,16 @@ export const MAJOR_SYMBOLS = new Set([
   "TESLA XSTOCK",
   "NETFLIX XSTOCK",
   "ALPHABET XSTOCK",
+  "UNISWAP",
+  "GATETOKEN",
+  "GATE TOKEN",
+  "GATE",
+  "BITGET TOKEN",
+  "BITGET",
+  "PANCAKESWAP",
+  "JUPITER",
+  "RONIN",
+  "BINANCE COIN",
 ]);
 
 export type MajorMarketSnapshot = {
@@ -450,6 +615,14 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   "tesla-xstock": "tslax",
   "netflix-xstock": "nflxx",
   "alphabet-xstock": "googlx",
+  binancecoin: "bnb",
+  uniswap: "uni",
+  okb: "okb",
+  "gatechain-token": "gt",
+  "bitget-token": "bgb",
+  "pancakeswap-token": "cake",
+  "jupiter-exchange-solana": "jup",
+  ronin: "ron",
 };
 
 /** Fallback static values if CoinGecko is unreachable. */
@@ -645,6 +818,102 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atl: 176.77,
     athDate: "2025-12-01T00:00:00.000Z",
     atlDate: "2025-06-01T00:00:00.000Z",
+  },
+  bnb: {
+    price: 584,
+    change24h: 0,
+    marketCap: 7.78e10,
+    volume24h: 6.65e8,
+    totalSupply: 133_165_134,
+    circulatingSupply: 133_165_134,
+    ath: 1369.99,
+    atl: 0.0398177,
+    athDate: "2025-10-13T00:41:24.000Z",
+    atlDate: "2017-10-18T16:00:00.000Z",
+  },
+  uni: {
+    price: 4.21,
+    change24h: 0,
+    marketCap: 2.63e9,
+    volume24h: 1.94e8,
+    totalSupply: 892_098_420,
+    circulatingSupply: 624_854_424,
+    ath: 44.92,
+    atl: 1.03,
+    athDate: "2021-05-02T21:25:04.000Z",
+    atlDate: "2020-09-16T17:20:38.000Z",
+  },
+  okb: {
+    price: 87.36,
+    change24h: 0,
+    marketCap: 1.83e9,
+    volume24h: 1.1e7,
+    totalSupply: 21_000_000,
+    circulatingSupply: 21_000_000,
+    ath: 228.74,
+    atl: 0.580608,
+    athDate: "2025-10-04T16:00:00.000Z",
+    atlDate: "2019-01-13T16:00:00.000Z",
+  },
+  gt: {
+    price: 6.46,
+    change24h: 0,
+    marketCap: 6.89e8,
+    volume24h: 8.17e5,
+    totalSupply: 118_829_529,
+    circulatingSupply: 106_578_297,
+    ath: 25.38,
+    atl: 0.25754,
+    athDate: "2025-01-25T16:00:00.000Z",
+    atlDate: "2020-03-12T18:18:02.000Z",
+  },
+  bgb: {
+    price: 1.63,
+    change24h: 0,
+    marketCap: 1.14e9,
+    volume24h: 6.98e6,
+    totalSupply: 910_920_875,
+    circulatingSupply: 699_992_030,
+    ath: 8.45,
+    atl: 0.0142795,
+    athDate: "2024-12-27T03:41:24.000Z",
+    atlDate: "2020-06-24T20:17:05.000Z",
+  },
+  cake: {
+    price: 1.42,
+    change24h: 0,
+    marketCap: 4.59e8,
+    volume24h: 2.22e7,
+    totalSupply: 334_683_355,
+    circulatingSupply: 322_364_881,
+    ath: 43.96,
+    atl: 0.194441,
+    athDate: "2021-04-30T02:08:22.000Z",
+    atlDate: "2020-11-03T06:29:34.000Z",
+  },
+  jup: {
+    price: 0.197,
+    change24h: 0,
+    marketCap: 6.53e8,
+    volume24h: 1.6e7,
+    totalSupply: 6_862_431_314,
+    circulatingSupply: 3_320_312_968,
+    ath: 2.0,
+    atl: 0.135801,
+    athDate: "2024-01-31T07:02:47.000Z",
+    atlDate: "2026-02-12T10:35:44.000Z",
+  },
+  ron: {
+    price: 0.0487,
+    change24h: 0,
+    marketCap: 3.76e7,
+    volume24h: 5.47e5,
+    totalSupply: 1_000_000_000,
+    circulatingSupply: 772_401_679,
+    ath: 4.45,
+    atl: 0.04546125,
+    athDate: "2024-03-25T21:12:38.000Z",
+    atlDate: "2026-07-29T20:30:50.000Z",
   },
 };
 

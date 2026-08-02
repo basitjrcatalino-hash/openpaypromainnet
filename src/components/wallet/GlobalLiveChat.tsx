@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Search, Smile, X } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { searchKlipyMedia, type KlipyMediaItem } from "@/lib/klipy";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { formatNumber, formatPct } from "@/lib/wallet-utils";
 
 type ChatKind = "text" | "gif" | "sticker" | "emoji";
 
@@ -29,6 +30,16 @@ type ChatRow = {
   profile?: ProfileBits;
 };
 
+/** Token / asset room — same Global UI with branded header + live price. */
+export type LiveChatTokenRoom = {
+  id: string;
+  name: string;
+  symbol: string;
+  logoUrl?: string | null;
+  priceUsd?: number | null;
+  change24h?: number | null;
+};
+
 const EMOJI_QUICK = ["🚀", "💎", "🔥", "📈", "🐸", "💰", "⚡", "🌙", "🫡", "👑", "😂", "💀"];
 
 function errMessage(err: unknown): string {
@@ -42,12 +53,12 @@ function errMessage(err: unknown): string {
 }
 
 function isMissingTable(message: string) {
-  return /relation|global_chat_messages|schema cache|does not exist|Could not find the table/i.test(
+  return /relation|global_chat_messages|asset_chat_messages|schema cache|does not exist|Could not find the table/i.test(
     message,
   );
 }
 
-function displayNameOf(profile: ProfileBits | undefined, userId: string) {
+function displayNameOf(profile: ProfileBits | undefined, _userId: string) {
   return profile?.display_name?.trim() || profile?.username?.trim() || "OpenPay user";
 }
 
@@ -68,15 +79,63 @@ function chattingLabel(count: number) {
   return `${count} people chatting`;
 }
 
+function formatRoomPrice(n: number | null | undefined) {
+  if (n == null || !Number.isFinite(n) || n <= 0) return null;
+  if (n >= 1000) return `$${formatNumber(n, 2)}`;
+  if (n >= 1) return `$${formatNumber(n, n >= 100 ? 2 : 4)}`;
+  return `$${formatNumber(n, n < 0.01 ? 6 : 4)}`;
+}
+
+async function attachProfiles(
+  rows: {
+    id: string;
+    body: string;
+    kind: string | null;
+    media_url: string | null;
+    created_at: string;
+    user_id: string;
+  }[],
+): Promise<ChatRow[]> {
+  const ids = [...new Set(rows.map((c) => c.user_id))];
+  const profiles: Record<string, ProfileBits> = {};
+  if (ids.length) {
+    const { data: ps } = await supabase
+      .from("profiles")
+      .select("id, display_name, username, avatar_url")
+      .in("id", ids);
+    for (const p of ps ?? []) {
+      profiles[p.id] = {
+        display_name: p.display_name,
+        username: p.username,
+        avatar_url: p.avatar_url,
+      };
+    }
+  }
+  return rows.map((c) => ({
+    id: c.id,
+    body: c.body,
+    media_url: c.media_url,
+    created_at: c.created_at,
+    user_id: c.user_id,
+    kind: (c.kind as ChatKind) || "text",
+    profile: profiles[c.user_id],
+  }));
+}
+
 export function GlobalLiveChat({
   userId,
   className,
   fill,
+  room,
+  onBack,
 }: {
   userId: string;
   className?: string;
   /** Fill parent height (immersive live chat page). */
   fill?: boolean;
+  /** When set, same UI as Global but messages stay in this token room. */
+  room?: LiveChatTokenRoom | null;
+  onBack?: () => void;
 }) {
   const qc = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -89,6 +148,12 @@ export function GlobalLiveChat({
   const [emojiRow, setEmojiRow] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const roomId = room?.id?.trim().toLowerCase() || null;
+  const isTokenRoom = Boolean(roomId);
+  const queryKey = isTokenRoom
+    ? (["asset-live-chat", roomId] as const)
+    : (["global-live-chat"] as const);
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
@@ -96,10 +161,27 @@ export function GlobalLiveChat({
     return () => window.clearTimeout(t);
   }, [pickerQuery]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["global-live-chat"],
+  const { data, isLoading } = useQuery<{ rows: ChatRow[]; error: string | null }>({
+    queryKey,
     retry: false,
     queryFn: async (): Promise<{ rows: ChatRow[]; error: string | null }> => {
+      if (isTokenRoom && roomId) {
+        const { data: rows, error: qErr } = await supabase
+          .from("asset_chat_messages")
+          .select("id, body, kind, media_url, created_at, user_id")
+          .eq("room_id", roomId)
+          .order("created_at", { ascending: true })
+          .limit(200);
+
+        if (qErr) {
+          return { rows: [], error: errMessage(qErr) || "Could not load chat" };
+        }
+        return {
+          rows: await attachProfiles(rows ?? []),
+          error: null,
+        };
+      }
+
       const { data: rows, error: qErr } = await supabase
         .from("global_chat_messages")
         .select("id, body, kind, media_url, created_at, user_id")
@@ -109,101 +191,100 @@ export function GlobalLiveChat({
       if (qErr) {
         return { rows: [], error: errMessage(qErr) || "Could not load chat" };
       }
-
-      const ids = [...new Set((rows ?? []).map((c) => c.user_id))];
-      const profiles: Record<string, ProfileBits> = {};
-      if (ids.length) {
-        const { data: ps } = await supabase
-          .from("profiles")
-          .select("id, display_name, username, avatar_url")
-          .in("id", ids);
-        for (const p of ps ?? []) {
-          profiles[p.id] = {
-            display_name: p.display_name,
-            username: p.username,
-            avatar_url: p.avatar_url,
-          };
-        }
-      }
       return {
-        rows: (rows ?? []).map((c) => ({
-          ...c,
-          kind: (c.kind as ChatKind) || "text",
-          profile: profiles[c.user_id],
-        })),
+        rows: await attachProfiles(rows ?? []),
         error: null,
       };
     },
   });
 
-  const messages = data?.rows ?? [];
+  const messages = useMemo(() => data?.rows ?? [], [data?.rows]);
   const loadError = data?.error ?? null;
   const uniqueChatters = useMemo(
-    () => new Set(messages.map((m) => m.user_id)).size,
+    () => new Set(messages.map((m: ChatRow) => m.user_id)).size,
     [messages],
   );
 
   const mediaQuery = useQuery({
-    queryKey: ["klipy-global", pickerTab, debouncedQuery || "openpay"],
+    queryKey: ["klipy-global", pickerTab, debouncedQuery || "openpay", roomId ?? "global"],
     enabled: pickerOpen,
     staleTime: 60_000,
     queryFn: () =>
       searchKlipyMedia({
         tab: pickerTab,
-        query: debouncedQuery || "crypto",
+        query: debouncedQuery || room?.symbol || "crypto",
         perPage: 24,
       }),
   });
 
   useEffect(() => {
+    const channelName = isTokenRoom ? `asset-chat-${roomId}` : "global-chat";
+    const table = isTokenRoom ? "asset_chat_messages" : "global_chat_messages";
+    const filter = isTokenRoom && roomId ? `room_id=eq.${roomId}` : undefined;
+    const invalidateKey = isTokenRoom
+      ? (["asset-live-chat", roomId] as const)
+      : (["global-live-chat"] as const);
+
     const channel = supabase
-      .channel("global-chat")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "global_chat_messages",
+          table,
+          ...(filter ? { filter } : {}),
         },
         () => {
-          void qc.invalidateQueries({ queryKey: ["global-live-chat"] });
+          void qc.invalidateQueries({ queryKey: invalidateKey });
         },
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [qc]);
+  }, [qc, isTokenRoom, roomId]);
 
   useEffect(() => {
     if (!mounted || messages.length === 0) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages.length, mounted]);
 
-  async function send(payload: {
-    kind: ChatKind;
-    body: string;
-    media_url?: string | null;
-  }) {
+  async function send(payload: { kind: ChatKind; body: string; media_url?: string | null }) {
     const text = payload.body.trim();
     if (!text && !payload.media_url) return;
     setBusy(true);
     try {
-      const { error: insertErr } = await supabase.from("global_chat_messages").insert({
-        user_id: userId,
-        kind: payload.kind,
-        body: text || payload.kind,
-        media_url: payload.media_url ?? null,
-      });
-      if (insertErr) throw insertErr;
+      if (isTokenRoom && roomId) {
+        const { error: insertErr } = await supabase.from("asset_chat_messages").insert({
+          room_id: roomId,
+          user_id: userId,
+          kind: payload.kind,
+          body: text || payload.kind,
+          media_url: payload.media_url ?? null,
+        });
+        if (insertErr) throw insertErr;
+      } else {
+        const { error: insertErr } = await supabase.from("global_chat_messages").insert({
+          user_id: userId,
+          kind: payload.kind,
+          body: text || payload.kind,
+          media_url: payload.media_url ?? null,
+        });
+        if (insertErr) throw insertErr;
+      }
       setBody("");
       setPickerOpen(false);
       setEmojiRow(false);
-      await qc.invalidateQueries({ queryKey: ["global-live-chat"] });
+      await qc.invalidateQueries({ queryKey });
     } catch (err) {
       const msg = errMessage(err) || "Could not send";
       if (isMissingTable(msg)) {
-        toast.error("Global chat needs a DB migration — run global_chat_messages on Supabase");
+        toast.error(
+          isTokenRoom
+            ? "Token chat needs the asset_chat_messages migration on Supabase"
+            : "Global chat needs a DB migration — run global_chat_messages on Supabase",
+        );
       } else {
         toast.error(msg);
       }
@@ -221,30 +302,79 @@ export function GlobalLiveChat({
   }
 
   const missingTable = Boolean(loadError && isMissingTable(loadError));
+  const priceLabel = formatRoomPrice(room?.priceUsd);
+  const change = room?.change24h;
+  const changeUp = change != null && Number.isFinite(change) && change > 0;
+  const changeDown = change != null && Number.isFinite(change) && change < 0;
+
+  const headerTitle = room ? room.name : "OpenPay Live";
+  const headerLogo = room?.logoUrl || OUSD_LOGO_URL;
+  const headerSub = room
+    ? [
+        priceLabel,
+        change != null && Number.isFinite(change) ? formatPct(change) : null,
+        chattingLabel(uniqueChatters),
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : `${chattingLabel(uniqueChatters)} · global community`;
 
   return (
     <div
       className={cn(
         "flex min-h-0 flex-col overflow-hidden rounded-3xl border border-border/40 bg-background",
         fill ? "h-full flex-1 lg:rounded-none lg:border-0" : "h-[min(40rem,calc(100dvh-8rem))]",
-
         className,
       )}
     >
       <header className="flex shrink-0 items-center gap-3 border-b border-border/40 px-4 py-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground hover:bg-muted press"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        ) : null}
         <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/15">
-          <img src={OUSD_LOGO_URL} alt="" className="h-full w-full object-cover" />
+          <img src={headerLogo} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[15px] font-semibold">OpenPay Live</span>
+            <span className="truncate text-[15px] font-semibold">{headerTitle}</span>
+            {room?.symbol ? (
+              <span className="truncate text-xs font-semibold text-muted-foreground">
+                {room.symbol}
+              </span>
+            ) : null}
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            {chattingLabel(uniqueChatters)} · global community
+            {room && priceLabel ? (
+              <span>
+                <span className="font-medium text-foreground">{priceLabel}</span>
+                {change != null && Number.isFinite(change) ? (
+                  <span
+                    className={cn(
+                      "ml-1.5 font-semibold",
+                      changeUp && "text-emerald-500",
+                      changeDown && "text-rose-500",
+                      !changeUp && !changeDown && "text-muted-foreground",
+                    )}
+                  >
+                    {formatPct(change)}
+                  </span>
+                ) : null}
+                <span className="text-muted-foreground"> · {chattingLabel(uniqueChatters)}</span>
+              </span>
+            ) : (
+              headerSub
+            )}
           </div>
         </div>
       </header>
@@ -254,16 +384,20 @@ export function GlobalLiveChat({
           <p className="text-sm text-muted-foreground">Loading chat…</p>
         ) : missingTable ? (
           <p className="text-sm text-muted-foreground">
-            Chat is unavailable until the global_chat_messages migration is applied.
+            {isTokenRoom
+              ? "Chat is unavailable until the asset_chat_messages migration is applied."
+              : "Chat is unavailable until the global_chat_messages migration is applied."}
           </p>
         ) : loadError ? (
           <p className="text-sm text-muted-foreground">Could not load chat. Try again later.</p>
         ) : messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Welcome to OpenPay Live — say hi with your name, username, and profile photo.
+            {room
+              ? `Welcome to the ${room.name} room — say hi. Messages stay in this token only.`
+              : "Welcome to OpenPay Live — say hi with your name, username, and profile photo."}
           </p>
         ) : (
-          messages.map((m) => {
+          messages.map((m: ChatRow) => {
             const name = displayNameOf(m.profile, m.user_id);
             const handle = usernameOf(m.profile, m.user_id);
             return (
@@ -274,11 +408,7 @@ export function GlobalLiveChat({
                   className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-muted text-xs font-bold"
                 >
                   {m.profile?.avatar_url ? (
-                    <img
-                      src={m.profile.avatar_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={m.profile.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     initialsOf(m.profile)
                   )}
@@ -392,7 +522,7 @@ export function GlobalLiveChat({
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                {(mediaQuery.data?.items ?? []).map((item) => (
+                {(mediaQuery.data?.items ?? []).map((item: KlipyMediaItem) => (
                   <button
                     key={item.id}
                     type="button"
@@ -447,7 +577,7 @@ export function GlobalLiveChat({
               }
               setEmojiRow(false);
               setPickerOpen(true);
-              setPickerQuery("crypto");
+              setPickerQuery(room?.symbol?.toLowerCase() || "crypto");
             }}
             onContextMenu={(e) => {
               e.preventDefault();

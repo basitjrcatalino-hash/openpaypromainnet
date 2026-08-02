@@ -1,6 +1,6 @@
 # OpenPay — Connect Auth & Payments for Third-Party Apps
 
-Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance payments** to your product — the same integration used by [OpenPay Pro](https://openpaypromainnet.lovable.app).
+Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance payments** to your product — the same integration used by [OpenPay Pro](https://openpaypro.space).
 
 |                                   |                                                                                                                                                          |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -16,7 +16,7 @@ Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance
 
 ## OpenPay Pro wallet sign-in methods
 
-OpenPay Pro (`/authpi`) supports six authentication methods. Full exact setup (env, flows, files, security):
+OpenPay Pro (`/authpi`) supports **seven** authentication methods (OpenPay, Telegram, Solana, Pi, Phantom, WalletConnect, MetaMask). Full exact setup (env, flows, files, security):
 
 → **[OpenPay Pro Authentication Integration Guide](./OPENPAY_PRO_AUTH.md)**  
 → Live page: [`/docs/openpay#auth`](/docs/openpay#auth)  
@@ -349,7 +349,7 @@ export async function createCharge({ amount, reference, success_url, cancel_url 
 - OpenPay Send feature prompt: [`OPENPAY_SEND_TO_PRO_PROMPT.md`](./OPENPAY_SEND_TO_PRO_PROMPT.md)
 - Partner Transfer API detail: [`PARTNER_TRANSFER_API.md`](./PARTNER_TRANSFER_API.md)
 - OpenPay Pro public ledger: [`LEDGER_API.md`](./LEDGER_API.md)
-- OpenPay Pro demo: [https://openpaypromainnet.lovable.app](https://openpaypromainnet.lovable.app)
+- OpenPay Pro: [https://openpaypro.space](https://openpaypro.space)
 
 ---
 
@@ -361,7 +361,7 @@ To send from OpenPay into a Pro user’s wallet:
 2. Credit Pro via:
 
 ```bash
-curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \
+curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
   -H "Authorization: Bearer opk_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"to":"@alice","amount":25,"openpay_tx_id":"TX_ID","note":"pro_xfer:@alice:r_1"}'

@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, MessageCircle, Search, Users } from "lucide-react";
+import { MessageCircle, Search, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/wallet/PageHeader";
@@ -14,8 +14,12 @@ import {
   MAJOR_TOKEN_IDS,
   MAJOR_TOKENS,
   MAJOR_SYMBOLS,
+  fetchMajorMarkets,
+  majorMarketById,
   type MajorTokenId,
 } from "@/lib/major-tokens";
+import { formatNumber, formatPct } from "@/lib/wallet-utils";
+import { OUSD_LOGO_URL } from "@/lib/token-logos";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
@@ -39,6 +43,8 @@ type OpenTokenRoom = {
   symbol: string;
   logo_url: string | null;
   is_verified: boolean | null;
+  price_usd?: number | null;
+  change_24h?: number | null;
   is_hidden?: boolean | null;
 };
 
@@ -60,8 +66,16 @@ function matchesQuery(q: string, name: string, symbol: string): boolean {
   );
 }
 
+function formatListPrice(n: number | null | undefined) {
+  if (n == null || !Number.isFinite(n) || n <= 0) return "—";
+  if (n >= 1000) return `$${formatNumber(n, 2)}`;
+  if (n >= 1) return `$${formatNumber(n, n >= 100 ? 2 : 4)}`;
+  return `$${formatNumber(n, n < 0.01 ? 6 : 4)}`;
+}
+
 function LiveChatHubPage() {
   const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<HubTab>("rooms");
   const [query, setQuery] = useState("");
 
@@ -77,20 +91,27 @@ function LiveChatHubPage() {
       ).data,
   });
 
+  const { data: majorMarkets } = useQuery({
+    queryKey: ["major-markets"],
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    queryFn: () => fetchMajorMarkets(),
+  });
+
   const { data: openTokens = [] } = useQuery<OpenTokenRoom[]>({
     queryKey: ["ot-tokens", "chat-rooms-all"],
     staleTime: 60_000,
     queryFn: async (): Promise<OpenTokenRoom[]> => {
       const { data, error } = await supabase
         .from("tokens")
-        .select("id, name, symbol, logo_url, is_verified, is_hidden")
+        .select("id, name, symbol, logo_url, is_verified, is_hidden, price_usd, change_24h")
         .eq("is_hidden", false)
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) {
         const { data: fallback } = await supabase
           .from("tokens")
-          .select("id, name, symbol, logo_url, is_verified")
+          .select("id, name, symbol, logo_url, is_verified, price_usd, change_24h")
           .order("created_at", { ascending: false })
           .limit(500);
         return (fallback ?? []) as OpenTokenRoom[];
@@ -133,10 +154,14 @@ function LiveChatHubPage() {
       ? profile.username
       : `@${profile.username}`
     : null;
-  const initials = (profile?.display_name || profile?.username || "U")
-    .replace(/^@/, "")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = displayName.slice(0, 1).toUpperCase() || "U";
+
+  function openRoom(tokenId: string) {
+    void navigate({
+      to: "/asset/$tokenId/chat",
+      params: { tokenId },
+    });
+  }
 
   return (
     <div className="ot-phantom flex h-dvh min-h-0 flex-col bg-background">
@@ -202,9 +227,8 @@ function LiveChatHubPage() {
         ) : (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
             <p className="px-0.5 text-xs leading-relaxed text-muted-foreground">
-              Every token has its own live room at{" "}
-              <span className="font-medium text-foreground">/asset/&lt;token&gt;/chat</span> —
-              price in the header, messages stay in that room only.
+              Each token opens the same Live Chat as Global — with that token’s name, logo, and
+              live price. Messages stay in that room only.
             </p>
 
             <div className="relative">
@@ -222,16 +246,22 @@ function LiveChatHubPage() {
               onClick={() => setTab("global")}
               className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-3.5 py-3 press hover:bg-muted/40"
             >
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary">
-                <Users className="h-5 w-5" />
+              <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-full bg-primary/15">
+                <img src={OUSD_LOGO_URL} alt="" className="h-full w-full object-cover" />
               </span>
               <span className="min-w-0 flex-1 text-left">
-                <span className="block text-sm font-bold">OpenPay Global</span>
+                <span className="flex items-center gap-2">
+                  <span className="block text-sm font-bold">OpenPay Live</span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                </span>
                 <span className="block text-xs text-muted-foreground">
-                  Community room · all topics
+                  Global community · all topics
                 </span>
               </span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-primary" />
             </button>
 
             <section>
@@ -246,30 +276,35 @@ function LiveChatHubPage() {
                 <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card/60">
                   {showOusd ? (
                     <li>
-                      <Link
-                        to="/asset/$tokenId/chat"
-                        params={{ tokenId: "ousd" }}
-                        className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
+                      <button
+                        type="button"
+                        onClick={() => openRoom("ousd")}
+                        className="flex w-full items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
                       >
                         <OusdIcon className="h-11 w-11" />
                         <span className="min-w-0 flex-1 text-left">
                           <span className="block text-sm font-bold">OpenUSD</span>
                           <span className="block text-xs text-muted-foreground">
-                            OUSD room · /asset/ousd/chat
+                            OUSD · $1.00 · 0.00%
                           </span>
                         </span>
                         <MessageCircle className="h-4 w-4 text-primary" />
-                      </Link>
+                      </button>
                     </li>
                   ) : null}
                   {filteredMajors.map((id) => {
                     const def = MAJOR_TOKENS[id];
+                    const m = majorMarketById(majorMarkets, id);
+                    const price = Number(m.price ?? 0);
+                    const change = Number(m.change24h ?? 0);
+                    const up = change > 0;
+                    const down = change < 0;
                     return (
                       <li key={id}>
-                        <Link
-                          to="/asset/$tokenId/chat"
-                          params={{ tokenId: id }}
-                          className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
+                        <button
+                          type="button"
+                          onClick={() => openRoom(id)}
+                          className="flex w-full items-center gap-3 border-b border-border/40 px-3.5 py-3 press hover:bg-muted/40"
                         >
                           <TokenAvatar
                             logoUrl={def.logoUrl}
@@ -279,38 +314,62 @@ function LiveChatHubPage() {
                           />
                           <span className="min-w-0 flex-1 text-left">
                             <span className="block truncate text-sm font-bold">{def.name}</span>
-                            <span className="block text-xs text-muted-foreground">
-                              {def.symbol} room · /asset/{id}/chat
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {def.symbol} · {formatListPrice(price)}{" "}
+                              <span
+                                className={cn(
+                                  "font-semibold",
+                                  up && "text-emerald-500",
+                                  down && "text-rose-500",
+                                )}
+                              >
+                                {formatPct(change)}
+                              </span>
                             </span>
                           </span>
                           <MessageCircle className="h-4 w-4 text-primary" />
-                        </Link>
+                        </button>
                       </li>
                     );
                   })}
-                  {filteredOpenTokens.map((t: OpenTokenRoom) => (
-                    <li key={t.id}>
-                      <Link
-                        to="/opentoken/$tokenId/chat"
-                        params={{ tokenId: t.id }}
-                        className="flex items-center gap-3 border-b border-border/40 px-3.5 py-3 last:border-b-0 press hover:bg-muted/40"
-                      >
-                        <TokenAvatar
-                          logoUrl={t.logo_url}
-                          name={t.name}
-                          symbol={t.symbol}
-                          verified={Boolean(t.is_verified)}
-                        />
-                        <span className="min-w-0 flex-1 text-left">
-                          <span className="block truncate text-sm font-bold">{t.name}</span>
-                          <span className="block text-xs text-muted-foreground">
-                            {t.symbol} room · OpenToken
+                  {filteredOpenTokens.map((t: OpenTokenRoom) => {
+                    const price = Number(t.price_usd ?? 0);
+                    const change = Number(t.change_24h ?? 0);
+                    const up = change > 0;
+                    const down = change < 0;
+                    return (
+                      <li key={t.id}>
+                        <button
+                          type="button"
+                          onClick={() => openRoom(t.id)}
+                          className="flex w-full items-center gap-3 border-b border-border/40 px-3.5 py-3 last:border-b-0 press hover:bg-muted/40"
+                        >
+                          <TokenAvatar
+                            logoUrl={t.logo_url}
+                            name={t.name}
+                            symbol={t.symbol}
+                            verified={Boolean(t.is_verified)}
+                          />
+                          <span className="min-w-0 flex-1 text-left">
+                            <span className="block truncate text-sm font-bold">{t.name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {t.symbol} · {formatListPrice(price)}{" "}
+                              <span
+                                className={cn(
+                                  "font-semibold",
+                                  up && "text-emerald-500",
+                                  down && "text-rose-500",
+                                )}
+                              >
+                                {formatPct(change)}
+                              </span>
+                            </span>
                           </span>
-                        </span>
-                        <MessageCircle className="h-4 w-4 text-primary" />
-                      </Link>
-                    </li>
-                  ))}
+                          <MessageCircle className="h-4 w-4 text-primary" />
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>

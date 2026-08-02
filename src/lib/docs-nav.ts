@@ -15,7 +15,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
     label: "Start here",
     items: [
       { label: "Developer Portal", href: "/docs", desc: "Hub for every integration path" },
-      { label: "Quickstart", href: "/docs#quickstart", desc: "Ship Connect + payments in one afternoon" },
+      {
+        label: "Quickstart",
+        href: "/docs#quickstart",
+        desc: "Ship Connect + payments in one afternoon",
+      },
       { label: "Choose your path", href: "/docs#paths", desc: "Exchange · Merchant · App · Agent" },
     ],
   },
@@ -68,6 +72,16 @@ export const DOCS_NAV: DocsNavGroup[] = [
     label: "Reference",
     items: [
       { label: "FAQ", href: "/docs/faq", desc: "Wallets, fees, partner teaser" },
+      {
+        label: "Errors & retries",
+        href: "/docs/errors",
+        desc: "HTTP codes, polling, idempotency",
+      },
+      {
+        label: "Authentication",
+        href: "/docs/auth",
+        desc: "Seven Pro methods + Connect OAuth",
+      },
       {
         label: "Partner portal",
         href: "https://openpy.space/partner-api",

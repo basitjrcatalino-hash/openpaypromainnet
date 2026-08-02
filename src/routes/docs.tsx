@@ -142,6 +142,9 @@ const RAW_DOCS = [
   { label: "Partner Transfer API", href: "/api/public/docs/partner-transfer" },
   { label: "Public Ledger API", href: "/api/public/docs/ledger" },
   { label: "OpenPay → Pro inbound", href: "/api/public/docs/openpay-to-pro" },
+  { label: "Tokens & assets", href: "/api/public/docs/tokens" },
+  { label: "Agent Connect · MCP", href: "/api/public/docs/mcp" },
+  { label: "Errors & retries", href: "/api/public/docs/errors" },
   { label: "Developer portal playbook", href: "/api/public/docs/portal" },
 ] as const;
 
@@ -177,8 +180,9 @@ function DocsPortalPage() {
             </p>
             <h2 className="mt-1 text-xl font-extrabold tracking-tight">Get credentials</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Create an app at the Partner API portal. Copy <code className="text-foreground">client_id</code>{" "}
-              and <code className="text-foreground">opk_live_…</code>. Keep the key on your server only.
+              Create an app at the Partner API portal. Copy{" "}
+              <code className="text-foreground">client_id</code> and{" "}
+              <code className="text-foreground">opk_live_…</code>. Keep the key on your server only.
             </p>
           </div>
           <Button asChild className="rounded-full">
@@ -199,12 +203,12 @@ function DocsPortalPage() {
           </li>
           <li>
             <strong className="text-foreground">2. Authenticate</strong> —{" "}
-            <code className="text-foreground">Authorization: Bearer opk_live_…</code> on Partner Transfer
-            calls.
+            <code className="text-foreground">Authorization: Bearer opk_live_…</code> on Partner
+            Transfer calls.
           </li>
           <li>
-            <strong className="text-foreground">3. Pick a flow</strong> — Charges (checkout), Transfers
-            (payouts), Connect (user OAuth), or Pro inbound (credit Pro wallets).
+            <strong className="text-foreground">3. Pick a flow</strong> — Charges (checkout),
+            Transfers (payouts), Connect (user OAuth), or Pro inbound (credit Pro wallets).
           </li>
           <li>
             <strong className="text-foreground">4. Reconcile</strong> — Poll{" "}

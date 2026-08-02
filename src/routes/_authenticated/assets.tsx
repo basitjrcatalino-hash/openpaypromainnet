@@ -18,10 +18,7 @@ import { AccountAssetList } from "@/components/assets/AccountAssetList";
 import { PortfolioAccountCard } from "@/components/assets/PortfolioAccountCard";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
-import {
-  accountAssetRows,
-  portfolioUsdTotals,
-} from "@/lib/account-portfolio";
+import { accountAssetRows, portfolioUsdTotals } from "@/lib/account-portfolio";
 import { ACCOUNT_IDS, type TransferAsset } from "@/lib/account-transfer";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
@@ -32,7 +29,8 @@ export const Route = createFileRoute("/_authenticated/assets")({
       { title: "Assets — OpenPay Pro" },
       {
         name: "description",
-        content: "View Funding, Trading, and P2P balances. Deposit, withdraw, transfer, and history.",
+        content:
+          "View Funding, Trading, and P2P balances. Deposit, withdraw, transfer, and history.",
       },
     ],
   }),
@@ -64,7 +62,16 @@ function AssetsOverviewPage() {
         map[k.toUpperCase()] = Number(v) || 0;
       }
     }
-    for (const a of ["OUSD", "USDT", "USDC", "PYUSD", "USDG", "USD1", "CASH", "EURC"] as TransferAsset[]) {
+    for (const a of [
+      "OUSD",
+      "USDT",
+      "USDC",
+      "PYUSD",
+      "USDG",
+      "USD1",
+      "CASH",
+      "EURC",
+    ] as TransferAsset[]) {
       map[a] = map[a] ?? 1;
     }
     return map;
@@ -75,7 +82,7 @@ function AssetsOverviewPage() {
     () =>
       balances
         ? portfolioUsdTotals(balances, priceMap)
-        : { funding: 0, trading: 0, p2p: 0, total: 0 },
+        : { funding: 0, spot: 0, trading: 0, p2p: 0, total: 0 },
     [balances, priceMap],
   );
 
@@ -112,17 +119,11 @@ function AssetsOverviewPage() {
             Est total value
             {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
-          <button
-            type="button"
-            onClick={() => setFxOpen(true)}
-            className="mt-1 block text-left"
-          >
+          <button type="button" onClick={() => setFxOpen(true)} className="mt-1 block text-left">
             <span className="text-3xl font-bold tracking-tight tabular-nums">
               {hideBalance ? "••••••" : fmt(totals.total)}
             </span>
-            <span className="ml-1.5 text-sm font-semibold text-muted-foreground">
-              {currency} ▾
-            </span>
+            <span className="ml-1.5 text-sm font-semibold text-muted-foreground">{currency} ▾</span>
           </button>
         </div>
         <Link

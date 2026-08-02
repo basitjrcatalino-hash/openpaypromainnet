@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, ChevronRight, Moon, Sun } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageListenButton } from "@/components/page-listen-button";
-import { useTheme } from "@/components/theme-provider";
+import { DocsSection, DocsShell } from "@/components/docs/DocsShell";
+import { DOCS_BASE, PARTNER_PORTAL } from "@/lib/docs-nav";
 
 export const Route = createFileRoute("/docs/faq")({
   head: () => ({
@@ -18,11 +18,12 @@ export const Route = createFileRoute("/docs/faq")({
       { property: "og:title", content: "FAQ — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Answers on wallets, sending and receiving, currencies, security, and integrations.",
+        content:
+          "Answers on wallets, sending and receiving, currencies, security, and integrations.",
       },
-      { property: "og:url", content: "https://openpaypro.space/docs/faq" },
+      { property: "og:url", content: `${DOCS_BASE}/docs/faq` },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/docs/faq" }],
+    links: [{ rel: "canonical", href: `${DOCS_BASE}/docs/faq` }],
   }),
   component: FaqPage,
 });
@@ -31,7 +32,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "Account",
     q: "How do I create an OpenPay Pro wallet?",
-    a: "Sign in via OpenPay, Pi, Solana, Phantom, WalletConnect, or MetaMask on /authpi. A Main Wallet is created automatically on first login.",
+    a: "Sign in via OpenPay, Pi, Solana, Phantom, WalletConnect, MetaMask, or Telegram on /authpi. A Main Wallet is created automatically on first login.",
   },
   {
     category: "Account",
@@ -66,7 +67,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "Fees",
     q: "Where do buy/swap fees go?",
-    a: "Platform fees (0.30%) on OpenToken trades, OpenDEX swaps, and major buys credit the admin fee wallet — usually @openpay or the 0x address set in Admin → Top-up fee.",
+    a: "Platform fees on OpenToken trades, OpenDEX swaps, and major buys credit the admin fee wallet — usually @openpay or the address set in Admin → Top-up fee. Spot launch fees are 0.10%/0.10%; perp maker 0.02% / taker 0.05%.",
   },
   {
     category: "Security",
@@ -93,110 +94,66 @@ function faqSpeechText() {
 }
 
 function FaqPage() {
-  const { theme, toggle } = useTheme();
   const categories = [...new Set(FAQS.map((f) => f.category))];
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <BookOpen className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate text-sm font-semibold">OpenPay Pro FAQ</span>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <PageListenButton
-              id="page:faq"
-              text={faqSpeechText()}
-              label="Listen"
-              stopLabel="Stop"
-              variant="outline"
-              size="sm"
-              className="hidden sm:inline-flex"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={toggle}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button asChild variant="outline" size="sm" className="rounded-full">
-              <Link to="/docs/openpay">Integration docs</Link>
-            </Button>
-            <Button asChild size="sm" className="rounded-full">
-              <Link to="/dashboard">Open Pro</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Frequently asked questions</h1>
-          <p className="text-sm text-muted-foreground md:text-base">
-            Account, wallets, payments, fees, and third-party integration.
-          </p>
-          <div className="pt-1 sm:hidden">
-            <PageListenButton
-              id="page:faq"
-              text={faqSpeechText()}
-              label="Listen to FAQ"
-              stopLabel="Stop"
-              variant="primary"
-              size="sm"
-            />
-          </div>
-        </div>
-
-        <nav className="flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <a
-              key={c}
-              href={`#${c.toLowerCase().replace(/\s+/g, "-")}`}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
-            >
-              {c}
-            </a>
-          ))}
-        </nav>
-
-        {categories.map((cat) => (
-          <section
-            key={cat}
-            id={cat.toLowerCase().replace(/\s+/g, "-")}
-            className="scroll-mt-24 space-y-3"
+    <DocsShell
+      title="Frequently asked questions"
+      description="Account, wallets, payments, fees, and third-party integration."
+      pathname="/docs/faq"
+      eyebrow="Reference"
+      speechText={faqSpeechText()}
+    >
+      <nav className="flex flex-wrap gap-2">
+        {categories.map((c) => (
+          <a
+            key={c}
+            href={`#${c.toLowerCase().replace(/\s+/g, "-")}`}
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
           >
-            <h2 className="text-lg font-bold tracking-tight">{cat}</h2>
-            <div className="space-y-2">
-              {FAQS.filter((f) => f.category === cat).map((f) => (
-                <Card
-                  key={f.q}
-                  className="rounded-2xl border-border bg-card p-4 shadow-none"
-                >
-                  <p className="font-semibold text-foreground">{f.q}</p>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{f.a}</p>
-                </Card>
-              ))}
-            </div>
-          </section>
+            {c}
+          </a>
         ))}
+      </nav>
 
-        <Card className="flex items-center justify-between gap-3 rounded-3xl border-border bg-card p-4 shadow-none">
-          <div>
-            <p className="font-semibold text-foreground">Need the full integration guide?</p>
-            <p className="text-sm text-muted-foreground">Connect, payments, Ledger API, NFT, WC Pay.</p>
+      {categories.map((cat, idx) => (
+        <DocsSection
+          key={cat}
+          id={cat.toLowerCase().replace(/\s+/g, "-")}
+          eyebrow={String(idx + 1).padStart(2, "0")}
+          title={cat}
+        >
+          <div className="space-y-2">
+            {FAQS.filter((f) => f.category === cat).map((f) => (
+              <Card key={f.q} className="rounded-2xl border-border bg-card p-4 shadow-none">
+                <p className="font-semibold text-foreground">{f.q}</p>
+                <p className="mt-1.5 text-sm text-muted-foreground">{f.a}</p>
+              </Card>
+            ))}
           </div>
+        </DocsSection>
+      ))}
+
+      <Card className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border-border bg-card p-4 shadow-none">
+        <div>
+          <p className="font-semibold text-foreground">Need the full integration guide?</p>
+          <p className="text-sm text-muted-foreground">
+            Connect, payments, Ledger API, NFT, WC Pay — or open the partner portal.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" className="shrink-0 rounded-full">
+            <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
+              Partner portal
+            </a>
+          </Button>
           <Button asChild className="shrink-0 rounded-full">
             <Link to="/docs/openpay">
               Docs <ChevronRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-        </Card>
-      </main>
-    </div>
+        </div>
+      </Card>
+    </DocsShell>
   );
 }

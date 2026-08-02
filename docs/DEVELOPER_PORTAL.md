@@ -14,6 +14,9 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 | Partner Transfer API | https://openpaypro.space/docs/api |
 | Public Ledger API | https://openpaypro.space/docs/ledger |
 | Agent Connect · MCP | https://openpaypro.space/docs/mcp |
+| FAQ | https://openpaypro.space/docs/faq |
+| Errors & retries | https://openpaypro.space/docs/errors |
+| Authentication | https://openpaypro.space/docs/auth |
 | Partner portal (keys) | https://openpy.space/partner-api |
 | Partner Transfer base | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
 | Pro inbound | `POST https://openpaypro.space/api/public/openpay/inbound` |
@@ -58,4 +61,7 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 - `/api/public/docs/partner-transfer`
 - `/api/public/docs/ledger`
 - `/api/public/docs/openpay-to-pro`
+- `/api/public/docs/tokens`
+- `/api/public/docs/mcp`
+- `/api/public/docs/errors`
 - `/api/public/docs/portal` (this file)

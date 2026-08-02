@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { TokenLiveChat } from "@/components/opentoken";
+import { GlobalLiveChat } from "@/components/wallet/GlobalLiveChat";
 import {
   fetchMajorMarkets,
   getMajorToken,
@@ -26,9 +26,8 @@ export const Route = createFileRoute("/_authenticated/asset_/$tokenId_/chat")({
 });
 
 /**
- * Phantom-style live chat for every asset: majors, OUSD, OpenTokens.
- * Route: `/asset/$tokenId/chat` — one room per token (room_id = major id / ousd / OT uuid).
- * Header shows live price + 24h change; Trade opens /trade (perps) or asset page.
+ * Exact Global Live Chat UI per token — name, logo, live price in the header.
+ * Route: `/asset/$tokenId/chat` — one `asset_chat_messages` room per token.
  */
 function AssetLiveChatPage() {
   const { tokenId: rawId } = Route.useParams();
@@ -40,9 +39,7 @@ function AssetLiveChatPage() {
   const isOusd = tokenId === "ousd" || tokenId === "__ousd__";
   const isMajor = isMajorTokenId(tokenId);
   const majorDef = isMajor ? getMajorToken(tokenId) : null;
-  // Majors / OUSD → asset_chat_messages.room_id (one room per asset).
-  // OpenToken UUIDs omit roomId so TokenLiveChat uses ot_token_chat_messages (per token).
-  const roomId = isOusd ? "ousd" : isMajor ? tokenId.toLowerCase() : undefined;
+  const roomId = isOusd ? "ousd" : tokenId.toLowerCase();
 
   const { data: majorMarkets } = useQuery({
     queryKey: ["major-markets"],
@@ -80,12 +77,12 @@ function AssetLiveChatPage() {
   const meta = useMemo(() => {
     if (isOusd) {
       return {
+        id: "ousd",
         name: "OpenUSD",
         symbol: "OUSD",
         logoUrl: OUSD_LOGO_URL,
         priceUsd: 1,
         change24h: 0,
-        changeAbs: 0,
       };
     }
     if (isMajor && majorDef) {
@@ -99,90 +96,60 @@ function AssetLiveChatPage() {
             : Number(m.price ?? 0);
       const change =
         q != null && Number.isFinite(q.change24h) ? q.change24h : Number(m.change24h ?? 0);
-      const changeAbs =
-        q?.changeAbs != null && Number.isFinite(q.changeAbs)
-          ? q.changeAbs
-          : price > 0
-            ? (price * change) / 100
-            : 0;
       return {
+        id: roomId,
         name: majorDef.name,
         symbol: majorDef.symbol,
         logoUrl: majorDef.logoUrl,
         priceUsd: price,
         change24h: change,
-        changeAbs,
       };
     }
     if (otToken) {
-      const price = Number(otToken.price_usd ?? 0);
-      const change = Number(otToken.change_24h ?? 0);
       return {
+        id: String(otToken.id).toLowerCase(),
         name: otToken.name,
         symbol: otToken.symbol,
         logoUrl: otToken.logo_url,
-        priceUsd: price,
-        change24h: change,
-        changeAbs: price > 0 ? (price * change) / 100 : 0,
+        priceUsd: Number(otToken.price_usd ?? 0),
+        change24h: Number(otToken.change_24h ?? 0),
       };
     }
     return null;
-  }, [isOusd, isMajor, majorDef, majorMarkets, otToken, perpQuotes, perpSym]);
+  }, [isOusd, isMajor, majorDef, majorMarkets, otToken, perpQuotes, perpSym, roomId]);
 
   if (!isOusd && !isMajor && otLoading) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-black">
-        <Loader2 className="h-5 w-5 animate-spin text-white/50" />
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!meta) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-black px-4 text-center">
-        <p className="text-sm text-white/50">Token not found</p>
+      <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background px-4 text-center">
+        <p className="text-sm text-muted-foreground">Token not found</p>
         <button
           type="button"
-          className="text-sm font-semibold text-[#ABA3FF]"
-          onClick={() => void router.navigate({ to: "/tokens" })}
+          className="text-sm font-semibold text-primary"
+          onClick={() => void router.navigate({ to: "/chat" })}
         >
-          Back to Tokens
+          Back to Live Chat
         </button>
       </div>
     );
   }
 
-  const canPerp = isPerpMarket(meta.symbol);
-
   return (
-    <div className="flex h-dvh min-h-0 flex-col bg-black">
-      <TokenLiveChat
-        variant="page"
+    <div className="flex h-dvh min-h-0 flex-col bg-background">
+      <GlobalLiveChat
+        fill
         className="h-full min-h-0 flex-1"
-        tokenId={tokenId}
-        roomId={roomId}
         userId={user.id}
-        name={meta.name}
-        symbol={meta.symbol}
-        logoUrl={meta.logoUrl}
-        priceUsd={meta.priceUsd}
-        change24h={meta.change24h}
-        changeAbs={meta.changeAbs}
-        onClose={() => {
+        room={meta}
+        onBack={() => {
           void router.navigate({ to: "/chat" });
-        }}
-        onTrade={() => {
-          if (canPerp) {
-            void router.navigate({
-              to: "/trade",
-              search: { market: meta.symbol, mode: "futures" },
-            });
-            return;
-          }
-          void router.navigate({
-            to: "/asset/$tokenId",
-            params: { tokenId },
-          });
         }}
       />
     </div>

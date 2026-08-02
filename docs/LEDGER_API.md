@@ -155,7 +155,7 @@ entries.
 ## Example — OpenLedger sync (Node)
 
 ```ts
-const BASE = "https://openpaypromainnet.lovable.app/api/public/ledger";
+const BASE = "https://openpaypro.space/api/public/ledger";
 const KEY  = process.env.OPENPAY_LEDGER_KEY!;
 
 let cursor: string | null = null;

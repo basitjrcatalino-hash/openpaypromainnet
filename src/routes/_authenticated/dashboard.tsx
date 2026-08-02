@@ -22,7 +22,14 @@ import { copyText } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { formatNumber, formatPct, createFreshRecoveryWallet, fetchActiveWallet, shortAddress, stashRecoveryPhrase } from "@/lib/wallet-utils";
+import {
+  formatNumber,
+  formatPct,
+  createFreshRecoveryWallet,
+  fetchActiveWallet,
+  shortAddress,
+  stashRecoveryPhrase,
+} from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTokenPrice, useCurrency } from "@/lib/currency";
 import {
@@ -132,13 +139,19 @@ function Dashboard() {
     queryFn: async (): Promise<HoldingRow[]> => {
       const { data } = await supabase
         .from("token_holdings")
-        .select("balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url, is_verified)")
+        .select(
+          "balance, tokens:token_id(id, name, symbol, price_usd, change_24h, logo_url, is_verified)",
+        )
         .eq("wallet_id", wallet!.id);
       return ((data ?? []) as HoldingRow[]).filter((h) => h.tokens != null);
     },
   });
 
-  const { data: recentTxs = [], isLoading: recentLoading, isPending: recentPending } = useQuery({
+  const {
+    data: recentTxs = [],
+    isLoading: recentLoading,
+    isPending: recentPending,
+  } = useQuery({
     queryKey: ["recent-txs", wallet?.id],
     enabled: !!wallet?.id,
     staleTime: 10_000,
@@ -435,7 +448,11 @@ function Dashboard() {
       {tab === "tokens" ? (
         <section>
           {showTokenSkeletons ? (
-            <ul className="animate-in fade-in duration-300" aria-busy="true" aria-label="Loading tokens">
+            <ul
+              className="animate-in fade-in duration-300"
+              aria-busy="true"
+              aria-label="Loading tokens"
+            >
               {Array.from({ length: 5 }).map((_, i) => (
                 <li key={i}>
                   <TokenRowSkeleton delayMs={i * 60} />
@@ -448,9 +465,7 @@ function Dashboard() {
                 <Plus className="h-6 w-6" />
               </div>
               <div className="ph-callout">No tokens yet</div>
-              <p className="ph-caption max-w-xs">
-                Buy some tokens to get started
-              </p>
+              <p className="ph-caption max-w-xs">Buy some tokens to get started</p>
               <div className="mt-1 flex gap-2">
                 <Link
                   to="/topup"
@@ -533,9 +548,7 @@ function Dashboard() {
                           <div className="ph-row-sub tabular-nums">
                             {formatTokenPrice(a.priceUsd, currency)}{" "}
                             <span
-                              className={cn(
-                                a.change24h >= 0 ? "text-success" : "text-destructive",
-                              )}
+                              className={cn(a.change24h >= 0 ? "text-success" : "text-destructive")}
                             >
                               {formatPct(a.change24h)}
                             </span>
@@ -605,9 +618,7 @@ function Dashboard() {
                         <div className="ph-row-sub tabular-nums">
                           {hideBalance ? "••••" : formatCurrency(usd, currency)}
                           {!hideBalance && (
-                            <span className="ml-1 opacity-80">
-                              · {share.toFixed(1)}%
-                            </span>
+                            <span className="ml-1 opacity-80">· {share.toFixed(1)}%</span>
                           )}
                         </div>
                       </div>
@@ -652,7 +663,11 @@ function Dashboard() {
           </Link>
         </header>
         {showActivitySkeletons ? (
-          <ul className="animate-in fade-in duration-300" aria-busy="true" aria-label="Loading activity">
+          <ul
+            className="animate-in fade-in duration-300"
+            aria-busy="true"
+            aria-label="Loading activity"
+          >
             {Array.from({ length: 3 }).map((_, i) => (
               <li key={i}>
                 <ActivityRowSkeleton delayMs={i * 70} />
@@ -739,10 +754,7 @@ function Dashboard() {
 
 function TokenRowSkeleton({ delayMs = 0 }: { delayMs?: number }) {
   return (
-    <div
-      className="ph-row pointer-events-none"
-      style={{ animationDelay: `${delayMs}ms` }}
-    >
+    <div className="ph-row pointer-events-none" style={{ animationDelay: `${delayMs}ms` }}>
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -784,7 +796,7 @@ function PortfolioStrip({
         priceMap[k.toUpperCase()] = Number(v) || 0;
       }
     }
-    if (!data?.balances) return { funding: 0, trading: 0, p2p: 0, total: 0 };
+    if (!data?.balances) return { funding: 0, spot: 0, trading: 0, p2p: 0, total: 0 };
     return portfolioUsdTotals(data.balances, priceMap);
   }, [data?.balances, majorPrices]);
 
@@ -812,10 +824,7 @@ function PortfolioStrip({
 
 function ActivityRowSkeleton({ delayMs = 0 }: { delayMs?: number }) {
   return (
-    <div
-      className="ph-row pointer-events-none"
-      style={{ animationDelay: `${delayMs}ms` }}
-    >
+    <div className="ph-row pointer-events-none" style={{ animationDelay: `${delayMs}ms` }}>
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">

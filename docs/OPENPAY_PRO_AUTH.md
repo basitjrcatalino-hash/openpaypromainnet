@@ -361,7 +361,7 @@ Register **origins** and matching **redirect URIs**:
 | Origin | Redirect URI |
 | ------ | ------------ |
 | `https://openpaypro.space` | `https://openpaypro.space/auth/telegram/callback` |
-| `https://openpaypromainnet.lovable.app` | `https://openpaypromainnet.lovable.app/auth/telegram/callback` |
+| `https://openpaypro.space` | `https://openpaypro.space/auth/telegram/callback` |
 | `https://openpaypromainnet.vercel.app` | `https://openpaypromainnet.vercel.app/auth/telegram/callback` |
 | `http://localhost:8080` (or your Vite port) | `http://localhost:PORT/auth/telegram/callback` |
 

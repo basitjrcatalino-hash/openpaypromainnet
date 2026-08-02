@@ -1,13 +1,29 @@
 # OpenPay Pro Wallet
 
-> Self-custody Web3 wallet for the OpenPay ecosystem: hold OUSD and Pi, swap tokens, mint NFTs, send payments, and track every transaction on a public ledger.
+> Self-custody Web3 wallet for the OpenPay ecosystem: hold OUSD and majors, swap, trade spot/perps, mint NFTs, send payments, and track every transaction on a public ledger.
 
-## Pages
+## Developer portal
 
-- [Sign in](/authpi): Sign in with Pi Network, OpenPay, Phantom, MetaMask, or Telegram.
+- [Developer Portal](/docs): Hub for every integration path.
+- [Quickstart](/docs#quickstart): Ship Connect + payments in one afternoon.
+- [Choose your path](/docs#paths): Exchange · Merchant · App · Agent.
+- [Connect & payments](/docs/openpay): OAuth, PayButton, inbound, auth methods.
+- [Exchange · OUSD](/docs/exchange): Deposit, withdraw, swap, reconcile.
+- [Money rails](/docs/money): Send, receive, deposit, withdraw, swap.
+- [Tokens & assets](/docs/tokens): OUSD, majors, OpenToken, NFT.
+- [Partner Transfer API](/docs/api): Transfers, charges, OAuth token.
+- [Public Ledger API](/docs/ledger): Append-only transaction mirror.
+- [Agent Connect · MCP](/docs/mcp): Tools for ChatGPT, Claude, agents.
+- [FAQ](/docs/faq): Wallets, fees, partner teaser.
+- [Errors & retries](/docs/errors): HTTP codes, polling, idempotency.
+- [Authentication](/docs/auth): Seven Pro methods + Connect OAuth.
+- [Raw markdown feeds](/docs#raw): Machine-readable docs under /api/public/docs/*.
+
+## Product pages
+
+- [Sign in](/authpi): OpenPay, Pi, Solana, Phantom, MetaMask, WalletConnect, or Telegram.
 - [Transfer Pi guide](/guides/transfer-pi): How to transfer Pi Network assets into OpenPay Pro.
-- [FAQ](/docs/faq): Wallets, send/receive, currencies, security, and integrations.
-- [OpenPay integration docs](/docs/openpay): Connect with OpenPay (OAuth) and OpenPay Balance payments.
+- [Wiki](/wiki): End-user tutorials.
 - [Claim Test Pi](/testnet-reward): Pi Testnet reward claim page.
 
 ## Optional

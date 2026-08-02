@@ -127,7 +127,7 @@ Standard Authorization Code flow. Users sign in on OpenPay and grant `profile` /
 
 Exact match required. OpenPay Pro always uses production:
 
-`https://openpaypromainnet.lovable.app/openpay/connect/callback`
+`https://openpaypro.space/openpay/connect/callback`
 
 (Localhost / preview origins are rewritten to this URL — do not register localhost.)
 

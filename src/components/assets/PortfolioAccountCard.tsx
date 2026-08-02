@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Briefcase, CandlestickChart, Landmark, Users, ChevronRight, type LucideIcon } from "lucide-react";
+import {
+  Briefcase,
+  CandlestickChart,
+  Landmark,
+  Users,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ACCOUNT_LABELS, type AccountId } from "@/lib/account-transfer";
 
@@ -27,7 +34,7 @@ export function PortfolioAccountCard({
       to="/assets/$account"
       params={{ account }}
       className={cn(
-        "flex min-w-[9.5rem] flex-1 flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 px-3.5 py-3 press hover:bg-muted/40",
+        "flex min-w-38 flex-1 flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 px-3.5 py-3 press hover:bg-muted/40",
         className,
       )}
     >

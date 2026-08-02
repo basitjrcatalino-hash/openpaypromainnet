@@ -45,8 +45,8 @@ https://openpy.space/pay/wainfoundation
   ?amount=25.00
   &currency=OUSD
   &note=pro_xfer:@alice:r_k7x2
-  &success_url=https://openpaypromainnet.lovable.app/receive?openpay_in=1&amount=25.00
-  &cancel_url=https://openpaypromainnet.lovable.app/receive?openpay_cancel=1
+  &success_url=https://openpaypro.space/receive?openpay_in=1&amount=25.00
+  &cancel_url=https://openpaypro.space/receive?openpay_cancel=1
 ```
 
 Payer completes Pay on OpenPay → thank-you → returns to Pro → wallet credited.
@@ -58,7 +58,7 @@ Payer completes Pay on OpenPay → thank-you → returns to Pro → wallet credi
 After the OpenPay payment succeeds, credit Pro:
 
 ```bash
-curl -X POST "https://openpaypromainnet.lovable.app/api/public/openpay/inbound" \
+curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
   -H "Authorization: Bearer opk_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{

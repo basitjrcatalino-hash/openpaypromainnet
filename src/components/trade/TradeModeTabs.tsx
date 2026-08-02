@@ -29,7 +29,7 @@ export function TradeModeTabs({
         >
           {label}
           {mode === id ? (
-            <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-[#ffad0a]" />
+            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#ffad0a]" />
           ) : null}
         </button>
       ))}

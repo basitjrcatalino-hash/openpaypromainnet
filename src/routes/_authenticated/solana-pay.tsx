@@ -392,7 +392,7 @@ function DonatePage() {
               <span className="text-sm font-semibold">Donation</span>
             </div>
 
-            <div className="donate-amount-box flex h-[4.75rem] w-full max-w-[min(100%,20rem)] items-center justify-center gap-1 overflow-hidden">
+            <div className="donate-amount-box flex h-19 w-full max-w-[min(100%,20rem)] items-center justify-center gap-1 overflow-hidden">
               <span className="shrink-0 text-3xl font-bold text-muted-foreground/80 sm:text-4xl">
                 $
               </span>

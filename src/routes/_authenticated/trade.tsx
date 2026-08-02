@@ -43,12 +43,13 @@ import {
   placeSpotLimitOrder,
   processSpotOrders,
 } from "@/lib/spot-orders.functions";
-import { limitIsMarketable } from "@/lib/spot-orders";
+import { limitIsMarketable, type SpotOrder } from "@/lib/spot-orders";
 import {
   isPerpMarket,
   marketToMajorId,
   type PerpMarginAsset,
   type PerpMarket,
+  type PerpPosition,
   type PerpSide,
 } from "@/lib/perp";
 import {
@@ -162,7 +163,10 @@ function TradePage() {
   const [payAsset, setPayAsset] = useState<SpotPay>("USDT");
 
   useEffect(() => {
-    if (search.market === market && search.mode === mode) return;
+    const marketMatch =
+      (search.market ?? "BTC").toUpperCase() === market &&
+      (search.mode ?? "futures") === mode;
+    if (marketMatch) return;
     void navigate({
       search: (prev) => ({ ...prev, market, mode }),
       replace: true,
@@ -216,7 +220,7 @@ function TradePage() {
 
   const posQ = useQuery({
     queryKey: ["perp-positions"],
-    queryFn: () => listPos(),
+    queryFn: (): Promise<PerpPosition[]> => listPos(),
     refetchInterval: 15_000,
   });
 
@@ -249,7 +253,6 @@ function TradePage() {
     queryKey: ["exchange-depth", market, mode, Math.round(price)],
     staleTime: 4_000,
     refetchInterval: 6_000,
-    enabled: price > 0 || true,
     queryFn: () =>
       fetchDepth({
         data: { market, mode, mark: price > 0 ? price : undefined },
@@ -268,14 +271,14 @@ function TradePage() {
     staleTime: 5_000,
     refetchInterval: 10_000,
     enabled: mode === "spot",
-    queryFn: () => listOrders({ data: { market, status: "open" } }),
+    queryFn: (): Promise<SpotOrder[]> => listOrders({ data: { market, status: "open" } }),
   });
 
   const orderHistQ = useQuery({
     queryKey: ["spot-orders-history", market],
     staleTime: 15_000,
     enabled: mode === "spot" && dockExpanded && dockTab === "orderHistory",
-    queryFn: () => listOrders({ data: { market, status: "history" } }),
+    queryFn: (): Promise<SpotOrder[]> => listOrders({ data: { market, status: "history" } }),
   });
 
   const tradeHistQ = useQuery({
@@ -289,14 +292,18 @@ function TradePage() {
   useEffect(() => {
     if (mode !== "spot") return;
     const tick = () => {
-      void processOrders({ data: { market } }).then((r) => {
-        if (r.filled > 0) {
-          void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
-          void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
-          void qc.invalidateQueries({ queryKey: ["account-balances"] });
-          void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
-        }
-      });
+      void processOrders({ data: { market } })
+        .then((r) => {
+          if (r.filled > 0) {
+            void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
+            void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
+            void qc.invalidateQueries({ queryKey: ["account-balances"] });
+            void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
+          }
+        })
+        .catch(() => {
+          /* migration may be pending — ignore */
+        });
     };
     tick();
     const id = window.setInterval(tick, 12_000);
@@ -311,10 +318,11 @@ function TradePage() {
   const fundingQuote = Number(balQ.data?.balances?.funding?.[payAsset] ?? 0) || 0;
   const fundingBase = Number(balQ.data?.balances?.funding?.[market] ?? 0) || 0;
 
-  const openPositions = (posQ.data ?? []).filter((p) => p.status === "open");
-  const marketPositions = openPositions.filter((p) => p.market === market);
-  const hasLong = marketPositions.some((p) => p.side === "long");
-  const hasShort = marketPositions.some((p) => p.side === "short");
+  const positions: PerpPosition[] = Array.isArray(posQ.data) ? posQ.data : [];
+  const openPositions = positions.filter((p: PerpPosition) => p.status === "open");
+  const marketPositions = openPositions.filter((p: PerpPosition) => p.market === market);
+  const hasLong = marketPositions.some((p: PerpPosition) => p.side === "long");
+  const hasShort = marketPositions.some((p: PerpPosition) => p.side === "short");
 
   function applyPct(p: number) {
     setPct(p);
@@ -456,7 +464,7 @@ function TradePage() {
 
   function onFuturesSubmit(side: PerpSide) {
     if (futAction === "close") {
-      const pos = marketPositions.find((p) => p.side === side);
+      const pos = marketPositions.find((p: PerpPosition) => p.side === side);
       if (!pos) {
         toast.error(`No open ${side} to close`);
         return;
@@ -569,7 +577,7 @@ function TradePage() {
             </div>
             <div ref={chartHostRef} className="min-h-0 flex-1">
               <TradingViewEmbed
-                key={`${tvSymbol}-${tvInterval}-${chartHeight}`}
+                key={`${tvSymbol}-${tvInterval}`}
                 kind="advanced-chart"
                 symbol={tvSymbol}
                 interval={tvInterval}
@@ -660,7 +668,7 @@ function TradePage() {
                   Recent
                 </button>
               </div>
-              <div className="min-h-[16rem] flex-1 overflow-hidden p-1.5">
+              <div className="min-h-64 flex-1 overflow-hidden p-1.5">
                 {bookPane === "book" ? (
                   <OrderBook
                     book={depthQ.data}

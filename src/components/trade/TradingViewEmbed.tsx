@@ -75,7 +75,7 @@ export function TradingViewEmbed({
     if (!ready || kind === "advanced-chart" || !hostRef.current) return;
     const host = hostRef.current;
     let cancelled = false;
-    host.innerHTML = "";
+    host.replaceChildren();
 
     const widgetMount = document.createElement("div");
     widgetMount.className = "tradingview-widget-container__widget";
@@ -124,13 +124,22 @@ export function TradingViewEmbed({
     script.type = "text/javascript";
     script.src = SCRIPT_SRC[kind];
     script.async = true;
-    script.textContent = JSON.stringify(config);
+    script.innerHTML = JSON.stringify(config);
+    script.onerror = () => {
+      if (!cancelled && host.isConnected) {
+        host.replaceChildren();
+        const fallback = document.createElement("p");
+        fallback.className = "grid h-full place-items-center px-4 text-center text-xs text-muted-foreground";
+        fallback.textContent = "Chart widget unavailable";
+        host.appendChild(fallback);
+      }
+    };
     if (!cancelled) host.appendChild(script);
 
     return () => {
       cancelled = true;
       try {
-        host.innerHTML = "";
+        host.replaceChildren();
       } catch {
         /* ignore */
       }
@@ -150,7 +159,7 @@ export function TradingViewEmbed({
     return (
       <div
         className={cn(
-          "relative isolate overflow-hidden rounded-2xl bg-background [contain:layout_paint]",
+          "relative isolate overflow-hidden rounded-2xl bg-background contain-[layout_paint]",
           className,
         )}
         style={{ height: pxHeight, width: "100%" }}
@@ -171,7 +180,7 @@ export function TradingViewEmbed({
   return (
     <div
       className={cn(
-        "tradingview-widget-container relative isolate overflow-hidden rounded-2xl [contain:layout_paint]",
+        "tradingview-widget-container relative isolate overflow-hidden rounded-2xl contain-[layout_paint]",
         className,
       )}
       style={{ height: pxHeight, width: "100%" }}

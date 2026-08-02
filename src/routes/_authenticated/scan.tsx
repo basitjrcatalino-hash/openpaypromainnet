@@ -241,7 +241,7 @@ function ScanPage() {
   return createPortal(
     <div
       className={cn(
-        "ph-scan-shell fixed inset-0 z-[100] overflow-hidden bg-black text-white",
+        "ph-scan-shell fixed inset-0 z-100 overflow-hidden bg-black text-white",
         entered ? "ph-scan-shell-in" : "opacity-0",
       )}
     >
@@ -331,7 +331,7 @@ function ScanPage() {
 
       {/* My QR overlay */}
       {showMyQr && (
-        <div className="absolute inset-0 z-[25] flex flex-col items-center justify-center bg-black/95 px-6 pb-28 pt-20 animate-in fade-in duration-200">
+        <div className="absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/95 px-6 pb-28 pt-20 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-[1.75rem] bg-white p-6 text-center text-black shadow-2xl">
             <p className="text-sm font-semibold text-neutral-500">Receive on OpenPay Pro</p>
             <p className="mt-1 text-lg font-bold">OpenPay Pro</p>

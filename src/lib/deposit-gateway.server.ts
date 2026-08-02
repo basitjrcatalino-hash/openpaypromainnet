@@ -268,6 +268,89 @@ async function verifySolana(
   };
 }
 
+
+/* ------------------------------------------ Pi Network (Horizon) adapter */
+
+async function horizon<T>(base: string, path: string): Promise<T | null> {
+  const res = await fetch(`${base}${path}`, { headers: { Accept: "application/json" } });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Pi Horizon ${path} failed [${res.status}]`);
+  return (await res.json()) as T;
+}
+
+/**
+ * Verify a Pi mainnet deposit against the Pi blockchain explorer API
+ * (Horizon: https://api.mainnet.minepi.com). Matches native Pi payments to the
+ * platform deposit account, including muxed (M…) destinations.
+ */
+async function verifyPi(
+  chain: ChainRow,
+  token: TokenRow,
+  toAddress: string,
+  txHash: string,
+): Promise<OnChainDeposit> {
+  const base = resolveRpc(chain);
+  const empty = { found: false, amount: 0, from: null, to: null, blockNumber: null, confirmations: 0, failed: false };
+  if (!base) return { ...empty, reason: "No Pi Horizon endpoint configured" };
+
+  const hash = txHash.trim().toLowerCase();
+  const tx = await horizon<any>(base, `/transactions/${hash}`);
+  if (!tx) return { ...empty, reason: "Transaction not found on the Pi blockchain yet" };
+
+  const ledger = Number(tx.ledger ?? tx.ledger_attr ?? 0) || null;
+  let confirmations = 1;
+  try {
+    const head = await horizon<any>(base, `/ledgers?order=desc&limit=1`);
+    const latest = Number(head?._embedded?.records?.[0]?.sequence ?? 0);
+    if (latest && ledger) confirmations = Math.max(1, latest - ledger + 1);
+  } catch {
+    /* head lookup is best-effort */
+  }
+
+  if (tx.successful === false) {
+    return { found: true, amount: 0, from: null, to: null, blockNumber: ledger, confirmations, failed: true, reason: "Transaction failed on the Pi blockchain" };
+  }
+
+  const payments = await horizon<any>(base, `/transactions/${hash}/payments?limit=200`);
+  const records: any[] = payments?._embedded?.records ?? [];
+  const want = toAddress.trim().toUpperCase();
+
+  let amount = 0;
+  let from: string | null = null;
+  for (const p of records) {
+    const dest = String(p.to ?? p.account ?? "").toUpperCase();
+    const destMuxed = String(p.to_muxed ?? "").toUpperCase();
+    if (dest !== want && destMuxed !== want) continue;
+    if (p.type === "payment" && p.asset_type !== "native") continue;
+    if (p.type !== "payment" && p.type !== "create_account") continue;
+    amount += Number(p.amount ?? p.starting_balance ?? 0);
+    from = p.from ?? p.funder ?? from;
+  }
+
+  if (amount <= 0) {
+    return {
+      found: true,
+      amount: 0,
+      from,
+      to: null,
+      blockNumber: ledger,
+      confirmations,
+      failed: true,
+      reason: `No ${token.symbol} payment to the deposit address in this transaction`,
+    };
+  }
+
+  return {
+    found: true,
+    amount: Math.round(amount * 1e7) / 1e7,
+    from,
+    to: toAddress,
+    blockNumber: ledger,
+    confirmations,
+    failed: false,
+  };
+}
+
 /** Adapter registry — add a family here to support a new chain type. */
 export async function verifyOnChainDeposit(
   chain: ChainRow,
@@ -276,6 +359,9 @@ export async function verifyOnChainDeposit(
   txHash: string,
 ): Promise<OnChainDeposit> {
   try {
+    if (chain.family === "pi" || chain.family === "stellar") {
+      return await verifyPi(chain, token, toAddress, txHash);
+    }
     if (chain.family === "solana") return await verifySolana(chain, token, toAddress, txHash);
     return await verifyEvm(chain, token, toAddress, txHash);
   } catch (err) {

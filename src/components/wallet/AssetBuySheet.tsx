@@ -127,6 +127,12 @@ const ALL_METHODS: {
   desc: string;
 }[] = [
   {
+    id: "pi",
+    label: "Pi Network (π)",
+    logoUrl: PI_NETWORK_LOGO_URL,
+    desc: "Pay with Pi · live π price → OUSD ($1)",
+  },
+  {
     id: "wallet_ousd",
     label: "Wallet OUSD",
     logoUrl: OUSD_LOGO_URL,
@@ -161,12 +167,6 @@ const ALL_METHODS: {
     label: "MoonPay",
     icon: CreditCard,
     desc: "Card / Apple Pay / Google Pay → OUSD",
-  },
-  {
-    id: "pi",
-    label: "Pi Network (π)",
-    logoUrl: PI_NETWORK_LOGO_URL,
-    desc: "Pay with Pi · live π price → OUSD ($1)",
   },
   {
     id: "usdc",
@@ -238,9 +238,7 @@ export function AssetBuySheet({
   const [amount, setAmount] = useState("25");
   const [step, setStep] = useState<BuyStep>("amount");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [method, setMethod] = useState<PaymentMethod>(
-    token.isOusd ? "pi" : "wallet_ousd",
-  );
+  const [method, setMethod] = useState<PaymentMethod>("pi");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [moonpayVisible, setMoonpayVisible] = useState(false);
@@ -318,11 +316,15 @@ export function AssetBuySheet({
         const c = byKey.get(configKey(m.id));
         return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
       })
-      .sort(
-        (a, b) =>
-          Number(byKey.get(configKey(a.id))?.sort_order ?? 0) -
-          Number(byKey.get(configKey(b.id))?.sort_order ?? 0),
-      );
+      .sort((a, b) => {
+        // Pi Network always first on Buy payment methods
+        if (a.id === "pi" && b.id !== "pi") return -1;
+        if (b.id === "pi" && a.id !== "pi") return 1;
+        return (
+          Number(byKey.get(configKey(a.id))?.sort_order ?? 50) -
+          Number(byKey.get(configKey(b.id))?.sort_order ?? 50)
+        );
+      });
   }, [methodConfig, isOusd, targetSymbol]);
   const methodIdsKey = useMemo(() => methods.map((m) => m.id).join(","), [methods]);
 
@@ -360,7 +362,7 @@ export function AssetBuySheet({
     if (!open) return;
     setAmount("25");
     setStep("amount");
-    setMethod(isOusd ? "pi" : "wallet_ousd");
+    setMethod("pi");
     setActionError(null);
     setBusy(false);
     setDepositReady(false);

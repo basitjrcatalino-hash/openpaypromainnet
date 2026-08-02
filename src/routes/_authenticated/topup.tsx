@@ -96,6 +96,12 @@ const methods: {
   desc: string;
 }[] = [
   {
+    id: "pi",
+    label: "Pi Network (π)",
+    logoUrl: PI_NETWORK_LOGO_URL,
+    desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
+  },
+  {
     id: "openpay_balance",
     label: "OpenPay Balance",
     logoUrl: OUSD_LOGO_URL,
@@ -156,12 +162,6 @@ const methods: {
     desc: "Banxa · ACH / SEPA / Faster Payments / PayID → OUSD",
   },
   {
-    id: "pi",
-    label: "Pi Network (π)",
-    logoUrl: PI_NETWORK_LOGO_URL,
-    desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
-  },
-  {
     id: "usdc",
     label: "USDC Pay",
     logoUrl: USDC_LOGO_URL,
@@ -216,7 +216,7 @@ function TopUpPage() {
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/topup" });
   const [amount, setAmount] = useState("25");
-  const [method, setMethod] = useState<Method>("openpay_balance");
+  const [method, setMethod] = useState<Method>("pi");
   const [step, setStep] = useState<BuyStep>("amount");
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -296,10 +296,13 @@ function TopUpPage() {
         const c = byKey.get(m.id);
         return c ? { ...m, label: c.label || m.label, desc: c.description || m.desc } : m;
       })
-      .sort(
-        (a, b) =>
-          Number(byKey.get(a.id)?.sort_order ?? 0) - Number(byKey.get(b.id)?.sort_order ?? 0),
-      );
+      .sort((a, b) => {
+        if (a.id === "pi" && b.id !== "pi") return -1;
+        if (b.id === "pi" && a.id !== "pi") return 1;
+        return (
+          Number(byKey.get(a.id)?.sort_order ?? 50) - Number(byKey.get(b.id)?.sort_order ?? 50)
+        );
+      });
   }, [methodConfig]);
 
   const visibleMethodIds = useMemo(() => visibleMethods.map((m) => m.id).join(","), [visibleMethods]);

@@ -413,6 +413,8 @@ function AuthenticatedLayout() {
   const qc = useQueryClient();
   const hideChrome =
     pathname === "/scan" ||
+    pathname === "/trade" ||
+    pathname.startsWith("/trade/") ||
     pathname === "/chat" ||
     pathname.startsWith("/chat/") ||
     /\/opentoken\/[^/]+\/chat\/?$/.test(pathname) ||

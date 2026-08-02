@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { AlertTriangle, ExternalLink, MessageCircle } from "lucide-react";
+import { AlertTriangle, ExternalLink, MessageCircle, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 
@@ -11,10 +11,11 @@ import { TradingViewEmbed } from "@/components/trade/TradingViewEmbed";
 import { TradeModeTabs } from "@/components/trade/TradeModeTabs";
 import { TradePairHeader } from "@/components/trade/TradePairHeader";
 import { OrderBook } from "@/components/trade/OrderBook";
+import { RecentTrades } from "@/components/trade/RecentTrades";
+import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
-import { TradeBottomDock } from "@/components/trade/TradeBottomDock";
+import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
 import {
   closePerpPosition,
@@ -22,7 +23,7 @@ import {
   openPerpPosition,
 } from "@/lib/perp.functions";
 import { getPerpLiveQuotes } from "@/lib/perp-market.functions";
-import { getExchangeDepth } from "@/lib/exchange-depth.functions";
+import { getExchangeDepth, getRecentTrades } from "@/lib/exchange-depth.functions";
 import { buyMajorWithOusd } from "@/lib/buy-major.functions";
 import {
   BTC_SWAP_ID,
@@ -35,7 +36,15 @@ import {
   USDC_SWAP_ID,
 } from "@/lib/opendex.functions";
 import {
-  PERP_MARKETS,
+  cancelSpotOrder,
+  fillSpotLimitOrder,
+  listSpotOrders,
+  listSpotTradeHistory,
+  placeSpotLimitOrder,
+  processSpotOrders,
+} from "@/lib/spot-orders.functions";
+import { limitIsMarketable } from "@/lib/spot-orders";
+import {
   isPerpMarket,
   marketToMajorId,
   type PerpMarginAsset,
@@ -43,7 +52,6 @@ import {
   type PerpSide,
 } from "@/lib/perp";
 import {
-  MAJOR_TOKENS,
   PERP_CHART_PERIODS,
   fetchMajorMarkets,
   majorMarketById,
@@ -109,8 +117,15 @@ function TradePage() {
   const closePos = useServerFn(closePerpPosition);
   const fetchQuotes = useServerFn(getPerpLiveQuotes);
   const fetchDepth = useServerFn(getExchangeDepth);
+  const fetchTrades = useServerFn(getRecentTrades);
   const buyMajor = useServerFn(buyMajorWithOusd);
   const dexSwap = useServerFn(executeOpenDexSwap);
+  const placeLimit = useServerFn(placeSpotLimitOrder);
+  const fillLimit = useServerFn(fillSpotLimitOrder);
+  const cancelLimit = useServerFn(cancelSpotOrder);
+  const listOrders = useServerFn(listSpotOrders);
+  const processOrders = useServerFn(processSpotOrders);
+  const listTradeHist = useServerFn(listSpotTradeHistory);
 
   const initialMarket: PerpMarket =
     search.market && isPerpMarket(search.market)
@@ -125,7 +140,11 @@ function TradePage() {
   const [infoTab, setInfoTab] = useState<InfoTab>("overview");
   const [period, setPeriod] = useState<PerpChartPeriod>("LIVE");
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [dockTab, setDockTab] = useState<"orders" | "positions">("positions");
+  const [dockTab, setDockTab] = useState<DockTab>("orders");
+  const [dockExpanded, setDockExpanded] = useState(false);
+  const [bookPane, setBookPane] = useState<"book" | "trades">("book");
+  const chartHostRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState(320);
 
   // Shared order form state
   const [orderType, setOrderType] = useState<"market" | "limit">("market");
@@ -163,6 +182,17 @@ function TradePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (view !== "chart") return;
+    const el = chartHostRef.current;
+    if (!el) return;
+    const measure = () => setChartHeight(Math.max(220, Math.floor(el.clientHeight)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [view, dockExpanded]);
+
   const quotesQ = useQuery({
     queryKey: ["perp-live-quotes"],
     staleTime: 8_000,
@@ -191,7 +221,6 @@ function TradePage() {
   });
 
   const majorId = marketToMajorId(market);
-  const def = MAJOR_TOKENS[majorId];
   const quote = quoteByMarket(quotesQ.data, market);
   const majorSnap = majorMarketById(majorsQ.data, majorId);
   const price = Number(
@@ -226,6 +255,53 @@ function TradePage() {
         data: { market, mode, mark: price > 0 ? price : undefined },
       }),
   });
+
+  const recentQ = useQuery({
+    queryKey: ["recent-trades", market, mode],
+    staleTime: 4_000,
+    refetchInterval: 8_000,
+    queryFn: () => fetchTrades({ data: { market, mode } }),
+  });
+
+  const openOrdersQ = useQuery({
+    queryKey: ["spot-orders-open", market],
+    staleTime: 5_000,
+    refetchInterval: 10_000,
+    enabled: mode === "spot",
+    queryFn: () => listOrders({ data: { market, status: "open" } }),
+  });
+
+  const orderHistQ = useQuery({
+    queryKey: ["spot-orders-history", market],
+    staleTime: 15_000,
+    enabled: mode === "spot" && dockExpanded && dockTab === "orderHistory",
+    queryFn: () => listOrders({ data: { market, status: "history" } }),
+  });
+
+  const tradeHistQ = useQuery({
+    queryKey: ["spot-trade-history", market],
+    staleTime: 15_000,
+    enabled: dockExpanded && dockTab === "tradeHistory",
+    queryFn: () => listTradeHist({ data: { market } }),
+  });
+
+  // Poll resting limits for fill
+  useEffect(() => {
+    if (mode !== "spot") return;
+    const tick = () => {
+      void processOrders({ data: { market } }).then((r) => {
+        if (r.filled > 0) {
+          void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
+          void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
+          void qc.invalidateQueries({ queryKey: ["account-balances"] });
+          void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
+        }
+      });
+    };
+    tick();
+    const id = window.setInterval(tick, 12_000);
+    return () => window.clearInterval(id);
+  }, [mode, market, processOrders, qc]);
 
   const tvSymbol = tvSymbolForMode(market, mode);
   const tvInterval = periodToTvInterval(period);
@@ -297,9 +373,31 @@ function TradePage() {
         orderType === "limit" && Number(limitPrice) > 0 ? Number(limitPrice) : price;
       if (!(px > 0)) throw new Error("No market price");
 
+      if (orderType === "limit") {
+        const order = await placeLimit({
+          data: {
+            market,
+            side: spotSide,
+            price: px,
+            amount: qty,
+            pay_asset: payAsset,
+          },
+        });
+        // Try immediate fill when mark is already through the limit
+        if (limitIsMarketable(spotSide, px, price)) {
+          try {
+            const filled = await fillLimit({ data: { id: order.id } });
+            return { kind: "limit" as const, order: filled };
+          } catch {
+            return { kind: "limit" as const, order };
+          }
+        }
+        return { kind: "limit" as const, order };
+      }
+
       if (spotSide === "buy") {
         const usd = Math.round(qty * px * 1e8) / 1e8;
-        return buyMajor({
+        const res = await buyMajor({
           data: {
             wallet_id: walletId,
             major_id: majorId,
@@ -307,9 +405,10 @@ function TradePage() {
             pay_asset: payAsset,
           },
         });
+        return { kind: "market" as const, res };
       }
 
-      return dexSwap({
+      const res = await dexSwap({
         data: {
           wallet_id: walletId,
           from_id: MAJOR_SWAP[market],
@@ -318,15 +417,39 @@ function TradePage() {
           slippage: 1,
         },
       });
+      return { kind: "market" as const, res };
     },
-    onSuccess: () => {
-      notifySuccess(spotSide === "buy" ? "Spot buy filled" : "Spot sell filled", {
-        sound: spotSide === "buy" ? "receive" : "send",
-      });
+    onSuccess: (result) => {
+      if (result.kind === "limit") {
+        if (result.order.status === "filled") {
+          notifySuccess("Limit filled", { sound: "receive" });
+        } else {
+          notifySuccess("Limit order placed", { sound: "send" });
+          setDockTab("orders");
+          setDockExpanded(true);
+        }
+      } else {
+        notifySuccess(spotSide === "buy" ? "Spot buy filled" : "Spot sell filled", {
+          sound: spotSide === "buy" ? "receive" : "send",
+        });
+      }
       setAmount("");
       setPct(0);
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
       void qc.invalidateQueries({ queryKey: ["major-markets"] });
+      void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
+      void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
+      void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cancelM = useMutation({
+    mutationFn: (id: string) => cancelLimit({ data: { id } }),
+    onSuccess: () => {
+      notifySuccess("Order cancelled");
+      void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
+      void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -349,18 +472,38 @@ function TradePage() {
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;
 
   return (
-    <div className="ot-phantom mx-auto flex w-full max-w-lg flex-col bg-background pb-[calc(var(--ph-tabbar-content,3.75rem)+2rem)]">
-      <TradeModeTabs
-        mode={mode}
-        onChange={(m) => {
-          setMode(m);
-          setAmount("");
-          setPct(0);
-          setView(m === "futures" ? "chart" : "trade");
-        }}
-      />
+    <div className="ot-phantom flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-background">
+      <header className="flex shrink-0 items-center gap-2 border-b border-border/40 px-2 pt-[max(0.35rem,env(safe-area-inset-top))]">
+        <Link
+          to="/dashboard"
+          aria-label="Close trade"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground press hover:bg-muted/50 hover:text-foreground"
+        >
+          <X className="h-5 w-5" />
+        </Link>
+        <TradeModeTabs
+          className="min-w-0 flex-1 border-0"
+          mode={mode}
+          onChange={(m) => {
+            setMode(m);
+            setAmount("");
+            setPct(0);
+            setView(m === "futures" ? "chart" : "trade");
+            setDockExpanded(false);
+          }}
+        />
+        <Link
+          to="/asset/$tokenId/chat"
+          params={{ tokenId: market.toLowerCase() }}
+          aria-label="Live chat"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground press hover:bg-muted/50 hover:text-[#ffad0a]"
+        >
+          <MessageCircle className="h-4 w-4" />
+        </Link>
+      </header>
 
       <TradePairHeader
+        compact
         market={market}
         mode={mode}
         price={price}
@@ -376,7 +519,7 @@ function TradePage() {
         source={quote?.source}
       />
 
-      <div className="mt-1 flex gap-4 overflow-x-auto border-b border-border/40 px-4 scrollbar-none">
+      <div className="flex shrink-0 gap-4 overflow-x-auto border-b border-border/40 px-3 scrollbar-none">
         {(
           [
             ["chart", "Chart"],
@@ -387,322 +530,315 @@ function TradePage() {
           <button
             key={id}
             type="button"
-            onClick={() => setView(id)}
+            onClick={() => {
+              setView(id);
+              if (id === "trade") setDockExpanded(false);
+            }}
             className={cn(
-              "relative shrink-0 pb-2.5 pt-1 text-[13px] font-semibold press",
+              "relative shrink-0 pb-2 pt-1 text-[13px] font-semibold press",
               view === id ? "text-foreground" : "text-muted-foreground",
             )}
           >
             {label}
             {view === id ? (
-              <span className="absolute inset-x-0 bottom-0 h-[2px] bg-foreground" />
+              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
             ) : null}
           </button>
         ))}
       </div>
 
-      {view === "chart" ? (
-        <div className="mt-0">
-          <div className="flex gap-1 overflow-x-auto border-b border-border/30 px-3 py-1.5 scrollbar-none">
-            {PERP_CHART_PERIODS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  "shrink-0 px-2.5 py-1 text-[11px] font-semibold press",
-                  period === p
-                    ? "rounded text-foreground bg-muted/70"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {p === "LIVE" ? "1m" : p}
-              </button>
-            ))}
-          </div>
-          <TradingViewEmbed
-            key={`${tvSymbol}-${tvInterval}`}
-            kind="advanced-chart"
-            symbol={tvSymbol}
-            interval={tvInterval}
-            height={320}
-            className="rounded-none"
-          />
-          <p className="mt-2 px-4 text-[11px] text-muted-foreground">
-            News &amp; analysis live on the{" "}
-            <button
-              type="button"
-              className="font-semibold text-foreground underline-offset-2 press hover:underline"
-              onClick={() => {
-                setView("info");
-                setInfoTab("news");
-              }}
-            >
-              Info
-            </button>{" "}
-            tab.
-          </p>
-        </div>
-      ) : null}
-
-      {view === "trade" ? (
-        <div className="mt-3 grid grid-cols-[1.15fr_0.95fr] gap-2 px-3">
-          <div className="min-w-0">
-            {mode === "futures" ? (
-              <ExchangeOrderForm
-                mode="futures"
-                market={market}
-                markPrice={price}
-                orderType={orderType}
-                onOrderType={setOrderType}
-                limitPrice={limitPrice}
-                onLimitPrice={setLimitPrice}
-                amount={amount}
-                onAmount={setAmount}
-                pct={pct}
-                onPct={applyPct}
-                busy={formBusy}
-                action={futAction}
-                onAction={setFutAction}
-                leverage={leverage}
-                onLeverage={setLeverage}
-                marginAsset={marginAsset}
-                onMarginAsset={setMarginAsset}
-                available={tradingBal}
-                hasLong={hasLong}
-                hasShort={hasShort}
-                onSubmitLong={() => onFuturesSubmit("long")}
-                onSubmitShort={() => onFuturesSubmit("short")}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {view === "chart" ? (
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border/30 px-2 py-1 scrollbar-none">
+              {PERP_CHART_PERIODS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPeriod(p)}
+                  className={cn(
+                    "shrink-0 px-2.5 py-1 text-[11px] font-semibold press",
+                    period === p
+                      ? "rounded bg-muted/70 text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {p === "LIVE" ? "1m" : p}
+                </button>
+              ))}
+            </div>
+            <div ref={chartHostRef} className="min-h-0 flex-1">
+              <TradingViewEmbed
+                key={`${tvSymbol}-${tvInterval}-${chartHeight}`}
+                kind="advanced-chart"
+                symbol={tvSymbol}
+                interval={tvInterval}
+                height={chartHeight}
+                className="rounded-none"
               />
-            ) : (
-              <ExchangeOrderForm
-                mode="spot"
-                market={market}
-                markPrice={price}
-                orderType={orderType}
-                onOrderType={setOrderType}
-                limitPrice={limitPrice}
-                onLimitPrice={setLimitPrice}
-                amount={amount}
-                onAmount={setAmount}
-                pct={pct}
-                onPct={applyPct}
-                busy={formBusy}
-                side={spotSide}
-                onSide={(s) => {
-                  setSpotSide(s);
-                  setAmount("");
-                  setPct(0);
-                }}
-                payAsset={payAsset}
-                onPayAsset={setPayAsset}
-                availableQuote={fundingQuote}
-                availableBase={fundingBase}
-                onSubmit={() => spotM.mutate()}
-              />
-            )}
+            </div>
           </div>
-          <div className="min-h-[22rem] min-w-0 rounded-xl border border-border/40 bg-card/40 p-2">
-            <OrderBook
-              book={depthQ.data}
-              baseSymbol={market}
-              midOverride={mid}
-              loading={depthQ.isLoading}
-              change24h={change}
-            />
-          </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {view === "info" ? (
-        <div className="mt-3 space-y-3 px-3">
-          <div className="flex gap-4 border-b border-border/40">
-            {(
-              [
-                ["overview", "Overview"],
-                ["news", "News"],
-                ["alerts", "Analysis"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setInfoTab(id)}
-                className={cn(
-                  "relative pb-2 text-[12px] font-semibold press",
-                  infoTab === id ? "text-foreground" : "text-muted-foreground",
+        {view === "trade" ? (
+          <div className="grid h-full min-h-0 grid-cols-[1.08fr_0.92fr] gap-2 overflow-y-auto overscroll-contain px-2 py-2">
+            <div className="min-w-0 pb-2">
+              {mode === "futures" ? (
+                <ExchangeOrderForm
+                  mode="futures"
+                  market={market}
+                  markPrice={price}
+                  orderType={orderType}
+                  onOrderType={setOrderType}
+                  limitPrice={limitPrice}
+                  onLimitPrice={setLimitPrice}
+                  amount={amount}
+                  onAmount={setAmount}
+                  pct={pct}
+                  onPct={applyPct}
+                  busy={formBusy}
+                  action={futAction}
+                  onAction={setFutAction}
+                  leverage={leverage}
+                  onLeverage={setLeverage}
+                  marginAsset={marginAsset}
+                  onMarginAsset={setMarginAsset}
+                  available={tradingBal}
+                  hasLong={hasLong}
+                  hasShort={hasShort}
+                  onSubmitLong={() => onFuturesSubmit("long")}
+                  onSubmitShort={() => onFuturesSubmit("short")}
+                />
+              ) : (
+                <ExchangeOrderForm
+                  mode="spot"
+                  market={market}
+                  markPrice={price}
+                  orderType={orderType}
+                  onOrderType={setOrderType}
+                  limitPrice={limitPrice}
+                  onLimitPrice={setLimitPrice}
+                  amount={amount}
+                  onAmount={setAmount}
+                  pct={pct}
+                  onPct={applyPct}
+                  busy={formBusy}
+                  side={spotSide}
+                  onSide={(s) => {
+                    setSpotSide(s);
+                    setAmount("");
+                    setPct(0);
+                  }}
+                  payAsset={payAsset}
+                  onPayAsset={setPayAsset}
+                  availableQuote={fundingQuote}
+                  availableBase={fundingBase}
+                  onSubmit={() => spotM.mutate()}
+                />
+              )}
+            </div>
+            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border/40 bg-card/30">
+              <div className="flex shrink-0 gap-3 border-b border-border/40 px-2 py-1.5 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setBookPane("book")}
+                  className={cn(
+                    "press",
+                    bookPane === "book" ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  Order book
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBookPane("trades")}
+                  className={cn(
+                    "press",
+                    bookPane === "trades" ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  Recent
+                </button>
+              </div>
+              <div className="min-h-[16rem] flex-1 overflow-hidden p-1.5">
+                {bookPane === "book" ? (
+                  <OrderBook
+                    book={depthQ.data}
+                    baseSymbol={market}
+                    midOverride={mid}
+                    loading={depthQ.isLoading}
+                    change24h={change}
+                  />
+                ) : (
+                  <RecentTrades trades={recentQ.data} loading={recentQ.isLoading} />
                 )}
-              >
-                {label}
-                {infoTab === id ? (
-                  <span className="absolute inset-x-0 bottom-0 h-[2px] bg-[#ffad0a]" />
-                ) : null}
-              </button>
-            ))}
-          </div>
-          {infoTab === "overview" ? (
-            <div className="space-y-3">
-              <TradingViewEmbed kind="symbol-info" symbol={tvSymbol} height={200} />
-              <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-[11px]">
-                <div>
-                  <p className="text-muted-foreground">Contract</p>
-                  <p className="mt-0.5 font-semibold">{pairLabel(market, mode)} Perp</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Quote</p>
-                  <p className="mt-0.5 font-semibold">USDT</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Mark</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
-                    {price > 0 ? formatNumber(price, price >= 1000 ? 1 : 2) : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Funding</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
-                    {quote?.fundingRate != null
-                      ? `${quote.fundingRate >= 0 ? "+" : ""}${formatNumber(quote.fundingRate, 4)}%`
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">24h high</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
-                    {quote?.high24h ? formatNumber(quote.high24h, price >= 1000 ? 1 : 2) : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">24h low</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
-                    {quote?.low24h ? formatNumber(quote.low24h, price >= 1000 ? 1 : 2) : "—"}
-                  </p>
-                </div>
               </div>
             </div>
-          ) : null}
-          {infoTab === "news" ? (
-            <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={440} />
-          ) : null}
-          {infoTab === "alerts" ? (
-            <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={420} />
-          ) : null}
-          <a
-            href={PERP_TV[market].tvUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
-          >
-            Open on TradingView <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-      ) : null}
-
-      <Link
-        to="/asset/$tokenId/chat"
-        params={{ tokenId: market.toLowerCase() }}
-        className="mx-4 mt-3 flex items-center justify-between border-y border-border/40 bg-transparent px-1 py-3 press"
-      >
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-4 w-4 text-[#ffad0a]" />
-          <div>
-            <p className="text-sm font-semibold">Live Chat</p>
-            <p className="text-[11px] text-muted-foreground">{market} perpetual room</p>
           </div>
-        </div>
-        <span className="text-[11px] font-semibold text-[#0ecb81]">Online</span>
-      </Link>
+        ) : null}
 
-      {mode === "futures" ? (
-        <div className="mx-4 mt-2 flex gap-2 rounded-lg border border-[#ffad0a]/25 bg-[#ffad0a]/8 px-3 py-2.5">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ffad0a]" />
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-foreground">Trade is risky.</span> Perpetuals can
-            liquidate your margin. Charts and depth are informational — not advice.
-          </p>
-        </div>
-      ) : (
-        <p className="mx-4 mt-2 text-[11px] leading-relaxed text-muted-foreground">
-          Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via OpenDEX at live mark.
-        </p>
-      )}
-
-      <div className="mt-2">
-        <TradeBottomDock
-          mode={mode}
-          tab={dockTab}
-          onTab={setDockTab}
-          positions={mode === "futures" ? marketPositions : []}
-          markPrice={price}
-          onClosePosition={(id) => closeM.mutate(id)}
-          closingId={closeM.isPending ? closeM.variables : null}
-          onGoTrade={view !== "trade" ? () => setView("trade") : undefined}
-        />
+        {view === "info" ? (
+          <div className="h-full space-y-3 overflow-y-auto overscroll-contain px-3 py-3 pb-6">
+            <div className="flex gap-4 border-b border-border/40">
+              {(
+                [
+                  ["overview", "Overview"],
+                  ["news", "News"],
+                  ["alerts", "Analysis"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInfoTab(id)}
+                  className={cn(
+                    "relative pb-2 text-[12px] font-semibold press",
+                    infoTab === id ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                  {infoTab === id ? (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#ffad0a]" />
+                  ) : null}
+                </button>
+              ))}
+            </div>
+            {infoTab === "overview" ? (
+              <div className="space-y-3">
+                <TradingViewEmbed kind="symbol-info" symbol={tvSymbol} height={180} />
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-[11px]">
+                  <div>
+                    <p className="text-muted-foreground">Contract</p>
+                    <p className="mt-0.5 font-semibold">{pairLabel(market, mode)} Perp</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Quote</p>
+                    <p className="mt-0.5 font-semibold">USDT</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Mark</p>
+                    <p className="mt-0.5 font-semibold tabular-nums">
+                      {price > 0 ? formatNumber(price, price >= 1000 ? 1 : 2) : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Funding</p>
+                    <p className="mt-0.5 font-semibold tabular-nums">
+                      {quote?.fundingRate != null
+                        ? `${quote.fundingRate >= 0 ? "+" : ""}${formatNumber(quote.fundingRate, 4)}%`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">24h high</p>
+                    <p className="mt-0.5 font-semibold tabular-nums">
+                      {quote?.high24h ? formatNumber(quote.high24h, price >= 1000 ? 1 : 2) : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">24h low</p>
+                    <p className="mt-0.5 font-semibold tabular-nums">
+                      {quote?.low24h ? formatNumber(quote.low24h, price >= 1000 ? 1 : 2) : "—"}
+                    </p>
+                  </div>
+                </div>
+                {mode === "futures" ? (
+                  <div className="flex gap-2 rounded-lg border border-[#ffad0a]/25 bg-[#ffad0a]/8 px-3 py-2.5">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ffad0a]" />
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      <span className="font-semibold text-foreground">Trade is risky.</span>{" "}
+                      Perpetuals can liquidate your margin. Charts and depth are informational —
+                      not advice.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    Spot {pairLabel(market, "spot")} uses Funding balances. Buy/Sell settles via
+                    OpenDEX at live mark.
+                  </p>
+                )}
+                <Link
+                  to="/asset/$tokenId/chat"
+                  params={{ tokenId: market.toLowerCase() }}
+                  className="flex items-center justify-between rounded-xl border border-border/50 px-3 py-2.5 press"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <MessageCircle className="h-4 w-4 text-[#ffad0a]" />
+                    Live Chat · {market}
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#0ecb81]">Online</span>
+                </Link>
+              </div>
+            ) : null}
+            {infoTab === "news" ? (
+              <TradingViewEmbed kind="timeline" symbol={tvSymbol} height={420} />
+            ) : null}
+            {infoTab === "alerts" ? (
+              <TradingViewEmbed kind="technical-analysis" symbol={tvSymbol} height={400} />
+            ) : null}
+            <a
+              href={PERP_TV[market].tvUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
+            >
+              Open on TradingView <ExternalLink className="h-3 w-3" />
+            </a>
+            <p className="pb-2 text-center text-[10px] text-muted-foreground">
+              Charts by TradingView
+              {depthQ.data?.source ? ` · Depth ${depthQ.data.source}` : null}
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      <p className="mx-4 mt-2 pb-2 text-center text-[10px] text-muted-foreground">
-        Charts by{" "}
-        <a
-          href="https://www.tradingview.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline-offset-2 hover:underline"
-        >
-          TradingView
-        </a>
-        {depthQ.data?.source ? ` · Depth ${depthQ.data.source}` : null}
-      </p>
+      <TradeBottomDock
+        mode={mode}
+        market={market}
+        tab={dockTab}
+        onTab={setDockTab}
+        positions={mode === "futures" ? marketPositions : []}
+        markPrice={price}
+        onClosePosition={(id) => closeM.mutate(id)}
+        closingId={closeM.isPending ? closeM.variables : null}
+        onGoTrade={view !== "trade" ? () => setView("trade") : undefined}
+        expanded={dockExpanded}
+        onExpanded={setDockExpanded}
+        openOrders={openOrdersQ.data ?? []}
+        orderHistory={orderHistQ.data ?? []}
+        tradeHistory={tradeHistQ.data ?? []}
+        assets={[
+          { symbol: "USDT", amount: Number(balQ.data?.balances?.funding?.USDT ?? 0) },
+          { symbol: "OUSD", amount: Number(balQ.data?.balances?.funding?.OUSD ?? 0) },
+          { symbol: "USDC", amount: Number(balQ.data?.balances?.funding?.USDC ?? 0) },
+          { symbol: market, amount: fundingBase },
+          {
+            symbol: `${marginAsset} (Trading)`,
+            amount: tradingBal,
+          },
+        ].filter((a) => a.amount > 0 || a.symbol === "USDT" || a.symbol === "OUSD")}
+        onCancelOrder={(id) => cancelM.mutate(id)}
+        cancellingId={cancelM.isPending ? cancelM.variables : null}
+      />
 
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">
           <SheetHeader>
             <SheetTitle>Select market</SheetTitle>
           </SheetHeader>
-          <div className="mt-3 space-y-1 pb-6">
-            {PERP_MARKETS.map((m) => {
-              const id = marketToMajorId(m);
-              const d = MAJOR_TOKENS[id];
-              const s = quoteByMarket(quotesQ.data, m);
-              const snap = majorMarketById(majorsQ.data, id);
-              const px = Number(
-                s?.markPrice && s.markPrice > 0
-                  ? s.markPrice
-                  : s?.price && s.price > 0
-                    ? s.price
-                    : snap.price > 0
-                      ? snap.price
-                      : 0,
-              );
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 press hover:bg-muted/50"
-                  onClick={() => {
-                    setMarket(m);
-                    setPickerOpen(false);
-                    setAmount("");
-                    setPct(0);
-                  }}
-                >
-                  <TokenAvatar
-                    logoUrl={d.logoUrl}
-                    name={d.name}
-                    symbol={d.symbol}
-                    verified
-                  />
-                  <span className="min-w-0 flex-1 text-left">
-                    <span className="block font-bold">{pairLabel(m, mode)}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      {mode === "futures" ? PERP_TV[m].tvSymbol : tvSymbolForMode(m, "spot")}
-                    </span>
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums">
-                    ${formatNumber(px, px >= 1000 ? 0 : px >= 1 ? 2 : 4)}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="mt-3 pb-4">
+            <TradePairSearch
+              mode={mode}
+              market={market}
+              quotes={quotesQ.data}
+              majors={majorsQ.data}
+              onSelect={(m) => {
+                setMarket(m);
+                setPickerOpen(false);
+                setAmount("");
+                setPct(0);
+              }}
+            />
           </div>
         </SheetContent>
       </Sheet>

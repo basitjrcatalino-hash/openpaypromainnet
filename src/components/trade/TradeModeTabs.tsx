@@ -4,12 +4,14 @@ import type { TradeMode } from "@/lib/exchange-depth";
 export function TradeModeTabs({
   mode,
   onChange,
+  className,
 }: {
   mode: TradeMode;
   onChange: (m: TradeMode) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex items-end gap-5 border-b border-border/40 px-4">
+    <div className={cn("flex items-end gap-5", className)}>
       {(
         [
           ["spot", "Spot"],
@@ -21,7 +23,7 @@ export function TradeModeTabs({
           type="button"
           onClick={() => onChange(id)}
           className={cn(
-            "relative pb-2.5 pt-3 text-[15px] font-semibold tracking-tight press",
+            "relative pb-2 pt-1 text-[15px] font-semibold tracking-tight press",
             mode === id ? "text-foreground" : "text-muted-foreground/80",
           )}
         >

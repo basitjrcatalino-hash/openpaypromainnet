@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { ArrowLeftRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import {
@@ -10,8 +10,10 @@ import {
   type PerpSide,
 } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
+import { PLATFORM_TRADE_FEE_BPS } from "@/lib/platform-treasury";
 
 const PCTS = [0, 25, 50, 75, 100] as const;
+const FEE_RATE = PLATFORM_TRADE_FEE_BPS / 10_000;
 
 export type SpotSide = "buy" | "sell";
 export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
@@ -67,6 +69,18 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
       : props.markPrice;
   const amt = Number(props.amount) || 0;
   const priceDigits = props.markPrice >= 1000 ? 1 : props.markPrice >= 1 ? 2 : 4;
+  const total = amt > 0 && price > 0 ? amt * price : 0;
+  const fee = total > 0 ? total * FEE_RATE : 0;
+  const receive =
+    props.mode === "spot"
+      ? props.side === "buy"
+        ? amt > 0
+          ? amt * (1 - FEE_RATE)
+          : 0
+        : total > 0
+          ? total * (1 - FEE_RATE)
+          : 0
+      : 0;
 
   return (
     <div className="flex min-h-0 flex-col gap-2 text-[12px]">
@@ -112,6 +126,18 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         </div>
       )}
 
+      {props.mode === "spot" ? (
+        <div className="flex gap-1">
+          <Link
+            to="/swap"
+            className="flex flex-1 items-center justify-center gap-1 rounded-md bg-muted/50 py-1.5 text-[10px] font-bold text-muted-foreground press hover:text-foreground"
+          >
+            <ArrowLeftRight className="h-3 w-3" />
+            Convert / Swap
+          </Link>
+        </div>
+      ) : null}
+
       {props.mode === "futures" ? (
         <div className="flex gap-1">
           <span className="flex-1 rounded-md bg-muted/60 px-2 py-1.5 text-center text-[11px] font-semibold text-muted-foreground">
@@ -124,7 +150,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
                 type="button"
                 onClick={() => props.onLeverage(l)}
                 className={cn(
-                  "min-w-[2rem] flex-1 rounded px-1 py-1 text-[10px] font-bold",
+                  "min-w-8 flex-1 rounded px-1 py-1 text-[10px] font-bold",
                   props.leverage === l
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground",
@@ -142,8 +168,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         onChange={(e) => props.onOrderType(e.target.value as OrderType)}
         className="h-8 w-full rounded-md border-0 bg-muted/60 px-2 text-xs font-semibold text-foreground outline-none"
       >
-        <option value="market">Market order</option>
-        <option value="limit">Limit order</option>
+        <option value="market">Market</option>
+        <option value="limit">Limit</option>
       </select>
 
       {props.orderType === "limit" ? (
@@ -200,7 +226,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       <label className="block">
         <span className="mb-1 block text-[10px] text-muted-foreground">
-          {props.mode === "futures" ? "Margin" : `Amount (${props.market})`}
+          {props.mode === "futures" ? "Margin" : `Quantity (${props.market})`}
         </span>
         <input
           value={props.amount}
@@ -210,6 +236,15 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           placeholder="0"
         />
       </label>
+
+      {props.mode === "spot" ? (
+        <div className="flex h-8 items-center justify-between rounded-md bg-muted/40 px-2.5 text-[11px]">
+          <span className="text-muted-foreground">Total</span>
+          <span className="font-semibold tabular-nums">
+            {total > 0 ? `${formatNumber(total, 2)} USDT` : "—"}
+          </span>
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between gap-1 px-0.5">
         {PCTS.map((p) => (
@@ -239,7 +274,11 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
             {formatNumber(props.available, 4)} {props.marginAsset}
           </span>{" "}
           ·{" "}
-          <Link to="/transfer" search={{ from: "funding", to: "trading", asset: props.marginAsset }} className="text-primary">
+          <Link
+            to="/transfer"
+            search={{ from: "funding", to: "trading", asset: props.marginAsset }}
+            className="text-primary"
+          >
             Transfer
           </Link>
         </p>
@@ -260,17 +299,24 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
               {props.market}
             </span>
           </p>
+          {total > 0 ? (
+            <>
+              <p>
+                Est. fee ({PLATFORM_TRADE_FEE_BPS / 100}%){" "}
+                <span className="font-semibold text-foreground">{formatNumber(fee, 4)} USDT</span>
+              </p>
+              <p>
+                {props.side === "buy" ? "You receive ≈" : "You receive ≈"}{" "}
+                <span className="font-semibold text-foreground">
+                  {props.side === "buy"
+                    ? `${formatNumber(receive, 6)} ${props.market}`
+                    : `${formatNumber(receive, 2)} ${props.payAsset}`}
+                </span>
+              </p>
+            </>
+          ) : null}
         </div>
       )}
-
-      {props.mode === "spot" && amt > 0 && price > 0 ? (
-        <p className="text-[10px] text-muted-foreground">
-          Total ≈{" "}
-          <span className="font-semibold text-foreground">
-            {formatNumber(amt * price, 2)} USDT
-          </span>
-        </p>
-      ) : null}
 
       {props.mode === "futures" && amt > 0 ? (
         <p className="text-[10px] text-muted-foreground">
@@ -335,6 +381,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         >
           {props.busy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
+          ) : props.orderType === "limit" ? (
+            `${props.side === "buy" ? "Buy" : "Sell"} limit`
           ) : (
             `${props.side === "buy" ? "Buy" : "Sell"} ${props.market}`
           )}

@@ -31,16 +31,16 @@ type BuyMethod = "openpay_balance" | "pi";
 
 const BUY_METHODS = [
   {
-    id: "openpay_balance" as const,
-    label: "OpenPay Balance",
-    logoUrl: OUSD_LOGO_URL,
-    desc: "Pay / top up from connected OpenPay · same as Buy",
-  },
-  {
     id: "pi" as const,
     label: "Pi Network (π)",
     logoUrl: PI_NETWORK_LOGO_URL,
     desc: "Pay with Pi · live π price → OUSD ($1) credited instantly",
+  },
+  {
+    id: "openpay_balance" as const,
+    label: "OpenPay Balance",
+    logoUrl: OUSD_LOGO_URL,
+    desc: "Pay / top up from connected OpenPay · same as Buy",
   },
 ];
 const BUY_PRESETS = [
@@ -105,7 +105,7 @@ export function TradePanel({
   const [busy, setBusy] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [payMethod, setPayMethod] = useState<BuyMethod>("openpay_balance");
+  const [payMethod, setPayMethod] = useState<BuyMethod>("pi");
 
   const { data: openpayLink } = useQuery({
     queryKey: ["openpay-link", userId],

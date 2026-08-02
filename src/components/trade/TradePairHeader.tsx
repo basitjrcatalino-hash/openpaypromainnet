@@ -23,8 +23,13 @@ function Stat({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] leading-none text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 truncate text-[11px] font-semibold tabular-nums text-foreground", valueClass)}>
+      <p className="text-[9px] leading-none text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "mt-0.5 truncate text-[10px] font-semibold tabular-nums text-foreground",
+          valueClass,
+        )}
+      >
         {value}
       </p>
     </div>
@@ -45,6 +50,7 @@ export function TradePairHeader({
   indexPrice,
   fundingRate,
   source,
+  compact,
 }: {
   market: PerpMarket;
   mode: TradeMode;
@@ -59,6 +65,7 @@ export function TradePairHeader({
   indexPrice?: number;
   fundingRate?: number;
   source?: string;
+  compact?: boolean;
 }) {
   const up = change24h >= 0;
   const digits = price >= 1000 ? 1 : price >= 1 ? 2 : 4;
@@ -70,11 +77,13 @@ export function TradePairHeader({
       : "—";
 
   return (
-    <div className="space-y-3 px-4 pt-3">
+    <div className={cn("space-y-2 px-3", compact ? "pt-1.5 pb-1" : "pt-3")}>
       <div className="flex items-start justify-between gap-3">
         <button type="button" onClick={onOpenPicker} className="min-w-0 text-left press">
           <div className="inline-flex items-center gap-1.5">
-            <span className="text-[17px] font-bold tracking-tight">{pairLabel(market, mode)}</span>
+            <span className={cn("font-bold tracking-tight", compact ? "text-[15px]" : "text-[17px]")}>
+              {pairLabel(market, mode)}
+            </span>
             <span
               className={cn(
                 "rounded-[3px] px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide",
@@ -89,7 +98,8 @@ export function TradePairHeader({
           </div>
           <p
             className={cn(
-              "mt-1.5 text-[28px] font-bold tabular-nums leading-none tracking-tight",
+              "mt-1 font-bold tabular-nums leading-none tracking-tight",
+              compact ? "text-[22px]" : "text-[28px]",
               up ? "text-[#0ecb81]" : "text-[#f6465d]",
             )}
           >
@@ -97,7 +107,7 @@ export function TradePairHeader({
           </p>
           <p
             className={cn(
-              "mt-1.5 text-[12px] font-semibold tabular-nums",
+              "mt-1 text-[11px] font-semibold tabular-nums",
               up ? "text-[#0ecb81]" : "text-[#f6465d]",
             )}
           >
@@ -105,12 +115,12 @@ export function TradePairHeader({
             {formatNumber(changeAbs, price >= 100 ? 2 : 4)} ({up ? "+" : ""}
             {formatNumber(change24h, 2)}%)
           </p>
-          {source ? (
+          {source && !compact ? (
             <p className="mt-1 text-[10px] text-muted-foreground">{source}</p>
           ) : null}
         </button>
 
-        <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-2.5 text-right">
+        <div className="grid shrink-0 grid-cols-2 gap-x-3 gap-y-1.5 text-right">
           <Stat label="24h high" value={high24h && high24h > 0 ? formatNumber(high24h, digits) : "—"} />
           <Stat label="24h low" value={low24h && low24h > 0 ? formatNumber(low24h, digits) : "—"} />
           <Stat label="Mark" value={mark > 0 ? formatNumber(mark, digits) : "—"} />

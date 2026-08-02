@@ -31,6 +31,13 @@ export type TopupMethodSeed = {
 
 export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
   {
+    method_key: "pi",
+    label: "Pi Network (π)",
+    description: "Pay with Pi · live π price → OUSD ($1) credited instantly",
+    sort_order: 0,
+    enabled: true,
+  },
+  {
     method_key: "openpay_balance",
     label: "OpenPay Balance",
     description: "Pay from your connected OpenPay account · real debit",
@@ -42,13 +49,6 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     label: "MoonPay",
     description: "Card / Apple Pay / Google Pay · MoonPay → OUSD",
     sort_order: 2,
-    enabled: true,
-  },
-  {
-    method_key: "pi",
-    label: "Pi Network (π)",
-    description: "Pay with Pi · live π price → OUSD ($1) credited instantly",
-    sort_order: 3,
     enabled: true,
   },
   {

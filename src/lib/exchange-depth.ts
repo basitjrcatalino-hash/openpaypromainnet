@@ -188,3 +188,97 @@ export function buySellRatio(book: ExchangeDepthBook | undefined): { buyPct: num
   const buyPct = Math.round((bidVol / total) * 100);
   return { buyPct, sellPct: 100 - buyPct };
 }
+
+export type RecentTrade = {
+  id: string;
+  price: number;
+  amount: number;
+  side: "buy" | "sell";
+  time: number;
+  source: string;
+};
+
+async function fetchBinanceRecentTrades(
+  market: PerpMarket,
+  mode: TradeMode,
+  symbol: string,
+): Promise<RecentTrade[]> {
+  const url =
+    mode === "futures"
+      ? `https://fapi.binance.com/fapi/v1/trades?symbol=${symbol}&limit=24`
+      : `https://api.binance.com/api/v3/trades?symbol=${symbol}&limit=24`;
+  const rows = (await fetchJson(url)) as Array<Record<string, unknown>>;
+  return rows
+    .map((r, i) => {
+      const price = num(r.price);
+      const amount = num(r.qty);
+      const time = num(r.time) || Date.now();
+      const isBuyerMaker = Boolean(r.isBuyerMaker);
+      // taker buy when seller was maker
+      const side: "buy" | "sell" = isBuyerMaker ? "sell" : "buy";
+      return {
+        id: String(r.id ?? `${symbol}-${time}-${i}`),
+        price,
+        amount,
+        side,
+        time,
+        source: mode === "futures" ? "Binance Futures" : "Binance Spot",
+      };
+    })
+    .filter((t) => t.price > 0 && t.amount > 0)
+    .reverse();
+}
+
+async function fetchGateRecentTrades(
+  market: PerpMarket,
+  mode: TradeMode,
+  contract: string,
+): Promise<RecentTrade[]> {
+  const url =
+    mode === "futures"
+      ? `https://api.gateio.ws/api/v4/futures/usdt/trades?contract=${contract}&limit=24`
+      : `https://api.gateio.ws/api/v4/spot/trades?currency_pair=${contract}&limit=24`;
+  const rows = (await fetchJson(url)) as Array<Record<string, unknown>>;
+  return rows
+    .map((r, i) => {
+      const price = num(r.price);
+      const amount = num(r.size ?? r.amount);
+      const time = (num(r.create_time_ms) || num(r.create_time) * 1000) || Date.now();
+      const sideRaw = String(r.side ?? "").toLowerCase();
+      const side: "buy" | "sell" = sideRaw === "sell" || amount < 0 ? "sell" : "buy";
+      return {
+        id: String(r.id ?? `${contract}-${time}-${i}`),
+        price,
+        amount: Math.abs(amount),
+        side,
+        time,
+        source: mode === "futures" ? "Gate Futures" : "Gate Spot",
+      };
+    })
+    .filter((t) => t.price > 0 && t.amount > 0);
+}
+
+/** Venue recent trades for Trade UI tape. */
+export async function fetchRecentTrades(
+  market: PerpMarket,
+  mode: TradeMode,
+): Promise<RecentTrade[]> {
+  const cfg = PERP_TV[market];
+  const errors: string[] = [];
+
+  if (cfg.binanceFutures) {
+    try {
+      return await fetchBinanceRecentTrades(market, mode, cfg.binanceFutures);
+    } catch (e) {
+      errors.push(`binance: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  if (cfg.gateFutures) {
+    try {
+      return await fetchGateRecentTrades(market, mode, cfg.gateFutures);
+    } catch (e) {
+      errors.push(`gate: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  throw new Error(`No recent trades for ${market} (${errors.join("; ") || "unknown"})`);
+}

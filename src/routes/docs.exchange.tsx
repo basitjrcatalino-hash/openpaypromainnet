@@ -108,7 +108,7 @@ function ExchangeDocsPage() {
             OpenPay Pro
           </Link>
           <div className="flex items-center gap-1.5">
-            <PageListenButton text={DOCS_SPEECH} label="Listen" />
+            <PageListenButton id="docs-exchange" text={DOCS_SPEECH} label="Listen" />
             <Button
               type="button"
               variant="ghost"

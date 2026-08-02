@@ -18,7 +18,9 @@ function sha256(v: string) {
   return createHash("sha256").update(v).digest("hex");
 }
 
-async function authorizePartner(request: Request): Promise<{ ok: true } | Response> {
+async function authorizePartner(
+  request: Request,
+): Promise<{ ok: true; restrictToUserId?: string } | Response> {
   const key =
     request.headers.get("x-api-key") ||
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
@@ -28,6 +30,14 @@ async function authorizePartner(request: Request): Promise<{ ok: true } | Respon
   const { partnerKeyFromEnv } = await import("@/lib/openpay-inbound.server");
   const master = partnerKeyFromEnv();
   if (master && key === master) return { ok: true };
+
+  try {
+    const { resolveDeveloperApiKey } = await import("@/lib/developer-auth.server");
+    const dev = await resolveDeveloperApiKey(key);
+    if (dev) return { ok: true, restrictToUserId: dev.userId };
+  } catch {
+    /* ignore */
+  }
 
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -70,8 +80,9 @@ export const Route = createFileRoute("/api/public/openpay/inbound")({
         json({
           service: "OpenPay → OpenPay Pro inbound transfer",
           usage:
-            "POST with partner API key after OpenPay user sends OUSD destined for a Pro user. Note format: pro_xfer:@username:ref",
+            "POST with partner (opk_), developer (opdk_), or ledger (olk_) API key after OpenPay user sends OUSD destined for a Pro user. Note format: pro_xfer:@username:ref. Developer keys only credit the key owner's wallet.",
           docs: "/docs/openpay#openpay-to-pro",
+          portal: "/developer",
         }),
       POST: async ({ request }) => {
         try {
@@ -111,6 +122,7 @@ export const Route = createFileRoute("/api/public/openpay/inbound")({
             fromLabel: body.from_username
               ? `@${body.from_username.replace(/^@+/, "")}`
               : body.from_account,
+            restrictToUserId: auth.restrictToUserId,
           });
 
           return json({

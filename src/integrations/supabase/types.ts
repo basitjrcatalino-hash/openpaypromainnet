@@ -1794,6 +1794,45 @@ export type Database = {
           },
         ]
       }
+      developer_api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          key_hash: string
+          label: string
+          last_used_at: string | null
+          prefix: string
+          scopes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash: string
+          label: string
+          last_used_at?: string | null
+          prefix: string
+          scopes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash?: string
+          label?: string
+          last_used_at?: string | null
+          prefix?: string
+          scopes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       p2p_payment_methods: {
         Row: {
           code: string
@@ -1802,6 +1841,8 @@ export type Database = {
           id: string
           is_active: boolean
           keywords: string
+          logo_dark_url: string | null
+          logo_url: string | null
           name: string
           region: string
           sort_order: number
@@ -1814,6 +1855,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string
+          logo_dark_url?: string | null
+          logo_url?: string | null
           name: string
           region?: string
           sort_order?: number
@@ -1826,6 +1869,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string
+          logo_dark_url?: string | null
+          logo_url?: string | null
           name?: string
           region?: string
           sort_order?: number

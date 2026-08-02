@@ -4,7 +4,7 @@ import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
 import { P2P_ASSETS, isP2pStableAsset } from "@/lib/p2p";
 import { logoUrlForTokenSymbol } from "@/lib/token-logos";
 
-/** OKX-style Buy / Sell text tabs (green buy · red sell). */
+/** Bitget-style Buy / Sell pill toggle. */
 export function BuySellToggle({
   value,
   onChange,
@@ -15,7 +15,12 @@ export function BuySellToggle({
   className?: string;
 }) {
   return (
-    <div className={cn("inline-flex items-center gap-5", className)}>
+    <div
+      className={cn(
+        "inline-flex h-9 items-center rounded-full bg-muted/90 p-1 dark:bg-muted/60",
+        className,
+      )}
+    >
       {(["buy", "sell"] as const).map((s) => {
         const active = value === s;
         return (
@@ -24,23 +29,15 @@ export function BuySellToggle({
             type="button"
             onClick={() => onChange(s)}
             className={cn(
-              "relative pb-1 text-[17px] font-extrabold capitalize tracking-tight transition-colors",
+              "h-7 min-w-[4.25rem] rounded-full px-4 text-[13px] font-bold capitalize tracking-tight transition-colors press",
               active
                 ? s === "buy"
-                  ? "text-[#11C66D]"
-                  : "text-[#F04438]"
-                : "text-muted-foreground/70",
+                  ? "bg-[#11C66D] text-white shadow-sm"
+                  : "bg-[#FF2D55] text-white shadow-sm"
+                : "text-muted-foreground",
             )}
           >
             {s}
-            {active ? (
-              <span
-                className={cn(
-                  "absolute inset-x-0 -bottom-0.5 mx-auto h-0.5 w-5 rounded-full",
-                  s === "buy" ? "bg-[#11C66D]" : "bg-[#F04438]",
-                )}
-              />
-            ) : null}
           </button>
         );
       })}
@@ -168,7 +165,7 @@ export function MerchantAvatar({
   );
 }
 
-/** OKX-style merchant meta: orders | completion% · positive% · response time */
+/** Bitget-style: `59(100%) · 4 min` */
 export function MerchantStatLine({
   completed,
   completionRate,
@@ -184,6 +181,24 @@ export function MerchantStatLine({
   responseMin?: number | null;
   compact?: boolean;
 }) {
+  if (compact) {
+    const orders = completed != null ? completed.toLocaleString() : "0";
+    const pct =
+      completionRate != null && Number.isFinite(completionRate)
+        ? `(${Math.round(completionRate)}%)`
+        : "";
+    const time = responseMin != null ? `${responseMin} min` : null;
+    return (
+      <p className="truncate text-[11px] leading-tight text-muted-foreground tabular-nums">
+        <span>
+          {orders}
+          {pct}
+        </span>
+        {time ? <span> · {time}</span> : null}
+      </p>
+    );
+  }
+
   const bits: string[] = [];
   if (completed != null) bits.push(`${completed.toLocaleString()} orders`);
   if (completionRate != null && Number.isFinite(completionRate)) {
@@ -193,14 +208,6 @@ export function MerchantStatLine({
     bits.push(`${positiveRate.toFixed(positiveRate >= 100 ? 0 : 1)}% positive`);
   }
   if (responseMin != null) bits.push(`${responseMin} min`);
-
-  if (compact) {
-    return (
-      <p className="truncate text-[11px] leading-tight text-muted-foreground">
-        {bits.length ? bits.join(" · ") : "New advertiser"}
-      </p>
-    );
-  }
 
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
@@ -215,7 +222,7 @@ export function MerchantStatLine({
   );
 }
 
-/** Compact OKX payment method tags (logo + short name). */
+/** Compact payment method tags with colored square markers (Bitget-style). */
 export function PaymentMethodTags({
   codes,
   labels,
@@ -228,11 +235,11 @@ export function PaymentMethodTags({
   const shown = codes.slice(0, max);
   const extra = codes.length - shown.length;
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-1">
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
       {shown.map((code) => (
         <span
           key={code}
-          className="inline-flex h-4.5 max-w-22 items-center gap-1 rounded-[2px] bg-foreground/6 px-1 text-[10px] font-medium text-muted-foreground"
+          className="inline-flex h-5 max-w-28 items-center gap-1 text-[11px] font-medium text-muted-foreground"
           title={labels[code] ?? code}
         >
           <P2pPayIcon
@@ -267,8 +274,8 @@ export function TradeCta({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-8 min-w-19 shrink-0 rounded-[6px] px-3.5 text-[13px] font-bold text-white press",
-        side === "buy" ? "bg-[#11C66D] hover:bg-[#0FB461]" : "bg-[#F04438] hover:bg-[#DE3A2F]",
+        "h-8 min-w-[4.75rem] shrink-0 rounded-lg px-3.5 text-[13px] font-bold text-white press",
+        side === "buy" ? "bg-[#11C66D] hover:bg-[#0FB461]" : "bg-[#FF2D55] hover:bg-[#E8254A]",
         className,
       )}
     >

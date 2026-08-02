@@ -36,6 +36,7 @@ import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
+import { Route as AuthenticatedDeveloperRouteImport } from './routes/_authenticated/developer'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
 import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
@@ -141,6 +142,7 @@ import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './route
 import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId.chat'
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
+import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
 import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
@@ -290,6 +292,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedDepositRoute = AuthenticatedDepositRouteImport.update({
   id: '/deposit',
   path: '/deposit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDeveloperRoute = AuthenticatedDeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
@@ -847,6 +854,12 @@ const AuthenticatedP2pOrderIdRoute = AuthenticatedP2pOrderIdRouteImport.update({
   path: '/p2p/order/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedP2pTakeAdIdRoute =
+  AuthenticatedP2pTakeAdIdRouteImport.update({
+    id: '/p2p_/take/$adId',
+    path: '/p2p/take/$adId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicDocsExchangeRoute = ApiPublicDocsExchangeRouteImport.update({
   id: '/api/public/docs/exchange',
   path: '/api/public/docs/exchange',
@@ -953,6 +966,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deposit': typeof AuthenticatedDepositRoute
+  '/developer': typeof AuthenticatedDeveloperRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
@@ -1058,6 +1072,7 @@ export interface FileRoutesByFullPath {
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -1100,6 +1115,7 @@ export interface FileRoutesByTo {
   '/connect': typeof AuthenticatedConnectRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deposit': typeof AuthenticatedDepositRoute
+  '/developer': typeof AuthenticatedDeveloperRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/ledger': typeof AuthenticatedLedgerRoute
   '/metamask': typeof AuthenticatedMetamaskRoute
@@ -1205,6 +1221,7 @@ export interface FileRoutesByTo {
   '/opentoken/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -1249,6 +1266,7 @@ export interface FileRoutesById {
   '/_authenticated/connect': typeof AuthenticatedConnectRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deposit': typeof AuthenticatedDepositRoute
+  '/_authenticated/developer': typeof AuthenticatedDeveloperRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/ledger': typeof AuthenticatedLedgerRoute
   '/_authenticated/metamask': typeof AuthenticatedMetamaskRoute
@@ -1354,6 +1372,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/$tokenId/chat': typeof AuthenticatedOpentokenTokenIdChatRoute
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
+  '/_authenticated/p2p_/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
@@ -1398,6 +1417,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/dashboard'
     | '/deposit'
+    | '/developer'
     | '/kyc'
     | '/ledger'
     | '/metamask'
@@ -1503,6 +1523,7 @@ export interface FileRouteTypes {
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
+    | '/p2p/take/$adId'
     | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -1545,6 +1566,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/dashboard'
     | '/deposit'
+    | '/developer'
     | '/kyc'
     | '/ledger'
     | '/metamask'
@@ -1650,6 +1672,7 @@ export interface FileRouteTypes {
     | '/opentoken/$tokenId/chat'
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
+    | '/p2p/take/$adId'
     | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -1693,6 +1716,7 @@ export interface FileRouteTypes {
     | '/_authenticated/connect'
     | '/_authenticated/dashboard'
     | '/_authenticated/deposit'
+    | '/_authenticated/developer'
     | '/_authenticated/kyc'
     | '/_authenticated/ledger'
     | '/_authenticated/metamask'
@@ -1798,6 +1822,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/$tokenId/chat'
     | '/_authenticated/opentoken_/creator/$userId'
     | '/_authenticated/p2p_/order/$id'
+    | '/_authenticated/p2p_/take/$adId'
     | '/api/public/docs/exchange'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
@@ -2070,6 +2095,13 @@ declare module '@tanstack/react-router' {
       path: '/deposit'
       fullPath: '/deposit'
       preLoaderRoute: typeof AuthenticatedDepositRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/developer': {
+      id: '/_authenticated/developer'
+      path: '/developer'
+      fullPath: '/developer'
+      preLoaderRoute: typeof AuthenticatedDeveloperRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kyc': {
@@ -2807,6 +2839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/p2p_/take/$adId': {
+      id: '/_authenticated/p2p_/take/$adId'
+      path: '/p2p/take/$adId'
+      fullPath: '/p2p/take/$adId'
+      preLoaderRoute: typeof AuthenticatedP2pTakeAdIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/docs/exchange': {
       id: '/api/public/docs/exchange'
       path: '/api/public/docs/exchange'
@@ -2969,6 +3008,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConnectRoute: typeof AuthenticatedConnectRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepositRoute: typeof AuthenticatedDepositRoute
+  AuthenticatedDeveloperRoute: typeof AuthenticatedDeveloperRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedLedgerRoute: typeof AuthenticatedLedgerRoute
   AuthenticatedMetamaskRoute: typeof AuthenticatedMetamaskRoute
@@ -3033,6 +3073,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpenpayConnectCallbackRoute: typeof AuthenticatedOpenpayConnectCallbackRoute
   AuthenticatedOpentokenCreatorUserIdRoute: typeof AuthenticatedOpentokenCreatorUserIdRoute
   AuthenticatedP2pOrderIdRoute: typeof AuthenticatedP2pOrderIdRoute
+  AuthenticatedP2pTakeAdIdRoute: typeof AuthenticatedP2pTakeAdIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -3045,6 +3086,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConnectRoute: AuthenticatedConnectRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepositRoute: AuthenticatedDepositRoute,
+  AuthenticatedDeveloperRoute: AuthenticatedDeveloperRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedLedgerRoute: AuthenticatedLedgerRoute,
   AuthenticatedMetamaskRoute: AuthenticatedMetamaskRoute,
@@ -3112,6 +3154,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenCreatorUserIdRoute:
     AuthenticatedOpentokenCreatorUserIdRoute,
   AuthenticatedP2pOrderIdRoute: AuthenticatedP2pOrderIdRoute,
+  AuthenticatedP2pTakeAdIdRoute: AuthenticatedP2pTakeAdIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -10,6 +10,7 @@ const REGION_TABS = [
   "All",
   "Popular",
   "Global",
+  "Philippines",
   "Americas",
   "Europe",
   "Asia",
@@ -26,6 +27,9 @@ const POPULAR_CODES = [
   "wise",
   "gcash",
   "maya",
+  "bdo",
+  "bpi",
+  "instapay",
   "upi",
   "pix",
   "zelle",
@@ -44,6 +48,7 @@ function matchesQuery(m: P2PPaymentMethod, q: string) {
 function MethodRow({
   code,
   name,
+  logoUrl,
   selected,
   onClick,
   subtitle,
@@ -51,6 +56,7 @@ function MethodRow({
 }: {
   code?: string;
   name: string;
+  logoUrl?: string | null;
   selected: boolean;
   onClick: () => void;
   subtitle?: string;
@@ -73,7 +79,9 @@ function MethodRow({
       )}
     >
       {leading ??
-        (code ? <P2pPayIcon code={code} name={name} size="lg" className="shadow-sm" /> : null)}
+        (code ? (
+          <P2pPayIcon code={code} name={name} logoUrl={logoUrl} size="lg" className="shadow-sm" />
+        ) : null)}
       <span className="min-w-0 flex-1">
         <span
           className={cn(
@@ -151,6 +159,7 @@ export function P2pPaymentMethodPicker({
     const order = [
       "Popular",
       "Global",
+      "Philippines",
       "Americas",
       "Europe",
       "Asia",
@@ -261,6 +270,7 @@ export function P2pPaymentMethodPicker({
                         key={m.code}
                         code={m.code}
                         name={label}
+                        logoUrl={m.logo_url}
                         subtitle={
                           m.region && m.region !== "Popular" ? m.region : undefined
                         }

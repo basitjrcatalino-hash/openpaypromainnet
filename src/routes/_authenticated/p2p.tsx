@@ -1,13 +1,10 @@
-import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
-import { notifySuccess } from "@/lib/notify-success";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, Loader2, RefreshCw, SlidersHorizontal, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +17,6 @@ import {
   BuySellToggle,
   FilterChip,
   FilterChipRow,
-  MerchantAvatar,
   MerchantStatLine,
   P2pAssetIcon,
   P2pAssetPickerGrid,
@@ -29,11 +25,8 @@ import {
   TradeCta,
 } from "@/components/p2p/P2pUi";
 import { MerchantBadge } from "@/components/p2p/MerchantBadge";
-import { P2pPayIcon } from "@/components/p2p/P2pPayIcon";
-import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import {
-  P2P_MAX_AMOUNT_OUSD,
   expireOrders,
   fetchAds,
   fetchDisplayNames,
@@ -42,12 +35,7 @@ import {
   fetchRatingStats,
   fetchTraderStats,
   fmtAmount,
-  isTraderOnline,
-  openOrder,
-  p2pAmountExceedsLimit,
-  p2pLimitError,
   sortAdsByMerchantRank,
-  type P2PAd,
 } from "@/lib/p2p";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/p2p")({
       {
         name: "description",
         content:
-          "Buy and sell crypto peer-to-peer with escrow protection, local payment methods and OKX-style trading.",
+          "Buy and sell crypto peer-to-peer with escrow protection — Bitget-style P2P trading on OpenPay Pro.",
       },
       { property: "og:title", content: "P2P Marketplace — OpenPay Pro" },
       { property: "og:type", content: "website" },
@@ -82,9 +70,8 @@ function P2PMarketplace() {
   const [fiatOpen, setFiatOpen] = useState(false);
   const [amountOpen, setAmountOpen] = useState(false);
   const [amountDraft, setAmountDraft] = useState("");
-  const [selected, setSelected] = useState<P2PAd | null>(null);
+  const [bannerOpen, setBannerOpen] = useState(true);
   const { code: fiat, setCode, meta } = useCurrency();
-  const qc = useQueryClient();
   const navigate = useNavigate();
 
   const methodFilter = payParam;
@@ -145,45 +132,55 @@ function P2PMarketplace() {
     return sortAdsByMerchantRank(list, merchants.data ?? {}, adSide);
   }, [adsQ.data, amountFilter, methodFilter, merchants.data, adSide]);
 
-  const buy = useMutation({
-    mutationFn: (v: { adId: string; amount: number; method: string }) =>
-      openOrder(v.adId, v.amount, v.method),
-    onSuccess: (order) => {
-      notifySuccess("Escrow locked — trade started", { sound: "order" });
-      void qc.invalidateQueries({ queryKey: ["p2p-ads"] });
-      setSelected(null);
-      void navigate({ to: "/p2p/order/$id", params: { id: order.id } });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  function openTake(adId: string) {
+    void navigate({
+      to: "/p2p/take/$adId",
+      params: { adId },
+      search: { side },
+    });
+  }
 
   return (
     <div className="min-h-[70dvh]">
-      {/* Sticky OKX-style control strip */}
-      <div className="sticky top-11 z-20 border-b border-border/40 bg-background/95 backdrop-blur-xl">
-        <div className="flex items-center gap-2 px-4 py-1.5 text-[11px] text-muted-foreground md:px-5">
-          <ShieldCheck className="h-3.5 w-3.5 text-[#11C66D]" />
-          <p className="flex-1 truncate">0 trading fees · Escrow protected</p>
+      {bannerOpen ? (
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/8 px-3 py-2.5 md:mx-5">
+          <Sparkles className="h-4 w-4 shrink-0 text-sky-500" />
+          <p className="flex-1 text-[12px] font-medium text-foreground/90">
+            Get more event updates and security insights.
+          </p>
+          <span className="text-[10px] tabular-nums text-muted-foreground">1/3</span>
           <button
             type="button"
-            className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground press"
-            aria-label="Refresh"
-            onClick={() => void adsQ.refetch()}
+            className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground press"
+            aria-label="Dismiss"
+            onClick={() => setBannerOpen(false)}
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", adsQ.isFetching && "animate-spin")} />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
+      ) : null}
 
-        <div className="flex items-end justify-between gap-3 px-4 pb-2 pt-1 md:px-5">
+      <div className="sticky top-11 z-20 border-b border-border/30 bg-background/95 backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-3 md:px-5">
           <BuySellToggle value={side} onChange={setSide} />
-          <button
-            type="button"
-            onClick={() => setFiatOpen(true)}
-            className="mb-0.5 inline-flex h-7 items-center gap-1 rounded-lg px-1.5 text-[13px] font-bold press"
-          >
-            {meta.code}
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setFiatOpen(true)}
+              className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[14px] font-bold press"
+            >
+              {meta.code}
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+            <button
+              type="button"
+              className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground press"
+              aria-label="Refresh"
+              onClick={() => void adsQ.refetch()}
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", adsQ.isFetching && "animate-spin")} />
+            </button>
+          </div>
         </div>
 
         <div className="px-3 pb-2.5 md:px-4">
@@ -195,7 +192,7 @@ function P2PMarketplace() {
               icon={<P2pAssetIcon asset={asset} className="h-4 w-4" />}
             />
             <FilterChip
-              label={amountFilter ? `Amt ${amountFilter}` : "Amount"}
+              label={amountFilter ? `Limit ${amountFilter}` : "Limit"}
               active={!!amountFilter}
               onClick={() => {
                 setAmountDraft(amountFilter);
@@ -203,7 +200,7 @@ function P2PMarketplace() {
               }}
             />
             <FilterChip
-              label={methodFilter ? (methodLabel[methodFilter] ?? methodFilter) : "All payments"}
+              label={methodFilter ? (methodLabel[methodFilter] ?? methodFilter) : "Method"}
               active={!!methodFilter}
               onClick={() =>
                 void navigate({
@@ -216,6 +213,14 @@ function P2PMarketplace() {
                 })
               }
             />
+            <button
+              type="button"
+              className="ml-auto grid h-7 w-7 shrink-0 place-items-center rounded-lg text-muted-foreground press"
+              aria-label="More filters"
+              onClick={() => setAmountOpen(true)}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+            </button>
           </FilterChipRow>
         </div>
       </div>
@@ -230,20 +235,11 @@ function P2PMarketplace() {
           description={`No ${side} offers for ${asset} match your filters.`}
         />
       ) : (
-        <div className="divide-y divide-border/30">
-          <div className="hidden grid-cols-[minmax(0,1.35fr)_minmax(6.5rem,0.65fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 border-b border-border/40 px-5 py-2 text-[11px] font-semibold text-muted-foreground md:grid lg:px-6">
-            <span>Advertisers</span>
-            <span>Price</span>
-            <span>Available / Limit</span>
-            <span>Payment</span>
-            <span className="w-19 text-right">Trade</span>
-          </div>
-
+        <div className="divide-y divide-border/25">
           {filtered.map((ad) => {
             const st = stats.data?.[ad.user_id];
             const rt = ratings.data?.[ad.user_id];
             const name = names.data?.[ad.user_id] ?? "Trader";
-            const online = isTraderOnline(st?.last_active_at);
             const merch = merchants.data?.[ad.user_id];
             const featured = !!merch?.is_featured;
             const priceFiat = formatCurrency(Number(ad.price_usd), fiat, { compact: false });
@@ -255,68 +251,53 @@ function P2PMarketplace() {
               fiat,
               { compact: false },
             );
+            const verified =
+              !!merch?.has_verified_badge || (!!merch && merch.tier !== "none");
 
             return (
               <article
                 key={ad.id}
-                className={cn(
-                  "relative px-4 py-3 md:grid md:grid-cols-[minmax(0,1.35fr)_minmax(6.5rem,0.65fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-3 md:px-5 lg:px-6",
-                  featured && "bg-[#11C66D]/4",
-                )}
+                className={cn("px-4 py-3.5 md:px-5", featured && "bg-[#11C66D]/4")}
               >
-                {featured ? (
-                  <span className="mb-1.5 inline-flex rounded-[2px] bg-[#11C66D]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#11C66D] md:absolute md:left-5 md:top-2 lg:left-6">
-                    Featured
-                  </span>
-                ) : null}
-
-                {/* Advertiser */}
-                <div className={cn("min-w-0", featured && "md:mt-3")}>
-                  <div className="flex items-center gap-2">
-                    <MerchantAvatar name={name} online={online} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-wrap items-center gap-1">
-                        <p className="truncate text-[13px] font-bold leading-tight">{name}</p>
-                        <MerchantBadge merchant={merch} />
-                      </div>
-                      <MerchantStatLine
-                        compact
-                        completed={st?.completed_count}
-                        completionRate={st?.completion_rate}
-                        positiveRate={rt?.positive_rate}
-                        responseMin={ad.pay_time_limit_minutes}
-                      />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-1">
+                      <p className="truncate text-[14px] font-bold leading-tight">{name}</p>
+                      {verified ? (
+                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#4DA3FF]" />
+                      ) : null}
+                      <MerchantBadge merchant={merch} />
                     </div>
+                    <MerchantStatLine
+                      compact
+                      completed={st?.completed_count}
+                      completionRate={st?.completion_rate ?? rt?.positive_rate}
+                      responseMin={ad.pay_time_limit_minutes}
+                    />
                   </div>
+                  <p className="shrink-0 text-[22px] font-extrabold leading-none tabular-nums tracking-tight">
+                    {priceFiat}
+                  </p>
                 </div>
 
-                {/* Price — dominant OKX signal */}
-                <p className="mt-2.5 text-[22px] font-extrabold leading-none tabular-nums tracking-tight md:mt-0 md:text-lg">
-                  {priceFiat}
-                </p>
-
-                {/* Qty / limits */}
-                <div className="mt-1.5 space-y-0.5 text-[11px] leading-snug text-muted-foreground md:mt-0 md:text-xs">
+                <div className="mt-2.5 space-y-0.5 text-[12px] text-muted-foreground">
                   <p>
-                    <span className="md:hidden">Available </span>
-                    <span className="font-semibold text-foreground/85">
+                    Quantity{" "}
+                    <span className="font-semibold text-foreground/90">
                       {fmtAmount(ad.available_amount)} {ad.asset}
                     </span>
                   </p>
                   <p>
-                    <span className="md:hidden">Limit </span>
-                    <span className="font-medium text-foreground/75">
+                    Limit{" "}
+                    <span className="font-semibold text-foreground/85">
                       {minFiat} – {maxFiat}
                     </span>
                   </p>
                 </div>
 
-                {/* Payments + CTA */}
-                <div className="mt-2.5 flex items-end justify-between gap-3 md:mt-0 md:contents">
-                  <div className="min-w-0 flex-1 md:block">
-                    <PaymentMethodTags codes={ad.payment_methods} labels={methodLabel} />
-                  </div>
-                  <TradeCta side={side} onClick={() => setSelected(ad)} className="md:w-19" />
+                <div className="mt-3 flex items-end justify-between gap-3">
+                  <PaymentMethodTags codes={ad.payment_methods} labels={methodLabel} max={4} />
+                  <TradeCta side={side} onClick={() => openTake(ad.id)} />
                 </div>
               </article>
             );
@@ -347,7 +328,7 @@ function P2PMarketplace() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="h-10 flex-1 rounded-[6px]"
+              className="h-10 flex-1 rounded-lg"
               onClick={() => {
                 setAmountFilter("");
                 setAmountOpen(false);
@@ -356,7 +337,7 @@ function P2PMarketplace() {
               Clear
             </Button>
             <Button
-              className="h-10 flex-1 rounded-[6px] bg-foreground text-background hover:bg-foreground/90"
+              className="h-10 flex-1 rounded-lg bg-foreground text-background hover:bg-foreground/90"
               onClick={() => {
                 setAmountFilter(amountDraft);
                 setAmountOpen(false);
@@ -384,206 +365,6 @@ function P2PMarketplace() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <BuyDialog
-        ad={selected}
-        side={side}
-        fiat={fiat}
-        methodLabel={methodLabel}
-        onClose={() => setSelected(null)}
-        pending={buy.isPending}
-        onConfirm={(amount, method) =>
-          selected && buy.mutate({ adId: selected.id, amount, method })
-        }
-      />
     </div>
-  );
-}
-
-function BuyDialog({
-  ad,
-  side,
-  fiat,
-  methodLabel,
-  onClose,
-  onConfirm,
-  pending,
-}: {
-  ad: P2PAd | null;
-  side: "buy" | "sell";
-  fiat: string;
-  methodLabel: Record<string, string>;
-  onClose: () => void;
-  onConfirm: (amount: number, method: string) => void;
-  pending: boolean;
-}) {
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<string>("");
-  const [balance, setBalance] = useState<number | null>(null);
-  const [agreed, setAgreed] = useState(false);
-
-  useEffect(() => {
-    if (!ad) return;
-    setAmount(String(ad.min_order));
-    setMethod(ad.payment_methods[0] ?? "");
-    setAgreed(false);
-  }, [ad]);
-
-  useEffect(() => {
-    let alive = true;
-    if (!ad || side !== "sell") {
-      setBalance(null);
-      return;
-    }
-    void (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
-      const { data: w } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", data.user.id)
-        .order("is_active", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!alive || !w) return;
-      const key = `${ad.asset.toLowerCase()}_balance` as keyof typeof w;
-      setBalance(Number(w[key] ?? 0));
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [ad, side]);
-
-  const amt = Number(amount || 0);
-  const totalUsd = ad ? amt * Number(ad.price_usd) : 0;
-  const overLimit = ad ? p2pAmountExceedsLimit(ad.asset, amt, Number(ad.price_usd)) : false;
-  const invalid =
-    !ad ||
-    !method ||
-    !agreed ||
-    !(amt > 0) ||
-    amt < Number(ad.min_order) ||
-    amt > Math.min(Number(ad.max_order), Number(ad.available_amount)) ||
-    overLimit ||
-    (side === "sell" && balance != null && amt > balance);
-
-  return (
-    <Dialog open={!!ad} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md border-border/60 bg-background">
-        <DialogHeader>
-          <DialogTitle>
-            {side === "buy" ? "Buy" : "Sell"} {ad?.asset}
-          </DialogTitle>
-          <DialogDescription>
-            Price{" "}
-            {ad ? formatCurrency(Number(ad.price_usd), fiat as never, { compact: false }) : "—"} ·
-            limits {ad ? `${fmtAmount(ad.min_order)} – ${fmtAmount(ad.max_order)}` : ""}
-            {" · "}max {P2P_MAX_AMOUNT_OUSD.toLocaleString()} OUSD
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Amount ({ad?.asset})</Label>
-            <Input
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-              className="h-12 text-lg font-bold tabular-nums"
-            />
-            {overLimit ? (
-              <p className="text-[11px] font-semibold text-rose-500">
-                {ad ? p2pLimitError(ad.asset) : "Amount too large"}
-              </p>
-            ) : null}
-            {side === "sell" && balance != null ? (
-              <p className="text-[11px] text-muted-foreground">
-                Available {fmtAmount(balance)} {ad?.asset}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Payment method</Label>
-            <div className="flex flex-wrap gap-2">
-              {(ad?.payment_methods ?? []).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => setMethod(code)}
-                  className={cn(
-                    "inline-flex h-9 items-center gap-2 rounded-[6px] border px-3 text-xs font-semibold",
-                    method === code
-                      ? "border-foreground bg-secondary text-foreground"
-                      : "border-border text-muted-foreground",
-                  )}
-                >
-                  <P2pPayIcon code={code} name={methodLabel[code] ?? code} size="sm" />
-                  {methodLabel[code] ?? code}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {ad?.terms ? (
-            <div className="rounded-xl border border-border/50 bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-              <span className="font-bold text-foreground">Merchant instructions:</span> {ad.terms}
-            </div>
-          ) : null}
-
-          <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
-            <span className="text-sm text-muted-foreground">
-              {side === "buy" ? "You pay" : "You receive"}
-            </span>
-            <span className="text-lg font-extrabold tabular-nums">
-              {formatCurrency(totalUsd, fiat as never, { compact: false })}
-            </span>
-          </div>
-
-          <label className="flex items-start gap-2.5 text-[11px] leading-relaxed text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#11C66D]"
-            />
-            <span>
-              I have read the{" "}
-              <Link
-                to="/p2p/rules"
-                className="font-semibold text-foreground underline-offset-2 hover:underline"
-              >
-                Trading Rules
-              </Link>{" "}
-              and{" "}
-              <Link
-                to="/p2p/agreement"
-                className="font-semibold text-foreground underline-offset-2 hover:underline"
-              >
-                User Agreement
-              </Link>
-              . Crypto is escrow-protected; fiat transfers are between traders.
-            </span>
-          </label>
-
-          <Button
-            className={cn(
-              "h-12 w-full rounded-xl text-base font-bold",
-              side === "buy"
-                ? "bg-[#11C66D] text-white hover:bg-[#0FB461]"
-                : "bg-[#F04438] text-white hover:bg-[#DE3A2F]",
-            )}
-            disabled={invalid || pending}
-            onClick={() => onConfirm(amt, method)}
-          >
-            {pending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              `${side === "buy" ? "Buy" : "Sell"} ${ad?.asset ?? ""}`
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

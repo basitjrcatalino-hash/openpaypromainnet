@@ -23,23 +23,27 @@ function initials(name?: string, code?: string) {
 export function P2pPayIcon({
   code,
   name,
+  logoUrl,
   size = "sm",
   className,
 }: {
   code: string;
   name?: string;
+  /** Prefer DB logo_url when present. */
+  logoUrl?: string | null;
   size?: Size;
   className?: string;
 }) {
-  const candidates = logoCandidatesForP2pPayment(code);
+  const candidates = logoCandidatesForP2pPayment(code, logoUrl);
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
     setIdx(0);
-  }, [code]);
+  }, [code, logoUrl]);
 
   const src = candidates[idx];
   const dim = SIZE[size];
+  const isFlag = !!src && (src.includes("flagcdn.com") || /\/[a-z]{2}\.svg(\?|$)/i.test(src));
 
   if (!src) {
     return (
@@ -60,7 +64,8 @@ export function P2pPayIcon({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden bg-white ring-1 ring-black/5",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden ring-1 ring-black/5",
+        isFlag ? "bg-muted/40" : "bg-white",
         dim.box,
         className,
       )}
@@ -72,7 +77,7 @@ export function P2pPayIcon({
         alt=""
         loading="lazy"
         decoding="async"
-        className={cn("object-contain", dim.img)}
+        className={cn(isFlag ? "h-full w-full object-cover" : cn("object-contain", dim.img))}
         onError={() => setIdx((i) => i + 1)}
       />
     </span>

@@ -66,6 +66,8 @@ export async function creditProUserFromOpenPay(opts: {
   openpayTxId: string;
   note?: string;
   fromLabel?: string;
+  /** When set (developer API key), only credit this user's wallets. */
+  restrictToUserId?: string;
 }): Promise<{
   credited: boolean;
   already?: boolean;
@@ -95,6 +97,9 @@ export async function creditProUserFromOpenPay(opts: {
       .select("id, user_id, ousd_balance")
       .eq("id", existing.wallet_id)
       .maybeSingle();
+    if (opts.restrictToUserId && w?.user_id && w.user_id !== opts.restrictToUserId) {
+      throw new Error("This API key can only credit your own OpenPay Pro wallet");
+    }
     return {
       credited: true,
       already: true,
@@ -127,6 +132,9 @@ export async function creditProUserFromOpenPay(opts: {
       .limit(1);
     const byAddr = Array.isArray(rows) ? rows[0] : rows;
     if (!byAddr) throw new Error("OpenPay Pro wallet address not found");
+    if (opts.restrictToUserId && byAddr.user_id !== opts.restrictToUserId) {
+      throw new Error("This API key can only credit your own OpenPay Pro wallet");
+    }
     const newBal = Number(byAddr.ousd_balance ?? 0) + amount;
     const { error: uErr } = await opts.admin
       .from("wallets")
@@ -173,6 +181,10 @@ export async function creditProUserFromOpenPay(opts: {
     username = prof.username;
   }
 
+  if (opts.restrictToUserId && userId && userId !== opts.restrictToUserId) {
+    throw new Error("This API key can only credit your own OpenPay Pro wallet");
+  }
+
   const { data: wallet, error: wErr } = await opts.admin
     .from("wallets")
     .select("*")
@@ -182,6 +194,9 @@ export async function creditProUserFromOpenPay(opts: {
     .limit(1)
     .maybeSingle();
   if (wErr || !wallet) throw new Error("Recipient wallet not found on OpenPay Pro");
+  if (opts.restrictToUserId && wallet.user_id !== opts.restrictToUserId) {
+    throw new Error("This API key can only credit your own OpenPay Pro wallet");
+  }
 
   const newBal = Number(wallet.ousd_balance ?? 0) + amount;
   const { error: uErr } = await opts.admin

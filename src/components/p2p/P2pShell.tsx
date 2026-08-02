@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, QrCode, Search } from "lucide-react";
+import { ChevronLeft, CircleHelp, MessageCircleMore } from "lucide-react";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 
 import { P2pBottomNav } from "@/components/p2p/P2pBottomNav";
 import { P2P_ADMIN_SHELL_WIDTH, P2P_SHELL_WIDTH } from "@/components/p2p/p2p-layout";
@@ -10,7 +9,6 @@ import { cn } from "@/lib/utils";
 const MODE_TABS = [
   { id: "p2p", label: "P2P", to: "/p2p" as const },
   { id: "express", label: "Express", to: "/p2p/express" as const },
-  { id: "block", label: "Block trade", to: null },
 ] as const;
 
 function showModeTabs(pathname: string) {
@@ -18,7 +16,10 @@ function showModeTabs(pathname: string) {
 }
 
 function showBottomNav(pathname: string) {
-  return pathname.startsWith("/p2p") && !pathname.startsWith("/p2p/admin");
+  if (!pathname.startsWith("/p2p") || pathname.startsWith("/p2p/admin")) return false;
+  // Bitget-style: hide chrome on take-order + live trade room
+  if (pathname.startsWith("/p2p/take/") || pathname.startsWith("/p2p/order/")) return false;
+  return true;
 }
 
 function isAdminPath(pathname: string) {
@@ -65,7 +66,7 @@ export function P2pShell({ children }: { children: ReactNode }) {
     >
       {modes ? (
         <header
-          className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur-xl"
+          className="sticky top-0 z-30 border-b border-border/30 bg-background/95 backdrop-blur-xl"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
           <div className="flex h-11 items-center gap-0.5 px-1.5 sm:px-2 md:px-3">
@@ -77,34 +78,22 @@ export function P2pShell({ children }: { children: ReactNode }) {
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <div className="flex flex-1 items-end justify-center gap-6 pb-0.5 md:gap-10">
+            <div className="flex flex-1 items-end justify-center gap-8 pb-0.5 md:gap-12">
               {MODE_TABS.map((tab) => {
                 const active =
                   (tab.id === "p2p" && !isExpress) || (tab.id === "express" && isExpress);
-                if (!tab.to) {
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => toast.message("Block trade coming soon")}
-                      className="pb-2 text-[15px] font-semibold text-muted-foreground/55"
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                }
                 return (
                   <Link
                     key={tab.id}
                     to={tab.to}
                     className={cn(
-                      "relative pb-2 text-[15px] font-extrabold tracking-tight",
-                      active ? "text-foreground" : "text-muted-foreground/70",
+                      "relative pb-2 text-[16px] font-extrabold tracking-tight",
+                      active ? "text-foreground" : "text-muted-foreground/65",
                     )}
                   >
                     {tab.label}
                     {active ? (
-                      <span className="absolute inset-x-0 -bottom-px mx-auto h-[2px] w-5 rounded-full bg-foreground" />
+                      <span className="absolute inset-x-0 -bottom-px mx-auto h-[2.5px] w-6 rounded-full bg-foreground" />
                     ) : null}
                   </Link>
                 );
@@ -113,18 +102,18 @@ export function P2pShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground press"
-              aria-label="Scan"
-              onClick={() => void navigate({ to: "/scan" })}
+              aria-label="Help"
+              onClick={() => void navigate({ to: "/p2p/guide" })}
             >
-              <QrCode className="h-[1.15rem] w-[1.15rem]" />
+              <CircleHelp className="h-[1.15rem] w-[1.15rem]" />
             </button>
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground press"
-              aria-label="Search"
-              onClick={() => toast.message("Search ads by merchant or amount")}
+              aria-label="Support"
+              onClick={() => void navigate({ to: "/p2p/support" })}
             >
-              <Search className="h-[1.15rem] w-[1.15rem]" />
+              <MessageCircleMore className="h-[1.15rem] w-[1.15rem]" />
             </button>
           </div>
         </header>

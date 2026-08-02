@@ -152,6 +152,8 @@ export async function fetchPaymentMethods(): Promise<P2PPaymentMethod[]> {
       sort_order: seed.sort_order,
       region: seed.region,
       keywords: seed.keywords,
+      logo_url: null,
+      logo_dark_url: null,
       created_at: now,
       updated_at: now,
     });
@@ -248,6 +250,12 @@ export async function fetchAds(opts: { side: "sell" | "buy"; asset: string }): P
     .limit(60);
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+export async function fetchAd(id: string): Promise<P2PAd | null> {
+  const { data, error } = await supabase.from("p2p_ads").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function fetchMyAds(userId: string): Promise<P2PAd[]> {

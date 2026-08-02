@@ -17,6 +17,7 @@ import {
   Upload,
   ScrollText,
   BookOpen,
+  Code2,
   FileText,
   Shield,
   LogOut,
@@ -1235,6 +1236,26 @@ function SettingsPage() {
           {t("settings.connected")}
         </h2>
         <OpenPayIntegrationCard userId={user.id} />
+
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <Code2 className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">Developer Portal</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  API keys (<code className="rounded bg-muted px-1 text-[11px]">opdk_</code>), wallet
+                  seed backup, and receive-to-address snippets for your integrations.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="rounded-full">
+              <Link to="/developer">Open portal</Link>
+            </Button>
+          </div>
+        </div>
 
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">

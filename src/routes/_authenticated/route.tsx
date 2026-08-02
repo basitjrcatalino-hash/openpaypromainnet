@@ -39,6 +39,7 @@ import {
   Sparkles,
   Code2,
   Gift,
+  KeyRound,
   Newspaper,
   BookMarked,
   Globe2,
@@ -903,6 +904,22 @@ function SidebarInner({
             <span className="truncate">Airdrops</span>
           </Link>
           <Link
+            to="/developer"
+            onClick={onClose}
+            preload="intent"
+            aria-current={pathname === "/developer" ? "page" : undefined}
+            className={sideItemClass(pathname === "/developer")}
+          >
+            <Code2
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                pathname === "/developer" && "ph-tab-icon-active",
+              )}
+              strokeWidth={pathname === "/developer" ? 2.25 : 1.75}
+            />
+            <span className="truncate">Developer Portal</span>
+          </Link>
+          <Link
             to="/ai"
             onClick={onClose}
             preload="intent"
@@ -1063,6 +1080,22 @@ function SidebarInner({
             </div>
             {developerMode ? (
               <>
+                <Link
+                  to="/developer"
+                  onClick={onClose}
+                  preload="intent"
+                  aria-current={pathname === "/developer" ? "page" : undefined}
+                  className={sideItemClass(pathname === "/developer")}
+                >
+                  <KeyRound
+                    className={cn(
+                      "h-[1.15rem] w-[1.15rem] shrink-0",
+                      pathname === "/developer" && "ph-tab-icon-active",
+                    )}
+                    strokeWidth={pathname === "/developer" ? 2.25 : 1.75}
+                  />
+                  <span className="truncate">API keys &amp; seed</span>
+                </Link>
                 <Link
                   to="/ledger"
                   onClick={onClose}

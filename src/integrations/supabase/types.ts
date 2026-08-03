@@ -55,6 +55,138 @@ export type Database = {
           },
         ]
       }
+      airdrop_campaigns: {
+        Row: {
+          amount_per_claim: number
+          asset: string
+          badge: string | null
+          claim_code: string | null
+          claim_mode: Database["public"]["Enums"]["airdrop_claim_mode"]
+          claimed_count: number
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          distributed_amount: number
+          ends_at: string | null
+          id: string
+          max_claims: number | null
+          notes: string | null
+          require_kyc: boolean
+          require_wallet: boolean
+          requirements: Json
+          slug: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["airdrop_status"]
+          subtitle: string | null
+          title: string
+          total_budget: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_per_claim: number
+          asset: string
+          badge?: string | null
+          claim_code?: string | null
+          claim_mode?: Database["public"]["Enums"]["airdrop_claim_mode"]
+          claimed_count?: number
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          distributed_amount?: number
+          ends_at?: string | null
+          id?: string
+          max_claims?: number | null
+          notes?: string | null
+          require_kyc?: boolean
+          require_wallet?: boolean
+          requirements?: Json
+          slug: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["airdrop_status"]
+          subtitle?: string | null
+          title: string
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_per_claim?: number
+          asset?: string
+          badge?: string | null
+          claim_code?: string | null
+          claim_mode?: Database["public"]["Enums"]["airdrop_claim_mode"]
+          claimed_count?: number
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          distributed_amount?: number
+          ends_at?: string | null
+          id?: string
+          max_claims?: number | null
+          notes?: string | null
+          require_kyc?: boolean
+          require_wallet?: boolean
+          requirements?: Json
+          slug?: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["airdrop_status"]
+          subtitle?: string | null
+          title?: string
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      airdrop_claims: {
+        Row: {
+          amount: number
+          asset: string
+          campaign_id: string
+          created_at: string
+          id: string
+          tx_hash: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          asset: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          tx_hash: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          asset?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          tx_hash?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airdrop_claims_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "airdrop_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "airdrop_claims_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_chat_messages: {
         Row: {
           body: string
@@ -82,6 +214,42 @@ export type Database = {
           media_url?: string | null
           room_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      auth_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          maintenance_message: string | null
+          method_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          maintenance_message?: string | null
+          method_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          maintenance_message?: string | null
+          method_key?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -612,6 +780,45 @@ export type Database = {
           },
         ]
       }
+      developer_api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          key_hash: string
+          label: string
+          last_used_at: string | null
+          prefix: string
+          scopes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash: string
+          label: string
+          last_used_at?: string | null
+          prefix: string
+          scopes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash?: string
+          label?: string
+          last_used_at?: string | null
+          prefix?: string
+          scopes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -983,6 +1190,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      openpay_kyc_links: {
+        Row: {
+          admin_notes: string | null
+          application_id: string | null
+          created_at: string
+          external_ref: string
+          id: string
+          last_event_at: string | null
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          application_id?: string | null
+          created_at?: string
+          external_ref: string
+          id?: string
+          last_event_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          application_id?: string | null
+          created_at?: string
+          external_ref?: string
+          id?: string
+          last_event_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       ot_comments: {
         Row: {
@@ -1794,84 +2040,6 @@ export type Database = {
           },
         ]
       }
-      developer_api_keys: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          key_hash: string
-          label: string
-          last_used_at: string | null
-          prefix: string
-          scopes: string[]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          key_hash: string
-          label: string
-          last_used_at?: string | null
-          prefix: string
-          scopes?: string[]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          key_hash?: string
-          label?: string
-          last_used_at?: string | null
-          prefix?: string
-          scopes?: string[]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      openpay_kyc_links: {
-        Row: {
-          id: string
-          user_id: string
-          application_id: string | null
-          external_ref: string
-          status: string
-          rejection_reason: string | null
-          admin_notes: string | null
-          last_event_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          application_id?: string | null
-          external_ref: string
-          status?: string
-          rejection_reason?: string | null
-          admin_notes?: string | null
-          last_event_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          application_id?: string | null
-          external_ref?: string
-          status?: string
-          rejection_reason?: string | null
-          admin_notes?: string | null
-          last_event_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       p2p_payment_methods: {
         Row: {
           code: string
@@ -2226,6 +2394,64 @@ export type Database = {
           },
         ]
       }
+      perp_funding_payments: {
+        Row: {
+          created_at: string
+          funding_rate: number
+          id: string
+          mark_price: number | null
+          market: string
+          payment: number
+          position_id: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          created_at?: string
+          funding_rate: number
+          id?: string
+          mark_price?: number | null
+          market: string
+          payment: number
+          position_id?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          created_at?: string
+          funding_rate?: number
+          id?: string
+          mark_price?: number | null
+          market?: string
+          payment?: number
+          position_id?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_funding_payments_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "perp_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perp_funding_payments_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "v_perp_open_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perp_funding_payments_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perp_positions: {
         Row: {
           closed_at: string | null
@@ -2234,9 +2460,12 @@ export type Database = {
           exit_price: number | null
           id: string
           leverage: number
+          liquidation_price: number | null
           margin: number
           margin_asset: string
+          margin_mode: string
           market: string
+          position_mode: string
           realized_pnl: number | null
           side: string
           size_usd: number
@@ -2252,9 +2481,12 @@ export type Database = {
           exit_price?: number | null
           id?: string
           leverage: number
+          liquidation_price?: number | null
           margin: number
           margin_asset: string
+          margin_mode?: string
           market: string
+          position_mode?: string
           realized_pnl?: number | null
           side: string
           size_usd: number
@@ -2270,9 +2502,12 @@ export type Database = {
           exit_price?: number | null
           id?: string
           leverage?: number
+          liquidation_price?: number | null
           margin?: number
           margin_asset?: string
+          margin_mode?: string
           market?: string
+          position_mode?: string
           realized_pnl?: number | null
           side?: string
           size_usd?: number
@@ -2509,6 +2744,157 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      spot_fills: {
+        Row: {
+          amount: number
+          created_at: string
+          fee_usd: number
+          id: string
+          mark_price: number | null
+          market: string
+          order_id: string
+          pay_asset: string
+          price: number
+          quote_amount: number
+          side: string
+          tx_id: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fee_usd?: number
+          id?: string
+          mark_price?: number | null
+          market: string
+          order_id: string
+          pay_asset: string
+          price: number
+          quote_amount: number
+          side: string
+          tx_id?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee_usd?: number
+          id?: string
+          mark_price?: number | null
+          market?: string
+          order_id?: string
+          pay_asset?: string
+          price?: number
+          quote_amount?: number
+          side?: string
+          tx_id?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spot_fills_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "spot_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spot_fills_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_spot_open_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spot_fills_tx_id_fkey"
+            columns: ["tx_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spot_fills_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spot_orders: {
+        Row: {
+          amount: number
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string
+          filled: number
+          filled_at: string | null
+          id: string
+          market: string
+          order_type: string
+          pay_asset: string
+          price: number
+          reduce_only: boolean
+          side: string
+          status: string
+          time_in_force: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          avg_fill_price?: number | null
+          client_order_id?: string | null
+          created_at?: string
+          filled?: number
+          filled_at?: string | null
+          id?: string
+          market: string
+          order_type?: string
+          pay_asset: string
+          price: number
+          reduce_only?: boolean
+          side: string
+          status?: string
+          time_in_force?: string
+          updated_at?: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          avg_fill_price?: number | null
+          client_order_id?: string | null
+          created_at?: string
+          filled?: number
+          filled_at?: string | null
+          id?: string
+          market?: string
+          order_type?: string
+          pay_asset?: string
+          price?: number
+          reduce_only?: boolean
+          side?: string
+          status?: string
+          time_in_force?: string
+          updated_at?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spot_orders_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppressed_emails: {
         Row: {
@@ -2801,6 +3187,24 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_favorites: {
+        Row: {
+          created_at: string
+          market: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          market: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          market?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -2976,9 +3380,9 @@ export type Database = {
       }
       wallets: {
         Row: {
-          address: string
           aave_balance: number
           ada_balance: number
+          address: string
           aster_balance: number
           avax_balance: number
           bch_balance: number
@@ -3031,9 +3435,9 @@ export type Database = {
           zec_balance: number
         }
         Insert: {
-          address: string
           aave_balance?: number
           ada_balance?: number
+          address: string
           aster_balance?: number
           avax_balance?: number
           bch_balance?: number
@@ -3086,9 +3490,9 @@ export type Database = {
           zec_balance?: number
         }
         Update: {
-          address?: string
           aave_balance?: number
           ada_balance?: number
+          address?: string
           aster_balance?: number
           avax_balance?: number
           bch_balance?: number
@@ -3162,7 +3566,192 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_perp_open_positions: {
+        Row: {
+          closed_at: string | null
+          created_at: string | null
+          entry_price: number | null
+          exit_price: number | null
+          id: string | null
+          leverage: number | null
+          liquidation_price: number | null
+          margin: number | null
+          margin_asset: string | null
+          margin_mode: string | null
+          market: string | null
+          position_mode: string | null
+          realized_pnl: number | null
+          side: string | null
+          size_usd: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          wallet_id: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string | null
+          leverage?: number | null
+          liquidation_price?: number | null
+          margin?: number | null
+          margin_asset?: string | null
+          margin_mode?: string | null
+          market?: string | null
+          position_mode?: string | null
+          realized_pnl?: number | null
+          side?: string | null
+          size_usd?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_id?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string | null
+          leverage?: number | null
+          liquidation_price?: number | null
+          margin?: number | null
+          margin_asset?: string | null
+          margin_mode?: string | null
+          market?: string | null
+          position_mode?: string | null
+          realized_pnl?: number | null
+          side?: string | null
+          size_usd?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_positions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_spot_open_orders: {
+        Row: {
+          amount: number | null
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string | null
+          filled: number | null
+          filled_at: string | null
+          id: string | null
+          market: string | null
+          order_type: string | null
+          pay_asset: string | null
+          price: number | null
+          reduce_only: boolean | null
+          side: string | null
+          status: string | null
+          time_in_force: string | null
+          updated_at: string | null
+          user_id: string | null
+          wallet_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          avg_fill_price?: number | null
+          client_order_id?: string | null
+          created_at?: string | null
+          filled?: number | null
+          filled_at?: string | null
+          id?: string | null
+          market?: string | null
+          order_type?: string | null
+          pay_asset?: string | null
+          price?: number | null
+          reduce_only?: boolean | null
+          side?: string | null
+          status?: string | null
+          time_in_force?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          avg_fill_price?: number | null
+          client_order_id?: string | null
+          created_at?: string | null
+          filled?: number | null
+          filled_at?: string | null
+          id?: string | null
+          market?: string | null
+          order_type?: string | null
+          pay_asset?: string | null
+          price?: number | null
+          reduce_only?: boolean | null
+          side?: string | null
+          status?: string | null
+          time_in_force?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spot_orders_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_spot_trade_history: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          fee_usd: number | null
+          id: string | null
+          market: string | null
+          order_id: string | null
+          order_status: string | null
+          order_type: string | null
+          pay_asset: string | null
+          price: number | null
+          quote_amount: number | null
+          side: string | null
+          user_id: string | null
+          wallet_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spot_fills_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "spot_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spot_fills_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_spot_open_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spot_fills_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       account_bucket_move: {
@@ -3284,6 +3873,16 @@ export type Database = {
       }
       backfill_ledger_entries: { Args: never; Returns: Json }
       claim_first_admin: { Args: never; Returns: boolean }
+      credit_platform_fee_asset: {
+        Args: {
+          p_amount: number
+          p_asset: string
+          p_counterparty?: string
+          p_memo?: string
+          p_source_wallet_id?: string
+        }
+        Returns: string
+      }
       credit_platform_fee_ousd: {
         Args: {
           p_amount: number
@@ -3863,9 +4462,12 @@ export type Database = {
           exit_price: number | null
           id: string
           leverage: number
+          liquidation_price: number | null
           margin: number
           margin_asset: string
+          margin_mode: string
           market: string
+          position_mode: string
           realized_pnl: number | null
           side: string
           size_usd: number
@@ -3897,9 +4499,12 @@ export type Database = {
           exit_price: number | null
           id: string
           leverage: number
+          liquidation_price: number | null
           margin: number
           margin_asset: string
+          margin_mode: string
           market: string
+          position_mode: string
           realized_pnl: number | null
           side: string
           size_usd: number
@@ -3915,6 +4520,31 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      perp_record_funding: {
+        Args: {
+          _funding_rate: number
+          _mark_price?: number
+          _payment: number
+          _position_id: string
+        }
+        Returns: {
+          created_at: string
+          funding_rate: number
+          id: string
+          mark_price: number | null
+          market: string
+          payment: number
+          position_id: string | null
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "perp_funding_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -3923,10 +4553,117 @@ export type Database = {
           read_ct: number
         }[]
       }
+      spot_cancel_order: {
+        Args: { _order_id: string }
+        Returns: {
+          amount: number
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string
+          filled: number
+          filled_at: string | null
+          id: string
+          market: string
+          order_type: string
+          pay_asset: string
+          price: number
+          reduce_only: boolean
+          side: string
+          status: string
+          time_in_force: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "spot_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      spot_complete_fill: {
+        Args: {
+          _fee_usd?: number
+          _fill_amount: number
+          _fill_price: number
+          _mark_price?: number
+          _order_id: string
+          _tx_id?: string
+        }
+        Returns: {
+          amount: number
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string
+          filled: number
+          filled_at: string | null
+          id: string
+          market: string
+          order_type: string
+          pay_asset: string
+          price: number
+          reduce_only: boolean
+          side: string
+          status: string
+          time_in_force: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "spot_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      spot_funding_bridge: {
+        Args: { _amount: number; _asset: string; _direction: string }
+        Returns: Json
+      }
+      spot_place_limit_order: {
+        Args: {
+          _amount: number
+          _client_order_id?: string
+          _market: string
+          _pay_asset: string
+          _price: number
+          _side: string
+        }
+        Returns: {
+          amount: number
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string
+          filled: number
+          filled_at: string | null
+          id: string
+          market: string
+          order_type: string
+          pay_asset: string
+          price: number
+          reduce_only: boolean
+          side: string
+          status: string
+          time_in_force: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "spot_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_user_pin: { Args: { _pin_hash: string }; Returns: boolean }
       wallet_has_recovery: { Args: { p_wallet_id: string }; Returns: boolean }
     }
     Enums: {
+      airdrop_claim_mode: "open" | "code"
+      airdrop_status: "draft" | "live" | "paused" | "ended"
       app_role: "admin" | "moderator" | "user"
       kyc_status:
         | "not_started"
@@ -4091,6 +4828,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      airdrop_claim_mode: ["open", "code"],
+      airdrop_status: ["draft", "live", "paused", "ended"],
       app_role: ["admin", "moderator", "user"],
       kyc_status: [
         "not_started",

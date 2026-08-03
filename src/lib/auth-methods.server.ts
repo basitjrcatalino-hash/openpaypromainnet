@@ -4,8 +4,8 @@ import { getSupabaseServiceRoleKey } from "@/integrations/supabase/env.server";
 import { isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
 
 function serviceClient() {
-  const url = getSupabaseUrl();
-  const key = getSupabaseServiceRoleKey() || getSupabasePublishableKey();
+  const url = getSupabaseUrl() ?? "";
+  const key = getSupabaseServiceRoleKey() || getSupabasePublishableKey() || "";
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 

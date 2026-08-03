@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Wallet,
   ArrowDownToLine,
+  QrCode,
   ArrowUpFromLine,
   ArrowLeftRight,
   Compass,
@@ -119,6 +120,7 @@ const NAV = [
   { to: "/assets", labelKey: "nav.assets", icon: Layers },
   { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
+  { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode },
   { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
   { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },
@@ -155,6 +157,7 @@ const FOOTER_TABS = [
 
 const MORE_NAV = [
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
+  { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode, desc: "Show your QR & address" },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
   { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
   { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },

@@ -157,6 +157,7 @@ const FOOTER_TABS = [
 
 const MORE_NAV = [
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
+  { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode, desc: "Show your QR & address" },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
   { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
   { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },

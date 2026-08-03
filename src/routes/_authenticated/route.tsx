@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Wallet,
   ArrowDownToLine,
+  QrCode,
   ArrowUpFromLine,
   ArrowLeftRight,
   Compass,

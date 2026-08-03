@@ -156,7 +156,7 @@ function TradePage() {
       (search.mode ?? "futures") === mode;
     if (marketMatch) return;
     void navigate({
-      search: (prev) => ({ ...prev, market, mode }),
+      search: (prev: Record<string, unknown>) => ({ ...prev, market, mode }),
       replace: true,
     });
   }, [market, mode, navigate, search.market, search.mode]);

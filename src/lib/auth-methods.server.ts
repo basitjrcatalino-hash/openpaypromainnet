@@ -6,7 +6,7 @@ import { isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
 function serviceClient() {
   const url = getSupabaseUrl();
   const key = getSupabaseServiceRoleKey() || getSupabasePublishableKey();
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient(url, key ?? "", { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 /** Server-side check — returns false when method is maintenance-hidden. Missing row = enabled. */

@@ -455,22 +455,24 @@ export function usePhantomQrScanner({
     nativeReadyRef.current = false;
 
     const BD = getBarcodeDetector();
-    if (!BD || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setUseFallback(true);
       return;
     }
 
-    // Verify BarcodeDetector actually works (some browsers declare it but throw)
-    try {
-      const testDetector = new BD({ formats: ["qr_code"] });
-      if (!testDetector || typeof testDetector.detect !== "function") {
-        setUseFallback(true);
-        return;
+    // BarcodeDetector is optional (absent on iOS Safari) — jsQR handles decoding there.
+    let detectorFactory: (() => BarcodeDetectorLike) | null = null;
+    if (BD) {
+      try {
+        const testDetector = new BD({ formats: ["qr_code"] });
+        if (testDetector && typeof testDetector.detect === "function") {
+          detectorFactory = () => new BD({ formats: ["qr_code"] });
+        }
+      } catch {
+        detectorFactory = null;
       }
-    } catch {
-      setUseFallback(true);
-      return;
     }
+
 
     (async () => {
       try {

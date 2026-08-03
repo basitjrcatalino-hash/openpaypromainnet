@@ -81,6 +81,7 @@ import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
+import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
@@ -537,6 +538,11 @@ const AuthenticatedAdminAirdropsRoute =
     path: '/admin/airdrops',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminAuthRoute = AuthenticatedAdminAuthRouteImport.update({
+  id: '/admin/auth',
+  path: '/admin/auth',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminDepositsRoute =
   AuthenticatedAdminDepositsRouteImport.update({
     id: '/admin/deposits',
@@ -1110,6 +1116,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
+  '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1275,6 +1282,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
+  '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1442,6 +1450,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
+  '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1609,6 +1618,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/airdrops'
+    | '/admin/auth'
     | '/admin/deposits'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -1774,6 +1784,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/airdrops'
+    | '/admin/auth'
     | '/admin/deposits'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -1940,6 +1951,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/airdrops'
+    | '/_authenticated/admin/auth'
     | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
@@ -2611,6 +2623,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/airdrops'
       fullPath: '/admin/airdrops'
       preLoaderRoute: typeof AuthenticatedAdminAirdropsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/auth': {
+      id: '/_authenticated/admin/auth'
+      path: '/admin/auth'
+      fullPath: '/admin/auth'
+      preLoaderRoute: typeof AuthenticatedAdminAuthRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/deposits': {
@@ -3316,6 +3335,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
   AuthenticatedWithdrawRoute: typeof AuthenticatedWithdrawRoute
   AuthenticatedAdminAirdropsRoute: typeof AuthenticatedAdminAirdropsRoute
+  AuthenticatedAdminAuthRoute: typeof AuthenticatedAdminAuthRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
@@ -3396,6 +3416,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,
   AuthenticatedWithdrawRoute: AuthenticatedWithdrawRoute,
   AuthenticatedAdminAirdropsRoute: AuthenticatedAdminAirdropsRoute,
+  AuthenticatedAdminAuthRoute: AuthenticatedAdminAuthRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,

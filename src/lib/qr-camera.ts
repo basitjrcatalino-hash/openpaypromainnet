@@ -455,22 +455,24 @@ export function usePhantomQrScanner({
     nativeReadyRef.current = false;
 
     const BD = getBarcodeDetector();
-    if (!BD || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setUseFallback(true);
       return;
     }
 
-    // Verify BarcodeDetector actually works (some browsers declare it but throw)
-    try {
-      const testDetector = new BD({ formats: ["qr_code"] });
-      if (!testDetector || typeof testDetector.detect !== "function") {
-        setUseFallback(true);
-        return;
+    // BarcodeDetector is optional (absent on iOS Safari) — jsQR handles decoding there.
+    let detectorFactory: (() => BarcodeDetectorLike) | null = null;
+    if (BD) {
+      try {
+        const testDetector = new BD({ formats: ["qr_code"] });
+        if (testDetector && typeof testDetector.detect === "function") {
+          detectorFactory = () => new BD({ formats: ["qr_code"] });
+        }
+      } catch {
+        detectorFactory = null;
       }
-    } catch {
-      setUseFallback(true);
-      return;
     }
+
 
     (async () => {
       try {
@@ -549,7 +551,7 @@ export function usePhantomQrScanner({
         setStarting(false);
         setError(null);
 
-        const detector = new BD({ formats: ["qr_code"] });
+        const detector = detectorFactory ? detectorFactory() : null;
         const canvas = document.createElement("canvas");
         let busy = false;
         let frame = 0;
@@ -565,12 +567,13 @@ export function usePhantomQrScanner({
           try {
             let value: string | undefined;
 
-            // jsQR first on most frames — better for phone-screen receive QRs
-            if (frame % 2 === 0) {
+            // jsQR first — works everywhere incl. iOS Safari (no BarcodeDetector),
+            // and reads phone-screen receive QRs well.
+            if (!detector || frame % 2 === 0) {
               value = decodeQrFromVideo(video, canvas) ?? undefined;
             }
 
-            if (!value) {
+            if (!value && detector) {
               try {
                 const codes = await detector.detect(canvasFromVideoCrop(video, canvas, 0.62));
                 value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
@@ -579,7 +582,7 @@ export function usePhantomQrScanner({
               }
             }
 
-            if (!value && frame % 3 === 0) {
+            if (!value && detector && frame % 3 === 0) {
               try {
                 const codes = await detector.detect(canvasFromVideo(video, canvas));
                 value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
@@ -588,7 +591,7 @@ export function usePhantomQrScanner({
               }
             }
 
-            if (!value && frame % 7 === 0) {
+            if (!value && detector && frame % 7 === 0) {
               try {
                 const codes = await detector.detect(video);
                 value = codes.find((c) => c.rawValue?.trim())?.rawValue?.trim();
@@ -596,6 +599,7 @@ export function usePhantomQrScanner({
                 /* ignore */
               }
             }
+
 
             if (value) emit(value);
           } catch {

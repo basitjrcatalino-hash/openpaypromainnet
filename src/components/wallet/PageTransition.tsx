@@ -4,9 +4,9 @@ import { useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 /**
- * Phantom-style page enter: soft fade + rise on pathname change only.
- * Search-param updates (e.g. Trade ?market=&mode=) must NOT remount or re-animate,
- * or transforms stick and break fixed chrome / navigation.
+ * Phantom-style page enter: soft fade + rise on pathname change.
+ * - Never animates during SSR/hydration (avoids markup mismatch + first-paint flash).
+ * - Search-param updates (e.g. Trade ?market=&mode=) do NOT remount or re-animate.
  */
 export function PageTransition({
   children,
@@ -19,8 +19,8 @@ export function PageTransition({
   disabled?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [enter, setEnter] = useState(!disabled);
-  const prevPath = useRef(pathname);
+  const [enter, setEnter] = useState(false);
+  const prevPath = useRef<string | null>(null);
 
   useEffect(() => {
     if (disabled) {
@@ -29,14 +29,18 @@ export function PageTransition({
       return;
     }
     if (prevPath.current === pathname) return;
+    const isFirst = prevPath.current === null;
     prevPath.current = pathname;
     setEnter(true);
-    if (typeof window !== "undefined") {
+
+    if (!isFirst && typeof window !== "undefined") {
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      // Instant scroll — smooth scrolling fights the enter animation and looks janky.
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "auto" });
     }
-    // Failsafe: never leave enter class stuck if animationend is skipped
-    const t = window.setTimeout(() => setEnter(false), 500);
+
+    // Failsafe: never leave the enter class stuck if animationend is skipped.
+    const t = window.setTimeout(() => setEnter(false), 600);
     return () => window.clearTimeout(t);
   }, [pathname, disabled]);
 
@@ -46,7 +50,6 @@ export function PageTransition({
 
   return (
     <div
-      key={pathname}
       className={cn("min-h-0", enter && "ph-route-enter", className)}
       onAnimationEnd={(e) => {
         if (e.target !== e.currentTarget) return;

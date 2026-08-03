@@ -120,6 +120,7 @@ const NAV = [
   { to: "/assets", labelKey: "nav.assets", icon: Layers },
   { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
+  { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode },
   { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine },
   { to: "/tokens", labelKey: "nav.tokens", icon: CircleDollarSign },

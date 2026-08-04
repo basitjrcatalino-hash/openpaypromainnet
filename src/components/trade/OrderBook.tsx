@@ -1,9 +1,12 @@
+import { useMemo, useState } from "react";
+
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import {
   buySellRatio,
   type ExchangeDepthBook,
 } from "@/lib/exchange-depth";
+import { aggregateLevels, formatTick, precisionOptions } from "@/lib/trade-advanced";
 
 export function OrderBook({
   book,
@@ -11,16 +14,29 @@ export function OrderBook({
   midOverride,
   loading,
   change24h,
+  onPriceClick,
 }: {
   book?: ExchangeDepthBook;
   baseSymbol: string;
   midOverride?: number;
   loading?: boolean;
   change24h?: number;
+  /** Click a level to prefill the order form price (OKX behaviour). */
+  onPriceClick?: (price: number) => void;
 }) {
   const mid = midOverride && midOverride > 0 ? midOverride : book?.mid ?? 0;
-  const asks = [...(book?.asks ?? [])].slice(0, 8).reverse();
-  const bids = (book?.bids ?? []).slice(0, 8);
+  const ticks = useMemo(() => precisionOptions(mid), [mid]);
+  const [tickIdx, setTickIdx] = useState(0);
+  const tick = ticks[Math.min(tickIdx, ticks.length - 1)] ?? 0;
+
+  const asks = useMemo(
+    () => aggregateLevels(book?.asks ?? [], tick, "ask").slice(0, 8).reverse(),
+    [book?.asks, tick],
+  );
+  const bids = useMemo(
+    () => aggregateLevels(book?.bids ?? [], tick, "bid").slice(0, 8),
+    [book?.bids, tick],
+  );
   const { buyPct, sellPct } = buySellRatio(book);
   const maxAmt = Math.max(
     0.0001,
@@ -34,8 +50,20 @@ export function OrderBook({
 
   return (
     <div className="flex h-full min-h-0 flex-col text-[11px]">
-      <div className="mb-1 flex items-center justify-between px-0.5 text-[10px] text-muted-foreground">
+      <div className="mb-1 flex items-center justify-between gap-1 px-0.5 text-[10px] text-muted-foreground">
         <span>Price</span>
+        <select
+          aria-label="Price precision"
+          value={tickIdx}
+          onChange={(e) => setTickIdx(Number(e.target.value))}
+          className="h-5 rounded border-0 bg-muted/60 px-1 text-[9px] font-semibold text-foreground outline-none"
+        >
+          {ticks.map((t, i) => (
+            <option key={t} value={i}>
+              {formatTick(t)}
+            </option>
+          ))}
+        </select>
         <span>Qty ({baseSymbol})</span>
       </div>
 
@@ -56,6 +84,7 @@ export function OrderBook({
               maxAmt={maxAmt}
               priceDigits={priceDigits}
               amtDigits={amtDigits}
+              onClick={onPriceClick}
             />
           ))
         )}
@@ -85,6 +114,7 @@ export function OrderBook({
             maxAmt={maxAmt}
             priceDigits={priceDigits}
             amtDigits={amtDigits}
+            onClick={onPriceClick}
           />
         ))}
       </div>
@@ -108,6 +138,7 @@ function DepthRow({
   maxAmt,
   priceDigits,
   amtDigits,
+  onClick,
 }: {
   side: "ask" | "bid";
   price: number;
@@ -115,10 +146,18 @@ function DepthRow({
   maxAmt: number;
   priceDigits: number;
   amtDigits: number;
+  onClick?: (price: number) => void;
 }) {
   const pct = Math.min(100, (amount / maxAmt) * 100);
   return (
-    <div className="relative flex items-center justify-between px-0.5 py-[2px] tabular-nums">
+    <div
+      role={onClick ? "button" : undefined}
+      onClick={onClick ? () => onClick(price) : undefined}
+      className={cn(
+        "relative flex items-center justify-between px-0.5 py-[2px] tabular-nums",
+        onClick && "cursor-pointer hover:bg-muted/40",
+      )}
+    >
       <span
         className="absolute inset-y-0 right-0 rounded-sm opacity-20"
         style={{

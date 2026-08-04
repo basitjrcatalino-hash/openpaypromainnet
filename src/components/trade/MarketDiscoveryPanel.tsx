@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { PERP_MARKETS, marketToMajorId, type PerpMarket } from "@/lib/perp";
-import { MAJOR_TOKENS, majorMarketById, type MajorMarketSnapshot } from "@/lib/major-tokens";
+import { getMajorToken, majorMarketById, type MajorMarketSnapshot } from "@/lib/major-tokens";
 import { pairLabel, type TradeMode } from "@/lib/exchange-depth";
 import { quoteByMarket, type PerpLiveQuote } from "@/lib/tradingview-perps";
 import {
@@ -90,7 +90,7 @@ export function MarketDiscoveryPanel({
     let list = rows;
     if (term) {
       list = list.filter((r) => {
-        const token = MAJOR_TOKENS.find((t) => t.id === marketToMajorId(r.market));
+        const token = getMajorToken(marketToMajorId(r.market));
         return (
           r.market.toLowerCase().includes(term) ||
           (token?.name ?? "").toLowerCase().includes(term)
@@ -156,7 +156,7 @@ export function MarketDiscoveryPanel({
         ) : (
           <ul className="space-y-0.5">
             {filtered.map((r) => {
-              const token = MAJOR_TOKENS.find((t) => t.id === marketToMajorId(r.market));
+              const token = getMajorToken(marketToMajorId(r.market));
               const up = r.change >= 0;
               return (
                 <li key={r.market}>

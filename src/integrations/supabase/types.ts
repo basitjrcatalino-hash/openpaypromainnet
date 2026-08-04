@@ -2470,6 +2470,8 @@ export type Database = {
           side: string
           size_usd: number
           status: string
+          stop_loss_price: number | null
+          take_profit_price: number | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -2491,6 +2493,8 @@ export type Database = {
           side: string
           size_usd: number
           status?: string
+          stop_loss_price?: number | null
+          take_profit_price?: number | null
           updated_at?: string
           user_id: string
           wallet_id: string
@@ -2512,6 +2516,8 @@ export type Database = {
           side?: string
           size_usd?: number
           status?: string
+          stop_loss_price?: number | null
+          take_profit_price?: number | null
           updated_at?: string
           user_id?: string
           wallet_id?: string
@@ -2835,13 +2841,20 @@ export type Database = {
           filled_at: string | null
           id: string
           market: string
+          oco_group: string | null
           order_type: string
           pay_asset: string
+          post_only: boolean
           price: number
           reduce_only: boolean
           side: string
           status: string
           time_in_force: string
+          trail_percent: number | null
+          trail_ref: number | null
+          trigger_direction: string | null
+          trigger_price: number | null
+          triggered_at: string | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -2855,13 +2868,20 @@ export type Database = {
           filled_at?: string | null
           id?: string
           market: string
+          oco_group?: string | null
           order_type?: string
           pay_asset: string
+          post_only?: boolean
           price: number
           reduce_only?: boolean
           side: string
           status?: string
           time_in_force?: string
+          trail_percent?: number | null
+          trail_ref?: number | null
+          trigger_direction?: string | null
+          trigger_price?: number | null
+          triggered_at?: string | null
           updated_at?: string
           user_id: string
           wallet_id: string
@@ -2875,13 +2895,20 @@ export type Database = {
           filled_at?: string | null
           id?: string
           market?: string
+          oco_group?: string | null
           order_type?: string
           pay_asset?: string
+          post_only?: boolean
           price?: number
           reduce_only?: boolean
           side?: string
           status?: string
           time_in_force?: string
+          trail_percent?: number | null
+          trail_ref?: number | null
+          trigger_direction?: string | null
+          trigger_price?: number | null
+          triggered_at?: string | null
           updated_at?: string
           user_id?: string
           wallet_id?: string
@@ -4453,6 +4480,38 @@ export type Database = {
         }[]
       }
       p2p_wallet_id: { Args: { _user_id: string }; Returns: string }
+      perp_add_margin: {
+        Args: { _amount: number; _position_id: string }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          entry_price: number
+          exit_price: number | null
+          id: string
+          leverage: number
+          liquidation_price: number | null
+          margin: number
+          margin_asset: string
+          margin_mode: string
+          market: string
+          position_mode: string
+          realized_pnl: number | null
+          side: string
+          size_usd: number
+          status: string
+          stop_loss_price: number | null
+          take_profit_price: number | null
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "perp_positions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       perp_close_position: {
         Args: { _exit_price: number; _position_id: string }
         Returns: {
@@ -4472,6 +4531,8 @@ export type Database = {
           side: string
           size_usd: number
           status: string
+          stop_loss_price: number | null
+          take_profit_price: number | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -4509,6 +4570,8 @@ export type Database = {
           side: string
           size_usd: number
           status: string
+          stop_loss_price: number | null
+          take_profit_price: number | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -4545,6 +4608,42 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      perp_set_tpsl: {
+        Args: {
+          _position_id: string
+          _stop_loss?: number
+          _take_profit?: number
+        }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          entry_price: number
+          exit_price: number | null
+          id: string
+          leverage: number
+          liquidation_price: number | null
+          margin: number
+          margin_asset: string
+          margin_mode: string
+          market: string
+          position_mode: string
+          realized_pnl: number | null
+          side: string
+          size_usd: number
+          status: string
+          stop_loss_price: number | null
+          take_profit_price: number | null
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "perp_positions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -4564,13 +4663,20 @@ export type Database = {
           filled_at: string | null
           id: string
           market: string
+          oco_group: string | null
           order_type: string
           pay_asset: string
+          post_only: boolean
           price: number
           reduce_only: boolean
           side: string
           status: string
           time_in_force: string
+          trail_percent: number | null
+          trail_ref: number | null
+          trigger_direction: string | null
+          trigger_price: number | null
+          triggered_at: string | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -4600,13 +4706,20 @@ export type Database = {
           filled_at: string | null
           id: string
           market: string
+          oco_group: string | null
           order_type: string
           pay_asset: string
+          post_only: boolean
           price: number
           reduce_only: boolean
           side: string
           status: string
           time_in_force: string
+          trail_percent: number | null
+          trail_ref: number | null
+          trigger_direction: string | null
+          trigger_price: number | null
+          triggered_at: string | null
           updated_at: string
           user_id: string
           wallet_id: string
@@ -4640,13 +4753,71 @@ export type Database = {
           filled_at: string | null
           id: string
           market: string
+          oco_group: string | null
           order_type: string
           pay_asset: string
+          post_only: boolean
           price: number
           reduce_only: boolean
           side: string
           status: string
           time_in_force: string
+          trail_percent: number | null
+          trail_ref: number | null
+          trigger_direction: string | null
+          trigger_price: number | null
+          triggered_at: string | null
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "spot_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      spot_place_trigger_order: {
+        Args: {
+          _amount: number
+          _market: string
+          _oco_group?: string
+          _order_type: string
+          _pay_asset: string
+          _post_only?: boolean
+          _price?: number
+          _reduce_only?: boolean
+          _side: string
+          _time_in_force?: string
+          _trail_percent?: number
+          _trail_ref?: number
+          _trigger_direction?: string
+          _trigger_price?: number
+        }
+        Returns: {
+          amount: number
+          avg_fill_price: number | null
+          client_order_id: string | null
+          created_at: string
+          filled: number
+          filled_at: string | null
+          id: string
+          market: string
+          oco_group: string | null
+          order_type: string
+          pay_asset: string
+          post_only: boolean
+          price: number
+          reduce_only: boolean
+          side: string
+          status: string
+          time_in_force: string
+          trail_percent: number | null
+          trail_ref: number | null
+          trigger_direction: string | null
+          trigger_price: number | null
+          triggered_at: string | null
           updated_at: string
           user_id: string
           wallet_id: string

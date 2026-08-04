@@ -11,6 +11,14 @@ import {
 } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
 import {
+  SPOT_ORDER_KINDS,
+  TIME_IN_FORCE,
+  isTriggerKind,
+  orderKindLabel,
+  type SpotOrderKind,
+  type TimeInForce,
+} from "@/lib/trade-advanced";
+import {
   PERP_MAKER_FEE_BPS,
   PERP_TAKER_FEE_BPS,
   SPOT_MAKER_FEE_BPS,
@@ -23,7 +31,7 @@ const SPOT_FEE_RATE = SPOT_TAKER_FEE_BPS / 10_000;
 
 export type SpotSide = "buy" | "sell";
 export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
-export type OrderType = "market" | "limit";
+export type OrderType = SpotOrderKind;
 
 type SharedProps = {
   market: PerpMarket;
@@ -38,6 +46,18 @@ type SharedProps = {
   pct: number;
   onPct: (p: number) => void;
   busy?: boolean;
+  /** Trigger / stop price for stop-limit and stop-market. */
+  triggerPrice?: string;
+  onTriggerPrice?: (v: string) => void;
+  /** Trailing stop callback distance in percent. */
+  trailPercent?: string;
+  onTrailPercent?: (v: string) => void;
+  tif?: TimeInForce;
+  onTif?: (t: TimeInForce) => void;
+  postOnly?: boolean;
+  onPostOnly?: (v: boolean) => void;
+  reduceOnly?: boolean;
+  onReduceOnly?: (v: boolean) => void;
 };
 
 type FuturesProps = SharedProps & {
@@ -66,6 +86,11 @@ type SpotProps = SharedProps & {
   /** Funding surplus — hint to Transfer into Spot. */
   fundingQuote?: number;
   fundingBase?: number;
+  /** Attach a protective stop to a limit order (OCO). */
+  useOco?: boolean;
+  onUseOco?: (v: boolean) => void;
+  ocoStopPrice?: string;
+  onOcoStopPrice?: (v: string) => void;
   onSubmit: () => void;
 };
 
@@ -181,11 +206,48 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         onChange={(e) => props.onOrderType(e.target.value as OrderType)}
         className="h-8 w-full rounded-md border-0 bg-muted/60 px-2 text-xs font-semibold text-foreground outline-none"
       >
-        <option value="market">Market</option>
-        <option value="limit">Limit</option>
+        {SPOT_ORDER_KINDS.map((k) => (
+          <option key={k} value={k}>
+            {orderKindLabel(k)}
+          </option>
+        ))}
       </select>
 
-      {props.orderType === "limit" ? (
+      {props.orderType === "stop_limit" || props.orderType === "stop_market" ? (
+        <label className="block">
+          <span className="mb-1 block text-[10px] text-muted-foreground">
+            Trigger price (USDT)
+          </span>
+          <input
+            value={props.triggerPrice ?? ""}
+            onChange={(e) =>
+              props.onTriggerPrice?.(e.target.value.replace(/[^0-9.]/g, ""))
+            }
+            inputMode="decimal"
+            className="h-9 w-full rounded-md bg-muted/60 px-2.5 text-sm font-semibold tabular-nums outline-none ring-1 ring-transparent focus:ring-primary/40"
+            placeholder={props.markPrice > 0 ? formatNumber(props.markPrice, priceDigits) : "0"}
+          />
+        </label>
+      ) : null}
+
+      {props.orderType === "trailing_stop" ? (
+        <label className="block">
+          <span className="mb-1 block text-[10px] text-muted-foreground">
+            Trail distance (%)
+          </span>
+          <input
+            value={props.trailPercent ?? ""}
+            onChange={(e) =>
+              props.onTrailPercent?.(e.target.value.replace(/[^0-9.]/g, ""))
+            }
+            inputMode="decimal"
+            className="h-9 w-full rounded-md bg-muted/60 px-2.5 text-sm font-semibold tabular-nums outline-none ring-1 ring-transparent focus:ring-primary/40"
+            placeholder="1.5"
+          />
+        </label>
+      ) : null}
+
+      {props.orderType === "limit" || props.orderType === "stop_limit" ? (
         <label className="block">
           <span className="mb-1 block text-[10px] text-muted-foreground">Price (USDT)</span>
           <input
@@ -242,6 +304,82 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           Spot uses <span className="font-semibold text-foreground">Spot</span> balances.
           Futures uses Futures. Transfer Funding → Spot to trade.
         </p>
+      ) : null}
+
+      {props.onTif || props.onPostOnly || props.onReduceOnly ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {props.onTif ? (
+            <div className="flex gap-0.5 rounded-md bg-muted/50 p-0.5">
+              {TIME_IN_FORCE.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => props.onTif?.(t)}
+                  className={cn(
+                    "rounded px-1.5 py-1 text-[9px] font-bold uppercase press",
+                    (props.tif ?? "gtc") === t
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {props.onPostOnly ? (
+            <button
+              type="button"
+              onClick={() => props.onPostOnly?.(!props.postOnly)}
+              className={cn(
+                "rounded-md px-2 py-1 text-[9px] font-bold uppercase press",
+                props.postOnly ? "bg-primary/20 text-primary" : "bg-muted/50 text-muted-foreground",
+              )}
+            >
+              Post only
+            </button>
+          ) : null}
+          {props.onReduceOnly ? (
+            <button
+              type="button"
+              onClick={() => props.onReduceOnly?.(!props.reduceOnly)}
+              className={cn(
+                "rounded-md px-2 py-1 text-[9px] font-bold uppercase press",
+                props.reduceOnly
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted/50 text-muted-foreground",
+              )}
+            >
+              Reduce only
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {props.mode === "spot" && props.orderType === "limit" && props.onUseOco ? (
+        <div className="space-y-1.5 rounded-md bg-muted/30 p-2">
+          <button
+            type="button"
+            onClick={() => props.onUseOco?.(!props.useOco)}
+            className={cn(
+              "w-full rounded px-2 py-1 text-[10px] font-bold uppercase press",
+              props.useOco ? "bg-primary/20 text-primary" : "bg-muted/60 text-muted-foreground",
+            )}
+          >
+            OCO · attach protective stop
+          </button>
+          {props.useOco ? (
+            <input
+              value={props.ocoStopPrice ?? ""}
+              onChange={(e) =>
+                props.onOcoStopPrice?.(e.target.value.replace(/[^0-9.]/g, ""))
+              }
+              inputMode="decimal"
+              placeholder="Stop price"
+              className="h-8 w-full rounded-md bg-muted/60 px-2.5 text-[12px] font-semibold tabular-nums outline-none ring-1 ring-transparent focus:ring-primary/40"
+            />
+          ) : null}
+        </div>
       ) : null}
 
       <label className="block">
@@ -477,6 +615,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         >
           {props.busy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isTriggerKind(props.orderType) ? (
+            `${props.side === "buy" ? "Buy" : "Sell"} ${orderKindLabel(props.orderType).toLowerCase()}`
           ) : props.orderType === "limit" ? (
             `${props.side === "buy" ? "Buy" : "Sell"} limit`
           ) : (

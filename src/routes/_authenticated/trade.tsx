@@ -134,7 +134,7 @@ function TradePage() {
   const [chartHeight, setChartHeight] = useState(320);
 
   // Shared order form state
-  const [orderType, setOrderType] = useState<"market" | "limit">("market");
+  const [orderType, setOrderType] = useState<SpotOrderKind>("market");
   const [limitPrice, setLimitPrice] = useState("");
   const [amount, setAmount] = useState("");
   const [pct, setPct] = useState(0);

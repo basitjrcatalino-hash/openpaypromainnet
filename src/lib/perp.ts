@@ -51,4 +51,9 @@ export type PerpPosition = {
   realized_pnl: number | null;
   closed_at: string | null;
   created_at: string;
+  liquidation_price?: number | null;
+  take_profit_price?: number | null;
+  stop_loss_price?: number | null;
+  margin_mode?: string | null;
+  position_mode?: string | null;
 };

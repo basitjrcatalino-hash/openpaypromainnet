@@ -60,6 +60,11 @@ export const listPerpPositions = createServerFn({ method: "GET" })
       realized_pnl: r.realized_pnl == null ? null : Number(r.realized_pnl),
       closed_at: r.closed_at,
       created_at: r.created_at,
+      liquidation_price: r.liquidation_price == null ? null : Number(r.liquidation_price),
+      take_profit_price: r.take_profit_price == null ? null : Number(r.take_profit_price),
+      stop_loss_price: r.stop_loss_price == null ? null : Number(r.stop_loss_price),
+      margin_mode: r.margin_mode ?? null,
+      position_mode: r.position_mode ?? null,
     }));
   });
 

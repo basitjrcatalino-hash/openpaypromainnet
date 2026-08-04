@@ -3,6 +3,12 @@ import type { PerpMarket } from "@/lib/perp";
 export type SpotOrderSide = "buy" | "sell";
 export type SpotOrderStatus = "open" | "partial" | "filled" | "cancelled";
 export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
+export type SpotOrderType =
+  | "market"
+  | "limit"
+  | "stop_limit"
+  | "stop_market"
+  | "trailing_stop";
 
 export type SpotOrder = {
   id: string;
@@ -10,7 +16,7 @@ export type SpotOrder = {
   wallet_id: string;
   market: PerpMarket;
   side: SpotOrderSide;
-  order_type: "market" | "limit";
+  order_type: SpotOrderType;
   price: number;
   amount: number;
   filled: number;
@@ -46,7 +52,7 @@ export function mapSpotOrder(r: Record<string, unknown>): SpotOrder {
     wallet_id: String(r.wallet_id),
     market: String(r.market).toUpperCase() as PerpMarket,
     side: String(r.side).toLowerCase() as SpotOrderSide,
-    order_type: (String(r.order_type || "limit").toLowerCase() as "market" | "limit") || "limit",
+    order_type: (String(r.order_type || "limit").toLowerCase() as SpotOrderType) || "limit",
     price: Number(r.price),
     amount: Number(r.amount),
     filled: Number(r.filled ?? 0),

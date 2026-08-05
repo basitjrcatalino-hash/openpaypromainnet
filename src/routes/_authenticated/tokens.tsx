@@ -197,10 +197,13 @@ function TokensPage() {
       }
     });
 
-    // Pin PI directly under OUSD (OUSD is rendered above this list).
-    if (ids.includes("pi")) {
-      ids = ["pi", ...ids.filter((id) => id !== "pi")];
-    }
+    // Pin PI directly under OUSD (OUSD is rendered above this list),
+    // then Fabric Protocol (ROBO) directly under PI.
+    const rest = ids.filter((id) => id !== "pi" && id !== "robo");
+    const pinned: MajorTokenId[] = [];
+    if (ids.includes("pi")) pinned.push("pi");
+    if (ids.includes("robo")) pinned.push("robo");
+    ids = [...pinned, ...rest];
     return ids;
   }, [q, sort, majorMarkets, curatedOnly, activeNetwork]);
 

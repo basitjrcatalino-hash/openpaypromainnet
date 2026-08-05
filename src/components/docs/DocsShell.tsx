@@ -56,6 +56,22 @@ export function DocsSection({
   );
 }
 
+function isActiveHref(pathname: string, href: string) {
+  if (href.startsWith("http") || href.startsWith("/api/") || href.startsWith("/llms")) {
+    return false;
+  }
+  const [pathOnly, hash] = href.split("#");
+  const base = pathOnly || "/";
+  // Hub hash anchors — highlight only when on the hub itself
+  if (hash && base === "/docs") {
+    return pathname === "/docs";
+  }
+  if (base === "/docs") {
+    return pathname === "/docs";
+  }
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
 function NavList({
   pathname,
   onNavigate,
@@ -72,14 +88,11 @@ function NavList({
           </p>
           <ul className="space-y-1">
             {group.items.map((item) => {
-              const external = item.href.startsWith("http");
-              const hashOnly = item.href.includes("#");
-              const pathOnly = item.href.split("#")[0] || item.href;
-              const active =
-                !external &&
-                !hashOnly &&
-                (pathname === item.href ||
-                  (item.href !== "/docs" && pathname.startsWith(pathOnly)));
+              const external =
+                item.href.startsWith("http") ||
+                item.href.startsWith("/api/") ||
+                item.href.startsWith("/llms");
+              const active = isActiveHref(pathname, item.href);
               const className = cn(
                 "block rounded-2xl px-3 py-2.5 text-[0.95rem] leading-snug transition md:text-base",
                 active
@@ -88,22 +101,34 @@ function NavList({
               );
               return (
                 <li key={item.href + item.label}>
-                  <a
-                    href={item.href}
-                    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-                    className={className}
-                    onClick={onNavigate}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      {item.label}
-                      {external ? <ExternalLink className="h-3.5 w-3.5 opacity-50" /> : null}
-                    </span>
-                    {item.desc ? (
-                      <span className="mt-1 block text-sm font-normal leading-snug opacity-75">
-                        {item.desc}
+                  {external ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={className}
+                      onClick={onNavigate}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        {item.label}
+                        <ExternalLink className="h-3.5 w-3.5 opacity-50" />
                       </span>
-                    ) : null}
-                  </a>
+                      {item.desc ? (
+                        <span className="mt-1 block text-sm font-normal leading-snug opacity-75">
+                          {item.desc}
+                        </span>
+                      ) : null}
+                    </a>
+                  ) : (
+                    <a href={item.href} className={className} onClick={onNavigate}>
+                      <span className="inline-flex items-center gap-1.5">{item.label}</span>
+                      {item.desc ? (
+                        <span className="mt-1 block text-sm font-normal leading-snug opacity-75">
+                          {item.desc}
+                        </span>
+                      ) : null}
+                    </a>
+                  )}
                 </li>
               );
             })}
@@ -137,7 +162,7 @@ export function DocsShell({
     <div className="opblog relative min-h-screen overflow-x-hidden text-base">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] opacity-90"
+        className="pointer-events-none absolute inset-x-0 top-0 h-105 opacity-90"
         style={{
           backgroundImage:
             "radial-gradient(ellipse 70% 50% at 15% -5%, rgba(171,159,242,0.28), transparent 55%), radial-gradient(ellipse 55% 40% at 90% 0%, rgba(124,108,240,0.14), transparent 50%)",
@@ -150,12 +175,17 @@ export function DocsShell({
             <button
               type="button"
               className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground lg:hidden"
-              aria-label="Docs menu"
+              aria-label={mobileNav ? "Close docs menu" : "Docs menu"}
+              aria-expanded={mobileNav}
               onClick={() => setMobileNav((v) => !v)}
             >
               {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <Link to="/docs" className="flex min-w-0 items-center gap-2.5">
+            <Link
+              to="/docs"
+              activeOptions={{ exact: true }}
+              className="flex min-w-0 items-center gap-2.5"
+            >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent ring-1 ring-primary/30">
                 <BookOpen className="h-4.5 w-4.5 text-foreground" />
               </span>
@@ -172,7 +202,7 @@ export function DocsShell({
                 label="Listen"
                 variant="primary"
                 size="sm"
-                className="hidden rounded-full text-sm sm:inline-flex"
+                className="rounded-full text-sm"
               />
             ) : null}
             <a

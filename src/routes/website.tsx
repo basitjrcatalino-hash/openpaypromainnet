@@ -91,6 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Website", href: "/website", desc: "OpenPay Pro marketing home" },
       { label: "Pitch Deck", href: "/pitch", desc: "Investor overview" },
+      { label: "Funding", href: "/funding", desc: "Investors & partners" },
       { label: "Wiki", href: "/wiki", desc: "Guides for every Pro feature" },
       { label: "Blog", href: "/blog", desc: "Product news and deep dives" },
       { label: "FAQ", href: "/docs/faq", desc: "Answers for wallets and OUSD" },
@@ -112,6 +113,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Company",
     items: [
       { label: "About", href: "/about", desc: "Why OpenPay Pro exists" },
+      { label: "Funding", href: "/funding", desc: "Investors & partners" },
       { label: "Whitepaper", href: "https://openpy.space/whitepaper", desc: "Network thesis" },
       { label: "Pitch Deck", href: "/pitch", desc: "Investor overview" },
     ],
@@ -1196,6 +1198,7 @@ function HomePage() {
               { label: "Open wallet", href: "/authpi" },
               { label: "Website", href: "/website" },
               { label: "Pitch Deck", href: "/pitch" },
+              { label: "Funding", href: "/funding" },
               { label: "OpenUSD", href: "/openusd" },
               { label: "Partners", href: "/website#partners" },
               { label: "About", href: "/about" },
@@ -1225,6 +1228,7 @@ function HomePage() {
               { label: "OpenPay", href: "https://openpy.space" },
               { label: "OpenApp", href: "https://openappdev.space" },
               { label: "Pitch Deck", href: "/pitch" },
+              { label: "Funding", href: "/funding" },
               { label: "Telegram", href: "https://t.me/openpayofficial" },
               { label: "Follow", href: "https://droplinkpi.space/@openpay" },
             ]}

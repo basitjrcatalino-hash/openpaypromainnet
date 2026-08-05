@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as FundingRouteImport } from './routes/funding'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OpenusdRouteImport } from './routes/openusd'
@@ -221,6 +222,11 @@ const BlogRoute = BlogRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FundingRoute = FundingRouteImport.update({
+  id: '/funding',
+  path: '/funding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalRoute = LegalRouteImport.update({
@@ -1142,6 +1148,7 @@ export interface FileRoutesByFullPath {
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
   '/docs': typeof DocsRouteWithChildren
+  '/funding': typeof FundingRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1322,6 +1329,7 @@ export interface FileRoutesByTo {
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
   '/docs': typeof DocsRouteWithChildren
+  '/funding': typeof FundingRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1504,6 +1512,7 @@ export interface FileRoutesById {
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
   '/docs': typeof DocsRouteWithChildren
+  '/funding': typeof FundingRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/openusd': typeof OpenusdRoute
@@ -1686,6 +1695,7 @@ export interface FileRouteTypes {
     | '/authpi'
     | '/blog'
     | '/docs'
+    | '/funding'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -1866,6 +1876,7 @@ export interface FileRouteTypes {
     | '/authpi'
     | '/blog'
     | '/docs'
+    | '/funding'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -2047,6 +2058,7 @@ export interface FileRouteTypes {
     | '/authpi'
     | '/blog'
     | '/docs'
+    | '/funding'
     | '/legal'
     | '/mcp'
     | '/openusd'
@@ -2229,6 +2241,7 @@ export interface RootRouteChildren {
   AuthpiRoute: typeof AuthpiRoute
   BlogRoute: typeof BlogRoute
   DocsRoute: typeof DocsRouteWithChildren
+  FundingRoute: typeof FundingRoute
   LegalRoute: typeof LegalRoute
   McpRoute: typeof McpRoute
   OpenusdRoute: typeof OpenusdRoute
@@ -2354,6 +2367,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/funding': {
+      id: '/funding'
+      path: '/funding'
+      fullPath: '/funding'
+      preLoaderRoute: typeof FundingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal': {
@@ -3825,6 +3845,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthpiRoute: AuthpiRoute,
   BlogRoute: BlogRoute,
   DocsRoute: DocsRouteWithChildren,
+  FundingRoute: FundingRoute,
   LegalRoute: LegalRoute,
   McpRoute: McpRoute,
   OpenusdRoute: OpenusdRoute,

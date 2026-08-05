@@ -55,6 +55,7 @@ const SPEECH = `
 Pro Pay merchant integration.
 Third-party apps and OpenPay can accept payment with OpenPay Pro methods.
 Create Partner API charges, optionally Connect OAuth, then credit earnings to a Pro username or wallet address via inbound.
+OpenPay QR Pay can add method openpay_pro for the same settle path.
 Buyers who need Pi, Banxa, MoonPay, or wallet majors deep-link into Pro Top Up.
 Poll charges, keep keys on the server, and track earnings on the partner dashboard and Pro wallet.
 `.trim();
@@ -66,11 +67,12 @@ const TOC = [
   ["#auth", "3. Auth (Connect)"],
   ["#checkout", "4. Create checkout"],
   ["#inbound", "5. Credit Pro wallet"],
-  ["#methods", "6. Pro payment methods"],
-  ["#deeplink", "7. Deep-link Top Up"],
-  ["#dashboard", "8. Dashboard & earnings"],
-  ["#node", "9. Copy-paste Node"],
-  ["#checklist", "10. Launch checklist"],
+  ["#qr-pay", "6. QR Pay · openpay_pro"],
+  ["#methods", "7. Pro payment methods"],
+  ["#deeplink", "8. Deep-link Top Up"],
+  ["#dashboard", "9. Dashboard & earnings"],
+  ["#node", "10. Copy-paste Node"],
+  ["#checklist", "11. Launch checklist"],
 ] as const;
 
 function Pill({
@@ -121,7 +123,9 @@ function ProPayDocsPage() {
           Get API keys
         </Pill>
         <Pill href="/api/public/docs/pro-pay">Raw Markdown</Pill>
+        <Pill href="/api/public/docs/qrpay-pro">QR Pay pack</Pill>
         <Pill href="/docs/ai">AI Partner Pack</Pill>
+        <Pill href="/docs/openpay">Connect & payments</Pill>
       </div>
 
       <DocsCallout>
@@ -328,7 +332,64 @@ curl -X POST -H "Authorization: Bearer opk_live_YOUR_KEY" \\
         </DocsCard>
       </DocsSection>
 
-      <DocsSection id="methods" eyebrow="06" title="OpenPay Pro payment methods">
+      <DocsSection id="qr-pay" eyebrow="06" title="QR Pay · method openpay_pro">
+        <DocsCallout>
+          For OpenPay’s QR Pay / checkout UI, register method{" "}
+          <code className="text-foreground">openpay_pro</code>. Same settle path as Path A+B:
+          PayButton charge → poll → inbound to Pro receive wallet.
+        </DocsCallout>
+        <DocsCard className="space-y-4">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-md text-left text-base">
+              <tbody className="divide-y divide-border">
+                {[
+                  ["Method id", "openpay_pro"],
+                  ["Label", "OpenPay Pro"],
+                  ["Pay rail", "OpenPay Balance via POST /charges"],
+                  ["Receive", "@username and/or 0x… on OpenPay Pro"],
+                  ["Note", "pro_xfer:@shop:r_order_9001"],
+                ].map(([k, v]) => (
+                  <tr key={k}>
+                    <th className="py-2.5 pr-4 font-semibold text-foreground">{k}</th>
+                    <td className="py-2.5 font-mono text-sm text-muted-foreground">{v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <DocsCode>{`# Create charge for QR Pay order
+curl -X POST "${PARTNER_API}/charges" \\
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "amount": 25.00,
+    "currency": "OUSD",
+    "description": "QR Pay order_9001",
+    "reference": "qr_order_9001",
+    "success_url": "https://openpy.space/qrpay/thanks?ref=qr_order_9001",
+    "cancel_url": "https://openpy.space/qrpay/cancel?ref=qr_order_9001"
+  }'
+# Show checkout_url (or QR of that URL) to buyer
+# Poll until paid, then inbound:`}</DocsCode>
+          <DocsCode>{`curl -X POST "${INBOUND_API}" \\
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "to": "@shop",
+    "amount": 25.00,
+    "openpay_tx_id": "CHARGE_OR_TX_ID",
+    "note": "pro_xfer:@shop:r_qr_order_9001"
+  }'`}</DocsCode>
+          <div className="flex flex-wrap gap-2">
+            <Pill href="/api/public/docs/qrpay-pro" primary>
+              Full QR Pay markdown
+            </Pill>
+            <Pill href="/docs/openpay#qr-pay">OpenPay docs · QR</Pill>
+          </div>
+        </DocsCard>
+      </DocsSection>
+
+      <DocsSection id="methods" eyebrow="07" title="OpenPay Pro payment methods">
         <DocsCallout>
           Same catalog as the Pro <strong className="text-foreground">Top Up → Pay with</strong>{" "}
           screen. Partners deep-link buyers to Pro; they do not embed provider secrets.
@@ -357,7 +418,7 @@ curl -X POST -H "Authorization: Bearer opk_live_YOUR_KEY" \\
         </div>
       </DocsSection>
 
-      <DocsSection id="deeplink" eyebrow="07" title="Deep-link Top Up + pay merchant">
+      <DocsSection id="deeplink" eyebrow="08" title="Deep-link Top Up + pay merchant">
         <DocsCode>{`# Buyer funds self with full Pro methods (Pi, Banxa, MoonPay, USDT…)
 https://openpaypro.space/topup
 
@@ -372,7 +433,7 @@ https://openpy.space/pay/YOUR_PARTNER_TAG
   &cancel_url=https://yourapp.com/cancel`}</DocsCode>
       </DocsSection>
 
-      <DocsSection id="dashboard" eyebrow="08" title="Dashboard & earnings">
+      <DocsSection id="dashboard" eyebrow="09" title="Dashboard & earnings">
         <div className="flex items-start gap-3 rounded-3xl border border-border bg-card p-5">
           <LayoutDashboard className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
           <div className="space-y-2 text-base text-muted-foreground">
@@ -398,7 +459,7 @@ https://openpy.space/pay/YOUR_PARTNER_TAG
   ${PARTNER_API}/balance`}</DocsCode>
       </DocsSection>
 
-      <DocsSection id="node" eyebrow="09" title="Copy-paste Node">
+      <DocsSection id="node" eyebrow="10" title="Copy-paste Node">
         <DocsCode>{`const API = process.env.OPENPAY_PARTNER_API_BASE || "${PARTNER_API}";
 const KEY = process.env.OPENPAY_PARTNER_API_KEY;
 const INBOUND = process.env.PRO_INBOUND_URL || "${INBOUND_API}";
@@ -457,7 +518,7 @@ export async function creditMerchantPro({ amount, openpay_tx_id, reference }) {
 }`}</DocsCode>
       </DocsSection>
 
-      <DocsSection id="checklist" eyebrow="10" title="Launch checklist">
+      <DocsSection id="checklist" eyebrow="11" title="Launch checklist">
         <DocsCard className="space-y-3">
           <div className="flex items-center gap-2 font-semibold text-foreground">
             <ShieldCheck className="h-5 w-5 text-primary" />
@@ -470,6 +531,7 @@ export async function creditMerchantPro({ amount, openpay_tx_id, reference }) {
               "Connect redirect URIs exact-matched (if using OAuth)",
               "Charges create → redirect → poll paid",
               "Inbound credits Pro receive wallet (Path B)",
+              "QR Pay method openpay_pro wired (if using OpenPay QR)",
               "/topup + /pay/@merchant tested (Path C)",
               "Earnings via GET /balance and/or Pro wallet",
             ].map((item) => (
@@ -485,6 +547,7 @@ export async function creditMerchantPro({ amount, openpay_tx_id, reference }) {
             <Pill href="/docs/openpay" primary>
               Connect & payments
             </Pill>
+            <Pill href="/api/public/docs/qrpay-pro">QR Pay pack</Pill>
             <Pill href="/docs/api">Partner Transfer API</Pill>
             <Pill href="/docs/auth">Auth methods</Pill>
             <Pill href="/docs/ai">AI Partner Pack</Pill>
@@ -493,7 +556,8 @@ export async function creditMerchantPro({ amount, openpay_tx_id, reference }) {
       </DocsSection>
 
       <footer className="border-t border-border pt-6 text-sm text-muted-foreground">
-        Source: <code className="text-foreground">docs/PRO_PAY_INTEGRATION.md</code> · Raw:{" "}
+        Source: <code className="text-foreground">docs/PRO_PAY_INTEGRATION.md</code> · QR:{" "}
+        <code className="text-foreground">docs/OPENPAY_QRPAY_PRO.md</code> · Raw:{" "}
         <a
           href="/api/public/docs/pro-pay"
           className="font-semibold text-foreground underline-offset-2 hover:underline"
@@ -501,6 +565,15 @@ export async function creditMerchantPro({ amount, openpay_tx_id, reference }) {
           rel="noreferrer"
         >
           /api/public/docs/pro-pay
+        </a>
+        {" · "}
+        <a
+          href="/api/public/docs/qrpay-pro"
+          className="font-semibold text-foreground underline-offset-2 hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          /api/public/docs/qrpay-pro
         </a>
         {" · "}
         <a

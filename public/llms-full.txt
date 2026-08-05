@@ -1,0 +1,1060 @@
+﻿# OpenPay + OpenPay Pro — llms-full.txt
+# Consolidated partner integration dump for AI agents (Cursor, Lovable, Replit, Claude).
+# Prefer fetching live: https://openpaypro.space/llms-full.txt
+# Individual feeds: https://openpaypro.space/api/public/docs/*
+
+# OpenPay + OpenPay Pro â€” AI Partner Integration Pack
+
+**Audience:** third-party partners and AI coding agents (Cursor, Lovable, Replit, Claude, ChatGPT, Copilot).
+
+Paste this file (or fetch the live URLs below) into your AI tool, then ask it to implement Connect, payments, payouts, top-up, inbound, or ledger reconcile.
+
+| Resource | URL |
+| --- | --- |
+| Live AI guide | https://openpaypro.space/docs/ai |
+| This markdown (raw) | https://openpaypro.space/api/public/docs/ai-partner |
+| `llms.txt` index | https://openpaypro.space/llms.txt |
+| Full AI dump | https://openpaypro.space/llms-full.txt |
+| OpenAPI | https://openpaypro.space/api/public/docs/openapi |
+| Partner keys portal | https://openpy.space/partner-api |
+| Developer Portal | https://openpaypro.space/docs |
+
+---
+
+## Canonical bases (do not invent)
+
+```
+OpenPay app:           https://openpy.space
+Partner portal:        https://openpy.space/partner-api
+Connect authorize:     https://openpy.space/connect
+PayButton UI:          https://openpy.space/paybutton/{CHARGE_ID}
+Hosted pay:            https://openpy.space/pay/{USERNAME}
+Partner Transfer API:  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+OpenPay Pro:           https://openpaypro.space
+Pro inbound:           POST https://openpaypro.space/api/public/openpay/inbound
+Ledger API:            https://openpaypro.space/api/public/ledger
+MCP:                   https://openpaypro.space/mcp
+```
+
+Currency for Partner Transfer charges/transfers: **OUSD**.
+
+---
+
+## Keys & tokens (never mix them up)
+
+| Prefix / form | Who issues | Use |
+| --- | --- | --- |
+| `opk_live_â€¦` | Partner portal | Server-only partner key. Auth for `/me`, `/balance`, `/accounts`, `/transfers`, `/charges`, OAuth `client_secret`. Also valid for Pro inbound (master scope). |
+| `opa_live_â€¦` | `POST /oauth/token` | End-user Connect token. Only `/user/me` and `/user/balance`. |
+| `opdk_â€¦` | OpenPay Pro `/developer` | Pro developer key â€” scoped inbound credit for that Pro user. |
+| Ledger key | Pro admin / `LEDGER_MASTER_API_KEY` | Public Ledger API (`x-api-key` or Bearer). |
+
+**Rules**
+
+1. Never put `opk_live_â€¦` in browsers, mobile apps, Lovable client env, or public repos.
+2. OAuth `redirect_uri` must **exact-match** the Partner portal allowlist (no trailing slash).
+3. Every payout / inbound credit needs idempotency (`Idempotency-Key` or unique `openpay_tx_id`).
+4. **No partner payment webhooks** for charges â€” **poll** `GET /charges/:id` (TTL ~2 hours).
+5. OUSD is a **ledger/network asset**, not a public EVM/SPL contract address.
+
+---
+
+## Feature map â€” what to build
+
+| Feature | Integration |
+| --- | --- |
+| **Auth / Connect** | OAuth 2.0 Authorization Code â†’ `opa_live_â€¦` â†’ `/user/me` |
+| **Checkout / Pay** | `POST /charges` â†’ redirect `checkout_url` â†’ poll until `paid` |
+| **Hosted pay link** | `https://openpy.space/pay/@tag?amount=&note=&success_url=&cancel_url=` |
+| **Payout / withdraw** | Resolve account â†’ `POST /transfers` with `Idempotency-Key` |
+| **Account resolve** | `GET /accounts/:id` (`@user` \| `OPâ€¦` \| email) â€” prefer `OPâ€¦` |
+| **OpenPay â†’ Pro credit** | Pay with note `pro_xfer:@proUser:ref` â†’ `POST â€¦/inbound` |
+| **Pro â†’ OpenPay send** | Pro app uses Partner `/transfers` |
+| **Top-up (product UX)** | Deep-link `https://openpaypro.space/topup` (Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance, scan-pay, wallet majors) |
+| **Deposit / receive** | `/deposit`, `/receive`, `/pay/$to` deep links |
+| **Swap** | Deep-link `/swap` Â· reconcile Ledger `type=swap` |
+| **Reconcile** | Poll charges + Ledger `GET /entries` |
+| **AI agents (read-only)** | MCP URL â€” profile, wallets, txs, ledger (no money move) |
+
+Pro end-user sign-in methods (product, not Partner Transfer): OpenPay, Telegram, Solana SIWS, Pi, Phantom, WalletConnect SIWE, MetaMask/Web3Auth, optional Privy/email. Full setup: `/api/public/docs/openpay-auth`.
+
+---
+
+## 1. Setup (5 minutes)
+
+1. Open https://openpy.space/partner-api â†’ register app.
+2. Save `client_id` (UUID) and `opk_live_â€¦` (shown once) in **server** secrets.
+3. Register exact redirect URIs, e.g. `https://yourapp.com/openpay/callback`.
+4. Env:
+
+```bash
+OPENPAY_CLIENT_ID="your-client-uuid"
+OPENPAY_PARTNER_API_KEY="opk_live_..."
+OPENPAY_PARTNER_API_BASE="https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api"
+OPENPAY_REDIRECT_URI="https://yourapp.com/openpay/callback"
+```
+
+---
+
+## 2. Connect with OpenPay (auth)
+
+### Authorize URL
+
+```
+https://openpy.space/connect
+  ?client_id={CLIENT_ID}
+  &redirect_uri={EXACT_REDIRECT}
+  &scope=profile%20balance
+  &state={CSRF}
+```
+
+### Exchange code (backend)
+
+```http
+POST {PARTNER_API}/oauth/token
+Content-Type: application/json
+
+{
+  "grant_type": "authorization_code",
+  "code": "opc_...",
+  "redirect_uri": "https://yourapp.com/openpay/callback",
+  "client_id": "{CLIENT_ID}",
+  "client_secret": "opk_live_..."
+}
+```
+
+Response: `{ "access_token": "opa_live_...", "token_type": "Bearer", "expires_in": 2592000, "scope", "user_id" }`
+
+- Codes: **10 minutes**, single-use  
+- Access tokens: **30 days**
+
+### User APIs
+
+```http
+GET {PARTNER_API}/user/me
+Authorization: Bearer opa_live_...
+
+GET {PARTNER_API}/user/balance
+Authorization: Bearer opa_live_...
+```
+
+---
+
+## 3. Payments (charges / PayButton)
+
+```http
+POST {PARTNER_API}/charges
+Authorization: Bearer opk_live_...
+Content-Type: application/json
+
+{
+  "amount": 19.99,
+  "currency": "OUSD",
+  "description": "Order #1234",
+  "reference": "order_1234",
+  "success_url": "https://yourapp.com/thanks",
+  "cancel_url": "https://yourapp.com/cart"
+}
+```
+
+Returns `{ id, amount, currency, status, checkout_url, expires_at }`.
+
+Statuses: `created` | `paid` | `canceled` | `expired`.
+
+```http
+GET  {PARTNER_API}/charges/{id}
+POST {PARTNER_API}/charges/{id}/cancel
+GET  {PARTNER_API}/charges?status=paid
+```
+
+Fulfill **only** after `status === "paid"`.
+
+---
+
+## 4. Transfers (payout / send)
+
+```http
+POST {PARTNER_API}/transfers
+Authorization: Bearer opk_live_...
+Content-Type: application/json
+Idempotency-Key: {uuid}
+
+{
+  "to": "OP...",
+  "amount": 10.00,
+  "note": "Payout"
+}
+```
+
+Also: `GET /me`, `GET /balance`, `GET /accounts/:identifier`.
+
+---
+
+## 5. OpenPay â†’ OpenPay Pro inbound (top-up Pro wallets)
+
+Note format:
+
+```
+pro_xfer:@alice:r_abc123
+pro_xfer:0xWALLET:r_abc123
+pro_xfer:uid_<supabase-uuid>:r_abc123
+```
+
+```http
+POST https://openpaypro.space/api/public/openpay/inbound
+Authorization: Bearer opk_live_...
+Content-Type: application/json
+
+{
+  "to": "@alice",
+  "amount": 25.00,
+  "openpay_tx_id": "UNIQUE_OPENPAY_TX_ID",
+  "note": "pro_xfer:@alice:r_abc123",
+  "from_username": "bob"
+}
+```
+
+Idempotent on `openpay_tx_id`. Accepts `opk_live_â€¦`, Pro `opdk_â€¦`, or ledger keys (scoped).
+
+---
+
+## 6. Public Ledger (reconcile)
+
+```http
+GET https://openpaypro.space/api/public/ledger/entries?limit=100&asset=OUSD&type=buy
+x-api-key: {LEDGER_KEY}
+```
+
+Types: `send` | `receive` | `buy` | `sell` | `swap` | `mint` | `reward`.
+
+Also: `GET /entries/{id}`, `GET /stats`.
+
+---
+
+## 7. Top-up & deposit rails (OpenPay Pro product)
+
+Partners usually deep-link users into Pro rather than re-implementing every rail:
+
+| Method key | User-facing |
+| --- | --- |
+| `openpay_balance` | OpenPay Balance (Partner charges / Connect) |
+| `pi` | Pi Network â†’ OUSD |
+| `moonpay` | Card / Apple Pay / Google Pay |
+| `helio` / `usdc` | MoonPay Commerce crypto / USDC |
+| `solana_pay` | Solana Pay QR |
+| `circle_mint` | Circle Mint USDC |
+| `banxa_*` | Banxa Apple/Google/card/bank |
+| `cash_pay` | Phantom CASH â†’ OUSD |
+| `scan_pay` | Multi-chain QR |
+| `wallet_usdt` / `wallet_usdc` / `wallet_sol` | Internal majors â†’ OUSD |
+
+Deep links: `https://openpaypro.space/topup` Â· `/deposit` Â· `/receive` Â· `/pay/{to}` Â· `/swap`.
+
+---
+
+## 8. MCP (AI agents â€” read-only)
+
+```
+https://openpaypro.space/mcp
+```
+
+Tools: `get_profile`, `list_wallets`, `list_transactions`, `list_ledger_entries`.  
+**Does not move money** â€” use Partner Transfer for payouts/charges.
+
+---
+
+## 9. Minimal Node SDK pattern
+
+```js
+const API =
+  process.env.OPENPAY_PARTNER_API_BASE ||
+  "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
+const KEY = process.env.OPENPAY_PARTNER_API_KEY; // opk_live_â€¦
+const CLIENT_ID = process.env.OPENPAY_CLIENT_ID;
+const REDIRECT = process.env.OPENPAY_REDIRECT_URI;
+
+export function connectUrl(state) {
+  const u = new URL("https://openpy.space/connect");
+  u.searchParams.set("client_id", CLIENT_ID);
+  u.searchParams.set("redirect_uri", REDIRECT);
+  u.searchParams.set("scope", "profile balance");
+  u.searchParams.set("state", state);
+  return u.toString();
+}
+
+export async function exchangeCode(code) {
+  const res = await fetch(`${API}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: REDIRECT,
+      client_id: CLIENT_ID,
+      client_secret: KEY,
+    }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function createCharge(body) {
+  const res = await fetch(`${API}/charges`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ currency: "OUSD", ...body }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getCharge(id) {
+  const res = await fetch(`${API}/charges/${id}`, {
+    headers: { Authorization: `Bearer ${KEY}` },
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function transfer({ to, amount, note, idempotencyKey }) {
+  const res = await fetch(`${API}/transfers`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({ to, amount, note }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function creditProInbound(body) {
+  const res = await fetch("https://openpaypro.space/api/public/openpay/inbound", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+```
+
+---
+
+## 10. Copy-paste prompts for AI tools
+
+### Cursor / Claude Code / Copilot
+
+```
+Fetch https://openpaypro.space/api/public/docs/ai-partner and
+https://openpaypro.space/api/public/docs/openapi
+Then implement OpenPay Partner integration in this repo:
+- Server-only opk_live_ key from env
+- Connect OAuth (authorize â†’ callback â†’ /oauth/token â†’ store opa_live_)
+- PayButton charges + poll until paid
+- Optional POST /transfers with Idempotency-Key
+Do not invent webhooks for charges. Do not expose the partner key to the client.
+```
+
+### Lovable
+
+```
+@https://openpaypro.space/llms-full.txt
+Build a merchant checkout that:
+1) Creates an OpenPay charge from a server function using OPENPAY_PARTNER_API_KEY
+2) Redirects the buyer to checkout_url
+3) On return, polls GET /charges/:id until paid|canceled|expired
+Also add a "Connect with OpenPay" button using openpy.space/connect.
+```
+
+### Replit / Claude Projects
+
+```
+Use OpenPay Partner Transfer API base
+https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+Implement auth (Connect), payments (charges), and payouts (transfers)
+per https://openpaypro.space/api/public/docs/ai-partner
+Secrets: OPENPAY_CLIENT_ID, OPENPAY_PARTNER_API_KEY, OPENPAY_REDIRECT_URI
+```
+
+### ChatGPT / Claude (chat)
+
+```
+You are integrating OpenPay + OpenPay Pro.
+Read: https://openpaypro.space/llms.txt and https://openpaypro.space/api/public/docs/ai-partner
+Generate production-ready backend + frontend snippets for: Connect, PayButton, payout, Pro inbound.
+```
+
+---
+
+## 11. Errors
+
+| Status | Meaning | Action |
+| --- | --- | --- |
+| 401 | Bad / revoked key or token | Rotate; check env quotes |
+| 403 | Origin / redirect not allowlisted | Exact URI match |
+| 404 | Account / charge missing | Resolve `OPâ€¦` first |
+| 400 | Validation / insufficient balance | Fund partner wallet; fix body |
+| 5xx | Upstream | Backoff; reuse Idempotency-Key |
+
+`invalid_client` on `/oauth/token` â†’ wrong `client_id` / `opk_live_` or stray quotes in env.
+
+---
+
+## 12. Partner checklist
+
+- [ ] App registered; `client_id` + `opk_live_â€¦` in server secrets  
+- [ ] Redirect URIs exact-matched  
+- [ ] Connect â†’ token exchange â†’ `/user/me` works  
+- [ ] Charges create + poll `paid` before fulfill  
+- [ ] Transfers use `Idempotency-Key`  
+- [ ] Inbound (if used) unique `openpay_tx_id` + `pro_xfer:` note  
+- [ ] Ledger key for reconcile (exchanges)  
+- [ ] No partner key in client bundles  
+
+---
+
+## Related raw feeds
+
+- `/api/public/docs/openpay` â€” Connect + payments  
+- `/api/public/docs/openpay-auth` â€” Pro auth methods  
+- `/api/public/docs/partner-transfer` â€” Transfer API  
+- `/api/public/docs/openpay-to-pro` â€” Inbound  
+- `/api/public/docs/ledger` â€” Ledger  
+- `/api/public/docs/exchange` â€” OUSD listing  
+- `/api/public/docs/tokens` â€” Assets  
+- `/api/public/docs/mcp` â€” MCP  
+- `/api/public/docs/errors` â€” Errors  
+- `/api/public/docs/portal` â€” Portal playbook  
+- `/api/public/docs/openapi` â€” OpenAPI YAML  
+# OpenPay Partner Transfer API
+
+Integration reference for OpenPay Pro (and other partner apps).
+
+For the full **Connect + Payments** guide for third-party apps, see
+[`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
+[`/docs/openpay`](https://openpaypro.space/docs/openpay).
+
+For **exchanges listing OUSD** (deposit / withdraw / network metadata), see
+[`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) or
+[`/docs/exchange`](https://openpaypro.space/docs/exchange).
+
+**Partner API portal:** [https://openpy.space/partner-api](https://openpy.space/partner-api)  
+**Auth docs:** [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  
+**Base URL:** `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
+
+## Authentication
+
+Send your key in the Authorization header:
+
+```
+Authorization: Bearer opk_live_YOUR_KEY
+```
+
+---
+
+## Account & transfers (partner key)
+
+### `GET /me`
+
+Returns the OpenPay account (name, username, account number, balance) that owns this key.
+
+```bash
+curl -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/me
+```
+
+### `GET /balance`
+
+```bash
+curl -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/balance
+```
+
+### `GET /accounts/:identifier`
+
+Resolve any OpenPay user by `@username`, account number (`OPâ€¦`), or email.
+
+```bash
+curl -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/accounts/@satoshi
+```
+
+### `POST /transfers` â€” Send balance
+
+Debits the key owner's OpenPay balance and credits the recipient. Use `Idempotency-Key` to safely retry.
+
+```bash
+curl -X POST "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/transfers" \
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"to":"@username","amount":10.00,"note":"Payout"}'
+```
+
+Body: `{ "to": "OP...|@username|email", "amount": 10.00, "note": "optional", "idempotency_key": "optional" }`
+
+---
+
+## PayButton â€” Accept OpenPay balance
+
+Create a charge from your backend, redirect the buyer to `checkout_url`. Funds land in the partner-app owner's OpenPay wallet in real time.
+
+### `POST /charges` â€” Create a checkout
+
+```bash
+curl -X POST "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/charges" \
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 19.99,
+    "currency": "OUSD",
+    "description": "Order #1234",
+    "reference": "order_1234",
+    "success_url": "https://yourapp.com/thanks",
+    "cancel_url": "https://yourapp.com/cart"
+  }'
+```
+
+Returns `{ id, amount, currency, status, checkout_url, expires_at }`. Charges expire in **2 hours**.
+
+Drop-in button after creating a charge:
+
+```html
+<a href="https://openpy.space/paybutton/CHARGE_ID"
+   style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
+   padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
+  Pay with OpenPay
+</a>
+```
+
+### `GET /charges/:id` â€” Check status
+
+Status values: `created`, `paid`, `canceled`, `expired`.
+
+```bash
+curl -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/charges/CHARGE_ID
+```
+
+List: `GET /charges?status=paid`
+
+### `POST /charges/:id/cancel`
+
+```bash
+curl -X POST -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/charges/CHARGE_ID/cancel
+```
+
+---
+
+## Connect with OpenPay â€” OAuth 2.0
+
+Standard Authorization Code flow. Users sign in on OpenPay and grant `profile` / `balance`.
+
+### 1. Register redirect URIs
+
+Exact match required. OpenPay Pro always uses production:
+
+`https://openpaypro.space/openpay/connect/callback`
+
+(Localhost / preview origins are rewritten to this URL â€” do not register localhost.)
+
+### 2. Send the user to OpenPay
+
+```
+https://openpy.space/connect
+  ?client_id=YOUR_APP_ID
+  &redirect_uri=https://yourapp.com/openpay/callback
+  &scope=profile%20balance
+  &state=RANDOM_CSRF_TOKEN
+```
+
+### 3. Handle the callback
+
+Success: `?code=opc_...&state=...`  
+Cancel: `?error=access_denied`
+
+### 4. Exchange the code for an access token
+
+From your backend (never expose the API key to the browser):
+
+```bash
+curl -X POST "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/oauth/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "opc_...",
+    "redirect_uri": "https://yourapp.com/openpay/callback",
+    "client_id": "YOUR_APP_ID",
+    "client_secret": "opk_live_YOUR_KEY"
+  }'
+```
+
+Response: `{ access_token: "opa_live_...", token_type: "Bearer", expires_in: 2592000, scope, user_id }`.  
+Codes expire in **10 minutes** (single-use). Access tokens last **30 days**.
+
+### 5. Call OpenPay on behalf of the user
+
+```bash
+curl -H "Authorization: Bearer opa_live_..." \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/user/me
+
+curl -H "Authorization: Bearer opa_live_..." \
+  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api/user/balance
+```
+
+`GET /user/me` returns `{ user_id, account_number, full_name, username, avatar_url, balance, currency, scope }`.
+
+Drop-in Connect button:
+
+```html
+<a href="https://openpy.space/connect?client_id=YOUR_APP_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
+   style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
+   padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
+  Connect with OpenPay
+</a>
+```
+
+---
+
+## Errors
+
+| Status | Meaning |
+|--------|---------|
+| 401 | missing / invalid / revoked key |
+| 403 | origin not whitelisted |
+| 404 | recipient not found |
+| 400 | validation error (amount, insufficient balanceâ€¦) |
+
+---
+
+## OpenPay Pro wiring
+
+| Concern | Implementation |
+|---------|----------------|
+| Authorize URL | `OPENPAY_OAUTH_AUTHORIZE_URL` â†’ `https://openpy.space/connect` |
+| Client ID | `OPENPAY_OAUTH_CLIENT_ID` |
+| Partner key | `OPENPAY_PARTNER_API_KEY` (`opk_live_â€¦`) |
+| Callback | `/openpay/connect/callback` |
+| Token exchange | `exchangeOAuthCode` â†’ `/oauth/token` |
+| Profile / sync | `/user/me`, `/user/balance` with stored `opa_live_â€¦` |
+| Top Up | `POST /charges` â†’ redirect `checkout_url` |
+| Send to OpenPay | `POST /transfers` |
+# OpenPay â†’ OpenPay Pro transfers
+
+Send OUSD from an **OpenPay** user into an **OpenPay Pro** wallet (mirror of Pro â†’ OpenPay send / pay).
+
+## How it works
+
+```
+OpenPay user  â†’  pays partner tag @wainfoundation
+              note: pro_xfer:@proUsername:ref_â€¦
+              â†“
+OpenPay Pro   â†’  POST /api/public/openpay/inbound  (or settle on return)
+              â†’  credits @proUsername Pro OUSD wallet
+```
+
+Money settles on the partner OpenPay account first; Pro ledger credits the destination Pro user.
+
+---
+
+## Note format (routing)
+
+```
+pro_xfer:@alice:r_abc123
+pro_xfer:0x7bf2â€¦851a:r_abc123
+pro_xfer:uid_<supabase-user-uuid>:r_abc123
+```
+
+| Part | Meaning |
+|------|---------|
+| `pro_xfer:` | Inbound to OpenPay Pro |
+| `@alice` / `0xâ€¦` / `uid_â€¦` | Pro username, **wallet address**, or user id |
+| `r_â€¦` | Unique ref for idempotency / matching |
+
+Inbound API `to` accepts the same: `@user`, `0x` address, or uuid.
+
+---
+
+## A. Share a receive link (Pro user)
+
+In OpenPay Pro â†’ **Receive** â†’ **Create OpenPay receive link**.
+
+Example URL:
+
+```
+https://openpy.space/pay/wainfoundation
+  ?amount=25.00
+  &currency=OUSD
+  &note=pro_xfer:@alice:r_k7x2
+  &success_url=https://openpaypro.space/receive?openpay_in=1&amount=25.00
+  &cancel_url=https://openpaypro.space/receive?openpay_cancel=1
+```
+
+Payer completes Pay on OpenPay â†’ thank-you â†’ returns to Pro â†’ wallet credited.
+
+---
+
+## B. Server API (OpenPay or your backend)
+
+After the OpenPay payment succeeds, credit Pro:
+
+```bash
+curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
+  -H "Authorization: Bearer opk_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "@alice",
+    "amount": 25.00,
+    "openpay_tx_id": "UNIQUE_OPENPAY_TX_ID",
+    "note": "pro_xfer:@alice:r_k7x2",
+    "from_username": "bob"
+  }'
+```
+
+Auth: same partner key as Connect (`opk_live_â€¦`).
+
+Idempotent on `openpay_tx_id`.
+
+---
+
+## C. Implement on OpenPay Send (product prompt)
+
+See [`docs/OPENPAY_SEND_TO_PRO_PROMPT.md`](./OPENPAY_SEND_TO_PRO_PROMPT.md).
+
+Add a Send destination **OpenPay Pro** that:
+
+1. Resolves Pro user (`@username` on Pro).
+2. Builds `pro_xfer:@user:ref` note.
+3. Sends OUSD to partner tag (or calls inbound API after local debit).
+4. Optionally notifies Pro via `/api/public/openpay/inbound`.
+
+---
+
+## Bidirectional summary
+
+| Direction | Mechanism |
+|-----------|-----------|
+| **Pro â†’ OpenPay** | Pro Send rail â†’ `POST /transfers` (prefer `OPâ€¦`) |
+| **OpenPay â†’ Pro** | Pay `/pay/@partner` + `pro_xfer:` note â†’ Pro inbound API / settle |
+| **Pro top-up (self)** | Connect + `/charges` or `/pay` with `pro_topup_` note |
+
+Live docs: [/docs/openpay](/docs/openpay)
+# OpenPay Pro â€” Public Ledger API
+
+An append-only public ledger of every transaction on OpenPay Pro. Designed for
+integration with **OpenLedger** or any external accounting / analytics pipeline.
+
+Every row in `transactions` is mirrored automatically into `ledger_entries` via
+a database trigger. Entries are immutable and monotonically ordered by
+`sequence`.
+
+### Covered transaction types
+
+| Type | Source in OpenPay Pro |
+|------|------------------------|
+| `send` | Wallet transfer, OpenPay send |
+| `receive` | Incoming transfer credit |
+| `buy` | Top-up (card/bank/OpenPay checkout), Pi Network top-up, voucher redeem, OpenPay sync credit |
+| `sell` | Sell / cash-out flows |
+| `swap` | Token swap |
+| `mint` | NFT mint |
+| `reward` | Rewards / promotions |
+
+Admins can run **Sync all transactions** on `/ledger` (or RPC `backfill_ledger_entries`) to mirror any historical rows that predate the trigger.
+
+---
+
+## Base URL
+
+```
+Production : https://openpaypro.space/api/public/ledger
+Preview    : https://openpaypro.space/api/public/ledger
+```
+
+## Authentication
+
+Send your API key in **either** header on every request:
+
+```
+x-api-key: <YOUR_KEY>
+# or
+Authorization: Bearer <YOUR_KEY>
+```
+
+Requests without a valid key return `401 Unauthorized`.
+
+Two kinds of keys are accepted:
+
+1. **Master key** â€” the `LEDGER_MASTER_API_KEY` server secret (root access).
+2. **Issued keys** â€” created by an admin in the `ledger_api_keys` table. Only
+   the SHA-256 hash is stored; the plaintext is shown once at creation.
+
+---
+
+## Endpoints
+
+### `GET /entries`
+
+List ledger entries, newest first.
+
+**Query params**
+
+| Param    | Type   | Description                                          |
+| -------- | ------ | ---------------------------------------------------- |
+| `limit`  | int    | 1â€“500 (default `100`)                                |
+| `cursor` | int    | `sequence` from the previous page's `next_cursor`    |
+| `asset`  | string | filter by token symbol (e.g. `OUSD`, `PI`)           |
+| `type`   | string | `send` \| `receive` \| `buy` (top-up) \| `sell` \| `swap` \| `mint` \| `reward` |
+| `address`| string | matches either `from_address` or `to_address`        |
+| `since`  | ISO ts | only entries at/after this timestamp                 |
+
+**Response**
+
+```json
+{
+  "count": 100,
+  "next_cursor": "1042",
+  "data": [
+    {
+      "id": "b1e5â€¦",
+      "sequence": 1141,
+      "tx_id": "a02câ€¦",
+      "from_address": "0xabcâ€¦",
+      "to_address": "0xdefâ€¦",
+      "asset": "OUSD",
+      "amount": "10.00000000",
+      "usd_value": "10.00",
+      "type": "send",
+      "status": "confirmed",
+      "tx_hash": null,
+      "memo": "invoice #42",
+      "occurred_at": "2026-07-01T05:30:12.000Z"
+    }
+  ]
+}
+```
+
+### `GET /entries/{id_or_sequence}`
+
+Fetch a single entry by UUID `id` or numeric `sequence`.
+
+### `GET /stats`
+
+```json
+{
+  "total_entries": 1141,
+  "latest_sequence": 1141,
+  "latest_at": "2026-07-01T05:30:12.000Z",
+  "server_time": "2026-07-01T05:31:00.000Z"
+}
+```
+
+---
+
+## Pagination
+
+Cursor-based on `sequence` (strictly descending). Loop until `next_cursor` is
+`null`:
+
+```bash
+curl -H "x-api-key: $KEY" \
+  "$BASE/entries?limit=500&cursor=$LAST_SEQ"
+```
+
+For incremental sync store the highest `sequence` you've ingested and poll:
+
+```bash
+curl -H "x-api-key: $KEY" \
+  "$BASE/entries?since=$LAST_TIMESTAMP"
+```
+
+---
+
+## Data model (`ledger_entries`)
+
+| Column        | Type           | Notes                              |
+| ------------- | -------------- | ---------------------------------- |
+| `id`          | uuid           | primary key                        |
+| `sequence`    | bigint         | monotonic, unique, append-only     |
+| `tx_id`       | uuid           | source transaction                 |
+| `from_address`| text           | sender wallet address              |
+| `to_address`  | text           | recipient wallet address           |
+| `asset`       | text           | token symbol                       |
+| `amount`      | numeric(38,8)  |                                    |
+| `usd_value`   | numeric(38,2)  |                                    |
+| `type`        | text           | send / receive / buy (top-up) / sell / swap / mint / reward |
+| `status`      | text           | pending / confirmed / failed       |
+| `tx_hash`     | text           | on-chain hash if any               |
+| `memo`        | text           |                                    |
+| `occurred_at` | timestamptz    | event time                         |
+
+Rows are **never updated or deleted** â€” corrections are appended as new
+entries.
+
+---
+
+## Example â€” OpenLedger sync (Node)
+
+```ts
+const BASE = "https://openpaypro.space/api/public/ledger";
+const KEY  = process.env.OPENPAY_LEDGER_KEY!;
+
+let cursor: string | null = null;
+do {
+  const url = new URL(`${BASE}/entries`);
+  url.searchParams.set("limit", "500");
+  if (cursor) url.searchParams.set("cursor", cursor);
+  const res  = await fetch(url, { headers: { "x-api-key": KEY } });
+  const body = await res.json();
+  await openledger.ingest(body.data);
+  cursor = body.next_cursor;
+} while (cursor);
+```
+
+---
+
+## Issuing an API key (admin, SQL)
+
+```sql
+-- Generate a key client-side, e.g. `openssl rand -hex 24` â†’ $NEW_KEY
+insert into public.ledger_api_keys (label, prefix, key_hash, scopes)
+values (
+  'openledger prod',
+  substr('$NEW_KEY', 1, 8),
+  encode(digest('$NEW_KEY', 'sha256'), 'hex'),
+  array['read']
+);
+```
+
+Revoke by setting `active = false`.
+
+---
+
+## Errors
+
+| Status | Meaning                          |
+| ------ | -------------------------------- |
+| 401    | Missing / invalid API key        |
+| 404    | Entry not found                  |
+| 500    | Server error (see response body) |
+
+All responses are `application/json` and CORS-enabled (`*`).
+# Errors & retries â€” OpenPay Pro
+
+Live page: [`/docs/errors`](https://openpaypro.space/docs/errors)
+
+## Partner Transfer API
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| 401 | Missing / invalid / revoked key | Rotate key; never expose in clients |
+| 403 | Origin not whitelisted | Allowlist exact redirect / Origin |
+| 404 | Recipient or charge not found | Resolve account; verify charge id |
+| 400 | Validation / insufficient balance | Fix request; fund hot wallet |
+| 5xx | Upstream | Backoff; reuse `Idempotency-Key` on transfers |
+
+## Charges
+
+No partner webhooks. Poll `GET /charges/:id` until `paid` | `canceled` | `expired` (2h TTL).
+
+## MCP
+
+`Not authenticated` â†’ finish OAuth. Tool errors return `isError: true` with a text message.
+# Agent Connect Â· MCP â€” OpenPay Pro
+
+Live page: [`/docs/mcp`](https://openpaypro.space/docs/mcp)
+
+## Endpoint
+
+- MCP: `https://openpaypro.space/mcp`
+- List tools: `https://openpaypro.space/.mcp/list-tools`
+- Invoke: `https://openpaypro.space/.mcp/invoke-tool/$tool`
+- OAuth metadata: `https://openpaypro.space/.well-known/oauth-protected-resource`
+
+## Tools (read-only)
+
+| Tool | Inputs | Purpose |
+|------|--------|---------|
+| `get_profile` | â€” | Signed-in profile |
+| `list_wallets` | â€” | Wallets + balances |
+| `list_transactions` | `limit?` (1â€“100) | Recent activity |
+| `list_ledger_entries` | `limit?`, `asset?` | Public ledger rows |
+
+Money moves require Pro UI or Partner Transfer â€” MCP tools do not transfer funds.
+# OpenPay Pro â€” Developer Portal Playbook
+
+Complete integration map for **exchanges**, **merchants**, **wallet apps**, and **AI agents**.
+
+Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
+
+| Surface | URL |
+| --- | --- |
+| Developer Portal | https://openpaypro.space/docs |
+| Connect & payments | https://openpaypro.space/docs/openpay |
+| Exchange Â· OUSD | https://openpaypro.space/docs/exchange |
+| Money rails | https://openpaypro.space/docs/money |
+| Tokens | https://openpaypro.space/docs/tokens |
+| Partner Transfer API | https://openpaypro.space/docs/api |
+| Public Ledger API | https://openpaypro.space/docs/ledger |
+| Agent Connect Â· MCP | https://openpaypro.space/docs/mcp |
+| FAQ | https://openpaypro.space/docs/faq |
+| Errors & retries | https://openpaypro.space/docs/errors |
+| Authentication | https://openpaypro.space/docs/auth |
+| Partner portal (keys) | https://openpy.space/partner-api |
+| Partner Transfer base | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
+| Pro inbound | `POST https://openpaypro.space/api/public/openpay/inbound` |
+| Ledger HTTP | `https://openpaypro.space/api/public/ledger` |
+| MCP | `https://openpaypro.space/mcp` |
+
+---
+
+## Feature â†’ integration path
+
+| Feature | How partners integrate |
+| --- | --- |
+| **Payments (checkout)** | `POST /charges` â†’ PayButton `checkout_url` â†’ poll `GET /charges/:id` |
+| **Send / payout** | `POST /transfers` with `Idempotency-Key` |
+| **Receive** | Resolve accounts `GET /accounts/:id` Â· Pro QR / `/pay` deep links Â· inbound `pro_xfer` |
+| **Deposit** | Charges or Partner Transfer into your hot wallet Â· Pro top-up deep link `/topup` |
+| **Withdraw** | Debit your DB â†’ `POST /transfers` to user `@username` / `OPâ€¦` |
+| **Swap** | Deep-link `/swap` or `/trade` Â· reconcile Ledger `type=swap` (no partner OpenDEX HTTP) |
+| **OUSD listing** | See Exchange docs â€” network id `openpay`, ledger API asset |
+| **Majors / OpenToken** | Deep-link Pro `/assets`, `/opentoken` Â· Ledger asset filters |
+| **Connect identity** | OAuth Connect â†’ `opa_live_` user token â†’ `/user/me` |
+| **Reconcile** | Public Ledger API + charge polling |
+| **Agents** | MCP URL + tools (`get_profile`, `list_wallets`, `list_transactions`, `list_ledger_entries`) |
+
+---
+
+## Security non-negotiables
+
+1. Keep `opk_live_â€¦` on the server only.  
+2. Exact-match OAuth redirect URIs.  
+3. Idempotency keys on every payout / inbound credit.  
+4. No partner payment webhooks yet â€” **poll**.  
+5. OUSD is **not** a public EVM/SPL contract â€” integrate as ledger/network API.
+
+---
+
+## Raw markdown feeds
+
+- `/api/public/docs/openpay`
+- `/api/public/docs/openpay-auth`
+- `/api/public/docs/exchange`
+- `/api/public/docs/partner-transfer`
+- `/api/public/docs/ledger`
+- `/api/public/docs/openpay-to-pro`
+- `/api/public/docs/tokens`
+- `/api/public/docs/mcp`
+- `/api/public/docs/errors`
+- `/api/public/docs/portal` (this file)

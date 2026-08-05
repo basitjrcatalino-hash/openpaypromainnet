@@ -1,0 +1,361 @@
+openapi: 3.1.0
+info:
+  title: OpenPay Partner + OpenPay Pro Public APIs
+  version: "1.0.0"
+  description: |
+    Machine-readable contract for third-party partners and AI coding agents.
+    Partner money movement lives on OpenPay Partner Transfer API.
+    OpenPay Pro adds inbound credit, Public Ledger, and MCP (read-only).
+    No charge webhooks — poll GET /charges/{id}. Currency: OUSD.
+  contact:
+    name: OpenPay Pro Docs
+    url: https://openpaypro.space/docs/ai
+servers:
+  - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+    description: OpenPay Partner Transfer API
+  - url: https://openpaypro.space
+    description: OpenPay Pro
+tags:
+  - name: PartnerAccount
+  - name: PartnerTransfers
+  - name: PartnerCharges
+  - name: PartnerOAuth
+  - name: PartnerUser
+  - name: ProInbound
+  - name: ProLedger
+paths:
+  /me:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerAccount]
+      summary: Partner owner profile
+      security: [{ PartnerKey: [] }]
+      responses:
+        "200":
+          description: Partner account
+        "401":
+          description: Invalid key
+  /balance:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerAccount]
+      summary: Partner treasury balance
+      security: [{ PartnerKey: [] }]
+      responses:
+        "200":
+          description: Balance
+  /accounts/{identifier}:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerAccount]
+      summary: Resolve @username, OP account, or email
+      security: [{ PartnerKey: [] }]
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            examples: ["@satoshi", "OP123", "user@example.com"]
+      responses:
+        "200":
+          description: Account found
+        "404":
+          description: Not found
+  /transfers:
+    post:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerTransfers]
+      summary: Send OUSD from partner to user (payout)
+      security: [{ PartnerKey: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequest"
+      responses:
+        "200":
+          description: Transfer created
+        "400":
+          description: Validation / insufficient balance
+  /charges:
+    post:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerCharges]
+      summary: Create PayButton checkout charge
+      security: [{ PartnerKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChargeCreate"
+      responses:
+        "200":
+          description: Charge created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Charge"
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerCharges]
+      summary: List charges
+      security: [{ PartnerKey: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ChargeStatus"
+      responses:
+        "200":
+          description: Charge list
+  /charges/{id}:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerCharges]
+      summary: Get charge status (poll until paid|canceled|expired)
+      security: [{ PartnerKey: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ChargeId"
+      responses:
+        "200":
+          description: Charge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Charge"
+  /charges/{id}/cancel:
+    post:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerCharges]
+      summary: Cancel unpaid charge
+      security: [{ PartnerKey: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ChargeId"
+      responses:
+        "200":
+          description: Canceled
+  /oauth/token:
+    post:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerOAuth]
+      summary: Exchange Connect authorization code for opa_live_ token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuthTokenRequest"
+      responses:
+        "200":
+          description: Token response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthTokenResponse"
+        "401":
+          description: invalid_client
+  /user/me:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerUser]
+      summary: Connected user profile
+      security: [{ UserToken: [] }]
+      responses:
+        "200":
+          description: User profile + optional balance
+  /user/balance:
+    get:
+      servers:
+        - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+      tags: [PartnerUser]
+      summary: Connected user balance
+      security: [{ UserToken: [] }]
+      responses:
+        "200":
+          description: Balance
+  /api/public/openpay/inbound:
+    post:
+      servers:
+        - url: https://openpaypro.space
+      tags: [ProInbound]
+      summary: Credit an OpenPay Pro wallet after OpenPay payment
+      security: [{ PartnerKey: [] }, { ProDeveloperKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InboundRequest"
+      responses:
+        "200":
+          description: Credited (idempotent on openpay_tx_id)
+  /api/public/ledger/entries:
+    get:
+      servers:
+        - url: https://openpaypro.space
+      tags: [ProLedger]
+      summary: List ledger entries
+      security: [{ LedgerKey: [] }]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: asset
+          in: query
+          schema: { type: string, example: OUSD }
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [send, receive, buy, sell, swap, mint, reward]
+        - name: address
+          in: query
+          schema: { type: string }
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Page of ledger entries
+  /api/public/ledger/entries/{id}:
+    get:
+      servers:
+        - url: https://openpaypro.space
+      tags: [ProLedger]
+      summary: Single ledger entry
+      security: [{ LedgerKey: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Entry
+  /api/public/ledger/stats:
+    get:
+      servers:
+        - url: https://openpaypro.space
+      tags: [ProLedger]
+      summary: Ledger stats
+      security: [{ LedgerKey: [] }]
+      responses:
+        "200":
+          description: Stats
+components:
+  securitySchemes:
+    PartnerKey:
+      type: http
+      scheme: bearer
+      description: opk_live_… partner API key (server only)
+    UserToken:
+      type: http
+      scheme: bearer
+      description: opa_live_… Connect user access token
+    ProDeveloperKey:
+      type: http
+      scheme: bearer
+      description: opdk_… OpenPay Pro developer key (scoped inbound)
+    LedgerKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Ledger master or issued key (Authorization Bearer also accepted)
+  parameters:
+    ChargeId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    ChargeStatus:
+      type: string
+      enum: [created, paid, canceled, expired]
+    TransferRequest:
+      type: object
+      required: [to, amount]
+      properties:
+        to:
+          type: string
+          description: OP… preferred, or @username / email
+        amount:
+          type: number
+          exclusiveMinimum: 0
+        note:
+          type: string
+        idempotency_key:
+          type: string
+    ChargeCreate:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+        currency: { type: string, default: OUSD }
+        description: { type: string }
+        reference: { type: string }
+        success_url: { type: string, format: uri }
+        cancel_url: { type: string, format: uri }
+    Charge:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status: { $ref: "#/components/schemas/ChargeStatus" }
+        checkout_url: { type: string, format: uri }
+        expires_at: { type: string, format: date-time }
+    OAuthTokenRequest:
+      type: object
+      required: [grant_type, code, redirect_uri, client_id, client_secret]
+      properties:
+        grant_type: { type: string, const: authorization_code }
+        code: { type: string }
+        redirect_uri: { type: string, format: uri }
+        client_id: { type: string, format: uuid }
+        client_secret: { type: string, description: opk_live_… }
+    OAuthTokenResponse:
+      type: object
+      properties:
+        access_token: { type: string, description: opa_live_… }
+        token_type: { type: string, example: Bearer }
+        expires_in: { type: integer, example: 2592000 }
+        scope: { type: string }
+        user_id: { type: string }
+    InboundRequest:
+      type: object
+      required: [to, amount, openpay_tx_id]
+      properties:
+        to:
+          type: string
+          description: "@proUser | 0x wallet | uuid"
+        amount: { type: number, exclusiveMinimum: 0 }
+        openpay_tx_id:
+          type: string
+          description: Unique OpenPay tx id (idempotency)
+        note:
+          type: string
+          description: "pro_xfer:@user:ref_…"
+        from_username: { type: string }

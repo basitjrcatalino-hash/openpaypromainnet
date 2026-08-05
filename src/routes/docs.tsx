@@ -51,13 +51,20 @@ export const Route = createFileRoute("/docs")({
 const SPEECH = `
 OpenPay Pro Developer Portal.
 Integrate OpenPay Pro into exchanges, merchant apps, wallets, and agent platforms.
-Start at the Partner API portal, create an app, keep your opk live key on the server,
+Start with the AI Partner Pack for Cursor, Lovable, Replit, and Claude,
+or create an app at the Partner API portal, keep your opk live key on the server,
 then wire Connect OAuth, PayButton charges, Partner transfers, Pro inbound credit,
 Public Ledger reconciliation, and Agent Connect MCP tools.
 Money rails cover send, receive, deposit, withdraw, and swap for OUSD and majors.
 `.trim();
 
 const PATHS = [
+  {
+    title: "AI / agent (paste & ship)",
+    body: "Give Cursor, Lovable, Replit, or Claude one URL — Connect, PayButton, payouts, inbound, ledger.",
+    href: "/docs/ai",
+    icon: Bot,
+  },
   {
     title: "Exchange / brokerage",
     body: "List OUSD as a network asset. Wire deposit (user → you), withdraw (you → user), and Ledger reconcile.",
@@ -136,6 +143,8 @@ const FEATURES = [
 ] as const;
 
 const RAW_DOCS = [
+  { label: "AI Partner Pack (start here)", href: "/api/public/docs/ai-partner" },
+  { label: "OpenAPI (Partner + Pro)", href: "/api/public/docs/openapi" },
   { label: "OpenPay integration + auth", href: "/api/public/docs/openpay" },
   { label: "OpenPay Pro auth only", href: "/api/public/docs/openpay-auth" },
   { label: "Exchange · OUSD", href: "/api/public/docs/exchange" },
@@ -158,45 +167,66 @@ function DocsPortalPage() {
       eyebrow="Developer Portal"
     >
       <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary" className="rounded-full">
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
           Partner Transfer API
         </Badge>
-        <Badge variant="secondary" className="rounded-full">
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
           Connect OAuth
         </Badge>
-        <Badge variant="secondary" className="rounded-full">
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
           Ledger · MCP
         </Badge>
-        <Badge variant="outline" className="rounded-full">
+        <Badge variant="outline" className="rounded-full px-3.5 py-1.5 text-sm">
           No partner webhooks — poll charges
         </Badge>
       </div>
 
-      <Card className="rounded-3xl border-border/60 bg-card/80 p-5 sm:p-6">
+      <Card className="rounded-3xl border-primary/25 bg-primary/5 p-6 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              For AI tools
+            </p>
+            <h2 className="opblog-h2 mt-2">Cursor · Lovable · Replit · Claude</h2>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
+              Paste one markdown feed and ship auth, payments, top-up, and inbound. Includes
+              OpenAPI + copy-paste prompts.
+            </p>
+          </div>
+          <Button asChild size="lg" className="rounded-full text-base">
+            <Link to="/docs/ai">
+              Open AI Partner Pack
+              <ExternalLink className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="rounded-3xl border-border/60 bg-card/80 p-6 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-xl">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Step 0
             </p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-tight">Get credentials</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <h2 className="opblog-h2 mt-2">Get credentials</h2>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
               Create an app at the Partner API portal. Copy{" "}
               <code className="text-foreground">client_id</code> and{" "}
               <code className="text-foreground">opk_live_…</code>. Keep the key on your server only.
             </p>
           </div>
-          <Button asChild className="rounded-full">
+          <Button asChild size="lg" className="rounded-full text-base">
             <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
               Open partner portal
-              <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+              <ExternalLink className="ml-1.5 h-4 w-4" />
             </a>
           </Button>
         </div>
       </Card>
 
-      <section id="quickstart" className="scroll-mt-28 space-y-4">
-        <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">Quickstart</h2>
-        <ol className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+      <section id="quickstart" className="scroll-mt-28 space-y-5">
+        <h2 className="opblog-h2">Quickstart</h2>
+        <ol className="space-y-4 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
           <li>
             <strong className="text-foreground">1. Register</strong> — Partner portal → app → domain
             allowlist for OAuth redirects.
@@ -233,50 +263,50 @@ curl -X POST "${PARTNER_API}/charges" \\
   }'`}</DocsCode>
       </section>
 
-      <section id="paths" className="scroll-mt-28 space-y-4">
-        <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">Choose your path</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+      <section id="paths" className="scroll-mt-28 space-y-5">
+        <h2 className="opblog-h2">Choose your path</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
           {PATHS.map((p) => {
             const Icon = p.icon;
             return (
               <Link
                 key={p.href}
                 to={p.href}
-                className="rounded-2xl border border-border/60 bg-card/70 p-4 transition hover:border-primary/30 hover:bg-card"
+                className="rounded-3xl border border-border/60 bg-card/70 p-5 transition hover:border-primary/40 hover:bg-card sm:p-6"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary">
-                  <Icon className="h-5 w-5" />
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/12 text-primary">
+                  <Icon className="h-6 w-6" />
                 </span>
-                <p className="mt-3 text-base font-bold tracking-tight">{p.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{p.body}</p>
+                <p className="mt-4 text-lg font-bold tracking-tight">{p.title}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{p.body}</p>
               </Link>
             );
           })}
         </div>
       </section>
 
-      <section id="features" className="scroll-mt-28 space-y-4">
-        <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">
-          All features you can integrate
-        </h2>
-        <p className="text-sm text-muted-foreground">
+      <section id="features" className="scroll-mt-28 space-y-5">
+        <h2 className="opblog-h2">All features you can integrate</h2>
+        <p className="text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
           Every major OpenPay Pro surface partners ask about — mapped to docs and APIs.
         </p>
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {FEATURES.map((f) => {
             const Icon = f.icon;
             return (
               <a
                 key={f.href}
                 href={f.href}
-                className="flex gap-3 rounded-2xl border border-border/50 bg-muted/20 px-3.5 py-3 transition hover:bg-muted/40"
+                className="flex gap-4 rounded-2xl border border-border/50 bg-muted/20 px-4 py-4 transition hover:bg-muted/40"
               >
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-background text-primary">
-                  <Icon className="h-4 w-4" />
+                <span className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-background text-primary">
+                  <Icon className="h-5 w-5" />
                 </span>
                 <span>
-                  <span className="block text-sm font-bold">{f.title}</span>
-                  <span className="block text-xs text-muted-foreground">{f.desc}</span>
+                  <span className="block text-base font-bold md:text-lg">{f.title}</span>
+                  <span className="mt-1 block text-base leading-snug text-muted-foreground">
+                    {f.desc}
+                  </span>
                 </span>
               </a>
             );
@@ -284,8 +314,8 @@ curl -X POST "${PARTNER_API}/charges" \\
         </div>
       </section>
 
-      <section id="bases" className="scroll-mt-28 space-y-4">
-        <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">Base URLs</h2>
+      <section id="bases" className="scroll-mt-28 space-y-5">
+        <h2 className="opblog-h2">Base URLs</h2>
         <DocsCode>{`Partner Transfer API
 ${PARTNER_API}
 
@@ -305,35 +335,35 @@ Agent Connect (MCP)
 ${MCP_URL}`}</DocsCode>
       </section>
 
-      <section id="raw" className="scroll-mt-28 space-y-4">
-        <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">Raw markdown feeds</h2>
-        <p className="text-sm text-muted-foreground">
+      <section id="raw" className="scroll-mt-28 space-y-5">
+        <h2 className="opblog-h2">Raw markdown feeds</h2>
+        <p className="text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
           Machine-readable docs for LLMs, internal wikis, and offline mirrors. CORS{" "}
           <code className="text-foreground">*</code> enabled.
         </p>
-        <ul className="grid gap-2 sm:grid-cols-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {RAW_DOCS.map((d) => (
             <li key={d.href}>
               <a
                 href={d.href}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 text-sm font-semibold hover:bg-card"
+                className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-card/60 px-4 py-3.5 text-base font-semibold hover:bg-card"
               >
                 {d.label}
-                <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-40" />
+                <ExternalLink className="h-4 w-4 shrink-0 opacity-40" />
               </a>
             </li>
           ))}
         </ul>
       </section>
 
-      <Card className="rounded-3xl border-primary/20 bg-primary/5 p-5">
+      <Card className="rounded-3xl border-primary/20 bg-primary/5 p-6 sm:p-7">
         <div className="flex items-start gap-3">
-          <BookOpen className="mt-0.5 h-5 w-5 text-primary" />
+          <BookOpen className="mt-1 h-6 w-6 text-primary" />
           <div>
-            <p className="font-bold">Need the deep dive?</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-lg font-bold">Need the deep dive?</p>
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
               Start with{" "}
               <Link to="/docs/openpay" className="font-semibold text-primary hover:underline">
                 Connect & payments

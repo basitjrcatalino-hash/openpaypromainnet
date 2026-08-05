@@ -1234,6 +1234,61 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   letter-spacing: -0.006em;
 }
 
+/* Developer docs — same readable scale as blog/wiki (not tiny UI text) */
+.opblog main.opdocs-body {
+  font-size: 1.125rem;
+  line-height: 1.72;
+  letter-spacing: -0.006em;
+}
+
+.opblog main.opdocs-body p,
+.opblog main.opdocs-body li,
+.opblog main.opdocs-body td,
+.opblog main.opdocs-body dd,
+.opblog main.opdocs-body .docs-copy {
+  font-size: 1.125rem;
+  line-height: 1.72;
+}
+
+.opblog main.opdocs-body .docs-lede,
+.opblog main.opdocs-body .opblog-dek {
+  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  line-height: 1.55;
+}
+
+/* Override Tailwind text-sm / text-xs used heavily on docs pages */
+.opblog main.opdocs-body :where(.text-sm) {
+  font-size: 1.125rem;
+  line-height: 1.65;
+}
+
+.opblog main.opdocs-body :where(.text-xs) {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.opblog main.opdocs-body :where(.text-\[11px\], .text-\[10px\]) {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.opblog main.opdocs-body h2:not(.opblog-h2) {
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.opblog main.opdocs-body pre,
+.opblog main.opdocs-body code {
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.opblog main.opdocs-body pre code {
+  font-size: inherit;
+}
+
 /* ---------------------------------------------------------------
    About — OpenPay Pro as an open network
    --------------------------------------------------------------- */

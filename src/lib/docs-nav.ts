@@ -16,9 +16,14 @@ export const DOCS_NAV: DocsNavGroup[] = [
     items: [
       { label: "Developer Portal", href: "/docs", desc: "Hub for every integration path" },
       {
+        label: "AI Partner Pack",
+        href: "/docs/ai",
+        desc: "Cursor · Lovable · Replit · Claude",
+      },
+      {
         label: "Quickstart",
         href: "/docs#quickstart",
-        desc: "Ship Connect + payments in one afternoon",
+        desc: "Connect + payments in one afternoon",
       },
       { label: "Choose your path", href: "/docs#paths", desc: "Exchange · Merchant · App · Agent" },
     ],
@@ -29,7 +34,7 @@ export const DOCS_NAV: DocsNavGroup[] = [
       {
         label: "Connect & payments",
         href: "/docs/openpay",
-        desc: "OAuth, PayButton, inbound, auth methods",
+        desc: "OAuth, PayButton, inbound, auth",
       },
       {
         label: "Exchange · OUSD",
@@ -45,6 +50,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
         label: "Tokens & assets",
         href: "/docs/tokens",
         desc: "OUSD, majors, OpenToken, NFT",
+      },
+      {
+        label: "Authentication",
+        href: "/docs/auth",
+        desc: "Seven Pro methods + Connect OAuth",
       },
     ],
   },
@@ -66,6 +76,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
         href: "/docs/mcp",
         desc: "Tools for ChatGPT, Claude, agents",
       },
+      {
+        label: "OpenAPI spec",
+        href: "/api/public/docs/openapi",
+        desc: "Machine-readable Partner + Pro APIs",
+      },
     ],
   },
   {
@@ -78,9 +93,14 @@ export const DOCS_NAV: DocsNavGroup[] = [
         desc: "HTTP codes, polling, idempotency",
       },
       {
-        label: "Authentication",
-        href: "/docs/auth",
-        desc: "Seven Pro methods + Connect OAuth",
+        label: "AI guide (raw MD)",
+        href: "/api/public/docs/ai-partner",
+        desc: "Paste into any LLM / agent",
+      },
+      {
+        label: "All raw feeds",
+        href: "/docs#raw",
+        desc: "Markdown + OpenAPI under /api/public/docs",
       },
       {
         label: "Partner portal",
@@ -88,9 +108,9 @@ export const DOCS_NAV: DocsNavGroup[] = [
         desc: "Create apps & API keys",
       },
       {
-        label: "Raw markdown",
-        href: "/docs#raw",
-        desc: "Machine-readable docs feeds",
+        label: "llms.txt",
+        href: "/llms.txt",
+        desc: "AI discovery index",
       },
     ],
   },
@@ -104,3 +124,5 @@ export const CONNECT_URL = "https://openpy.space/connect";
 export const LEDGER_API_BASE = "https://openpaypro.space/api/public/ledger";
 export const INBOUND_API = "https://openpaypro.space/api/public/openpay/inbound";
 export const MCP_URL = "https://openpaypro.space/mcp";
+export const OPENAPI_URL = "https://openpaypro.space/api/public/docs/openapi";
+export const AI_DOCS_URL = "https://openpaypro.space/docs/ai";

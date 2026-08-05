@@ -6,6 +6,9 @@ For the full **Connect + Payments** guide for third-party apps, see
 [`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
 [`/docs/openpay`](https://openpaypro.space/docs/openpay).
 
+**AI / agent pack (Cursor · Lovable · Replit · Claude):**  
+[`AI_PARTNER_INTEGRATION.md`](./AI_PARTNER_INTEGRATION.md) · live [`/docs/ai`](https://openpaypro.space/docs/ai) · raw [`/api/public/docs/ai-partner`](https://openpaypro.space/api/public/docs/ai-partner) · OpenAPI [`/api/public/docs/openapi`](https://openpaypro.space/api/public/docs/openapi)
+
 For **exchanges listing OUSD** (deposit / withdraw / network metadata), see
 [`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) or
 [`/docs/exchange`](https://openpaypro.space/docs/exchange).

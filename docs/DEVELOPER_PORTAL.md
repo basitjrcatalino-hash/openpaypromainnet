@@ -7,6 +7,11 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 | Surface | URL |
 | --- | --- |
 | Developer Portal | https://openpaypro.space/docs |
+| **AI Partner Pack** (Cursor / Lovable / Replit / Claude) | https://openpaypro.space/docs/ai |
+| AI guide (raw markdown) | https://openpaypro.space/api/public/docs/ai-partner |
+| OpenAPI | https://openpaypro.space/api/public/docs/openapi |
+| `llms.txt` | https://openpaypro.space/llms.txt |
+| `llms-full.txt` | https://openpaypro.space/llms-full.txt |
 | Connect & payments | https://openpaypro.space/docs/openpay |
 | Exchange · OUSD | https://openpaypro.space/docs/exchange |
 | Money rails | https://openpaypro.space/docs/money |
@@ -53,8 +58,16 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 
 ---
 
+## AI agents (Cursor · Lovable · Replit · Claude)
+
+1. Paste https://openpaypro.space/api/public/docs/ai-partner into the agent.  
+2. Or `@https://openpaypro.space/llms-full.txt` in Lovable.  
+3. Repo skill: `.agents/skills/openpay-partner-api/SKILL.md`
+
 ## Raw markdown feeds
 
+- `/api/public/docs/ai-partner`
+- `/api/public/docs/openapi`
 - `/api/public/docs/openpay`
 - `/api/public/docs/openpay-auth`
 - `/api/public/docs/exchange`

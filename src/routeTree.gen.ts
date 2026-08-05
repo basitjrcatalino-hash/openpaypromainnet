@@ -67,6 +67,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as DocsAiRouteImport } from './routes/docs.ai'
 import { Route as DocsApiRouteImport } from './routes/docs.api'
 import { Route as DocsAuthRouteImport } from './routes/docs.auth'
 import { Route as DocsErrorsRouteImport } from './routes/docs.errors'
@@ -160,10 +161,12 @@ import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/
 import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
 import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
 import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
+import { Route as ApiPublicDocsAiPartnerRouteImport } from './routes/api/public/docs/ai-partner'
 import { Route as ApiPublicDocsErrorsRouteImport } from './routes/api/public/docs/errors'
 import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
 import { Route as ApiPublicDocsLedgerRouteImport } from './routes/api/public/docs/ledger'
 import { Route as ApiPublicDocsMcpRouteImport } from './routes/api/public/docs/mcp'
+import { Route as ApiPublicDocsOpenapiRouteImport } from './routes/api/public/docs/openapi'
 import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
 import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
 import { Route as ApiPublicDocsOpenpayToProRouteImport } from './routes/api/public/docs/openpay-to-pro'
@@ -474,6 +477,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/blog_/$slug',
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsAiRoute = DocsAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => DocsRoute,
 } as any)
 const DocsApiRoute = DocsApiRouteImport.update({
   id: '/api',
@@ -977,6 +985,11 @@ const AuthenticatedP2pTakeAdIdRoute =
     path: '/p2p/take/$adId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicDocsAiPartnerRoute = ApiPublicDocsAiPartnerRouteImport.update({
+  id: '/api/public/docs/ai-partner',
+  path: '/api/public/docs/ai-partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDocsErrorsRoute = ApiPublicDocsErrorsRouteImport.update({
   id: '/api/public/docs/errors',
   path: '/api/public/docs/errors',
@@ -995,6 +1008,11 @@ const ApiPublicDocsLedgerRoute = ApiPublicDocsLedgerRouteImport.update({
 const ApiPublicDocsMcpRoute = ApiPublicDocsMcpRouteImport.update({
   id: '/api/public/docs/mcp',
   path: '/api/public/docs/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsOpenapiRoute = ApiPublicDocsOpenapiRouteImport.update({
+  id: '/api/public/docs/openapi',
+  path: '/api/public/docs/openapi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
@@ -1157,6 +1175,7 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/ai': typeof DocsAiRoute
   '/docs/api': typeof DocsApiRoute
   '/docs/auth': typeof DocsAuthRoute
   '/docs/errors': typeof DocsErrorsRoute
@@ -1250,10 +1269,12 @@ export interface FileRoutesByFullPath {
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
+  '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
+  '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
@@ -1331,6 +1352,7 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/docs/ai': typeof DocsAiRoute
   '/docs/api': typeof DocsApiRoute
   '/docs/auth': typeof DocsAuthRoute
   '/docs/errors': typeof DocsErrorsRoute
@@ -1424,10 +1446,12 @@ export interface FileRoutesByTo {
   '/opentoken/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/p2p/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/p2p/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
+  '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
+  '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
@@ -1507,6 +1531,7 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog_/$slug': typeof BlogSlugRoute
+  '/docs/ai': typeof DocsAiRoute
   '/docs/api': typeof DocsApiRoute
   '/docs/auth': typeof DocsAuthRoute
   '/docs/errors': typeof DocsErrorsRoute
@@ -1600,10 +1625,12 @@ export interface FileRoutesById {
   '/_authenticated/opentoken_/creator/$userId': typeof AuthenticatedOpentokenCreatorUserIdRoute
   '/_authenticated/p2p_/order/$id': typeof AuthenticatedP2pOrderIdRoute
   '/_authenticated/p2p_/take/$adId': typeof AuthenticatedP2pTakeAdIdRoute
+  '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
+  '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
   '/api/public/docs/openpay': typeof ApiPublicDocsOpenpayRoute
   '/api/public/docs/openpay-auth': typeof ApiPublicDocsOpenpayAuthRoute
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
@@ -1683,6 +1710,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/ai'
     | '/docs/api'
     | '/docs/auth'
     | '/docs/errors'
@@ -1776,10 +1804,12 @@ export interface FileRouteTypes {
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
     | '/p2p/take/$adId'
+    | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
+    | '/api/public/docs/openapi'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/docs/openpay-to-pro'
@@ -1857,6 +1887,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog/$slug'
+    | '/docs/ai'
     | '/docs/api'
     | '/docs/auth'
     | '/docs/errors'
@@ -1950,10 +1981,12 @@ export interface FileRouteTypes {
     | '/opentoken/creator/$userId'
     | '/p2p/order/$id'
     | '/p2p/take/$adId'
+    | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
+    | '/api/public/docs/openapi'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/docs/openpay-to-pro'
@@ -2032,6 +2065,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/auth/callback'
     | '/blog_/$slug'
+    | '/docs/ai'
     | '/docs/api'
     | '/docs/auth'
     | '/docs/errors'
@@ -2125,10 +2159,12 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken_/creator/$userId'
     | '/_authenticated/p2p_/order/$id'
     | '/_authenticated/p2p_/take/$adId'
+    | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
+    | '/api/public/docs/openapi'
     | '/api/public/docs/openpay'
     | '/api/public/docs/openpay-auth'
     | '/api/public/docs/openpay-to-pro'
@@ -2206,10 +2242,12 @@ export interface RootRouteChildren {
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
   ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
+  ApiPublicDocsAiPartnerRoute: typeof ApiPublicDocsAiPartnerRoute
   ApiPublicDocsErrorsRoute: typeof ApiPublicDocsErrorsRoute
   ApiPublicDocsExchangeRoute: typeof ApiPublicDocsExchangeRoute
   ApiPublicDocsLedgerRoute: typeof ApiPublicDocsLedgerRoute
   ApiPublicDocsMcpRoute: typeof ApiPublicDocsMcpRoute
+  ApiPublicDocsOpenapiRoute: typeof ApiPublicDocsOpenapiRoute
   ApiPublicDocsOpenpayRoute: typeof ApiPublicDocsOpenpayRoute
   ApiPublicDocsOpenpayAuthRoute: typeof ApiPublicDocsOpenpayAuthRoute
   ApiPublicDocsOpenpayToProRoute: typeof ApiPublicDocsOpenpayToProRoute
@@ -2636,6 +2674,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/$slug'
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/docs/ai': {
+      id: '/docs/ai'
+      path: '/ai'
+      fullPath: '/docs/ai'
+      preLoaderRoute: typeof DocsAiRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/docs/api': {
       id: '/docs/api'
@@ -3288,6 +3333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedP2pTakeAdIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/docs/ai-partner': {
+      id: '/api/public/docs/ai-partner'
+      path: '/api/public/docs/ai-partner'
+      fullPath: '/api/public/docs/ai-partner'
+      preLoaderRoute: typeof ApiPublicDocsAiPartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/docs/errors': {
       id: '/api/public/docs/errors'
       path: '/api/public/docs/errors'
@@ -3314,6 +3366,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/docs/mcp'
       fullPath: '/api/public/docs/mcp'
       preLoaderRoute: typeof ApiPublicDocsMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openapi': {
+      id: '/api/public/docs/openapi'
+      path: '/api/public/docs/openapi'
+      fullPath: '/api/public/docs/openapi'
+      preLoaderRoute: typeof ApiPublicDocsOpenapiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/docs/openpay': {
@@ -3654,6 +3713,7 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DocsRouteChildren {
+  DocsAiRoute: typeof DocsAiRoute
   DocsApiRoute: typeof DocsApiRoute
   DocsAuthRoute: typeof DocsAuthRoute
   DocsErrorsRoute: typeof DocsErrorsRoute
@@ -3667,6 +3727,7 @@ interface DocsRouteChildren {
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
+  DocsAiRoute: DocsAiRoute,
   DocsApiRoute: DocsApiRoute,
   DocsAuthRoute: DocsAuthRoute,
   DocsErrorsRoute: DocsErrorsRoute,
@@ -3753,10 +3814,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
   ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
+  ApiPublicDocsAiPartnerRoute: ApiPublicDocsAiPartnerRoute,
   ApiPublicDocsErrorsRoute: ApiPublicDocsErrorsRoute,
   ApiPublicDocsExchangeRoute: ApiPublicDocsExchangeRoute,
   ApiPublicDocsLedgerRoute: ApiPublicDocsLedgerRoute,
   ApiPublicDocsMcpRoute: ApiPublicDocsMcpRoute,
+  ApiPublicDocsOpenapiRoute: ApiPublicDocsOpenapiRoute,
   ApiPublicDocsOpenpayRoute: ApiPublicDocsOpenpayRoute,
   ApiPublicDocsOpenpayAuthRoute: ApiPublicDocsOpenpayAuthRoute,
   ApiPublicDocsOpenpayToProRoute: ApiPublicDocsOpenpayToProRoute,

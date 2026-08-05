@@ -1,33 +1,60 @@
 # OpenPay Pro Wallet
 
-> Self-custody Web3 wallet for the OpenPay ecosystem: hold OUSD and majors, swap, trade spot/perps, mint NFTs, send payments, and track every transaction on a public ledger.
+> OpenPay + OpenPay Pro partner APIs for Connect (OAuth), payments (PayButton charges), payouts (transfers), top-up / inbound, Public Ledger, and MCP. Currency: OUSD. No charge webhooks — poll. Keep `opk_live_` keys on the server only.
+
+## AI-first partner pack (start here)
+
+- [AI Partner Integration Pack](https://openpaypro.space/docs/ai): Single guide for Cursor, Lovable, Replit, Claude — auth, pay, top-up, inbound, ledger.
+- [Raw AI guide (markdown)](https://openpaypro.space/api/public/docs/ai-partner): Paste into any LLM / agent.
+- [Full dump](https://openpaypro.space/llms-full.txt): Consolidated partner + Pro docs for long-context agents.
+- [OpenAPI](https://openpaypro.space/api/public/docs/openapi): Machine-readable Partner Transfer + Pro inbound/ledger.
+
+## Bases
+
+- Partner Transfer API: `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
+- Partner portal (keys): https://openpy.space/partner-api
+- Connect: https://openpy.space/connect
+- Pro inbound: `POST https://openpaypro.space/api/public/openpay/inbound`
+- Ledger: https://openpaypro.space/api/public/ledger
+- MCP: https://openpaypro.space/mcp
 
 ## Developer portal
 
-- [Developer Portal](/docs): Hub for every integration path.
-- [Quickstart](/docs#quickstart): Ship Connect + payments in one afternoon.
-- [Choose your path](/docs#paths): Exchange · Merchant · App · Agent.
-- [Connect & payments](/docs/openpay): OAuth, PayButton, inbound, auth methods.
-- [Exchange · OUSD](/docs/exchange): Deposit, withdraw, swap, reconcile.
-- [Money rails](/docs/money): Send, receive, deposit, withdraw, swap.
-- [Tokens & assets](/docs/tokens): OUSD, majors, OpenToken, NFT.
-- [Partner Transfer API](/docs/api): Transfers, charges, OAuth token.
-- [Public Ledger API](/docs/ledger): Append-only transaction mirror.
-- [Agent Connect · MCP](/docs/mcp): Tools for ChatGPT, Claude, agents.
-- [FAQ](/docs/faq): Wallets, fees, partner teaser.
-- [Errors & retries](/docs/errors): HTTP codes, polling, idempotency.
-- [Authentication](/docs/auth): Seven Pro methods + Connect OAuth.
-- [Raw markdown feeds](/docs#raw): Machine-readable docs under /api/public/docs/*.
+- [Developer Portal](https://openpaypro.space/docs): Hub for every integration path.
+- [Quickstart](https://openpaypro.space/docs#quickstart): Ship Connect + payments in one afternoon.
+- [Connect & payments](https://openpaypro.space/docs/openpay): OAuth, PayButton, inbound, auth methods.
+- [Exchange · OUSD](https://openpaypro.space/docs/exchange): Deposit, withdraw, swap, reconcile.
+- [Money rails](https://openpaypro.space/docs/money): Send, receive, deposit, withdraw, swap.
+- [Tokens & assets](https://openpaypro.space/docs/tokens): OUSD, majors, OpenToken, NFT.
+- [Partner Transfer API](https://openpaypro.space/docs/api): Transfers, charges, OAuth token.
+- [Public Ledger API](https://openpaypro.space/docs/ledger): Append-only transaction mirror.
+- [Agent Connect · MCP](https://openpaypro.space/docs/mcp): Tools for ChatGPT, Claude, agents.
+- [Authentication](https://openpaypro.space/docs/auth): Pro methods + Connect OAuth.
+- [Errors & retries](https://openpaypro.space/docs/errors): HTTP codes, polling, idempotency.
+- [FAQ](https://openpaypro.space/docs/faq): Wallets, fees, partner teaser.
+- [Raw markdown feeds](https://openpaypro.space/docs#raw): `/api/public/docs/*`
+
+## Raw markdown feeds (CORS *)
+
+- https://openpaypro.space/api/public/docs/ai-partner
+- https://openpaypro.space/api/public/docs/openapi
+- https://openpaypro.space/api/public/docs/openpay
+- https://openpaypro.space/api/public/docs/openpay-auth
+- https://openpaypro.space/api/public/docs/partner-transfer
+- https://openpaypro.space/api/public/docs/openpay-to-pro
+- https://openpaypro.space/api/public/docs/ledger
+- https://openpaypro.space/api/public/docs/exchange
+- https://openpaypro.space/api/public/docs/tokens
+- https://openpaypro.space/api/public/docs/mcp
+- https://openpaypro.space/api/public/docs/errors
+- https://openpaypro.space/api/public/docs/portal
 
 ## Product pages
 
-- [Sign in](/authpi): OpenPay, Pi, Solana, Phantom, MetaMask, WalletConnect, or Telegram.
-- [Transfer Pi guide](/guides/transfer-pi): How to transfer Pi Network assets into OpenPay Pro.
-- [Wiki](/wiki): End-user tutorials.
-- [Claim Test Pi](/testnet-reward): Pi Testnet reward claim page.
+- [Sign in](https://openpaypro.space/authpi): OpenPay, Pi, Solana, Phantom, MetaMask, WalletConnect, Telegram.
+- [Top up](https://openpaypro.space/topup): Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance.
+- [Wiki](https://openpaypro.space/wiki): End-user tutorials.
 
 ## Optional
 
-- [Terms of Service](/terms): Terms governing use of OpenPay Pro.
-- [Privacy Policy](/privacy): How data is collected and protected.
-- [Regulatory status](/regulatory): Disclosures on providers and price feeds.
+- [Terms](https://openpaypro.space/terms) · [Privacy](https://openpaypro.space/privacy) · [Regulatory](https://openpaypro.space/regulatory)

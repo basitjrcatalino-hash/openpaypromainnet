@@ -120,11 +120,16 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Developers",
     items: [
       { label: "Developer Portal", href: "/docs", desc: "Full integration hub" },
-      { label: "Docs", href: "/docs/openpay", desc: "Connect & payments" },
+      { label: "AI Partner Pack", href: "/docs/ai", desc: "Cursor · Lovable · Replit · Claude" },
+      { label: "Connect & payments", href: "/docs/openpay", desc: "OAuth, PayButton, inbound, auth" },
       { label: "Exchange · OUSD", href: "/docs/exchange", desc: "Deposit, withdraw, network API" },
       { label: "Money rails", href: "/docs/money", desc: "Send, receive, deposit, swap" },
-      { label: "Partner API", href: "https://openpy.space/partner-api", desc: "Apps & keys" },
+      { label: "Tokens & assets", href: "/docs/tokens", desc: "OUSD, majors, OpenToken, NFT" },
+      { label: "Partner Transfer API", href: "/docs/api", desc: "Transfers, charges, OAuth" },
+      { label: "Public Ledger", href: "/docs/ledger", desc: "Append-only tx mirror" },
+      { label: "Authentication", href: "/docs/auth", desc: "Seven Pro sign-in methods" },
       { label: "Agent Connect", href: "/docs/mcp", desc: "MCP for agents" },
+      { label: "Partner API keys", href: "https://openpy.space/partner-api", desc: "Apps & keys" },
     ],
   },
 ];
@@ -1201,8 +1206,11 @@ function HomePage() {
             title="Developers"
             links={[
               { label: "Developer Portal", href: "/docs" },
-              { label: "Docs", href: "/docs/openpay" },
+              { label: "AI Partner Pack", href: "/docs/ai" },
+              { label: "Connect & payments", href: "/docs/openpay" },
               { label: "Exchange · OUSD", href: "/docs/exchange" },
+              { label: "Money rails", href: "/docs/money" },
+              { label: "Partner Transfer API", href: "/docs/api" },
               { label: "FAQ", href: "/docs/faq" },
               { label: "Partner API", href: "https://openpy.space/partner-api" },
               { label: "OpenLedger", href: "https://openpyledger.space" },

@@ -144,6 +144,8 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.discover") return "Discover";
   if (labelKey === "nav.withdraw") return "Withdraw";
   if (labelKey === "nav.trustWallet") return "Trust Wallet";
+  if (labelKey === "nav.pitch") return "Pitch Deck";
+  if (labelKey === "nav.website") return "Website";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
@@ -1292,7 +1294,7 @@ function SidebarInner({
                     className={sideItemClass(false)}
                   >
                     <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                    <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+                    <span className="min-w-0 flex-1 truncate">{navLabel(t, labelKey)}</span>
                     <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
                   </a>
                 ) : (
@@ -1309,7 +1311,7 @@ function SidebarInner({
                     )}
                   >
                     <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                    <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+                    <span className="min-w-0 flex-1 truncate">{navLabel(t, labelKey)}</span>
                   </Link>
                 ),
               )}

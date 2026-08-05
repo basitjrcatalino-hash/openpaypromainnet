@@ -56,6 +56,7 @@ export const en = {
     wiki: "Wiki",
     about: "About",
     website: "Website",
+    pitch: "Pitch Deck",
     ousd: "OpenUSD",
     explore: "Explore",
     discover: "Discover",

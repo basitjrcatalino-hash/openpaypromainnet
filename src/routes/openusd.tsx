@@ -1,14 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  ChevronDown,
-  ExternalLink,
-  Newspaper,
-} from "lucide-react";
+import { ArrowRight, BookOpen, ChevronDown, ExternalLink, Newspaper } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
-import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
+import { MainTokensHighlight } from "@/components/main-tokens-highlight";
+import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 import {
   PARTNER_CATEGORIES,
@@ -20,7 +15,6 @@ import {
 import { MAJOR_TOKENS, MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
 import { cn } from "@/lib/utils";
 
-const BTC_LOGO_URL = "https://assets.coingecko.com/coins/images/1/large/bitcoin.png";
 const MOONPAY_LOGO = "https://www.google.com/s2/favicons?domain=moonpay.com&sz=128";
 
 const TITLE = "Meet OpenUSD (OUSD) — OpenPay’s dollar on the open network";
@@ -201,6 +195,9 @@ function OusdPage() {
             >
               <img src={OUSD_LOGO_URL} alt="" className="h-5 w-5 rounded-md object-cover" />
               OpenUSD · OUSD
+              <span className="text-border">·</span>
+              <img src={PI_NETWORK_LOGO_URL} alt="" className="h-5 w-5 rounded-full object-cover" />
+              Pi Network
             </p>
             <h1
               data-rise
@@ -208,16 +205,22 @@ function OusdPage() {
             >
               Meet OpenUSD
             </h1>
-            <p data-rise className="opcash-rise mt-5 text-xl font-semibold tracking-tight sm:text-2xl">
-              OpenPay’s dollar for the open network.
+            <p
+              data-rise
+              className="opcash-rise mt-5 text-xl font-semibold tracking-tight sm:text-2xl"
+            >
+              OpenPay’s dollar for the open network — beside Pi as a core Pro asset.
             </p>
             <p
               data-rise
               className="opcash-rise mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              Hold, send, and settle in OUSD across OpenPay Pro — with the power of crypto and the
-              ease of cash.
+              Hold, send, and settle in OUSD across OpenPay Pro. Top up with Pi Network at a live π
+              price — OpenUSD and Pi lead every wallet.
             </p>
+            <div data-rise className="opcash-rise mt-6">
+              <MainTokensHighlight tone="light" compact />
+            </div>
             <div data-rise className="opcash-rise mt-8 flex flex-wrap gap-3">
               <Link
                 to="/authpi"
@@ -258,25 +261,25 @@ function OusdPage() {
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
               <img
-                src={BTC_LOGO_URL}
+                src={PI_NETWORK_LOGO_URL}
                 alt=""
-                className="mx-auto h-10 w-10 rounded-full object-cover"
+                className="mx-auto h-12 w-12 rounded-full object-cover"
                 referrerPolicy="no-referrer"
               />
-              <p className="mt-4 text-lg font-bold">The power of crypto</p>
+              <p className="mt-4 text-lg font-bold">Pi Network · core asset</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Ledger settlement, APIs, agents, and multi-rail top-ups — without giving up dollar
-                clarity.
+                Hold Pi beside OpenUSD in one Pro wallet — and top up OUSD from Pi at a live π
+                price.
               </p>
             </div>
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
               <img
                 src={OUSD_LOGO_URL}
                 alt=""
-                className="mx-auto h-10 w-10 rounded-2xl object-cover"
+                className="mx-auto h-12 w-12 rounded-2xl object-cover"
                 referrerPolicy="no-referrer"
               />
-              <p className="mt-4 text-lg font-bold">The ease of cash</p>
+              <p className="mt-4 text-lg font-bold">OpenUSD · primary dollar</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 $1 OUSD thinking for everyday sends, receives, and merchant payouts across OpenPay.
               </p>
@@ -325,9 +328,7 @@ function OusdPage() {
                   />
                 </div>
                 <h3 className="text-lg font-bold tracking-tight">{title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  {body}
-                </p>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{body}</p>
               </li>
             ))}
           </ul>
@@ -342,7 +343,11 @@ function OusdPage() {
             Powered by
           </p>
           <div className="mt-5 inline-flex items-center gap-3">
-            <img src={OUSD_LOGO_URL} alt="" className="h-12 w-12 rounded-2xl object-cover shadow-md" />
+            <img
+              src={OUSD_LOGO_URL}
+              alt=""
+              className="h-12 w-12 rounded-2xl object-cover shadow-md"
+            />
             <span className="font-(family-name:--font-display) text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">
               OUSD
             </span>
@@ -583,9 +588,14 @@ function OusdSwapShowcase() {
         Every token OpenUSD can buy &amp; swap
       </h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-        OpenUSD is the dollar rail for OpenDEX swaps, Tokens buys, Spot, and Perpetuals — the same
-        catalog you see in the wallet, powered by partner market data and payment integrations.
+        <span className="font-bold text-foreground">OpenUSD</span> and{" "}
+        <span className="font-bold text-foreground">Pi Network</span> are the main Pro tokens — then
+        majors, Spot, and Perpetuals settle against the same OUSD rail.
       </p>
+
+      <div className="mt-6">
+        <MainTokensHighlight tone="light" />
+      </div>
 
       <ul className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
@@ -750,9 +760,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         )}
       >
         <div className="overflow-hidden">
-          <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
-            {answer}
-          </p>
+          <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">{answer}</p>
         </div>
       </div>
     </div>

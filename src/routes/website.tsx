@@ -20,7 +20,12 @@ import {
   Volume2,
   Wallet,
 } from "lucide-react";
-import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL, SOL_LOGO_URL } from "@/lib/token-logos";
+import {
+  OUSD_LOGO_URL,
+  OPENPAY_NETWORK_BADGE_URL,
+  PI_NETWORK_LOGO_URL,
+  SOL_LOGO_URL,
+} from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
 import { PHANTOM_WALLET_LOGO } from "@/lib/phantom";
 
@@ -37,6 +42,7 @@ import {
 } from "@/lib/openpay-partners";
 import { useSpeech } from "@/hooks/use-speech";
 import { cn } from "@/lib/utils";
+import { MainTokensHighlight } from "@/components/main-tokens-highlight";
 
 const TITLE = "OpenPay Pro — The money app for the open network";
 const DESC =
@@ -73,7 +79,11 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "OpenToken", href: "/wiki", desc: "Mint and trade on bonding curves" },
       { label: "Solana Pay", href: "/authpi", desc: "QR payments on Solana" },
       { label: "Multi-chain deposit", href: "/wiki", desc: "ETH, Base, BNB, Polygon, Solana…" },
-      { label: "OpenPay AI", href: "https://www.openpy.space/blog/meet-openpay-ai", desc: "Assistant & MCP agents" },
+      {
+        label: "OpenPay AI",
+        href: "https://www.openpy.space/blog/meet-openpay-ai",
+        desc: "Assistant & MCP agents",
+      },
     ],
   },
   {
@@ -91,7 +101,11 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "OpenPay", href: "https://openpy.space", desc: "The open money network" },
       { label: "OpenLedger", href: "https://openpyledger.space", desc: "Public ledger explorer" },
-      { label: "OpenPay AI", href: "https://www.openpy.space/blog/meet-openpay-ai", desc: "Agents on open rails" },
+      {
+        label: "OpenPay AI",
+        href: "https://www.openpy.space/blog/meet-openpay-ai",
+        desc: "Agents on open rails",
+      },
     ],
   },
   {
@@ -122,15 +136,36 @@ const FEATURE_SHOWCASE = [
     title: "Money & OpenUSD",
     blurb: "Your home balance on the open network.",
     items: [
-      { name: "OpenUSD (OUSD)", desc: "OpenPay’s $1 ledger dollar for hold, send, spend, and settle." },
+      {
+        name: "OpenUSD (OUSD)",
+        desc: "OpenPay’s $1 ledger dollar for hold, send, spend, and settle.",
+      },
       { name: "Unified Pro wallet", desc: "One home for OUSD, Pi, majors, OpenTokens, and NFTs." },
-      { name: "Multi-asset holdings", desc: "BTC, ETH, SOL, PI, USDC, USDT, EURC and more beside OUSD." },
-      { name: "@username identity", desc: "Pay and get paid with readable @handles on the same ledger." },
+      {
+        name: "Multi-asset holdings",
+        desc: "BTC, ETH, SOL, PI, USDC, USDT, EURC and more beside OUSD.",
+      },
+      {
+        name: "@username identity",
+        desc: "Pay and get paid with readable @handles on the same ledger.",
+      },
       { name: "Pi in the wallet", desc: "Hold and move Pi alongside OUSD on one Pro account." },
-      { name: "Display currencies", desc: "See balances in USD, EUR, PI, and dozens of display currencies." },
-      { name: "Activity & history", desc: "Every credit and debit in a clear transaction timeline." },
-      { name: "OpenNFT collectibles", desc: "Browse and mint marketplace-linked NFTs inside the wallet." },
-      { name: "Multi-wallet switching", desc: "Create, import, and switch Pro wallets without leaving the app." },
+      {
+        name: "Display currencies",
+        desc: "See balances in USD, EUR, PI, and dozens of display currencies.",
+      },
+      {
+        name: "Activity & history",
+        desc: "Every credit and debit in a clear transaction timeline.",
+      },
+      {
+        name: "OpenNFT collectibles",
+        desc: "Browse and mint marketplace-linked NFTs inside the wallet.",
+      },
+      {
+        name: "Multi-wallet switching",
+        desc: "Create, import, and switch Pro wallets without leaving the app.",
+      },
     ],
   },
   {
@@ -138,9 +173,15 @@ const FEATURE_SHOWCASE = [
     title: "Trading & OpenToken",
     blurb: "Swap majors and launch community coins.",
     items: [
-      { name: "OpenDEX swap", desc: "Buy and sell majors against OUSD with quotes and fee clarity." },
+      {
+        name: "OpenDEX swap",
+        desc: "Buy and sell majors against OUSD with quotes and fee clarity.",
+      },
       { name: "OpenToken launchpad", desc: "Mint and trade community coins on bonding curves." },
-      { name: "Create OpenToken", desc: "Launch your coin with name, symbol, and logo — mint fee in OUSD." },
+      {
+        name: "Create OpenToken",
+        desc: "Launch your coin with name, symbol, and logo — mint fee in OUSD.",
+      },
       { name: "Token discovery", desc: "Trending rails, charts, holders, and per-token rooms." },
       { name: "Watchlist", desc: "Star tokens you care about and jump back in one tap." },
       { name: "Live Chat", desc: "Global and token rooms for launches and markets." },
@@ -151,18 +192,45 @@ const FEATURE_SHOWCASE = [
     title: "Send, receive & deposit",
     blurb: "Move value in — and out — on open rails.",
     items: [
-      { name: "Send anywhere Pro", desc: "OUSD, Pi, majors, or OpenTokens to @users, addresses, or OpenPay." },
+      {
+        name: "Send anywhere Pro",
+        desc: "OUSD, Pi, majors, or OpenTokens to @users, addresses, or OpenPay.",
+      },
       { name: "Receive + QR", desc: "Share a QR or receive link so others can pay you instantly." },
-      { name: "Public pay links", desc: "Camera-friendly /pay links that open cleanly from phone scans." },
-      { name: "Buy / Top up OUSD", desc: "Fund from OpenPay Balance, Pi, USDC, crypto, Solana Pay, or Circle." },
-      { name: "OpenPay Balance", desc: "Move network balance into Pro OUSD when accounts are linked." },
+      {
+        name: "Public pay links",
+        desc: "Camera-friendly /pay links that open cleanly from phone scans.",
+      },
+      {
+        name: "Buy / Top up OUSD",
+        desc: "Fund from OpenPay Balance, Pi, USDC, crypto, Solana Pay, or Circle.",
+      },
+      {
+        name: "OpenPay Balance",
+        desc: "Move network balance into Pro OUSD when accounts are linked.",
+      },
       { name: "Pi Network top-up", desc: "Pay with Pi at a live π price and get OUSD credited." },
-      { name: "USDC / crypto deposit", desc: "Deposit USDC and supported crypto via Commerce rails into OUSD." },
-      { name: "Circle Mint", desc: "Circle Mint USDC pay-ins that settle as OUSD on your Pro wallet." },
+      {
+        name: "USDC / crypto deposit",
+        desc: "Deposit USDC and supported crypto via Commerce rails into OUSD.",
+      },
+      {
+        name: "Circle Mint",
+        desc: "Circle Mint USDC pay-ins that settle as OUSD on your Pro wallet.",
+      },
       { name: "Solana Pay", desc: "Wallet connect, PaymentButton, and Solana Pay QR → OUSD." },
-      { name: "Multi-chain gateway", desc: "Deposit from Ethereum, Base, BNB, Polygon, Solana, and more." },
-      { name: "Scan QR", desc: "Point the camera at payment QRs to prefill Send or merchant flows." },
-      { name: "WalletConnect Pay", desc: "Pay WalletConnect merchant links with an EVM signature." },
+      {
+        name: "Multi-chain gateway",
+        desc: "Deposit from Ethereum, Base, BNB, Polygon, Solana, and more.",
+      },
+      {
+        name: "Scan QR",
+        desc: "Point the camera at payment QRs to prefill Send or merchant flows.",
+      },
+      {
+        name: "WalletConnect Pay",
+        desc: "Pay WalletConnect merchant links with an EVM signature.",
+      },
       { name: "Tx notifications", desc: "In-app alerts — and email when Email alerts are on." },
     ],
   },
@@ -171,11 +239,20 @@ const FEATURE_SHOWCASE = [
     title: "Security & control",
     blurb: "Self-custody keys. Open ledger. Your rules.",
     items: [
-      { name: "Recovery phrase", desc: "Create or import 12/24-word recovery so you control the wallet." },
+      {
+        name: "Recovery phrase",
+        desc: "Create or import 12/24-word recovery so you control the wallet.",
+      },
       { name: "PIN protection", desc: "Gate sensitive actions with an optional PIN." },
       { name: "Biometrics", desc: "Fingerprint / Face ID where the device supports it." },
-      { name: "Pi Verify KYC", desc: "Identity verification via Pi Verify when higher access requires it." },
-      { name: "OpenPay OAuth link", desc: "Connect OpenPay for balance top-ups, NFTs, and partner features." },
+      {
+        name: "Pi Verify KYC",
+        desc: "Identity verification via Pi Verify when higher access requires it.",
+      },
+      {
+        name: "OpenPay OAuth link",
+        desc: "Connect OpenPay for balance top-ups, NFTs, and partner features.",
+      },
       { name: "Self-custody posture", desc: "A money app on open rails — not a closed bank silo." },
     ],
   },
@@ -184,10 +261,22 @@ const FEATURE_SHOWCASE = [
     title: "OpenPay AI & agents",
     blurb: "Help without hiding how money moves.",
     items: [
-      { name: "OpenPay AI assistant", desc: "Ask how-to questions about top-ups, sends, OpenToken, ledger, KYC." },
-      { name: "Spoken answers", desc: "Listen to AI and Wiki replies with built-in text-to-speech." },
-      { name: "Agent Connect (MCP)", desc: "Plug ChatGPT, Claude, or any MCP client into Pro wallet tools." },
-      { name: "Read-oriented tools", desc: "Documented assistant surfaces — help without silent fund moves." },
+      {
+        name: "OpenPay AI assistant",
+        desc: "Ask how-to questions about top-ups, sends, OpenToken, ledger, KYC.",
+      },
+      {
+        name: "Spoken answers",
+        desc: "Listen to AI and Wiki replies with built-in text-to-speech.",
+      },
+      {
+        name: "Agent Connect (MCP)",
+        desc: "Plug ChatGPT, Claude, or any MCP client into Pro wallet tools.",
+      },
+      {
+        name: "Read-oriented tools",
+        desc: "Documented assistant surfaces — help without silent fund moves.",
+      },
     ],
   },
   {
@@ -196,11 +285,26 @@ const FEATURE_SHOWCASE = [
     blurb: "Same OUSD rails for apps, ledgers, and agents.",
     items: [
       { name: "Partner API", desc: "Apps, keys, and OUSD-denominated partner transfers." },
-      { name: "Connect with OpenPay", desc: "Sign in with OpenPay and Balance payments for third-party apps." },
-      { name: "Public Ledger API", desc: "Mirror sends, receives, buys, swaps, and mints to an append-only ledger." },
-      { name: "OpenLedger explorer", desc: "Inspect credits and debits on public OpenLedger rails." },
-      { name: "In-app Ledger console", desc: "API keys, entries, and sync helpers under Developer mode." },
-      { name: "Docs & FAQ", desc: "Ship Connect, payments, Ledger, and WalletConnect Pay with first-party docs." },
+      {
+        name: "Connect with OpenPay",
+        desc: "Sign in with OpenPay and Balance payments for third-party apps.",
+      },
+      {
+        name: "Public Ledger API",
+        desc: "Mirror sends, receives, buys, swaps, and mints to an append-only ledger.",
+      },
+      {
+        name: "OpenLedger explorer",
+        desc: "Inspect credits and debits on public OpenLedger rails.",
+      },
+      {
+        name: "In-app Ledger console",
+        desc: "API keys, entries, and sync helpers under Developer mode.",
+      },
+      {
+        name: "Docs & FAQ",
+        desc: "Ship Connect, payments, Ledger, and WalletConnect Pay with first-party docs.",
+      },
       { name: "Wiki & Blog", desc: "Guides and updates for every major Pro surface." },
     ],
   },
@@ -224,10 +328,10 @@ const FEATURE_SHOWCASE = [
 const FEATURE_BENTO = [
   {
     title: "OpenUSD home",
-    body: "One balance for OUSD, Pi, majors, and OpenTokens — send, receive, swap.",
-    tag: "Money",
-    href: "/website#feature-money",
-    logo: OUSD_LOGO_URL,
+    body: "OpenUSD + Pi Network lead your Pro balance — then majors and OpenTokens.",
+    tag: "Main tokens",
+    href: "/openusd",
+    logos: [OUSD_LOGO_URL, PI_NETWORK_LOGO_URL],
   },
   {
     title: "OpenToken launch",
@@ -360,11 +464,7 @@ function HomePage() {
     void speech.speak(speechId, websiteSpeechText());
   };
 
-  const listenLabel = isLoadingAudio
-    ? "Starting…"
-    : isSpeaking
-      ? "Stop"
-      : "Listen";
+  const listenLabel = isLoadingAudio ? "Starting…" : isSpeaking ? "Stop" : "Listen";
 
   useEffect(() => {
     const root = heroRef.current;
@@ -670,9 +770,17 @@ function HomePage() {
               data-rise
               className="ophome-rise mt-5 max-w-xl text-[clamp(1.05rem,2.2vw,1.35rem)] font-medium leading-snug tracking-[-0.02em] text-white/80"
             >
-              Your home for OUSD, Pi, and OpenTokens on the open network.
+              Your home for <span className="font-bold text-white">OpenUSD</span> and{" "}
+              <span className="font-bold text-white">Pi Network</span> — plus OpenTokens on the open
+              network.
             </p>
-            <div data-rise className="ophome-rise mt-9 flex flex-wrap items-center justify-center gap-3">
+            <div data-rise className="ophome-rise mt-6 w-full max-w-xl">
+              <MainTokensHighlight tone="dark" compact />
+            </div>
+            <div
+              data-rise
+              className="ophome-rise mt-7 flex flex-wrap items-center justify-center gap-3"
+            >
               <Link to="/authpi" className="ophome-hero-cta">
                 <Wallet className="h-4 w-4" strokeWidth={2.25} />
                 Open wallet
@@ -701,7 +809,11 @@ function HomePage() {
             <div ref={phoneRef} className="ophome-phone ophome-float-slow">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <img src={OPENPAY_AUTH_LOGO} alt="" className="h-7 w-7 rounded-lg object-contain" />
+                  <img
+                    src={OPENPAY_AUTH_LOGO}
+                    alt=""
+                    className="h-7 w-7 rounded-lg object-contain"
+                  />
                   <span className="text-xs font-bold text-white">OpenPay Pro</span>
                 </div>
                 <span className="relative flex h-2 w-2">
@@ -709,7 +821,9 @@ function HomePage() {
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
               </div>
-              <p className="mt-4 text-left text-[11px] font-semibold text-white/55">Total balance</p>
+              <p className="mt-4 text-left text-[11px] font-semibold text-white/55">
+                Total balance
+              </p>
               <p className="mt-0.5 bg-linear-to-r from-white via-(--lavender) to-white bg-clip-text text-left text-3xl font-extrabold tracking-tight text-transparent ophome-shimmer">
                 $4,820.40
               </p>
@@ -735,7 +849,11 @@ function HomePage() {
                   <span className="text-[11px] font-bold text-white/90">2,480</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-2.5 py-2">
-                  <img src={PI_NETWORK_LOGO_URL} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  <img
+                    src={PI_NETWORK_LOGO_URL}
+                    alt=""
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
                   <span className="flex-1 text-left text-[11px] font-bold text-white">Pi</span>
                   <span className="text-[11px] font-bold text-white/90">1,204</span>
                 </div>
@@ -814,7 +932,10 @@ function HomePage() {
 
         {/* Full product showcase — reveal header + bands separately (tall wrapper broke IO on mobile) */}
         <section id="features" className="mt-16 scroll-mt-28 sm:mt-24">
-          <div data-reveal className="ophome-section-reveal flex flex-wrap items-end justify-between gap-4 px-1">
+          <div
+            data-reveal
+            className="ophome-section-reveal flex flex-wrap items-end justify-between gap-4 px-1"
+          >
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Product
@@ -850,7 +971,10 @@ function HomePage() {
           </div>
 
           {/* Bento highlight row */}
-          <ul data-reveal className="ophome-section-reveal mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul
+            data-reveal
+            className="ophome-section-reveal mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {FEATURE_BENTO.map((card) => {
               const logo = "logo" in card ? card.logo : null;
               const logos = "logos" in card ? card.logos : null;
@@ -888,7 +1012,9 @@ function HomePage() {
                         {card.tag}
                       </span>
                     </div>
-                    <p className="text-lg font-extrabold tracking-tight text-(--ink)">{card.title}</p>
+                    <p className="text-lg font-extrabold tracking-tight text-(--ink)">
+                      {card.title}
+                    </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                       {card.body}
                     </p>
@@ -1054,7 +1180,8 @@ function HomePage() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Self-custody money app for the OpenPay ecosystem — OUSD, Pi, OpenTokens, and open rails.
+              Self-custody money app for the OpenPay ecosystem — OUSD, Pi, OpenTokens, and open
+              rails.
             </p>
           </div>
           <FooterCol
@@ -1250,10 +1377,12 @@ function PartnersShowcase() {
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3 px-1">
             <div>
               <h3 className="text-xl font-extrabold tracking-tight text-(--ink)">
-                Exchange tokens & majors
+                Main tokens · majors · OpenTokens
               </h3>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                The same catalog powers Tokens, Spot, and Perpetuals — from BTC to community listings.
+                <span className="font-bold text-(--ink)">OpenUSD</span> and{" "}
+                <span className="font-bold text-(--ink)">Pi Network</span> lead every Pro wallet —
+                then majors for Tokens, Spot, and Perpetuals.
               </p>
             </div>
             <Link
@@ -1351,9 +1480,7 @@ function ShowcaseBand({
                   {item.name}
                 </p>
                 {i === idx ? (
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    {item.desc}
-                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
                 ) : null}
               </button>
             </li>
@@ -1361,7 +1488,10 @@ function ShowcaseBand({
         </ul>
 
         <div className="ophome-feature-stage relative min-h-85 p-5 sm:min-h-100 sm:p-7">
-          <div key={`${category.id}-${active.name}`} className="ophome-stage-in relative z-10 h-full">
+          <div
+            key={`${category.id}-${active.name}`}
+            className="ophome-stage-in relative z-10 h-full"
+          >
             <ShowcaseVisual categoryId={category.id} item={active} />
           </div>
         </div>
@@ -1566,9 +1696,7 @@ function ShowcaseVisual({
   // auth
   return (
     <StageCard>
-      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-        {item.name}
-      </p>
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{item.name}</p>
       <p className="mt-2 text-2xl font-extrabold tracking-tight">Sign in your way</p>
       <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
       <div className="mt-6 grid grid-cols-2 gap-2">
@@ -1578,9 +1706,7 @@ function ShowcaseVisual({
               key={label}
               className={cn(
                 "rounded-2xl px-3 py-3 text-center text-xs font-extrabold",
-                i === 0
-                  ? "bg-(--lavender) text-(--ink)"
-                  : "bg-(--lavender-soft) text-(--ink)/80",
+                i === 0 ? "bg-(--lavender) text-(--ink)" : "bg-(--lavender-soft) text-(--ink)/80",
               )}
             >
               {label}
@@ -1799,7 +1925,8 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
           </div>
         </div>
         <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          Hold, send, and settle with the power of crypto and the ease of cash — on the open network.
+          Hold, send, and settle with the power of crypto and the ease of cash — on the open
+          network.
         </p>
         <Link
           to="/openusd"
@@ -1861,7 +1988,9 @@ function SecurityVisual({ kind }: { kind: (typeof SECURITY_SLIDES)[number]["visu
       <StageCard dark>
         <BookOpen className="h-8 w-8 text-(--lavender)" />
         <p className="mt-5 text-2xl font-extrabold tracking-tight text-white">OpenLedger</p>
-        <p className="mt-2 text-sm text-white/65">Inspect every credit and debit on the public rails.</p>
+        <p className="mt-2 text-sm text-white/65">
+          Inspect every credit and debit on the public rails.
+        </p>
       </StageCard>
     );
   }
@@ -1921,9 +2050,7 @@ function FooterCol({
 }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-        {title}
-      </p>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{title}</p>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
           <li key={link.href + link.label}>

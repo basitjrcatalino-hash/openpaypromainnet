@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
+import { MainTokensHighlight } from "@/components/main-tokens-highlight";
 import {
   OUSD_LOGO_URL,
   OPENPAY_NETWORK_BADGE_URL,
@@ -80,15 +81,15 @@ const DESC =
 const FEATURE_PILLARS = [
   {
     id: "money",
-    title: "Money & OpenUSD",
-    blurb: "One Pro home for network dollars and assets.",
-    logo: OUSD_LOGO_URL,
+    title: "Money · OpenUSD + Pi",
+    blurb: "Main tokens first — then majors and OpenTokens.",
+    logos: [OUSD_LOGO_URL, PI_NETWORK_LOGO_URL],
     items: [
-      "OpenUSD (OUSD) — $1 ledger dollar",
+      "OpenUSD (OUSD) — primary $1 ledger dollar",
+      "Pi Network — core Pro asset and OUSD top-up rail",
       "Unified wallet: OUSD, Pi, majors, OpenTokens, NFTs",
       "@username identity on the same ledger",
       "Display currencies (USD, EUR, PI, and more)",
-      "Activity timeline & multi-wallet switching",
     ],
   },
   {
@@ -575,9 +576,13 @@ function PitchPage() {
           The open money network — and OpenPay Pro, the self-custody money app built on it.
         </p>
         <p data-rise className="oppitch-rise oppitch-body mt-7 max-w-2xl text-muted-foreground">
-          Hold, send, and settle in OpenUSD. Trade majors and OpenTokens. Deposit from open rails.
-          Build with Partner API and agents — one public ledger.
+          Hold, send, and settle in <span className="font-bold text-foreground">OpenUSD</span>.{" "}
+          <span className="font-bold text-foreground">Pi Network</span> is a core Pro asset and
+          top-up rail — then majors, OpenTokens, Spot, Perps, and P2P on one public ledger.
         </p>
+        <div data-rise className="oppitch-rise mt-7 max-w-2xl">
+          <MainTokensHighlight tone="lavender" compact />
+        </div>
         <div data-rise className="oppitch-rise mt-9 flex flex-wrap items-center gap-3">
           <a
             href="#thesis"
@@ -713,7 +718,8 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="openusd" num="05" title="OpenUSD" kicker="Network dollar">
+        <Slide id="openusd" num="05" title="OpenUSD + Pi" kicker="Main tokens">
+          <MainTokensHighlight tone="lavender" className="mb-8" />
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
             <div className="flex-1">
               <div className="flex items-center gap-4">
@@ -724,7 +730,9 @@ function PitchPage() {
                 />
                 <div>
                   <h3 className="opblog-h2">OpenUSD</h3>
-                  <p className="text-lg font-semibold text-primary">OUSD · tracks ~$1 USD</p>
+                  <p className="text-lg font-semibold text-primary">
+                    OUSD · primary $1 ledger dollar
+                  </p>
                 </div>
               </div>
               <p className="oppitch-body mt-6 max-w-xl text-muted-foreground">
@@ -735,7 +743,7 @@ function PitchPage() {
                 {[
                   "Settles OpenDEX swaps, Tokens buys, Spot & Perpetuals",
                   "Denominates Partner API and OpenLedger activity",
-                  "Funded via OpenPay Balance, Pi, cards, USDC, Solana Pay, Circle, multi-chain",
+                  "Funded via Pi Network, OpenPay Balance, cards, USDC, Solana Pay, Circle, multi-chain",
                 ].map((line) => (
                   <li key={line} className="flex gap-2">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -752,29 +760,41 @@ function PitchPage() {
               </Link>
             </div>
             <div className="oppitch-panel flex-1 p-6 sm:p-8">
-              <p className="oppitch-label text-muted-foreground">This is New Money</p>
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <div className="flex items-center gap-3">
+                <img
+                  src={PI_NETWORK_LOGO_URL}
+                  alt="Pi Network"
+                  className="h-14 w-14 rounded-full object-contain shadow-sm"
+                />
                 <div>
-                  <p className="oppitch-card-title">Power of crypto</p>
-                  <p className="mt-2 oppitch-body text-muted-foreground">
-                    Ledger settlement, APIs, agents, multi-rail top-ups, inspectable credits and
-                    debits.
+                  <h3 className="oppitch-card-title">Pi Network</h3>
+                  <p className="text-base font-semibold text-muted-foreground">
+                    Core Pro asset · top-up rail
                   </p>
                 </div>
+              </div>
+              <p className="oppitch-label mt-6 text-muted-foreground">This is New Money</p>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <div>
-                  <p className="oppitch-card-title">Ease of cash</p>
+                  <p className="oppitch-card-title">OpenUSD</p>
                   <p className="mt-2 oppitch-body text-muted-foreground">
                     One-dollar OUSD thinking for everyday sends, merchant payouts, and clear
                     balances.
                   </p>
                 </div>
+                <div>
+                  <p className="oppitch-card-title">Pi Network</p>
+                  <p className="mt-2 oppitch-body text-muted-foreground">
+                    Hold Pi beside OUSD — pay with π at live price and credit OpenUSD instantly.
+                  </p>
+                </div>
               </div>
               <div className="mt-8 flex items-center gap-3">
-                <img src={BTC_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
+                <img src={PI_NETWORK_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
                 <span className="text-muted-foreground">+</span>
                 <img src={OUSD_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
                 <span className="ml-auto text-sm font-bold text-muted-foreground">
-                  Crypto × Cash
+                  Pi × OpenUSD
                 </span>
               </div>
             </div>

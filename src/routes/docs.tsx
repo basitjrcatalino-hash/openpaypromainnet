@@ -81,7 +81,13 @@ const PATHS = [
     icon: Layers,
   },
   {
-    title: "Merchant / checkout",
+    title: "Merchant / Pro Pay",
+    body: "Accept OpenPay Pro payment methods. Set receive @username / wallet. Charges + inbound + dashboard earnings.",
+    href: "/docs/pro-pay",
+    icon: Wallet,
+  },
+  {
+    title: "Merchant / checkout (classic)",
     body: "Accept OpenPay Balance via PayButton charges. Poll charge status. Optional Connect for @username identity.",
     href: "/docs/openpay",
     icon: Wallet,
@@ -153,6 +159,7 @@ const FEATURES = [
 
 const RAW_DOCS = [
   { label: "AI Partner Pack (start here)", href: "/api/public/docs/ai-partner" },
+  { label: "Pro Pay · Merchant", href: "/api/public/docs/pro-pay" },
   { label: "OpenAPI (Partner + Pro)", href: "/api/public/docs/openapi" },
   { label: "OpenPay integration + auth", href: "/api/public/docs/openpay" },
   { label: "OpenPay Pro auth only", href: "/api/public/docs/openpay-auth" },

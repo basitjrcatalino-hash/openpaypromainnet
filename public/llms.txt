@@ -5,6 +5,7 @@
 ## AI-first partner pack (start here)
 
 - [AI Partner Integration Pack](https://openpaypro.space/docs/ai): Single guide for OpenAI, ChatGPT, Cursor, Lovable, Replit, Claude — auth, pay, top-up, inbound, ledger.
+- [Pro Pay · Merchant](https://openpaypro.space/docs/pro-pay): Partner checkout — charges, receive @username/wallet, inbound earnings, Top Up methods, env & copy-paste.
 - [Raw AI guide (markdown)](https://openpaypro.space/api/public/docs/ai-partner): Paste into any LLM / agent.
 - [Full dump](https://openpaypro.space/llms-full.txt): Consolidated partner + Pro docs for long-context agents.
 - [OpenAPI](https://openpaypro.space/api/public/docs/openapi): Machine-readable Partner Transfer + Pro inbound/ledger.
@@ -37,6 +38,7 @@
 ## Raw markdown feeds (CORS *)
 
 - https://openpaypro.space/api/public/docs/ai-partner
+- https://openpaypro.space/api/public/docs/pro-pay
 - https://openpaypro.space/api/public/docs/openapi
 - https://openpaypro.space/api/public/docs/openpay
 - https://openpaypro.space/api/public/docs/openpay-auth

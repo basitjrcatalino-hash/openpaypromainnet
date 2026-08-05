@@ -8,7 +8,9 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 | --- | --- |
 | Developer Portal | https://openpaypro.space/docs |
 | **AI Partner Pack** (OpenAI / ChatGPT / Cursor / Claude) | https://openpaypro.space/docs/ai |
+| **Pro Pay · Merchant checkout** | https://openpaypro.space/docs/pro-pay |
 | AI guide (raw markdown) | https://openpaypro.space/api/public/docs/ai-partner |
+| Pro Pay (raw markdown) | https://openpaypro.space/api/public/docs/pro-pay |
 | OpenAPI | https://openpaypro.space/api/public/docs/openapi |
 | `llms.txt` | https://openpaypro.space/llms.txt |
 | `llms-full.txt` | https://openpaypro.space/llms-full.txt |
@@ -67,6 +69,7 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 ## Raw markdown feeds
 
 - `/api/public/docs/ai-partner`
+- `/api/public/docs/pro-pay`
 - `/api/public/docs/openapi`
 - `/api/public/docs/openpay`
 - `/api/public/docs/openpay-auth`

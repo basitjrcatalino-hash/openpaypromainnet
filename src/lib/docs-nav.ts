@@ -37,6 +37,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
         desc: "OAuth, PayButton, inbound, auth",
       },
       {
+        label: "Pro Pay · Merchant",
+        href: "/docs/pro-pay",
+        desc: "Checkout, receive wallet, earnings dashboard",
+      },
+      {
         label: "Exchange · OUSD",
         href: "/docs/exchange",
         desc: "Deposit, withdraw, swap, reconcile",

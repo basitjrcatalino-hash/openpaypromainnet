@@ -77,6 +77,7 @@ import { Route as DocsLedgerRouteImport } from './routes/docs.ledger'
 import { Route as DocsMcpRouteImport } from './routes/docs.mcp'
 import { Route as DocsMoneyRouteImport } from './routes/docs.money'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
+import { Route as DocsProPayRouteImport } from './routes/docs.pro-pay'
 import { Route as DocsTokensRouteImport } from './routes/docs.tokens'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
 import { Route as PayToRouteImport } from './routes/pay.$to'
@@ -172,6 +173,8 @@ import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/publi
 import { Route as ApiPublicDocsOpenpayToProRouteImport } from './routes/api/public/docs/openpay-to-pro'
 import { Route as ApiPublicDocsPartnerTransferRouteImport } from './routes/api/public/docs/partner-transfer'
 import { Route as ApiPublicDocsPortalRouteImport } from './routes/api/public/docs/portal'
+import { Route as ApiPublicDocsProPayRouteImport } from './routes/api/public/docs/pro-pay'
+import { Route as ApiPublicDocsQrpayProRouteImport } from './routes/api/public/docs/qrpay-pro'
 import { Route as ApiPublicDocsTokensRouteImport } from './routes/api/public/docs/tokens'
 import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
@@ -526,6 +529,11 @@ const DocsMoneyRoute = DocsMoneyRouteImport.update({
 const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
   id: '/openpay',
   path: '/openpay',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsProPayRoute = DocsProPayRouteImport.update({
+  id: '/pro-pay',
+  path: '/pro-pay',
   getParentRoute: () => DocsRoute,
 } as any)
 const DocsTokensRoute = DocsTokensRouteImport.update({
@@ -1043,6 +1051,16 @@ const ApiPublicDocsPortalRoute = ApiPublicDocsPortalRouteImport.update({
   path: '/api/public/docs/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDocsProPayRoute = ApiPublicDocsProPayRouteImport.update({
+  id: '/api/public/docs/pro-pay',
+  path: '/api/public/docs/pro-pay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsQrpayProRoute = ApiPublicDocsQrpayProRouteImport.update({
+  id: '/api/public/docs/qrpay-pro',
+  path: '/api/public/docs/qrpay-pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDocsTokensRoute = ApiPublicDocsTokensRouteImport.update({
   id: '/api/public/docs/tokens',
   path: '/api/public/docs/tokens',
@@ -1185,6 +1203,7 @@ export interface FileRoutesByFullPath {
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
@@ -1280,6 +1299,8 @@ export interface FileRoutesByFullPath {
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
   '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
   '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
+  '/api/public/docs/pro-pay': typeof ApiPublicDocsProPayRoute
+  '/api/public/docs/qrpay-pro': typeof ApiPublicDocsQrpayProRoute
   '/api/public/docs/tokens': typeof ApiPublicDocsTokensRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
@@ -1362,6 +1383,7 @@ export interface FileRoutesByTo {
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
@@ -1457,6 +1479,8 @@ export interface FileRoutesByTo {
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
   '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
   '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
+  '/api/public/docs/pro-pay': typeof ApiPublicDocsProPayRoute
+  '/api/public/docs/qrpay-pro': typeof ApiPublicDocsQrpayProRoute
   '/api/public/docs/tokens': typeof ApiPublicDocsTokensRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
@@ -1541,6 +1565,7 @@ export interface FileRoutesById {
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
   '/docs/openpay': typeof DocsOpenpayRoute
+  '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
@@ -1636,6 +1661,8 @@ export interface FileRoutesById {
   '/api/public/docs/openpay-to-pro': typeof ApiPublicDocsOpenpayToProRoute
   '/api/public/docs/partner-transfer': typeof ApiPublicDocsPartnerTransferRoute
   '/api/public/docs/portal': typeof ApiPublicDocsPortalRoute
+  '/api/public/docs/pro-pay': typeof ApiPublicDocsProPayRoute
+  '/api/public/docs/qrpay-pro': typeof ApiPublicDocsQrpayProRoute
   '/api/public/docs/tokens': typeof ApiPublicDocsTokensRoute
   '/api/public/ledger/entries': typeof ApiPublicLedgerEntriesRouteWithChildren
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
@@ -1720,6 +1747,7 @@ export interface FileRouteTypes {
     | '/docs/mcp'
     | '/docs/money'
     | '/docs/openpay'
+    | '/docs/pro-pay'
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
@@ -1815,6 +1843,8 @@ export interface FileRouteTypes {
     | '/api/public/docs/openpay-to-pro'
     | '/api/public/docs/partner-transfer'
     | '/api/public/docs/portal'
+    | '/api/public/docs/pro-pay'
+    | '/api/public/docs/qrpay-pro'
     | '/api/public/docs/tokens'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
@@ -1897,6 +1927,7 @@ export interface FileRouteTypes {
     | '/docs/mcp'
     | '/docs/money'
     | '/docs/openpay'
+    | '/docs/pro-pay'
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
@@ -1992,6 +2023,8 @@ export interface FileRouteTypes {
     | '/api/public/docs/openpay-to-pro'
     | '/api/public/docs/partner-transfer'
     | '/api/public/docs/portal'
+    | '/api/public/docs/pro-pay'
+    | '/api/public/docs/qrpay-pro'
     | '/api/public/docs/tokens'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
@@ -2075,6 +2108,7 @@ export interface FileRouteTypes {
     | '/docs/mcp'
     | '/docs/money'
     | '/docs/openpay'
+    | '/docs/pro-pay'
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
@@ -2170,6 +2204,8 @@ export interface FileRouteTypes {
     | '/api/public/docs/openpay-to-pro'
     | '/api/public/docs/partner-transfer'
     | '/api/public/docs/portal'
+    | '/api/public/docs/pro-pay'
+    | '/api/public/docs/qrpay-pro'
     | '/api/public/docs/tokens'
     | '/api/public/ledger/entries'
     | '/api/public/ledger/stats'
@@ -2253,6 +2289,8 @@ export interface RootRouteChildren {
   ApiPublicDocsOpenpayToProRoute: typeof ApiPublicDocsOpenpayToProRoute
   ApiPublicDocsPartnerTransferRoute: typeof ApiPublicDocsPartnerTransferRoute
   ApiPublicDocsPortalRoute: typeof ApiPublicDocsPortalRoute
+  ApiPublicDocsProPayRoute: typeof ApiPublicDocsProPayRoute
+  ApiPublicDocsQrpayProRoute: typeof ApiPublicDocsQrpayProRoute
   ApiPublicDocsTokensRoute: typeof ApiPublicDocsTokensRoute
   ApiPublicLedgerEntriesRoute: typeof ApiPublicLedgerEntriesRouteWithChildren
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
@@ -2743,6 +2781,13 @@ declare module '@tanstack/react-router' {
       path: '/openpay'
       fullPath: '/docs/openpay'
       preLoaderRoute: typeof DocsOpenpayRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/pro-pay': {
+      id: '/docs/pro-pay'
+      path: '/pro-pay'
+      fullPath: '/docs/pro-pay'
+      preLoaderRoute: typeof DocsProPayRouteImport
       parentRoute: typeof DocsRoute
     }
     '/docs/tokens': {
@@ -3410,6 +3455,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDocsPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/docs/pro-pay': {
+      id: '/api/public/docs/pro-pay'
+      path: '/api/public/docs/pro-pay'
+      fullPath: '/api/public/docs/pro-pay'
+      preLoaderRoute: typeof ApiPublicDocsProPayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/qrpay-pro': {
+      id: '/api/public/docs/qrpay-pro'
+      path: '/api/public/docs/qrpay-pro'
+      fullPath: '/api/public/docs/qrpay-pro'
+      preLoaderRoute: typeof ApiPublicDocsQrpayProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/docs/tokens': {
       id: '/api/public/docs/tokens'
       path: '/api/public/docs/tokens'
@@ -3723,6 +3782,7 @@ interface DocsRouteChildren {
   DocsMcpRoute: typeof DocsMcpRoute
   DocsMoneyRoute: typeof DocsMoneyRoute
   DocsOpenpayRoute: typeof DocsOpenpayRoute
+  DocsProPayRoute: typeof DocsProPayRoute
   DocsTokensRoute: typeof DocsTokensRoute
 }
 
@@ -3737,6 +3797,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsMcpRoute: DocsMcpRoute,
   DocsMoneyRoute: DocsMoneyRoute,
   DocsOpenpayRoute: DocsOpenpayRoute,
+  DocsProPayRoute: DocsProPayRoute,
   DocsTokensRoute: DocsTokensRoute,
 }
 
@@ -3825,6 +3886,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDocsOpenpayToProRoute: ApiPublicDocsOpenpayToProRoute,
   ApiPublicDocsPartnerTransferRoute: ApiPublicDocsPartnerTransferRoute,
   ApiPublicDocsPortalRoute: ApiPublicDocsPortalRoute,
+  ApiPublicDocsProPayRoute: ApiPublicDocsProPayRoute,
+  ApiPublicDocsQrpayProRoute: ApiPublicDocsQrpayProRoute,
   ApiPublicDocsTokensRoute: ApiPublicDocsTokensRoute,
   ApiPublicLedgerEntriesRoute: ApiPublicLedgerEntriesRouteWithChildren,
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,

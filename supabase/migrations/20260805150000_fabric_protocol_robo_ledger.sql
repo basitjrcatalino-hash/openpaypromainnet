@@ -4,12 +4,13 @@ alter table public.wallets
 
 comment on column public.wallets.robo_balance is 'OpenPay Pro ledger ROBO (Fabric Protocol) — Spot/Perp listed major';
 
-create or replace function public.p2p_balance_column(asset text)
+create or replace function public.p2p_balance_column(_asset text)
 returns text
 language sql
 immutable
+set search_path = public
 as $$
-  select case upper(coalesce(asset, ''))
+  select case upper(coalesce(_asset, ''))
     when 'OUSD' then 'ousd_balance'
     when 'BTC' then 'btc_balance'
     when 'ETH' then 'eth_balance'

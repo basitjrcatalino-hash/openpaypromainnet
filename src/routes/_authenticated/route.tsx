@@ -29,7 +29,6 @@ import {
   BookOpen,
   Users,
   CircleDollarSign,
-  Layers,
   CandlestickChart,
   PanelLeftClose,
   PanelLeftOpen,
@@ -37,7 +36,7 @@ import {
   HelpCircle,
   MessageCircle,
   Bot,
-  Sparkles,
+  Search,
   Code2,
   Gift,
   KeyRound,
@@ -117,7 +116,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", labelKey: "nav.home", icon: Compass },
-  { to: "/assets", labelKey: "nav.assets", icon: Layers },
+  { to: "/assets", labelKey: "nav.assets", icon: Wallet },
   { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine },
   { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode },
@@ -150,9 +149,9 @@ function navLabel(t: (key: string) => string, labelKey: string) {
 /** Primary mobile tabs — 5 max. Deposit / P2P / History / OpenToken live in More. */
 const FOOTER_TABS = [
   { to: "/dashboard", labelKey: "nav.home", icon: Compass },
-  { to: "/assets", labelKey: "nav.assets", icon: Layers },
+  { to: "/assets", labelKey: "nav.assets", icon: Wallet },
   { to: "/trade", labelKey: "nav.trade", icon: CandlestickChart },
-  { to: "/tokens", labelKey: "nav.discover", icon: Sparkles },
+  { to: "/tokens", labelKey: "nav.discover", icon: Search },
 ] as const;
 
 const MORE_NAV = [

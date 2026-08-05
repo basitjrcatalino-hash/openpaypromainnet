@@ -24,6 +24,18 @@ export type WalletNetworkId =
   | "sui"
   | "near"
   | "polkadot"
+  | "litecoin"
+  | "hedera"
+  | "monero"
+  | "aptos"
+  | "cosmos"
+  | "algorand"
+  | "filecoin"
+  | "internet-computer"
+  | "optimism"
+  | "arbitrum"
+  | "mantle"
+  | "cronos"
   | "monad"
   | "hyperevm"
   | "pi";
@@ -182,7 +194,7 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     label: "Base",
     short: "Base",
     match: "Base",
-    status: "soon",
+    status: "live",
     logoUrl: "https://assets.coingecko.com/asset_platforms/images/131/small/base.jpeg",
     accent: "#0052FF",
   },
@@ -191,7 +203,7 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     label: "Polygon",
     short: "Polygon",
     match: "Polygon",
-    status: "soon",
+    status: "live",
     logoUrl: "https://assets.coingecko.com/coins/images/4713/large/polygon.png",
     accent: "#8247E5",
   },
@@ -221,6 +233,114 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     status: "live",
     logoUrl: "https://coin-images.coingecko.com/coins/images/12171/large/polkadot.jpg",
     accent: "#E6007A",
+  },
+  {
+    id: "litecoin",
+    label: "Litecoin",
+    short: "LTC",
+    match: "Litecoin",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/2/large/litecoin.png",
+    accent: "#345D9D",
+  },
+  {
+    id: "hedera",
+    label: "Hedera",
+    short: "HBAR",
+    match: "Hedera",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/3441/large/Hedera_Hashgraph_logo.png",
+    accent: "#000000",
+  },
+  {
+    id: "monero",
+    label: "Monero",
+    short: "XMR",
+    match: "Monero",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/69/large/monero_logo.png",
+    accent: "#FF6600",
+  },
+  {
+    id: "aptos",
+    label: "Aptos",
+    short: "APT",
+    match: "Aptos",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/26455/large/aptos_round.png",
+    accent: "#000000",
+  },
+  {
+    id: "cosmos",
+    label: "Cosmos",
+    short: "ATOM",
+    match: "Cosmos",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/1481/large/cosmos_hub.png",
+    accent: "#2E3148",
+  },
+  {
+    id: "algorand",
+    label: "Algorand",
+    short: "ALGO",
+    match: "Algorand",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/4380/large/download.png",
+    accent: "#000000",
+  },
+  {
+    id: "filecoin",
+    label: "Filecoin",
+    short: "FIL",
+    match: "Filecoin",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/12817/large/filecoin.png",
+    accent: "#0090FF",
+  },
+  {
+    id: "internet-computer",
+    label: "Internet Computer",
+    short: "ICP",
+    match: "Internet Computer",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/14495/large/Internet_Computer_logo.png",
+    accent: "#29ABE2",
+  },
+  {
+    id: "optimism",
+    label: "Optimism",
+    short: "OP",
+    match: "Optimism",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/25244/large/Optimism.png",
+    accent: "#FF0420",
+  },
+  {
+    id: "arbitrum",
+    label: "Arbitrum",
+    short: "ARB",
+    match: "Arbitrum",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/16547/large/photo_2023-03-29_21.47.00.jpeg",
+    accent: "#28A0F0",
+  },
+  {
+    id: "mantle",
+    label: "Mantle",
+    short: "MNT",
+    match: "Mantle",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/30980/large/token-logo.png",
+    accent: "#000000",
+  },
+  {
+    id: "cronos",
+    label: "Cronos",
+    short: "CRO",
+    match: "Cronos",
+    status: "live",
+    logoUrl: "https://assets.coingecko.com/coins/images/7310/large/cro_token_logo.png",
+    accent: "#002D74",
   },
   {
     id: "monad",

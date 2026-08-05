@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Gift, Loader2, Sparkles } from "lucide-react";
+import { Check, Gift, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,7 @@ function MerchantPage() {
       dek="Become a merchant with KYC, your details, and 100 OUSD in P2P. Admin approves before you create ads. Stay active 30 days for Verified — hit order milestones for OUSD bonuses."
       crumb="Profile"
       eyebrow="Apply · Verified · Bonuses"
-      hero={{ from: "#fde68a", to: "#c4b5fd", glyph: "✦" }}
+      hero={{ from: "#fde68a", to: "#c4b5fd", glyph: "★" }}
       actions={
         <>
           <P2pHubPill to="/p2p/create" primary>
@@ -181,7 +181,7 @@ function MerchantPage() {
     >
       <div className="rounded-3xl border border-border bg-accent p-5">
         <p className="inline-flex items-center gap-1.5 text-base font-bold">
-          <Sparkles className="h-4 w-4" /> List ads on the P2P marketplace
+          <Store className="h-4 w-4" /> List ads on the P2P marketplace
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <p className="text-sm font-bold">

@@ -52,7 +52,7 @@ import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { PortfolioAccountCard } from "@/components/assets/PortfolioAccountCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { readMajorBalance } from "@/lib/ledger-majors";
+import { LEDGER_MAJOR_IDS, readMajorBalance } from "@/lib/ledger-majors";
 import { useServerFn } from "@tanstack/react-start";
 import { getAccountBalances } from "@/lib/account-transfer.functions";
 import { portfolioUsdTotals } from "@/lib/account-portfolio";
@@ -199,7 +199,7 @@ function Dashboard() {
         badge: "Earn",
       },
     ];
-    for (const id of Object.keys(MAJOR_TOKENS) as Array<keyof typeof MAJOR_TOKENS>) {
+    for (const id of LEDGER_MAJOR_IDS) {
       const def = MAJOR_TOKENS[id];
       const m = majorMarketById(majorMarkets, id);
       rows.push({

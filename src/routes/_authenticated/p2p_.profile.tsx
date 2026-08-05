@@ -12,7 +12,6 @@ import {
   Scale,
   Settings,
   Shield,
-  Sparkles,
   Star,
   Wallet,
 } from "lucide-react";
@@ -57,7 +56,7 @@ const MENU = [
   { to: "/p2p/support", icon: Headset, label: "Customer support", desc: "Disputes & help" },
   {
     to: "/p2p/merchant",
-    icon: Sparkles,
+    icon: BadgeCheck,
     label: "Merchant program",
     desc: "KYC · 100 OUSD · bonuses",
   },

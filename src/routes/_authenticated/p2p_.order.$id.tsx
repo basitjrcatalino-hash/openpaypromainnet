@@ -14,7 +14,7 @@ import {
   Plus,
   Send,
   ShieldCheck,
-  Sparkles,
+  Star,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -592,7 +592,7 @@ function TradeRoom() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
               <p className="truncate text-[14px] font-extrabold">{counterparty}</p>
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+              <Star className="h-3.5 w-3.5 shrink-0 text-amber-400" />
             </div>
             <p className="text-[11px] text-muted-foreground">Merchant</p>
           </div>

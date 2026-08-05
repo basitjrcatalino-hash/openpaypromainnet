@@ -8,7 +8,7 @@ import {
   Link2,
   Network,
   ScrollText,
-  Sparkles,
+  Shield,
   Wallet,
 } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
@@ -248,7 +248,7 @@ function AboutPage() {
               to="/wiki"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold press"
             >
-              <Sparkles className="h-4 w-4" />
+              <Shield className="h-4 w-4" />
               Product wiki
             </Link>
             <Link

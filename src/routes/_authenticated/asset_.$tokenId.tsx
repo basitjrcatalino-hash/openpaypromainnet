@@ -66,6 +66,7 @@ import {
 } from "@/lib/major-tokens";
 import {
   LEDGER_BALANCE_COLUMN,
+  isLedgerMajorId,
   type LedgerAssetCode,
   walletMajorSelect,
 } from "@/lib/ledger-majors";
@@ -306,7 +307,7 @@ function PhantomAssetDetail() {
 
   const balance = isOusd
     ? Number(wallet?.ousd_balance ?? 0)
-    : isMajor && majorDef
+    : isMajor && majorDef && isLedgerMajorId(majorDef.id)
       ? Number(
           (wallet as Record<string, unknown> | null | undefined)?.[
             LEDGER_BALANCE_COLUMN[majorDef.id]
@@ -327,7 +328,12 @@ function PhantomAssetDetail() {
       return;
     }
     if (isMajor && majorDef) {
-      // Receive picker keys networks by major id (solana→sol alias only for SOL).
+      // Receive picker keys networks by ledger major id only.
+      if (!isLedgerMajorId(majorDef.id)) {
+        toast.message("Receive for this listing is coming soon — trade it on Spot / Perp.");
+        navigate({ to: "/trade" });
+        return;
+      }
       navigate({
         to: "/wallet/receive",
         search: {

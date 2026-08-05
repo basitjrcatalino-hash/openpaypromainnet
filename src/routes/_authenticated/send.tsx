@@ -34,8 +34,8 @@ import { sendViaOpenPay, resolveOpenPayAccount, getOpenPayLinkStatus, startOpenP
 import { stashOpenPayConnectReturn } from "@/lib/openpay-connect-return";
 import { formatNumber, formatUSD, shortAddress } from "@/lib/wallet-utils";
 import { cn } from "@/lib/utils";
-import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { LEDGER_ASSET_CODES, readMajorBalance, type LedgerAssetCode } from "@/lib/ledger-majors";
+import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { LEDGER_ASSET_CODES, LEDGER_MAJOR_IDS, readMajorBalance, type LedgerAssetCode } from "@/lib/ledger-majors";
 import {
   isSystemCounterparty,
   loadRecentRecipients,
@@ -221,7 +221,7 @@ function SendPage() {
         logoUrl: null,
       },
     ];
-    for (const id of MAJOR_TOKEN_IDS) {
+    for (const id of LEDGER_MAJOR_IDS) {
       const def = MAJOR_TOKENS[id];
       const bal = readMajorBalance(wallet as Record<string, unknown> | null, id);
       if (bal > 0 || search.asset === def.symbol) {

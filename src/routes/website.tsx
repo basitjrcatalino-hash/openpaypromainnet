@@ -17,7 +17,8 @@ import {
   QrCode,
   Send,
   ShieldCheck,
-  Sparkles,
+  Star,
+  Coins,
   Square,
   Volume2,
   Wallet,
@@ -221,7 +222,7 @@ const FEATURE_BENTO = [
     body: "Mint community coins on bonding curves and trade against OUSD.",
     tag: "Trade",
     href: "/website#feature-trading",
-    icon: Sparkles,
+    icon: Coins,
   },
   {
     title: "Multi-chain in",
@@ -1431,7 +1432,7 @@ function FeatureBand<T extends string>({
       >
         <div>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground shadow-sm ring-1 ring-black/4">
-            <Sparkles className="h-3.5 w-3.5 text-(--brand)" />
+            <Star className="h-3.5 w-3.5 text-(--brand)" />
             {eyebrow}
           </div>
           <ul className="space-y-1">
@@ -1607,7 +1608,7 @@ function MoneyVisual({ kind }: { kind: (typeof MONEY_SLIDES)[number]["visual"] }
             <p className="text-xl font-extrabold tracking-tight">$4,820.40</p>
           </div>
         </div>
-        <Sparkles className="h-5 w-5 text-(--brand)" strokeWidth={1.75} />
+        <Wallet className="h-5 w-5 text-(--brand)" strokeWidth={1.75} />
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {[

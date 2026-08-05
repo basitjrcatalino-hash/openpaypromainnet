@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, Loader2, RefreshCw, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { BadgeCheck, ChevronDown, Loader2, RefreshCw, SlidersHorizontal, Info, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,7 +144,7 @@ function P2PMarketplace() {
     <div className="min-h-[70dvh]">
       {bannerOpen ? (
         <div className="mx-4 mt-2 flex items-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/8 px-3 py-2.5 md:mx-5">
-          <Sparkles className="h-4 w-4 shrink-0 text-sky-500" />
+          <Info className="h-4 w-4 shrink-0 text-sky-500" />
           <p className="flex-1 text-[12px] font-medium text-foreground/90">
             Get more event updates and security insights.
           </p>
@@ -264,7 +264,7 @@ function P2PMarketplace() {
                     <div className="flex min-w-0 flex-wrap items-center gap-1">
                       <p className="truncate text-[14px] font-bold leading-tight">{name}</p>
                       {verified ? (
-                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#4DA3FF]" />
+                        <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#4DA3FF]" />
                       ) : null}
                       <MerchantBadge merchant={merch} />
                     </div>

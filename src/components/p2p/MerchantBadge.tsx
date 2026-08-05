@@ -1,4 +1,4 @@
-import { BadgeCheck, Sparkles, Star, Store } from "lucide-react";
+import { BadgeCheck, Star, Store } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { P2PMerchantPublic, P2PMerchantTier } from "@/lib/p2p";
@@ -31,7 +31,7 @@ export function MerchantBadge({
           )}
           title="Super Merchant"
         >
-          <Sparkles className={icon} />
+          <Star className={icon} />
           Super
         </span>
       ) : verified ? (

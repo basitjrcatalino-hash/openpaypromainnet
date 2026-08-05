@@ -24,8 +24,8 @@ import { Button } from "@/components/ui/button";
 import { OusdIcon } from "@/components/ousd-icon";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
 import { supabase } from "@/integrations/supabase/client";
-import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
-import { readMajorBalance } from "@/lib/ledger-majors";
+import { MAJOR_TOKENS, fetchMajorMarkets, majorMarketById } from "@/lib/major-tokens";
+import { LEDGER_MAJOR_IDS, readMajorBalance } from "@/lib/ledger-majors";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
@@ -106,7 +106,7 @@ function CryptoWalletPage() {
       },
     ];
 
-    for (const id of MAJOR_TOKEN_IDS) {
+    for (const id of LEDGER_MAJOR_IDS) {
       const def = MAJOR_TOKENS[id];
       rows.push({
         key: id,
@@ -233,7 +233,7 @@ function CryptoWalletPage() {
                     isOusd: true,
                     logoUrl: OUSD_LOGO_URL,
                   },
-                  ...MAJOR_TOKEN_IDS.map((id) => ({
+                  ...LEDGER_MAJOR_IDS.map((id) => ({
                     network: id,
                     label: MAJOR_TOKENS[id].symbol,
                     asset: MAJOR_TOKENS[id].symbol,
@@ -276,7 +276,7 @@ function CryptoWalletPage() {
             <ul className="overflow-hidden rounded-2xl border border-border bg-card">
               {assets.map((a, i) => {
                 const usd = a.balance * (a.priceUsd > 0 ? a.priceUsd : 0);
-                const isMajor = a.key === "ousd" || MAJOR_TOKEN_IDS.includes(a.key as (typeof MAJOR_TOKEN_IDS)[number]);
+                const isMajor = a.key === "ousd" || LEDGER_MAJOR_IDS.includes(a.key as (typeof LEDGER_MAJOR_IDS)[number]);
                 return (
                   <li key={a.key} className={cn(i > 0 && "border-t border-border")}>
                     <Link
@@ -286,7 +286,7 @@ function CryptoWalletPage() {
                           ? {
                               network: (a.key === "ousd" ? "openpay" : a.key) as
                                 | "openpay"
-                                | import("@/lib/major-tokens").MajorTokenId,
+                                | import("@/lib/ledger-majors").LedgerMajorId,
                               asset: a.symbol as import("@/lib/ledger-majors").LedgerAssetCode,
                             }
                           : { network: "openpay", token: a.key }

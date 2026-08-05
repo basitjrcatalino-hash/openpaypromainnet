@@ -3,7 +3,7 @@
  * Swap / buy / send / receive use CoinGecko USD prices (custodial ledger, not on-chain).
  */
 import type { MajorTokenId } from "@/lib/major-tokens";
-import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, isMajorTokenId } from "@/lib/major-tokens";
+import { MAJOR_TOKENS, isMajorTokenId } from "@/lib/major-tokens";
 import type { SwapNetworkId } from "@/lib/swap-networks";
 
 export const OUSD_SWAP_ID = "__ousd__";
@@ -53,7 +53,62 @@ export const AAVE_SWAP_ID = "__aave__";
 export const DOT_SWAP_ID = "__dot__";
 export const PUMP_SWAP_ID = "__pump__";
 
-export type LedgerMajorId = MajorTokenId;
+/** Ledger-backed majors only (wallet balance columns / swap). Display catalog may be wider. */
+export const LEDGER_MAJOR_SWAP_IDS = {
+  btc: BTC_SWAP_ID,
+  eth: ETH_SWAP_ID,
+  sol: SOL_SWAP_ID,
+  pi: PI_SWAP_ID,
+  usdc: USDC_SWAP_ID,
+  usdt: USDT_SWAP_ID,
+  pyusd: PYUSD_SWAP_ID,
+  usdg: USDG_SWAP_ID,
+  usd1: USD1_SWAP_ID,
+  cash: CASH_SWAP_ID,
+  eurc: EURC_SWAP_ID,
+  hype: HYPE_SWAP_ID,
+  zec: ZEC_SWAP_ID,
+  tslax: TSLAX_SWAP_ID,
+  nflxx: NFLXX_SWAP_ID,
+  googlx: GOOGLX_SWAP_ID,
+  bnb: BNB_SWAP_ID,
+  uni: UNI_SWAP_ID,
+  okb: OKB_SWAP_ID,
+  gt: GT_SWAP_ID,
+  bgb: BGB_SWAP_ID,
+  cake: CAKE_SWAP_ID,
+  jup: JUP_SWAP_ID,
+  ron: RON_SWAP_ID,
+  xrp: XRP_SWAP_ID,
+  trx: TRX_SWAP_ID,
+  doge: DOGE_SWAP_ID,
+  ada: ADA_SWAP_ID,
+  link: LINK_SWAP_ID,
+  xlm: XLM_SWAP_ID,
+  bch: BCH_SWAP_ID,
+  gram: GRAM_SWAP_ID,
+  avax: AVAX_SWAP_ID,
+  sui: SUI_SWAP_ID,
+  xaut: XAUT_SWAP_ID,
+  ondo: ONDO_SWAP_ID,
+  near: NEAR_SWAP_ID,
+  usdy: USDY_SWAP_ID,
+  paxg: PAXG_SWAP_ID,
+  wlfi: WLFI_SWAP_ID,
+  aster: ASTER_SWAP_ID,
+  rlusd: RLUSD_SWAP_ID,
+  aave: AAVE_SWAP_ID,
+  dot: DOT_SWAP_ID,
+  pump: PUMP_SWAP_ID,
+} as const;
+
+export type LedgerMajorId = keyof typeof LEDGER_MAJOR_SWAP_IDS;
+
+export const LEDGER_MAJOR_IDS = Object.keys(LEDGER_MAJOR_SWAP_IDS) as LedgerMajorId[];
+
+export function isLedgerMajorId(id: string): id is LedgerMajorId {
+  return Object.prototype.hasOwnProperty.call(LEDGER_MAJOR_SWAP_IDS, id);
+}
 
 export type LedgerAssetCode =
   | "OUSD"
@@ -155,54 +210,6 @@ export const LEDGER_ASSET_CODES = [
   "OUSD",
   ...LEDGER_MAJOR_ASSET_CODES,
 ] as const satisfies ReadonlyArray<LedgerAssetCode>;
-
-export const LEDGER_MAJOR_SWAP_IDS: Record<LedgerMajorId, string> = {
-  btc: BTC_SWAP_ID,
-  eth: ETH_SWAP_ID,
-  sol: SOL_SWAP_ID,
-  pi: PI_SWAP_ID,
-  usdc: USDC_SWAP_ID,
-  usdt: USDT_SWAP_ID,
-  pyusd: PYUSD_SWAP_ID,
-  usdg: USDG_SWAP_ID,
-  usd1: USD1_SWAP_ID,
-  cash: CASH_SWAP_ID,
-  eurc: EURC_SWAP_ID,
-  hype: HYPE_SWAP_ID,
-  zec: ZEC_SWAP_ID,
-  tslax: TSLAX_SWAP_ID,
-  nflxx: NFLXX_SWAP_ID,
-  googlx: GOOGLX_SWAP_ID,
-  bnb: BNB_SWAP_ID,
-  uni: UNI_SWAP_ID,
-  okb: OKB_SWAP_ID,
-  gt: GT_SWAP_ID,
-  bgb: BGB_SWAP_ID,
-  cake: CAKE_SWAP_ID,
-  jup: JUP_SWAP_ID,
-  ron: RON_SWAP_ID,
-  xrp: XRP_SWAP_ID,
-  trx: TRX_SWAP_ID,
-  doge: DOGE_SWAP_ID,
-  ada: ADA_SWAP_ID,
-  link: LINK_SWAP_ID,
-  xlm: XLM_SWAP_ID,
-  bch: BCH_SWAP_ID,
-  gram: GRAM_SWAP_ID,
-  avax: AVAX_SWAP_ID,
-  sui: SUI_SWAP_ID,
-  xaut: XAUT_SWAP_ID,
-  ondo: ONDO_SWAP_ID,
-  near: NEAR_SWAP_ID,
-  usdy: USDY_SWAP_ID,
-  paxg: PAXG_SWAP_ID,
-  wlfi: WLFI_SWAP_ID,
-  aster: ASTER_SWAP_ID,
-  rlusd: RLUSD_SWAP_ID,
-  aave: AAVE_SWAP_ID,
-  dot: DOT_SWAP_ID,
-  pump: PUMP_SWAP_ID,
-};
 
 export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
   btc: "btc_balance",
@@ -346,7 +353,10 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
 };
 
 export function isLedgerMajorSwapId(id: string): boolean {
-  return id in SWAP_ID_TO_MAJOR || Object.values(LEDGER_MAJOR_SWAP_IDS).includes(id);
+  return (
+    id in SWAP_ID_TO_MAJOR ||
+    (Object.values(LEDGER_MAJOR_SWAP_IDS) as string[]).includes(id)
+  );
 }
 
 export function majorIdFromSwapId(id: string): LedgerMajorId | null {
@@ -363,7 +373,7 @@ export function ledgerAssetFromMajor(id: LedgerMajorId): Exclude<LedgerAssetCode
 
 export function majorIdFromAssetCode(code: string): LedgerMajorId | null {
   const c = code.toUpperCase();
-  for (const id of MAJOR_TOKEN_IDS) {
+  for (const id of LEDGER_MAJOR_IDS) {
     if (MAJOR_TOKENS[id].symbol.toUpperCase() === c) return id;
   }
   return null;
@@ -559,7 +569,7 @@ export function setCachedPiUsdPrice(price: number): void {
 }
 
 export async function fetchMajorUsdPrices(
-  ids: LedgerMajorId[] = [...MAJOR_TOKEN_IDS],
+  ids: LedgerMajorId[] = [...LEDGER_MAJOR_IDS],
 ): Promise<Record<LedgerMajorId, number>> {
   const out = { ...FALLBACK_USD } as Record<LedgerMajorId, number>;
   try {
@@ -597,7 +607,7 @@ export function ousdFromPiAmount(piAmount: number, piUsdPrice = getCachedPiUsdPr
 }
 
 export function walletMajorSelect(extraPrefix = "id, user_id, address, ousd_balance"): string {
-  const cols = MAJOR_TOKEN_IDS.map((id) => LEDGER_BALANCE_COLUMN[id]).join(", ");
+  const cols = LEDGER_MAJOR_IDS.map((id) => LEDGER_BALANCE_COLUMN[id]).join(", ");
   return `${extraPrefix}, ${cols}`;
 }
 

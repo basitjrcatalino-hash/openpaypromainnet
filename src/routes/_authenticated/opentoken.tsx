@@ -19,7 +19,9 @@ import {
   MessageCircle,
   Share2,
   Shield,
-  Sparkles,
+  Star,
+  TrendingUp,
+  Coins,
   Users,
   Wallet,
   type LucideIcon,
@@ -46,16 +48,17 @@ import {
   MAJOR_TOKEN_IDS,
   fetchMajorMarkets,
   majorMarketById,
-  type MajorTokenId,
   type MajorMarketSnapshot,
 } from "@/lib/major-tokens";
 import {
+  LEDGER_MAJOR_IDS,
   LEDGER_MAJOR_SWAP_IDS,
   OUSD_SWAP_ID,
   SOL_SWAP_ID,
   majorIdFromSwapId,
   readMajorBalance,
   walletMajorSelect,
+  type LedgerMajorId,
 } from "@/lib/ledger-majors";
 import { buyMajorWithOusd } from "@/lib/buy-major.functions";
 import { applyOpenDexFee } from "@/lib/opendex-fee";
@@ -79,7 +82,7 @@ type TopTab = "home" | "trade" | "predict" | "explore";
 const TOP_TABS: { id: TopTab; label: string; icon?: LucideIcon }[] = [
   { id: "home", label: "Home" },
   { id: "trade", label: "Trade", icon: ArrowLeftRight },
-  { id: "predict", label: "Predict", icon: Sparkles },
+  { id: "predict", label: "Predict", icon: TrendingUp },
   { id: "explore", label: "Explore", icon: Compass },
 ];
 
@@ -124,7 +127,7 @@ function OpenTokenHome() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [tradeFilter, setTradeFilter] = useState<TradeFilter>("trending");
   const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("tokens");
-  const [predictAsset, setPredictAsset] = useState<MajorTokenId>("btc");
+  const [predictAsset, setPredictAsset] = useState<LedgerMajorId>("btc");
   const [predictWindow, setPredictWindow] = useState<(typeof PREDICT_WINDOWS)[number]["id"]>("15m");
   const [predictDetail, setPredictDetail] = useState(false);
   const [predictBuyOpen, setPredictBuyOpen] = useState(false);
@@ -737,7 +740,7 @@ function HomeTab({
             className="flex w-42 shrink-0 flex-col justify-between rounded-2xl bg-muted/70 p-3 text-left press"
           >
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/20 text-primary">
-              <Sparkles className="h-4 w-4" />
+              <Star className="h-4 w-4" />
             </div>
             <p className="mt-3 text-sm font-semibold leading-snug">Get started with Predictions</p>
           </button>
@@ -841,7 +844,7 @@ function TradeTab({
   onSwap: () => Promise<void>;
 }) {
   const filters: { id: TradeFilter; label: string; icon: LucideIcon }[] = [
-    { id: "featured", label: "Featured", icon: Sparkles },
+    { id: "featured", label: "Featured", icon: Star },
     { id: "trending", label: "Trending", icon: ArrowUp },
     { id: "volume", label: "Top Volume", icon: Wallet },
   ];
@@ -1076,8 +1079,8 @@ function PredictTab({
   onOpenDetail,
 }: {
   majorMarkets: Awaited<ReturnType<typeof fetchMajorMarkets>>;
-  predictAsset: MajorTokenId;
-  setPredictAsset: (id: MajorTokenId) => void;
+  predictAsset: LedgerMajorId;
+  setPredictAsset: (id: LedgerMajorId) => void;
   upOdds: number;
   downOdds: number;
   onOpenDetail: () => void;
@@ -1166,7 +1169,7 @@ function PredictTab({
         <h2 className="text-lg font-extrabold">15 Minute Markets</h2>
         <p className="mt-1 text-xs text-muted-foreground">All majors · live CoinGecko prices</p>
         <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-          {MAJOR_TOKEN_IDS.map((id) => {
+          {LEDGER_MAJOR_IDS.map((id) => {
             const d = MAJOR_TOKENS[id];
             const mm = majorMarketById(majorMarkets, id);
             const ch = Number(mm.change24h ?? 0);
@@ -1222,12 +1225,12 @@ function PredictDetail({
   onBuyWithMethods,
   onTrade,
 }: {
-  asset: MajorTokenId;
-  setAsset: (id: MajorTokenId) => void;
+  asset: LedgerMajorId;
+  setAsset: (id: LedgerMajorId) => void;
   windowId: (typeof PREDICT_WINDOWS)[number]["id"];
   setWindowId: (id: (typeof PREDICT_WINDOWS)[number]["id"]) => void;
   market: MajorMarketSnapshot;
-  def: (typeof MAJOR_TOKENS)[MajorTokenId];
+  def: (typeof MAJOR_TOKENS)[LedgerMajorId];
   upOdds: number;
   downOdds: number;
   ousdBalance: number;
@@ -1288,7 +1291,7 @@ function PredictDetail({
           <div className="mt-2 flex items-center gap-2">
             <img src={def.logoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
             <div className="flex max-w-55 gap-1 overflow-x-auto scrollbar-none">
-              {MAJOR_TOKEN_IDS.map((id) => (
+              {LEDGER_MAJOR_IDS.map((id) => (
                 <button
                   key={id}
                   type="button"
@@ -1489,7 +1492,7 @@ function ExploreTab({
   loading: boolean;
 }) {
   const filters: { id: ExploreFilter; label: string; icon: LucideIcon; color: string }[] = [
-    { id: "tokens", label: "Tokens", icon: Sparkles, color: "text-emerald-400" },
+    { id: "tokens", label: "Tokens", icon: Coins, color: "text-emerald-400" },
     { id: "perps", label: "Perps", icon: InfinityIcon, color: "text-pink-400" },
     { id: "people", label: "People", icon: Users, color: "text-amber-400" },
   ];

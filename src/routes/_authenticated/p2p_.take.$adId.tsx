@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 
@@ -350,7 +350,7 @@ function TakeOrderPage() {
             <div className="flex items-center gap-1">
               <p className="truncate text-[14px] font-bold">{merchantName}</p>
               {(merch?.has_verified_badge || (merch && merch.tier !== "none")) && (
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#00B2B2]" />
+                <Info className="h-3.5 w-3.5 shrink-0 text-[#00B2B2]" />
               )}
               <MerchantBadge merchant={merch} />
             </div>

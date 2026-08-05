@@ -9,7 +9,7 @@ import {
   Layers,
   Newspaper,
   Send,
-  Sparkles,
+  Shield,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -237,7 +237,7 @@ function OusdPage() {
           </h2>
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
-              <Sparkles className="mx-auto h-8 w-8 text-[var(--accent)]" strokeWidth={1.75} />
+              <Shield className="mx-auto h-8 w-8 text-[var(--accent)]" strokeWidth={1.75} />
               <p className="mt-4 text-lg font-bold">The power of crypto</p>
               <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
                 Ledger settlement, APIs, agents, and multi-rail top-ups — without giving up dollar

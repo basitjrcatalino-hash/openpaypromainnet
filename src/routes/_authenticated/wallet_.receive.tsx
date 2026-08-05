@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { OusdIcon } from "@/components/ousd-icon";
 import { supabase } from "@/integrations/supabase/client";
-import { MAJOR_TOKENS, MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { LEDGER_MAJOR_IDS } from "@/lib/ledger-majors";
 import { LEDGER_ASSET_CODES, type LedgerAssetCode } from "@/lib/ledger-majors";
 import { linkPiWallet } from "@/lib/pi-network";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
@@ -38,7 +39,7 @@ const NETWORK_ENUM = [
   "ethereum",
   "solana",
   "pi",
-  ...MAJOR_TOKEN_IDS,
+  ...LEDGER_MAJOR_IDS,
 ] as const;
 
 const searchSchema = z.object({
@@ -79,7 +80,7 @@ const NETWORKS: Array<{
     logoUrl: OUSD_LOGO_URL,
     isOusd: true,
   },
-  ...MAJOR_TOKEN_IDS.map((id) => ({
+  ...LEDGER_MAJOR_IDS.map((id) => ({
     id: id as NetworkId,
     label: MAJOR_TOKENS[id].symbol,
     asset: MAJOR_TOKENS[id].symbol as AssetCode,
@@ -99,7 +100,7 @@ function normalizeNetwork(raw: string | undefined): NetworkId {
 
 function networkFromAsset(asset: AssetCode): NetworkId {
   if (asset === "OUSD") return "openpay";
-  const major = MAJOR_TOKEN_IDS.find(
+  const major = LEDGER_MAJOR_IDS.find(
     (id) => MAJOR_TOKENS[id].symbol.toUpperCase() === asset.toUpperCase(),
   );
   return major ?? "openpay";

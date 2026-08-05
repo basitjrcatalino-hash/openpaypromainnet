@@ -8,7 +8,7 @@ import {
   RefreshCw,
   Terminal,
   MessageSquare,
-  Sparkles,
+  Plug,
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -173,7 +173,7 @@ function ConnectPage() {
 
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Sparkles className="h-5 w-5 text-primary" /> Connect
+          <Plug className="h-5 w-5 text-primary" /> Connect
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
           <ClientCard icon={MessageSquare} name="ChatGPT">
@@ -196,7 +196,7 @@ function ConnectPage() {
             </ol>
           </ClientCard>
 
-          <ClientCard icon={Sparkles} name="Claude">
+          <ClientCard icon={Bot} name="Claude">
             <ol className="space-y-3">
               <Step number={1}>
                 Click{" "}

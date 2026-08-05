@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   BadgeCheck,
   Compass,
-  Sparkles,
   Star,
   TrendingDown,
   TrendingUp,
@@ -307,7 +306,7 @@ function OpenTokenPortfolio() {
             body="Your buys and sells will show up here."
             actionLabel="Find a coin"
             actionTo="/opentoken"
-            icon="sparkles"
+            icon="star"
           />
         ) : (
           <ul className="animate-in fade-in duration-300">
@@ -377,9 +376,9 @@ function EmptyPanel({
   body: string;
   actionLabel: string;
   actionTo: "/opentoken";
-  icon?: "compass" | "sparkles";
+  icon?: "compass" | "star";
 }) {
-  const Icon = icon === "sparkles" ? Sparkles : Compass;
+  const Icon = icon === "star" ? Star : Compass;
   return (
     <div className="flex flex-col items-center gap-3 rounded-3xl bg-muted/40 px-6 py-10 text-center">
       <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/15 text-primary">

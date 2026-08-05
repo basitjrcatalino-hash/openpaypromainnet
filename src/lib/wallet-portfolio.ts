@@ -2,10 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   FALLBACK_MAJOR_USD_PRICES,
   LEDGER_BALANCE_COLUMN,
+  LEDGER_MAJOR_IDS,
   fetchMajorUsdPrices,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
-import { MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
 
 export type WalletBalanceSource = {
   id: string;
@@ -33,7 +33,7 @@ export function walletLedgerUsd(
 ): number {
   if (!wallet) return 0;
   let sum = Number(wallet.ousd_balance ?? 0);
-  for (const id of MAJOR_TOKEN_IDS) {
+  for (const id of LEDGER_MAJOR_IDS) {
     const col = LEDGER_BALANCE_COLUMN[id];
     const bal = Number(wallet[col] ?? 0);
     const px = prices?.[id] ?? FALLBACK_MAJOR_USD_PRICES[id];

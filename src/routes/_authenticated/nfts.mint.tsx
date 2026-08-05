@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Loader2,
   ImagePlus,
-  Sparkles,
   Upload,
   ExternalLink,
   Link2,
@@ -349,7 +348,7 @@ function MintNFT() {
             {busy ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
+              <ImagePlus className="mr-2 h-4 w-4" />
             )}
             {status?.mintAvailable ? "Mint on OpenPay" : "Mint coming soon"}
           </Button>

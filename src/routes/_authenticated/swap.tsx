@@ -52,6 +52,7 @@ import {
 } from "@/lib/opendex.functions";
 import {
   LEDGER_MAJOR_SWAP_IDS,
+  LEDGER_MAJOR_IDS,
   LEDGER_ASSET_CODES,
   majorIdFromSwapId,
   majorsForNetwork,
@@ -72,7 +73,6 @@ import {
 import {
   fetchMajorMarkets,
   majorMarketById,
-  MAJOR_TOKEN_IDS,
   MAJOR_TOKENS,
   MAJOR_SYMBOLS,
 } from "@/lib/major-tokens";
@@ -158,7 +158,7 @@ function OpenDexPage() {
   });
 
   const majorTokens: SwapToken[] = useMemo(() => {
-    return MAJOR_TOKEN_IDS.map((id) => {
+    return LEDGER_MAJOR_IDS.map((id) => {
       const def = MAJOR_TOKENS[id];
       const m = majorMarketById(majorMarkets, id);
       return {
@@ -209,7 +209,7 @@ function OpenDexPage() {
   const balanceMap = useMemo(() => {
     const map = new Map<string, number>();
     map.set(OUSD_SWAP_ID, Number(wallet?.ousd_balance ?? 0));
-    for (const id of MAJOR_TOKEN_IDS) {
+    for (const id of LEDGER_MAJOR_IDS) {
       map.set(
         LEDGER_MAJOR_SWAP_IDS[id],
         readMajorBalance(wallet as Record<string, unknown> | null | undefined, id),
@@ -251,7 +251,7 @@ function OpenDexPage() {
     const assetToId: Record<string, string> = {
       OUSD: OUSD_SWAP_ID,
     };
-    for (const id of MAJOR_TOKEN_IDS) {
+    for (const id of LEDGER_MAJOR_IDS) {
       assetToId[MAJOR_TOKENS[id].symbol] = LEDGER_MAJOR_SWAP_IDS[id];
     }
 

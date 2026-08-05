@@ -1,12 +1,11 @@
 import type { PerpMarket } from "@/lib/perp";
+import { coinmarketcapUrl, getTradeMarket } from "@/lib/trade-markets";
 
 /**
  * CoinMarketCap reference for Trade Spot / Perpetual Info tabs
  * (Overview · News · Analysis).
+ * Curated copy for BTC/ETH/SOL/PI; other markets use registry fallback.
  * @see https://coinmarketcap.com/currencies/bitcoin/
- * @see https://coinmarketcap.com/currencies/ethereum/
- * @see https://coinmarketcap.com/currencies/solana/
- * @see https://coinmarketcap.com/currencies/pi/
  */
 export type CmcNewsItem = {
   title: string;
@@ -52,7 +51,7 @@ export type CmcTradeInfo = {
   };
 };
 
-export const CMC_TRADE_INFO: Record<PerpMarket, CmcTradeInfo> = {
+export const CMC_TRADE_INFO: Partial<Record<string, CmcTradeInfo>> = {
   BTC: {
     market: "BTC",
     slug: "bitcoin",
@@ -351,7 +350,59 @@ export const CMC_TRADE_INFO: Record<PerpMarket, CmcTradeInfo> = {
 };
 
 export function cmcInfoForMarket(market: PerpMarket): CmcTradeInfo {
-  return CMC_TRADE_INFO[market];
+  const curated = CMC_TRADE_INFO[market as keyof typeof CMC_TRADE_INFO];
+  if (curated) return curated;
+
+  const row = getTradeMarket(market);
+  const slug = row?.coinmarketcap_slug ?? market.toLowerCase();
+  const name = row?.name ?? market;
+  const symbol = row?.symbol ?? market;
+  const url = coinmarketcapUrl(slug);
+  return {
+    market,
+    slug,
+    url,
+    newsUrl: `${url}#news`,
+    analysisUrl: url,
+    ucid: row?.cmc_ucid ?? 0,
+    rank: row?.cmc_rank ?? 0,
+    name,
+    symbol,
+    about: `${name} (${symbol}) is listed on OpenPay Pro Spot and Perpetual. Market reference: CoinMarketCap.`,
+    overviewFacts: [
+      { label: "Pair", value: `${symbol}/USDT` },
+      { label: "Network", value: row?.network ?? "—" },
+      ...(row?.contract_address
+        ? [{ label: "Contract", value: row.contract_address }]
+        : []),
+      { label: "CoinGecko", value: row?.coingecko_slug ?? "—" },
+    ],
+    tags: ["Listed", "Spot", "Perpetual"],
+    maxSupply: null,
+    news: [
+      {
+        title: `${name} on CoinMarketCap`,
+        summary: `Open the CMC page for ${symbol} headlines, market cap, and supply.`,
+        url,
+        source: "CoinMarketCap",
+      },
+    ],
+    analysis: {
+      summary: `Use Spot and Perpetual charts for ${symbol}USDT alongside CMC market stats.`,
+      points: [
+        {
+          title: "Registry listing",
+          detail: "This market is driven by the OpenPay Pro master token registry.",
+        },
+        {
+          title: "Liquidity",
+          detail: "Size carefully on thinner books; mark and funding matter on Perps.",
+        },
+      ],
+      spotNote: `Spot ${symbol}/USDT — track CMC circulating supply and volume.`,
+      perpNote: `${symbol}USDT Perpetual — watch funding, OI, and mark before leverage.`,
+    },
+  };
 }
 
 export function formatCompactUsd(n: number): string {

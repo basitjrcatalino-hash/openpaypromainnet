@@ -132,7 +132,19 @@ export function TradeBottomDock({
           {tab === "orders" ? (
             mode === "spot" ? (
               !openOrders.length ? (
-                <Empty>No open orders. Place a limit on the Trade tab.</Empty>
+                <Empty>
+                  <p className="font-semibold text-foreground">No orders found</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Transfer funds to your trading account to start trading.
+                  </p>
+                  <Link
+                    to="/transfer"
+                    search={{ from: "funding", to: "spot" }}
+                    className="mt-3 inline-flex h-8 items-center rounded-full bg-muted px-4 text-[11px] font-bold text-foreground press"
+                  >
+                    Transfer now
+                  </Link>
+                </Empty>
               ) : (
                 <ul className="space-y-2 pb-1">
                   {openOrders.map((o) => (
@@ -176,7 +188,19 @@ export function TradeBottomDock({
                 </ul>
               )
             ) : (
-              <Empty>Futures orders fill instantly at mark. Use Positions for opens.</Empty>
+              <Empty>
+                <p className="font-semibold text-foreground">No orders found</p>
+                <p className="mt-1 text-muted-foreground">
+                  Transfer funds to your trading account to start trading.
+                </p>
+                <Link
+                  to="/transfer"
+                  search={{ from: "funding", to: "trading" }}
+                  className="mt-3 inline-flex h-8 items-center rounded-full bg-muted px-4 text-[11px] font-bold text-foreground press"
+                >
+                  Transfer now
+                </Link>
+              </Empty>
             )
           ) : null}
 

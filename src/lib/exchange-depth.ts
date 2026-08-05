@@ -1,5 +1,6 @@
 import type { PerpMarket } from "@/lib/perp";
 import { PERP_TV } from "@/lib/tradingview-perps";
+import { getTradeMarket } from "@/lib/trade-markets";
 
 export type TradeMode = "spot" | "futures";
 
@@ -15,15 +16,14 @@ export type ExchangeDepthBook = {
   updatedAt: number;
 };
 
-const SPOT_TV: Record<PerpMarket, string> = {
-  BTC: "BINANCE:BTCUSDT",
-  ETH: "BINANCE:ETHUSDT",
-  SOL: "BINANCE:SOLUSDT",
-  PI: "OKX:PIUSDT",
-};
+export function spotTvSymbol(market: PerpMarket): string {
+  return getTradeMarket(market)?.spot_tv ?? `BINANCE:${market}USDT`;
+}
 
 export function tvSymbolForMode(market: PerpMarket, mode: TradeMode): string {
-  return mode === "futures" ? PERP_TV[market].tvSymbol : SPOT_TV[market];
+  return mode === "futures"
+    ? (PERP_TV[market]?.tvSymbol ?? `OKX:${market}USDT.P`)
+    : spotTvSymbol(market);
 }
 
 export function pairLabel(market: PerpMarket, mode: TradeMode): string {

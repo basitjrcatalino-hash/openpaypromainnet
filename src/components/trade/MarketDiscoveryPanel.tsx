@@ -4,8 +4,9 @@ import { Flame, Search, Star, TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import { TokenAvatar } from "@/components/wallet/TokenAvatar";
-import { PERP_MARKETS, marketToMajorId, type PerpMarket } from "@/lib/perp";
-import { getMajorToken, majorMarketById, type MajorMarketSnapshot } from "@/lib/major-tokens";
+import { PERP_MARKETS, type PerpMarket } from "@/lib/perp";
+import { getTradeMarket } from "@/lib/trade-markets";
+import { majorMarketById, type MajorMarketSnapshot } from "@/lib/major-tokens";
 import { pairLabel, type TradeMode } from "@/lib/exchange-depth";
 import { quoteByMarket, type PerpLiveQuote } from "@/lib/tradingview-perps";
 import {
@@ -70,7 +71,10 @@ export function MarketDiscoveryPanel({
     () =>
       PERP_MARKETS.map((m) => {
         const quote = quoteByMarket(quotes, m);
-        const snap = majorMarketById(majors, marketToMajorId(m));
+        const row = getTradeMarket(m);
+        const snap = row?.majorId
+          ? majorMarketById(majors, row.majorId)
+          : { price: 0, change24h: 0, volume24h: 0 };
         const price = quote?.markPrice || quote?.price || snap.price || 0;
         const change = Number.isFinite(quote?.change24h)
           ? Number(quote?.change24h)
@@ -90,7 +94,7 @@ export function MarketDiscoveryPanel({
     let list = rows;
     if (term) {
       list = list.filter((r) => {
-        const token = getMajorToken(marketToMajorId(r.market));
+        const token = getTradeMarket(r.market);
         return (
           r.market.toLowerCase().includes(term) ||
           (token?.name ?? "").toLowerCase().includes(term)
@@ -156,7 +160,7 @@ export function MarketDiscoveryPanel({
         ) : (
           <ul className="space-y-0.5">
             {filtered.map((r) => {
-              const token = getMajorToken(marketToMajorId(r.market));
+              const token = getTradeMarket(r.market);
               const up = r.change >= 0;
               return (
                 <li key={r.market}>
@@ -188,7 +192,7 @@ export function MarketDiscoveryPanel({
                     >
                       <TokenAvatar
                         symbol={r.market}
-                        logoUrl={token?.logoUrl}
+                        logoUrl={token?.logo}
                         className="h-6 w-6 shrink-0"
                       />
                       <span className="min-w-0 flex-1">

@@ -1097,22 +1097,95 @@ function SidebarInner({
             />
             <span className="truncate">Airdrops</span>
           </Link>
-          <Link
-            to="/developer"
-            onClick={onClose}
-            preload="intent"
-            aria-current={pathname === "/developer" ? "page" : undefined}
-            className={sideItemClass(pathname === "/developer")}
-          >
-            <Code2
-              className={cn(
-                "h-[1.15rem] w-[1.15rem] shrink-0",
-                pathname === "/developer" && "ph-tab-icon-active",
-              )}
-              strokeWidth={pathname === "/developer" ? 2.25 : 1.75}
+          <div className="mb-0.5 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
+            <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+            <label
+              htmlFor="developer-mode"
+              className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
+            >
+              {t("nav.developer")}
+            </label>
+            <Switch
+              id="developer-mode"
+              checked={developerMode}
+              onCheckedChange={setDeveloperMode}
+              aria-label="Toggle developer mode"
             />
-            <span className="truncate">Developer Portal</span>
-          </Link>
+          </div>
+          {developerMode ? (
+            <>
+              <Link
+                to="/developer"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/developer" ? "page" : undefined}
+                className={sideItemClass(pathname === "/developer")}
+              >
+                <KeyRound
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/developer" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/developer" ? 2.25 : 1.75}
+                />
+                <span className="truncate">Developer Portal</span>
+              </Link>
+              <Link
+                to="/ledger"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/ledger" ? "page" : undefined}
+                className={sideItemClass(pathname === "/ledger")}
+              >
+                <ScrollText
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/ledger" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
+                />
+                <span className="truncate">{t("nav.ledgerApi")}</span>
+              </Link>
+              <Link
+                to="/connect"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/connect" ? "page" : undefined}
+                className={sideItemClass(pathname === "/connect")}
+              >
+                <Bot
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/connect" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
+                />
+                <span className="truncate">{t("nav.agentConnect")}</span>
+              </Link>
+              <a
+                href="/docs"
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className={sideItemClass(false)}
+              >
+                <BookOpen className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate">{t("nav.docs")}</span>
+                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+              </a>
+              <a
+                href="/docs/faq"
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className={sideItemClass(false)}
+              >
+                <HelpCircle className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate">{t("nav.faq")}</span>
+                <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
+              </a>
+            </>
+          ) : null}
           <Link
             to="/ai"
             onClick={onClose}
@@ -1257,96 +1330,7 @@ function SidebarInner({
         </div>
 
         {isAdmin ? (
-          <SideSection label={t("nav.developer")}>
-            <div className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
-              <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
-              <label
-                htmlFor="developer-mode"
-                className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
-              >
-                {t("nav.developer")}
-              </label>
-              <Switch
-                id="developer-mode"
-                checked={developerMode}
-                onCheckedChange={setDeveloperMode}
-                aria-label="Toggle developer mode"
-              />
-            </div>
-            {developerMode ? (
-              <>
-                <Link
-                  to="/developer"
-                  onClick={onClose}
-                  preload="intent"
-                  aria-current={pathname === "/developer" ? "page" : undefined}
-                  className={sideItemClass(pathname === "/developer")}
-                >
-                  <KeyRound
-                    className={cn(
-                      "h-[1.15rem] w-[1.15rem] shrink-0",
-                      pathname === "/developer" && "ph-tab-icon-active",
-                    )}
-                    strokeWidth={pathname === "/developer" ? 2.25 : 1.75}
-                  />
-                  <span className="truncate">API keys &amp; seed</span>
-                </Link>
-                <Link
-                  to="/ledger"
-                  onClick={onClose}
-                  preload="intent"
-                  aria-current={pathname === "/ledger" ? "page" : undefined}
-                  className={sideItemClass(pathname === "/ledger")}
-                >
-                  <ScrollText
-                    className={cn(
-                      "h-[1.15rem] w-[1.15rem] shrink-0",
-                      pathname === "/ledger" && "ph-tab-icon-active",
-                    )}
-                    strokeWidth={pathname === "/ledger" ? 2.25 : 1.75}
-                  />
-                  <span className="truncate">{t("nav.ledgerApi")}</span>
-                </Link>
-                <Link
-                  to="/connect"
-                  onClick={onClose}
-                  preload="intent"
-                  aria-current={pathname === "/connect" ? "page" : undefined}
-                  className={sideItemClass(pathname === "/connect")}
-                >
-                  <Bot
-                    className={cn(
-                      "h-[1.15rem] w-[1.15rem] shrink-0",
-                      pathname === "/connect" && "ph-tab-icon-active",
-                    )}
-                    strokeWidth={pathname === "/connect" ? 2.25 : 1.75}
-                  />
-                  <span className="truncate">{t("nav.agentConnect")}</span>
-                </Link>
-                <a
-                  href="/docs"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={onClose}
-                  className={sideItemClass(false)}
-                >
-                  <BookOpen className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                  <span className="min-w-0 flex-1 truncate">{t("nav.docs")}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
-                </a>
-                <a
-                  href="/docs/faq"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={onClose}
-                  className={sideItemClass(false)}
-                >
-                  <HelpCircle className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
-                  <span className="min-w-0 flex-1 truncate">{t("nav.faq")}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0 opacity-40" />
-                </a>
-              </>
-            ) : null}
+          <SideSection label="Admin">
             <Link
               to="/p2p/admin"
               onClick={onClose}

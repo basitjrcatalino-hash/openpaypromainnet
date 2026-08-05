@@ -237,14 +237,20 @@ async function settleAndCompleteFill(
     // Spot account → Funding for settlement, then credit Spot with base.
     await spotFundingBridge(supabase, "spot_to_funding", order.pay_asset, usd);
     try {
-      const bought = await buyMajorWithOusd({
-        data: {
-          wallet_id: order.wallet_id,
-          major_id: marketToMajorId(order.market),
-          usd_amount: usd,
-          pay_asset: order.pay_asset,
-        },
-      });
+        const majorId = marketToMajorId(order.market);
+        if (!majorId) {
+          throw new Error(
+            `Spot settlement for ${order.market} requires a wallet major mapping — use a registry market with majorId`,
+          );
+        }
+        const bought = await buyMajorWithOusd({
+          data: {
+            wallet_id: order.wallet_id,
+            major_id: majorId,
+            usd_amount: usd,
+            pay_asset: order.pay_asset,
+          },
+        });
       const tokenAmt = Number((bought as { token_amount?: number })?.token_amount ?? 0);
       if (tokenAmt > 0) {
         await spotFundingBridge(supabase, "funding_to_spot", order.market, tokenAmt);
@@ -340,10 +346,16 @@ export const executeSpotMarketTrade = createServerFn({ method: "POST" })
       const usd = Math.round(qty * px * 1e8) / 1e8;
       await spotFundingBridge(supabase, "spot_to_funding", data.pay_asset, usd);
       try {
+        const majorId = marketToMajorId(data.market);
+        if (!majorId) {
+          throw new Error(
+            `Spot settlement for ${data.market} requires a wallet major mapping — use a registry market with majorId`,
+          );
+        }
         const bought = await buyMajorWithOusd({
           data: {
             wallet_id: data.wallet_id,
-            major_id: marketToMajorId(data.market),
+            major_id: majorId,
             usd_amount: usd,
             pay_asset: data.pay_asset,
           },

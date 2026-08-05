@@ -12,7 +12,7 @@ function read(): boolean {
   }
 }
 
-/** Developer mode toggle — gates docs/FAQ/Ledger API/Agent Connect in the nav. */
+/** Developer mode toggle — gates Developer Portal / Ledger API / Agent Connect / docs in the nav (available to all users). */
 export function useDeveloperMode() {
   const [enabled, setEnabled] = useState(false);
 

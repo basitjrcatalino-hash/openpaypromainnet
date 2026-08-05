@@ -1,69 +1,54 @@
 import type { PerpMarket } from "@/lib/perp";
+import {
+  getTradeMarket,
+  listedTradeMarkets,
+  tradingViewPerpUrl,
+} from "@/lib/trade-markets";
 
 /** TradingView perpetual symbols used on Trade (chart / news / technicals). */
 export type PerpTvConfig = {
   market: PerpMarket;
-  /** TradingView embed symbol, e.g. BINANCE:BTCUSDT.P */
+  /** TradingView embed symbol, e.g. OKX:BTCUSDT.P */
   tvSymbol: string;
   /** Public TradingView symbol page */
   tvUrl: string;
   exchangeLabel: string;
-  /** Binance USDT-M futures ticker (BTC/ETH/SOL) */
+  /** Binance USDT-M futures ticker */
   binanceFutures?: string;
-  /** Gate.io USDT futures contract — works in more regions than Binance */
+  /** Gate.io USDT futures contract */
   gateFutures?: string;
   /** Bybit linear symbol */
   bybitLinear?: string;
-  /** OKX swap instrument (PI) */
+  /** OKX swap instrument */
   okxSwap?: string;
   /** CoinGecko id for last-resort mark */
   coingeckoId: string;
 };
 
-export const PERP_TV: Record<PerpMarket, PerpTvConfig> = {
-  BTC: {
-    market: "BTC",
-    tvSymbol: "OKX:BTCUSDT.P",
-    tvUrl: "https://www.tradingview.com/symbols/BTCUSDT.P/",
-    exchangeLabel: "OKX",
-    binanceFutures: "BTCUSDT",
-    okxSwap: "BTC-USDT-SWAP",
-    gateFutures: "BTC_USDT",
-    bybitLinear: "BTCUSDT",
-    coingeckoId: "bitcoin",
-  },
-  ETH: {
-    market: "ETH",
-    tvSymbol: "OKX:ETHUSDT.P",
-    tvUrl: "https://www.tradingview.com/symbols/ETHUSDT.P/",
-    exchangeLabel: "OKX",
-    binanceFutures: "ETHUSDT",
-    okxSwap: "ETH-USDT-SWAP",
-    gateFutures: "ETH_USDT",
-    bybitLinear: "ETHUSDT",
-    coingeckoId: "ethereum",
-  },
-  SOL: {
-    market: "SOL",
-    tvSymbol: "OKX:SOLUSDT.P",
-    tvUrl: "https://www.tradingview.com/symbols/SOLUSDT.P/",
-    exchangeLabel: "OKX",
-    binanceFutures: "SOLUSDT",
-    okxSwap: "SOL-USDT-SWAP",
-    gateFutures: "SOL_USDT",
-    bybitLinear: "SOLUSDT",
-    coingeckoId: "solana",
-  },
-  PI: {
-    market: "PI",
-    tvSymbol: "OKX:PIUSDT.P",
-    tvUrl: "https://www.tradingview.com/symbols/PIUSDT.P/",
-    exchangeLabel: "OKX / Gate",
-    okxSwap: "PI-USDT-SWAP",
-    gateFutures: "PI_USDT",
-    coingeckoId: "pi-network",
-  },
-};
+function toPerpTvConfig(symbol: string): PerpTvConfig {
+  const m = getTradeMarket(symbol);
+  if (!m) {
+    throw new Error(`Missing trade market registry row for ${symbol}`);
+  }
+  return {
+    market: m.symbol as PerpMarket,
+    tvSymbol: m.perp_tv,
+    tvUrl: tradingViewPerpUrl(m.symbol),
+    exchangeLabel: m.okx_swap ? "OKX" : m.binance_futures ? "Binance" : "Gate",
+    binanceFutures: m.binance_futures,
+    okxSwap: m.okx_swap,
+    gateFutures: m.gate_futures,
+    bybitLinear: m.bybit_linear,
+    coingeckoId: m.coingecko_slug,
+  };
+}
+
+/** Built from Master Token Registry — do not hardcode per-market TV rows here. */
+export const PERP_TV: Record<string, PerpTvConfig> = Object.fromEntries(
+  listedTradeMarkets()
+    .filter((m) => m.perpetual_enabled)
+    .map((m) => [m.symbol, toPerpTvConfig(m.symbol)]),
+);
 
 export type PerpLiveQuote = {
   market: PerpMarket;
@@ -95,8 +80,8 @@ function quoteBase(market: PerpMarket): Pick<PerpLiveQuote, "market" | "tvSymbol
   const cfg = PERP_TV[market];
   return {
     market,
-    tvSymbol: cfg.tvSymbol,
-    tvUrl: cfg.tvUrl,
+    tvSymbol: cfg?.tvSymbol ?? `OKX:${market}USDT.P`,
+    tvUrl: cfg?.tvUrl ?? `https://www.tradingview.com/symbols/${market}USDT.P/`,
     updatedAt: Date.now(),
   };
 }
@@ -285,6 +270,7 @@ async function fetchCoinGeckoQuote(market: PerpMarket, id: string): Promise<Perp
 /** Try exchange feeds in order — Binance is geo-blocked on many serverless regions. */
 export async function fetchPerpLiveQuote(market: PerpMarket): Promise<PerpLiveQuote> {
   const cfg = PERP_TV[market];
+  if (!cfg) throw new Error(`Unknown perpetual market: ${market}`);
   const errors: string[] = [];
 
   const tryOne = async (label: string, fn: () => Promise<PerpLiveQuote>) => {
@@ -323,13 +309,30 @@ export async function fetchPerpLiveQuote(market: PerpMarket): Promise<PerpLiveQu
 
 export async function fetchAllPerpLiveQuotes(): Promise<PerpLiveQuote[]> {
   const markets = Object.keys(PERP_TV) as PerpMarket[];
-  const results = await Promise.allSettled(markets.map((m) => fetchPerpLiveQuote(m)));
+  const results: PromiseSettledResult<PerpLiveQuote>[] = new Array(markets.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(6, markets.length) }, async () => {
+    while (cursor < markets.length) {
+      const idx = cursor++;
+      const m = markets[idx]!;
+      try {
+        results[idx] = { status: "fulfilled", value: await fetchPerpLiveQuote(m) };
+      } catch (reason) {
+        results[idx] = { status: "rejected", reason };
+      }
+    }
+  });
+  await Promise.all(workers);
+
   const out: PerpLiveQuote[] = [];
   const errors: string[] = [];
   for (let i = 0; i < results.length; i++) {
     const r = results[i]!;
     if (r.status === "fulfilled") out.push(r.value);
-    else errors.push(`${markets[i]}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
+    else
+      errors.push(
+        `${markets[i]}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`,
+      );
   }
   if (!out.length) {
     throw new Error(`Unable to load perpetual market data (${errors.join("; ")})`);

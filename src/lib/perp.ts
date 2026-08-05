@@ -1,8 +1,14 @@
 import type { MajorTokenId } from "@/lib/major-tokens";
+import {
+  PERP_MARKETS as REGISTRY_MARKETS,
+  getTradeMarket,
+  isTradeMarket,
+  type PerpMarket as RegistryPerpMarket,
+} from "@/lib/trade-markets";
 
-/** Non-stable perpetual markets only. */
-export const PERP_MARKETS = ["BTC", "ETH", "SOL", "PI"] as const;
-export type PerpMarket = (typeof PERP_MARKETS)[number];
+/** Non-stable Spot / Perpetual markets — sourced from Master Token Registry. */
+export const PERP_MARKETS = REGISTRY_MARKETS;
+export type PerpMarket = RegistryPerpMarket;
 
 export const PERP_MARGIN_ASSETS = ["USDT", "OUSD", "USDC"] as const;
 export type PerpMarginAsset = (typeof PERP_MARGIN_ASSETS)[number];
@@ -12,11 +18,12 @@ export type PerpSide = "long" | "short";
 export const PERP_LEVERAGE_OPTIONS = [1, 2, 3, 5, 10, 20] as const;
 
 export function isPerpMarket(v: string): v is PerpMarket {
-  return (PERP_MARKETS as readonly string[]).includes(v.toUpperCase());
+  return isTradeMarket(v);
 }
 
-export function marketToMajorId(market: PerpMarket): MajorTokenId {
-  return market.toLowerCase() as MajorTokenId;
+export function marketToMajorId(market: PerpMarket): MajorTokenId | null {
+  const row = getTradeMarket(market);
+  return row?.majorId ?? null;
 }
 
 export function unrealizedPnl(opts: {

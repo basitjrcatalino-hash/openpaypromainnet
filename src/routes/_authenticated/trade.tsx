@@ -135,15 +135,19 @@ function TradePage() {
   const [chartHeight, setChartHeight] = useState(320);
 
   // Shared order form state
-  const [orderType, setOrderType] = useState<SpotOrderKind>("market");
+  const [orderType, setOrderType] = useState<SpotOrderKind>("limit");
   const [limitPrice, setLimitPrice] = useState("");
   const [amount, setAmount] = useState("");
   const [pct, setPct] = useState(0);
 
   // Futures
   const [futAction, setFutAction] = useState<"open" | "close">("open");
-  const [leverage, setLeverage] = useState(5);
+  const [leverage, setLeverage] = useState(3);
+  const [shortLeverage, setShortLeverage] = useState(3);
   const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("USDT");
+  const [tpPrice, setTpPrice] = useState("");
+  const [slPrice, setSlPrice] = useState("");
+  const [useTpsl, setUseTpsl] = useState(false);
 
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
@@ -215,7 +219,22 @@ function TradePage() {
 
   const majorId = marketToMajorId(market);
   const quote = quoteByMarket(quotesQ.data, market);
-  const majorSnap = majorMarketById(majorsQ.data, majorId);
+  const majorSnap = majorId
+    ? majorMarketById(majorsQ.data, majorId)
+    : ({
+        id: "btc",
+        price: 0,
+        change24h: 0,
+        marketCap: 0,
+        volume24h: 0,
+        totalSupply: 0,
+        circulatingSupply: 0,
+        ath: 0,
+        atl: 0,
+        athDate: null,
+        atlDate: null,
+        sparkline: [],
+      } satisfies import("@/lib/major-tokens").MajorMarketSnapshot);
   const price = Number(
     quote?.markPrice && quote.markPrice > 0
       ? quote.markPrice
@@ -305,9 +324,11 @@ function TradePage() {
 
   const tradingBal = Number(balQ.data?.balances?.trading?.[marginAsset] ?? 0) || 0;
   const spotQuote = Number(balQ.data?.balances?.spot?.[payAsset] ?? 0) || 0;
-  const spotBase = Number(balQ.data?.balances?.spot?.[market] ?? 0) || 0;
+  const spotMap = balQ.data?.balances?.spot as Record<string, number> | undefined;
+  const fundingMap = balQ.data?.balances?.funding as Record<string, number> | undefined;
+  const spotBase = Number(spotMap?.[market] ?? 0) || 0;
   const fundingQuote = Number(balQ.data?.balances?.funding?.[payAsset] ?? 0) || 0;
-  const fundingBase = Number(balQ.data?.balances?.funding?.[market] ?? 0) || 0;
+  const fundingBase = Number(fundingMap?.[market] ?? 0) || 0;
 
   // Prefer a pay asset that already has Spot balance
   useEffect(() => {
@@ -330,11 +351,13 @@ function TradePage() {
   function applyPct(p: number) {
     setPct(p);
     if (mode === "futures") {
-      // Reserve platform fee on notional so 100% doesn't overdraw Trading
+      // Amount is base size (OKX); convert available margin → max base at leverage
       const feeRate = PERP_TAKER_FEE_BPS / 10_000;
-      const maxMargin = tradingBal / (1 + leverage * feeRate);
-      const m = (maxMargin * p) / 100;
-      setAmount(m > 0 ? String(Math.floor(m * 1e4) / 1e4) : "");
+      const lev = leverage;
+      const maxMargin = tradingBal / (1 + lev * feeRate);
+      const maxBase = price > 0 ? (maxMargin * lev) / price : 0;
+      const m = (maxBase * p) / 100;
+      setAmount(m > 0 ? String(Math.floor(m * 1e6) / 1e6) : "");
       return;
     }
     if (spotSide === "buy") {
@@ -348,16 +371,24 @@ function TradePage() {
   }
 
   const openM = useMutation({
-    mutationFn: (side: PerpSide) =>
-      openPos({
+    mutationFn: (side: PerpSide) => {
+      const lev = side === "short" ? shortLeverage : leverage;
+      const baseAmt = Number(amount);
+      const px =
+        orderType === "limit" && Number(limitPrice) > 0 ? Number(limitPrice) : price;
+      const margin =
+        px > 0 && lev > 0 ? Math.round(((baseAmt * px) / lev) * 1e8) / 1e8 : 0;
+      if (!(margin > 0)) throw new Error("Enter a valid amount");
+      return openPos({
         data: {
           market,
           side,
-          leverage,
+          leverage: lev,
           margin_asset: marginAsset,
-          margin: Number(amount),
+          margin,
         },
-      }),
+      });
+    },
     onSuccess: () => {
       notifySuccess("Position opened from Trading", { sound: "send" });
       setAmount("");
@@ -634,11 +665,19 @@ function TradePage() {
                   onAction={setFutAction}
                   leverage={leverage}
                   onLeverage={setLeverage}
+                  shortLeverage={shortLeverage}
+                  onShortLeverage={setShortLeverage}
                   marginAsset={marginAsset}
                   onMarginAsset={setMarginAsset}
                   available={tradingBal}
                   hasLong={hasLong}
                   hasShort={hasShort}
+                  tpPrice={tpPrice}
+                  onTpPrice={setTpPrice}
+                  slPrice={slPrice}
+                  onSlPrice={setSlPrice}
+                  useTpsl={useTpsl}
+                  onUseTpsl={setUseTpsl}
                   onSubmitLong={() => onFuturesSubmit("long")}
                   onSubmitShort={() => onFuturesSubmit("short")}
                 />
@@ -668,6 +707,12 @@ function TradePage() {
                   availableBase={spotBase}
                   fundingQuote={fundingQuote}
                   fundingBase={fundingBase}
+                  tpPrice={tpPrice}
+                  onTpPrice={setTpPrice}
+                  slPrice={slPrice}
+                  onSlPrice={setSlPrice}
+                  useTpsl={useTpsl}
+                  onUseTpsl={setUseTpsl}
                   onSubmit={() => spotM.mutate()}
                 />
               )}
@@ -703,6 +748,12 @@ function TradePage() {
                     midOverride={mid}
                     loading={depthQ.isLoading}
                     change24h={change}
+                    fundingRate={quote?.fundingRate}
+                    showFunding={mode === "futures"}
+                    onPriceClick={(px) => {
+                      setOrderType("limit");
+                      setLimitPrice(String(px));
+                    }}
                   />
                 ) : (
                   <RecentTrades trades={recentQ.data} loading={recentQ.isLoading} />
@@ -832,7 +883,7 @@ function TradePage() {
                 Open on CoinMarketCap <ExternalLink className="h-3 w-3" />
               </a>
               <a
-                href={PERP_TV[market].tvUrl}
+                href={PERP_TV[market]?.tvUrl ?? `https://www.tradingview.com/symbols/${market}USDT.P/`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs font-semibold text-primary"

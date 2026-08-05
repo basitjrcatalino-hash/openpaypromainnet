@@ -331,7 +331,7 @@ function PitchPage() {
       </div>
 
       <header className="sticky top-0 z-40 border-b border-border/80 bg-[color-mix(in_srgb,var(--background)_88%,white)] backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:px-6">
           <Link
             to="/website"
             className="flex shrink-0 items-center gap-2 font-extrabold tracking-tight"
@@ -346,7 +346,7 @@ function PitchPage() {
                 key={link.href}
                 to={link.href}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold transition-colors",
                   link.href === "/pitch"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -364,7 +364,7 @@ function PitchPage() {
                 key={n.id}
                 href={`#${n.id}`}
                 className={cn(
-                  "rounded-full px-2 py-1 text-[11px] font-bold tabular-nums transition-colors",
+                  "rounded-full px-2 py-1 text-sm font-bold tabular-nums transition-colors",
                   activeNav === n.id
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground",
@@ -376,7 +376,7 @@ function PitchPage() {
           </nav>
           <Link
             to="/authpi"
-            className="hidden shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-xs font-bold text-background sm:inline-flex"
+            className="hidden shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-bold text-background sm:inline-flex"
           >
             Open wallet
           </Link>
@@ -388,7 +388,7 @@ function PitchPage() {
               key={link.href}
               to={link.href}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
+                "shrink-0 rounded-full px-3 py-1.5 text-sm font-bold",
                 link.href === "/pitch"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground",
@@ -404,11 +404,11 @@ function PitchPage() {
         id="cover"
         data-slide="cover"
         ref={heroRef}
-        className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col justify-center px-5 pb-16 pt-10 sm:px-8"
+        className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-7xl flex-col justify-center px-5 pb-16 pt-10 sm:px-8"
       >
         <p
           data-rise
-          className="oppitch-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground"
+          className="oppitch-rise oppitch-label inline-flex items-center gap-2 text-muted-foreground"
         >
           <Globe2 className="h-3.5 w-3.5" strokeWidth={2.25} />
           Investor overview · Confidential
@@ -416,33 +416,30 @@ function PitchPage() {
         <h1 data-rise className="oppitch-rise opblog-title mt-6">
           OpenPay
         </h1>
-        <p data-rise className="oppitch-rise opblog-dek mt-4 max-w-2xl font-semibold text-primary">
+        <p data-rise className="oppitch-rise opblog-dek mt-5 max-w-3xl text-primary">
           The open money network — and OpenPay Pro, the self-custody money app built on it.
         </p>
-        <p
-          data-rise
-          className="oppitch-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
-        >
+        <p data-rise className="oppitch-rise oppitch-body mt-7 max-w-2xl text-muted-foreground">
           Hold, send, and settle in OpenUSD. Trade majors and OpenTokens. Deposit from open rails.
           Build with Partner API and agents — one public ledger.
         </p>
         <div data-rise className="oppitch-rise mt-9 flex flex-wrap items-center gap-3">
           <a
             href="#thesis"
-            className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-background"
+            className="inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-3.5 text-base font-bold text-background"
           >
             Read the deck
             <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </a>
           <Link
             to="/openusd"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-bold backdrop-blur"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-6 py-3.5 text-base font-bold backdrop-blur"
           >
             Meet OpenUSD
           </Link>
           <Link
             to="/website"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-bold backdrop-blur"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-6 py-3.5 text-base font-bold backdrop-blur"
           >
             Website
           </Link>
@@ -461,10 +458,8 @@ function PitchPage() {
             { k: String(stats.networks), v: "Live networks" },
           ].map((s) => (
             <div key={s.v} className="oppitch-stat px-4 py-4">
-              <p className="font-(family-name:--font-display) text-2xl font-extrabold tracking-tight sm:text-3xl">
-                {s.k}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-muted-foreground">{s.v}</p>
+              <p className="oppitch-stat-num">{s.k}</p>
+              <p className="mt-2.5 text-base font-semibold text-muted-foreground">{s.v}</p>
             </div>
           ))}
         </div>
@@ -487,7 +482,7 @@ function PitchPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl space-y-4 px-5 py-16 sm:px-8 sm:py-24">
+      <div className="mx-auto w-full max-w-7xl space-y-4 px-5 py-16 sm:px-8 sm:py-24">
         <Slide id="thesis" num="02" title="Thesis" kicker="Why this exists">
           <p className="opblog-dek max-w-3xl font-semibold">
             Money should move on an <span className="text-primary">open network</span> — not locked
@@ -527,30 +522,28 @@ function PitchPage() {
               },
             ].map((p) => (
               <div key={p.t} data-reveal className="oppitch-reveal oppitch-panel p-6">
-                <h3 className="text-lg font-bold tracking-tight">{p.t}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.b}</p>
+                <h3 className="oppitch-card-title">{p.t}</h3>
+                <p className="mt-3 oppitch-body text-muted-foreground">{p.b}</p>
               </div>
             ))}
           </div>
         </Slide>
 
         <Slide id="solution" num="04" title="The solution" kicker="One Pro home">
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="max-w-2xl oppitch-body text-muted-foreground">
             OpenPay Pro unifies network dollars, Pi, listed majors, and OpenTokens — with
             self-custody keys, a public ledger, and builder rails that speak OpenUSD.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {WHY_NOW.map((w) => (
               <div key={w.title} data-reveal className="oppitch-reveal oppitch-panel p-5">
-                <h3 className="text-sm font-extrabold tracking-tight">{w.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.body}</p>
+                <h3 className="oppitch-card-title">{w.title}</h3>
+                <p className="mt-2 oppitch-body text-muted-foreground">{w.body}</p>
               </div>
             ))}
           </div>
           <div className="mt-10">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Sign in your way
-            </p>
+            <p className="oppitch-label text-muted-foreground">Sign in your way</p>
             <div className="mt-4 flex flex-wrap gap-3">
               {AUTH_METHODS.map((a) => (
                 <div
@@ -558,7 +551,7 @@ function PitchPage() {
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2"
                 >
                   <img src={a.logo} alt="" className="h-5 w-5 rounded object-contain" />
-                  <span className="text-xs font-bold">{a.name}</span>
+                  <span className="text-sm font-bold">{a.name}</span>
                 </div>
               ))}
             </div>
@@ -576,48 +569,46 @@ function PitchPage() {
                 />
                 <div>
                   <h3 className="opblog-h2">OpenUSD</h3>
-                  <p className="text-sm font-semibold text-primary">OUSD · tracks ~$1 USD</p>
+                  <p className="text-lg font-semibold text-primary">OUSD · tracks ~$1 USD</p>
                 </div>
               </div>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              <p className="oppitch-body mt-6 max-w-xl text-muted-foreground">
                 OpenPay's ledger dollar — the primary Pro balance unit. Hold, send, spend, and
                 settle with cash-simple $1 thinking and crypto settlement power.
               </p>
-              <ul className="mt-6 space-y-2.5 text-sm font-semibold">
+              <ul className="mt-6 space-y-3 text-lg font-semibold leading-snug">
                 {[
                   "Settles OpenDEX swaps, Tokens buys, Spot & Perpetuals",
                   "Denominates Partner API and OpenLedger activity",
                   "Funded via OpenPay Balance, Pi, cards, USDC, Solana Pay, Circle, multi-chain",
                 ].map((line) => (
                   <li key={line} className="flex gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                     <span>{line}</span>
                   </li>
                 ))}
               </ul>
               <Link
                 to="/openusd"
-                className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-primary"
+                className="mt-8 inline-flex items-center gap-2 text-lg font-bold text-primary"
               >
                 Full OpenUSD story
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="oppitch-panel flex-1 p-6 sm:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                This is New Money
-              </p>
+              <p className="oppitch-label text-muted-foreground">This is New Money</p>
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm font-extrabold">Power of crypto</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <p className="oppitch-card-title">Power of crypto</p>
+                  <p className="mt-2 oppitch-body text-muted-foreground">
                     Ledger settlement, APIs, agents, multi-rail top-ups, inspectable credits and
                     debits.
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-extrabold">Ease of cash</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <p className="oppitch-card-title">Ease of cash</p>
+                  <p className="mt-2 oppitch-body text-muted-foreground">
                     One-dollar OUSD thinking for everyday sends, merchant payouts, and clear
                     balances.
                   </p>
@@ -627,7 +618,7 @@ function PitchPage() {
                 <img src={BTC_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
                 <span className="text-muted-foreground">+</span>
                 <img src={OUSD_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
-                <span className="ml-auto text-xs font-bold text-muted-foreground">
+                <span className="ml-auto text-sm font-bold text-muted-foreground">
                   Crypto × Cash
                 </span>
               </div>
@@ -663,13 +654,13 @@ function PitchPage() {
                     />
                   )}
                   <div>
-                    <h3 className="text-sm font-extrabold tracking-tight">{f.title}</h3>
-                    <p className="text-xs text-muted-foreground">{f.blurb}</p>
+                    <h3 className="oppitch-card-title">{f.title}</h3>
+                    <p className="mt-1.5 text-lg text-muted-foreground">{f.blurb}</p>
                   </div>
                 </div>
-                <ul className="mt-4 flex-1 space-y-1.5">
+                <ul className="mt-5 flex-1 space-y-2.5">
                   {f.items.map((item) => (
-                    <li key={item} className="text-xs leading-snug text-muted-foreground">
+                    <li key={item} className="text-lg leading-snug text-muted-foreground">
                       · {item}
                     </li>
                   ))}
@@ -677,7 +668,7 @@ function PitchPage() {
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">
+          <p className="oppitch-body mt-6 text-muted-foreground">
             Full feature walkthrough on{" "}
             <Link to="/website" className="font-bold text-primary">
               /website
@@ -700,8 +691,8 @@ function PitchPage() {
               { k: String(stats.networks), v: "Networks" },
             ].map((s) => (
               <div key={s.v} className="oppitch-stat px-4 py-5 text-center">
-                <p className="font-(family-name:--font-display) text-2xl font-extrabold">{s.k}</p>
-                <p className="mt-1 text-xs font-semibold text-muted-foreground">{s.v}</p>
+                <p className="oppitch-stat-num">{s.k}</p>
+                <p className="mt-2.5 text-base font-semibold text-muted-foreground">{s.v}</p>
               </div>
             ))}
           </div>
@@ -709,8 +700,8 @@ function PitchPage() {
           <div className="mt-10 space-y-8">
             {PARTNER_CATEGORIES.map((cat) => (
               <div key={cat.id} data-reveal className="oppitch-reveal">
-                <h3 className="text-sm font-extrabold tracking-tight">{cat.title}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{cat.blurb}</p>
+                <h3 className="oppitch-card-title">{cat.title}</h3>
+                <p className="mt-1.5 text-lg text-muted-foreground">{cat.blurb}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {cat.partners.map((p) => (
                     <div
@@ -719,7 +710,7 @@ function PitchPage() {
                       title={p.blurb}
                     >
                       <img src={p.logo} alt="" className="h-4 w-4 object-contain" />
-                      <span className="text-xs font-bold">{p.name}</span>
+                      <span className="text-sm font-bold">{p.name}</span>
                     </div>
                   ))}
                 </div>
@@ -728,9 +719,7 @@ function PitchPage() {
           </div>
 
           <div className="mt-10">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Networks
-            </p>
+            <p className="oppitch-label text-muted-foreground">Networks</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {networks.map((n) => (
                 <MarkChip key={n.name} mark={n} />
@@ -766,12 +755,12 @@ function PitchPage() {
               },
             ].map((m) => (
               <div key={m.t} data-reveal className="oppitch-reveal oppitch-panel p-6">
-                <h3 className="font-extrabold tracking-tight">{m.t}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{m.b}</p>
+                <h3 className="oppitch-card-title">{m.t}</h3>
+                <p className="mt-3 oppitch-body text-muted-foreground">{m.b}</p>
               </div>
             ))}
           </div>
-          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="oppitch-body mt-8 max-w-2xl text-muted-foreground">
             OpenPay Pro is positioned like a network-native money app: grow users and builders on
             the same OpenUSD ledger — similar in ambition to how open networks scale distribution
             first, then deepen economic activity.
@@ -786,16 +775,16 @@ function PitchPage() {
                 data-reveal
                 className="oppitch-reveal relative grid gap-3 pl-10 sm:grid-cols-[10rem_1fr] sm:pl-12"
               >
-                <div className="absolute left-0 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-primary text-[10px] font-bold text-primary-foreground shadow sm:h-8 sm:w-8">
+                <div className="absolute left-0 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-primary text-xs font-bold text-primary-foreground shadow sm:h-8 sm:w-8">
                   {r.tone === "live" ? "●" : "○"}
                 </div>
                 <div>
-                  <p className="text-sm font-extrabold">{r.phase}</p>
-                  <p className="text-xs font-semibold text-muted-foreground">{r.when}</p>
+                  <p className="oppitch-card-title">{r.phase}</p>
+                  <p className="text-base font-semibold text-muted-foreground">{r.when}</p>
                 </div>
-                <ul className="oppitch-panel space-y-2 p-4 sm:p-5">
+                <ul className="oppitch-panel space-y-2.5 p-4 sm:p-5">
                   {r.items.map((item) => (
-                    <li key={item} className="text-sm leading-snug text-muted-foreground">
+                    <li key={item} className="text-lg leading-snug text-muted-foreground">
                       · {item}
                     </li>
                   ))}
@@ -806,7 +795,7 @@ function PitchPage() {
         </Slide>
 
         <Slide id="funds" num="10" title="Use of funds" kicker="Capital allocation">
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="oppitch-body max-w-2xl text-muted-foreground">
             Proposed allocation for growth capital — product-first, with liquidity, distribution,
             security, and operational resilience. Percentages are a planning framework for
             investors; final terms are set in formal diligence.
@@ -815,7 +804,7 @@ function PitchPage() {
             {FUND_USE.map((f) => (
               <div key={f.title} data-reveal className="oppitch-reveal">
                 <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                  <p className="text-sm font-extrabold">
+                  <p className="oppitch-card-title">
                     <span className="tabular-nums text-primary">{f.pct}%</span> · {f.title}
                   </p>
                 </div>
@@ -825,9 +814,7 @@ function PitchPage() {
                     style={{ width: `${f.pct}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                  {f.body}
-                </p>
+                <p className="mt-2 oppitch-body text-muted-foreground">{f.body}</p>
               </div>
             ))}
           </div>
@@ -852,15 +839,15 @@ function PitchPage() {
               },
             ].map((x) => (
               <div key={x.t} className="oppitch-panel p-5">
-                <p className="text-sm font-extrabold">{x.t}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{x.b}</p>
+                <p className="oppitch-card-title">{x.t}</p>
+                <p className="mt-2 oppitch-body text-muted-foreground">{x.b}</p>
               </div>
             ))}
           </div>
           <div className="mt-12 flex flex-wrap gap-3">
             <Link
               to="/authpi"
-              className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-background"
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-3.5 text-base font-bold text-background"
             >
               Open OpenPay Pro
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -869,26 +856,26 @@ function PitchPage() {
               href="https://openpy.space/whitepaper"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
             >
               Whitepaper
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
             <Link
               to="/website"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
             >
               Website
             </Link>
             <Link
               to="/about"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
             >
               About the network
             </Link>
             <Link
               to="/docs"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
             >
               <BookOpen className="h-4 w-4" />
               Developer portal
@@ -898,15 +885,15 @@ function PitchPage() {
       </div>
 
       <footer className="border-t border-border bg-card/60 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div className="flex items-center gap-3">
             <img src={OPENPAY_AUTH_LOGO} alt="" className="h-8 w-8 rounded-lg" />
             <div>
-              <p className="text-sm font-extrabold">OpenPay Pro</p>
+              <p className="oppitch-card-title">OpenPay Pro</p>
               <p className="text-xs text-muted-foreground">openpaypro.space/pitch</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs font-bold text-muted-foreground">
+          <div className="flex flex-wrap gap-4 text-sm font-bold text-muted-foreground">
             <Link to="/website" className="hover:text-foreground">
               Website
             </Link>
@@ -932,7 +919,7 @@ function PitchPage() {
             </Link>
           </div>
         </div>
-        <p className="mx-auto mt-6 max-w-6xl px-5 text-[11px] leading-relaxed text-muted-foreground sm:px-8">
+        <p className="mx-auto mt-6 max-w-7xl px-5 text-[11px] leading-relaxed text-muted-foreground sm:px-8">
           This overview is for informational purposes and does not constitute an offer to sell or a
           solicitation of an offer to buy securities. Product features and market counts reflect the
           live OpenPay Pro catalog and may change.
@@ -964,14 +951,10 @@ function Slide({
     >
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border/80 pb-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-            {kicker}
-          </p>
-          <h2 className="opblog-h2 mt-1">{title}</h2>
+          <p className="oppitch-label text-muted-foreground">{kicker}</p>
+          <h2 className="opblog-h2 mt-2">{title}</h2>
         </div>
-        <span className="font-(family-name:--font-display) text-3xl font-extrabold tabular-nums text-primary/35 sm:text-4xl">
-          {num}
-        </span>
+        <span className="oppitch-stat-num text-primary/30 tabular-nums">{num}</span>
       </div>
       {children}
     </section>
@@ -993,9 +976,9 @@ function ThesisCard({
     <>
       <div className="flex items-center gap-3">
         <img src={logo} alt="" className="h-10 w-10 rounded-xl object-contain" />
-        <h3 className="text-lg font-bold tracking-tight">{name}</h3>
+        <h3 className="oppitch-card-title">{name}</h3>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <p className="mt-4 oppitch-body text-muted-foreground">{body}</p>
     </>
   );
   if (href.startsWith("http")) {
@@ -1024,9 +1007,9 @@ function ThesisCard({
 
 function MarkChip({ mark }: { mark: PartnerMark }) {
   return (
-    <div className="inline-flex shrink-0 items-center gap-2">
-      <img src={mark.logo} alt="" className="h-5 w-5 object-contain" />
-      <span className="text-xs font-bold whitespace-nowrap text-foreground/80">{mark.name}</span>
+    <div className="inline-flex shrink-0 items-center gap-2.5">
+      <img src={mark.logo} alt="" className="h-7 w-7 object-contain" />
+      <span className="text-base font-bold whitespace-nowrap text-foreground/85">{mark.name}</span>
     </div>
   );
 }

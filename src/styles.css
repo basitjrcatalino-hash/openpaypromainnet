@@ -77,8 +77,8 @@
 
   /* Phantom-like geometric sans — Plus Jakarta Sans (not Inter/system defaults) */
   --font-phantom:
-    "Plus Jakarta Sans", "SF Pro Display", "SF Pro Text", -apple-system,
-    BlinkMacSystemFont, system-ui, sans-serif;
+    "Plus Jakarta Sans", "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+    system-ui, sans-serif;
 
   /* Light: cool gray + lavender (kept readable; dark is the primary Phantom look) */
   --background: oklch(0.97 0.008 290);
@@ -129,10 +129,16 @@
   --sidebar-border: oklch(0.9 0.012 290);
   --sidebar-ring: oklch(0.52 0.17 295);
 
-  --gradient-primary: linear-gradient(135deg, oklch(0.42 0.14 295), oklch(0.58 0.15 300) 55%, oklch(0.78 0.09 295));
+  --gradient-primary: linear-gradient(
+    135deg,
+    oklch(0.42 0.14 295),
+    oklch(0.58 0.15 300) 55%,
+    oklch(0.78 0.09 295)
+  );
   --gradient-mint: linear-gradient(135deg, oklch(0.72 0.12 165), oklch(0.8 0.1 150));
-  --gradient-hero: radial-gradient(circle at 20% 0%, oklch(0.55 0.16 295 / 0.14), transparent 55%),
-                   radial-gradient(circle at 85% 100%, oklch(0.78 0.09 295 / 0.1), transparent 50%);
+  --gradient-hero:
+    radial-gradient(circle at 20% 0%, oklch(0.55 0.16 295 / 0.14), transparent 55%),
+    radial-gradient(circle at 85% 100%, oklch(0.78 0.09 295 / 0.1), transparent 50%);
   --shadow-glow: 0 12px 40px -20px oklch(0.45 0.14 295 / 0.28);
   --shadow-card: 0 8px 28px -16px oklch(0.18 0.03 290 / 0.12);
   --glass-bg: oklch(1 0 0 / 0.72);
@@ -204,7 +210,9 @@
   * {
     border-color: var(--color-border);
   }
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
   }
   body {
@@ -214,13 +222,19 @@
     font-size: 0.9375rem; /* 15px body */
     line-height: 1.35;
     letter-spacing: -0.014em;
-    font-feature-settings: "ss01" on, "cv11" on, "tnum" on;
+    font-feature-settings:
+      "ss01" on,
+      "cv11" on,
+      "tnum" on;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, .ph-title {
+  h1,
+  h2,
+  h3,
+  .ph-title {
     font-family: var(--font-phantom);
     letter-spacing: -0.028em;
     font-weight: 700;
@@ -302,22 +316,35 @@
   .ph-tab-icon-active {
     filter: drop-shadow(0 0 6px color-mix(in oklab, var(--primary-glow) 70%, transparent));
   }
-  button, a, [role="button"], [data-slot="button"] {
+  button,
+  a,
+  [role="button"],
+  [data-slot="button"] {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     font-family: inherit;
   }
-  button:not(:disabled), a, [role="button"] {
-    transition: background-color .12s ease, color .12s ease, border-color .12s ease, opacity .12s ease,
-      box-shadow .18s ease, transform .12s ease;
+  button:not(:disabled),
+  a,
+  [role="button"] {
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease,
+      border-color 0.12s ease,
+      opacity 0.12s ease,
+      box-shadow 0.18s ease,
+      transform 0.12s ease;
   }
-  button:not(:disabled):active, [role="button"]:active {
+  button:not(:disabled):active,
+  [role="button"]:active {
     transform: none;
   }
   a:active {
     transform: none;
   }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+  }
   /* Keep scroll/slide; hide scrollbar chrome everywhere */
   * {
     scrollbar-width: none;
@@ -329,17 +356,26 @@
     height: 0;
   }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 /* Opacity-only legacy helper — layout PageTransition owns Phantom enter motion. */
 @keyframes page-in {
-  from { opacity: 0.92; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0.92;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @utility animate-page-in {
-  animation: page-in .18s cubic-bezier(.22, 1, .36, 1) both;
+  animation: page-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Phantom-style route enter (fade + soft rise). Cleared after animationend. */
@@ -354,7 +390,7 @@
   }
 }
 @utility ph-route-enter {
-  animation: ph-route-enter .28s cubic-bezier(.22, 1, .36, 1) both;
+  animation: ph-route-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   transform-origin: 50% 0%;
 }
 
@@ -365,7 +401,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ph-route-enter {
-    animation: page-in .01ms linear both !important;
+    animation: page-in 0.01ms linear both !important;
     transform: none !important;
   }
 }
@@ -373,10 +409,10 @@
 /* Progressive enhancement — soft crossfade when View Transitions API is used */
 @supports (view-transition-name: none) {
   ::view-transition-old(root) {
-    animation: ph-vt-out .2s cubic-bezier(.4, 0, 1, 1) both;
+    animation: ph-vt-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
   }
   ::view-transition-new(root) {
-    animation: ph-vt-in .38s cubic-bezier(.22, 1, .36, 1) both;
+    animation: ph-vt-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   /* Keep chrome (sidebar/tabbar) stable — only main content morphs */
   .ph-sidebar,
@@ -388,16 +424,20 @@
     view-transition-name: ph-main;
   }
   ::view-transition-old(ph-main) {
-    animation: ph-vt-out .18s cubic-bezier(.4, 0, 1, 1) both;
+    animation: ph-vt-out 0.18s cubic-bezier(0.4, 0, 1, 1) both;
   }
   ::view-transition-new(ph-main) {
-    animation: ph-vt-in .36s cubic-bezier(.22, 1, .36, 1) both;
+    animation: ph-vt-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
 @keyframes ph-vt-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes ph-vt-in {
   from {
@@ -411,26 +451,44 @@
 }
 
 @keyframes scan-line {
-  0% { top: 10%; opacity: 0; }
-  15% { opacity: 0.85; }
-  85% { opacity: 0.85; }
-  100% { top: 86%; opacity: 0; }
+  0% {
+    top: 10%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    top: 86%;
+    opacity: 0;
+  }
 }
 @utility ph-scan-line {
-  animation: scan-line 2.4s cubic-bezier(.4,0,.2,1) infinite;
+  animation: scan-line 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes scan-bracket-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @utility ph-scan-bracket {
   animation: scan-bracket-in 0.35s ease-out both;
 }
 
 @keyframes ph-scan-shell-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @utility ph-scan-shell-in {
   animation: ph-scan-shell-in 0.28s ease-out both;
@@ -474,41 +532,79 @@
 }
 
 @keyframes splash-bar {
-  0%   { transform: translateX(-120%); }
-  100% { transform: translateX(360%); }
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
 }
 @keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 @keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 25%, transparent); }
-  50%      { box-shadow: 0 0 0 10px color-mix(in oklab, var(--primary) 0%, transparent); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 25%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--primary) 0%, transparent);
+  }
 }
 
-@utility animate-splash-bar { animation: splash-bar 1.1s cubic-bezier(.4,0,.2,1) infinite; }
-@utility animate-float      { animation: float-y 3.5s ease-in-out infinite; }
-@utility animate-glow-pulse { animation: glow-pulse 2s ease-out infinite; }
+@utility animate-splash-bar {
+  animation: splash-bar 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@utility animate-float {
+  animation: float-y 3.5s ease-in-out infinite;
+}
+@utility animate-glow-pulse {
+  animation: glow-pulse 2s ease-out infinite;
+}
 @utility animate-shimmer {
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 20%, transparent), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 20%, transparent),
+    transparent
+  );
   background-size: 200% 100%;
   animation: shimmer 1.8s linear infinite;
 }
 @utility hover-lift {
-  transition: transform .2s ease, box-shadow .2s ease;
-  &:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+  }
 }
 @utility hover-scale {
-  transition: transform .2s ease;
-  &:hover { transform: scale(1.03); }
+  transition: transform 0.2s ease;
+  &:hover {
+    transform: scale(1.03);
+  }
 }
 @utility press {
-  transition: transform .1s ease;
-  &:active { transform: scale(0.97); }
+  transition: transform 0.1s ease;
+  &:active {
+    transform: scale(0.97);
+  }
 }
 
 @utility ph-action {
@@ -520,8 +616,12 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--foreground);
-  transition: transform .12s ease, opacity .12s ease;
-  &:active { transform: scale(0.96); }
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
+  &:active {
+    transform: scale(0.96);
+  }
 }
 
 @utility ph-action-icon {
@@ -543,8 +643,10 @@
   gap: 0.75rem;
   padding: 0.875rem 0;
   text-align: left;
-  transition: background-color .12s ease;
-  &:hover { background: color-mix(in oklab, var(--muted) 50%, transparent); }
+  transition: background-color 0.12s ease;
+  &:hover {
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
+  }
 }
 
 @utility ph-tabbar {
@@ -604,7 +706,8 @@
   }
 
   /* Desktop: let authenticated app pages fill the main column (dialogs portaled outside main). */
-  main.ot-phantom :is(.max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl) {
+  main.ot-phantom
+    :is(.max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl) {
     max-width: none !important;
   }
 }
@@ -652,9 +755,7 @@
 
 @media (max-width: 767px) {
   .ph-trade-bar {
-    bottom: calc(
-      var(--ph-tabbar-content, 3.75rem) + max(0.5rem, env(safe-area-inset-bottom, 0px))
-    );
+    bottom: calc(var(--ph-tabbar-content, 3.75rem) + max(0.5rem, env(safe-area-inset-bottom, 0px)));
   }
 
   /* When chrome (tabbar) is scrolled away, dock flush to the screen bottom. */
@@ -954,23 +1055,41 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   z-index: 200 !important;
 }
 
-
 /* Route progress bar */
 @keyframes ph-progress-run {
-  0% { transform: scaleX(0); }
-  60% { transform: scaleX(.72); }
-  100% { transform: scaleX(.92); }
+  0% {
+    transform: scaleX(0);
+  }
+  60% {
+    transform: scaleX(0.72);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
 }
 @keyframes ph-progress-done {
-  0% { opacity: 1; transform: scaleX(.92); }
-  100% { opacity: 0; transform: scaleX(1); }
+  0% {
+    opacity: 1;
+    transform: scaleX(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
 }
-.ph-progress-run { animation: ph-progress-run 1.6s cubic-bezier(.22,1,.36,1) forwards; }
-.ph-progress-done { animation: ph-progress-done .24s ease-out forwards; }
+.ph-progress-run {
+  animation: ph-progress-run 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.ph-progress-done {
+  animation: ph-progress-done 0.24s ease-out forwards;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .ph-progress-run,
-  .ph-progress-done { animation: none; opacity: .6; }
+  .ph-progress-done {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* ============================================================
@@ -985,8 +1104,7 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   }
   body {
     font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-      var(--font-phantom);
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-phantom);
     overscroll-behavior-y: none;
     /* Feels like chrome-less native UI: no long-press callout / text drag */
     -webkit-touch-callout: none;
@@ -1049,8 +1167,12 @@ html.solana-pay-open body > div[style*="z-index:50"] {
     animation: ph-ios-tab-pop 0.28s cubic-bezier(0.32, 1.35, 0.5, 1) both;
   }
   @keyframes ph-ios-tab-pop {
-    from { transform: scale(0.88); }
-    to { transform: scale(1); }
+    from {
+      transform: scale(0.88);
+    }
+    to {
+      transform: scale(1);
+    }
   }
 
   /* Navigation bar — centered title, hairline separator */
@@ -1370,7 +1492,9 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   font-size: 0.875rem;
   padding: 0.7rem 1.15rem;
   letter-spacing: -0.01em;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 .ophome-cta-pill:hover {
   filter: brightness(1.04);
@@ -1394,8 +1518,7 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   position: absolute;
   inset: 0;
   opacity: 0.35;
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 75%);
   pointer-events: none;
@@ -1444,7 +1567,9 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   padding: 0.95rem 1.35rem;
   letter-spacing: -0.015em;
   box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.45);
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 .ophome-hero-cta:hover {
   filter: brightness(1.05);
@@ -1469,8 +1594,7 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 
 .ophome-stage {
   border-radius: clamp(1.5rem, 3vw, 2.25rem);
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(239, 234, 252, 0.9));
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(239, 234, 252, 0.9));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.85) inset,
     0 28px 70px -40px rgba(40, 30, 80, 0.4);
@@ -1504,7 +1628,10 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(26, 20, 48, 0.06);
   backdrop-filter: blur(10px);
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 .ophome-eco:hover {
   background: #fff;
@@ -1517,7 +1644,10 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(26, 20, 48, 0.07);
   backdrop-filter: blur(10px);
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 .ophome-partner-tile:hover {
   background: #fff;
@@ -1648,8 +1778,7 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(rgba(26, 20, 48, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(26, 20, 48, 0.05) 1px, transparent 1px);
   background-size: 18px 18px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
   pointer-events: none;
@@ -1661,7 +1790,10 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   border: 1px solid rgba(26, 20, 48, 0.06);
   backdrop-filter: blur(12px);
   box-shadow: 0 18px 50px -36px rgba(40, 30, 80, 0.35);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 .ophome-bento:hover {
   transform: translateY(-4px);
@@ -1779,10 +1911,69 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   }
 }
 
-/* —— Pitch deck (/pitch) — blog/website editorial skin —— */
+/* —— Pitch deck (/pitch) — large readable presentation type —— */
 .oppitch.opblog,
 .dark .oppitch.opblog {
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-phantom), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Darker muted text for readability on cream */
+  --muted-foreground: #5a5270;
+  font-size: 1.125rem;
+}
+
+.oppitch .opblog-title {
+  font-family: var(--font-phantom);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  font-size: clamp(3.25rem, 10vw, 6.25rem);
+}
+
+.oppitch .opblog-h2 {
+  font-family: var(--font-phantom);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  font-size: clamp(2rem, 4.8vw, 3.15rem);
+}
+
+.oppitch .opblog-dek {
+  font-family: var(--font-phantom);
+  font-size: clamp(1.4rem, 2.8vw, 1.85rem);
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.oppitch-body {
+  font-family: var(--font-phantom);
+  font-size: clamp(1.25rem, 1.8vw, 1.45rem);
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+.oppitch-card-title {
+  font-family: var(--font-phantom);
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.oppitch-stat-num {
+  font-family: var(--font-phantom);
+  font-size: clamp(2.35rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.oppitch-label {
+  font-family: var(--font-phantom);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .oppitch-sky {

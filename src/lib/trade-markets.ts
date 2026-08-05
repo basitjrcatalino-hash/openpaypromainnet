@@ -13,6 +13,7 @@
  */
 
 import type { MajorTokenId } from "@/lib/major-tokens";
+import { isMajorTokenId } from "@/lib/major-tokens";
 
 export type TradeMarketStatus = "listed" | "delisted";
 
@@ -95,6 +96,11 @@ type MarketSeed = {
 function market(seed: MarketSeed): TradeMarketDef {
   const symbol = seed.symbol.toUpperCase();
   const pair = `${symbol}USDT`;
+  const inferred =
+    seed.majorId ??
+    (isMajorTokenId(symbol.toLowerCase())
+      ? (symbol.toLowerCase() as MajorTokenId)
+      : undefined);
   return {
     symbol,
     name: seed.name,
@@ -104,7 +110,7 @@ function market(seed: MarketSeed): TradeMarketDef {
     coingecko_slug: seed.coingecko_slug,
     coinmarketcap_slug: seed.coinmarketcap_slug ?? seed.coingecko_slug,
     logo: seed.logo,
-    majorId: seed.majorId,
+    majorId: inferred,
     status: "listed",
     spot_enabled: seed.spot_enabled ?? true,
     perpetual_enabled: seed.perpetual_enabled ?? true,

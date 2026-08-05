@@ -137,6 +137,12 @@ import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/p
 import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
 import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
 import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
+import { Route as ApiPublicTrustwalletListingsRouteImport } from './routes/api/public/trustwallet-listings'
+import { Route as ApiPublicTrustwalletPricesRouteImport } from './routes/api/public/trustwallet-prices'
+import { Route as ApiPublicTrustwalletQuoteRouteImport } from './routes/api/public/trustwallet-quote'
+import { Route as ApiPublicTrustwalletSearchRouteImport } from './routes/api/public/trustwallet-search'
+import { Route as ApiPublicTrustwalletStatusRouteImport } from './routes/api/public/trustwallet-status'
+import { Route as ApiPublicTrustwalletValidateRouteImport } from './routes/api/public/trustwallet-validate'
 import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
 import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
 import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
@@ -840,6 +846,42 @@ const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
   path: '/api/public/telegram-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTrustwalletListingsRoute =
+  ApiPublicTrustwalletListingsRouteImport.update({
+    id: '/api/public/trustwallet-listings',
+    path: '/api/public/trustwallet-listings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletPricesRoute =
+  ApiPublicTrustwalletPricesRouteImport.update({
+    id: '/api/public/trustwallet-prices',
+    path: '/api/public/trustwallet-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletQuoteRoute =
+  ApiPublicTrustwalletQuoteRouteImport.update({
+    id: '/api/public/trustwallet-quote',
+    path: '/api/public/trustwallet-quote',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletSearchRoute =
+  ApiPublicTrustwalletSearchRouteImport.update({
+    id: '/api/public/trustwallet-search',
+    path: '/api/public/trustwallet-search',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletStatusRoute =
+  ApiPublicTrustwalletStatusRouteImport.update({
+    id: '/api/public/trustwallet-status',
+    path: '/api/public/trustwallet-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletValidateRoute =
+  ApiPublicTrustwalletValidateRouteImport.update({
+    id: '/api/public/trustwallet-validate',
+    path: '/api/public/trustwallet-validate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWalletconnectAuthRoute =
   ApiPublicWalletconnectAuthRouteImport.update({
     id: '/api/public/walletconnect-auth',
@@ -1172,6 +1214,12 @@ export interface FileRoutesByFullPath {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
+  '/api/public/trustwallet-listings': typeof ApiPublicTrustwalletListingsRoute
+  '/api/public/trustwallet-prices': typeof ApiPublicTrustwalletPricesRoute
+  '/api/public/trustwallet-quote': typeof ApiPublicTrustwalletQuoteRoute
+  '/api/public/trustwallet-search': typeof ApiPublicTrustwalletSearchRoute
+  '/api/public/trustwallet-status': typeof ApiPublicTrustwalletStatusRoute
+  '/api/public/trustwallet-validate': typeof ApiPublicTrustwalletValidateRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
@@ -1338,6 +1386,12 @@ export interface FileRoutesByTo {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
+  '/api/public/trustwallet-listings': typeof ApiPublicTrustwalletListingsRoute
+  '/api/public/trustwallet-prices': typeof ApiPublicTrustwalletPricesRoute
+  '/api/public/trustwallet-quote': typeof ApiPublicTrustwalletQuoteRoute
+  '/api/public/trustwallet-search': typeof ApiPublicTrustwalletSearchRoute
+  '/api/public/trustwallet-status': typeof ApiPublicTrustwalletStatusRoute
+  '/api/public/trustwallet-validate': typeof ApiPublicTrustwalletValidateRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
@@ -1506,6 +1560,12 @@ export interface FileRoutesById {
   '/api/public/solana-auth': typeof ApiPublicSolanaAuthRoute
   '/api/public/supabase-config': typeof ApiPublicSupabaseConfigRoute
   '/api/public/telegram-auth': typeof ApiPublicTelegramAuthRoute
+  '/api/public/trustwallet-listings': typeof ApiPublicTrustwalletListingsRoute
+  '/api/public/trustwallet-prices': typeof ApiPublicTrustwalletPricesRoute
+  '/api/public/trustwallet-quote': typeof ApiPublicTrustwalletQuoteRoute
+  '/api/public/trustwallet-search': typeof ApiPublicTrustwalletSearchRoute
+  '/api/public/trustwallet-status': typeof ApiPublicTrustwalletStatusRoute
+  '/api/public/trustwallet-validate': typeof ApiPublicTrustwalletValidateRoute
   '/api/public/walletconnect-auth': typeof ApiPublicWalletconnectAuthRoute
   '/api/public/web3auth-auth': typeof ApiPublicWeb3authAuthRoute
   '/api/webhooks/circle': typeof ApiWebhooksCircleRoute
@@ -1674,6 +1734,12 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
+    | '/api/public/trustwallet-listings'
+    | '/api/public/trustwallet-prices'
+    | '/api/public/trustwallet-quote'
+    | '/api/public/trustwallet-search'
+    | '/api/public/trustwallet-status'
+    | '/api/public/trustwallet-validate'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
@@ -1840,6 +1906,12 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
+    | '/api/public/trustwallet-listings'
+    | '/api/public/trustwallet-prices'
+    | '/api/public/trustwallet-quote'
+    | '/api/public/trustwallet-search'
+    | '/api/public/trustwallet-status'
+    | '/api/public/trustwallet-validate'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
@@ -2007,6 +2079,12 @@ export interface FileRouteTypes {
     | '/api/public/solana-auth'
     | '/api/public/supabase-config'
     | '/api/public/telegram-auth'
+    | '/api/public/trustwallet-listings'
+    | '/api/public/trustwallet-prices'
+    | '/api/public/trustwallet-quote'
+    | '/api/public/trustwallet-search'
+    | '/api/public/trustwallet-status'
+    | '/api/public/trustwallet-validate'
     | '/api/public/walletconnect-auth'
     | '/api/public/web3auth-auth'
     | '/api/webhooks/circle'
@@ -2091,6 +2169,12 @@ export interface RootRouteChildren {
   ApiPublicSolanaAuthRoute: typeof ApiPublicSolanaAuthRoute
   ApiPublicSupabaseConfigRoute: typeof ApiPublicSupabaseConfigRoute
   ApiPublicTelegramAuthRoute: typeof ApiPublicTelegramAuthRoute
+  ApiPublicTrustwalletListingsRoute: typeof ApiPublicTrustwalletListingsRoute
+  ApiPublicTrustwalletPricesRoute: typeof ApiPublicTrustwalletPricesRoute
+  ApiPublicTrustwalletQuoteRoute: typeof ApiPublicTrustwalletQuoteRoute
+  ApiPublicTrustwalletSearchRoute: typeof ApiPublicTrustwalletSearchRoute
+  ApiPublicTrustwalletStatusRoute: typeof ApiPublicTrustwalletStatusRoute
+  ApiPublicTrustwalletValidateRoute: typeof ApiPublicTrustwalletValidateRoute
   ApiPublicWalletconnectAuthRoute: typeof ApiPublicWalletconnectAuthRoute
   ApiPublicWeb3authAuthRoute: typeof ApiPublicWeb3authAuthRoute
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
@@ -3017,6 +3101,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/trustwallet-listings': {
+      id: '/api/public/trustwallet-listings'
+      path: '/api/public/trustwallet-listings'
+      fullPath: '/api/public/trustwallet-listings'
+      preLoaderRoute: typeof ApiPublicTrustwalletListingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-prices': {
+      id: '/api/public/trustwallet-prices'
+      path: '/api/public/trustwallet-prices'
+      fullPath: '/api/public/trustwallet-prices'
+      preLoaderRoute: typeof ApiPublicTrustwalletPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-quote': {
+      id: '/api/public/trustwallet-quote'
+      path: '/api/public/trustwallet-quote'
+      fullPath: '/api/public/trustwallet-quote'
+      preLoaderRoute: typeof ApiPublicTrustwalletQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-search': {
+      id: '/api/public/trustwallet-search'
+      path: '/api/public/trustwallet-search'
+      fullPath: '/api/public/trustwallet-search'
+      preLoaderRoute: typeof ApiPublicTrustwalletSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-status': {
+      id: '/api/public/trustwallet-status'
+      path: '/api/public/trustwallet-status'
+      fullPath: '/api/public/trustwallet-status'
+      preLoaderRoute: typeof ApiPublicTrustwalletStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-validate': {
+      id: '/api/public/trustwallet-validate'
+      path: '/api/public/trustwallet-validate'
+      fullPath: '/api/public/trustwallet-validate'
+      preLoaderRoute: typeof ApiPublicTrustwalletValidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/walletconnect-auth': {
       id: '/api/public/walletconnect-auth'
       path: '/api/public/walletconnect-auth'
@@ -3573,6 +3699,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSolanaAuthRoute: ApiPublicSolanaAuthRoute,
   ApiPublicSupabaseConfigRoute: ApiPublicSupabaseConfigRoute,
   ApiPublicTelegramAuthRoute: ApiPublicTelegramAuthRoute,
+  ApiPublicTrustwalletListingsRoute: ApiPublicTrustwalletListingsRoute,
+  ApiPublicTrustwalletPricesRoute: ApiPublicTrustwalletPricesRoute,
+  ApiPublicTrustwalletQuoteRoute: ApiPublicTrustwalletQuoteRoute,
+  ApiPublicTrustwalletSearchRoute: ApiPublicTrustwalletSearchRoute,
+  ApiPublicTrustwalletStatusRoute: ApiPublicTrustwalletStatusRoute,
+  ApiPublicTrustwalletValidateRoute: ApiPublicTrustwalletValidateRoute,
   ApiPublicWalletconnectAuthRoute: ApiPublicWalletconnectAuthRoute,
   ApiPublicWeb3authAuthRoute: ApiPublicWeb3authAuthRoute,
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,

@@ -271,6 +271,8 @@ function MobileTabBar({
 }) {
   const chromeVisible = useChromeVisible();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { code: currency, setCode: setCurrency, meta: currencyMeta } = useCurrency();
   const moreActive = moreNavActive(pathname);
 
   useEffect(() => {
@@ -349,9 +351,29 @@ function MobileTabBar({
             <SheetTitle className="text-lg font-bold tracking-tight">
               {navLabel(t, "nav.more")}
             </SheetTitle>
-            <SheetDescription>Deposit, P2P, history, and settings</SheetDescription>
+            <SheetDescription>Deposit, currency, P2P, history, and settings</SheetDescription>
           </SheetHeader>
           <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreOpen(false);
+                  setCurrencyOpen(true);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl bg-muted/40 px-3.5 py-3 text-foreground press hover:bg-muted/70"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-background/80">
+                  <CircleDollarSign className="h-5 w-5" strokeWidth={1.85} />
+                </span>
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block text-sm font-bold tracking-tight">Currency</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Display as {currencyMeta.symbol} {currency}
+                  </span>
+                </span>
+              </button>
+            </li>
             {MORE_NAV.map((item) => {
               const Icon = item.icon;
               const active = navActive(pathname, item.to);
@@ -389,6 +411,13 @@ function MobileTabBar({
           </ul>
         </SheetContent>
       </Sheet>
+
+      <CurrencyPickerSheet
+        open={currencyOpen}
+        onOpenChange={setCurrencyOpen}
+        value={currency}
+        onSelect={setCurrency}
+      />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { MajorTokenId } from "@/lib/major-tokens";
+import { isMajorTokenId } from "@/lib/major-tokens";
 import {
   PERP_MARKETS as REGISTRY_MARKETS,
   getTradeMarket,
@@ -23,7 +24,10 @@ export function isPerpMarket(v: string): v is PerpMarket {
 
 export function marketToMajorId(market: PerpMarket): MajorTokenId | null {
   const row = getTradeMarket(market);
-  return row?.majorId ?? null;
+  if (row?.majorId) return row.majorId;
+  const fallback = market.toLowerCase();
+  if (isMajorTokenId(fallback)) return fallback;
+  return null;
 }
 
 export function unrealizedPnl(opts: {

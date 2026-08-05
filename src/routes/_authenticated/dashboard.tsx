@@ -16,6 +16,7 @@ import {
   BadgeCheck,
   BookOpen,
   MessageCircle,
+  CircleDollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
@@ -92,6 +93,7 @@ const MORE_ACTIONS = [
   { label: "Live Chat", icon: MessageCircle, to: "/chat" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },
+  { label: "Currency", icon: CircleDollarSign, action: "currency" as const },
   { label: "Blockchain", icon: Blocks, href: "https://www.openpyledger.space/pro" },
 ] as const;
 
@@ -723,7 +725,12 @@ function Dashboard() {
                 logoUrl={"logoUrl" in a ? (a.logoUrl as string) : undefined}
                 to={"to" in a ? (a.to as string) : undefined}
                 href={"href" in a ? (a.href as string) : undefined}
-                onClick={() => setMoreOpen(false)}
+                onClick={() => {
+                  setMoreOpen(false);
+                  if ("action" in a && a.action === "currency") {
+                    setCurrencyOpen(true);
+                  }
+                }}
               />
             ))}
           </div>

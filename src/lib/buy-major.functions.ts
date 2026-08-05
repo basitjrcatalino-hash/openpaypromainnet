@@ -3,12 +3,15 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   fetchMajorUsdPrices,
+  isLedgerMajorId,
   LEDGER_BALANCE_COLUMN,
   majorBalancePatch,
   readMajorBalance,
+  walletMajorSelect,
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
-import { MAJOR_TOKENS, isMajorTokenId } from "@/lib/major-tokens";
+import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { mergeTrustWalletMajorPrices } from "@/lib/trustwallet.server";
 import {
   applyPlatformTradeFee,
   creditPlatformFeeOusd,
@@ -21,7 +24,7 @@ export type BuyPayAsset = (typeof BUY_PAY_ASSETS)[number];
 
 const BuyMajorSchema = z.object({
   wallet_id: z.string().uuid(),
-  major_id: z.string().refine(isMajorTokenId, "Invalid major"),
+  major_id: z.string().refine(isLedgerMajorId, "Invalid major"),
   /** USD notional to spend (gross — includes platform fee) */
   usd_amount: z.number().positive().min(0.01).max(50_000),
   /** Asset to debit from the Pro wallet (defaults to OUSD). */
@@ -146,9 +149,7 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
 
     const { data: wallet, error: walErr } = await supabase
       .from("wallets")
-      .select(
-        "id, ousd_balance, pi_balance, btc_balance, eth_balance, sol_balance, usdc_balance, usdt_balance, pyusd_balance, usdg_balance, usd1_balance, cash_balance, eurc_balance, hype_balance, zec_balance, tslax_balance, nflxx_balance, googlx_balance, bnb_balance, uni_balance, okb_balance, gt_balance, bgb_balance, cake_balance, jup_balance, ron_balance, xrp_balance, trx_balance, doge_balance, ada_balance, link_balance, xlm_balance, bch_balance, gram_balance, avax_balance, sui_balance, xaut_balance, ondo_balance, near_balance, usdy_balance, paxg_balance, wlfi_balance, aster_balance, rlusd_balance, aave_balance, dot_balance, pump_balance",
-      )
+      .select(walletMajorSelect("id, ousd_balance"))
       .eq("id", data.wallet_id)
       .eq("user_id", userId)
       .maybeSingle();
@@ -157,7 +158,10 @@ export const buyMajorWithOusd = createServerFn({ method: "POST" })
 
     const priceIds: LedgerMajorId[] = [major];
     if (payAsset === "SOL") priceIds.push("sol");
-    const prices = await fetchMajorUsdPrices(priceIds);
+    const prices = await mergeTrustWalletMajorPrices(
+      await fetchMajorUsdPrices(priceIds),
+      priceIds,
+    );
     const price = prices[major];
     if (!(price > 0)) throw new Error(`Could not price ${def.symbol}`);
 

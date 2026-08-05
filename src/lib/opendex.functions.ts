@@ -34,6 +34,7 @@ import {
   type LedgerMajorId,
 } from "@/lib/ledger-majors";
 import { MAJOR_TOKENS } from "@/lib/major-tokens";
+import { mergeTrustWalletMajorPrices } from "@/lib/trustwallet.server";
 
 export {
   OUSD_SWAP_ID,
@@ -127,7 +128,10 @@ export const executeOpenDexSwap = createServerFn({ method: "POST" })
     const needMajors = [fromMajor, toMajor].filter(Boolean) as LedgerMajorId[];
     const prices =
       needMajors.length > 0
-        ? await fetchMajorUsdPrices(needMajors)
+        ? await mergeTrustWalletMajorPrices(
+            await fetchMajorUsdPrices(needMajors),
+            needMajors,
+          )
         : ({} as Record<LedgerMajorId, number>);
 
     const resolve = (id: string): QuoteToken | undefined => {

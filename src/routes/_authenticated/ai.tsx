@@ -239,7 +239,7 @@ function AiAssistantPage() {
               }
             }}
             placeholder="Message…"
-            className="max-h-32 min-h-[2.25rem] flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+            className="max-h-32 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
           />
           <button
             type="submit"
@@ -317,7 +317,7 @@ function OpenPayMarkdown({ text }: { text: string }) {
               );
             }
             return (
-              <code className="block whitespace-pre-wrap break-words font-mono text-[13px] leading-relaxed">
+              <code className="block whitespace-pre-wrap wrap-break-word font-mono text-[13px] leading-relaxed">
                 {children}
               </code>
             );

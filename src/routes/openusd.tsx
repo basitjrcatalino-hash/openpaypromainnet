@@ -152,7 +152,7 @@ function OusdPage() {
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/authpi"
-            className="rounded-full bg-white/70 px-3 py-1.5 text-foreground/80 backdrop-blur hover:text-foreground"
+            className="rounded-full bg-white/70 px-3 py-1.5 text-(--foreground)/80 backdrop-blur hover:text-foreground"
           >
             OpenPay Pro
           </Link>
@@ -285,7 +285,7 @@ function OusdPage() {
           <ul className="mt-12 grid gap-8 sm:grid-cols-2">
             {BULLETS.map(({ icon: Icon, title, body }) => (
               <li key={title} className="min-w-0">
-                <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-accent/15 text-accent">
+                <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-(--accent)/15 text-accent">
                   <Icon className="h-5 w-5" strokeWidth={2.1} />
                 </div>
                 <h3 className="text-lg font-bold tracking-tight">{title}</h3>
@@ -366,7 +366,7 @@ function OusdPage() {
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-accent/40 hover:bg-white"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-(--accent)/40 hover:bg-white"
                 >
                   <span>{item.label}</span>
                   <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

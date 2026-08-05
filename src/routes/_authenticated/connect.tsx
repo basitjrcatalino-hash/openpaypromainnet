@@ -151,7 +151,7 @@ function ConnectPage() {
       </div>
 
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-glow">
+      <Card className="border-primary/20 bg-linear-to-br from-primary/10 via-card to-card shadow-glow">
         <CardHeader>
           <div className="flex items-center gap-2.5">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg">

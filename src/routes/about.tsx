@@ -89,15 +89,15 @@ function AboutPage() {
     <main className="opabout min-h-screen text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
         <div className="opabout-mesh absolute inset-0" />
-        <div className="opabout-orb absolute -left-24 top-16 h-72 w-72 rounded-full bg-[color:rgba(171,159,242,0.35)] blur-3xl" />
-        <div className="opabout-orb absolute -right-16 top-[28%] h-80 w-80 rounded-full bg-[color:rgba(99,102,241,0.22)] blur-3xl [animation-delay:1.2s]" />
+        <div className="opabout-orb absolute -left-24 top-16 h-72 w-72 rounded-full bg-[rgba(171,159,242,0.35)] blur-3xl" />
+        <div className="opabout-orb absolute -right-16 top-[28%] h-80 w-80 rounded-full bg-[rgba(99,102,241,0.22)] blur-3xl [animation-delay:1.2s]" />
       </div>
 
       <div className="mx-auto w-full max-w-5xl px-5 pb-28 pt-10 sm:px-8">
         <nav className="mb-12 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/authpi"
-            className="rounded-full bg-muted px-3 py-1.5 text-foreground/80 hover:text-foreground"
+            className="rounded-full bg-muted px-3 py-1.5 text-(--foreground)/80 hover:text-foreground"
           >
             OpenPay Pro
           </Link>
@@ -155,7 +155,7 @@ function AboutPage() {
             />
             <a
               href="/docs/openpay"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-(--card)/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
             >
               Build on OpenPay
             </a>
@@ -264,7 +264,7 @@ function AboutPage() {
           <h2 className="max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">
             Join the open network.
           </h2>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-background/70">
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-(--background)/70">
             Create a wallet, move value, or build on the rails — OpenPay Pro stays open so the
             network can grow with you.
           </p>

@@ -120,7 +120,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Developers",
     items: [
       { label: "Developer Portal", href: "/docs", desc: "Full integration hub" },
-      { label: "AI Partner Pack", href: "/docs/ai", desc: "Cursor · Lovable · Replit · Claude" },
+      { label: "AI Partner Pack", href: "/docs/ai", desc: "OpenAI · ChatGPT · Cursor · Claude" },
       { label: "Connect & payments", href: "/docs/openpay", desc: "OAuth, PayButton, inbound, auth" },
       { label: "Exchange · OUSD", href: "/docs/exchange", desc: "Deposit, withdraw, network API" },
       { label: "Money rails", href: "/docs/money", desc: "Send, receive, deposit, swap" },

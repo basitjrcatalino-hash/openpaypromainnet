@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   ArrowDownToLine,
@@ -45,13 +45,22 @@ export const Route = createFileRoute("/docs")({
     ],
     links: [{ rel: "canonical", href: `${DOCS_BASE}/docs` }],
   }),
-  component: DocsPortalPage,
+  component: DocsLayout,
 });
 
+/**
+ * `/docs` hub + layout for child pages (`/docs/ai`, `/docs/openpay`, …).
+ * Without `<Outlet />`, sidebar/button clicks appear to do nothing.
+ */
+function DocsLayout() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
+  return <DocsPortalPage />;
+}
 const SPEECH = `
 OpenPay Pro Developer Portal.
 Integrate OpenPay Pro into exchanges, merchant apps, wallets, and agent platforms.
-Start with the AI Partner Pack for Cursor, Lovable, Replit, and Claude,
+Start with the AI Partner Pack for OpenAI, ChatGPT, Cursor, Lovable, Replit, and Claude,
 or create an app at the Partner API portal, keep your opk live key on the server,
 then wire Connect OAuth, PayButton charges, Partner transfers, Pro inbound credit,
 Public Ledger reconciliation, and Agent Connect MCP tools.
@@ -61,7 +70,7 @@ Money rails cover send, receive, deposit, withdraw, and swap for OUSD and majors
 const PATHS = [
   {
     title: "AI / agent (paste & ship)",
-    body: "Give Cursor, Lovable, Replit, or Claude one URL — Connect, PayButton, payouts, inbound, ledger.",
+    body: "Give OpenAI, ChatGPT, Cursor, Lovable, or Claude one URL — Connect, PayButton, payouts, inbound, ledger.",
     href: "/docs/ai",
     icon: Bot,
   },
@@ -181,26 +190,27 @@ function DocsPortalPage() {
         </Badge>
       </div>
 
-      <Card className="rounded-3xl border-primary/25 bg-primary/5 p-6 sm:p-7">
+      <Link
+        to="/docs/ai"
+        className="block rounded-3xl border border-primary/25 bg-primary/5 p-6 transition hover:border-primary/50 hover:bg-primary/10 sm:p-7"
+      >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-xl">
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
               For AI tools
             </p>
-            <h2 className="opblog-h2 mt-2">Cursor · Lovable · Replit · Claude</h2>
+            <h2 className="opblog-h2 mt-2">OpenAI · ChatGPT · Cursor · Claude</h2>
             <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
               Paste one markdown feed and ship auth, payments, top-up, and inbound. Includes
-              OpenAPI + copy-paste prompts.
+              OpenAPI + copy-paste prompts for OpenAI, ChatGPT, Lovable, and Replit.
             </p>
           </div>
-          <Button asChild size="lg" className="rounded-full text-base">
-            <Link to="/docs/ai">
-              Open AI Partner Pack
-              <ExternalLink className="ml-1.5 h-4 w-4" />
-            </Link>
-          </Button>
+          <span className="inline-flex items-center rounded-full bg-primary px-5 py-2.5 text-base font-bold text-primary-foreground shadow-sm">
+            Open AI Partner Pack
+            <ExternalLink className="ml-1.5 h-4 w-4" />
+          </span>
         </div>
-      </Card>
+      </Link>
 
       <Card className="rounded-3xl border-border/60 bg-card/80 p-6 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">

@@ -7,7 +7,7 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 | Surface | URL |
 | --- | --- |
 | Developer Portal | https://openpaypro.space/docs |
-| **AI Partner Pack** (Cursor / Lovable / Replit / Claude) | https://openpaypro.space/docs/ai |
+| **AI Partner Pack** (OpenAI / ChatGPT / Cursor / Claude) | https://openpaypro.space/docs/ai |
 | AI guide (raw markdown) | https://openpaypro.space/api/public/docs/ai-partner |
 | OpenAPI | https://openpaypro.space/api/public/docs/openapi |
 | `llms.txt` | https://openpaypro.space/llms.txt |
@@ -58,7 +58,7 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 
 ---
 
-## AI agents (Cursor · Lovable · Replit · Claude)
+## AI agents (OpenAI · ChatGPT · Cursor · Lovable · Replit · Claude)
 
 1. Paste https://openpaypro.space/api/public/docs/ai-partner into the agent.  
 2. Or `@https://openpaypro.space/llms-full.txt` in Lovable.  

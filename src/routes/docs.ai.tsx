@@ -16,20 +16,20 @@ import {
 export const Route = createFileRoute("/docs/ai")({
   head: () => ({
     meta: [
-      { title: "AI Partner Integration — OpenPay + OpenPay Pro" },
+      { title: "AI Partner Pack — OpenAI, ChatGPT, Cursor, Claude" },
       {
         name: "description",
         content:
-          "Easy OpenPay partner API integration for Cursor, Lovable, Replit, and Claude — auth, payments, top-up, inbound, ledger, MCP.",
+          "OpenPay AI Partner Pack for OpenAI, ChatGPT, Cursor, Lovable, Replit, and Claude — auth, payments, top-up, inbound, ledger, MCP.",
       },
       {
         property: "og:title",
-        content: "AI Partner Integration — OpenPay + OpenPay Pro",
+        content: "AI Partner Pack — OpenAI · ChatGPT · Cursor · Claude",
       },
       {
         property: "og:description",
         content:
-          "Paste one URL into your AI tool and ship Connect, PayButton, payouts, and Pro inbound.",
+          "Paste one URL into OpenAI, ChatGPT, or any coding agent and ship Connect, PayButton, payouts, and Pro inbound.",
       },
       { property: "og:url", content: `${DOCS_BASE}/docs/ai` },
     ],
@@ -39,17 +39,17 @@ export const Route = createFileRoute("/docs/ai")({
 });
 
 const SPEECH = `
-AI Partner Integration Pack for OpenPay and OpenPay Pro.
-Paste the raw markdown feed into Cursor, Lovable, Replit, or Claude.
-Cover Connect OAuth, PayButton charges, transfers, Pro inbound top-up, Ledger, and MCP.
-Keep opk live keys on the server. Poll charges — no partner webhooks yet.
+AI Partner Pack for OpenPay and OpenPay Pro.
+Built for OpenAI, ChatGPT, Cursor, Lovable, Replit, and Claude.
+Paste the raw markdown feed, then ship Connect OAuth, PayButton charges, transfers,
+Pro inbound top-up, Ledger, and MCP. Keep opk live keys on the server. Poll charges.
 `.trim();
 
 const FEEDS = [
   {
     label: "AI guide (markdown)",
     href: "/api/public/docs/ai-partner",
-    tip: "Best single paste for agents",
+    tip: "Best single paste for OpenAI / ChatGPT / agents",
   },
   { label: "OpenAPI YAML", href: "/api/public/docs/openapi", tip: "Schemas for codegen" },
   { label: "llms.txt index", href: "/llms.txt", tip: "Discovery index" },
@@ -57,6 +57,33 @@ const FEEDS = [
 ] as const;
 
 const PROMPTS = [
+  {
+    tool: "OpenAI · ChatGPT",
+    body: `You are integrating OpenPay + OpenPay Pro as a third-party partner.
+
+Read these first (fetch the URLs):
+1) https://openpaypro.space/api/public/docs/ai-partner
+2) https://openpaypro.space/api/public/docs/openapi
+3) https://openpaypro.space/llms.txt
+
+Then generate production-ready code for:
+- Connect OAuth (authorize → callback → POST /oauth/token → store opa_live_)
+- PayButton charges (POST /charges → redirect checkout_url → poll until paid)
+- Optional payouts (POST /transfers + Idempotency-Key)
+- Optional Pro inbound credit (POST /api/public/openpay/inbound)
+
+Rules:
+- Server-only OPENPAY_PARTNER_API_KEY (opk_live_…) — never in the browser
+- Currency is OUSD
+- No partner charge webhooks — poll GET /charges/:id
+- Exact-match OAuth redirect_uri
+
+Partner API base:
+https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
+
+For wallet read tools in ChatGPT, also connect MCP:
+https://openpaypro.space/mcp`,
+  },
   {
     tool: "Cursor / Claude Code",
     body: `Fetch https://openpaypro.space/api/public/docs/ai-partner and
@@ -90,72 +117,103 @@ Secrets: OPENPAY_CLIENT_ID, OPENPAY_PARTNER_API_KEY, OPENPAY_REDIRECT_URI`,
 function AiPartnerDocsPage() {
   return (
     <DocsShell
-      title="AI Partner Integration"
-      description="One pack for third-party partners and AI coding tools — Connect, payments, top-up, inbound, ledger, MCP. Paste a feed URL and ship."
+      title="AI Partner Pack"
+      description="OpenAI, ChatGPT, Cursor, Lovable, Replit, and Claude — paste one feed and ship Connect, payments, top-up, inbound, ledger, and MCP."
       pathname="/docs/ai"
       eyebrow="Start here"
       speechText={SPEECH}
     >
       <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary" className="rounded-full">
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
+          OpenAI · ChatGPT
+        </Badge>
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
           Cursor · Lovable · Replit · Claude
         </Badge>
-        <Badge variant="secondary" className="rounded-full">
+        <Badge variant="secondary" className="rounded-full px-3.5 py-1.5 text-sm">
           Auth · Pay · Top-up
         </Badge>
-        <Badge variant="outline" className="rounded-full">
+        <Badge variant="outline" className="rounded-full px-3.5 py-1.5 text-sm">
           Poll charges — no webhooks
         </Badge>
       </div>
 
-      <Card className="rounded-3xl border-border/60 bg-card/80 p-5 sm:p-6">
+      <Card className="rounded-3xl border-primary/25 bg-primary/5 p-6 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-xl">
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5" />
-              Fastest path
+          <div className="max-w-2xl">
+            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              <Sparkles className="h-4 w-4" />
+              OpenAI · ChatGPT first
             </p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-tight">
-              Give your AI one URL
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Paste{" "}
-              <code className="text-foreground">/api/public/docs/ai-partner</code> into Cursor,
-              Lovable, Replit, or Claude. Keys come from the Partner portal — never from the
-              browser.
+            <h2 className="opblog-h2 mt-2">Paste into ChatGPT or any OpenAI agent</h2>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
+              Start a new chat, paste the AI guide URL (or attach{" "}
+              <code className="text-foreground">llms-full.txt</code>), then ask for Connect +
+              PayButton. For live wallet reads, also connect MCP at{" "}
+              <code className="text-foreground">{MCP_URL}</code>.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button asChild className="rounded-full">
+            <Button asChild size="lg" className="rounded-full text-base">
               <a href="/api/public/docs/ai-partner" target="_blank" rel="noreferrer">
                 Open AI guide
-                <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                <ExternalLink className="ml-1.5 h-4 w-4" />
               </a>
             </Button>
-            <Button asChild variant="outline" className="rounded-full">
-              <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
-                Get API keys
-              </a>
+            <Button asChild size="lg" variant="outline" className="rounded-full text-base">
+              <Link to="/docs/mcp">MCP for ChatGPT</Link>
             </Button>
           </div>
+        </div>
+        <DocsCode>{`# Paste this into ChatGPT / OpenAI
+https://openpaypro.space/api/public/docs/ai-partner
+
+# Or long-context dump
+https://openpaypro.space/llms-full.txt
+
+# Then say:
+Implement OpenPay Connect OAuth + PayButton charges for my app.
+Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
+      </Card>
+
+      <Card className="rounded-3xl border-border/60 bg-card/80 p-6 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-xl">
+            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Fastest path
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight">Give your AI one URL</h2>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
+              Paste{" "}
+              <code className="text-foreground">/api/public/docs/ai-partner</code> into OpenAI,
+              ChatGPT, Cursor, Lovable, Replit, or Claude. Keys come from the Partner portal —
+              never from the browser.
+            </p>
+          </div>
+          <Button asChild size="lg" variant="outline" className="rounded-full text-base">
+            <a href={PARTNER_PORTAL} target="_blank" rel="noreferrer">
+              Get API keys
+              <ExternalLink className="ml-1.5 h-4 w-4" />
+            </a>
+          </Button>
         </div>
       </Card>
 
       <DocsSection id="feeds" eyebrow="01" title="Machine-readable feeds">
-        <ul className="grid gap-2 sm:grid-cols-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {FEEDS.map((f) => (
             <li key={f.href}>
               <a
                 href={f.href}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-start justify-between gap-2 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 hover:bg-card"
+                className="flex items-start justify-between gap-2 rounded-2xl border border-border/50 bg-card/60 px-4 py-3.5 hover:bg-card"
               >
                 <span>
-                  <span className="block text-sm font-semibold">{f.label}</span>
-                  <span className="block text-xs text-muted-foreground">{f.tip}</span>
+                  <span className="block text-base font-semibold">{f.label}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{f.tip}</span>
                 </span>
-                <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-40" />
+                <ExternalLink className="mt-1 h-4 w-4 shrink-0 opacity-40" />
               </a>
             </li>
           ))}
@@ -165,9 +223,9 @@ function AiPartnerDocsPage() {
       <DocsSection id="prompts" eyebrow="02" title="Copy-paste prompts">
         <div className="space-y-4">
           {PROMPTS.map((p) => (
-            <Card key={p.tool} className="rounded-2xl border-border/60 bg-muted/20 p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-bold">
-                <Bot className="h-4 w-4 text-primary" />
+            <Card key={p.tool} className="rounded-2xl border-border/60 bg-muted/20 p-5">
+              <div className="mb-3 flex items-center gap-2 text-base font-bold">
+                <Bot className="h-5 w-5 text-primary" />
                 {p.tool}
               </div>
               <DocsCode>{p.body}</DocsCode>
@@ -188,7 +246,7 @@ Agents (read-only) → ${MCP_URL}
 
 Partner API base
 ${PARTNER_API}`}</DocsCode>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Full narrative + Node examples:{" "}
           <Link to="/docs/openpay" className="font-semibold text-primary hover:underline">
             /docs/openpay
@@ -205,7 +263,7 @@ ${PARTNER_API}`}</DocsCode>
       </DocsSection>
 
       <DocsSection id="rules" eyebrow="04" title="Security rules for agents">
-        <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+        <ol className="list-decimal space-y-3 pl-5 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
           <li>
             Keep <code className="text-foreground">opk_live_…</code> on the server only — never{" "}
             <code className="text-foreground">VITE_</code> / client env.
@@ -215,8 +273,8 @@ ${PARTNER_API}`}</DocsCode>
           <li>No partner charge webhooks — poll until paid / canceled / expired.</li>
           <li>OUSD is a ledger/network asset, not a public EVM/SPL contract.</li>
         </ol>
-        <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <Copy className="h-3.5 w-3.5" />
+        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Copy className="h-4 w-4" />
           Repo skill for Cursor agents:{" "}
           <code className="text-foreground">.agents/skills/openpay-partner-api/</code>
         </p>

@@ -86,38 +86,24 @@ function NavList({
                   ? "bg-accent font-semibold text-foreground ring-1 ring-primary/35"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               );
-              if (external || hashOnly) {
-                return (
-                  <li key={item.href + item.label}>
-                    <a
-                      href={item.href}
-                      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-                      className={className}
-                      onClick={onNavigate}
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        {item.label}
-                        {external ? <ExternalLink className="h-3.5 w-3.5 opacity-50" /> : null}
-                      </span>
-                      {item.desc ? (
-                        <span className="mt-1 block text-sm font-normal leading-snug opacity-75">
-                          {item.desc}
-                        </span>
-                      ) : null}
-                    </a>
-                  </li>
-                );
-              }
               return (
                 <li key={item.href + item.label}>
-                  <Link to={item.href} className={className} onClick={onNavigate}>
-                    {item.label}
+                  <a
+                    href={item.href}
+                    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    className={className}
+                    onClick={onNavigate}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      {item.label}
+                      {external ? <ExternalLink className="h-3.5 w-3.5 opacity-50" /> : null}
+                    </span>
                     {item.desc ? (
                       <span className="mt-1 block text-sm font-normal leading-snug opacity-75">
                         {item.desc}
                       </span>
                     ) : null}
-                  </Link>
+                  </a>
                 </li>
               );
             })}

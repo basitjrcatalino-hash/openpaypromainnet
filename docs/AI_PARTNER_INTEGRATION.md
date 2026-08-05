@@ -1,6 +1,6 @@
 # OpenPay + OpenPay Pro — AI Partner Integration Pack
 
-**Audience:** third-party partners and AI coding agents (Cursor, Lovable, Replit, Claude, ChatGPT, Copilot).
+**Audience:** third-party partners and AI coding agents (OpenAI, ChatGPT, Cursor, Lovable, Replit, Claude, Copilot).
 
 Paste this file (or fetch the live URLs below) into your AI tool, then ask it to implement Connect, payments, payouts, top-up, inbound, or ledger reconcile.
 
@@ -346,6 +346,28 @@ export async function creditProInbound(body) {
 
 ## 10. Copy-paste prompts for AI tools
 
+### OpenAI · ChatGPT
+
+```
+You are integrating OpenPay + OpenPay Pro as a third-party partner.
+
+Read these first (fetch the URLs):
+1) https://openpaypro.space/api/public/docs/ai-partner
+2) https://openpaypro.space/api/public/docs/openapi
+3) https://openpaypro.space/llms.txt
+
+Then generate production-ready code for:
+- Connect OAuth (authorize → callback → POST /oauth/token → store opa_live_)
+- PayButton charges (POST /charges → redirect checkout_url → poll until paid)
+- Optional payouts (POST /transfers + Idempotency-Key)
+- Optional Pro inbound credit (POST /api/public/openpay/inbound)
+
+Rules: server-only opk_live_ keys, currency OUSD, poll charges (no webhooks),
+exact-match OAuth redirect_uri.
+
+MCP (read-only wallet tools in ChatGPT): https://openpaypro.space/mcp
+```
+
 ### Cursor / Claude Code / Copilot
 
 ```
@@ -378,14 +400,6 @@ https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
 Implement auth (Connect), payments (charges), and payouts (transfers)
 per https://openpaypro.space/api/public/docs/ai-partner
 Secrets: OPENPAY_CLIENT_ID, OPENPAY_PARTNER_API_KEY, OPENPAY_REDIRECT_URI
-```
-
-### ChatGPT / Claude (chat)
-
-```
-You are integrating OpenPay + OpenPay Pro.
-Read: https://openpaypro.space/llms.txt and https://openpaypro.space/api/public/docs/ai-partner
-Generate production-ready backend + frontend snippets for: Connect, PayButton, payout, Pro inbound.
 ```
 
 ---

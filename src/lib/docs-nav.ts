@@ -18,7 +18,7 @@ export const DOCS_NAV: DocsNavGroup[] = [
       {
         label: "AI Partner Pack",
         href: "/docs/ai",
-        desc: "Cursor · Lovable · Replit · Claude",
+        desc: "OpenAI · ChatGPT · Cursor · Claude",
       },
       {
         label: "Quickstart",

@@ -346,8 +346,12 @@ function OpenPayDocsPage() {
 
       <DocsSection id="ai-pack" eyebrow="AI tools" title="AI Partner Pack">
         <DocsCallout>
-          Building with <strong className="text-[var(--foreground)]">Cursor, Lovable, Replit, or Claude</strong>?
-          Paste the raw AI guide and OpenAPI into your agent — covers auth, pay, top-up, inbound, and ledger.
+          Building with{" "}
+          <strong className="text-[var(--foreground)]">
+            OpenAI, ChatGPT, Cursor, Lovable, Replit, or Claude
+          </strong>
+          ? Paste the raw AI guide and OpenAPI into your agent — covers auth, pay, top-up,
+          inbound, and ledger.
         </DocsCallout>
         <div className="flex flex-wrap gap-2">
           <Pill href="/docs/ai" primary>

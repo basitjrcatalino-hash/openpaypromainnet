@@ -26,12 +26,20 @@ import {
 } from "lucide-react";
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
+import {
+  ECOSYSTEM_MARKS,
+  PARTNER_CATEGORIES,
+  partnerListedTokens,
+  partnerNetworks,
+  tradeMarketStats,
+  type PartnerMark,
+} from "@/lib/openpay-partners";
 import { useSpeech } from "@/hooks/use-speech";
 import { cn } from "@/lib/utils";
 
 const TITLE = "OpenPay Pro — The money app for the open network";
 const DESC =
-  "Your home for OUSD, Pi, OpenTokens, and open money. Self-custody wallet, public ledger, Partner API, and OpenPay AI — one Pro account.";
+  "Your home for OUSD, Pi, OpenTokens, and open money. Partners include TradingView, CoinGecko, CoinMarketCap, MoonPay, Solana Pay, Circle, Trust Wallet, and exchange feeds — self-custody wallet, public ledger, and OpenPay AI.";
 
 export const Route = createFileRoute("/website")({
   head: () => ({
@@ -59,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Features",
     items: [
       { label: "All features", href: "/website#features", desc: "Everything in OpenPay Pro" },
+      { label: "Partners", href: "/website#partners", desc: "Integrations · exchanges · networks" },
       { label: "OpenUSD", href: "/openusd", desc: "OpenPay’s $1 ledger dollar" },
       { label: "OpenToken", href: "/wiki", desc: "Mint and trade on bonding curves" },
       { label: "Solana Pay", href: "/authpi", desc: "QR payments on Solana" },
@@ -311,22 +320,14 @@ const TRADE_SLIDES = [
   },
 ] as const;
 
-const ECO_MARKS = [
-  { logo: OUSD_LOGO_URL, label: "OpenUSD" },
-  { logo: PI_NETWORK_LOGO_URL, label: "Pi Network" },
-  { logo: OPENPAY_AI_MENU_ICON, label: "OpenPay AI" },
-  { logo: OPENPAY_NETWORK_BADGE_URL, label: "Open network" },
-  { logo: OUSD_LOGO_URL, label: "Partner API" },
-  { logo: OPENPAY_AUTH_LOGO, label: "Self-custody" },
-  { logo: OPENPAY_NETWORK_BADGE_URL, label: "OpenLedger" },
-  { logo: PI_NETWORK_LOGO_URL, label: "Multi-chain" },
-] as const;
-
 /** Plain-language tour for local browser text-to-speech. */
 function websiteSpeechText() {
+  const stats = tradeMarketStats();
   const parts: string[] = [
     "OpenPay Pro. Your home for OUSD, Pi, and OpenTokens on the open network.",
     "Self-custody wallet, public ledger, Partner API, and OpenPay AI — one Pro account.",
+    `Partners and integrations. TradingView charts, CoinGecko and CoinMarketCap prices, MoonPay and Solana Pay on-ramps, Circle, Banxa, Trust Wallet, Phantom, MetaMask, and exchange feeds from Binance, OKX, Bybit, and Gate.`,
+    `${stats.majors} listed majors, ${stats.spot} spot markets, ${stats.perp} perpetuals, across ${stats.networks} live networks.`,
   ];
   for (const cat of FEATURE_SHOWCASE) {
     parts.push(`${cat.title}. ${cat.blurb}`);
@@ -746,24 +747,32 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Ecosystem marquee */}
+        {/* Ecosystem marquee — partners & integrations */}
         <div
           data-reveal
           className="ophome-section-reveal ophome-marquee mt-8 sm:mt-10"
-          aria-label="OpenPay ecosystem"
+          aria-label="OpenPay partners and integrations"
         >
           <div className="ophome-marquee-track px-1">
-            {[...ECO_MARKS, ...ECO_MARKS].map((item, i) => (
+            {[...ECOSYSTEM_MARKS, ...ECOSYSTEM_MARKS].map((item, i) => (
               <span
-                key={`${item.label}-${i}`}
+                key={`${item.name}-${i}`}
                 className="inline-flex items-center gap-2 rounded-full border border-(--ink)/8 bg-white/70 px-3.5 py-2 text-xs font-bold text-(--ink) shadow-sm"
               >
-                <img src={item.logo} alt="" className="h-4 w-4 rounded-md object-cover" />
-                {item.label}
+                <img
+                  src={item.logo}
+                  alt=""
+                  className="h-4 w-4 rounded-md object-contain"
+                  referrerPolicy="no-referrer"
+                />
+                {item.name}
               </span>
             ))}
           </div>
         </div>
+
+        {/* Partners · exchanges · networks · tokens */}
+        <PartnersShowcase />
 
         {/* Trading tools */}
         <div data-reveal className="ophome-section-reveal">
@@ -1025,6 +1034,7 @@ function HomePage() {
             links={[
               { label: "Open wallet", href: "/authpi" },
               { label: "OpenUSD", href: "/openusd" },
+              { label: "Partners", href: "/website#partners" },
               { label: "About", href: "/about" },
               { label: "Wiki", href: "/wiki" },
               { label: "Blog", href: "/blog" },
@@ -1074,6 +1084,179 @@ function HomePage() {
         </div>
       </footer>
     </main>
+  );
+}
+
+function PartnerLogo({ mark, size = "md" }: { mark: PartnerMark; size?: "sm" | "md" }) {
+  const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const inner = (
+    <>
+      <span
+        className={cn(
+          "grid place-items-center overflow-hidden rounded-xl bg-white ring-1 ring-(--ink)/8",
+          dim,
+        )}
+      >
+        <img
+          src={mark.logo}
+          alt=""
+          className="h-[70%] w-[70%] object-contain"
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-bold tracking-tight text-(--ink)">
+          {mark.name}
+        </span>
+        {mark.blurb ? (
+          <span className="mt-0.5 block truncate text-[11px] font-medium text-muted-foreground">
+            {mark.blurb}
+          </span>
+        ) : null}
+      </span>
+    </>
+  );
+
+  const className =
+    "ophome-partner-tile flex items-center gap-3 px-3.5 py-3 press transition-colors";
+
+  if (mark.href) {
+    const external = /^https?:\/\//i.test(mark.href);
+    return (
+      <a
+        href={mark.href}
+        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+        className={className}
+      >
+        {inner}
+      </a>
+    );
+  }
+  return <div className={className}>{inner}</div>;
+}
+
+function PartnersShowcase() {
+  const stats = tradeMarketStats();
+  const networks = partnerNetworks();
+  const tokens = partnerListedTokens();
+
+  return (
+    <section id="partners" className="mt-16 scroll-mt-28 sm:mt-24">
+      <div data-reveal className="ophome-section-reveal px-1">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+          Partners & integrations
+        </p>
+        <h2 className="mt-2 max-w-3xl font-(family-name:--font-display) text-[clamp(1.9rem,4.2vw,3.1rem)] font-extrabold tracking-[-0.04em]">
+          Built with the stack professionals trust
+        </h2>
+        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+          OpenPay Pro connects market data, payment rails, wallets, exchange feeds, and{" "}
+          {stats.networks}+ networks — so Tokens, Spot, and Perpetuals feel like a full money app,
+          not a closed silo.
+        </p>
+
+        <ul className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            { value: String(stats.majors), label: "Listed majors" },
+            { value: String(stats.spot), label: "Spot markets" },
+            { value: String(stats.perp), label: "Perpetuals" },
+            { value: String(stats.networks), label: "Live networks" },
+          ].map((s) => (
+            <li
+              key={s.label}
+              className="rounded-2xl border border-(--ink)/8 bg-white/70 px-4 py-4 text-center"
+            >
+              <p className="font-(family-name:--font-display) text-2xl font-extrabold tracking-tight text-(--ink)">
+                {s.value}
+              </p>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                {s.label}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-12 space-y-14">
+        {PARTNER_CATEGORIES.map((cat) => (
+          <div key={cat.id} data-reveal className="ophome-section-reveal">
+            <div className="mb-5 px-1">
+              <h3 className="text-xl font-extrabold tracking-tight text-(--ink)">{cat.title}</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {cat.blurb}
+              </p>
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {cat.partners.map((p) => (
+                <li key={`${cat.id}-${p.name}`}>
+                  <PartnerLogo mark={p} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div data-reveal className="ophome-section-reveal">
+          <div className="mb-5 px-1">
+            <h3 className="text-xl font-extrabold tracking-tight text-(--ink)">
+              Network integrations
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Browse and settle across the chains OpenPay Pro already wires into the wallet.
+            </p>
+          </div>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {networks.map((n) => (
+              <li key={n.name}>
+                <PartnerLogo mark={n} size="sm" />
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div data-reveal className="ophome-section-reveal">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 px-1">
+            <div>
+              <h3 className="text-xl font-extrabold tracking-tight text-(--ink)">
+                Exchange tokens & majors
+              </h3>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                The same catalog powers Tokens, Spot, and Perpetuals — from BTC to community listings.
+              </p>
+            </div>
+            <Link
+              to="/authpi"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-(--brand) press"
+            >
+              Open Tokens
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="ophome-marquee ophome-token-marquee overflow-hidden rounded-2xl border border-(--ink)/8 bg-white/50 py-4">
+            <div className="ophome-marquee-track gap-3 px-3">
+              {[...tokens, ...tokens].map((t, i) => (
+                <span
+                  key={`${t.name}-${i}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-(--ink)/8 bg-white px-3 py-1.5 text-xs font-bold text-(--ink) shadow-sm"
+                  title={t.blurb}
+                >
+                  <img
+                    src={t.logo}
+                    alt=""
+                    className="h-5 w-5 rounded-full object-cover"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

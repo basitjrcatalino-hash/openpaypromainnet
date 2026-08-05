@@ -154,7 +154,8 @@ export type MajorTokenId =
   | "tia"
   | "spx"
   | "lunc"
-  | "gno";
+  | "gno"
+  | "robo";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -988,7 +989,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "LEO",
     network: "Ethereum",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/8418/large/leo_token.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/3957.png",
     website: "https://www.coingecko.com/en/coins/leo-token",
     coingeckoId: "leo-token",
     createdLabel: "Listed",
@@ -1031,7 +1032,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "HBAR",
     network: "Hedera",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/3441/large/Hedera_Hashgraph_logo.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/4642.png",
     website: "https://www.coingecko.com/en/coins/hedera-hashgraph",
     coingeckoId: "hedera-hashgraph",
     createdLabel: "Listed",
@@ -1088,7 +1089,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "TAO",
     network: "Bittensor",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/28452/large/ARUsPEvY_400x400.jpeg",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/22974.png",
     website: "https://www.coingecko.com/en/coins/bittensor",
     coingeckoId: "bittensor",
     createdLabel: "Listed",
@@ -1455,7 +1456,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "FLOW",
     network: "Flow",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/13446/large/5f6294c0c7a8cbe6eead49a9af_5f59c3930e6492d2e1bfa9a9_flow.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/4558.png",
     website: "https://www.coingecko.com/en/coins/flow",
     coingeckoId: "flow",
     createdLabel: "Listed",
@@ -1609,7 +1610,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "FLR",
     network: "Flare",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/28665/large/flr.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/7950.png",
     website: "https://www.coingecko.com/en/coins/flare-networks",
     coingeckoId: "flare-networks",
     createdLabel: "Listed",
@@ -1777,7 +1778,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "MINA",
     network: "Mina",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/15628/large/JM4_cQEwn1.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/8646.png",
     website: "https://www.coingecko.com/en/coins/mina-protocol",
     coingeckoId: "mina-protocol",
     createdLabel: "Listed",
@@ -1847,7 +1848,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "ZRO",
     network: "Ethereum",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/28206/large/ftxG9nQG_400x400.jpg",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/26997.png",
     website: "https://www.coingecko.com/en/coins/layerzero",
     coingeckoId: "layerzero",
     createdLabel: "Listed",
@@ -1931,7 +1932,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "NOT",
     network: "TON",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/34470/large/not.jpg",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/28850.png",
     website: "https://www.coingecko.com/en/coins/notcoin",
     coingeckoId: "notcoin",
     createdLabel: "Listed",
@@ -2001,7 +2002,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     symbol: "BABYDOGE",
     network: "BNB Smart Chain",
     category: "Listed",
-    logoUrl: "https://assets.coingecko.com/coins/images/16166/large/babydoge.jpg",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/10407.png",
     website: "https://www.coingecko.com/en/coins/baby-doge-coin",
     coingeckoId: "baby-doge-coin",
     createdLabel: "Listed",
@@ -2044,8 +2045,8 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     network: "Canton",
     category: "Listed",
     logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/35721.png",
-    website: "https://www.coingecko.com/en/coins/canton",
-    coingeckoId: "canton",
+    website: "https://www.coingecko.com/en/coins/canton-network",
+    coingeckoId: "canton-network",
     createdLabel: "Listed",
     createdAt: "2020-01-01T00:00:00.000Z",
     native: true,
@@ -2114,8 +2115,8 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     network: "Optimism",
     category: "Listed",
     logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/13502.png",
-    website: "https://www.coingecko.com/en/coins/worldcoin",
-    coingeckoId: "worldcoin",
+    website: "https://www.coingecko.com/en/coins/worldcoin-wld",
+    coingeckoId: "worldcoin-wld",
     createdLabel: "Listed",
     createdAt: "2020-01-01T00:00:00.000Z",
     native: false,
@@ -2268,8 +2269,8 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     network: "Midnight",
     category: "Listed",
     logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/37055.png",
-    website: "https://www.coingecko.com/en/coins/midnight-network",
-    coingeckoId: "midnight-network",
+    website: "https://www.coingecko.com/en/coins/midnight",
+    coingeckoId: "midnight",
     createdLabel: "Listed",
     createdAt: "2020-01-01T00:00:00.000Z",
     native: true,
@@ -2330,6 +2331,23 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2020-01-01T00:00:00.000Z",
     native: false,
     about: "GNO (Gnosis) is listed on OpenPay Pro Tokens from the Spot / Perpetual market registry. Prices refresh from CoinGecko when available.",
+  },
+  robo: {
+    id: "robo",
+    name: "Fabric Protocol",
+    symbol: "ROBO",
+    network: "Ethereum",
+    category: "AI",
+    logoUrl: "https://coin-images.coingecko.com/coins/images/102172005/large/fab.png",
+    website: "https://fabric.foundation/",
+    twitter: "https://x.com/FabricFND",
+    coingeckoId: "robo-token-2",
+    createdLabel: "Listed",
+    createdAt: "2025-01-01T00:00:00.000Z",
+    native: false,
+    contractAddress: "0x32b4d049fe4c888d2b92eecaf729f44df6b1f36e",
+    about:
+      "ROBO (Fabric Protocol) is an AI-focused token listed on OpenPay Pro Tokens, Spot, and Perpetuals. Prices refresh from CoinGecko when available.",
   },
 };
 
@@ -2488,6 +2506,9 @@ export const MAJOR_SYMBOLS = new Set([
   "SPX",
   "LUNC",
   "GNO",
+  "ROBO",
+  "FABRIC PROTOCOL",
+  "FABRIC",
   "BITCOIN",
   "ETHEREUM",
   "SOLANA",
@@ -2690,12 +2711,12 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   "baby-doge-coin": "babydoge",
   "whitebit": "wbt",
   "rain": "rain",
-  "canton": "cc",
+  "canton-network": "cc",
   "htx-dao": "htx",
   "memecore": "m",
   "sky": "sky",
   "morpho": "morpho",
-  "worldcoin": "wld",
+  "worldcoin-wld": "wld",
   "just": "jst",
   "stable-2": "stable",
   "audiera": "beat",
@@ -2706,11 +2727,12 @@ const CG_ID_TO_MAJOR: Record<string, MajorTokenId> = {
   "official-trump": "trump",
   "ether-fi": "ethfi",
   "sun-token": "sun",
-  "midnight-network": "night",
+  "midnight": "night",
   "celestia": "tia",
   "spx6900": "spx",
   "terra-luna": "lunc",
   "gnosis": "gno",
+  "robo-token-2": "robo",
 };
 
 /** Fallback static values if CoinGecko is unreachable. */
@@ -3256,7 +3278,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: "2026-06-25T17:04:20.000Z",
   },
   wbtc: {
-    price: 0,
+    price: 108000,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3268,7 +3290,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   leo: {
-    price: 0,
+    price: 9.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3280,7 +3302,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   shib: {
-    price: 0,
+    price: 0.0000125,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3292,7 +3314,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   ltc: {
-    price: 0,
+    price: 85,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3304,7 +3326,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   hbar: {
-    price: 0,
+    price: 0.165,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3316,7 +3338,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   pepe: {
-    price: 0,
+    price: 0.0000072,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3328,7 +3350,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   xmr: {
-    price: 0,
+    price: 265,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3340,7 +3362,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   apt: {
-    price: 0,
+    price: 3.9,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3352,7 +3374,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   tao: {
-    price: 0,
+    price: 290,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3364,7 +3386,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   icp: {
-    price: 0,
+    price: 4.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3376,7 +3398,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   etc: {
-    price: 0,
+    price: 16.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3388,7 +3410,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   cro: {
-    price: 0,
+    price: 0.12,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3400,7 +3422,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   mnt: {
-    price: 0,
+    price: 0.72,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3412,7 +3434,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   pol: {
-    price: 0,
+    price: 0.195,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3424,7 +3446,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   vet: {
-    price: 0,
+    price: 0.022,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3436,7 +3458,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   algo: {
-    price: 0,
+    price: 0.18,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3448,7 +3470,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   fil: {
-    price: 0,
+    price: 2.3,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3460,7 +3482,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   render: {
-    price: 0,
+    price: 3.1,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3472,7 +3494,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   atom: {
-    price: 0,
+    price: 4.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3484,7 +3506,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   arb: {
-    price: 0,
+    price: 0.32,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3496,7 +3518,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   op: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3508,7 +3530,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   inj: {
-    price: 0,
+    price: 9.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3520,7 +3542,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   sei: {
-    price: 0,
+    price: 0.22,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3532,7 +3554,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   fet: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3544,7 +3566,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   kas: {
-    price: 0,
+    price: 0.075,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3556,7 +3578,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   bonk: {
-    price: 0,
+    price: 0.000018,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3568,7 +3590,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   wif: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3580,7 +3602,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   ena: {
-    price: 0,
+    price: 0.32,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3592,7 +3614,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   pyth: {
-    price: 0,
+    price: 0.11,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3604,7 +3626,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   pendle: {
-    price: 0,
+    price: 3.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3616,7 +3638,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   sand: {
-    price: 0,
+    price: 0.22,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3628,7 +3650,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   mana: {
-    price: 0,
+    price: 0.25,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3640,7 +3662,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   grt: {
-    price: 0,
+    price: 0.085,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3652,7 +3674,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   theta: {
-    price: 0,
+    price: 0.72,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3664,7 +3686,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   flow: {
-    price: 0,
+    price: 0.35,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3676,7 +3698,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   eos: {
-    price: 0,
+    price: 0.45,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3688,7 +3710,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   egld: {
-    price: 0,
+    price: 12.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3700,7 +3722,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   qnt: {
-    price: 0,
+    price: 85,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3712,7 +3734,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   stx: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3724,7 +3746,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   xdc: {
-    price: 0,
+    price: 0.055,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3736,7 +3758,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   nexo: {
-    price: 0,
+    price: 1.05,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3748,7 +3770,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   bsv: {
-    price: 0,
+    price: 45,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3760,7 +3782,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   imx: {
-    price: 0,
+    price: 0.45,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3772,7 +3794,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   rune: {
-    price: 0,
+    price: 1.15,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3784,7 +3806,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   kcs: {
-    price: 0,
+    price: 10.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3796,7 +3818,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   flr: {
-    price: 0,
+    price: 0.018,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3808,7 +3830,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   mkr: {
-    price: 0,
+    price: 1450,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3820,7 +3842,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   crv: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3832,7 +3854,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   comp: {
-    price: 0,
+    price: 42,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3844,7 +3866,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   snx: {
-    price: 0,
+    price: 0.65,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3856,7 +3878,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   ldo: {
-    price: 0,
+    price: 0.85,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3868,7 +3890,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   axs: {
-    price: 0,
+    price: 2.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3880,7 +3902,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   gala: {
-    price: 0,
+    price: 0.014,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3892,7 +3914,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   chz: {
-    price: 0,
+    price: 0.035,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3904,7 +3926,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   iota: {
-    price: 0,
+    price: 0.16,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3916,7 +3938,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   rose: {
-    price: 0,
+    price: 0.025,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3928,7 +3950,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   kava: {
-    price: 0,
+    price: 0.35,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3940,7 +3962,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   mina: {
-    price: 0,
+    price: 0.15,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3952,7 +3974,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   dash: {
-    price: 0,
+    price: 22,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3964,7 +3986,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   neo: {
-    price: 0,
+    price: 5.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3976,7 +3998,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   sfp: {
-    price: 0,
+    price: 0.45,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -3988,7 +4010,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   twt: {
-    price: 0,
+    price: 0.95,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4000,7 +4022,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   zro: {
-    price: 0,
+    price: 1.8,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4012,7 +4034,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   strk: {
-    price: 0,
+    price: 0.12,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4024,7 +4046,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   aero: {
-    price: 0,
+    price: 0.75,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4036,7 +4058,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   virtual: {
-    price: 0,
+    price: 1.2,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4048,7 +4070,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   beam: {
-    price: 0,
+    price: 0.0065,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4060,7 +4082,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   akt: {
-    price: 0,
+    price: 1.05,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4072,7 +4094,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   not: {
-    price: 0,
+    price: 0.0015,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4084,7 +4106,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   blur: {
-    price: 0,
+    price: 0.12,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4096,7 +4118,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   celo: {
-    price: 0,
+    price: 0.28,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4108,7 +4130,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   ordi: {
-    price: 0,
+    price: 8.5,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4120,7 +4142,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   brett: {
-    price: 0,
+    price: 0.035,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4132,7 +4154,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   babydoge: {
-    price: 0,
+    price: 1.2e-9,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4144,7 +4166,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   wbt: {
-    price: 0,
+    price: 27,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4156,7 +4178,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   rain: {
-    price: 0,
+    price: 0.0075,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4168,7 +4190,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   cc: {
-    price: 0,
+    price: 0.11,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4180,7 +4202,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   htx: {
-    price: 0,
+    price: 0.0000019,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4192,7 +4214,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   m: {
-    price: 0,
+    price: 0.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4204,7 +4226,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   sky: {
-    price: 0,
+    price: 0.055,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4216,7 +4238,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   morpho: {
-    price: 0,
+    price: 1.45,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4228,7 +4250,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   wld: {
-    price: 0,
+    price: 0.323,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4240,7 +4262,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   jst: {
-    price: 0,
+    price: 0.104,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4252,7 +4274,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   stable: {
-    price: 0,
+    price: 0.0325,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4264,7 +4286,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   beat: {
-    price: 0,
+    price: 2.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4276,7 +4298,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   bdx: {
-    price: 0,
+    price: 0.083,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4288,7 +4310,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   vvv: {
-    price: 0,
+    price: 11.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4300,7 +4322,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   lit: {
-    price: 0,
+    price: 2.14,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4312,7 +4334,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   pengu: {
-    price: 0,
+    price: 0.00608,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4324,7 +4346,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   trump: {
-    price: 0,
+    price: 1.47,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4336,7 +4358,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   ethfi: {
-    price: 0,
+    price: 0.364,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4348,7 +4370,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   sun: {
-    price: 0,
+    price: 0.0179,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4360,7 +4382,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   night: {
-    price: 0,
+    price: 0.0000035,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4372,7 +4394,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   tia: {
-    price: 0,
+    price: 1.55,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4384,7 +4406,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   spx: {
-    price: 0,
+    price: 0.85,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4396,7 +4418,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   lunc: {
-    price: 0,
+    price: 0.000055,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
@@ -4408,12 +4430,24 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atlDate: null,
   },
   gno: {
-    price: 0,
+    price: 125,
     change24h: 0,
     marketCap: 0,
     volume24h: 0,
     totalSupply: 0,
     circulatingSupply: 0,
+    ath: 0,
+    atl: 0,
+    athDate: null,
+    atlDate: null,
+  },
+  robo: {
+    price: 0.0128,
+    change24h: 0,
+    marketCap: 27_000_000,
+    volume24h: 13_000_000,
+    totalSupply: 0,
+    circulatingSupply: 2_200_000_000,
     ath: 0,
     atl: 0,
     athDate: null,
@@ -4426,13 +4460,18 @@ async function fetchCoinGeckoMarketRows(cgIds: string[]): Promise<CoinGeckoMarke
   const rows: CoinGeckoMarketRow[] = [];
   for (let i = 0; i < cgIds.length; i += chunkSize) {
     const chunk = cgIds.slice(i, i + chunkSize).join(",");
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${chunk}&order=market_cap_desc&sparkline=true&price_change_percentage=24h`,
-      { headers: { accept: "application/json" } },
-    );
-    if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-    const part = (await res.json()) as CoinGeckoMarketRow[];
-    rows.push(...part);
+    try {
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${chunk}&order=market_cap_desc&sparkline=true&price_change_percentage=24h`,
+        { headers: { accept: "application/json" } },
+      );
+      // Keep any rows already fetched — do not throw away the whole catalog on a single 429.
+      if (!res.ok) continue;
+      const part = (await res.json()) as CoinGeckoMarketRow[];
+      if (Array.isArray(part)) rows.push(...part);
+    } catch {
+      /* try remaining chunks */
+    }
   }
   return rows;
 }
@@ -4445,42 +4484,87 @@ export async function fetchMajorMarkets(): Promise<MajorMarketSnapshot[]> {
       ),
     ),
   ];
+
+  const byCg = new Map<string, CoinGeckoMarketRow>();
   try {
     const rows = await fetchCoinGeckoMarketRows(ids);
-    const byCg = new Map(rows.map((r) => [r.id, r]));
-
-    const markets = MAJOR_TOKEN_IDS.map((id) => {
-      const def = MAJOR_TOKENS[id];
-      const row = byCg.get(def.coingeckoId);
-      const fb = FALLBACK_MARKET[id];
-      if (!row) {
-        return { id, ...fb, sparkline: [] };
-      }
-      return {
-        id,
-        price: Number(row.current_price ?? fb.price),
-        change24h: Number(row.price_change_percentage_24h ?? fb.change24h),
-        marketCap: Number(row.market_cap ?? fb.marketCap),
-        volume24h: Number(row.total_volume ?? fb.volume24h),
-        totalSupply: Number(row.total_supply ?? fb.totalSupply),
-        circulatingSupply: Number(row.circulating_supply ?? fb.circulatingSupply),
-        ath: Number(row.ath ?? fb.ath),
-        atl: Number(row.atl ?? fb.atl),
-        athDate: row.ath_date ?? fb.athDate,
-        atlDate: row.atl_date ?? fb.atlDate,
-        sparkline: Array.isArray(row.sparkline_in_7d?.price) ? row.sparkline_in_7d!.price! : [],
-      };
-    });
-
-    const pi = markets.find((m) => m.id === "pi");
-    if (pi && pi.price > 0) {
-      void import("@/lib/ledger-majors").then((m) => m.setCachedPiUsdPrice(pi.price));
-    }
-
-    return markets;
+    for (const r of rows) byCg.set(r.id, r);
   } catch {
-    return MAJOR_TOKEN_IDS.map((id) => ({ id, ...FALLBACK_MARKET[id], sparkline: [] }));
+    /* fall through to fallbacks / Trust Wallet */
   }
+
+  let markets = MAJOR_TOKEN_IDS.map((id) => {
+    const def = MAJOR_TOKENS[id];
+    const row = byCg.get(def.coingeckoId);
+    const fb = FALLBACK_MARKET[id];
+    if (!row) {
+      return { id, ...fb, sparkline: [] as number[] };
+    }
+    const price = Number(row.current_price);
+    return {
+      id,
+      price: price > 0 ? price : fb.price,
+      change24h: Number(row.price_change_percentage_24h ?? fb.change24h),
+      marketCap: Number(row.market_cap ?? fb.marketCap),
+      volume24h: Number(row.total_volume ?? fb.volume24h),
+      totalSupply: Number(row.total_supply ?? fb.totalSupply),
+      circulatingSupply: Number(row.circulating_supply ?? fb.circulatingSupply),
+      ath: Number(row.ath ?? fb.ath),
+      atl: Number(row.atl ?? fb.atl),
+      athDate: row.ath_date ?? fb.athDate,
+      atlDate: row.atl_date ?? fb.atlDate,
+      sparkline: Array.isArray(row.sparkline_in_7d?.price) ? row.sparkline_in_7d!.price! : [],
+    };
+  });
+
+  // Browser: fill any still-zero prices from Trust Wallet index (same-origin HMAC proxy).
+  if (typeof window !== "undefined") {
+    const zeros = markets.filter((m) => !(m.price > 0)).map((m) => m.id);
+    if (zeros.length > 0) {
+      try {
+        const { trustWalletAssetIdsForMajors } = await import("@/lib/trustwallet-assets");
+        const mapped = trustWalletAssetIdsForMajors(zeros);
+        const twPrices = new Map<string, number>();
+        for (let i = 0; i < mapped.length; i += 50) {
+          const chunk = mapped.slice(i, i + 50);
+          const res = await fetch("/api/public/trustwallet-prices", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              currency: "USD",
+              assets: chunk.map((c) => c.assetId),
+            }),
+          });
+          if (!res.ok) break;
+          const j = (await res.json()) as {
+            tickers?: Array<{ id: string; price?: number }>;
+          };
+          for (const t of j.tickers ?? []) {
+            const p = Number(t.price);
+            if (p > 0) twPrices.set(t.id, p);
+          }
+          for (const { assetId, majorId } of chunk) {
+            const p = twPrices.get(assetId);
+            if (p && p > 0) {
+              const idx = markets.findIndex((m) => m.id === majorId);
+              if (idx >= 0 && !(markets[idx].price > 0)) {
+                markets[idx] = { ...markets[idx], price: p };
+              }
+            }
+          }
+        }
+      } catch {
+        /* keep CoinGecko / static fallbacks */
+      }
+    }
+  }
+
+  const pi = markets.find((m) => m.id === "pi");
+  if (pi && pi.price > 0) {
+    void import("@/lib/ledger-majors").then((m) => m.setCachedPiUsdPrice(pi.price));
+  }
+
+  return markets;
 }
 
 export function majorMarketById(

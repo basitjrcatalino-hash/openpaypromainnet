@@ -100,6 +100,7 @@ function TokenAvatarImage({
         )}
         loading="lazy"
         decoding="async"
+        referrerPolicy="no-referrer"
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
       />

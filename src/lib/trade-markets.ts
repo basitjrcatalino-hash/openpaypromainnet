@@ -13,7 +13,7 @@
  */
 
 import type { MajorTokenId } from "@/lib/major-tokens";
-import { isMajorTokenId } from "@/lib/major-tokens";
+import { isMajorTokenId, MAJOR_TOKENS } from "@/lib/major-tokens";
 
 export type TradeMarketStatus = "listed" | "delisted";
 
@@ -101,6 +101,8 @@ function market(seed: MarketSeed): TradeMarketDef {
     (isMajorTokenId(symbol.toLowerCase())
       ? (symbol.toLowerCase() as MajorTokenId)
       : undefined);
+  // Prefer major catalog logo so Tokens / Spot / Perp stay in sync.
+  const majorLogo = inferred ? MAJOR_TOKENS[inferred]?.logoUrl : undefined;
   return {
     symbol,
     name: seed.name,
@@ -109,7 +111,7 @@ function market(seed: MarketSeed): TradeMarketDef {
     contract_address: seed.contract_address ?? null,
     coingecko_slug: seed.coingecko_slug,
     coinmarketcap_slug: seed.coinmarketcap_slug ?? seed.coingecko_slug,
-    logo: seed.logo,
+    logo: majorLogo || seed.logo,
     majorId: inferred,
     status: "listed",
     spot_enabled: seed.spot_enabled ?? true,
@@ -323,7 +325,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     network: "Ethereum",
     coingecko_slug: "leo-token",
     coinmarketcap_slug: "unus-sed-leo",
-    logo: cg("8418/large/leo_token.png"),
+    logo: cmc(3957),
     tick_size: 0.001,
     max_leverage: 10,
     cmc_rank: 18,
@@ -378,7 +380,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     network: "Hedera",
     coingecko_slug: "hedera-hashgraph",
     coinmarketcap_slug: "hedera",
-    logo: cg("3441/large/Hedera_Hashgraph_logo.png"),
+    logo: cmc(4642),
     tick_size: 0.00001,
     cmc_rank: 23,
     cmc_ucid: 4642,
@@ -433,7 +435,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "Bittensor",
     network: "Bittensor",
     coingecko_slug: "bittensor",
-    logo: cg("28452/large/ARUsPEvY_400x400.jpeg"),
+    logo: cmc(22974),
     cmc_rank: 28,
     cmc_ucid: 22974,
   }),
@@ -746,7 +748,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "Flow",
     network: "Flow",
     coingecko_slug: "flow",
-    logo: cg("13446/large/5f6294c0c7a8cbe6eead49a9af_5f59c3930e6492d2e1bfa9a9_flow.png"),
+    logo: cmc(4558),
     tick_size: 0.001,
     cmc_rank: 58,
     cmc_ucid: 4558,
@@ -879,7 +881,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     network: "Flare",
     coingecko_slug: "flare-networks",
     coinmarketcap_slug: "flare",
-    logo: cg("28665/large/flr.png"),
+    logo: cmc(7950),
     tick_size: 0.00001,
     cmc_rank: 70,
     cmc_ucid: 7950,
@@ -1001,7 +1003,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "Mina",
     network: "Mina",
     coingecko_slug: "mina-protocol",
-    logo: cg("15628/large/JM4_cQEwn1.png"),
+    logo: cmc(8646),
     tick_size: 0.001,
     cmc_rank: 82,
     cmc_ucid: 8646,
@@ -1061,7 +1063,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "LayerZero",
     network: "Ethereum",
     coingecko_slug: "layerzero",
-    logo: cg("28206/large/ftxG9nQG_400x400.jpg"),
+    logo: cmc(26997),
     tick_size: 0.001,
     cmc_rank: 88,
     cmc_ucid: 26997,
@@ -1124,7 +1126,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "Notcoin",
     network: "TON",
     coingecko_slug: "notcoin",
-    logo: cg("34470/large/not.jpg"),
+    logo: cmc(28850),
     tick_size: 0.000001,
     step_size: 100,
     max_leverage: 10,
@@ -1181,7 +1183,7 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     name: "Baby Doge Coin",
     network: "BNB Chain",
     coingecko_slug: "baby-doge-coin",
-    logo: cg("16166/large/babydoge.jpg"),
+    logo: cmc(10407),
     tick_size: 0.000000000001,
     step_size: 1_000_000,
     max_leverage: 5,
@@ -1514,6 +1516,18 @@ export const TRADE_MARKETS: TradeMarketDef[] = [
     logo: cmc(1659),
     max_leverage: 10,
     cmc_ucid: 1659,
+  }),
+  market({
+    symbol: "ROBO",
+    name: "Fabric Protocol",
+    network: "Ethereum",
+    contract_address: "0x32b4d049fe4c888d2b92eecaf729f44df6b1f36e",
+    coingecko_slug: "robo-token-2",
+    coinmarketcap_slug: "fabric-protocol",
+    logo: "https://coin-images.coingecko.com/coins/images/102172005/large/fab.png",
+    majorId: "robo",
+    tick_size: 0.00001,
+    max_leverage: 10,
   }),
   market({
     symbol: "EURC",

@@ -192,7 +192,7 @@ function Dashboard() {
     const rows: LedgerAsset[] = [
       {
         id: "ousd",
-        name: "OpenUSD OUSD",
+        name: "OpenUSD",
         symbol: "OUSD",
         balance: Number(wallet.ousd_balance ?? 0),
         priceUsd: 1,

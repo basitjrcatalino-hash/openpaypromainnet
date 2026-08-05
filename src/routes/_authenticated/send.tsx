@@ -231,7 +231,7 @@ function SendPage() {
       {
         key: "OUSD",
         kind: "OUSD",
-        name: "OpenUSD OUSD",
+        name: "OpenUSD",
         symbol: "OUSD",
         balance: Number(wallet?.ousd_balance ?? 0),
         priceUsd: 1,

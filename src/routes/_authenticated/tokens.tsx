@@ -469,7 +469,7 @@ function TokensPage() {
                   <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <div className="ph-row-title truncate">OpenUSD OUSD</div>
+                  <div className="ph-row-title truncate">OpenUSD</div>
                   <div className="ph-row-sub">OUSD · OpenPay</div>
                 </div>
               </div>

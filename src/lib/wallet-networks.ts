@@ -249,7 +249,7 @@ export const WALLET_NETWORKS: WalletNetwork[] = [
     short: "HBAR",
     match: "Hedera",
     status: "live",
-    logoUrl: "https://assets.coingecko.com/coins/images/3441/large/Hedera_Hashgraph_logo.png",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/64x64/4642.png",
     accent: "#000000",
   },
   {

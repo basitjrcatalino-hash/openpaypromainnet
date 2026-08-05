@@ -15,19 +15,30 @@ import {
 } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
 import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import {
+  PARTNER_CATEGORIES,
+  partnerListedTokens,
+  partnerNetworks,
+  tradeMarketStats,
+  type PartnerMark,
+} from "@/lib/openpay-partners";
+import { MAJOR_TOKENS, MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
 import { cn } from "@/lib/utils";
 
 const TITLE = "Meet OpenUSD (OUSD) — OpenPay’s dollar on the open network";
 const DESC =
-  "OpenUSD (OUSD) is OpenPay’s $1 ledger dollar — hold, send, spend, and build across OpenPay Pro, OpenLedger, OpenApp, and the wider OpenPay ecosystem.";
+  "OpenUSD (OUSD) is OpenPay’s $1 ledger dollar — swap and buy majors, Spot, and Perpetuals, with partners like TradingView, CoinGecko, MoonPay, Solana Pay, and Circle.";
 
 function openUsdSpeechText() {
+  const stats = tradeMarketStats();
   const features = FEATURES.map((f) => `${f.title}. ${f.body}`).join(" ");
   const bullets = BULLETS.map((b) => `${b.title}. ${b.body}`).join(" ");
   const faqs = FAQS.map((f) => `${f.q} ${f.a}`).join(" ");
   return [
     "Meet OpenUSD. OpenPay’s dollar for the open network.",
     "Hold, send, and settle in OUSD across OpenPay Pro — with the power of crypto and the ease of cash.",
+    `Swap and buy with OpenUSD. ${stats.majors} listed majors, ${stats.spot} spot markets, and ${stats.perp} perpetuals settle against OUSD.`,
+    "Partners include TradingView, CoinGecko, CoinMarketCap, MoonPay, Solana Pay, Circle, Trust Wallet, and exchange feeds.",
     "This is New Money. The power of crypto: ledger settlement, APIs, agents, and multi-rail top-ups. The ease of cash: one-dollar OUSD thinking for everyday sends and merchant payouts.",
     features,
     "Everything you need from a network dollar.",
@@ -98,6 +109,7 @@ const ECOSYSTEM = [
   { label: "Try OpenPay (Pi Browser)", href: "https://openpy.space" },
   { label: "OpenLedger", href: "https://openpyledger.space" },
   { label: "OpenApp", href: "https://openappdev.space" },
+  { label: "Partners & integrations", href: "/website#partners" },
   { label: "OpenPay Blogs", href: "https://www.openpy.space/blog" },
   { label: "Telegram Mini App", href: "https://t.me/openpayofficial" },
   { label: "OpenPay Sign in", href: "https://openpy.space/signin" },
@@ -115,7 +127,11 @@ const FAQS = [
   },
   {
     q: "What can I do with OUSD?",
-    a: "Hold OUSD in OpenPay Pro, top up from OpenPay Balance / Pi / cards / crypto, send to people and merchants, swap into other assets, receive via QR, and build partner flows that settle in OUSD through OpenPay’s Partner API and OpenLedger.",
+    a: "Hold OUSD in OpenPay Pro, top up from OpenPay Balance / Pi / cards / crypto, send to people and merchants, swap into listed majors and OpenTokens, trade Spot and Perpetuals against dollar settlement, receive via QR, and build partner flows that settle in OUSD through OpenPay’s Partner API and OpenLedger.",
+  },
+  {
+    q: "Which tokens can I buy or swap with OUSD?",
+    a: "OpenUSD settles buys and swaps across the OpenPay Pro Tokens catalog and Spot / Perpetual markets — including BTC, ETH, SOL, PI, majors like ROBO (Fabric Protocol), and community OpenTokens — with live prices from CoinGecko, CoinMarketCap, and TradingView charts.",
   },
   {
     q: "How is OUSD different from bank cash?",
@@ -123,7 +139,7 @@ const FAQS = [
   },
   {
     q: "Where can I learn more or build on OpenPay?",
-    a: "Read the OpenPay AI announcement, explore OpenLedger, review Partner API docs, or open the OpenPay whitepaper and pitch deck from the ecosystem links on this page.",
+    a: "Read the OpenPay AI announcement, explore OpenLedger, review Partner API docs, visit the Partners showcase on the website, or open the OpenPay whitepaper and pitch deck from the ecosystem links on this page.",
   },
 ] as const;
 
@@ -158,6 +174,12 @@ function OusdPage() {
           </Link>
           <span className="text-muted-foreground">›</span>
           <span className="rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">OpenUSD</span>
+          <a
+            href="#swap"
+            className="rounded-full border border-border bg-white/80 px-3 py-1.5 text-muted-foreground backdrop-blur hover:text-foreground"
+          >
+            Swap &amp; buy
+          </a>
           <a
             href="https://www.openpy.space/blog/meet-openpay-ai"
             target="_blank"
@@ -297,6 +319,9 @@ function OusdPage() {
           </ul>
         </section>
 
+        {/* Swap / buy catalog + partners */}
+        <OusdSwapShowcase />
+
         {/* Powered by OUSD */}
         <section className="border-t border-border/80 py-20 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
@@ -360,19 +385,25 @@ function OusdPage() {
             OUSD sits at the center of OpenPay’s products — explore every door into the network.
           </p>
           <ul className="mt-8 grid gap-2 sm:grid-cols-2">
-            {ECOSYSTEM.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-(--accent)/40 hover:bg-white"
-                >
-                  <span>{item.label}</span>
-                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                </a>
-              </li>
-            ))}
+            {ECOSYSTEM.map((item) => {
+              const external = /^https?:\/\//i.test(item.href);
+              return (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-(--accent)/40 hover:bg-white"
+                  >
+                    <span>{item.label}</span>
+                    {external ? (
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -480,6 +511,199 @@ function FeatureVisual({ kind }: { kind: "send" | "wallet" | "network" }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function OusdMarkTile({ mark }: { mark: PartnerMark }) {
+  const inner = (
+    <>
+      <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white ring-1 ring-border">
+        <img
+          src={mark.logo}
+          alt=""
+          className="h-[70%] w-[70%] object-contain"
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-bold tracking-tight">{mark.name}</span>
+        {mark.blurb ? (
+          <span className="mt-0.5 block truncate text-[11px] font-medium text-muted-foreground">
+            {mark.blurb}
+          </span>
+        ) : null}
+      </span>
+    </>
+  );
+  const className =
+    "flex items-center gap-3 rounded-2xl border border-border/80 bg-white/75 px-3.5 py-3 backdrop-blur transition hover:border-(--accent)/35 hover:bg-white press";
+  if (mark.href) {
+    const external = /^https?:\/\//i.test(mark.href);
+    return (
+      <a
+        href={mark.href}
+        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+        className={className}
+      >
+        {inner}
+      </a>
+    );
+  }
+  return <div className={className}>{inner}</div>;
+}
+
+function OusdSwapShowcase() {
+  const stats = tradeMarketStats();
+  const tokens = partnerListedTokens();
+  const networks = partnerNetworks();
+  const gridTokens = MAJOR_TOKEN_IDS.map((id) => MAJOR_TOKENS[id]);
+
+  return (
+    <section id="swap" className="scroll-mt-24 border-t border-border/80 py-20">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        Swap · buy · settle
+      </p>
+      <h2 className="mt-3 max-w-3xl font-(family-name:--font-display) text-[clamp(1.9rem,4vw,3rem)] font-extrabold tracking-[-0.035em]">
+        Every token OpenUSD can buy &amp; swap
+      </h2>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+        OpenUSD is the dollar rail for OpenDEX swaps, Tokens buys, Spot, and Perpetuals — the same
+        catalog you see in the wallet, powered by partner market data and payment integrations.
+      </p>
+
+      <ul className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[
+          { value: String(stats.majors), label: "Buyable majors" },
+          { value: String(stats.spot), label: "Spot markets" },
+          { value: String(stats.perp), label: "Perpetuals" },
+          { value: String(stats.networks), label: "Networks" },
+        ].map((s) => (
+          <li
+            key={s.label}
+            className="rounded-2xl border border-border/80 bg-white/75 px-4 py-4 text-center backdrop-blur"
+          >
+            <p className="font-(family-name:--font-display) text-2xl font-extrabold tracking-tight">
+              {s.value}
+            </p>
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {s.label}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="opcash-token-marquee mt-10 overflow-hidden rounded-[1.5rem] border border-border/80 bg-white/60 py-4 backdrop-blur">
+        <div className="opcash-token-track flex w-max gap-3 px-3">
+          {[...tokens, ...tokens].map((t, i) => (
+            <span
+              key={`${t.name}-${i}`}
+              className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-white px-3 py-1.5 text-xs font-bold shadow-sm"
+              title={t.blurb}
+            >
+              <img
+                src={t.logo}
+                alt=""
+                className="h-5 w-5 rounded-full object-cover"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+              {t.name}
+              <span className="text-[10px] font-semibold text-muted-foreground">↔ OUSD</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-extrabold tracking-tight">Listed majors</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Buy or swap each of these against OpenUSD in OpenPay Pro.
+          </p>
+        </div>
+        <Link
+          to="/authpi"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-accent press"
+        >
+          Open wallet
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+      <ul className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        {gridTokens.map((t) => (
+          <li key={t.id}>
+            <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-white/75 px-3 py-2.5 backdrop-blur">
+              <img
+                src={t.logoUrl}
+                alt=""
+                className="h-8 w-8 rounded-full object-cover"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{t.symbol}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{t.name}</p>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-16 space-y-12">
+        <div>
+          <h3 className="text-xl font-extrabold tracking-tight">Partners &amp; integrations</h3>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Market data, on-ramps, wallets, and exchange feeds that power OUSD buys, swaps, and
+            charts.
+          </p>
+        </div>
+        {PARTNER_CATEGORIES.map((cat) => (
+          <div key={cat.id}>
+            <h4 className="text-base font-bold tracking-tight">{cat.title}</h4>
+            <p className="mt-1 text-sm text-muted-foreground">{cat.blurb}</p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {cat.partners.map((p) => (
+                <li key={`${cat.id}-${p.name}`}>
+                  <OusdMarkTile mark={p} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div>
+          <h4 className="text-base font-bold tracking-tight">Network rails</h4>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Multi-chain deposits and majors that settle beside OUSD in one Pro wallet.
+          </p>
+          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {networks.map((n) => (
+              <li key={n.name}>
+                <OusdMarkTile mark={n} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <Link
+          to="/authpi"
+          className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-bold text-white press"
+        >
+          Buy with OUSD
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+        <a
+          href="/website#partners"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-semibold backdrop-blur press"
+        >
+          Full partners showcase
+        </a>
+      </div>
+    </section>
   );
 }
 

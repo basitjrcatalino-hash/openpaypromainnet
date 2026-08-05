@@ -1,7 +1,7 @@
 import { OUSD_LOGO_URL, OUSD_LOGO_FALLBACK_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 
-export function OusdIcon({ className, alt = "OpenUSD OUSD" }: { className?: string; alt?: string }) {
+export function OusdIcon({ className, alt = "OpenUSD" }: { className?: string; alt?: string }) {
   return (
     <img
       src={OUSD_LOGO_URL}

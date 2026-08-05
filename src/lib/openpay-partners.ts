@@ -4,6 +4,7 @@
 
 import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
+import { PHANTOM_WALLET_LOGO } from "@/lib/phantom";
 import { MAJOR_TOKENS, MAJOR_TOKEN_IDS, type MajorTokenId } from "@/lib/major-tokens";
 import { WALLET_NETWORKS } from "@/lib/wallet-networks";
 import { listedTradeMarkets } from "@/lib/trade-markets";
@@ -42,7 +43,7 @@ export const ECOSYSTEM_MARKS: PartnerMark[] = [
   { name: "MoonPay", logo: brand("moonpay.com") },
   { name: "Solana", logo: si("solana", "9945FF") },
   { name: "Trust Wallet", logo: brand("trustwallet.com") },
-  { name: "Phantom", logo: "/phantom-logo.svg" },
+  { name: "Phantom", logo: PHANTOM_WALLET_LOGO },
   { name: "Binance", logo: si("binance", "F0B90B") },
   { name: "OKX", logo: si("okx", "000000") },
   { name: "Circle", logo: si("circle", "063B74") },
@@ -144,7 +145,7 @@ export const PARTNER_CATEGORIES: PartnerCategory[] = [
     blurb: "Enter with the wallet or identity you already use.",
     partners: [
       { name: "OpenPay", logo: OPENPAY_AUTH_LOGO, href: "https://openpy.space", blurb: "Connect with OpenPay" },
-      { name: "Phantom", logo: "/phantom-logo.svg", href: "https://phantom.app", blurb: "Solana wallet sign-in" },
+      { name: "Phantom", logo: PHANTOM_WALLET_LOGO, href: "https://phantom.app", blurb: "Solana wallet sign-in" },
       {
         name: "MetaMask",
         logo: "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg",

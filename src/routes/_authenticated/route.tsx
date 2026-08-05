@@ -44,6 +44,7 @@ import {
   BookMarked,
   Globe2,
   Home,
+  Presentation,
   ChevronDown,
   ExternalLink,
   FileText,
@@ -1274,6 +1275,7 @@ function SidebarInner({
               {(
                 [
                   { href: "/website", labelKey: "nav.website", Icon: Home, external: false },
+                  { href: "/pitch", labelKey: "nav.pitch", Icon: Presentation, external: false },
                   { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign, external: false },
                   { href: "/about", labelKey: "nav.about", Icon: Globe2, external: false },
                   { href: "/blog", labelKey: "nav.blog", Icon: Newspaper, external: false },

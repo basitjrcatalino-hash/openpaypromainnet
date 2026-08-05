@@ -4,28 +4,29 @@ import {
   ArrowLeftRight,
   ArrowRight,
   BookOpen,
-  Bot,
   ChevronDown,
   ExternalLink,
   Fingerprint,
   Globe2,
   KeyRound,
-  Layers,
   Loader2,
   Lock,
   MessageCircle,
   QrCode,
   Send,
   ShieldCheck,
-  Star,
-  Coins,
   Square,
+  Star,
   Volume2,
   Wallet,
-  Zap,
 } from "lucide-react";
-import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL, SOL_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
+import { PHANTOM_WALLET_LOGO } from "@/lib/phantom";
+
+const ETH_LOGO_URL = "https://assets.coingecko.com/coins/images/279/large/ethereum.png";
+const BTC_LOGO_URL = "https://assets.coingecko.com/coins/images/1/large/bitcoin.png";
+const BNB_LOGO_URL = "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png";
 import {
   ECOSYSTEM_MARKS,
   PARTNER_CATEGORIES,
@@ -78,6 +79,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Learn",
     items: [
+      { label: "Website", href: "/website", desc: "OpenPay Pro marketing home" },
+      { label: "Pitch Deck", href: "/pitch", desc: "Investor overview" },
       { label: "Wiki", href: "/wiki", desc: "Guides for every Pro feature" },
       { label: "Blog", href: "/blog", desc: "Product news and deep dives" },
       { label: "FAQ", href: "/docs/faq", desc: "Answers for wallets and OUSD" },
@@ -96,7 +99,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "About", href: "/about", desc: "Why OpenPay Pro exists" },
       { label: "Whitepaper", href: "https://openpy.space/whitepaper", desc: "Network thesis" },
-      { label: "Pitch Deck", href: "https://openpy.space/pitch-deck", desc: "Product overview" },
+      { label: "Pitch Deck", href: "/pitch", desc: "Investor overview" },
     ],
   },
   {
@@ -224,42 +227,43 @@ const FEATURE_BENTO = [
     body: "One balance for OUSD, Pi, majors, and OpenTokens — send, receive, swap.",
     tag: "Money",
     href: "/website#feature-money",
-    icon: Wallet,
+    logo: OUSD_LOGO_URL,
   },
   {
     title: "OpenToken launch",
     body: "Mint community coins on bonding curves and trade against OUSD.",
     tag: "Trade",
     href: "/website#feature-trading",
-    icon: Coins,
+    logo: OPENPAY_NETWORK_BADGE_URL,
   },
   {
     title: "Multi-chain in",
     body: "Deposit from Ethereum, Base, BNB, Polygon, Solana — credit as OUSD.",
     tag: "Deposit",
     href: "/website#feature-move",
-    icon: Layers,
+    /** Stack of chain logos — no Lucide outline icons. */
+    logos: [ETH_LOGO_URL, SOL_LOGO_URL, BNB_LOGO_URL, BTC_LOGO_URL],
   },
   {
     title: "Self-custody",
     body: "Recovery phrase, PIN, biometrics — your keys, open ledger.",
     tag: "Security",
     href: "/website#feature-security",
-    icon: ShieldCheck,
+    logo: PHANTOM_WALLET_LOGO,
   },
   {
     title: "OpenPay AI",
     body: "Ask how money moves. Listen to answers. MCP agents on open rails.",
     tag: "AI",
     href: "/website#feature-ai",
-    icon: Bot,
+    logo: OPENPAY_AI_MENU_ICON,
   },
   {
     title: "Partner API",
     body: "Connect, charges, OpenLedger — build on the same OUSD network.",
     tag: "Builders",
     href: "/website#feature-builders",
-    icon: Zap,
+    logo: OPENPAY_AUTH_LOGO,
   },
 ] as const;
 
@@ -848,14 +852,38 @@ function HomePage() {
           {/* Bento highlight row */}
           <ul data-reveal className="ophome-section-reveal mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURE_BENTO.map((card) => {
-              const Icon = card.icon;
+              const logo = "logo" in card ? card.logo : null;
+              const logos = "logos" in card ? card.logos : null;
               return (
                 <li key={card.title}>
                   <a href={card.href} className="ophome-bento block h-full p-5 press">
                     <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-(--lavender-soft) text-(--brand)">
-                        <Icon className="h-5 w-5" strokeWidth={2.1} />
-                      </div>
+                      {logos ? (
+                        <div className="flex items-center -space-x-2" aria-hidden>
+                          {logos.map((src) => (
+                            <img
+                              key={src}
+                              src={src}
+                              alt=""
+                              className="h-9 w-9 rounded-full bg-white object-cover ring-2 ring-white shadow-sm"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-(--ink)/8 shadow-sm">
+                          {logo ? (
+                            <img
+                              src={logo}
+                              alt=""
+                              className="h-9 w-9 object-contain"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : null}
+                        </div>
+                      )}
                       <span className="rounded-full bg-(--ink)/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                         {card.tag}
                       </span>
@@ -966,7 +994,7 @@ function HomePage() {
               { label: "OpenApp", href: "https://openappdev.space" },
               { label: "Partner API", href: "https://openpy.space/partner-api" },
               { label: "Whitepaper", href: "https://openpy.space/whitepaper" },
-              { label: "Pitch Deck", href: "https://openpy.space/pitch-deck" },
+              { label: "Pitch Deck", href: "/pitch" },
               { label: "OpenNFT", href: "https://openpy.space/web3/nft" },
               { label: "Telegram Mini App", href: "https://t.me/openpayofficial" },
               { label: "Meet OpenPay AI", href: "https://www.openpy.space/blog/meet-openpay-ai" },
@@ -1033,6 +1061,8 @@ function HomePage() {
             title="Product"
             links={[
               { label: "Open wallet", href: "/authpi" },
+              { label: "Website", href: "/website" },
+              { label: "Pitch Deck", href: "/pitch" },
               { label: "OpenUSD", href: "/openusd" },
               { label: "Partners", href: "/website#partners" },
               { label: "About", href: "/about" },
@@ -1057,7 +1087,7 @@ function HomePage() {
             links={[
               { label: "OpenPay", href: "https://openpy.space" },
               { label: "OpenApp", href: "https://openappdev.space" },
-              { label: "Pitch Deck", href: "https://openpy.space/pitch-deck" },
+              { label: "Pitch Deck", href: "/pitch" },
               { label: "Telegram", href: "https://t.me/openpayofficial" },
               { label: "Follow", href: "https://droplinkpi.space/@openpay" },
             ]}

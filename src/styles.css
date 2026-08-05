@@ -1778,3 +1778,127 @@ html.solana-pay-open body > div[style*="z-index:50"] {
     transition: none;
   }
 }
+
+/* —— Pitch deck (/pitch) — blog/website editorial skin —— */
+.oppitch.opblog,
+.dark .oppitch.opblog {
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+.oppitch-sky {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -8%, rgba(171, 159, 242, 0.42), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 100% 18%, rgba(124, 108, 240, 0.16), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 0% 55%, rgba(61, 46, 99, 0.06), transparent 55%),
+    linear-gradient(180deg, #f7f4ff 0%, #fdfcf7 42%, #faf8f2 100%);
+}
+
+.oppitch-glow {
+  animation: oppitch-drift 14s ease-in-out infinite alternate;
+}
+
+@keyframes oppitch-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(12px, 18px) scale(1.06);
+  }
+}
+
+.oppitch-rise {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1) var(--rise-delay, 0ms),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) var(--rise-delay, 0ms);
+}
+
+.oppitch-rise.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.oppitch-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.oppitch-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.oppitch-slide {
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75) inset;
+  backdrop-filter: blur(10px);
+}
+
+.oppitch-panel {
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.oppitch-stat {
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.oppitch-marquee-track {
+  animation: oppitch-marquee 42s linear infinite;
+}
+
+@keyframes oppitch-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.oppitch-bar {
+  animation: oppitch-bar-in 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes oppitch-bar-in {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .oppitch-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oppitch-glow,
+  .oppitch-marquee-track,
+  .oppitch-bar {
+    animation: none;
+  }
+  .oppitch-rise,
+  .oppitch-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

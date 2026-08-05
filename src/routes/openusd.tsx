@@ -5,16 +5,11 @@ import {
   BookOpen,
   ChevronDown,
   ExternalLink,
-  Globe2,
-  Layers,
   Newspaper,
-  Send,
-  Shield,
-  Wallet,
-  Zap,
 } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
-import { OUSD_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL } from "@/lib/token-logos";
+import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 import {
   PARTNER_CATEGORIES,
   partnerListedTokens,
@@ -24,6 +19,9 @@ import {
 } from "@/lib/openpay-partners";
 import { MAJOR_TOKENS, MAJOR_TOKEN_IDS } from "@/lib/major-tokens";
 import { cn } from "@/lib/utils";
+
+const BTC_LOGO_URL = "https://assets.coingecko.com/coins/images/1/large/bitcoin.png";
+const MOONPAY_LOGO = "https://www.google.com/s2/favicons?domain=moonpay.com&sz=128";
 
 const TITLE = "Meet OpenUSD (OUSD) — OpenPay’s dollar on the open network";
 const DESC =
@@ -84,22 +82,22 @@ const FEATURES = [
 
 const BULLETS = [
   {
-    icon: Wallet,
+    logo: OUSD_LOGO_URL,
     title: "View your balance in one place",
     body: "See OUSD with your other OpenPay Pro assets as one clear home-screen balance.",
   },
   {
-    icon: Zap,
+    logo: MOONPAY_LOGO,
     title: "Move money fast",
     body: "Top up from OpenPay Balance, Pi, cards, or crypto — then send without the usual rails friction.",
   },
   {
-    icon: Send,
+    logo: OPENPAY_AUTH_LOGO,
     title: "Frictionless transfers",
     body: "Pay friends by @username or Pro address. Scan receive QRs for any Pro token, including OUSD.",
   },
   {
-    icon: Layers,
+    logo: OPENPAY_NETWORK_BADGE_URL,
     title: "Trade and build on $1",
     body: "Swap majors and OpenTokens against OUSD, and integrate Partner API payments denominated in the same dollar.",
   },
@@ -168,7 +166,7 @@ function OusdPage() {
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/authpi"
-            className="rounded-full bg-white/70 px-3 py-1.5 text-(--foreground)/80 backdrop-blur hover:text-foreground"
+            className="rounded-full bg-white/70 px-3 py-1.5 text-foreground/80 backdrop-blur hover:text-foreground"
           >
             OpenPay Pro
           </Link>
@@ -259,7 +257,12 @@ function OusdPage() {
           </h2>
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
-              <Shield className="mx-auto h-8 w-8 text-accent" strokeWidth={1.75} />
+              <img
+                src={BTC_LOGO_URL}
+                alt=""
+                className="mx-auto h-10 w-10 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
               <p className="mt-4 text-lg font-bold">The power of crypto</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Ledger settlement, APIs, agents, and multi-rail top-ups — without giving up dollar
@@ -267,7 +270,12 @@ function OusdPage() {
               </p>
             </div>
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
-              <Globe2 className="mx-auto h-8 w-8 text-accent" strokeWidth={1.75} />
+              <img
+                src={OUSD_LOGO_URL}
+                alt=""
+                className="mx-auto h-10 w-10 rounded-2xl object-cover"
+                referrerPolicy="no-referrer"
+              />
               <p className="mt-4 text-lg font-bold">The ease of cash</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 $1 OUSD thinking for everyday sends, receives, and merchant payouts across OpenPay.
@@ -305,10 +313,16 @@ function OusdPage() {
             Everything you need from a network dollar
           </h2>
           <ul className="mt-12 grid gap-8 sm:grid-cols-2">
-            {BULLETS.map(({ icon: Icon, title, body }) => (
+            {BULLETS.map(({ logo, title, body }) => (
               <li key={title} className="min-w-0">
-                <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-(--accent)/15 text-accent">
-                  <Icon className="h-5 w-5" strokeWidth={2.1} />
+                <div className="mb-3 grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-border shadow-sm">
+                  <img
+                    src={logo}
+                    alt=""
+                    className="h-8 w-8 object-contain"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
                 <h3 className="text-lg font-bold tracking-tight">{title}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">

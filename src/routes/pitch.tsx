@@ -1,0 +1,1032 @@
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  ExternalLink,
+  Globe2,
+  Home,
+  Presentation,
+} from "lucide-react";
+import { PageListenButton } from "@/components/page-listen-button";
+import {
+  OUSD_LOGO_URL,
+  OPENPAY_NETWORK_BADGE_URL,
+  PI_NETWORK_LOGO_URL,
+  SOL_LOGO_URL,
+} from "@/lib/token-logos";
+import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
+import { PHANTOM_WALLET_LOGO } from "@/lib/phantom";
+import {
+  ECOSYSTEM_MARKS,
+  PARTNER_CATEGORIES,
+  partnerListedTokens,
+  partnerNetworks,
+  tradeMarketStats,
+  type PartnerMark,
+} from "@/lib/openpay-partners";
+import { cn } from "@/lib/utils";
+
+const ETH_LOGO_URL = "https://assets.coingecko.com/coins/images/279/large/ethereum.png";
+const BTC_LOGO_URL = "https://assets.coingecko.com/coins/images/1/large/bitcoin.png";
+const BNB_LOGO_URL = "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png";
+
+const TITLE = "OpenPay Pro Pitch Deck — Investor overview";
+const DESC =
+  "Investor pitch for OpenPay and OpenPay Pro: OpenUSD, self-custody wallet, Spot & Perps, OpenToken, Partner API, OpenPay AI, roadmap, and capital allocation.";
+
+const FEATURE_PILLARS = [
+  {
+    id: "money",
+    title: "Money & OpenUSD",
+    blurb: "One Pro home for network dollars and assets.",
+    logo: OUSD_LOGO_URL,
+    items: [
+      "OpenUSD (OUSD) — $1 ledger dollar",
+      "Unified wallet: OUSD, Pi, majors, OpenTokens, NFTs",
+      "@username identity on the same ledger",
+      "Display currencies (USD, EUR, PI, and more)",
+      "Activity timeline & multi-wallet switching",
+    ],
+  },
+  {
+    id: "trading",
+    title: "Trading & OpenToken",
+    blurb: "Swap majors. Launch community coins.",
+    logo: OPENPAY_NETWORK_BADGE_URL,
+    items: [
+      "OpenDEX swaps vs OUSD",
+      "Spot & Perpetuals with TradingView charts",
+      "OpenToken bonding-curve launchpad",
+      "Discovery, watchlist, Live Chat rooms",
+    ],
+  },
+  {
+    id: "rails",
+    title: "Send, receive & deposit",
+    blurb: "Move value in on open rails.",
+    logos: [ETH_LOGO_URL, SOL_LOGO_URL, BNB_LOGO_URL, BTC_LOGO_URL],
+    items: [
+      "Send to @users, addresses, or OpenPay",
+      "Receive QR & public /pay links",
+      "MoonPay · Circle · Solana Pay · WalletConnect Pay",
+      "Multi-chain: Ethereum, Base, BNB, Polygon, Solana…",
+      "Pi Network and OpenPay Balance top-ups → OUSD",
+    ],
+  },
+  {
+    id: "security",
+    title: "Security & self-custody",
+    blurb: "Your keys. Open ledger. Your rules.",
+    logo: PHANTOM_WALLET_LOGO,
+    items: [
+      "12/24-word recovery phrase",
+      "PIN & biometrics",
+      "Pi Verify KYC when required",
+      "OpenPay OAuth for network features",
+      "Not a closed bank silo",
+    ],
+  },
+  {
+    id: "ai",
+    title: "OpenPay AI & agents",
+    blurb: "Help without hiding how money moves.",
+    logo: OPENPAY_AI_MENU_ICON,
+    items: [
+      "In-app OpenPay AI assistant",
+      "Spoken answers (TTS)",
+      "Agent Connect (MCP) for ChatGPT / Claude",
+      "Read-oriented tools — no silent fund moves",
+    ],
+  },
+  {
+    id: "builders",
+    title: "Builders & open network",
+    blurb: "Same OUSD rails for apps and agents.",
+    logo: OPENPAY_AUTH_LOGO,
+    items: [
+      "Partner API & Connect with OpenPay",
+      "Public Ledger API & OpenLedger explorer",
+      "In-app Developer console",
+      "Docs, Wiki, Blog, FAQ",
+    ],
+  },
+] as const;
+
+const AUTH_METHODS = [
+  { name: "OpenPay", logo: OPENPAY_AUTH_LOGO },
+  { name: "Pi Network", logo: PI_NETWORK_LOGO_URL },
+  { name: "Phantom", logo: PHANTOM_WALLET_LOGO },
+  { name: "Solana", logo: SOL_LOGO_URL },
+  { name: "MetaMask", logo: "https://www.google.com/s2/favicons?domain=metamask.io&sz=128" },
+  { name: "Telegram", logo: "https://cdn.simpleicons.org/telegram/26A5E4" },
+] as const;
+
+const ROADMAP = [
+  {
+    phase: "Live now",
+    when: "Today",
+    tone: "live" as const,
+    items: [
+      "OpenPay Pro wallet — OUSD, Pi, majors, OpenTokens",
+      "OpenUSD settlement across send, swap, Spot & Perps",
+      "Multi-rail deposits (cards, crypto, Solana Pay, Circle, Pi)",
+      "Self-custody, OpenLedger, Partner API, OpenPay AI + MCP",
+      "Auth: OpenPay, Pi, Phantom, Solana, MetaMask, WalletConnect, Telegram",
+    ],
+  },
+  {
+    phase: "Near term",
+    when: "Next 6–12 months",
+    tone: "near" as const,
+    items: [
+      "Deeper liquidity across listed majors and OpenToken markets",
+      "Expanded exchange & payment partner coverage",
+      "Stronger merchant tools — QR, pay links, Connect charges",
+      "Growth in Pi-native and Solana-native distribution",
+      "Compliance tooling and regional readiness",
+    ],
+  },
+  {
+    phase: "Mid term",
+    when: "12–24 months",
+    tone: "mid" as const,
+    items: [
+      "Scale OpenUSD as the default settlement unit for partners",
+      "Institutional-grade reporting on public ledger rails",
+      "Broader agent economy via MCP and Partner API",
+      "Global onboarding funnels for wallets and merchants",
+      "Network effects across OpenPay Balance ↔ Pro",
+    ],
+  },
+  {
+    phase: "Long term",
+    when: "24 months+",
+    tone: "long" as const,
+    items: [
+      "OpenPay as the open money network for people, apps, and agents",
+      "OpenUSD ubiquitous across apps built on Partner API",
+      "Self-custody money app category leadership",
+      "Sustainable fee flywheel from trading, deposits, and builders",
+    ],
+  },
+] as const;
+
+const FUND_USE = [
+  {
+    pct: 35,
+    title: "Product & engineering",
+    body: "Core wallet, OpenUSD rails, Spot/Perps, OpenToken, AI/MCP, multi-chain deposits, and developer surfaces.",
+  },
+  {
+    pct: 20,
+    title: "Liquidity & market operations",
+    body: "Depth for majors and OpenToken markets, settlement reliability, and healthy OUSD trading experience.",
+  },
+  {
+    pct: 20,
+    title: "Growth & partnerships",
+    body: "User acquisition, Pi & wallet distribution, exchange/payment integrations, and merchant adoption.",
+  },
+  {
+    pct: 15,
+    title: "Security & compliance",
+    body: "Self-custody hardening, audits, Pi Verify / KYC flows, and regional regulatory readiness.",
+  },
+  {
+    pct: 10,
+    title: "Operations & reserve",
+    body: "Team ops, infrastructure, contingency, and long-horizon network resilience.",
+  },
+] as const;
+
+const WHY_NOW = [
+  {
+    title: "One network dollar",
+    body: "OpenUSD gives users cash-simple $1 thinking while builders settle on the same ledger unit.",
+  },
+  {
+    title: "Distribution ready",
+    body: "Pi Network, Phantom, Solana, MetaMask, Telegram, and OpenPay — many doors into one Pro account.",
+  },
+  {
+    title: "Full stack, not a silo",
+    body: "Wallet + trading + deposits + Partner API + public ledger + AI agents share open rails.",
+  },
+  {
+    title: "Partner gravity",
+    body: "TradingView, CoinGecko, MoonPay, Circle, Solana Pay, Trust Wallet, and exchange feeds already in the product story.",
+  },
+] as const;
+
+const TOP_LINKS = [
+  { label: "Website", href: "/website", Icon: Home },
+  { label: "Pitch Deck", href: "/pitch", Icon: Presentation },
+  { label: "OpenUSD", href: "/openusd", Icon: null },
+  { label: "Blog", href: "/blog", Icon: null },
+  { label: "About", href: "/about", Icon: null },
+] as const;
+
+function pitchSpeechText() {
+  const stats = tradeMarketStats();
+  return [
+    "OpenPay Pro investor pitch deck.",
+    "OpenPay is the open money network. OpenPay Pro is the self-custody money app on that network.",
+    "Meet OpenUSD — OpenPay's one-dollar ledger dollar for hold, send, spend, and settle.",
+    `Live markets: ${stats.majors} majors, ${stats.spot} spot, ${stats.perp} perpetuals, ${stats.networks} networks.`,
+    "The problem: closed bank apps and fragmented crypto wallets force users to hop rails.",
+    "The solution: one Pro home for OUSD, Pi, majors, and OpenTokens — with open ledger, Partner API, and agents.",
+    "Roadmap from live product to global open money network.",
+    "Capital allocation prioritizes product, liquidity, growth, security, and operations.",
+    "Join the open network. Build with us.",
+  ].join(" ");
+}
+
+export const Route = createFileRoute("/pitch")({
+  head: () => ({
+    meta: [
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://openpaypro.space/pitch" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/pitch" }],
+  }),
+  component: PitchPage,
+});
+
+function PitchPage() {
+  const stats = tradeMarketStats();
+  const networks = partnerNetworks();
+  const tokens = partnerListedTokens().slice(0, 24);
+  const heroRef = useRef<HTMLElement | null>(null);
+  const [activeNav, setActiveNav] = useState("cover");
+
+  useEffect(() => {
+    const root = heroRef.current;
+    if (!root) return;
+    const nodes = root.querySelectorAll<HTMLElement>("[data-rise]");
+    nodes.forEach((el, i) => {
+      el.style.setProperty("--rise-delay", `${70 + i * 65}ms`);
+      requestAnimationFrame(() => el.classList.add("is-in"));
+    });
+  }, []);
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-slide]"));
+    if (!sections.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        const id = visible?.target.getAttribute("data-slide");
+        if (id) setActiveNav(id);
+      },
+      { rootMargin: "-35% 0px -45% 0px", threshold: [0.15, 0.4, 0.7] },
+    );
+    sections.forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    if (!nodes.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("is-in");
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+    );
+    nodes.forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, []);
+
+  const nav = [
+    { id: "cover", label: "01" },
+    { id: "thesis", label: "02" },
+    { id: "problem", label: "03" },
+    { id: "solution", label: "04" },
+    { id: "openusd", label: "05" },
+    { id: "product", label: "06" },
+    { id: "traction", label: "07" },
+    { id: "model", label: "08" },
+    { id: "roadmap", label: "09" },
+    { id: "funds", label: "10" },
+    { id: "ask", label: "11" },
+  ];
+
+  return (
+    <main className="opblog oppitch min-h-screen">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
+        <div className="oppitch-sky absolute inset-0" />
+        <div className="oppitch-glow absolute -left-28 top-8 h-112 w-md rounded-full bg-[rgba(171,159,242,0.35)] blur-3xl" />
+        <div className="oppitch-glow absolute -right-20 top-[42%] h-104 w-104 rounded-full bg-[rgba(124,108,240,0.18)] blur-3xl [animation-delay:1.4s]" />
+      </div>
+
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-[color-mix(in_srgb,var(--background)_88%,white)] backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6">
+          <Link
+            to="/website"
+            className="flex shrink-0 items-center gap-2 font-extrabold tracking-tight"
+          >
+            <img src={OPENPAY_AUTH_LOGO} alt="" className="h-7 w-7 rounded-lg object-contain" />
+            <span className="hidden sm:inline">OpenPay Pro</span>
+          </Link>
+
+          <nav className="ml-1 hidden items-center gap-1 lg:flex">
+            {TOP_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
+                  link.href === "/pitch"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {link.Icon ? <link.Icon className="h-3.5 w-3.5" strokeWidth={2.25} /> : null}
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <nav className="ml-auto flex max-w-[42vw] items-center gap-0.5 overflow-x-auto sm:max-w-none">
+            {nav.map((n) => (
+              <a
+                key={n.id}
+                href={`#${n.id}`}
+                className={cn(
+                  "rounded-full px-2 py-1 text-[11px] font-bold tabular-nums transition-colors",
+                  activeNav === n.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <Link
+            to="/authpi"
+            className="hidden shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-xs font-bold text-background sm:inline-flex"
+          >
+            Open wallet
+          </Link>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto border-t border-border/60 px-4 py-2 lg:hidden scrollbar-none">
+          {TOP_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold",
+                link.href === "/pitch"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </header>
+
+      <section
+        id="cover"
+        data-slide="cover"
+        ref={heroRef}
+        className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col justify-center px-5 pb-16 pt-10 sm:px-8"
+      >
+        <p
+          data-rise
+          className="oppitch-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground"
+        >
+          <Globe2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+          Investor overview · Confidential
+        </p>
+        <h1 data-rise className="oppitch-rise opblog-title mt-6">
+          OpenPay
+        </h1>
+        <p data-rise className="oppitch-rise opblog-dek mt-4 max-w-2xl font-semibold text-primary">
+          The open money network — and OpenPay Pro, the self-custody money app built on it.
+        </p>
+        <p
+          data-rise
+          className="oppitch-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+        >
+          Hold, send, and settle in OpenUSD. Trade majors and OpenTokens. Deposit from open rails.
+          Build with Partner API and agents — one public ledger.
+        </p>
+        <div data-rise className="oppitch-rise mt-9 flex flex-wrap items-center gap-3">
+          <a
+            href="#thesis"
+            className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-background"
+          >
+            Read the deck
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </a>
+          <Link
+            to="/openusd"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-bold backdrop-blur"
+          >
+            Meet OpenUSD
+          </Link>
+          <Link
+            to="/website"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-bold backdrop-blur"
+          >
+            Website
+          </Link>
+          <PageListenButton
+            id="page:pitch"
+            text={pitchSpeechText()}
+            variant="muted"
+            className="rounded-full"
+          />
+        </div>
+        <div data-rise className="oppitch-rise mt-14 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { k: String(stats.majors), v: "Listed majors" },
+            { k: String(stats.spot), v: "Spot markets" },
+            { k: String(stats.perp), v: "Perpetuals" },
+            { k: String(stats.networks), v: "Live networks" },
+          ].map((s) => (
+            <div key={s.v} className="oppitch-stat px-4 py-4">
+              <p className="font-(family-name:--font-display) text-2xl font-extrabold tracking-tight sm:text-3xl">
+                {s.k}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-muted-foreground">{s.v}</p>
+            </div>
+          ))}
+        </div>
+        <a
+          href="#thesis"
+          className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 animate-bounce text-muted-foreground sm:block"
+          aria-label="Scroll"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </a>
+      </section>
+
+      <div className="border-y border-border/80 bg-card/50 py-4 backdrop-blur-sm">
+        <div className="oppitch-marquee overflow-hidden">
+          <div className="oppitch-marquee-track flex w-max gap-10 px-6">
+            {[...ECOSYSTEM_MARKS, ...ECOSYSTEM_MARKS].map((m, i) => (
+              <MarkChip key={`${m.name}-${i}`} mark={m} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl space-y-4 px-5 py-16 sm:px-8 sm:py-24">
+        <Slide id="thesis" num="02" title="Thesis" kicker="Why this exists">
+          <p className="opblog-dek max-w-3xl font-semibold">
+            Money should move on an <span className="text-primary">open network</span> — not locked
+            inside a closed bank app. OpenPay is that network. OpenPay Pro is how people use it
+            every day.
+          </p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <ThesisCard
+              logo={OPENPAY_AUTH_LOGO}
+              name="OpenPay"
+              href="https://openpy.space"
+              body="The open money network: Balance, Partner API, Connect, OpenLedger, OpenNFT, and the network thesis."
+            />
+            <ThesisCard
+              logo={OPENPAY_NETWORK_BADGE_URL}
+              name="OpenPay Pro"
+              href="/website"
+              body="The self-custody money app on that network — OUSD, Pi, majors, OpenTokens, trading, deposits, and OpenPay AI."
+            />
+          </div>
+        </Slide>
+
+        <Slide id="problem" num="03" title="The problem" kicker="Fragmented money">
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                t: "Closed silos",
+                b: "Banks and fintech apps trap balances behind walls — hard to inspect, hard to build on, hard to leave.",
+              },
+              {
+                t: "Wallet chaos",
+                b: "Users juggle chains, bridges, and apps just to hold dollars, majors, and community coins in one place.",
+              },
+              {
+                t: "No shared dollar rail",
+                b: "Builders and agents lack a simple $1 settlement unit that works across wallet, trade, and Partner API.",
+              },
+            ].map((p) => (
+              <div key={p.t} data-reveal className="oppitch-reveal oppitch-panel p-6">
+                <h3 className="text-lg font-bold tracking-tight">{p.t}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.b}</p>
+              </div>
+            ))}
+          </div>
+        </Slide>
+
+        <Slide id="solution" num="04" title="The solution" kicker="One Pro home">
+          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            OpenPay Pro unifies network dollars, Pi, listed majors, and OpenTokens — with
+            self-custody keys, a public ledger, and builder rails that speak OpenUSD.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {WHY_NOW.map((w) => (
+              <div key={w.title} data-reveal className="oppitch-reveal oppitch-panel p-5">
+                <h3 className="text-sm font-extrabold tracking-tight">{w.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Sign in your way
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {AUTH_METHODS.map((a) => (
+                <div
+                  key={a.name}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2"
+                >
+                  <img src={a.logo} alt="" className="h-5 w-5 rounded object-contain" />
+                  <span className="text-xs font-bold">{a.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Slide>
+
+        <Slide id="openusd" num="05" title="OpenUSD" kicker="Network dollar">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-4">
+                <img
+                  src={OUSD_LOGO_URL}
+                  alt="OpenUSD"
+                  className="h-16 w-16 rounded-2xl object-contain shadow-sm"
+                />
+                <div>
+                  <h3 className="opblog-h2">OpenUSD</h3>
+                  <p className="text-sm font-semibold text-primary">OUSD · tracks ~$1 USD</p>
+                </div>
+              </div>
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                OpenPay's ledger dollar — the primary Pro balance unit. Hold, send, spend, and
+                settle with cash-simple $1 thinking and crypto settlement power.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm font-semibold">
+                {[
+                  "Settles OpenDEX swaps, Tokens buys, Spot & Perpetuals",
+                  "Denominates Partner API and OpenLedger activity",
+                  "Funded via OpenPay Balance, Pi, cards, USDC, Solana Pay, Circle, multi-chain",
+                ].map((line) => (
+                  <li key={line} className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/openusd"
+                className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-primary"
+              >
+                Full OpenUSD story
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="oppitch-panel flex-1 p-6 sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                This is New Money
+              </p>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-extrabold">Power of crypto</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Ledger settlement, APIs, agents, multi-rail top-ups, inspectable credits and
+                    debits.
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-extrabold">Ease of cash</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    One-dollar OUSD thinking for everyday sends, merchant payouts, and clear
+                    balances.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-8 flex items-center gap-3">
+                <img src={BTC_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
+                <span className="text-muted-foreground">+</span>
+                <img src={OUSD_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
+                <span className="ml-auto text-xs font-bold text-muted-foreground">
+                  Crypto × Cash
+                </span>
+              </div>
+            </div>
+          </div>
+        </Slide>
+
+        <Slide id="product" num="06" title="Product suite" kicker="Everything in Pro">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {FEATURE_PILLARS.map((f) => (
+              <div
+                key={f.id}
+                data-reveal
+                className="oppitch-reveal oppitch-panel flex flex-col p-5"
+              >
+                <div className="flex items-center gap-3">
+                  {"logos" in f && f.logos ? (
+                    <div className="flex -space-x-2">
+                      {f.logos.map((src) => (
+                        <img
+                          key={src}
+                          src={src}
+                          alt=""
+                          className="h-8 w-8 rounded-full border-2 border-card object-contain bg-card"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <img
+                      src={"logo" in f ? f.logo : OPENPAY_AUTH_LOGO}
+                      alt=""
+                      className="h-9 w-9 rounded-xl object-contain"
+                    />
+                  )}
+                  <div>
+                    <h3 className="text-sm font-extrabold tracking-tight">{f.title}</h3>
+                    <p className="text-xs text-muted-foreground">{f.blurb}</p>
+                  </div>
+                </div>
+                <ul className="mt-4 flex-1 space-y-1.5">
+                  {f.items.map((item) => (
+                    <li key={item} className="text-xs leading-snug text-muted-foreground">
+                      · {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Full feature walkthrough on{" "}
+            <Link to="/website" className="font-bold text-primary">
+              /website
+            </Link>
+            .
+          </p>
+        </Slide>
+
+        <Slide
+          id="traction"
+          num="07"
+          title="Ecosystem & traction"
+          kicker="Partners · markets · networks"
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { k: `${stats.majors}+`, v: "Majors listed" },
+              { k: String(stats.spot), v: "Spot markets" },
+              { k: String(stats.perp), v: "Perp markets" },
+              { k: String(stats.networks), v: "Networks" },
+            ].map((s) => (
+              <div key={s.v} className="oppitch-stat px-4 py-5 text-center">
+                <p className="font-(family-name:--font-display) text-2xl font-extrabold">{s.k}</p>
+                <p className="mt-1 text-xs font-semibold text-muted-foreground">{s.v}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 space-y-8">
+            {PARTNER_CATEGORIES.map((cat) => (
+              <div key={cat.id} data-reveal className="oppitch-reveal">
+                <h3 className="text-sm font-extrabold tracking-tight">{cat.title}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{cat.blurb}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {cat.partners.map((p) => (
+                    <div
+                      key={p.name}
+                      className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5"
+                      title={p.blurb}
+                    >
+                      <img src={p.logo} alt="" className="h-4 w-4 object-contain" />
+                      <span className="text-xs font-bold">{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Networks
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {networks.map((n) => (
+                <MarkChip key={n.name} mark={n} />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card/60 py-4">
+            <div className="oppitch-marquee">
+              <div className="oppitch-marquee-track flex w-max gap-8 px-4">
+                {[...tokens, ...tokens].map((t, i) => (
+                  <MarkChip key={`${t.name}-${i}`} mark={t} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </Slide>
+
+        <Slide id="model" num="08" title="Business model" kicker="How value accrues">
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                t: "Trading & markets",
+                b: "OpenDEX, Spot, and Perpetuals settle in OUSD — fee-aware quotes with professional charting.",
+              },
+              {
+                t: "OpenToken economy",
+                b: "Bonding-curve launches mint and trade against OUSD — community coins on shared rails.",
+              },
+              {
+                t: "Rails & builders",
+                b: "Deposits, Partner API, Connect charges, and agent tooling grow with network usage.",
+              },
+            ].map((m) => (
+              <div key={m.t} data-reveal className="oppitch-reveal oppitch-panel p-6">
+                <h3 className="font-extrabold tracking-tight">{m.t}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{m.b}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            OpenPay Pro is positioned like a network-native money app: grow users and builders on
+            the same OpenUSD ledger — similar in ambition to how open networks scale distribution
+            first, then deepen economic activity.
+          </p>
+        </Slide>
+
+        <Slide id="roadmap" num="09" title="Roadmap" kicker="Where capital goes to work">
+          <div className="relative space-y-4 before:absolute before:left-[0.85rem] before:top-3 before:bottom-3 before:w-px before:bg-border sm:before:left-[1.1rem]">
+            {ROADMAP.map((r) => (
+              <div
+                key={r.phase}
+                data-reveal
+                className="oppitch-reveal relative grid gap-3 pl-10 sm:grid-cols-[10rem_1fr] sm:pl-12"
+              >
+                <div className="absolute left-0 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-primary text-[10px] font-bold text-primary-foreground shadow sm:h-8 sm:w-8">
+                  {r.tone === "live" ? "●" : "○"}
+                </div>
+                <div>
+                  <p className="text-sm font-extrabold">{r.phase}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{r.when}</p>
+                </div>
+                <ul className="oppitch-panel space-y-2 p-4 sm:p-5">
+                  {r.items.map((item) => (
+                    <li key={item} className="text-sm leading-snug text-muted-foreground">
+                      · {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Slide>
+
+        <Slide id="funds" num="10" title="Use of funds" kicker="Capital allocation">
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Proposed allocation for growth capital — product-first, with liquidity, distribution,
+            security, and operational resilience. Percentages are a planning framework for
+            investors; final terms are set in formal diligence.
+          </p>
+          <div className="mt-8 space-y-4">
+            {FUND_USE.map((f) => (
+              <div key={f.title} data-reveal className="oppitch-reveal">
+                <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                  <p className="text-sm font-extrabold">
+                    <span className="tabular-nums text-primary">{f.pct}%</span> · {f.title}
+                  </p>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="oppitch-bar h-full rounded-full bg-linear-to-r from-primary to-[#7c6cf0]"
+                    style={{ width: `${f.pct}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                  {f.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Slide>
+
+        <Slide id="ask" num="11" title="The opportunity" kicker="Why invest">
+          <p className="opblog-dek max-w-3xl font-semibold">
+            Back the open money stack: <span className="text-primary">OpenPay</span> as the network,{" "}
+            <span className="text-primary">OpenPay Pro</span> as the daily money app, and{" "}
+            <span className="text-primary">OpenUSD</span> as the shared dollar rail.
+          </p>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                t: "Product live",
+                b: "Wallet, markets, deposits, AI, and builder APIs shipping today.",
+              },
+              { t: "Clear wedge", b: "OUSD + Pi + majors in one self-custody home." },
+              {
+                t: "Network upside",
+                b: "Partners, agents, and apps compound on open ledger rails.",
+              },
+            ].map((x) => (
+              <div key={x.t} className="oppitch-panel p-5">
+                <p className="text-sm font-extrabold">{x.t}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{x.b}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12 flex flex-wrap gap-3">
+            <Link
+              to="/authpi"
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-background"
+            >
+              Open OpenPay Pro
+              <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            </Link>
+            <a
+              href="https://openpy.space/whitepaper"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+            >
+              Whitepaper
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+            <Link
+              to="/website"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+            >
+              Website
+            </Link>
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+            >
+              About the network
+            </Link>
+            <Link
+              to="/docs"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold"
+            >
+              <BookOpen className="h-4 w-4" />
+              Developer portal
+            </Link>
+          </div>
+        </Slide>
+      </div>
+
+      <footer className="border-t border-border bg-card/60 py-10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="flex items-center gap-3">
+            <img src={OPENPAY_AUTH_LOGO} alt="" className="h-8 w-8 rounded-lg" />
+            <div>
+              <p className="text-sm font-extrabold">OpenPay Pro</p>
+              <p className="text-xs text-muted-foreground">openpaypro.space/pitch</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs font-bold text-muted-foreground">
+            <Link to="/website" className="hover:text-foreground">
+              Website
+            </Link>
+            <Link to="/pitch" className="hover:text-foreground">
+              Pitch Deck
+            </Link>
+            <Link to="/openusd" className="hover:text-foreground">
+              OpenUSD
+            </Link>
+            <Link to="/blog" className="hover:text-foreground">
+              Blog
+            </Link>
+            <a
+              href="https://openpy.space"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-foreground"
+            >
+              OpenPay
+            </a>
+            <Link to="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+          </div>
+        </div>
+        <p className="mx-auto mt-6 max-w-6xl px-5 text-[11px] leading-relaxed text-muted-foreground sm:px-8">
+          This overview is for informational purposes and does not constitute an offer to sell or a
+          solicitation of an offer to buy securities. Product features and market counts reflect the
+          live OpenPay Pro catalog and may change.
+        </p>
+      </footer>
+    </main>
+  );
+}
+
+function Slide({
+  id,
+  num,
+  title,
+  kicker,
+  children,
+}: {
+  id: string;
+  num: string;
+  title: string;
+  kicker: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      data-slide={id}
+      data-reveal
+      className="oppitch-reveal oppitch-slide scroll-mt-24 p-6 sm:p-10"
+    >
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border/80 pb-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            {kicker}
+          </p>
+          <h2 className="opblog-h2 mt-1">{title}</h2>
+        </div>
+        <span className="font-(family-name:--font-display) text-3xl font-extrabold tabular-nums text-primary/35 sm:text-4xl">
+          {num}
+        </span>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ThesisCard({
+  logo,
+  name,
+  body,
+  href,
+}: {
+  logo: string;
+  name: string;
+  body: string;
+  href: string;
+}) {
+  const inner = (
+    <>
+      <div className="flex items-center gap-3">
+        <img src={logo} alt="" className="h-10 w-10 rounded-xl object-contain" />
+        <h3 className="text-lg font-bold tracking-tight">{name}</h3>
+      </div>
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
+    </>
+  );
+  if (href.startsWith("http")) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        data-reveal
+        className="oppitch-reveal oppitch-panel block p-6 transition hover:border-primary/50"
+      >
+        {inner}
+      </a>
+    );
+  }
+  return (
+    <Link
+      to={href}
+      data-reveal
+      className="oppitch-reveal oppitch-panel block p-6 transition hover:border-primary/50"
+    >
+      {inner}
+    </Link>
+  );
+}
+
+function MarkChip({ mark }: { mark: PartnerMark }) {
+  return (
+    <div className="inline-flex shrink-0 items-center gap-2">
+      <img src={mark.logo} alt="" className="h-5 w-5 object-contain" />
+      <span className="text-xs font-bold whitespace-nowrap text-foreground/80">{mark.name}</span>
+    </div>
+  );
+}

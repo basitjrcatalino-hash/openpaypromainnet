@@ -3,11 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   BookOpen,
+  CandlestickChart,
   ChevronDown,
   ExternalLink,
   Globe2,
   Home,
   Presentation,
+  Rocket,
+  Users,
 } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
 import {
@@ -91,13 +94,26 @@ const FEATURE_PILLARS = [
   {
     id: "trading",
     title: "Trading & OpenToken",
-    blurb: "Swap majors. Launch community coins.",
+    blurb: "Spot, Perps, P2P, and community coins.",
     logo: OPENPAY_NETWORK_BADGE_URL,
     items: [
-      "OpenDEX swaps vs OUSD",
-      "Spot & Perpetuals with TradingView charts",
+      "Spot trading vs OUSD with live books & charts",
+      "Perpetuals with leverage, mark price & funding",
+      "P2P marketplace — escrow ads, merchants, chat",
       "OpenToken bonding-curve launchpad",
-      "Discovery, watchlist, Live Chat rooms",
+      "OpenDEX swaps, discovery, watchlist, Live Chat",
+    ],
+  },
+  {
+    id: "markets",
+    title: "Markets & discovery",
+    blurb: "Majors, memes, and community listings.",
+    logo: OUSD_LOGO_URL,
+    items: [
+      "Tokens list with live USD prices",
+      "Trust Wallet hub — search, safety, trending",
+      "TradingView charts on Spot & Perps",
+      "CoinGecko · CoinMarketCap · exchange feeds",
     ],
   },
   {
@@ -149,6 +165,69 @@ const FEATURE_PILLARS = [
       "In-app Developer console",
       "Docs, Wiki, Blog, FAQ",
     ],
+  },
+] as const;
+
+const DEMO_EXPERIENCES = [
+  {
+    id: "spot",
+    tag: "Spot",
+    title: "Spot trade",
+    body: "Buy and sell majors against OUSD with order books, TradingView charts, and clear fees.",
+    href: "/trade",
+    cta: "Try Spot demo",
+    accent: "#1652f0",
+    Icon: CandlestickChart,
+    stats: (s: ReturnType<typeof tradeMarketStats>) => [
+      { k: String(s.spot), v: "Spot markets" },
+      { k: String(s.majors), v: "Majors" },
+    ],
+    preview: "spot" as const,
+  },
+  {
+    id: "perp",
+    tag: "Perpetuals",
+    title: "Perpetual futures",
+    body: "Trade with leverage on mark price — funding, liquidation clarity, and pro charting.",
+    href: "/trade",
+    cta: "Try Perps demo",
+    accent: "#7c6cf0",
+    Icon: CandlestickChart,
+    stats: (s: ReturnType<typeof tradeMarketStats>) => [
+      { k: String(s.perp), v: "Perp markets" },
+      { k: "Live", v: "Funding · mark" },
+    ],
+    preview: "perp" as const,
+  },
+  {
+    id: "p2p",
+    tag: "P2P",
+    title: "P2P marketplace",
+    body: "Peer escrow ads, merchant wallets, order chat, and payment methods — cash-like OTC inside Pro.",
+    href: "/p2p",
+    cta: "Try P2P demo",
+    accent: "#14f195",
+    Icon: Users,
+    stats: (_s: ReturnType<typeof tradeMarketStats>) => [
+      { k: "Escrow", v: "Protected trades" },
+      { k: "Chat", v: "In-order messaging" },
+    ],
+    preview: "p2p" as const,
+  },
+  {
+    id: "opentoken",
+    tag: "OpenToken",
+    title: "OpenToken launchpad",
+    body: "Mint community coins on bonding curves, trade vs OUSD, and jump into token rooms.",
+    href: "/opentoken",
+    cta: "Try OpenToken demo",
+    accent: "#ab9ff2",
+    Icon: Rocket,
+    stats: (_s: ReturnType<typeof tradeMarketStats>) => [
+      { k: "Curve", v: "Bonding launch" },
+      { k: "OUSD", v: "Settle & mint fee" },
+    ],
+    preview: "opentoken" as const,
   },
 ] as const;
 
@@ -275,6 +354,7 @@ function pitchSpeechText() {
     `Live markets: ${stats.majors} majors, ${stats.spot} spot, ${stats.perp} perpetuals, ${stats.networks} networks.`,
     "The problem: closed bank apps and fragmented crypto wallets force users to hop rails.",
     "The solution: one Pro home for OUSD, Pi, majors, and OpenTokens — with open ledger, Partner API, and agents.",
+    "Experience Spot, Perpetuals, P2P, and OpenToken demos live in OpenPay Pro.",
     "Roadmap from live product to global open money network.",
     `The team is seeking ${formatUsdCompact(PITCH_RAISE.openPayProUsd)} for OpenPay Pro and ${formatUsdCompact(PITCH_RAISE.openPayNetworkUsd)} for OpenPay — ${formatUsdCompact(TOTAL_RAISE_USD)} total, payable in USD or Pi at the live π price.`,
     "Capital allocation prioritizes product, liquidity, growth, security, and operations.",
@@ -388,12 +468,13 @@ function PitchPage() {
     { id: "solution", label: "04" },
     { id: "openusd", label: "05" },
     { id: "product", label: "06" },
-    { id: "traction", label: "07" },
-    { id: "model", label: "08" },
-    { id: "roadmap", label: "09" },
-    { id: "funds", label: "10" },
-    { id: "raise", label: "11" },
-    { id: "ask", label: "12" },
+    { id: "demos", label: "07" },
+    { id: "traction", label: "08" },
+    { id: "model", label: "09" },
+    { id: "roadmap", label: "10" },
+    { id: "funds", label: "11" },
+    { id: "raise", label: "12" },
+    { id: "ask", label: "13" },
   ];
 
   return (
@@ -747,13 +828,98 @@ function PitchPage() {
             <Link to="/website" className="font-bold text-primary">
               /website
             </Link>
-            .
+            . Or jump into live demos below.
           </p>
+        </Slide>
+
+        <Slide id="demos" num="07" title="Live demos" kicker="Experience the product">
+          <p className="oppitch-body max-w-3xl text-muted-foreground">
+            Highlighted for investors: <span className="font-bold text-foreground">Spot</span>,{" "}
+            <span className="font-bold text-foreground">Perpetuals</span>,{" "}
+            <span className="font-bold text-foreground">P2P</span>, and{" "}
+            <span className="font-bold text-foreground">OpenToken</span>. Sign in once — then try
+            the real OpenPay Pro experience.
+          </p>
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+            {DEMO_EXPERIENCES.map((demo) => {
+              const Icon = demo.Icon;
+              const demoStats = demo.stats(stats);
+              return (
+                <div
+                  key={demo.id}
+                  data-reveal
+                  className="oppitch-reveal oppitch-panel overflow-hidden"
+                >
+                  <div className="p-5 sm:p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="grid h-12 w-12 place-items-center rounded-2xl"
+                          style={{ background: `${demo.accent}22`, color: demo.accent }}
+                        >
+                          <Icon className="h-6 w-6" strokeWidth={2.25} />
+                        </div>
+                        <div>
+                          <p className="oppitch-label" style={{ color: demo.accent }}>
+                            {demo.tag}
+                          </p>
+                          <h3 className="oppitch-card-title mt-1">{demo.title}</h3>
+                        </div>
+                      </div>
+                      <Link
+                        to="/authpi"
+                        search={{ next: demo.href }}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2.5 text-sm font-bold text-background"
+                      >
+                        {demo.cta}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                    <p className="oppitch-body mt-4 text-muted-foreground">{demo.body}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {demoStats.map((s) => (
+                        <span
+                          key={s.v}
+                          className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/60 px-3 py-1.5 text-sm font-bold"
+                        >
+                          <span className="tabular-nums text-foreground">{s.k}</span>
+                          <span className="text-muted-foreground">{s.v}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <DemoPreview kind={demo.preview} accent={demo.accent} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to="/authpi"
+              search={{ next: "/dashboard" }}
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-3.5 text-base font-bold text-background"
+            >
+              Open full wallet demo
+              <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            </Link>
+            <a
+              href="/website#features"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
+            >
+              All features on website
+            </a>
+            <Link
+              to="/wiki"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
+            >
+              Wiki tutorials
+            </Link>
+          </div>
         </Slide>
 
         <Slide
           id="traction"
-          num="07"
+          num="08"
           title="Ecosystem & traction"
           kicker="Partners · markets · networks"
         >
@@ -812,7 +978,7 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="model" num="08" title="Business model" kicker="How value accrues">
+        <Slide id="model" num="09" title="Business model" kicker="How value accrues">
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
@@ -841,7 +1007,7 @@ function PitchPage() {
           </p>
         </Slide>
 
-        <Slide id="roadmap" num="09" title="Roadmap" kicker="Where capital goes to work">
+        <Slide id="roadmap" num="10" title="Roadmap" kicker="Where capital goes to work">
           <div className="relative space-y-4 before:absolute before:left-[0.85rem] before:top-3 before:bottom-3 before:w-px before:bg-border sm:before:left-[1.1rem]">
             {ROADMAP.map((r) => (
               <div
@@ -868,7 +1034,7 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="funds" num="10" title="Use of funds" kicker="Capital allocation">
+        <Slide id="funds" num="11" title="Use of funds" kicker="Capital allocation">
           <p className="oppitch-body max-w-2xl text-muted-foreground">
             How the {formatUsdCompact(TOTAL_RAISE_USD)} raise ({formatPiAmount(totalPi)} at live π)
             is allocated — product-first, with liquidity, distribution, security, and operational
@@ -903,7 +1069,7 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="raise" num="11" title="The raise" kicker="What the team is seeking">
+        <Slide id="raise" num="12" title="The raise" kicker="What the team is seeking">
           <div className="flex flex-wrap items-center gap-3">
             <p className="oppitch-body max-w-2xl text-muted-foreground">
               Capital for OpenPay Pro and the OpenPay network — accept{" "}
@@ -1011,7 +1177,7 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="ask" num="12" title="The opportunity" kicker="Why invest">
+        <Slide id="ask" num="13" title="The opportunity" kicker="Why invest">
           <p className="opblog-dek max-w-3xl font-semibold">
             Back the open money stack: <span className="text-primary">OpenPay</span> as the network,{" "}
             <span className="text-primary">OpenPay Pro</span> as the daily money app, and{" "}
@@ -1198,6 +1364,122 @@ function ThesisCard({
     >
       {inner}
     </Link>
+  );
+}
+
+function DemoPreview({
+  kind,
+  accent,
+}: {
+  kind: "spot" | "perp" | "p2p" | "opentoken";
+  accent: string;
+}) {
+  if (kind === "spot" || kind === "perp") {
+    const rows =
+      kind === "spot"
+        ? [
+            { side: "ask", p: "68,420", s: "0.42" },
+            { side: "ask", p: "68,410", s: "1.10" },
+            { side: "bid", p: "68,390", s: "0.88" },
+            { side: "bid", p: "68,380", s: "2.05" },
+          ]
+        : [
+            { side: "ask", p: "68,450", s: "12.4×" },
+            { side: "ask", p: "68,430", s: "8.0×" },
+            { side: "bid", p: "68,370", s: "5.5×" },
+            { side: "bid", p: "68,350", s: "15×" },
+          ];
+    return (
+      <div className="border-t border-border bg-muted/40 px-5 py-4">
+        <div className="mb-3 flex items-center justify-between text-sm font-bold">
+          <span>{kind === "spot" ? "BTC / OUSD · Spot" : "BTC-PERP · Mark"}</span>
+          <span style={{ color: accent }}>{kind === "spot" ? "Book live" : "Funding 0.01%"}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <span>Side</span>
+          <span className="text-right">Price</span>
+          <span className="text-right">{kind === "spot" ? "Size" : "Lev"}</span>
+        </div>
+        <div className="mt-2 space-y-1.5">
+          {rows.map((r) => (
+            <div
+              key={`${r.side}-${r.p}`}
+              className="grid grid-cols-3 gap-2 rounded-lg px-2 py-1.5 text-sm font-bold tabular-nums"
+              style={{
+                background: r.side === "ask" ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.1)",
+              }}
+            >
+              <span className={r.side === "ask" ? "text-red-500" : "text-emerald-600"}>
+                {r.side.toUpperCase()}
+              </span>
+              <span className="text-right">{r.p}</span>
+              <span className="text-right text-muted-foreground">{r.s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "p2p") {
+    return (
+      <div className="border-t border-border bg-muted/40 px-5 py-4">
+        <div className="mb-3 flex items-center justify-between text-sm font-bold">
+          <span>P2P · Buy OUSD</span>
+          <span style={{ color: accent }}>Escrow on</span>
+        </div>
+        <div className="space-y-2">
+          {[
+            { m: "Merchant · Pi Pay", rate: "1.00 OUSD", lim: "50–2,000" },
+            { m: "Merchant · Bank", rate: "0.998 OUSD", lim: "100–5,000" },
+          ].map((ad) => (
+            <div
+              key={ad.m}
+              className="flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5"
+            >
+              <div>
+                <p className="text-sm font-extrabold">{ad.m}</p>
+                <p className="text-xs text-muted-foreground">Limit {ad.lim}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-extrabold tabular-nums">{ad.rate}</p>
+                <p className="text-xs font-bold" style={{ color: accent }}>
+                  Trade
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-border bg-muted/40 px-5 py-4">
+      <div className="mb-3 flex items-center justify-between text-sm font-bold">
+        <span>OpenToken · Bonding curve</span>
+        <span style={{ color: accent }}>+12.4%</span>
+      </div>
+      <div className="flex items-end gap-1.5 h-16">
+        {[28, 34, 32, 44, 48, 55, 52, 68, 74, 82].map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t-md"
+            style={{
+              height: `${h}%`,
+              background: `linear-gradient(180deg, ${accent}, ${accent}55)`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-3 flex items-center justify-between text-sm font-bold">
+        <span className="inline-flex items-center gap-2">
+          <img src={OPENPAY_NETWORK_BADGE_URL} alt="" className="h-5 w-5 rounded-full" />
+          Community coin
+        </span>
+        <span className="tabular-nums text-muted-foreground">Mint · Trade · Chat</span>
+      </div>
+    </div>
   );
 }
 

@@ -27,6 +27,44 @@ import {
   type PartnerMark,
 } from "@/lib/openpay-partners";
 import { cn } from "@/lib/utils";
+import { fetchMajorUsdPrices, getCachedPiUsdPrice } from "@/lib/ledger-majors";
+
+/**
+ * Current raise targets (USD). Edit these — π equivalents use live Pi Network price.
+ * OpenPay Pro = money app · OpenPay = open money network.
+ */
+const PITCH_RAISE = {
+  openPayProUsd: 5_000_000,
+  openPayNetworkUsd: 5_000_000,
+} as const;
+
+const TOTAL_RAISE_USD = PITCH_RAISE.openPayProUsd + PITCH_RAISE.openPayNetworkUsd;
+
+function formatUsdCompact(n: number) {
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `$${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
+  }
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toLocaleString("en-US")}`;
+}
+
+function formatUsdFull(n: number) {
+  return `$${n.toLocaleString("en-US")}`;
+}
+
+function formatPiAmount(pi: number) {
+  if (pi >= 1_000_000_000) return `${(pi / 1_000_000_000).toFixed(2)}B π`;
+  if (pi >= 1_000_000) return `${(pi / 1_000_000).toFixed(2)}M π`;
+  if (pi >= 1_000) return `${(pi / 1_000).toFixed(1)}K π`;
+  return `${pi.toLocaleString("en-US", { maximumFractionDigits: 0 })} π`;
+}
+
+function formatPiPrice(p: number) {
+  if (p >= 1) return `$${p.toLocaleString("en-US", { maximumFractionDigits: 4 })}`;
+  if (p >= 0.01) return `$${p.toFixed(4)}`;
+  return `$${p.toFixed(6)}`;
+}
 
 const ETH_LOGO_URL = "https://assets.coingecko.com/coins/images/279/large/ethereum.png";
 const BTC_LOGO_URL = "https://assets.coingecko.com/coins/images/1/large/bitcoin.png";
@@ -238,6 +276,7 @@ function pitchSpeechText() {
     "The problem: closed bank apps and fragmented crypto wallets force users to hop rails.",
     "The solution: one Pro home for OUSD, Pi, majors, and OpenTokens — with open ledger, Partner API, and agents.",
     "Roadmap from live product to global open money network.",
+    `The team is seeking ${formatUsdCompact(PITCH_RAISE.openPayProUsd)} for OpenPay Pro and ${formatUsdCompact(PITCH_RAISE.openPayNetworkUsd)} for OpenPay — ${formatUsdCompact(TOTAL_RAISE_USD)} total, payable in USD or Pi at the live π price.`,
     "Capital allocation prioritizes product, liquidity, growth, security, and operations.",
     "Join the open network. Build with us.",
   ].join(" ");
@@ -265,6 +304,40 @@ function PitchPage() {
   const tokens = partnerListedTokens().slice(0, 24);
   const heroRef = useRef<HTMLElement | null>(null);
   const [activeNav, setActiveNav] = useState("cover");
+  const [piUsd, setPiUsd] = useState(() => getCachedPiUsdPrice());
+  const [raiseUnit, setRaiseUnit] = useState<"usd" | "pi">("usd");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const prices = await fetchMajorUsdPrices(["pi"]);
+        if (!cancelled && prices.pi > 0) setPiUsd(prices.pi);
+      } catch {
+        /* keep fallback */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const piSafe = piUsd > 0 ? piUsd : 0.079;
+  const raiseRows = [
+    {
+      name: "OpenPay Pro",
+      blurb: "Self-custody money app — wallet, OpenUSD, trading, deposits, AI",
+      logo: OPENPAY_NETWORK_BADGE_URL,
+      usd: PITCH_RAISE.openPayProUsd,
+    },
+    {
+      name: "OpenPay",
+      blurb: "Open money network — Balance, Partner API, Connect, OpenLedger",
+      logo: OPENPAY_AUTH_LOGO,
+      usd: PITCH_RAISE.openPayNetworkUsd,
+    },
+  ] as const;
+  const totalPi = TOTAL_RAISE_USD / piSafe;
 
   useEffect(() => {
     const root = heroRef.current;
@@ -319,7 +392,8 @@ function PitchPage() {
     { id: "model", label: "08" },
     { id: "roadmap", label: "09" },
     { id: "funds", label: "10" },
-    { id: "ask", label: "11" },
+    { id: "raise", label: "11" },
+    { id: "ask", label: "12" },
   ];
 
   return (
@@ -796,35 +870,157 @@ function PitchPage() {
 
         <Slide id="funds" num="10" title="Use of funds" kicker="Capital allocation">
           <p className="oppitch-body max-w-2xl text-muted-foreground">
-            Proposed allocation for growth capital — product-first, with liquidity, distribution,
-            security, and operational resilience. Percentages are a planning framework for
-            investors; final terms are set in formal diligence.
+            How the {formatUsdCompact(TOTAL_RAISE_USD)} raise ({formatPiAmount(totalPi)} at live π)
+            is allocated — product-first, with liquidity, distribution, security, and operational
+            resilience.
           </p>
           <div className="mt-8 space-y-4">
-            {FUND_USE.map((f) => (
-              <div key={f.title} data-reveal className="oppitch-reveal">
-                <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                  <p className="oppitch-card-title">
-                    <span className="tabular-nums text-primary">{f.pct}%</span> · {f.title}
-                  </p>
+            {FUND_USE.map((f) => {
+              const sliceUsd = (TOTAL_RAISE_USD * f.pct) / 100;
+              const slicePi = sliceUsd / piSafe;
+              return (
+                <div key={f.title} data-reveal className="oppitch-reveal">
+                  <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-3">
+                    <p className="oppitch-card-title">
+                      <span className="tabular-nums text-primary">{f.pct}%</span> · {f.title}
+                    </p>
+                    <p className="text-base font-bold tabular-nums text-muted-foreground">
+                      {formatUsdCompact(sliceUsd)}
+                      <span className="mx-1.5 text-muted-foreground/50">·</span>
+                      {formatPiAmount(slicePi)}
+                    </p>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="oppitch-bar h-full rounded-full bg-linear-to-r from-primary to-[#7c6cf0]"
+                      style={{ width: `${f.pct}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 oppitch-body text-muted-foreground">{f.body}</p>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="oppitch-bar h-full rounded-full bg-linear-to-r from-primary to-[#7c6cf0]"
-                    style={{ width: `${f.pct}%` }}
-                  />
-                </div>
-                <p className="mt-2 oppitch-body text-muted-foreground">{f.body}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Slide>
 
-        <Slide id="ask" num="11" title="The opportunity" kicker="Why invest">
+        <Slide id="raise" num="11" title="The raise" kicker="What the team is seeking">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="oppitch-body max-w-2xl text-muted-foreground">
+              Capital for OpenPay Pro and the OpenPay network — accept{" "}
+              <span className="font-bold text-foreground">USD</span> or{" "}
+              <span className="font-bold text-foreground">Pi</span> at the live π market price.
+            </p>
+            <div className="ml-auto inline-flex rounded-full border border-border bg-card p-1">
+              <button
+                type="button"
+                onClick={() => setRaiseUnit("usd")}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-bold transition-colors",
+                  raiseUnit === "usd"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                USD
+              </button>
+              <button
+                type="button"
+                onClick={() => setRaiseUnit("pi")}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-bold transition-colors",
+                  raiseUnit === "pi"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Pi (π)
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 inline-flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+            <img src={PI_NETWORK_LOGO_URL} alt="" className="h-9 w-9 rounded-full object-contain" />
+            <div>
+              <p className="oppitch-label text-muted-foreground">Live Pi price</p>
+              <p className="oppitch-card-title tabular-nums">1 π = {formatPiPrice(piSafe)}</p>
+            </div>
+            <p className="ml-auto max-w-xs text-sm leading-snug text-muted-foreground sm:text-base">
+              Conversion updates from market data so investors see exactly how much π matches the
+              USD ask.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
+            {raiseRows.map((row) => {
+              const piAmt = row.usd / piSafe;
+              return (
+                <div key={row.name} data-reveal className="oppitch-reveal oppitch-panel p-6 sm:p-8">
+                  <div className="flex items-center gap-3">
+                    <img src={row.logo} alt="" className="h-12 w-12 rounded-2xl object-contain" />
+                    <div>
+                      <h3 className="oppitch-card-title">{row.name}</h3>
+                      <p className="mt-1 text-base text-muted-foreground">{row.blurb}</p>
+                    </div>
+                  </div>
+                  <p className="oppitch-stat-num mt-8 text-foreground">
+                    {raiseUnit === "usd" ? formatUsdCompact(row.usd) : formatPiAmount(piAmt)}
+                  </p>
+                  <p className="mt-3 oppitch-body text-muted-foreground">
+                    {raiseUnit === "usd" ? (
+                      <>
+                        {formatUsdFull(row.usd)} · ≈ {formatPiAmount(piAmt)}
+                      </>
+                    ) : (
+                      <>
+                        ≈ {formatUsdFull(row.usd)} at {formatPiPrice(piSafe)} / π
+                      </>
+                    )}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            data-reveal
+            className="oppitch-reveal mt-6 rounded-2xl border-2 border-primary/35 bg-primary/10 p-6 sm:p-8"
+          >
+            <p className="oppitch-label text-muted-foreground">Total raise</p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="oppitch-stat-num">
+                  {raiseUnit === "usd"
+                    ? formatUsdCompact(TOTAL_RAISE_USD)
+                    : formatPiAmount(totalPi)}
+                </p>
+                <p className="oppitch-body mt-3 text-muted-foreground">
+                  {raiseUnit === "usd" ? (
+                    <>
+                      {formatUsdFull(TOTAL_RAISE_USD)} total · ≈ {formatPiAmount(totalPi)}
+                    </>
+                  ) : (
+                    <>≈ {formatUsdFull(TOTAL_RAISE_USD)} · OpenPay Pro + OpenPay network</>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-card px-4 py-2">
+                <img src={PI_NETWORK_LOGO_URL} alt="" className="h-6 w-6 rounded-full" />
+                <span className="text-base font-bold">USD or Pi accepted</span>
+              </div>
+            </div>
+          </div>
+        </Slide>
+
+        <Slide id="ask" num="12" title="The opportunity" kicker="Why invest">
           <p className="opblog-dek max-w-3xl font-semibold">
             Back the open money stack: <span className="text-primary">OpenPay</span> as the network,{" "}
             <span className="text-primary">OpenPay Pro</span> as the daily money app, and{" "}
             <span className="text-primary">OpenUSD</span> as the shared dollar rail.
+          </p>
+          <p className="oppitch-body mt-5 max-w-2xl text-muted-foreground">
+            Seeking {formatUsdCompact(TOTAL_RAISE_USD)} ({formatPiAmount(totalPi)} at{" "}
+            {formatPiPrice(piSafe)} / π) to scale product, liquidity, partners, and the open
+            network.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[

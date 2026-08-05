@@ -140,11 +140,11 @@ function OusdPage() {
   }, []);
 
   return (
-    <main className="opcash min-h-screen text-[var(--foreground)]">
+    <main className="opcash min-h-screen text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
         <div className="opcash-sky absolute inset-0" />
         <div className="opcash-cloud absolute -left-10 top-24 h-40 w-56 opacity-70" />
-        <div className="opcash-cloud opcash-cloud-b absolute right-[-2rem] top-[18%] h-48 w-64 opacity-60" />
+        <div className="opcash-cloud opcash-cloud-b absolute -right-8 top-[18%] h-48 w-64 opacity-60" />
         <div className="opcash-cloud opcash-cloud-c absolute bottom-[12%] left-[18%] h-36 w-52 opacity-50" />
       </div>
 
@@ -152,17 +152,17 @@ function OusdPage() {
         <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/authpi"
-            className="rounded-full bg-white/70 px-3 py-1.5 text-[var(--foreground)]/80 backdrop-blur hover:text-[var(--foreground)]"
+            className="rounded-full bg-white/70 px-3 py-1.5 text-foreground/80 backdrop-blur hover:text-foreground"
           >
             OpenPay Pro
           </Link>
-          <span className="text-[var(--muted-foreground)]">›</span>
+          <span className="text-muted-foreground">›</span>
           <span className="rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">OpenUSD</span>
           <a
             href="https://www.openpy.space/blog/meet-openpay-ai"
             target="_blank"
             rel="noreferrer"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-white/80 px-3 py-1.5 text-[var(--muted-foreground)] backdrop-blur hover:text-[var(--foreground)]"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-white/80 px-3 py-1.5 text-muted-foreground backdrop-blur hover:text-foreground"
           >
             Announcement
             <ExternalLink className="h-3.5 w-3.5" />
@@ -177,14 +177,14 @@ function OusdPage() {
           <div className="relative z-10 max-w-xl">
             <p
               data-rise
-              className="opcash-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]"
+              className="opcash-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"
             >
               <img src={OUSD_LOGO_URL} alt="" className="h-5 w-5 rounded-md object-cover" />
               OpenUSD · OUSD
             </p>
             <h1
               data-rise
-              className="opcash-rise mt-5 font-[family-name:var(--font-display)] text-[clamp(2.8rem,7.5vw,5rem)] font-extrabold leading-[0.92] tracking-[-0.045em]"
+              className="opcash-rise mt-5 font-(family-name:--font-display) text-[clamp(2.8rem,7.5vw,5rem)] font-extrabold leading-[0.92] tracking-[-0.045em]"
             >
               Meet OpenUSD
             </h1>
@@ -193,7 +193,7 @@ function OusdPage() {
             </p>
             <p
               data-rise
-              className="opcash-rise mt-4 max-w-md text-base leading-relaxed text-[var(--muted-foreground)] sm:text-lg"
+              className="opcash-rise mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
               Hold, send, and settle in OUSD across OpenPay Pro — with the power of crypto and the
               ease of cash.
@@ -201,7 +201,7 @@ function OusdPage() {
             <div data-rise className="opcash-rise mt-8 flex flex-wrap gap-3">
               <Link
                 to="/authpi"
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-bold text-white press"
+                className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-white press"
               >
                 Get OUSD in OpenPay Pro
                 <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -212,13 +212,13 @@ function OusdPage() {
                 label="Listen"
                 stopLabel="Stop"
                 variant="outline"
-                className="border-[var(--border)] bg-white/80 backdrop-blur"
+                className="border-border bg-white/80 backdrop-blur"
               />
               <a
                 href="https://openpy.space/partner-api"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
               >
                 Partner API
               </a>
@@ -231,23 +231,23 @@ function OusdPage() {
         </header>
 
         {/* This is New Money */}
-        <section className="border-t border-[var(--border)]/80 py-20 text-center">
-          <h2 className="font-[family-name:var(--font-display)] text-[clamp(2rem,4.5vw,3.25rem)] font-extrabold tracking-[-0.04em]">
+        <section className="border-t border-border/80 py-20 text-center">
+          <h2 className="font-(family-name:--font-display) text-[clamp(2rem,4.5vw,3.25rem)] font-extrabold tracking-[-0.04em]">
             This is New Money
           </h2>
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
-              <Shield className="mx-auto h-8 w-8 text-[var(--accent)]" strokeWidth={1.75} />
+              <Shield className="mx-auto h-8 w-8 text-accent" strokeWidth={1.75} />
               <p className="mt-4 text-lg font-bold">The power of crypto</p>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Ledger settlement, APIs, agents, and multi-rail top-ups — without giving up dollar
                 clarity.
               </p>
             </div>
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
-              <Globe2 className="mx-auto h-8 w-8 text-[var(--accent)]" strokeWidth={1.75} />
+              <Globe2 className="mx-auto h-8 w-8 text-accent" strokeWidth={1.75} />
               <p className="mt-4 text-lg font-bold">The ease of cash</p>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 $1 OUSD thinking for everyday sends, receives, and merchant payouts across OpenPay.
               </p>
             </div>
@@ -255,7 +255,7 @@ function OusdPage() {
         </section>
 
         {/* Feature stories */}
-        <section className="space-y-24 border-t border-[var(--border)]/80 py-20">
+        <section className="space-y-24 border-t border-border/80 py-20">
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
@@ -265,10 +265,10 @@ function OusdPage() {
               )}
             >
               <div>
-                <h3 className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
+                <h3 className="font-(family-name:--font-display) text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
                   {f.title}
                 </h3>
-                <p className="mt-4 max-w-md text-lg leading-relaxed text-[var(--muted-foreground)]">
+                <p className="mt-4 max-w-md text-lg leading-relaxed text-muted-foreground">
                   {f.body}
                 </p>
               </div>
@@ -278,18 +278,18 @@ function OusdPage() {
         </section>
 
         {/* Bullet grid */}
-        <section className="border-t border-[var(--border)]/80 py-20">
-          <h2 className="max-w-2xl font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
+        <section className="border-t border-border/80 py-20">
+          <h2 className="max-w-2xl font-(family-name:--font-display) text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
             Everything you need from a network dollar
           </h2>
           <ul className="mt-12 grid gap-8 sm:grid-cols-2">
             {BULLETS.map(({ icon: Icon, title, body }) => (
               <li key={title} className="min-w-0">
-                <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-[var(--accent)]/15 text-[var(--accent)]">
+                <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-accent/15 text-accent">
                   <Icon className="h-5 w-5" strokeWidth={2.1} />
                 </div>
                 <h3 className="text-lg font-bold tracking-tight">{title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   {body}
                 </p>
               </li>
@@ -298,24 +298,24 @@ function OusdPage() {
         </section>
 
         {/* Powered by OUSD */}
-        <section className="border-t border-[var(--border)]/80 py-20 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+        <section className="border-t border-border/80 py-20 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Powered by
           </p>
           <div className="mt-5 inline-flex items-center gap-3">
             <img src={OUSD_LOGO_URL} alt="" className="h-12 w-12 rounded-2xl object-cover shadow-md" />
-            <span className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">
+            <span className="font-(family-name:--font-display) text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">
               OUSD
             </span>
           </div>
-          <p className="mx-auto mt-4 max-w-lg text-[var(--muted-foreground)]">
+          <p className="mx-auto mt-4 max-w-lg text-muted-foreground">
             OpenUSD keeps OpenPay Pro, OpenLedger, and partner apps on one clear dollar unit.
           </p>
           <a
             href="https://openpyledger.space"
             target="_blank"
             rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[var(--accent)] hover:underline"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent hover:underline"
           >
             Explore OpenLedger
             <ExternalLink className="h-3.5 w-3.5" />
@@ -323,8 +323,8 @@ function OusdPage() {
         </section>
 
         {/* News / announcement */}
-        <section className="border-t border-[var(--border)]/80 py-20">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+        <section className="border-t border-border/80 py-20">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             New news
           </p>
           <a
@@ -334,29 +334,29 @@ function OusdPage() {
             className="group mt-6 flex flex-col gap-5 rounded-[1.75rem] bg-white/80 p-6 shadow-[0_24px_70px_-48px_rgba(30,60,90,0.45)] backdrop-blur transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-8"
           >
             <div className="grid h-24 w-full shrink-0 place-items-center rounded-2xl bg-[linear-gradient(135deg,#d7f0ff,#e8fff6)] sm:h-28 sm:w-40">
-              <Newspaper className="h-10 w-10 text-[var(--accent)]" strokeWidth={1.5} />
+              <Newspaper className="h-10 w-10 text-accent" strokeWidth={1.5} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Announcement · OpenPay
               </p>
               <h3 className="mt-1 text-xl font-bold tracking-tight group-hover:underline sm:text-2xl">
                 Meet OpenPay AI — read the announcement
               </h3>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-2 text-sm text-muted-foreground">
                 How OpenPay is opening the network for assistants, partners, and everyday money.
               </p>
             </div>
-            <ExternalLink className="hidden h-5 w-5 shrink-0 text-[var(--muted-foreground)] sm:block" />
+            <ExternalLink className="hidden h-5 w-5 shrink-0 text-muted-foreground sm:block" />
           </a>
         </section>
 
         {/* Ecosystem */}
-        <section className="border-t border-[var(--border)]/80 py-20">
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
+        <section className="border-t border-border/80 py-20">
+          <h2 className="font-(family-name:--font-display) text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
             OpenPay ecosystem
           </h2>
-          <p className="mt-3 max-w-xl text-[var(--muted-foreground)]">
+          <p className="mt-3 max-w-xl text-muted-foreground">
             OUSD sits at the center of OpenPay’s products — explore every door into the network.
           </p>
           <ul className="mt-8 grid gap-2 sm:grid-cols-2">
@@ -366,10 +366,10 @@ function OusdPage() {
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)]/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-[var(--accent)]/40 hover:bg-white"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border/80 bg-white/70 px-4 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-accent/40 hover:bg-white"
                 >
                   <span>{item.label}</span>
-                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)]" />
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 </a>
               </li>
             ))}
@@ -377,8 +377,8 @@ function OusdPage() {
         </section>
 
         {/* FAQ */}
-        <section className="border-t border-[var(--border)]/80 py-20">
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
+        <section className="border-t border-border/80 py-20">
+          <h2 className="font-(family-name:--font-display) text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
             FAQ
           </h2>
           <div className="mt-8 space-y-2">
@@ -389,8 +389,8 @@ function OusdPage() {
         </section>
 
         {/* CTA */}
-        <section className="mt-8 overflow-hidden rounded-[2rem] bg-[var(--foreground)] px-6 py-12 text-white sm:px-10 sm:py-14">
-          <h2 className="max-w-xl font-[family-name:var(--font-display)] text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
+        <section className="mt-8 overflow-hidden rounded-[2rem] bg-foreground px-6 py-12 text-white sm:px-10 sm:py-14">
+          <h2 className="max-w-xl font-(family-name:--font-display) text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
             Start with OpenUSD in OpenPay Pro
           </h2>
           <p className="mt-4 max-w-lg text-white/70">
@@ -400,7 +400,7 @@ function OusdPage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/authpi"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-bold text-white press"
+              className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-bold text-white press"
             >
               Open OpenPay Pro
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -417,7 +417,7 @@ function OusdPage() {
           </div>
         </section>
 
-        <p className="mt-10 text-center text-xs leading-relaxed text-[var(--muted-foreground)]">
+        <p className="mt-10 text-center text-xs leading-relaxed text-muted-foreground">
           OUSD is OpenPay’s network dollar for use inside OpenPay products. Always review in-app
           disclosures for fees, availability, and settlement details.
         </p>
@@ -428,23 +428,23 @@ function OusdPage() {
 
 function ProductStage() {
   return (
-    <div className="relative aspect-[4/5] w-full sm:aspect-square">
+    <div className="relative aspect-4/5 w-full sm:aspect-square">
       <div className="opcash-float absolute left-[6%] top-[8%] z-20 w-[72%] rounded-[1.4rem] bg-white p-4 shadow-[0_28px_80px_-36px_rgba(20,50,80,0.45)]">
         <div className="flex items-center gap-2">
           <img src={OUSD_LOGO_URL} alt="" className="h-8 w-8 rounded-xl object-cover" />
           <div>
-            <p className="text-[11px] font-semibold text-[var(--muted-foreground)]">My balance</p>
+            <p className="text-[11px] font-semibold text-muted-foreground">My balance</p>
             <p className="text-lg font-extrabold tracking-tight">$2,480.00</p>
           </div>
         </div>
         <div className="mt-4 flex items-center justify-between rounded-xl bg-[#f0f7ff] px-3 py-2.5">
-          <span className="text-xs font-semibold text-[var(--muted-foreground)]">OUSD</span>
+          <span className="text-xs font-semibold text-muted-foreground">OUSD</span>
           <span className="text-sm font-bold">2,480.00</span>
         </div>
       </div>
 
       <div className="opcash-float-b absolute bottom-[10%] right-[2%] z-10 w-[68%] rounded-[1.4rem] bg-white p-4 shadow-[0_28px_80px_-36px_rgba(20,50,80,0.4)]">
-        <p className="text-[11px] font-semibold text-[var(--muted-foreground)]">You get</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">You get</p>
         <div className="mt-2 flex items-center gap-2">
           <img src={OUSD_LOGO_URL} alt="" className="h-7 w-7 rounded-lg object-cover" />
           <span className="text-sm font-bold">OUSD</span>
@@ -469,14 +469,14 @@ function FeatureVisual({ kind }: { kind: "send" | "wallet" | "network" }) {
   return (
     <div className="relative overflow-hidden rounded-[1.75rem] bg-white/80 p-8 shadow-[0_24px_70px_-48px_rgba(30,60,90,0.4)] backdrop-blur">
       <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(56,168,255,0.2),transparent_70%)]" />
-      <div className="relative rounded-2xl border border-[var(--border)] bg-[#f7fbff] p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+      <div className="relative rounded-2xl border border-border bg-[#f7fbff] p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           OpenPay Pro
         </p>
         <p className="mt-3 text-xl font-extrabold tracking-tight">{copy.title}</p>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{copy.line}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.line}</p>
         <div className="mt-5 h-2 overflow-hidden rounded-full bg-white">
-          <div className="opcash-bar h-full w-2/3 rounded-full bg-[var(--accent)]" />
+          <div className="opcash-bar h-full w-2/3 rounded-full bg-accent" />
         </div>
       </div>
     </div>
@@ -488,7 +488,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
   const panelId = useId();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)]/80 bg-white/75 backdrop-blur">
+    <div className="overflow-hidden rounded-2xl border border-border/80 bg-white/75 backdrop-blur">
       <button
         type="button"
         aria-expanded={open}
@@ -499,7 +499,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         <span className="text-[15px] font-bold tracking-tight">{question}</span>
         <ChevronDown
           className={cn(
-            "h-5 w-5 shrink-0 text-[var(--muted-foreground)] transition-transform",
+            "h-5 w-5 shrink-0 text-muted-foreground transition-transform",
             open && "rotate-180",
           )}
         />
@@ -512,7 +512,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         )}
       >
         <div className="overflow-hidden">
-          <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+          <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
             {answer}
           </p>
         </div>

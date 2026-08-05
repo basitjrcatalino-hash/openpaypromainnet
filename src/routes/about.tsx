@@ -86,7 +86,7 @@ function AboutPage() {
   }, []);
 
   return (
-    <main className="opabout min-h-screen text-[var(--foreground)]">
+    <main className="opabout min-h-screen text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
         <div className="opabout-mesh absolute inset-0" />
         <div className="opabout-orb absolute -left-24 top-16 h-72 w-72 rounded-full bg-[color:rgba(171,159,242,0.35)] blur-3xl" />
@@ -97,15 +97,15 @@ function AboutPage() {
         <nav className="mb-12 flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link
             to="/authpi"
-            className="rounded-full bg-[var(--muted)] px-3 py-1.5 text-[var(--foreground)]/80 hover:text-[var(--foreground)]"
+            className="rounded-full bg-muted px-3 py-1.5 text-foreground/80 hover:text-foreground"
           >
             OpenPay Pro
           </Link>
-          <span className="text-[var(--muted-foreground)]">›</span>
-          <span className="rounded-full bg-[var(--muted)] px-3 py-1.5">About</span>
+          <span className="text-muted-foreground">›</span>
+          <span className="rounded-full bg-muted px-3 py-1.5">About</span>
           <Link
             to="/wiki"
-            className="ml-auto rounded-full border border-[var(--border)] bg-[var(--card)]/70 px-3 py-1.5 text-[var(--muted-foreground)] backdrop-blur hover:text-[var(--foreground)]"
+            className="ml-auto rounded-full border border-border bg-card/70 px-3 py-1.5 text-muted-foreground backdrop-blur hover:text-foreground"
           >
             Wiki
           </Link>
@@ -114,26 +114,26 @@ function AboutPage() {
         <header ref={heroRef} className="relative min-h-[70vh] max-w-3xl pb-16 pt-4 sm:pt-10">
           <p
             data-rise
-            className="opabout-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]"
+            className="opabout-rise inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"
           >
             <Globe2 className="h-3.5 w-3.5" strokeWidth={2.25} />
             About
           </p>
           <h1
             data-rise
-            className="opabout-rise mt-5 font-[family-name:var(--font-display)] text-[clamp(2.75rem,8vw,5.25rem)] font-extrabold leading-[0.95] tracking-[-0.04em]"
+            className="opabout-rise mt-5 font-(family-name:--font-display) text-[clamp(2.75rem,8vw,5.25rem)] font-extrabold leading-[0.95] tracking-[-0.04em]"
           >
             OpenPay Pro
           </h1>
           <p
             data-rise
-            className="opabout-rise mt-4 text-[clamp(1.35rem,3.5vw,2rem)] font-semibold tracking-tight text-[var(--primary)]"
+            className="opabout-rise mt-4 text-[clamp(1.35rem,3.5vw,2rem)] font-semibold tracking-tight text-primary"
           >
             is an open network.
           </p>
           <p
             data-rise
-            className="opabout-rise mt-6 max-w-xl text-lg leading-relaxed text-[var(--muted-foreground)]"
+            className="opabout-rise mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground"
           >
             Not a closed bank app. A network where wallets, payments, tokens, APIs, and agents share
             the same open ledger — so money can move, and builders can build.
@@ -141,7 +141,7 @@ function AboutPage() {
           <div data-rise className="opabout-rise mt-9 flex flex-wrap gap-3">
             <Link
               to="/authpi"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-bold text-[var(--primary-foreground)] press hover:brightness-105"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground press hover:brightness-105"
             >
               Open the wallet
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -155,21 +155,21 @@ function AboutPage() {
             />
             <a
               href="/docs/openpay"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)]/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
             >
               Build on OpenPay
             </a>
           </div>
         </header>
 
-        <section className="border-t border-[var(--border)] pt-16">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+        <section className="border-t border-border pt-16">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             What open means
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             One network. Many ways in.
           </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             OpenPay Pro connects people, partners, and software on shared rails — so you are never
             stuck behind a single closed door.
           </p>
@@ -177,11 +177,11 @@ function AboutPage() {
           <ul className="mt-12 grid gap-10 sm:grid-cols-2">
             {PILLARS.map(({ icon: Icon, title, body }) => (
               <li key={title} className="min-w-0">
-                <div className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-[var(--primary)]/12 text-[var(--primary)]">
+                <div className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-primary/12 text-primary">
                   <Icon className="h-5 w-5" strokeWidth={2.1} />
                 </div>
                 <h3 className="text-xl font-bold tracking-tight">{title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   {body}
                 </p>
               </li>
@@ -189,17 +189,17 @@ function AboutPage() {
           </ul>
         </section>
 
-        <section className="mt-20 border-t border-[var(--border)] pt-16">
+        <section className="mt-20 border-t border-border pt-16">
           <div className="flex items-center gap-3">
-            <Network className="h-5 w-5 text-[var(--primary)]" strokeWidth={2.1} />
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+            <Network className="h-5 w-5 text-primary" strokeWidth={2.1} />
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
               How it connects
             </p>
           </div>
           <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             The network is the product.
           </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Sign in with OpenPay, Pi, email, or wallets. Hold OUSD and majors. Launch OpenTokens.
             Deposit from chains. Pay merchants. Let agents assist — all on one Pro ledger.
           </p>
@@ -217,7 +217,7 @@ function AboutPage() {
             ].map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-[var(--border)] bg-[var(--card)]/60 px-3.5 py-1.5 text-sm font-semibold text-[var(--foreground)]/85"
+                className="rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-sm font-semibold text-foreground/85"
               >
                 {label}
               </span>
@@ -225,52 +225,52 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mt-20 border-t border-[var(--border)] pt-16">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+        <section className="mt-20 border-t border-border pt-16">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             For builders
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             Open to integrate.
           </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--muted-foreground)]">
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Partner apps can Connect with OpenPay, charge from OpenPay Balance, and read ledger
             context through documented APIs — the same open network users already live in.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="/docs/openpay"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-bold text-[var(--background)] press"
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background press"
             >
               <BookOpen className="h-4 w-4" />
               Integration docs
             </a>
             <Link
               to="/wiki"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold press"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-semibold press"
             >
               <Shield className="h-4 w-4" />
               Product wiki
             </Link>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold press"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-semibold press"
             >
               Learn more
             </Link>
           </div>
         </section>
 
-        <section className="mt-24 rounded-[2rem] bg-[var(--foreground)] px-6 py-12 text-[var(--background)] sm:px-10 sm:py-14">
+        <section className="mt-24 rounded-[2rem] bg-foreground px-6 py-12 text-background sm:px-10 sm:py-14">
           <h2 className="max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">
             Join the open network.
           </h2>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-[var(--background)]/70">
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-background/70">
             Create a wallet, move value, or build on the rails — OpenPay Pro stays open so the
             network can grow with you.
           </p>
           <Link
             to="/authpi"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-bold text-[var(--primary-foreground)] press"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground press"
           >
             Get started
             <ArrowRight className="h-4 w-4" strokeWidth={2.5} />

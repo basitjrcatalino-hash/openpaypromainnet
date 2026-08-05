@@ -789,15 +789,17 @@ function PitchPage() {
                 data-reveal
                 className="oppitch-reveal oppitch-panel flex flex-col p-5"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3">
                   {"logos" in f && f.logos ? (
-                    <div className="flex -space-x-2">
+                    <div className="flex shrink-0 items-center -space-x-2" aria-hidden>
                       {f.logos.map((src) => (
                         <img
                           key={src}
                           src={src}
                           alt=""
-                          className="h-8 w-8 rounded-full border-2 border-card object-contain bg-card"
+                          className="h-9 w-9 rounded-full border-2 border-card bg-card object-contain shadow-sm"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
                         />
                       ))}
                     </div>
@@ -805,10 +807,12 @@ function PitchPage() {
                     <img
                       src={"logo" in f ? f.logo : OPENPAY_AUTH_LOGO}
                       alt=""
-                      className="h-9 w-9 rounded-xl object-contain"
+                      className="h-10 w-10 shrink-0 rounded-xl object-contain"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
                     />
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="oppitch-card-title">{f.title}</h3>
                     <p className="mt-1.5 text-lg text-muted-foreground">{f.blurb}</p>
                   </div>

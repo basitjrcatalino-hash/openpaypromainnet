@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowUpDown,
   BadgeCheck,
+  ExternalLink,
   Info,
   Loader2,
   Search,
@@ -76,6 +77,8 @@ import {
   MAJOR_TOKENS,
   MAJOR_SYMBOLS,
 } from "@/lib/major-tokens";
+import { trustWalletAssetIdForMajor } from "@/lib/trustwallet-assets";
+import { twPrices } from "@/lib/trustwallet-client";
 
 const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3] as const;
 const FEE_PCT = opendexFeePct();
@@ -323,6 +326,27 @@ function OpenDexPage() {
     return fp / tp;
   }, [fromToken, toToken]);
 
+  const fromMajorId = fromToken?.majorId;
+  const toMajorId = toToken?.majorId;
+  const twFromAsset =
+    fromMajorId != null ? trustWalletAssetIdForMajor(fromMajorId) : null;
+  const twToAsset = toMajorId != null ? trustWalletAssetIdForMajor(toMajorId) : null;
+
+  const { data: twTickers = [] } = useQuery({
+    queryKey: ["tw-swap-prices", twFromAsset, twToAsset],
+    enabled: !!twFromAsset && !!twToAsset,
+    staleTime: 45_000,
+    queryFn: () => twPrices([twFromAsset!, twToAsset!]),
+  });
+
+  const twRate = useMemo(() => {
+    if (!twFromAsset || !twToAsset) return 0;
+    const fp = Number(twTickers.find((t) => t.id === twFromAsset)?.price) || 0;
+    const tp = Number(twTickers.find((t) => t.id === twToAsset)?.price) || 0;
+    if (tp <= 0) return 0;
+    return fp / tp;
+  }, [twTickers, twFromAsset, twToAsset]);
+
   const amt = Number(amount) || 0;
   const rawOutput = amt > 0 && rate > 0 ? amt * rate : 0;
   const { fee: feeOut, net: netOutput } = applyOpenDexFee(rawOutput);
@@ -526,6 +550,39 @@ function OpenDexPage() {
           </Row>
         </div>
       </div>
+
+      {twFromAsset && twToAsset && (
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80">
+          <div className="flex items-center justify-between px-4 pt-3">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              Trust Wallet index
+            </span>
+            <Link
+              to="/trust-wallet"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
+            >
+              Markets
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="space-y-0 px-1 py-1 text-sm">
+            <Row label="TW rate">
+              {twRate > 0
+                ? `1 ${fromToken?.symbol} ≈ ${formatNumber(twRate, 8)} ${toToken?.symbol}`
+                : "Fetching…"}
+            </Row>
+            <Row label="vs OpenDEX">
+              {rate > 0 && twRate > 0
+                ? `${formatNumber(((twRate - rate) / rate) * 100, 2)}%`
+                : "—"}
+            </Row>
+          </div>
+          <p className="px-4 pb-3 text-[11px] leading-relaxed text-muted-foreground">
+            Reference only — your swap settles on OpenPay Pro ledger (OpenDEX), not on-chain
+            Trust Wallet / Amber.
+          </p>
+        </div>
+      )}
 
       {samePair && (
         <p className="text-center text-xs text-destructive">Choose different tokens</p>

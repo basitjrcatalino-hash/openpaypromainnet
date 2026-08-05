@@ -90,6 +90,7 @@ const PRIMARY_ACTIONS = [
 
 const MORE_ACTIONS = [
   { label: "OpenToken", icon: BookOpen, to: "/opentoken" },
+  { label: "Trust Wallet", icon: Shield, to: "/trust-wallet" },
   { label: "Live Chat", icon: MessageCircle, to: "/chat" },
   { label: "Earn", icon: TrendingUp, to: "/ousd" },
   { label: "Sell", icon: DollarSign, to: "/swap" },

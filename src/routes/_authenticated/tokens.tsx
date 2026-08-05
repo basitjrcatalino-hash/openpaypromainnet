@@ -2,7 +2,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, BadgeCheck, CircleDollarSign, MessageCircle, Plus, Shield } from "lucide-react";
+import {
+  ArrowUpDown,
+  BadgeCheck,
+  CircleDollarSign,
+  ExternalLink,
+  Loader2,
+  MessageCircle,
+  Plus,
+  Shield,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,6 +33,9 @@ import {
   WALLET_NETWORKS,
   type WalletNetworkId,
 } from "@/lib/wallet-networks";
+import { twListings, twSearch, type TwListingDoc, type TwSearchDoc } from "@/lib/trustwallet-client";
+import { trustWalletAssetDeepLink } from "@/lib/trustwallet-deeplinks";
+import { formatNumber, formatUSD } from "@/lib/wallet-utils";
 
 export const Route = createFileRoute("/_authenticated/tokens")({
   head: () => ({
@@ -108,6 +120,21 @@ function TokensPage() {
     queryKey: ["major-markets"],
     staleTime: 60_000,
     queryFn: fetchMajorMarkets,
+  });
+
+  const { data: twTrending = [], isLoading: twTrendingLoading } = useQuery({
+    queryKey: ["tw-listings", "trending"],
+    enabled: listMode === "trending",
+    staleTime: 60_000,
+    queryFn: () => twListings({ category_id: "trending", limit: 40 }),
+  });
+
+  const twSearchQ = q.trim();
+  const { data: twSearchDocs = [], isFetching: twSearching } = useQuery({
+    queryKey: ["tw-search-tokens", twSearchQ],
+    enabled: searchOpen && twSearchQ.length >= 2,
+    staleTime: 30_000,
+    queryFn: () => twSearch(twSearchQ, { limit: 15 }),
   });
 
   const { data: isStaff = false } = useQuery({
@@ -242,7 +269,8 @@ function TokensPage() {
     !isLoading &&
     filtered.length === 0 &&
     visibleMajors.length === 0 &&
-    !showOusd;
+    !showOusd &&
+    !(listMode === "trending" && (twTrendingLoading || twTrending.length > 0));
 
   return (
     <div className="ot-phantom mx-auto w-full max-w-lg animate-page-in md:max-w-2xl">
@@ -275,22 +303,30 @@ function TokensPage() {
       </div>
 
       {/* List mode */}
-      <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {LIST_MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => setListMode(m.id)}
-            className={cn(
-              "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition press",
-              listMode === m.id
-                ? "bg-foreground text-background"
-                : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {m.label}
-          </button>
-        ))}
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex flex-1 gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {LIST_MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setListMode(m.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition press",
+                listMode === m.id
+                  ? "bg-foreground text-background"
+                  : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <Link
+          to="/trust-wallet"
+          className="shrink-0 rounded-full bg-primary/12 px-3 py-1.5 text-[11px] font-bold text-primary press"
+        >
+          Trust Wallet
+        </Link>
       </div>
 
       {/* Network filter — Phantom-style full list */}
@@ -372,6 +408,53 @@ function TokensPage() {
       )}
 
       <ul className="pb-4">
+        {listMode === "trending" && (
+          <li className="mb-2 list-none">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                Trust Wallet trending
+              </span>
+              <Link to="/trust-wallet" className="text-[11px] font-semibold text-primary">
+                See all
+              </Link>
+            </div>
+            <ul className="mb-3 overflow-hidden rounded-2xl bg-card">
+              {twTrendingLoading ? (
+                <li className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading…
+                </li>
+              ) : twTrending.length === 0 ? (
+                <li className="py-6 text-center text-xs text-muted-foreground">
+                  No Trust Wallet listings
+                </li>
+              ) : (
+                twTrending.slice(0, 12).map((doc, i) => (
+                  <TwListingMiniRow key={doc.asset?.asset_id ?? i} doc={doc} />
+                ))
+              )}
+            </ul>
+          </li>
+        )}
+
+        {searchOpen && twSearchQ.length >= 2 && (
+          <li className="mb-2 list-none">
+            <div className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              Trust Wallet search
+              {twSearching ? "…" : ""}
+            </div>
+            <ul className="mb-3 overflow-hidden rounded-2xl bg-card">
+              {twSearchDocs.length === 0 && !twSearching ? (
+                <li className="py-4 text-center text-xs text-muted-foreground">No TW matches</li>
+              ) : (
+                twSearchDocs.map((doc, i) => (
+                  <TwSearchMiniRow key={doc.asset_id ?? i} doc={doc} />
+                ))
+              )}
+            </ul>
+          </li>
+        )}
+
         {showOusd && (
           <li className="flex items-stretch">
             <Link
@@ -529,6 +612,83 @@ function TokenRow({ token: t, currency }: { token: any; currency: CurrencyCode }
       >
         <MessageCircle className="h-4 w-4" />
       </Link>
+    </li>
+  );
+}
+
+function TwListingMiniRow({ doc }: { doc: TwListingDoc }) {
+  const asset = doc.asset;
+  const price = Number(doc.price?.price ?? 0);
+  const change = Number(doc.price?.percent_change_24h ?? doc.price?.change_24h ?? 0);
+  const up = change >= 0;
+  const assetId = asset?.asset_id;
+  return (
+    <li className="flex items-center gap-3 border-b border-border/40 px-3 py-2.5 last:border-0">
+      {asset?.icon_url ? (
+        <img src={asset.icon_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+      ) : (
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-muted text-[10px] font-bold">
+          {(asset?.symbol ?? "?").slice(0, 2)}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold">
+          {asset?.symbol ?? "—"}{" "}
+          <span className="font-normal text-muted-foreground">{asset?.name}</span>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-xs font-semibold">{price > 0 ? formatUSD(price) : "—"}</div>
+        <div
+          className={cn(
+            "text-[10px] font-semibold",
+            up ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+          )}
+        >
+          {change ? `${up ? "+" : ""}${formatNumber(change, 2)}%` : ""}
+        </div>
+      </div>
+      {assetId ? (
+        <a
+          href={trustWalletAssetDeepLink(assetId)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+          aria-label="Open in Trust Wallet"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      ) : null}
+    </li>
+  );
+}
+
+function TwSearchMiniRow({ doc }: { doc: TwSearchDoc }) {
+  return (
+    <li className="flex items-center gap-3 border-b border-border/40 px-3 py-2.5 last:border-0">
+      {doc.icon_url ? (
+        <img src={doc.icon_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+      ) : (
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-muted text-[10px] font-bold">
+          {(doc.symbol ?? "?").slice(0, 2)}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold">
+          {doc.symbol} <span className="font-normal text-muted-foreground">{doc.name}</span>
+        </div>
+      </div>
+      <div className="text-xs font-semibold">{doc.price ? formatUSD(doc.price) : "—"}</div>
+      {doc.asset_id ? (
+        <a
+          href={trustWalletAssetDeepLink(doc.asset_id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      ) : null}
     </li>
   );
 }

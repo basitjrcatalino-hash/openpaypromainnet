@@ -13,6 +13,8 @@ import {
   Link2,
   Loader2,
   Search,
+  ShieldAlert,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -42,6 +44,7 @@ import {
   saveRecentRecipient,
   type RecentRecipient,
 } from "@/lib/recent-recipients";
+import { twValidate, twRiskLabel } from "@/lib/trustwallet-client";
 
 const sendSearchSchema = z.object({
   to: z.string().optional(),
@@ -110,6 +113,20 @@ function SendPage() {
   } | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
   const [deepLinkHandled, setDeepLinkHandled] = useState(false);
+
+  const twAddr = to.trim();
+  const shouldTwCheck =
+    rail === "wallet" &&
+    step === "recipient" &&
+    twAddr.length >= 10 &&
+    !twAddr.startsWith("@");
+
+  const { data: twRisk, isFetching: twChecking } = useQuery({
+    queryKey: ["tw-validate-send", twAddr],
+    enabled: shouldTwCheck,
+    staleTime: 30_000,
+    queryFn: () => twValidate(twAddr),
+  });
 
   const { data: wallet } = useQuery({
     queryKey: ["active-wallet", user.id],
@@ -899,6 +916,55 @@ function SendPage() {
             )}
             {rail === "openpay" && opError && (
               <div className="mt-2 text-xs text-destructive">{opError}</div>
+            )}
+            {rail === "wallet" && shouldTwCheck && (
+              <div
+                className={cn(
+                  "mt-3 flex items-start gap-2 rounded-2xl p-3 text-xs leading-relaxed",
+                  twChecking && "bg-muted/50 text-muted-foreground",
+                  !twChecking &&
+                    twRisk &&
+                    twRiskLabel(twRisk.result).tone === "ok" &&
+                    "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                  !twChecking &&
+                    twRisk &&
+                    twRiskLabel(twRisk.result).tone === "bad" &&
+                    "bg-destructive/10 text-destructive",
+                  !twChecking &&
+                    twRisk &&
+                    (twRiskLabel(twRisk.result).tone === "warn" ||
+                      twRiskLabel(twRisk.result).tone === "neutral") &&
+                    "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+                  !twChecking && twRisk?.error && "bg-muted/50 text-muted-foreground",
+                )}
+              >
+                {twChecking ? (
+                  <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                ) : twRiskLabel(twRisk?.result).tone === "bad" ? (
+                  <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                )}
+                <div>
+                  <p className="font-semibold">
+                    Trust Wallet check
+                    {twChecking
+                      ? "…"
+                      : twRisk?.error
+                        ? " unavailable"
+                        : ` · ${twRiskLabel(twRisk?.result).label}`}
+                  </p>
+                  {!twChecking && twRisk && !twRisk.error && (
+                    <p className="mt-0.5 text-[11px] opacity-90">
+                      Valid: {twRisk.valid ? "yes" : "no"}
+                      {typeof twRisk.details?.risk_score === "number"
+                        ? ` · score ${twRisk.details.risk_score}`
+                        : ""}
+                      {twRisk.details?.is_sanctioned ? " · sanctioned" : ""}
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
             {rail === "wallet" && (
               <div className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-500">

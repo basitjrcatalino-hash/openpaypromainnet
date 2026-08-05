@@ -142,6 +142,7 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.more") return "More";
   if (labelKey === "nav.discover") return "Discover";
   if (labelKey === "nav.withdraw") return "Withdraw";
+  if (labelKey === "nav.trustWallet") return "Trust Wallet";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
@@ -157,6 +158,7 @@ const FOOTER_TABS = [
 const MORE_NAV = [
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
   { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode, desc: "Show your QR & address" },
+  { to: "/trust-wallet", labelKey: "nav.trustWallet", icon: Shield, desc: "Markets, search & safety" },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
   { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
   { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },
@@ -182,6 +184,7 @@ function navActive(pathname: string, to: string) {
     (to === "/deposit" && pathname.startsWith("/deposit")) ||
     (to === "/activity" && pathname.startsWith("/activity")) ||
     (to === "/withdraw" && pathname.startsWith("/withdraw")) ||
+    (to === "/trust-wallet" && pathname.startsWith("/trust-wallet")) ||
     (to === "/settings" && pathname.startsWith("/settings"))
   );
 }

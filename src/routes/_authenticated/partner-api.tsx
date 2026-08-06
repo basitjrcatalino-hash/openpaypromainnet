@@ -6,6 +6,7 @@ import {
   Bot,
   BookOpen,
   Check,
+  ChevronRight,
   Copy,
   ExternalLink,
   KeyRound,
@@ -13,7 +14,6 @@ import {
   Pencil,
   Plus,
   RefreshCw,
-  Shield,
   Sparkles,
   Trash2,
   Wallet,
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { copyText } from "@/lib/clipboard";
 import { getDeveloperPortalProfile } from "@/lib/developer.functions";
@@ -131,6 +132,7 @@ function PartnerApiPortalPage() {
     client_id: string;
     client_secret: string;
   } | null>(null);
+  const [setupStep, setSetupStep] = useState(1);
 
   const apps = appsQ.data ?? [];
   const selected = useMemo(
@@ -179,6 +181,7 @@ function PartnerApiPortalPage() {
       setCreateOpen(false);
       resetForm();
       setSelectedId(res.app.id);
+      setSetupStep(2);
       void qc.invalidateQueries({ queryKey: ["pro-connect-apps"] });
       toast.success("App created — copy your client secret now");
     },
@@ -249,13 +252,17 @@ function PartnerApiPortalPage() {
     ? `${origin}/pro/authorize?client_id=${encodeURIComponent(selected.client_id)}&redirect_uri=${encodeURIComponent(redirect0)}&scope=profile%20balance%20payments&state=RANDOM`
     : "";
 
+  const clientId = selected?.client_id ?? "opro_live_YOUR_CLIENT_ID";
+  const secretPlaceholder =
+    plainSecret?.client_secret ?? "oprs_live_PASTE_SECRET_SHOWN_ONCE";
+
   const envSample = selected
-    ? `# OpenPay Pro Connect — server only (never VITE_)
+    ? `# OpenPay Pro Connect — SERVER ONLY (never VITE_ / public)
 PRO_CLIENT_ID="${selected.client_id}"
-PRO_CLIENT_SECRET="oprs_live_…"
+PRO_CLIENT_SECRET="${secretPlaceholder}"
 PRO_REDIRECT_URI="${redirect0}"
 PRO_API_BASE="${origin}/api/public/pro"
-# Where Pro Pay credits land (your merchant wallet)
+# Your merchant wallet — Pro Pay credits land here
 PRO_RECEIVE_WALLET="${walletAddress || "0x…"}"
 PRO_RECEIVE_HANDLE="${receiveHandle || "@you"}"`
     : "";
@@ -273,62 +280,201 @@ PRO_RECEIVE_HANDLE="${receiveHandle || "@you"}"`
   }'`
     : "";
 
-  const aiPrompt = selected
-    ? `Integrate OpenPay Pro Connect into this project (beginner-friendly).
+  const authCode = selected
+    ? `// Step A — Sign in with OpenPay Pro (browser)
+const state = crypto.randomUUID();
+sessionStorage.setItem("op_pro_state", state);
+const url = new URL("${origin}/pro/authorize");
+url.searchParams.set("client_id", process.env.PRO_CLIENT_ID!);
+url.searchParams.set("redirect_uri", process.env.PRO_REDIRECT_URI!);
+url.searchParams.set("scope", "profile balance payments");
+url.searchParams.set("state", state);
+window.location.href = url.toString();
 
-## Credentials (server only — never VITE_ / browser)
+// Step B — Callback route (server): exchange code → oprat_
+export async function exchangeProCode(code: string, redirectUri: string) {
+  const basic = Buffer.from(
+    \`\${process.env.PRO_CLIENT_ID}:\${process.env.PRO_CLIENT_SECRET}\`,
+  ).toString("base64");
+  const res = await fetch(\`\${process.env.PRO_API_BASE}/oauth/token\`, {
+    method: "POST",
+    headers: {
+      Authorization: \`Basic \${basic}\`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json(); // { access_token: "oprat_…", user_id, … }
+}`
+    : "";
+
+  const payCode = selected
+    ? `// Step C — Create charge + redirect to checkout (server)
+export async function createProCharge(opts: {
+  amount: number;
+  description?: string;
+  reference?: string;
+  success_url: string;
+  cancel_url: string;
+}) {
+  const basic = Buffer.from(
+    \`\${process.env.PRO_CLIENT_ID}:\${process.env.PRO_CLIENT_SECRET}\`,
+  ).toString("base64");
+  const res = await fetch(\`\${process.env.PRO_API_BASE}/charges\`, {
+    method: "POST",
+    headers: {
+      Authorization: \`Basic \${basic}\`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ currency: "OUSD", ...opts }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json(); // { id, checkout_url, status, … }
+}
+
+// Step D — Poll until paid | canceled | expired (no webhooks)
+export async function pollProCharge(id: string) {
+  const basic = Buffer.from(
+    \`\${process.env.PRO_CLIENT_ID}:\${process.env.PRO_CLIENT_SECRET}\`,
+  ).toString("base64");
+  for (let i = 0; i < 60; i++) {
+    const res = await fetch(\`\${process.env.PRO_API_BASE}/charges/\${id}\`, {
+      headers: { Authorization: \`Basic \${basic}\` },
+    });
+    const charge = await res.json();
+    if (["paid", "canceled", "expired"].includes(charge.status)) return charge;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  throw new Error("Timed out waiting for payment");
+}`
+    : "";
+
+  const fullStackPaste = selected
+    ? `${envSample}
+
+# --- Auth redirect ---
+${authorizeSample}
+
+# --- Node helpers (paste into your server) ---
+${authCode}
+
+${payCode}`
+    : "";
+
+  const cursorPrompt = selected
+    ? `Integrate OpenPay Pro Connect into this project — full beginner setup.
+
+## 1) Add server env (never VITE_ / browser)
 PRO_CLIENT_ID=${selected.client_id}
-PRO_CLIENT_SECRET=<paste secret from Partner API portal — shown once>
+PRO_CLIENT_SECRET=<paste secret from Partner API — shown once at create/rotate>
 PRO_REDIRECT_URI=${redirect0}
 PRO_API_BASE=${origin}/api/public/pro
 
-## Merchant receive wallet (OUSD lands here when users pay)
-Wallet address: ${walletAddress || "(create a wallet in OpenPay Pro Settings first)"}
+## 2) Merchant receive wallet (paid OUSD lands here)
+Address: ${walletAddress || "(create wallet in OpenPay Pro first)"}
 Handle: ${receiveHandle || "@you"}
 
-## Docs to fetch first
-1) ${origin}/docs/integrations
-2) ${origin}/api/public/docs/integrations
-3) ${origin}/api/public/pro/config
+## 3) Fetch docs first
+- ${origin}/api/public/docs/integrations
+- ${origin}/api/public/pro/config
+- ${origin}/docs/integrations
 
-## Build these flows
-1) **Auth (OpenPay Pro Auth)**
-   - Redirect user to: ${origin}/pro/authorize?client_id=…&redirect_uri=…&scope=profile%20balance%20payments&state=…
-   - On callback, POST ${origin}/api/public/pro/oauth/token with Basic auth (client_id:client_secret) + code
-   - Store access_token (oprat_…) server-side
+## 4) Build UI + server
+A) "Sign in with OpenPay Pro" button → redirect:
+   ${origin}/pro/authorize?client_id=${encodeURIComponent(selected.client_id)}&redirect_uri=${encodeURIComponent(redirect0)}&scope=profile%20balance%20payments&state=RANDOM
+B) Callback: POST ${origin}/api/public/pro/oauth/token
+   Basic auth (client_id:client_secret) + { grant_type, code, redirect_uri }
+   Store access_token (oprat_…) server-side only
+C) Checkout: POST ${origin}/api/public/pro/charges → redirect checkout_url
+D) Poll GET ${origin}/api/public/pro/charges/{id} until paid|canceled|expired
+E) Optional: GET /user/me and /user/balance with Bearer oprat_
 
-2) **Checkout (Pro Pay)**
-   - POST ${origin}/api/public/pro/charges → get checkout_url
-   - Redirect buyer to checkout_url
-   - Poll GET ${origin}/api/public/pro/charges/{id} until paid|canceled|expired
-   - No webhooks — poll only
-   - Paid OUSD credits the app owner's Pro wallet (${walletAddress || "merchant wallet"})
+## Rules
+- Exact-match redirect_uri · currency OUSD · no charge webhooks · secrets server-only
+- Paid funds credit app owner Pro wallet ${walletAddress || "0x…"}
 
-3) **User APIs**
-   - GET /api/public/pro/user/me (Bearer oprat_)
-   - GET /api/public/pro/user/balance (requires balance scope)
-
-Rules: exact-match redirect_uri, currency OUSD, secrets on server only.`
+Ship working Auth + Pay pages with copy-pasteable env and error toasts.`
     : "";
 
   const lovablePrompt = selected
     ? `@${origin}/api/public/docs/integrations
 @${origin}/llms.txt
+@${origin}/api/public/pro/config
 
-Build a simple checkout + "Sign in with OpenPay Pro" using Pro Connect.
+Build a complete OpenPay Pro Connect integration (beginner-friendly).
 
-Env (server secrets, not VITE_):
+## Env (server secrets only — NEVER VITE_)
+PRO_CLIENT_ID=${selected.client_id}
+PRO_CLIENT_SECRET=<paste from Partner API portal>
+PRO_REDIRECT_URI=${redirect0}
+PRO_API_BASE=${origin}/api/public/pro
+
+## Pages to create
+1) Home with two buttons:
+   - "Sign in with OpenPay Pro" → ${origin}/pro/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirect0)}&scope=profile%20balance%20payments&state=…
+   - "Pay with OpenPay Pro" → server creates charge → redirect checkout_url
+2) /callback — read ?code&state → exchange token at POST /api/public/pro/oauth/token (Basic auth)
+3) /paid — poll GET /charges/:id until paid|canceled|expired
+
+## Merchant wallet (you get paid here)
+${walletAddress || "0x…"} (${receiveHandle || "@you"})
+
+No webhooks. Exact redirect_uri. Currency OUSD. Keep secrets on server.`
+    : "";
+
+  const replitPrompt = selected
+    ? `Use OpenPay Pro Connect API.
+
+Base: ${origin}/api/public/pro
+Docs: ${origin}/api/public/docs/integrations
+
+Secrets (.env — not public):
 PRO_CLIENT_ID=${selected.client_id}
 PRO_CLIENT_SECRET=…
 PRO_REDIRECT_URI=${redirect0}
 PRO_API_BASE=${origin}/api/public/pro
 
-Flows:
-1) Connect button → ${origin}/pro/authorize → callback → exchange code for oprat_
-2) Create charge → redirect checkout_url → poll until paid
-Paid funds credit merchant wallet ${walletAddress || "0x…"} on OpenPay Pro.
-No charge webhooks — poll. Exact redirect_uri match.`
+Implement:
+1) Auth: redirect /pro/authorize → exchange code → oprat_
+2) Pay: POST /charges → checkout_url → poll
+Paid OUSD → merchant wallet ${walletAddress || "0x…"}
+No webhooks. Exact redirect_uri match.`
     : "";
+
+  const chatgptPrompt = selected
+    ? `You are integrating OpenPay Pro Connect for a beginner.
+
+Read: ${origin}/api/public/docs/integrations
+Discovery: ${origin}/api/public/pro/config
+
+My credentials (server only):
+PRO_CLIENT_ID=${selected.client_id}
+PRO_CLIENT_SECRET=<I will paste secret>
+PRO_REDIRECT_URI=${redirect0}
+PRO_API_BASE=${origin}/api/public/pro
+Receive wallet: ${walletAddress || "0x…"}
+
+Generate step-by-step:
+1) .env file
+2) Sign-in button + OAuth callback (token exchange)
+3) Create charge + redirect + poller
+4) How I confirm payment landed in my Pro wallet
+
+Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
+    : "";
+
+  const SETUP_STEPS = [
+    { n: 1, title: "Create app", blurb: "Name + callback URL" },
+    { n: 2, title: "Copy env", blurb: "Paste PRO_* secrets" },
+    { n: 3, title: "AI paste", blurb: "Cursor · Lovable · Replit" },
+    { n: 4, title: "App code", blurb: "Auth + Pay snippets" },
+    { n: 5, title: "Get paid", blurb: "Your Pro wallet" },
+  ] as const;
 
   if (appsQ.isLoading) {
     return (
@@ -348,9 +494,9 @@ No charge webhooks — poll. Exact redirect_uri match.`
           Connect any app in minutes
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Create an app, copy env vars, paste an AI prompt into Cursor / Lovable / Replit, and ship
-          Auth + Pro Pay. Payments credit <strong className="text-foreground">your</strong> OpenPay
-          Pro wallet address.
+          Follow the 5-step copy-paste setup: create app → copy env → paste a Cursor / Lovable /
+          Replit prompt (or Auth + Pay code). Payments credit{" "}
+          <strong className="text-foreground">your</strong> OpenPay Pro wallet.
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Button
@@ -362,6 +508,18 @@ No charge webhooks — poll. Exact redirect_uri match.`
           >
             <Plus className="mr-1.5 h-4 w-4" />
             Create app
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={() => {
+              setSetupStep(1);
+              document.getElementById("setup")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            Start setup guide
           </Button>
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <Link to="/docs/integrations">
@@ -384,64 +542,358 @@ No charge webhooks — poll. Exact redirect_uri match.`
         </div>
       </div>
 
-      {/* Beginner steps */}
-      <section className="rounded-3xl border border-border/60 bg-card p-5">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-          Beginner path
-        </p>
-        <ol className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              n: "1",
-              t: "Create app",
-              d: "Name + exact callback URL → get client ID & secret",
-            },
-            {
-              n: "2",
-              t: "Copy env",
-              d: "Paste PRO_* vars on your server (never VITE_)",
-            },
-            {
-              n: "3",
-              t: "Auth + Pay",
-              d: "/pro/authorize → token → POST /charges → poll",
-            },
-            {
-              n: "4",
-              t: "Get paid",
-              d: "OUSD credits your Pro wallet address below",
-            },
-          ].map((s) => (
-            <li
-              key={s.n}
-              className="rounded-2xl border border-border/40 bg-muted/20 px-3 py-3"
+      {/* Full copy-paste setup wizard */}
+      <section id="setup" className="space-y-4 rounded-3xl border border-border/60 bg-card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              Full Partner API setup
+            </p>
+            <h2 className="mt-1 text-lg font-bold">Copy & paste — step by step</h2>
+            <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+              Follow each step in order. Copy env into your app, then paste a Cursor / Lovable /
+              Replit prompt — or drop the Auth + Pay code yourself.
+            </p>
+          </div>
+          {selected ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+              onClick={() => copy("Full setup pack", fullStackPaste)}
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                {s.n}
-              </span>
-              <p className="mt-2 text-sm font-bold">{s.t}</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">{s.d}</p>
+              <Copy className="mr-1.5 h-3.5 w-3.5" />
+              Copy everything
+            </Button>
+          ) : null}
+        </div>
+
+        <ol className="grid gap-2 sm:grid-cols-5">
+          {SETUP_STEPS.map((s) => (
+            <li key={s.n}>
+              <button
+                type="button"
+                onClick={() => setSetupStep(s.n)}
+                className={cn(
+                  "flex w-full items-start gap-2 rounded-2xl border px-3 py-2.5 text-left transition",
+                  setupStep === s.n
+                    ? "border-primary/40 bg-primary/10 ring-1 ring-primary/25"
+                    : "border-border/40 bg-muted/15 hover:bg-muted/40",
+                )}
+              >
+                <span
+                  className={cn(
+                    "grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+                    setupStep === s.n
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {s.n}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-bold">{s.title}</span>
+                  <span className="block text-[10px] text-muted-foreground">{s.blurb}</span>
+                </span>
+              </button>
             </li>
           ))}
         </ol>
+
+        <div className="rounded-2xl border border-border/50 bg-muted/20 p-4 sm:p-5">
+          {setupStep === 1 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold">Step 1 — Create your Connect app</h3>
+              <p className="text-xs text-muted-foreground">
+                Add your app name and the <strong className="text-foreground">exact</strong> OAuth
+                callback URL your site will use (example:{" "}
+                <code className="rounded bg-muted px-1">https://your.app/callback</code>). You’ll
+                get a <code className="rounded bg-muted px-1">opro_live_</code> client ID and a
+                one-time <code className="rounded bg-muted px-1">oprs_live_</code> secret.
+              </p>
+              <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                <li>Local testing: add <code className="rounded bg-muted px-1">http://localhost:3000/callback</code></li>
+                <li>Copy the secret immediately — it is only shown once</li>
+                <li>Never put the secret in <code className="rounded bg-muted px-1">VITE_</code> env</li>
+              </ul>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  className="rounded-full"
+                  onClick={() => {
+                    resetForm();
+                    setCreateOpen(true);
+                  }}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  {selected ? "Create another app" : "Create app now"}
+                </Button>
+                {selected ? (
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => setSetupStep(2)}
+                  >
+                    Next: copy env
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {setupStep === 2 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold">Step 2 — Copy env into your app</h3>
+              {!selected ? (
+                <p className="text-xs text-muted-foreground">
+                  Create an app first (Step 1), then come back to copy live credentials.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Paste into your server <code className="rounded bg-muted px-1">.env</code> /
+                    secrets. Replace the secret with the value from create/rotate. After env is set,
+                    go to Step 3 (AI) or Step 4 (manual code).
+                  </p>
+                  {plainSecret ? (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs">
+                      Fresh secret is in the dialog — also filled into the env block below for this
+                      session.
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-muted-foreground">
+                      Secret not in memory. Use{" "}
+                      <strong className="text-foreground">Rotate</strong> on the app card if you
+                      need a new one, or paste the secret you saved earlier.
+                    </div>
+                  )}
+                  <CodeBlock
+                    label=".env (server)"
+                    value={envSample}
+                    onCopy={() => copy("Env", envSample)}
+                  />
+                  <CodeBlock
+                    label="Authorize URL (test in browser)"
+                    value={authorizeSample}
+                    onCopy={() => copy("Authorize URL", authorizeSample)}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(1)}>
+                      Back
+                    </Button>
+                    <Button className="rounded-full" onClick={() => setSetupStep(3)}>
+                      Next: AI paste
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          {setupStep === 3 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold">Step 3 — Paste into Cursor · Lovable · Replit</h3>
+              {!selected ? (
+                <p className="text-xs text-muted-foreground">Create an app first to unlock live prompts.</p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Pick your tool → <strong className="text-foreground">Copy</strong> → paste into
+                    the AI chat. It will wire Auth, checkout, env, and your receive wallet.
+                  </p>
+                  <Tabs defaultValue="cursor" className="w-full">
+                    <TabsList className="mb-3 flex h-auto w-full flex-wrap justify-start gap-1 rounded-2xl bg-muted/40 p-1">
+                      <TabsTrigger value="cursor" className="rounded-xl text-xs">
+                        Cursor
+                      </TabsTrigger>
+                      <TabsTrigger value="lovable" className="rounded-xl text-xs">
+                        Lovable
+                      </TabsTrigger>
+                      <TabsTrigger value="replit" className="rounded-xl text-xs">
+                        Replit
+                      </TabsTrigger>
+                      <TabsTrigger value="chatgpt" className="rounded-xl text-xs">
+                        ChatGPT
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="cursor" className="mt-0 space-y-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Paste in Cursor Agent / Composer. Best for existing repos.
+                      </p>
+                      <CodeBlock
+                        label="Cursor / Claude prompt"
+                        value={cursorPrompt}
+                        onCopy={() => copy("Cursor prompt", cursorPrompt)}
+                      />
+                    </TabsContent>
+                    <TabsContent value="lovable" className="mt-0 space-y-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Paste in Lovable chat. Keep secrets in server secrets — not{" "}
+                        <code className="rounded bg-muted px-1">VITE_</code>.
+                      </p>
+                      <CodeBlock
+                        label="Lovable prompt"
+                        value={lovablePrompt}
+                        onCopy={() => copy("Lovable prompt", lovablePrompt)}
+                      />
+                    </TabsContent>
+                    <TabsContent value="replit" className="mt-0 space-y-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Paste in Replit AI / Agent. Add Secrets in the Replit Secrets panel.
+                      </p>
+                      <CodeBlock
+                        label="Replit prompt"
+                        value={replitPrompt}
+                        onCopy={() => copy("Replit prompt", replitPrompt)}
+                      />
+                    </TabsContent>
+                    <TabsContent value="chatgpt" className="mt-0 space-y-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        Paste in ChatGPT / Claude Projects with your stack described.
+                      </p>
+                      <CodeBlock
+                        label="ChatGPT prompt"
+                        value={chatgptPrompt}
+                        onCopy={() => copy("ChatGPT prompt", chatgptPrompt)}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(2)}>
+                      Back
+                    </Button>
+                    <Button className="rounded-full" onClick={() => setSetupStep(4)}>
+                      Or paste code yourself
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                    <Button asChild variant="ghost" size="sm" className="rounded-full">
+                      <Link to="/docs/ai">More AI prompts</Link>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          {setupStep === 4 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold">Step 4 — Copy Auth + Pay app code</h3>
+              {!selected ? (
+                <p className="text-xs text-muted-foreground">Create an app first.</p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Prefer hand-wiring? Copy these Node snippets into your server. Flow: authorize →
+                    token → create charge → poll.
+                  </p>
+                  <CodeBlock
+                    label="Auth (redirect + token exchange)"
+                    value={authCode}
+                    onCopy={() => copy("Auth code", authCode)}
+                  />
+                  <CodeBlock
+                    label="Pay (create charge + poll)"
+                    value={payCode}
+                    onCopy={() => copy("Pay code", payCode)}
+                  />
+                  <CodeBlock
+                    label="Create charge (cURL test)"
+                    value={chargeCurl}
+                    onCopy={() => copy("cURL", chargeCurl)}
+                  />
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <QuickLink
+                      href="/docs/integrations#auth"
+                      title="Docs: Auth"
+                      body="Consent → code → oprat_"
+                    />
+                    <QuickLink
+                      href="/docs/integrations#charges"
+                      title="Docs: Pro Pay"
+                      body="POST /charges → poll"
+                    />
+                    <QuickLink
+                      href="/api/public/pro/config"
+                      title="Discovery JSON"
+                      body="Endpoint map"
+                      external
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(3)}>
+                      Back
+                    </Button>
+                    <Button className="rounded-full" onClick={() => setSetupStep(5)}>
+                      Next: get paid
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          {setupStep === 5 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold">Step 5 — Confirm payments land in your wallet</h3>
+              <p className="text-xs text-muted-foreground">
+                When a buyer pays a Pro Pay charge for your app, OUSD credits{" "}
+                <strong className="text-foreground">your</strong> OpenPay Pro wallet below. Check
+                Recent charges on this page after a test payment.
+              </p>
+              {!walletAddress ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                  <p className="font-semibold text-amber-800 dark:text-amber-300">No wallet yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Create a wallet first so Pro Pay knows where to credit you.
+                  </p>
+                  <Button asChild size="sm" className="mt-3 rounded-full">
+                    <Link to="/settings">Open Settings</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <FieldRow
+                    label="Wallet address"
+                    value={walletAddress}
+                    onCopy={() => copy("Wallet address", walletAddress)}
+                  />
+                  <FieldRow
+                    label="Receive handle"
+                    value={receiveHandle}
+                    onCopy={() => copy("Handle", receiveHandle)}
+                  />
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm" variant="outline" className="rounded-full">
+                  <Link to="/receive">Open Receive</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-full">
+                  <a href="/docs/integrations#charges">How Pro Pay credits you</a>
+                </Button>
+                <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(1)}>
+                  Restart setup
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </section>
 
-      {/* Receive wallet */}
+      {/* Receive wallet summary (always visible) */}
       <section className="space-y-3 rounded-3xl border border-primary/25 bg-primary/5 p-5">
         <div className="flex items-center gap-2">
           <Wallet className="h-5 w-5 text-primary" />
           <h2 className="text-base font-bold">Your receive wallet (where payments land)</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          When a user pays a Pro Pay charge for <em>your</em> Connect app, OUSD is credited to this
-          OpenPay Pro wallet. Set it up once — every checkout pays you here.
+          Pro Pay for your Connect apps credits this OpenPay Pro wallet. Same address as Step 5.
         </p>
         {!walletAddress ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
             <p className="font-semibold text-amber-800 dark:text-amber-300">No wallet yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Create a wallet in Settings or Dashboard, then return here.
-            </p>
             <Button asChild size="sm" className="mt-3 rounded-full">
               <Link to="/settings">Open Settings</Link>
             </Button>
@@ -460,14 +912,6 @@ No charge webhooks — poll. Exact redirect_uri match.`
             />
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="outline" className="rounded-full">
-            <Link to="/receive">Open Receive</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="rounded-full">
-            <a href="/docs/integrations#charges">How Pro Pay credits you</a>
-          </Button>
-        </div>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
@@ -672,82 +1116,60 @@ No charge webhooks — poll. Exact redirect_uri match.`
               </section>
 
               <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold">Easy integration — copy & paste</h3>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Auth at <code className="rounded bg-muted px-1">/pro/authorize</code> · token at{" "}
-                  <code className="rounded bg-muted px-1">/api/public/pro/oauth/token</code> · pay
-                  at <code className="rounded bg-muted px-1">/api/public/pro/charges</code>. Paid
-                  OUSD → your wallet above.
-                </p>
-
-                <CodeBlock
-                  label="Env (server)"
-                  value={envSample}
-                  onCopy={() => copy("Env", envSample)}
-                />
-                <CodeBlock
-                  label="Authorize URL"
-                  value={authorizeSample}
-                  onCopy={() => copy("Authorize URL", authorizeSample)}
-                />
-                <CodeBlock
-                  label="Create charge (cURL)"
-                  value={chargeCurl}
-                  onCopy={() => copy("cURL", chargeCurl)}
-                />
-
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <QuickLink
-                    href="/docs/integrations#auth"
-                    title="1. OAuth Auth"
-                    body="Consent → code → oprat_ token"
-                  />
-                  <QuickLink
-                    href="/docs/integrations#charges"
-                    title="2. Pro Pay"
-                    body="POST /charges → checkout → poll"
-                  />
-                  <QuickLink
-                    href="/api/public/pro/config"
-                    title="3. Discovery"
-                    body="Public endpoint map"
-                    external
-                  />
-                </div>
-              </section>
-
-              {/* AI paste */}
-              <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold">AI setup — Cursor · Lovable · Replit</h3>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Paste one prompt into your AI tool. It will wire Auth, checkout, env, and receive
-                  wallet using your live client ID.
-                </p>
-                <CodeBlock
-                  label="Cursor / Claude / ChatGPT"
-                  value={aiPrompt}
-                  onCopy={() => copy("AI prompt", aiPrompt)}
-                />
-                <CodeBlock
-                  label="Lovable"
-                  value={lovablePrompt}
-                  onCopy={() => copy("Lovable prompt", lovablePrompt)}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild size="sm" variant="outline" className="rounded-full">
-                    <Link to="/docs/ai">More AI prompts</Link>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="text-base font-bold">Ready to integrate?</h3>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => {
+                      setSetupStep(2);
+                      document.getElementById("setup")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    Open copy-paste setup
+                    <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
-                  <Button asChild size="sm" variant="outline" className="rounded-full">
-                    <a href="/api/public/docs/integrations" target="_blank" rel="noreferrer">
-                      Raw markdown feed
-                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                    </a>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use the <strong className="text-foreground">5-step wizard</strong> above: copy
+                  env → paste Cursor / Lovable / Replit prompt → or drop Auth + Pay code. Paid
+                  OUSD credits your receive wallet.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => {
+                      setSetupStep(3);
+                      document.getElementById("setup")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    <Bot className="mr-1.5 h-3.5 w-3.5" />
+                    AI prompts
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => {
+                      setSetupStep(4);
+                      document.getElementById("setup")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    App code
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => copy("Env", envSample)}
+                  >
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />
+                    Copy env
                   </Button>
                 </div>
               </section>
@@ -840,8 +1262,8 @@ No charge webhooks — poll. Exact redirect_uri match.`
             <DialogTitle>Copy your credentials</DialogTitle>
             <DialogDescription>
               The client secret is shown once. Store it in server secrets — never in{" "}
-              <code className="rounded bg-muted px-1">VITE_</code> env vars. Then paste the AI
-              prompt below into Cursor or Lovable.
+              <code className="rounded bg-muted px-1">VITE_</code> env vars. Then continue the
+              copy-paste setup (env → AI prompt).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -872,6 +1294,20 @@ No charge webhooks — poll. Exact redirect_uri match.`
             >
               <Check className="mr-1.5 h-4 w-4" />
               Copy secret
+            </Button>
+            <Button
+              className="rounded-full"
+              variant="secondary"
+              onClick={() => {
+                setPlainSecret(null);
+                setSetupStep(2);
+                requestAnimationFrame(() =>
+                  document.getElementById("setup")?.scrollIntoView({ behavior: "smooth" }),
+                );
+              }}
+            >
+              Continue setup
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </DialogContent>

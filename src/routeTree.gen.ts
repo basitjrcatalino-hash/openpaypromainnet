@@ -159,6 +159,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
 import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as ApiPublicProConfigRouteImport } from './routes/api/public/pro/config'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
@@ -975,6 +976,11 @@ const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
   path: '/api/public/push/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicProConfigRoute = ApiPublicProConfigRouteImport.update({
+  id: '/api/public/pro/config',
+  path: '/api/public/pro/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPiPaymentsIncompleteRoute =
   ApiPublicPiPaymentsIncompleteRouteImport.update({
     id: '/api/public/pi-payments/incomplete',
@@ -1316,6 +1322,7 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -1497,6 +1504,7 @@ export interface FileRoutesByTo {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -1680,6 +1688,7 @@ export interface FileRoutesById {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -1863,6 +1872,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
@@ -2044,6 +2054,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
@@ -2226,6 +2237,7 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
@@ -2312,6 +2324,7 @@ export interface RootRouteChildren {
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
+  ApiPublicProConfigRoute: typeof ApiPublicProConfigRoute
   ApiPublicPushSubscribeRoute: typeof ApiPublicPushSubscribeRoute
   ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -3370,6 +3383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pro/config': {
+      id: '/api/public/pro/config'
+      path: '/api/public/pro/config'
+      fullPath: '/api/public/pro/config'
+      preLoaderRoute: typeof ApiPublicProConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pi-payments/incomplete': {
       id: '/api/public/pi-payments/incomplete'
       path: '/api/public/pi-payments/incomplete'
@@ -3917,6 +3937,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
+  ApiPublicProConfigRoute: ApiPublicProConfigRoute,
   ApiPublicPushSubscribeRoute: ApiPublicPushSubscribeRoute,
   ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

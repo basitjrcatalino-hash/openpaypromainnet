@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Eye, EyeOff, HelpCircle, Loader2, Lock } from "lucide-react";
+import { Eye, EyeOff, Fingerprint, HelpCircle, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

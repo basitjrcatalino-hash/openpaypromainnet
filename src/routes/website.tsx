@@ -751,7 +751,7 @@ function HomePage() {
 
       <div className="mx-auto w-full max-w-295 px-3 pb-10 sm:px-5">
         {/* Hero — brand-first composition */}
-        <section ref={heroRef} className="ophome-hero relative mt-3 overflow-hidden sm:mt-4">
+        <section ref={heroRef} className="ophome-hero relative mt-3 overflow-visible sm:mt-4">
           <div className="ophome-hero-glow" aria-hidden />
           <div className="ophome-hero-mesh" aria-hidden />
           <div
@@ -762,7 +762,7 @@ function HomePage() {
             className="pointer-events-none absolute -right-6 bottom-24 h-48 w-48 rounded-full bg-(--brand)/20 blur-3xl ophome-float-delay"
             aria-hidden
           />
-          <div className="relative z-10 mx-auto flex min-h-[min(88vh,820px)] max-w-3xl flex-col items-center px-6 pb-[min(42vh,340px)] pt-16 text-center sm:px-10 sm:pt-20">
+          <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-6 pb-6 pt-16 text-center sm:px-10 sm:pt-20">
             <div
               data-rise
               className="ophome-rise inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 ring-1 ring-white/15 backdrop-blur-md"
@@ -784,9 +784,6 @@ function HomePage() {
               <span className="font-bold text-white">Pi Network</span> — plus OpenTokens on the open
               network.
             </p>
-            <div data-rise className="ophome-rise mt-6 w-full max-w-xl">
-              <MainTokensHighlight tone="dark" compact />
-            </div>
             <div
               data-rise
               className="ophome-rise mt-7 flex flex-wrap items-center justify-center gap-3"
@@ -812,11 +809,14 @@ function HomePage() {
                 {isSpeaking ? "Stop" : "Listen"}
               </button>
             </div>
+            <div data-rise className="ophome-rise mt-6 w-full max-w-xl">
+              <MainTokensHighlight tone="dark" compact />
+            </div>
           </div>
 
-          {/* Product preview — single composition (activity lives inside the phone) */}
+          {/* Product preview — in-flow under Main Tokens (never covers the card) */}
           <div className="ophome-hero-preview" aria-hidden>
-            <div ref={phoneRef} className="ophome-phone ophome-float-slow">
+            <div ref={phoneRef} className="ophome-phone">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <img

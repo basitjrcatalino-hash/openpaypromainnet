@@ -1857,10 +1857,11 @@ html.solana-pay-open body > div[style*="z-index:50"] {
 }
 
 .ophome-hero-preview {
-  position: absolute;
-  inset: auto 0 8% 0;
+  position: relative;
   display: flex;
   justify-content: center;
+  margin-top: 1.25rem;
+  padding-bottom: 1.75rem;
   pointer-events: none;
   z-index: 1;
 }

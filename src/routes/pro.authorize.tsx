@@ -1,26 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  Check,
-  Loader2,
-  Shield,
-  UserRound,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Check, Loader2, Shield, UserRound, Wallet, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  approveProAuthorization,
-  getProAuthorizeContext,
-} from "@/lib/pro-connect.functions";
+import { approveProAuthorization, getProAuthorizeContext } from "@/lib/pro-connect.functions";
 
-const SCOPE_META: Record<
-  string,
-  { label: string; desc: string; icon: typeof UserRound }
-> = {
+const SCOPE_META: Record<string, { label: string; desc: string; icon: typeof UserRound }> = {
   profile: {
     label: "Profile",
     desc: "Username, display name, avatar, and wallet address",
@@ -69,9 +56,7 @@ export const Route = createFileRoute("/pro/authorize")({
   errorComponent: ({ error }) => (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-3 p-6 text-center">
       <h1 className="text-lg font-semibold">Authorization request failed</h1>
-      <p className="text-sm text-muted-foreground">
-        {String((error as Error)?.message ?? error)}
-      </p>
+      <p className="text-sm text-muted-foreground">{String((error as Error)?.message ?? error)}</p>
     </main>
   ),
 });
@@ -84,9 +69,7 @@ function ProAuthorizePage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ctx, setCtx] = useState<Awaited<ReturnType<typeof getProAuthorizeContext>> | null>(
-    null,
-  );
+  const [ctx, setCtx] = useState<Awaited<ReturnType<typeof getProAuthorizeContext>> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,9 +103,7 @@ function ProAuthorizePage() {
 
   const scopes = useMemo(() => {
     const raw = (ctx && "scope" in ctx ? ctx.scope : search.scope) || "profile";
-    return String(raw)
-      .split(/\s+/)
-      .filter(Boolean);
+    return String(raw).split(/\s+/).filter(Boolean);
   }, [ctx, search.scope]);
 
   async function onApprove() {
@@ -171,7 +152,7 @@ function ProAuthorizePage() {
     <main className="relative min-h-screen overflow-hidden bg-background">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.72_0.12_295_/_0.22),_transparent_55%),radial-gradient(ellipse_at_bottom,_oklch(0.55_0.08_280_/_0.12),_transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.72_0.12_295/0.22),transparent_55%),radial-gradient(ellipse_at_bottom,oklch(0.55_0.08_280/0.12),transparent_50%)]"
       />
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
         <div className="text-center">
@@ -211,7 +192,9 @@ function ProAuthorizePage() {
                   {app.website_url.replace(/^https?:\/\//, "")}
                 </a>
               ) : (
-                <p className="text-xs text-muted-foreground">{app?.description || "Third-party app"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {app?.description || "Third-party app"}
+                </p>
               )}
             </div>
           </div>
@@ -219,11 +202,7 @@ function ProAuthorizePage() {
           {user ? (
             <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-muted/30 px-3 py-2.5">
               {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt=""
-                  className="h-9 w-9 rounded-full object-cover"
-                />
+                <img src={user.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
               ) : (
                 <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/20 text-sm font-bold text-primary">
                   {(user.display_name || user.username || "?").slice(0, 1).toUpperCase()}
@@ -283,7 +262,11 @@ function ProAuthorizePage() {
             onClick={() => void onApprove()}
             className="h-12 rounded-xl text-base font-bold"
           >
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+            {busy ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="mr-2 h-4 w-4" />
+            )}
             Approve
           </Button>
           <Button

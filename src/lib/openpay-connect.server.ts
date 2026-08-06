@@ -177,7 +177,7 @@ export function verifyConnectCode(code: string): ConnectAccountPayload {
 
 const DEFAULT_CLIENT_ID = "e9248f5d-3971-4cbc-9032-9b678c9b71ae";
 /** Partner app redirect URIs are registered for production only — never send localhost. */
-const PRODUCTION_ORIGIN = "https://openpaypromainnet.lovable.app";
+const PRODUCTION_ORIGIN = "https://openpaypro.space";
 /** Canonical Connect page — openpay.lovable.app/connect 404s; openpy.space/connect works. */
 const DEFAULT_AUTHORIZE_URL = "https://openpy.space/connect";
 
@@ -242,18 +242,33 @@ export function resolvePartnerRedirectOrigin(requested?: string): string {
   const configured = (
     process.env.OPENPAY_OAUTH_PUBLIC_ORIGIN ||
     process.env.OPENPAY_PRO_PUBLIC_ORIGIN ||
+    process.env.VITE_APP_URL ||
     ""
   )
     .trim()
     .replace(/\/$/, "");
-  if (configured) return configured;
+  // Prefer canonical openpaypro.space over stale Lovable preview origins in secrets.
+  if (configured) {
+    try {
+      const host = new URL(configured).hostname.toLowerCase();
+      if (host.endsWith("lovable.app") || host.endsWith("lovableproject.com")) {
+        return PRODUCTION_ORIGIN;
+      }
+    } catch {
+      /* ignore */
+    }
+    return configured;
+  }
 
   const req = (requested || "").trim().replace(/\/$/, "");
   if (!req || /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?$/i.test(req)) {
     return PRODUCTION_ORIGIN;
   }
-  // Lovable preview hosts also need exact URI registration — prefer production
-  if (/lovable\.app$/i.test(new URL(req).hostname) && !req.includes("openpaypromainnet")) {
+  try {
+    if (/lovable\.app$/i.test(new URL(req).hostname) && !req.includes("openpaypro")) {
+      return PRODUCTION_ORIGIN;
+    }
+  } catch {
     return PRODUCTION_ORIGIN;
   }
   return req;

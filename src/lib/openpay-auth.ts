@@ -13,21 +13,53 @@ export const OPENPAY_AI_MENU_ICON =
 /** Partner portal — key management (Apps & keys). */
 export const OPENPAY_PARTNER_PORTAL = "https://openpy.space/partner-api";
 
+/** Canonical production host — OAuth callback + state HMAC must share this origin. */
+export const OPENPAY_PRO_PUBLIC_ORIGIN = "https://openpaypro.space";
+
+function isLocalDevHost(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".local");
+}
+
+/**
+ * Start Sign in with OpenPay.
+ * On localhost, bootstrap from production so the OAuth `state` HMAC is signed by the
+ * same server that handles `/auth/openpay/callback` (localhost is not an allowlisted redirect).
+ */
 export async function startOpenPaySignIn(opts?: { redirectTo?: string }): Promise<void> {
   if (typeof window === "undefined") return;
 
-  const origin = encodeURIComponent(window.location.origin);
-  const res = await fetch(`/api/public/openpay-auth?origin=${origin}`);
+  const localOrigin = window.location.origin;
+  const onLocal = isLocalDevHost(window.location.hostname);
+  // Always ask production to mint state when local — callback lands on openpaypro.space.
+  const apiBase = onLocal ? OPENPAY_PRO_PUBLIC_ORIGIN : "";
+  const originParam = encodeURIComponent(onLocal ? OPENPAY_PRO_PUBLIC_ORIGIN : localOrigin);
+
+  const res = await fetch(`${apiBase}/api/public/openpay-auth?origin=${originParam}`);
   const body = (await res.json().catch(() => ({}))) as {
     authorize_url?: string;
     state?: string;
+    redirect_uri?: string;
     error?: string;
   };
   if (!res.ok || !body.authorize_url || !body.state) {
-    throw new Error(body.error || `Could not start OpenPay sign-in (${res.status})`);
+    const msg =
+      typeof body.error === "string" &&
+      body.error.trim() &&
+      body.error !== "0" &&
+      body.error !== "()"
+        ? body.error
+        : `Could not start OpenPay sign-in (${res.status || "network"})`;
+    throw new Error(msg);
   }
 
   sessionStorage.setItem("openpay_oauth_state", body.state);
   sessionStorage.setItem("openpay_oauth_redirect", opts?.redirectTo || "/dashboard");
+  // Remember we started from local so callback success can deep-link back if needed.
+  if (onLocal) {
+    sessionStorage.setItem("openpay_oauth_started_local", localOrigin);
+  } else {
+    sessionStorage.removeItem("openpay_oauth_started_local");
+  }
+
   window.location.href = body.authorize_url;
 }

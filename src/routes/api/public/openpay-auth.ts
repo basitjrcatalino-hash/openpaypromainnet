@@ -218,16 +218,12 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
           });
         } catch (err) {
           console.error("[openpay-auth:complete]", err);
-          const { formatOpenPayApiError } = await import("@/lib/openpay-connect.server");
-          return Response.json(
-            {
-              error: formatOpenPayApiError(
-                (err as Error)?.message || err,
-                "OpenPay sign-in failed — try again",
-              ),
-            },
-            { status: 500 },
-          );
+          const raw = err instanceof Error ? err.message : typeof err === "string" ? err : "";
+          const nice =
+            raw && raw !== "0" && raw !== "()" && !/^\d+$/.test(raw) && !/^[\s()]+$/.test(raw)
+              ? raw
+              : "OpenPay sign-in failed — try again";
+          return Response.json({ error: nice }, { status: 500 });
         }
       },
     },

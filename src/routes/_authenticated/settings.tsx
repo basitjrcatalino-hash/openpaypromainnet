@@ -27,6 +27,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Lock,
+  Fingerprint,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
@@ -58,6 +59,12 @@ import {
   rememberLockEnabled,
   validateLockPassword,
 } from "@/lib/app-lock";
+import {
+  clearBiometricCredential,
+  hasBiometricCredential,
+  isPlatformAuthenticatorAvailable,
+  registerBiometric,
+} from "@/lib/biometric";
 import { currencyListLabel, getCurrencyMeta, useCurrency, type CurrencyCode } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getLanguageMeta } from "@/i18n/languages";
@@ -996,6 +1003,8 @@ function SettingsPage() {
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
             <BiometricCard
+              userId={user.id}
+              label={user.email || "OpenPay user"}
               enabled={!!prefs?.biometric_enabled}
               onToggle={(v) => updatePref({ biometric_enabled: v })}
             />

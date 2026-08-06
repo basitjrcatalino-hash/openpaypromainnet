@@ -135,7 +135,42 @@ function AppLockScreen({
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [bioBusy, setBioBusy] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      if (!hasBiometricCredential(userId)) return;
+      const ok = await isPlatformAuthenticatorAvailable();
+      if (!cancelled && ok) setBioAvailable(true);
+    }
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  async function unlockWithBiometrics() {
+    setBioBusy(true);
+    setError(null);
+    try {
+      const ok = await verifyBiometric(userId);
+      if (ok) onUnlocked();
+      else setError("Biometric check failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Biometric check cancelled");
+    } finally {
+      setBioBusy(false);
+    }
+  }
+
+  // Offer the biometric prompt immediately when it's set up on this device.
+  useEffect(() => {
+    if (bioAvailable) void unlockWithBiometrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bioAvailable]);
 
   async function unlock(e?: FormEvent) {
     e?.preventDefault();

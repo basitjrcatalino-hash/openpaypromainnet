@@ -100,11 +100,7 @@ export type OAuthUserProfile = {
   email?: string;
 };
 
-export function createConnectState(
-  userId: string,
-  redirectUri: string,
-  ttlSec = 600,
-): string {
+export function createConnectState(userId: string, redirectUri: string, ttlSec = 600): string {
   const payload: ConnectStatePayload = {
     uid: userId,
     purpose: "connect",
@@ -278,7 +274,8 @@ export function buildOpenPayAuthorizeUrl(opts: {
   scope?: string;
 }): { authorize_url: string; redirect_uri: string } {
   const clientId = resolveClientId(opts.clientId);
-  const path = (opts.callbackPath || OPENPAY_CONNECT_CALLBACK_PATH).replace(/\/$/, "") ||
+  const path =
+    (opts.callbackPath || OPENPAY_CONNECT_CALLBACK_PATH).replace(/\/$/, "") ||
     OPENPAY_CONNECT_CALLBACK_PATH;
   const configuredRedirect = (process.env.OPENPAY_REDIRECT_URI || "").trim();
   const redirect_uri =
@@ -326,23 +323,67 @@ export async function exchangeOAuthCode(opts: {
     }),
   });
   const text = await res.text();
-  let body: any = null;
+  let body: Record<string, unknown> | null = null;
   try {
-    body = text ? JSON.parse(text) : null;
+    body = text ? (JSON.parse(text) as Record<string, unknown>) : null;
   } catch {
     body = { raw: text };
   }
   if (!res.ok) {
-    const err = String(body?.error || body?.message || `OAuth token exchange failed (${res.status})`);
+    const err = formatOpenPayApiError(body, `OAuth token exchange failed (${res.status})`);
     if (/invalid_client/i.test(err)) {
       throw new Error(
-        "invalid_client — OpenPay rejected the partner API key. In Lovable Secrets set OPENPAY_PARTNER_API_KEY to the exact opk_live_… key for client_id e9248f5d-3971-4cbc-9032-9b678c9b71ae (no quotes).",
+        "invalid_client — OpenPay rejected the partner API key. In Lovable Secrets set OPENPAY_PARTNER_API_KEY to the exact opk_live_… key for your OpenPay partner app (no quotes).",
+      );
+    }
+    if (/redirect_uri|invalid_grant|mismatch/i.test(err)) {
+      throw new Error(
+        `${err} — Confirm the Partner portal redirect URI exactly matches ${opts.redirect_uri}`,
       );
     }
     throw new Error(err);
   }
   if (!body?.access_token) throw new Error("OAuth token response missing access_token");
-  return body as OAuthTokenResponse;
+  return body as unknown as OAuthTokenResponse;
+}
+
+/** Prefer human-readable OpenPay / OAuth error fields; never surface bare "0". */
+export function formatOpenPayApiError(body: unknown, fallback: string): string {
+  if (body == null) return fallback;
+  if (typeof body === "string") {
+    const s = body.trim();
+    if (!s || s === "0" || /^\d+$/.test(s)) return fallback;
+    return s;
+  }
+  if (typeof body !== "object") {
+    const s = String(body).trim();
+    if (!s || s === "0" || /^\d+$/.test(s)) return fallback;
+    return s;
+  }
+  const o = body as Record<string, unknown>;
+  const candidates = [o.error_description, o.error_message, o.message, o.msg, o.error, o.detail];
+  for (const c of candidates) {
+    if (c == null || c === "") continue;
+    if (typeof c === "object") {
+      const nested = formatOpenPayApiError(c, "");
+      if (nested) return nested;
+      continue;
+    }
+    const s = String(c).trim();
+    if (!s || s === "0" || s === "null" || s === "undefined") continue;
+    // Numeric-only codes are useless alone — keep searching / use fallback
+    if (/^\d+$/.test(s)) continue;
+    return s;
+  }
+  const code = o.code ?? o.error_code ?? o.status;
+  if (code != null && String(code).trim() && String(code) !== "0") {
+    return `${fallback} (code ${String(code)})`;
+  }
+  if (typeof o.raw === "string" && o.raw.trim()) {
+    const raw = o.raw.trim().slice(0, 180);
+    if (raw !== "0" && !/^\d+$/.test(raw)) return raw;
+  }
+  return fallback;
 }
 
 /** Call /user/me with user access token (opa_live_…). */
@@ -351,25 +392,25 @@ export async function fetchOAuthUserMe(accessToken: string): Promise<OAuthUserPr
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const text = await res.text();
-  let body: any = null;
+  let body: Record<string, unknown> | null = null;
   try {
-    body = text ? JSON.parse(text) : null;
+    body = text ? (JSON.parse(text) as Record<string, unknown>) : null;
   } catch {
     body = { raw: text };
   }
   if (!res.ok) {
-    throw new Error(body?.error || body?.message || `OpenPay /user/me failed (${res.status})`);
+    throw new Error(formatOpenPayApiError(body, `OpenPay /user/me failed (${res.status})`));
   }
   return {
-    user_id: body.user_id,
-    account_number: body.account_number,
-    full_name: body.full_name ?? body.name,
-    username: body.username,
-    avatar_url: body.avatar_url,
-    balance: typeof body.balance === "number" ? body.balance : undefined,
-    currency: body.currency,
-    scope: body.scope,
-    email: body.email,
+    user_id: body?.user_id as string | undefined,
+    account_number: body?.account_number as string | undefined,
+    full_name: (body?.full_name ?? body?.name) as string | undefined,
+    username: body?.username as string | undefined,
+    avatar_url: body?.avatar_url as string | undefined,
+    balance: typeof body?.balance === "number" ? body.balance : undefined,
+    currency: body?.currency as string | undefined,
+    scope: body?.scope as string | undefined,
+    email: body?.email as string | undefined,
   };
 }
 
@@ -380,17 +421,17 @@ export async function fetchOAuthUserBalance(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const text = await res.text();
-  let body: any = null;
+  let body: Record<string, unknown> | null = null;
   try {
-    body = text ? JSON.parse(text) : null;
+    body = text ? (JSON.parse(text) as Record<string, unknown>) : null;
   } catch {
     body = { raw: text };
   }
   if (!res.ok) {
-    throw new Error(body?.error || body?.message || `OpenPay /user/balance failed (${res.status})`);
+    throw new Error(formatOpenPayApiError(body, `OpenPay /user/balance failed (${res.status})`));
   }
   return {
-    balance: Number(body.balance ?? 0),
-    currency: body.currency,
+    balance: Number(body?.balance ?? 0),
+    currency: body?.currency as string | undefined,
   };
 }

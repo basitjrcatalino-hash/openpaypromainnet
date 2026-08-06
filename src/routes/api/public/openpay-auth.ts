@@ -75,11 +75,8 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
             return Response.json({ error: "Missing code or state" }, { status: 400 });
           }
 
-          const {
-            verifyConnectState,
-            exchangeOAuthCode,
-            fetchOAuthUserMe,
-          } = await import("@/lib/openpay-connect.server");
+          const { verifyConnectState, exchangeOAuthCode, fetchOAuthUserMe } =
+            await import("@/lib/openpay-connect.server");
 
           const st = verifyConnectState(oauthState);
           if (st.purpose !== "signin" && st.uid !== "signin") {
@@ -96,23 +93,13 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
           const profile = await fetchOAuthUserMe(token.access_token);
 
           const openpayUserId =
-            profile.user_id ||
-            token.user_id ||
-            profile.account_number ||
-            profile.username;
+            profile.user_id || token.user_id || profile.account_number || profile.username;
           if (!openpayUserId) {
-            return Response.json(
-              { error: "OpenPay profile missing user_id" },
-              { status: 502 },
-            );
+            return Response.json({ error: "OpenPay profile missing user_id" }, { status: 502 });
           }
 
-          const { getSupabaseServiceRoleKey } = await import(
-            "@/integrations/supabase/env.server"
-          );
-          const { getSupabasePublishableKey } = await import(
-            "@/integrations/supabase/env"
-          );
+          const { getSupabaseServiceRoleKey } = await import("@/integrations/supabase/env.server");
+          const { getSupabasePublishableKey } = await import("@/integrations/supabase/env");
           const passSecret =
             process.env.OPENPAY_AUTH_PASSWORD_SECRET ||
             process.env.PI_AUTH_PASSWORD_SECRET ||
@@ -131,9 +118,7 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
             .digest("hex");
 
           const username =
-            (profile.username || "").replace(/^@/, "") ||
-            profile.full_name ||
-            openpayUserId;
+            (profile.username || "").replace(/^@/, "") || profile.full_name || openpayUserId;
           const displayName = profile.full_name || username;
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -156,19 +141,29 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
           });
 
           if (createErr && !/registered|exists|duplicate/i.test(createErr.message)) {
-            return Response.json({ error: createErr.message }, { status: 500 });
+            return Response.json(
+              { error: createErr.message || "Failed to create OpenPay user" },
+              { status: 500 },
+            );
           }
 
           let userId = created?.user?.id;
 
           if (!userId) {
-            const { data: list } = await supabaseAdmin.auth.admin.listUsers({
-              page: 1,
-              perPage: 1000,
+            // Prefer generateLink — listUsers(1000) misses older accounts.
+            const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+              type: "magiclink",
+              email,
             });
-            const existing = list?.users.find((u) => u.email === email);
-            if (!existing) {
-              return Response.json({ error: "Failed to provision OpenPay user" }, { status: 500 });
+            const existing = linkData?.user;
+            if (!existing?.id) {
+              return Response.json(
+                {
+                  error:
+                    linkErr?.message || createErr?.message || "Failed to provision OpenPay user",
+                },
+                { status: 500 },
+              );
             }
             userId = existing.id;
             await supabaseAdmin.auth.admin.updateUserById(existing.id, {
@@ -176,8 +171,7 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
               user_metadata: {
                 ...existing.user_metadata,
                 ...metadata,
-                display_name:
-                  existing.user_metadata?.display_name ?? metadata.display_name,
+                display_name: existing.user_metadata?.display_name ?? metadata.display_name,
               },
             });
           }
@@ -197,16 +191,12 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
             openpay: {
               linked: true,
               openpayUserId:
-                profile.account_number ||
-                profile.username ||
-                profile.user_id ||
-                openpayUserId,
+                profile.account_number || profile.username || profile.user_id || openpayUserId,
               username: profile.username?.replace(/^@/, ""),
               account_number: profile.account_number,
               name: profile.full_name,
               email: profile.email,
-              identifier:
-                profile.account_number || profile.username || profile.user_id,
+              identifier: profile.account_number || profile.username || profile.user_id,
               source: "partner",
               linkedAt: new Date().toISOString(),
               access_token: token.access_token,
@@ -228,8 +218,14 @@ export const Route = createFileRoute("/api/public/openpay-auth")({
           });
         } catch (err) {
           console.error("[openpay-auth:complete]", err);
+          const { formatOpenPayApiError } = await import("@/lib/openpay-connect.server");
           return Response.json(
-            { error: (err as Error).message || "Server error" },
+            {
+              error: formatOpenPayApiError(
+                (err as Error)?.message || err,
+                "OpenPay sign-in failed — try again",
+              ),
+            },
             { status: 500 },
           );
         }

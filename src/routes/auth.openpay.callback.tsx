@@ -11,11 +11,26 @@ export const Route = createFileRoute("/auth/openpay/callback")({
     code: typeof s.code === "string" ? s.code : undefined,
     state: typeof s.state === "string" ? s.state : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
-    error_description:
-      typeof s.error_description === "string" ? s.error_description : undefined,
+    error_description: typeof s.error_description === "string" ? s.error_description : undefined,
   }),
   component: OpenPayAuthCallbackPage,
 });
+
+const USED_CODE_KEY = "openpay_oauth_code_used";
+
+/** Never show bare "0" / numeric junk from upstream APIs. */
+function humanizeOpenPayError(raw: unknown, fallback: string): string {
+  if (raw == null) return fallback;
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    return humanizeOpenPayError(o.error_description ?? o.message ?? o.error ?? o.msg, fallback);
+  }
+  const s = String(raw).trim();
+  if (!s || s === "0" || s === "null" || s === "undefined" || /^\d+$/.test(s)) {
+    return fallback;
+  }
+  return s;
+}
 
 function OpenPayAuthCallbackPage() {
   const search = Route.useSearch();
@@ -35,13 +50,27 @@ function OpenPayAuthCallbackPage() {
         setError(
           denied
             ? "Sign-in cancelled — you denied OpenPay access."
-            : search.error_description || `OpenPay sign-in failed: ${search.error}`,
+            : humanizeOpenPayError(
+                search.error_description || search.error,
+                `OpenPay sign-in failed (${search.error})`,
+              ),
         );
         return;
       }
       if (!search.code || !search.state) {
         setError("Missing authorization code from OpenPay.");
         return;
+      }
+
+      // React Strict Mode remounts — don't exchange the same code twice.
+      try {
+        const used = sessionStorage.getItem(USED_CODE_KEY);
+        if (used && used === search.code) {
+          setError("This sign-in link was already used. Please try OpenPay sign-in again.");
+          return;
+        }
+      } catch {
+        /* ignore */
       }
 
       const savedState = sessionStorage.getItem("openpay_oauth_state");
@@ -52,6 +81,12 @@ function OpenPayAuthCallbackPage() {
       sessionStorage.removeItem("openpay_oauth_state");
 
       try {
+        try {
+          sessionStorage.setItem(USED_CODE_KEY, search.code);
+        } catch {
+          /* ignore */
+        }
+
         const res = await fetch("/api/public/openpay-auth", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -61,17 +96,23 @@ function OpenPayAuthCallbackPage() {
           email?: string;
           password?: string;
           username?: string;
-          error?: string;
+          error?: unknown;
         };
         if (!res.ok || !body.email || !body.password) {
-          throw new Error(body.error || `OpenPay sign-in failed (${res.status})`);
+          throw new Error(
+            humanizeOpenPayError(body.error, `OpenPay sign-in failed (${res.status || "network"})`),
+          );
         }
 
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: body.email,
           password: body.password,
         });
-        if (signInErr) throw signInErr;
+        if (signInErr) {
+          throw new Error(
+            humanizeOpenPayError(signInErr.message, "Could not create your Pro session"),
+          );
+        }
 
         toast.success(
           body.username
@@ -79,11 +120,11 @@ function OpenPayAuthCallbackPage() {
             : "Signed in with OpenPay",
         );
         sessionStorage.removeItem("openpay_oauth_redirect");
-        // Use window.location for a hard redirect so the authenticated layout
-        // re-checks the fresh session instead of rendering the callback route.
+        sessionStorage.removeItem(USED_CODE_KEY);
+        // Hard redirect so /_authenticated re-checks the fresh session.
         window.location.replace(redirect);
       } catch (e) {
-        setError((e as Error).message || "OpenPay sign-in failed");
+        setError(humanizeOpenPayError((e as Error)?.message || e, "OpenPay sign-in failed"));
       }
     })();
   }, [navigate, search.code, search.state, search.error, search.error_description]);

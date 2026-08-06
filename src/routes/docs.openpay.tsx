@@ -788,7 +788,7 @@ curl -H "Authorization: Bearer opk_live_YOUR_KEY" ${PARTNER_API}/balance`}</Docs
             Idempotent on <code className="text-foreground">openpay_tx_id</code>. Pro users
             can also <strong className="text-foreground">Receive → Create OpenPay receive link</strong>.
             Product deep-link:{" "}
-            <Link to="/topup" className="font-semibold text-foreground underline-offset-2 hover:underline">
+            <Link to="/topup" search={{}} className="font-semibold text-foreground underline-offset-2 hover:underline">
               /topup
             </Link>
             .

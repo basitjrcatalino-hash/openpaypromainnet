@@ -10,11 +10,12 @@ function toB64(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
 
-function fromB64(v: string): Uint8Array {
+function fromB64(v: string): ArrayBuffer {
   const bin = atob(v);
-  const out = new Uint8Array(bin.length);
+  const buf = new ArrayBuffer(bin.length);
+  const out = new Uint8Array(buf);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+  return buf;
 }
 
 export function isBiometricSupported(): boolean {
@@ -60,7 +61,9 @@ export async function registerBiometric(userId: string, label: string): Promise<
   if (!isBiometricSupported()) throw new Error("Biometrics are not supported on this device");
 
   const challenge = crypto.getRandomValues(new Uint8Array(32));
-  const rawUserId = new TextEncoder().encode(userId).slice(0, 64);
+  const encoded = new TextEncoder().encode(userId).slice(0, 64);
+  const rawUserId = new ArrayBuffer(encoded.length);
+  new Uint8Array(rawUserId).set(encoded);
 
   const cred = (await navigator.credentials.create({
     publicKey: {

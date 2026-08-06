@@ -1165,6 +1165,22 @@ function SidebarInner({
                 <span className="truncate">Developer Portal</span>
               </Link>
               <Link
+                to="/partner-api"
+                onClick={onClose}
+                preload="intent"
+                aria-current={pathname === "/partner-api" ? "page" : undefined}
+                className={sideItemClass(pathname === "/partner-api")}
+              >
+                <Code2
+                  className={cn(
+                    "h-[1.15rem] w-[1.15rem] shrink-0",
+                    pathname === "/partner-api" && "ph-tab-icon-active",
+                  )}
+                  strokeWidth={pathname === "/partner-api" ? 2.25 : 1.75}
+                />
+                <span className="truncate">Partner API</span>
+              </Link>
+              <Link
                 to="/ledger"
                 onClick={onClose}
                 preload="intent"

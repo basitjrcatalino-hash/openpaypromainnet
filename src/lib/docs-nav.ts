@@ -42,6 +42,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
         desc: "Checkout, receive wallet, earnings dashboard",
       },
       {
+        label: "Pro Connect · Auth & Pay",
+        href: "/docs/integrations",
+        desc: "Native OAuth + OUSD charges on Pro",
+      },
+      {
         label: "Exchange · OUSD",
         href: "/docs/exchange",
         desc: "Deposit, withdraw, swap, reconcile",
@@ -70,6 +75,11 @@ export const DOCS_NAV: DocsNavGroup[] = [
         label: "Partner Transfer API",
         href: "/docs/api",
         desc: "Transfers, charges, OAuth token",
+      },
+      {
+        label: "Pro Connect API",
+        href: "/docs/integrations",
+        desc: "Auth + Pay endpoints on Pro",
       },
       {
         label: "Public Ledger API",
@@ -110,7 +120,12 @@ export const DOCS_NAV: DocsNavGroup[] = [
       {
         label: "Partner portal",
         href: "https://openpy.space/partner-api",
-        desc: "Create apps & API keys",
+        desc: "OpenPay apps & opk_live_ keys",
+      },
+      {
+        label: "Pro Partner API",
+        href: "/partner-api",
+        desc: "Pro Connect apps · opro_live_ / callbacks",
       },
       {
         label: "llms.txt",
@@ -125,6 +140,8 @@ export const DOCS_BASE = "https://openpaypro.space";
 export const PARTNER_API =
   "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
 export const PARTNER_PORTAL = "https://openpy.space/partner-api";
+/** OpenPay Pro Connect credentials portal (native Pro apps). */
+export const PRO_PARTNER_PORTAL = "https://openpaypro.space/partner-api";
 export const CONNECT_URL = "https://openpy.space/connect";
 export const LEDGER_API_BASE = "https://openpaypro.space/api/public/ledger";
 export const INBOUND_API = "https://openpaypro.space/api/public/openpay/inbound";

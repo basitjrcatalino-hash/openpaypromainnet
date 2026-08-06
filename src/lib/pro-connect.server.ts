@@ -323,6 +323,91 @@ export async function getCharge(id: string): Promise<ProCharge | null> {
   return (data as ProCharge | null) ?? null;
 }
 
+const CHARGE_TTL_DEFAULT_SEC = 30 * 60; // 30 minutes (matches DB default)
+const CHARGE_TTL_MAX_SEC = 2 * 60 * 60; // 2 hours
+
+export async function createCharge(opts: {
+  app: ProApp;
+  amount: number;
+  description?: string | null;
+  reference?: string | null;
+  success_url?: string | null;
+  cancel_url?: string | null;
+  expires_in?: number;
+}): Promise<ProCharge> {
+  const amount = Math.round(Number(opts.amount) * 1e8) / 1e8;
+  if (!(amount > 0) || !Number.isFinite(amount)) throw new Error("invalid_amount");
+
+  const ttl = Math.min(
+    Math.max(Math.floor(opts.expires_in ?? CHARGE_TTL_DEFAULT_SEC), 60),
+    CHARGE_TTL_MAX_SEC,
+  );
+  const db = await admin();
+  const { data, error } = await db
+    .from("pro_charges")
+    .insert({
+      app_id: opts.app.id,
+      amount,
+      currency: "OUSD",
+      description: opts.description?.trim() || null,
+      reference: opts.reference?.trim() || null,
+      success_url: opts.success_url?.trim() || null,
+      cancel_url: opts.cancel_url?.trim() || null,
+      expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as ProCharge;
+}
+
+export async function listCharges(
+  app: ProApp,
+  opts?: { status?: string; limit?: number },
+): Promise<ProCharge[]> {
+  const db = await admin();
+  let q = db
+    .from("pro_charges")
+    .select("*")
+    .eq("app_id", app.id)
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(opts?.limit ?? 25, 1), 100));
+  if (opts?.status && opts.status !== "expired") {
+    q = q.eq("status", opts.status);
+  }
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  let rows = (data ?? []) as ProCharge[];
+  if (opts?.status === "expired") {
+    rows = rows.filter((c) => expandStatus(c) === "expired");
+  } else if (opts?.status === "created") {
+    rows = rows.filter((c) => expandStatus(c) === "created");
+  }
+  return rows;
+}
+
+export async function cancelCharge(app: ProApp, chargeId: string): Promise<ProCharge> {
+  const charge = await getCharge(chargeId);
+  if (!charge || charge.app_id !== app.id) throw new Error("not_found");
+  const status = expandStatus(charge);
+  if (status === "paid") throw new Error("already_paid");
+  if (status === "canceled") return charge;
+  if (status === "expired") throw new Error("expired");
+
+  const db = await admin();
+  const { data, error } = await db
+    .from("pro_charges")
+    .update({ status: "canceled" })
+    .eq("id", charge.id)
+    .eq("app_id", app.id)
+    .eq("status", "created")
+    .select("*")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("already_paid");
+  return data as ProCharge;
+}
+
 /** Pay a charge from the signed-in user's OUSD balance → app owner's wallet. */
 export async function payCharge(
   chargeId: string,

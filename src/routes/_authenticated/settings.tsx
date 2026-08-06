@@ -1290,6 +1290,26 @@ function SettingsPage() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <KeyRound className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold">Partner API</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Create Pro Connect apps — client ID, secret, OAuth callback URLs, and Pro Pay
+                  charges (like openpy.space/partner-api).
+                </p>
+              </div>
+            </div>
+            <Button asChild className="rounded-full">
+              <Link to="/partner-api">Manage apps</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/15 text-primary">
                 <ScrollText className="h-5 w-5" />
               </span>
               <div>

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AppWindow,
   BookOpen,
   Check,
   Copy,
@@ -12,6 +13,7 @@ import {
   Loader2,
   Plus,
   ShieldAlert,
+  Unplug,
   Wallet,
   Webhook,
 } from "lucide-react";
@@ -35,6 +37,7 @@ import {
   listDeveloperApiKeys,
   revokeDeveloperApiKey,
 } from "@/lib/developer.functions";
+import { listProApps, listProConnections, revokeProConnection } from "@/lib/pro-connect.functions";
 import {
   generateMnemonic,
   peekRecoveryPhrase,
@@ -57,8 +60,7 @@ export const Route = createFileRoute("/_authenticated/developer")({
       { title: "Developer Portal — OpenPay Pro" },
       {
         name: "description",
-        content:
-          "API keys, wallet seed, and receive-payment integration for OpenPay Pro wallets.",
+        content: "API keys, wallet seed, and receive-payment integration for OpenPay Pro wallets.",
       },
     ],
   }),
@@ -103,6 +105,19 @@ function DeveloperPortalPage() {
   const [phraseWords, setPhraseWords] = useState<string[] | null>(null);
   const [phraseBusy, setPhraseBusy] = useState(false);
 
+  const listApps = useServerFn(listProApps);
+  const listConnections = useServerFn(listProConnections);
+  const revokeConnectionFn = useServerFn(revokeProConnection);
+
+  const appsQ = useQuery({
+    queryKey: ["pro-connect-apps"],
+    queryFn: () => listApps(),
+  });
+  const connectionsQ = useQuery({
+    queryKey: ["pro-connect-connections"],
+    queryFn: () => listConnections(),
+  });
+
   const profile = profileQ.data;
   const wallet = profile?.activeWallet;
   const username = profile?.username;
@@ -144,6 +159,15 @@ function DeveloperPortalPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["developer-api-keys"] });
       toast.success("Key activated");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const revokeConnection = useMutation({
+    mutationFn: (id: string) => revokeConnectionFn({ data: { id } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pro-connect-connections"] });
+      toast.success("Access revoked");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -221,10 +245,16 @@ function DeveloperPortalPage() {
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Button asChild variant="outline" size="sm" className="rounded-full">
-            <a href="/docs/openpay" target="_blank" rel="noreferrer">
+            <Link to="/partner-api">
+              <AppWindow className="mr-1.5 h-3.5 w-3.5" />
+              Partner API
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link to="/docs/integrations">
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-              Docs
-            </a>
+              Connect docs
+            </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <Link to="/docs/exchange">Exchange guide</Link>
@@ -250,7 +280,9 @@ function DeveloperPortalPage() {
           <code className="rounded bg-muted px-1">pro_xfer</code> notes.
         </p>
         {!wallet ? (
-          <p className="text-sm text-amber-600">No wallet yet — create one in Settings or Dashboard.</p>
+          <p className="text-sm text-amber-600">
+            No wallet yet — create one in Settings or Dashboard.
+          </p>
         ) : (
           <div className="space-y-2">
             <FieldRow
@@ -262,21 +294,19 @@ function DeveloperPortalPage() {
               label="Username"
               value={username ? `@${username.replace(/^@+/, "")}` : "— set in Settings"}
               onCopy={
-                username
-                  ? () => copy("Username", `@${username.replace(/^@+/, "")}`)
-                  : undefined
+                username ? () => copy("Username", `@${username.replace(/^@+/, "")}`) : undefined
               }
             />
             <FieldRow
               label="User id"
               value={profile?.userId ? `uid_${profile.userId}` : "—"}
-              onCopy={
-                profile?.userId
-                  ? () => copy("User id", `uid_${profile.userId}`)
-                  : undefined
-              }
+              onCopy={profile?.userId ? () => copy("User id", `uid_${profile.userId}`) : undefined}
             />
-            <FieldRow label="Routing note" value={sampleNote} onCopy={() => copy("Note", sampleNote)} />
+            <FieldRow
+              label="Routing note"
+              value={sampleNote}
+              onCopy={() => copy("Note", sampleNote)}
+            />
           </div>
         )}
         <Button asChild className="rounded-full" size="sm">
@@ -293,8 +323,8 @@ function DeveloperPortalPage() {
         <p className="text-xs text-muted-foreground">
           Each Pro account wallet has a 12-word seed used to restore the same address and balances.
           Use it to reconnect this wallet on another device.{" "}
-          <strong className="text-foreground">Never send the seed to an API or third party</strong> —
-          use an <code className="rounded bg-muted px-1">opdk_</code> API key for integrations.
+          <strong className="text-foreground">Never send the seed to an API or third party</strong>{" "}
+          — use an <code className="rounded bg-muted px-1">opdk_</code> API key for integrations.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -434,6 +464,88 @@ function DeveloperPortalPage() {
         </div>
       </section>
 
+      {/* Pro Connect apps — full portal at /partner-api */}
+      <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
+        <div className="flex items-center gap-2">
+          <AppWindow className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-bold">Pro Connect apps</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Register apps with client ID, secret, and OAuth callbacks — same flow as OpenPay’s Partner
+          portal. Manage credentials on the dedicated Partner API page.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild className="rounded-full">
+            <Link to="/partner-api">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Open Partner API
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/docs/integrations">Docs</Link>
+          </Button>
+        </div>
+        {(appsQ.data ?? []).length > 0 ? (
+          <div className="divide-y divide-border/40 overflow-hidden rounded-2xl border border-border/50">
+            {(appsQ.data ?? []).slice(0, 5).map((app) => (
+              <div key={app.id} className="flex flex-wrap items-center gap-2 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{app.name}</p>
+                  <p className="font-mono text-[11px] text-muted-foreground">{app.client_id}</p>
+                </div>
+                <Badge
+                  variant={app.active ? "secondary" : "outline"}
+                  className={cn("rounded-full", !app.active && "opacity-60")}
+                >
+                  {app.active ? "Active" : "Off"}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Connected apps (user as subject) */}
+      <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
+        <div className="flex items-center gap-2">
+          <Unplug className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-bold">Connected apps</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Apps you authorized via OpenPay Pro Auth. Revoke to invalidate their access tokens.
+        </p>
+        <div className="divide-y divide-border/40 overflow-hidden rounded-2xl border border-border/50">
+          {(connectionsQ.data ?? []).length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+              No connected apps.
+            </p>
+          ) : (
+            (connectionsQ.data ?? []).map((c) => (
+              <div key={c.id} className="flex flex-wrap items-center gap-2 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{c.app.name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Scope: {c.scope}
+                    {c.last_used_at
+                      ? ` · last used ${new Date(c.last_used_at).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={revokeConnection.isPending}
+                  onClick={() => revokeConnection.mutate(c.id)}
+                >
+                  Revoke
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
       {/* Inbound snippet */}
       <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
         <div className="flex items-center gap-2">
@@ -462,8 +574,8 @@ function DeveloperPortalPage() {
           <DialogHeader>
             <DialogTitle>Copy your API key</DialogTitle>
             <DialogDescription>
-              This is the only time the full key is shown. Store it in your server secrets —
-              OpenPay Pro only keeps a hash.
+              This is the only time the full key is shown. Store it in your server secrets — OpenPay
+              Pro only keeps a hash.
             </DialogDescription>
           </DialogHeader>
           <div className="break-all rounded-2xl border border-border bg-muted/40 p-3 font-mono text-xs">
@@ -484,15 +596,7 @@ function DeveloperPortalPage() {
   );
 }
 
-function FieldRow({
-  label,
-  value,
-  onCopy,
-}: {
-  label: string;
-  value: string;
-  onCopy?: () => void;
-}) {
+function FieldRow({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
   return (
     <div className="flex items-start gap-2 rounded-xl border border-border/40 bg-muted/20 px-3 py-2.5">
       <div className="min-w-0 flex-1">

@@ -9,268 +9,206 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WikiRouteImport } from './routes/wiki'
-import { Route as WebsiteRouteImport } from './routes/website'
-import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RegulatoryRouteImport } from './routes/regulatory'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PitchRouteImport } from './routes/pitch'
-import { Route as OpenusdRouteImport } from './routes/openusd'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as LegalRouteImport } from './routes/legal'
-import { Route as FundingRouteImport } from './routes/funding'
-import { Route as DocsRouteImport } from './routes/docs'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as AuthpiRouteImport } from './routes/authpi'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
-import { Route as PayToRouteImport } from './routes/pay.$to'
-import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
-import { Route as DocsTokensRouteImport } from './routes/docs.tokens'
-import { Route as DocsProPayRouteImport } from './routes/docs.pro-pay'
-import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
-import { Route as DocsMoneyRouteImport } from './routes/docs.money'
-import { Route as DocsMcpRouteImport } from './routes/docs.mcp'
-import { Route as DocsLedgerRouteImport } from './routes/docs.ledger'
-import { Route as DocsFaqRouteImport } from './routes/docs.faq'
-import { Route as DocsExchangeRouteImport } from './routes/docs.exchange'
-import { Route as DocsErrorsRouteImport } from './routes/docs.errors'
-import { Route as DocsAuthRouteImport } from './routes/docs.auth'
-import { Route as DocsApiRouteImport } from './routes/docs.api'
-import { Route as DocsAiRouteImport } from './routes/docs.ai'
-import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as ApiTtsRouteImport } from './routes/api/tts'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
-import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticated/withdraw'
-import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
-import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
-import { Route as AuthenticatedTrustWalletRouteImport } from './routes/_authenticated/trust-wallet'
-import { Route as AuthenticatedTransferRouteImport } from './routes/_authenticated/transfer'
-import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
-import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
-import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
-import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
-import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
-import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
-import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedP2pRouteImport } from './routes/_authenticated/p2p'
-import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
-import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
-import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
-import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
-import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
-import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedDeveloperRouteImport } from './routes/_authenticated/developer'
-import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
-import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
-import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
-import { Route as AuthenticatedAssetsRouteImport } from './routes/_authenticated/assets'
-import { Route as AuthenticatedAirdropRouteImport } from './routes/_authenticated/airdrop'
-import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
-import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthpiRouteImport } from './routes/authpi'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as FundingRouteImport } from './routes/funding'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as OpenusdRouteImport } from './routes/openusd'
+import { Route as PitchRouteImport } from './routes/pitch'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegulatoryRouteImport } from './routes/regulatory'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
+import { Route as WebsiteRouteImport } from './routes/website'
+import { Route as WikiRouteImport } from './routes/wiki'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
-import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
-import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
-import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
-import { Route as ApiWebhooksCircleMintRouteImport } from './routes/api/webhooks/circle-mint'
-import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
-import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
-import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
-import { Route as ApiPublicTrustwalletValidateRouteImport } from './routes/api/public/trustwallet-validate'
-import { Route as ApiPublicTrustwalletStatusRouteImport } from './routes/api/public/trustwallet-status'
-import { Route as ApiPublicTrustwalletSearchRouteImport } from './routes/api/public/trustwallet-search'
-import { Route as ApiPublicTrustwalletQuoteRouteImport } from './routes/api/public/trustwallet-quote'
-import { Route as ApiPublicTrustwalletPricesRouteImport } from './routes/api/public/trustwallet-prices'
-import { Route as ApiPublicTrustwalletListingsRouteImport } from './routes/api/public/trustwallet-listings'
-import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
-import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
-import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
-import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/pi-link-wallet'
-import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
-import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
-import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
-import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
-import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
-import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
-import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
-import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
-import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
-import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
-import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
-import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
-import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
-import { Route as AuthenticatedP2pTermsRouteImport } from './routes/_authenticated/p2p_.terms'
-import { Route as AuthenticatedP2pSupportRouteImport } from './routes/_authenticated/p2p_.support'
-import { Route as AuthenticatedP2pSettingsRouteImport } from './routes/_authenticated/p2p_.settings'
-import { Route as AuthenticatedP2pSelectPaymentRouteImport } from './routes/_authenticated/p2p_.select-payment'
-import { Route as AuthenticatedP2pSecurityRouteImport } from './routes/_authenticated/p2p_.security'
-import { Route as AuthenticatedP2pRulesRouteImport } from './routes/_authenticated/p2p_.rules'
-import { Route as AuthenticatedP2pReviewsRouteImport } from './routes/_authenticated/p2p_.reviews'
-import { Route as AuthenticatedP2pProfileRouteImport } from './routes/_authenticated/p2p_.profile'
-import { Route as AuthenticatedP2pPrivacyRouteImport } from './routes/_authenticated/p2p_.privacy'
-import { Route as AuthenticatedP2pPaymentsRouteImport } from './routes/_authenticated/p2p_.payments'
-import { Route as AuthenticatedP2pPaymentAdsRouteImport } from './routes/_authenticated/p2p_.payment-ads'
-import { Route as AuthenticatedP2pPaymentAccountRouteImport } from './routes/_authenticated/p2p_.payment-account'
-import { Route as AuthenticatedP2pOrdersRouteImport } from './routes/_authenticated/p2p_.orders'
-import { Route as AuthenticatedP2pMessagesRouteImport } from './routes/_authenticated/p2p_.messages'
-import { Route as AuthenticatedP2pMerchantRouteImport } from './routes/_authenticated/p2p_.merchant'
-import { Route as AuthenticatedP2pGuideRouteImport } from './routes/_authenticated/p2p_.guide'
-import { Route as AuthenticatedP2pExpressRouteImport } from './routes/_authenticated/p2p_.express'
-import { Route as AuthenticatedP2pCreateNewRouteImport } from './routes/_authenticated/p2p_.create-new'
-import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
-import { Route as AuthenticatedP2pApiRouteImport } from './routes/_authenticated/p2p_.api'
-import { Route as AuthenticatedP2pAgreementRouteImport } from './routes/_authenticated/p2p_.agreement'
-import { Route as AuthenticatedP2pAdminRouteImport } from './routes/_authenticated/p2p_.admin'
-import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
-import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
-import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
-import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
-import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
-import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
-import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
-import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
-import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
-import { Route as AuthenticatedAssetsAccountRouteImport } from './routes/_authenticated/assets_.$account'
-import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
-import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
-import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
-import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
-import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
-import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
+import { Route as AuthenticatedAirdropRouteImport } from './routes/_authenticated/airdrop'
+import { Route as AuthenticatedAssetsRouteImport } from './routes/_authenticated/assets'
+import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticated/connect'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
+import { Route as AuthenticatedDeveloperRouteImport } from './routes/_authenticated/developer'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedLedgerRouteImport } from './routes/_authenticated/ledger'
+import { Route as AuthenticatedMetamaskRouteImport } from './routes/_authenticated/metamask'
+import { Route as AuthenticatedNftsRouteImport } from './routes/_authenticated/nfts'
+import { Route as AuthenticatedOpentokenRouteImport } from './routes/_authenticated/opentoken'
+import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
+import { Route as AuthenticatedP2pRouteImport } from './routes/_authenticated/p2p'
+import { Route as AuthenticatedPartnerApiRouteImport } from './routes/_authenticated/partner-api'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
+import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
+import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
+import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
+import { Route as AuthenticatedTransferRouteImport } from './routes/_authenticated/transfer'
+import { Route as AuthenticatedTrustWalletRouteImport } from './routes/_authenticated/trust-wallet'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
+import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
+import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticated/withdraw'
+import { Route as AdminTestnetProgressRouteImport } from './routes/admin.testnet-progress'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as DocsAiRouteImport } from './routes/docs.ai'
+import { Route as DocsApiRouteImport } from './routes/docs.api'
+import { Route as DocsAuthRouteImport } from './routes/docs.auth'
+import { Route as DocsErrorsRouteImport } from './routes/docs.errors'
+import { Route as DocsExchangeRouteImport } from './routes/docs.exchange'
+import { Route as DocsFaqRouteImport } from './routes/docs.faq'
+import { Route as DocsIntegrationsRouteImport } from './routes/docs.integrations'
+import { Route as DocsLedgerRouteImport } from './routes/docs.ledger'
+import { Route as DocsMcpRouteImport } from './routes/docs.mcp'
+import { Route as DocsMoneyRouteImport } from './routes/docs.money'
+import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
+import { Route as DocsProPayRouteImport } from './routes/docs.pro-pay'
+import { Route as DocsTokensRouteImport } from './routes/docs.tokens'
+import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
+import { Route as PayToRouteImport } from './routes/pay.$to'
+import { Route as ProAuthorizeRouteImport } from './routes/pro.authorize'
+import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
-import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
-import { Route as ApiPublicProConfigRouteImport } from './routes/api/public/pro/config'
-import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
-import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
-import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
-import { Route as ApiPublicOpenpayKycWebhookRouteImport } from './routes/api/public/openpay/kyc-webhook'
-import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
-import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
-import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
-import { Route as ApiPublicDocsTokensRouteImport } from './routes/api/public/docs/tokens'
-import { Route as ApiPublicDocsQrpayProRouteImport } from './routes/api/public/docs/qrpay-pro'
-import { Route as ApiPublicDocsProPayRouteImport } from './routes/api/public/docs/pro-pay'
-import { Route as ApiPublicDocsPortalRouteImport } from './routes/api/public/docs/portal'
-import { Route as ApiPublicDocsPartnerTransferRouteImport } from './routes/api/public/docs/partner-transfer'
-import { Route as ApiPublicDocsOpenpayToProRouteImport } from './routes/api/public/docs/openpay-to-pro'
-import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
-import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
-import { Route as ApiPublicDocsOpenapiRouteImport } from './routes/api/public/docs/openapi'
-import { Route as ApiPublicDocsMcpRouteImport } from './routes/api/public/docs/mcp'
-import { Route as ApiPublicDocsLedgerRouteImport } from './routes/api/public/docs/ledger'
-import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
-import { Route as ApiPublicDocsErrorsRouteImport } from './routes/api/public/docs/errors'
-import { Route as ApiPublicDocsAiPartnerRouteImport } from './routes/api/public/docs/ai-partner'
-import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
-import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
-import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
-import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId_.chat'
-import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
-import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
+import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
+import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
+import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
+import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
+import { Route as AuthenticatedAssetsAccountRouteImport } from './routes/_authenticated/assets_.$account'
+import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
+import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
+import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
+import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
+import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
+import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_authenticated/opentoken_.create'
+import { Route as AuthenticatedOpentokenPortfolioRouteImport } from './routes/_authenticated/opentoken_.portfolio'
+import { Route as AuthenticatedOpentokenTerminalRouteImport } from './routes/_authenticated/opentoken_.terminal'
+import { Route as AuthenticatedP2pAdminRouteImport } from './routes/_authenticated/p2p_.admin'
+import { Route as AuthenticatedP2pAgreementRouteImport } from './routes/_authenticated/p2p_.agreement'
+import { Route as AuthenticatedP2pApiRouteImport } from './routes/_authenticated/p2p_.api'
+import { Route as AuthenticatedP2pCreateRouteImport } from './routes/_authenticated/p2p_.create'
+import { Route as AuthenticatedP2pCreateNewRouteImport } from './routes/_authenticated/p2p_.create-new'
+import { Route as AuthenticatedP2pExpressRouteImport } from './routes/_authenticated/p2p_.express'
+import { Route as AuthenticatedP2pGuideRouteImport } from './routes/_authenticated/p2p_.guide'
+import { Route as AuthenticatedP2pMerchantRouteImport } from './routes/_authenticated/p2p_.merchant'
+import { Route as AuthenticatedP2pMessagesRouteImport } from './routes/_authenticated/p2p_.messages'
+import { Route as AuthenticatedP2pOrdersRouteImport } from './routes/_authenticated/p2p_.orders'
+import { Route as AuthenticatedP2pPaymentAccountRouteImport } from './routes/_authenticated/p2p_.payment-account'
+import { Route as AuthenticatedP2pPaymentAdsRouteImport } from './routes/_authenticated/p2p_.payment-ads'
+import { Route as AuthenticatedP2pPaymentsRouteImport } from './routes/_authenticated/p2p_.payments'
+import { Route as AuthenticatedP2pPrivacyRouteImport } from './routes/_authenticated/p2p_.privacy'
+import { Route as AuthenticatedP2pProfileRouteImport } from './routes/_authenticated/p2p_.profile'
+import { Route as AuthenticatedP2pReviewsRouteImport } from './routes/_authenticated/p2p_.reviews'
+import { Route as AuthenticatedP2pRulesRouteImport } from './routes/_authenticated/p2p_.rules'
+import { Route as AuthenticatedP2pSecurityRouteImport } from './routes/_authenticated/p2p_.security'
+import { Route as AuthenticatedP2pSelectPaymentRouteImport } from './routes/_authenticated/p2p_.select-payment'
+import { Route as AuthenticatedP2pSettingsRouteImport } from './routes/_authenticated/p2p_.settings'
+import { Route as AuthenticatedP2pSupportRouteImport } from './routes/_authenticated/p2p_.support'
+import { Route as AuthenticatedP2pTermsRouteImport } from './routes/_authenticated/p2p_.terms'
+import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
+import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
+import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
+import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
+import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
+import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
+import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
+import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
+import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
+import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
+import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
+import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
+import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/pi-link-wallet'
+import { Route as ApiPublicSolanaAuthRouteImport } from './routes/api/public/solana-auth'
+import { Route as ApiPublicSupabaseConfigRouteImport } from './routes/api/public/supabase-config'
+import { Route as ApiPublicTelegramAuthRouteImport } from './routes/api/public/telegram-auth'
+import { Route as ApiPublicTrustwalletListingsRouteImport } from './routes/api/public/trustwallet-listings'
+import { Route as ApiPublicTrustwalletPricesRouteImport } from './routes/api/public/trustwallet-prices'
+import { Route as ApiPublicTrustwalletQuoteRouteImport } from './routes/api/public/trustwallet-quote'
+import { Route as ApiPublicTrustwalletSearchRouteImport } from './routes/api/public/trustwallet-search'
+import { Route as ApiPublicTrustwalletStatusRouteImport } from './routes/api/public/trustwallet-status'
+import { Route as ApiPublicTrustwalletValidateRouteImport } from './routes/api/public/trustwallet-validate'
+import { Route as ApiPublicWalletconnectAuthRouteImport } from './routes/api/public/walletconnect-auth'
+import { Route as ApiPublicWeb3authAuthRouteImport } from './routes/api/public/web3auth-auth'
+import { Route as ApiWebhooksCircleRouteImport } from './routes/api/webhooks/circle'
+import { Route as ApiWebhooksCircleMintRouteImport } from './routes/api/webhooks/circle-mint'
+import { Route as ApiWebhooksTransactionsRouteImport } from './routes/api/webhooks/transactions'
+import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
+import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
+import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
+import { Route as ProCheckoutIdRouteImport } from './routes/pro.checkout.$id'
 import { Route as AuthenticatedAssetTokenIdChatRouteImport } from './routes/_authenticated/asset_.$tokenId_.chat'
-import { Route as ApiPublicProUserMeRouteImport } from './routes/api/public/pro/user/me'
-import { Route as ApiPublicProOauthTokenRouteImport } from './routes/api/public/pro/oauth/token'
-import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
+import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
+import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
+import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/_authenticated/opentoken_.$tokenId_.chat'
+import { Route as AuthenticatedOpentokenCreatorUserIdRouteImport } from './routes/_authenticated/opentoken_.creator.$userId'
+import { Route as AuthenticatedP2pOrderIdRouteImport } from './routes/_authenticated/p2p_.order.$id'
+import { Route as AuthenticatedP2pTakeAdIdRouteImport } from './routes/_authenticated/p2p_.take.$adId'
+import { Route as ApiPublicDocsAiPartnerRouteImport } from './routes/api/public/docs/ai-partner'
+import { Route as ApiPublicDocsErrorsRouteImport } from './routes/api/public/docs/errors'
+import { Route as ApiPublicDocsExchangeRouteImport } from './routes/api/public/docs/exchange'
+import { Route as ApiPublicDocsIntegrationsRouteImport } from './routes/api/public/docs/integrations'
+import { Route as ApiPublicDocsLedgerRouteImport } from './routes/api/public/docs/ledger'
+import { Route as ApiPublicDocsMcpRouteImport } from './routes/api/public/docs/mcp'
+import { Route as ApiPublicDocsOpenapiRouteImport } from './routes/api/public/docs/openapi'
+import { Route as ApiPublicDocsOpenpayRouteImport } from './routes/api/public/docs/openpay'
+import { Route as ApiPublicDocsOpenpayAuthRouteImport } from './routes/api/public/docs/openpay-auth'
+import { Route as ApiPublicDocsOpenpayToProRouteImport } from './routes/api/public/docs/openpay-to-pro'
+import { Route as ApiPublicDocsPartnerTransferRouteImport } from './routes/api/public/docs/partner-transfer'
+import { Route as ApiPublicDocsPortalRouteImport } from './routes/api/public/docs/portal'
+import { Route as ApiPublicDocsProPayRouteImport } from './routes/api/public/docs/pro-pay'
+import { Route as ApiPublicDocsQrpayProRouteImport } from './routes/api/public/docs/qrpay-pro'
+import { Route as ApiPublicDocsTokensRouteImport } from './routes/api/public/docs/tokens'
+import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/ledger/entries'
+import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
+import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
+import { Route as ApiPublicOpenpayKycWebhookRouteImport } from './routes/api/public/openpay/kyc-webhook'
+import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
+import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
+import { Route as ApiPublicProChargesRouteImport } from './routes/api/public/pro/charges'
+import { Route as ApiPublicProConfigRouteImport } from './routes/api/public/pro/config'
+import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
+import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
+import { Route as ApiPublicProChargesIdRouteImport } from './routes/api/public/pro/charges.$id'
+import { Route as ApiPublicProOauthTokenRouteImport } from './routes/api/public/pro/oauth/token'
+import { Route as ApiPublicProUserBalanceRouteImport } from './routes/api/public/pro/user/balance'
+import { Route as ApiPublicProUserMeRouteImport } from './routes/api/public/pro/user/me'
+import { Route as ApiPublicProChargesIdCancelRouteImport } from './routes/api/public/pro/charges.$id.cancel'
 
-const WikiRoute = WikiRouteImport.update({
-  id: '/wiki',
-  path: '/wiki',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WebsiteRoute = WebsiteRouteImport.update({
-  id: '/website',
-  path: '/website',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestnetRewardRoute = TestnetRewardRouteImport.update({
-  id: '/testnet-reward',
-  path: '/testnet-reward',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegulatoryRoute = RegulatoryRouteImport.update({
-  id: '/regulatory',
-  path: '/regulatory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PitchRoute = PitchRouteImport.update({
-  id: '/pitch',
-  path: '/pitch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OpenusdRoute = OpenusdRouteImport.update({
-  id: '/openusd',
-  path: '/openusd',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalRoute = LegalRouteImport.update({
-  id: '/legal',
-  path: '/legal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FundingRoute = FundingRouteImport.update({
-  id: '/funding',
-  path: '/funding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthpiRoute = AuthpiRouteImport.update({
-  id: '/authpi',
-  path: '/authpi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -278,133 +216,241 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WikiSlugRoute = WikiSlugRouteImport.update({
-  id: '/wiki_/$slug',
-  path: '/wiki/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PayToRoute = PayToRouteImport.update({
-  id: '/pay/$to',
-  path: '/pay/$to',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
-  id: '/guides/transfer-pi',
-  path: '/guides/transfer-pi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsTokensRoute = DocsTokensRouteImport.update({
-  id: '/tokens',
-  path: '/tokens',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsProPayRoute = DocsProPayRouteImport.update({
-  id: '/pro-pay',
-  path: '/pro-pay',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
-  id: '/openpay',
-  path: '/openpay',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsMoneyRoute = DocsMoneyRouteImport.update({
-  id: '/money',
-  path: '/money',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsMcpRoute = DocsMcpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsLedgerRoute = DocsLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsFaqRoute = DocsFaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsExchangeRoute = DocsExchangeRouteImport.update({
-  id: '/exchange',
-  path: '/exchange',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsErrorsRoute = DocsErrorsRouteImport.update({
-  id: '/errors',
-  path: '/errors',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsAuthRoute = DocsAuthRouteImport.update({
+const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => DocsRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DocsApiRoute = DocsApiRouteImport.update({
-  id: '/api',
-  path: '/api',
-  getParentRoute: () => DocsRoute,
+const AuthpiRoute = AuthpiRouteImport.update({
+  id: '/authpi',
+  path: '/authpi',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DocsAiRoute = DocsAiRouteImport.update({
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FundingRoute = FundingRouteImport.update({
+  id: '/funding',
+  path: '/funding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpenusdRoute = OpenusdRouteImport.update({
+  id: '/openusd',
+  path: '/openusd',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PitchRoute = PitchRouteImport.update({
+  id: '/pitch',
+  path: '/pitch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegulatoryRoute = RegulatoryRouteImport.update({
+  id: '/regulatory',
+  path: '/regulatory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestnetRewardRoute = TestnetRewardRouteImport.update({
+  id: '/testnet-reward',
+  path: '/testnet-reward',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteRoute = WebsiteRouteImport.update({
+  id: '/website',
+  path: '/website',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WikiRoute = WikiRouteImport.update({
+  id: '/wiki',
+  path: '/wiki',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
   id: '/ai',
   path: '/ai',
-  getParentRoute: () => DocsRoute,
-} as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/blog_/$slug',
-  path: '/blog/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const ApiTtsRoute = ApiTtsRouteImport.update({
-  id: '/api/tts',
-  path: '/api/tts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
-  id: '/admin/testnet-progress',
-  path: '/admin/testnet-progress',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedWithdrawRoute = AuthenticatedWithdrawRouteImport.update({
-  id: '/withdraw',
-  path: '/withdraw',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
-  id: '/wc-pay',
-  path: '/wc-pay',
+const AuthenticatedAirdropRoute = AuthenticatedAirdropRouteImport.update({
+  id: '/airdrop',
+  path: '/airdrop',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
-  id: '/watchlist',
-  path: '/watchlist',
+const AuthenticatedAssetsRoute = AuthenticatedAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
+const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
+  id: '/bags',
+  path: '/bags',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConnectRoute = AuthenticatedConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDepositRoute = AuthenticatedDepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDeveloperRoute = AuthenticatedDeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
+  id: '/metamask',
+  path: '/metamask',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
+  id: '/nfts',
+  path: '/nfts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpentokenRoute = AuthenticatedOpentokenRouteImport.update({
+  id: '/opentoken',
+  path: '/opentoken',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
+  id: '/ousd',
+  path: '/ousd',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pRoute = AuthenticatedP2pRouteImport.update({
+  id: '/p2p',
+  path: '/p2p',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPartnerApiRoute = AuthenticatedPartnerApiRouteImport.update({
+  id: '/partner-api',
+  path: '/partner-api',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
+  id: '/solana-pay',
+  path: '/solana-pay',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTradeRoute = AuthenticatedTradeRouteImport.update({
+  id: '/trade',
+  path: '/trade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTransferRoute = AuthenticatedTransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTrustWalletRoute =
@@ -413,524 +459,156 @@ const AuthenticatedTrustWalletRoute =
     path: '/trust-wallet',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTransferRoute = AuthenticatedTransferRouteImport.update({
-  id: '/transfer',
-  path: '/transfer',
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTradeRoute = AuthenticatedTradeRouteImport.update({
-  id: '/trade',
-  path: '/trade',
+const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTopupRoute = AuthenticatedTopupRouteImport.update({
-  id: '/topup',
-  path: '/topup',
+const AuthenticatedWcPayRoute = AuthenticatedWcPayRouteImport.update({
+  id: '/wc-pay',
+  path: '/wc-pay',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
-  id: '/tokens',
-  path: '/tokens',
+const AuthenticatedWithdrawRoute = AuthenticatedWithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
-  id: '/swap',
-  path: '/swap',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AdminTestnetProgressRoute = AdminTestnetProgressRouteImport.update({
+  id: '/admin/testnet-progress',
+  path: '/admin/testnet-progress',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
-  id: '/solana-pay',
-  path: '/solana-pay',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
-  id: '/send',
-  path: '/send',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
-  id: '/scan',
-  path: '/scan',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog_/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
-  id: '/receive',
-  path: '/receive',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pRoute = AuthenticatedP2pRouteImport.update({
-  id: '/p2p',
-  path: '/p2p',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOusdRoute = AuthenticatedOusdRouteImport.update({
-  id: '/ousd',
-  path: '/ousd',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOpentokenRoute = AuthenticatedOpentokenRouteImport.update({
-  id: '/opentoken',
-  path: '/opentoken',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNftsRoute = AuthenticatedNftsRouteImport.update({
-  id: '/nfts',
-  path: '/nfts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMetamaskRoute = AuthenticatedMetamaskRouteImport.update({
-  id: '/metamask',
-  path: '/metamask',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLedgerRoute = AuthenticatedLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
-  id: '/kyc',
-  path: '/kyc',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDeveloperRoute = AuthenticatedDeveloperRouteImport.update({
-  id: '/developer',
-  path: '/developer',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDepositRoute = AuthenticatedDepositRouteImport.update({
-  id: '/deposit',
-  path: '/deposit',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedConnectRoute = AuthenticatedConnectRouteImport.update({
-  id: '/connect',
-  path: '/connect',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
-  id: '/bags',
-  path: '/bags',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAssetsRoute = AuthenticatedAssetsRouteImport.update({
-  id: '/assets',
-  path: '/assets',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAirdropRoute = AuthenticatedAirdropRouteImport.update({
-  id: '/airdrop',
-  path: '/airdrop',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
+const DocsAiRoute = DocsAiRouteImport.update({
   id: '/ai',
   path: '/ai',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => DocsRoute,
 } as any)
-const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const DocsApiRoute = DocsApiRouteImport.update({
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => DocsRoute,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
+const DocsAuthRoute = DocsAuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsErrorsRoute = DocsErrorsRouteImport.update({
+  id: '/errors',
+  path: '/errors',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsExchangeRoute = DocsExchangeRouteImport.update({
+  id: '/exchange',
+  path: '/exchange',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFaqRoute = DocsFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsIntegrationsRoute = DocsIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsLedgerRoute = DocsLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsMcpRoute = DocsMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsMoneyRoute = DocsMoneyRouteImport.update({
+  id: '/money',
+  path: '/money',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsOpenpayRoute = DocsOpenpayRouteImport.update({
+  id: '/openpay',
+  path: '/openpay',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsProPayRoute = DocsProPayRouteImport.update({
+  id: '/pro-pay',
+  path: '/pro-pay',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsTokensRoute = DocsTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => DocsRoute,
+} as any)
+const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
+  id: '/guides/transfer-pi',
+  path: '/guides/transfer-pi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayToRoute = PayToRouteImport.update({
+  id: '/pay/$to',
+  path: '/pay/$to',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProAuthorizeRoute = ProAuthorizeRouteImport.update({
+  id: '/pro/authorize',
+  path: '/pro/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WikiSlugRoute = WikiSlugRouteImport.update({
+  id: '/wiki_/$slug',
+  path: '/wiki/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
-  id: '/telegram/callback',
-  path: '/telegram/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
-  id: '/pi/callback',
-  path: '/pi/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
-  id: '/openpay/callback',
-  path: '/openpay/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
-  id: '/api/webhooks/transactions',
-  path: '/api/webhooks/transactions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksCircleMintRoute = ApiWebhooksCircleMintRouteImport.update({
-  id: '/api/webhooks/circle-mint',
-  path: '/api/webhooks/circle-mint',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
-  id: '/api/webhooks/circle',
-  path: '/api/webhooks/circle',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
-  id: '/api/public/web3auth-auth',
-  path: '/api/public/web3auth-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWalletconnectAuthRoute =
-  ApiPublicWalletconnectAuthRouteImport.update({
-    id: '/api/public/walletconnect-auth',
-    path: '/api/public/walletconnect-auth',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletValidateRoute =
-  ApiPublicTrustwalletValidateRouteImport.update({
-    id: '/api/public/trustwallet-validate',
-    path: '/api/public/trustwallet-validate',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletStatusRoute =
-  ApiPublicTrustwalletStatusRouteImport.update({
-    id: '/api/public/trustwallet-status',
-    path: '/api/public/trustwallet-status',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletSearchRoute =
-  ApiPublicTrustwalletSearchRouteImport.update({
-    id: '/api/public/trustwallet-search',
-    path: '/api/public/trustwallet-search',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletQuoteRoute =
-  ApiPublicTrustwalletQuoteRouteImport.update({
-    id: '/api/public/trustwallet-quote',
-    path: '/api/public/trustwallet-quote',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletPricesRoute =
-  ApiPublicTrustwalletPricesRouteImport.update({
-    id: '/api/public/trustwallet-prices',
-    path: '/api/public/trustwallet-prices',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTrustwalletListingsRoute =
-  ApiPublicTrustwalletListingsRouteImport.update({
-    id: '/api/public/trustwallet-listings',
-    path: '/api/public/trustwallet-listings',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
-  id: '/api/public/telegram-auth',
-  path: '/api/public/telegram-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
-  id: '/api/public/supabase-config',
-  path: '/api/public/supabase-config',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
-  id: '/api/public/solana-auth',
-  path: '/api/public/solana-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiLinkWalletRoute = ApiPublicPiLinkWalletRouteImport.update({
-  id: '/api/public/pi-link-wallet',
-  path: '/api/public/pi-link-wallet',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
-  id: '/api/public/pi-auth',
-  path: '/api/public/pi-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
-  id: '/api/public/pi-a2u',
-  path: '/api/public/pi-a2u',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
-  id: '/api/public/openpay-auth',
-  path: '/api/public/openpay-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
-  id: '/api/public/moonpay-webhook',
-  path: '/api/public/moonpay-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
-  id: '/api/public/moonpay-sign',
-  path: '/api/public/moonpay-sign',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
-  id: '/api/public/kyc-webhook',
-  path: '/api/public/kyc-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHelioDepositWebhookRoute =
-  ApiPublicHelioDepositWebhookRouteImport.update({
-    id: '/api/public/helio-deposit-webhook',
-    path: '/api/public/helio-deposit-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDepositMonitorRoute = ApiPublicDepositMonitorRouteImport.update({
-  id: '/api/public/deposit-monitor',
-  path: '/api/public/deposit-monitor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
-  id: '/api/public/banxa-webhook',
-  path: '/api/public/banxa-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminTransferFixRoute = ApiAdminTransferFixRouteImport.update({
-  id: '/api/admin/transfer-fix',
-  path: '/api/admin/transfer-fix',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminP2pFixRoute = ApiAdminP2pFixRouteImport.update({
-  id: '/api/admin/p2p-fix',
-  path: '/api/admin/p2p-fix',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedWalletReceiveRoute =
-  AuthenticatedWalletReceiveRouteImport.update({
-    id: '/wallet_/receive',
-    path: '/wallet/receive',
+const AuthenticatedAdminAirdropsRoute =
+  AuthenticatedAdminAirdropsRouteImport.update({
+    id: '/admin/airdrops',
+    path: '/admin/airdrops',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTokensCreateRoute =
-  AuthenticatedTokensCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => AuthenticatedTokensRoute,
-  } as any)
-const AuthenticatedP2pWalletRoute = AuthenticatedP2pWalletRouteImport.update({
-  id: '/p2p_/wallet',
-  path: '/p2p/wallet',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pTermsRoute = AuthenticatedP2pTermsRouteImport.update({
-  id: '/p2p_/terms',
-  path: '/p2p/terms',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pSupportRoute = AuthenticatedP2pSupportRouteImport.update({
-  id: '/p2p_/support',
-  path: '/p2p/support',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pSettingsRoute =
-  AuthenticatedP2pSettingsRouteImport.update({
-    id: '/p2p_/settings',
-    path: '/p2p/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pSelectPaymentRoute =
-  AuthenticatedP2pSelectPaymentRouteImport.update({
-    id: '/p2p_/select-payment',
-    path: '/p2p/select-payment',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pSecurityRoute =
-  AuthenticatedP2pSecurityRouteImport.update({
-    id: '/p2p_/security',
-    path: '/p2p/security',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pRulesRoute = AuthenticatedP2pRulesRouteImport.update({
-  id: '/p2p_/rules',
-  path: '/p2p/rules',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pReviewsRoute = AuthenticatedP2pReviewsRouteImport.update({
-  id: '/p2p_/reviews',
-  path: '/p2p/reviews',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pProfileRoute = AuthenticatedP2pProfileRouteImport.update({
-  id: '/p2p_/profile',
-  path: '/p2p/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pPrivacyRoute = AuthenticatedP2pPrivacyRouteImport.update({
-  id: '/p2p_/privacy',
-  path: '/p2p/privacy',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pPaymentsRoute =
-  AuthenticatedP2pPaymentsRouteImport.update({
-    id: '/p2p_/payments',
-    path: '/p2p/payments',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pPaymentAdsRoute =
-  AuthenticatedP2pPaymentAdsRouteImport.update({
-    id: '/p2p_/payment-ads',
-    path: '/p2p/payment-ads',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pPaymentAccountRoute =
-  AuthenticatedP2pPaymentAccountRouteImport.update({
-    id: '/p2p_/payment-account',
-    path: '/p2p/payment-account',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pOrdersRoute = AuthenticatedP2pOrdersRouteImport.update({
-  id: '/p2p_/orders',
-  path: '/p2p/orders',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pMessagesRoute =
-  AuthenticatedP2pMessagesRouteImport.update({
-    id: '/p2p_/messages',
-    path: '/p2p/messages',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pMerchantRoute =
-  AuthenticatedP2pMerchantRouteImport.update({
-    id: '/p2p_/merchant',
-    path: '/p2p/merchant',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pGuideRoute = AuthenticatedP2pGuideRouteImport.update({
-  id: '/p2p_/guide',
-  path: '/p2p/guide',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pExpressRoute = AuthenticatedP2pExpressRouteImport.update({
-  id: '/p2p_/express',
-  path: '/p2p/express',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pCreateNewRoute =
-  AuthenticatedP2pCreateNewRouteImport.update({
-    id: '/p2p_/create-new',
-    path: '/p2p/create-new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pCreateRoute = AuthenticatedP2pCreateRouteImport.update({
-  id: '/p2p_/create',
-  path: '/p2p/create',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pApiRoute = AuthenticatedP2pApiRouteImport.update({
-  id: '/p2p_/api',
-  path: '/p2p/api',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedP2pAgreementRoute =
-  AuthenticatedP2pAgreementRouteImport.update({
-    id: '/p2p_/agreement',
-    path: '/p2p/agreement',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedP2pAdminRoute = AuthenticatedP2pAdminRouteImport.update({
-  id: '/p2p_/admin',
-  path: '/p2p/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOpentokenTerminalRoute =
-  AuthenticatedOpentokenTerminalRouteImport.update({
-    id: '/opentoken_/terminal',
-    path: '/opentoken/terminal',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenPortfolioRoute =
-  AuthenticatedOpentokenPortfolioRouteImport.update({
-    id: '/opentoken_/portfolio',
-    path: '/opentoken/portfolio',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenCreateRoute =
-  AuthenticatedOpentokenCreateRouteImport.update({
-    id: '/opentoken_/create',
-    path: '/opentoken/create',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenAdminRoute =
-  AuthenticatedOpentokenAdminRouteImport.update({
-    id: '/opentoken_/admin',
-    path: '/opentoken/admin',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOpentokenTokenIdRoute =
-  AuthenticatedOpentokenTokenIdRouteImport.update({
-    id: '/opentoken_/$tokenId',
-    path: '/opentoken/$tokenId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
-  id: '/mint',
-  path: '/mint',
-  getParentRoute: () => AuthenticatedNftsRoute,
-} as any)
-const AuthenticatedBagsTradeRoute = AuthenticatedBagsTradeRouteImport.update({
-  id: '/bags_/trade',
-  path: '/bags/trade',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsLaunchRoute = AuthenticatedBagsLaunchRouteImport.update({
-  id: '/bags_/launch',
-  path: '/bags/launch',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBagsFeesRoute = AuthenticatedBagsFeesRouteImport.update({
-  id: '/bags_/fees',
-  path: '/bags/fees',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAssetsAccountRoute =
-  AuthenticatedAssetsAccountRouteImport.update({
-    id: '/assets_/$account',
-    path: '/assets/$account',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAssetTokenIdRoute =
-  AuthenticatedAssetTokenIdRouteImport.update({
-    id: '/asset_/$tokenId',
-    path: '/asset/$tokenId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminWithdrawalsRoute =
-  AuthenticatedAdminWithdrawalsRouteImport.update({
-    id: '/admin/withdrawals',
-    path: '/admin/withdrawals',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
-  id: '/admin/topup',
-  path: '/admin/topup',
+const AuthenticatedAdminAuthRoute = AuthenticatedAdminAuthRouteImport.update({
+  id: '/admin/auth',
+  path: '/admin/auth',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminDepositsRoute =
@@ -939,189 +617,383 @@ const AuthenticatedAdminDepositsRoute =
     path: '/admin/deposits',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAuthRoute = AuthenticatedAdminAuthRouteImport.update({
-  id: '/admin/auth',
-  path: '/admin/auth',
+const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
+  id: '/admin/topup',
+  path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminAirdropsRoute =
-  AuthenticatedAdminAirdropsRouteImport.update({
-    id: '/admin/airdrops',
-    path: '/admin/airdrops',
+const AuthenticatedAdminWithdrawalsRoute =
+  AuthenticatedAdminWithdrawalsRouteImport.update({
+    id: '/admin/withdrawals',
+    path: '/admin/withdrawals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPushUnsubscribeRoute =
-  ApiPublicPushUnsubscribeRouteImport.update({
-    id: '/api/public/push/unsubscribe',
-    path: '/api/public/push/unsubscribe',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
-  id: '/api/public/push/subscribe',
-  path: '/api/public/push/subscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicProConfigRoute = ApiPublicProConfigRouteImport.update({
-  id: '/api/public/pro/config',
-  path: '/api/public/pro/config',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPiPaymentsIncompleteRoute =
-  ApiPublicPiPaymentsIncompleteRouteImport.update({
-    id: '/api/public/pi-payments/incomplete',
-    path: '/api/public/pi-payments/incomplete',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPiPaymentsCompleteRoute =
-  ApiPublicPiPaymentsCompleteRouteImport.update({
-    id: '/api/public/pi-payments/complete',
-    path: '/api/public/pi-payments/complete',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPiPaymentsApproveRoute =
-  ApiPublicPiPaymentsApproveRouteImport.update({
-    id: '/api/public/pi-payments/approve',
-    path: '/api/public/pi-payments/approve',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicOpenpayKycWebhookRoute =
-  ApiPublicOpenpayKycWebhookRouteImport.update({
-    id: '/api/public/openpay/kyc-webhook',
-    path: '/api/public/openpay/kyc-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
-  id: '/api/public/openpay/inbound',
-  path: '/api/public/openpay/inbound',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
-  id: '/api/public/ledger/stats',
-  path: '/api/public/ledger/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
-  id: '/api/public/ledger/entries',
-  path: '/api/public/ledger/entries',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsTokensRoute = ApiPublicDocsTokensRouteImport.update({
-  id: '/api/public/docs/tokens',
-  path: '/api/public/docs/tokens',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsQrpayProRoute = ApiPublicDocsQrpayProRouteImport.update({
-  id: '/api/public/docs/qrpay-pro',
-  path: '/api/public/docs/qrpay-pro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsProPayRoute = ApiPublicDocsProPayRouteImport.update({
-  id: '/api/public/docs/pro-pay',
-  path: '/api/public/docs/pro-pay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsPortalRoute = ApiPublicDocsPortalRouteImport.update({
-  id: '/api/public/docs/portal',
-  path: '/api/public/docs/portal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsPartnerTransferRoute =
-  ApiPublicDocsPartnerTransferRouteImport.update({
-    id: '/api/public/docs/partner-transfer',
-    path: '/api/public/docs/partner-transfer',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicDocsOpenpayToProRoute =
-  ApiPublicDocsOpenpayToProRouteImport.update({
-    id: '/api/public/docs/openpay-to-pro',
-    path: '/api/public/docs/openpay-to-pro',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicDocsOpenpayAuthRoute =
-  ApiPublicDocsOpenpayAuthRouteImport.update({
-    id: '/api/public/docs/openpay-auth',
-    path: '/api/public/docs/openpay-auth',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
-  id: '/api/public/docs/openpay',
-  path: '/api/public/docs/openpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsOpenapiRoute = ApiPublicDocsOpenapiRouteImport.update({
-  id: '/api/public/docs/openapi',
-  path: '/api/public/docs/openapi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsMcpRoute = ApiPublicDocsMcpRouteImport.update({
-  id: '/api/public/docs/mcp',
-  path: '/api/public/docs/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsLedgerRoute = ApiPublicDocsLedgerRouteImport.update({
-  id: '/api/public/docs/ledger',
-  path: '/api/public/docs/ledger',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsExchangeRoute = ApiPublicDocsExchangeRouteImport.update({
-  id: '/api/public/docs/exchange',
-  path: '/api/public/docs/exchange',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsErrorsRoute = ApiPublicDocsErrorsRouteImport.update({
-  id: '/api/public/docs/errors',
-  path: '/api/public/docs/errors',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDocsAiPartnerRoute = ApiPublicDocsAiPartnerRouteImport.update({
-  id: '/api/public/docs/ai-partner',
-  path: '/api/public/docs/ai-partner',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedP2pTakeAdIdRoute =
-  AuthenticatedP2pTakeAdIdRouteImport.update({
-    id: '/p2p_/take/$adId',
-    path: '/p2p/take/$adId',
+const AuthenticatedAssetTokenIdRoute =
+  AuthenticatedAssetTokenIdRouteImport.update({
+    id: '/asset_/$tokenId',
+    path: '/asset/$tokenId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedP2pOrderIdRoute = AuthenticatedP2pOrderIdRouteImport.update({
-  id: '/p2p_/order/$id',
-  path: '/p2p/order/$id',
+const AuthenticatedAssetsAccountRoute =
+  AuthenticatedAssetsAccountRouteImport.update({
+    id: '/assets_/$account',
+    path: '/assets/$account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBagsFeesRoute = AuthenticatedBagsFeesRouteImport.update({
+  id: '/bags_/fees',
+  path: '/bags/fees',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedOpentokenCreatorUserIdRoute =
-  AuthenticatedOpentokenCreatorUserIdRouteImport.update({
-    id: '/opentoken_/creator/$userId',
-    path: '/opentoken/creator/$userId',
+const AuthenticatedBagsLaunchRoute = AuthenticatedBagsLaunchRouteImport.update({
+  id: '/bags_/launch',
+  path: '/bags/launch',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBagsTradeRoute = AuthenticatedBagsTradeRouteImport.update({
+  id: '/bags_/trade',
+  path: '/bags/trade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
+  id: '/mint',
+  path: '/mint',
+  getParentRoute: () => AuthenticatedNftsRoute,
+} as any)
+const AuthenticatedOpentokenTokenIdRoute =
+  AuthenticatedOpentokenTokenIdRouteImport.update({
+    id: '/opentoken_/$tokenId',
+    path: '/opentoken/$tokenId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedOpentokenTokenIdChatRoute =
-  AuthenticatedOpentokenTokenIdChatRouteImport.update({
-    id: '/opentoken_/$tokenId_/chat',
-    path: '/opentoken/$tokenId/chat',
+const AuthenticatedOpentokenAdminRoute =
+  AuthenticatedOpentokenAdminRouteImport.update({
+    id: '/opentoken_/admin',
+    path: '/opentoken/admin',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedOpenpayConnectCallbackRoute =
-  AuthenticatedOpenpayConnectCallbackRouteImport.update({
-    id: '/openpay/connect/callback',
-    path: '/openpay/connect/callback',
+const AuthenticatedOpentokenCreateRoute =
+  AuthenticatedOpentokenCreateRouteImport.update({
+    id: '/opentoken_/create',
+    path: '/opentoken/create',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenPortfolioRoute =
+  AuthenticatedOpentokenPortfolioRouteImport.update({
+    id: '/opentoken_/portfolio',
+    path: '/opentoken/portfolio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenTerminalRoute =
+  AuthenticatedOpentokenTerminalRouteImport.update({
+    id: '/opentoken_/terminal',
+    path: '/opentoken/terminal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pAdminRoute = AuthenticatedP2pAdminRouteImport.update({
+  id: '/p2p_/admin',
+  path: '/p2p/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pAgreementRoute =
+  AuthenticatedP2pAgreementRouteImport.update({
+    id: '/p2p_/agreement',
+    path: '/p2p/agreement',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pApiRoute = AuthenticatedP2pApiRouteImport.update({
+  id: '/p2p_/api',
+  path: '/p2p/api',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pCreateRoute = AuthenticatedP2pCreateRouteImport.update({
+  id: '/p2p_/create',
+  path: '/p2p/create',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pCreateNewRoute =
+  AuthenticatedP2pCreateNewRouteImport.update({
+    id: '/p2p_/create-new',
+    path: '/p2p/create-new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pExpressRoute = AuthenticatedP2pExpressRouteImport.update({
+  id: '/p2p_/express',
+  path: '/p2p/express',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pGuideRoute = AuthenticatedP2pGuideRouteImport.update({
+  id: '/p2p_/guide',
+  path: '/p2p/guide',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pMerchantRoute =
+  AuthenticatedP2pMerchantRouteImport.update({
+    id: '/p2p_/merchant',
+    path: '/p2p/merchant',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pMessagesRoute =
+  AuthenticatedP2pMessagesRouteImport.update({
+    id: '/p2p_/messages',
+    path: '/p2p/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pOrdersRoute = AuthenticatedP2pOrdersRouteImport.update({
+  id: '/p2p_/orders',
+  path: '/p2p/orders',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pPaymentAccountRoute =
+  AuthenticatedP2pPaymentAccountRouteImport.update({
+    id: '/p2p_/payment-account',
+    path: '/p2p/payment-account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pPaymentAdsRoute =
+  AuthenticatedP2pPaymentAdsRouteImport.update({
+    id: '/p2p_/payment-ads',
+    path: '/p2p/payment-ads',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pPaymentsRoute =
+  AuthenticatedP2pPaymentsRouteImport.update({
+    id: '/p2p_/payments',
+    path: '/p2p/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pPrivacyRoute = AuthenticatedP2pPrivacyRouteImport.update({
+  id: '/p2p_/privacy',
+  path: '/p2p/privacy',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pProfileRoute = AuthenticatedP2pProfileRouteImport.update({
+  id: '/p2p_/profile',
+  path: '/p2p/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pReviewsRoute = AuthenticatedP2pReviewsRouteImport.update({
+  id: '/p2p_/reviews',
+  path: '/p2p/reviews',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pRulesRoute = AuthenticatedP2pRulesRouteImport.update({
+  id: '/p2p_/rules',
+  path: '/p2p/rules',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pSecurityRoute =
+  AuthenticatedP2pSecurityRouteImport.update({
+    id: '/p2p_/security',
+    path: '/p2p/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pSelectPaymentRoute =
+  AuthenticatedP2pSelectPaymentRouteImport.update({
+    id: '/p2p_/select-payment',
+    path: '/p2p/select-payment',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pSettingsRoute =
+  AuthenticatedP2pSettingsRouteImport.update({
+    id: '/p2p_/settings',
+    path: '/p2p/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pSupportRoute = AuthenticatedP2pSupportRouteImport.update({
+  id: '/p2p_/support',
+  path: '/p2p/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pTermsRoute = AuthenticatedP2pTermsRouteImport.update({
+  id: '/p2p_/terms',
+  path: '/p2p/terms',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pWalletRoute = AuthenticatedP2pWalletRouteImport.update({
+  id: '/p2p_/wallet',
+  path: '/p2p/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTokensCreateRoute =
+  AuthenticatedTokensCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedTokensRoute,
+  } as any)
+const AuthenticatedWalletReceiveRoute =
+  AuthenticatedWalletReceiveRouteImport.update({
+    id: '/wallet_/receive',
+    path: '/wallet/receive',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiAdminP2pFixRoute = ApiAdminP2pFixRouteImport.update({
+  id: '/api/admin/p2p-fix',
+  path: '/api/admin/p2p-fix',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminTransferFixRoute = ApiAdminTransferFixRouteImport.update({
+  id: '/api/admin/transfer-fix',
+  path: '/api/admin/transfer-fix',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
+  id: '/api/public/banxa-webhook',
+  path: '/api/public/banxa-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDepositMonitorRoute = ApiPublicDepositMonitorRouteImport.update({
+  id: '/api/public/deposit-monitor',
+  path: '/api/public/deposit-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHelioDepositWebhookRoute =
+  ApiPublicHelioDepositWebhookRouteImport.update({
+    id: '/api/public/helio-deposit-webhook',
+    path: '/api/public/helio-deposit-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
+  id: '/api/public/kyc-webhook',
+  path: '/api/public/kyc-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
+  id: '/api/public/moonpay-sign',
+  path: '/api/public/moonpay-sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
+  id: '/api/public/moonpay-webhook',
+  path: '/api/public/moonpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
+  id: '/api/public/openpay-auth',
+  path: '/api/public/openpay-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
+  id: '/api/public/pi-a2u',
+  path: '/api/public/pi-a2u',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiAuthRoute = ApiPublicPiAuthRouteImport.update({
+  id: '/api/public/pi-auth',
+  path: '/api/public/pi-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPiLinkWalletRoute = ApiPublicPiLinkWalletRouteImport.update({
+  id: '/api/public/pi-link-wallet',
+  path: '/api/public/pi-link-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSolanaAuthRoute = ApiPublicSolanaAuthRouteImport.update({
+  id: '/api/public/solana-auth',
+  path: '/api/public/solana-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSupabaseConfigRoute = ApiPublicSupabaseConfigRouteImport.update({
+  id: '/api/public/supabase-config',
+  path: '/api/public/supabase-config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTelegramAuthRoute = ApiPublicTelegramAuthRouteImport.update({
+  id: '/api/public/telegram-auth',
+  path: '/api/public/telegram-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrustwalletListingsRoute =
+  ApiPublicTrustwalletListingsRouteImport.update({
+    id: '/api/public/trustwallet-listings',
+    path: '/api/public/trustwallet-listings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletPricesRoute =
+  ApiPublicTrustwalletPricesRouteImport.update({
+    id: '/api/public/trustwallet-prices',
+    path: '/api/public/trustwallet-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletQuoteRoute =
+  ApiPublicTrustwalletQuoteRouteImport.update({
+    id: '/api/public/trustwallet-quote',
+    path: '/api/public/trustwallet-quote',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletSearchRoute =
+  ApiPublicTrustwalletSearchRouteImport.update({
+    id: '/api/public/trustwallet-search',
+    path: '/api/public/trustwallet-search',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletStatusRoute =
+  ApiPublicTrustwalletStatusRouteImport.update({
+    id: '/api/public/trustwallet-status',
+    path: '/api/public/trustwallet-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrustwalletValidateRoute =
+  ApiPublicTrustwalletValidateRouteImport.update({
+    id: '/api/public/trustwallet-validate',
+    path: '/api/public/trustwallet-validate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWalletconnectAuthRoute =
+  ApiPublicWalletconnectAuthRouteImport.update({
+    id: '/api/public/walletconnect-auth',
+    path: '/api/public/walletconnect-auth',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWeb3authAuthRoute = ApiPublicWeb3authAuthRouteImport.update({
+  id: '/api/public/web3auth-auth',
+  path: '/api/public/web3auth-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksCircleRoute = ApiWebhooksCircleRouteImport.update({
+  id: '/api/webhooks/circle',
+  path: '/api/webhooks/circle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksCircleMintRoute = ApiWebhooksCircleMintRouteImport.update({
+  id: '/api/webhooks/circle-mint',
+  path: '/api/webhooks/circle-mint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksTransactionsRoute = ApiWebhooksTransactionsRouteImport.update({
+  id: '/api/webhooks/transactions',
+  path: '/api/webhooks/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthOpenpayCallbackRoute = AuthOpenpayCallbackRouteImport.update({
+  id: '/openpay/callback',
+  path: '/openpay/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPiCallbackRoute = AuthPiCallbackRouteImport.update({
+  id: '/pi/callback',
+  path: '/pi/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
+  id: '/telegram/callback',
+  path: '/telegram/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const ProCheckoutIdRoute = ProCheckoutIdRouteImport.update({
+  id: '/pro/checkout/$id',
+  path: '/pro/checkout/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAssetTokenIdChatRoute =
+  AuthenticatedAssetTokenIdChatRouteImport.update({
+    id: '/asset_/$tokenId_/chat',
+    path: '/asset/$tokenId/chat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBagsTokenMintRoute =
@@ -1130,26 +1002,178 @@ const AuthenticatedBagsTokenMintRoute =
     path: '/bags/token/$mint',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAssetTokenIdChatRoute =
-  AuthenticatedAssetTokenIdChatRouteImport.update({
-    id: '/asset_/$tokenId_/chat',
-    path: '/asset/$tokenId/chat',
+const AuthenticatedOpenpayConnectCallbackRoute =
+  AuthenticatedOpenpayConnectCallbackRouteImport.update({
+    id: '/openpay/connect/callback',
+    path: '/openpay/connect/callback',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicProUserMeRoute = ApiPublicProUserMeRouteImport.update({
-  id: '/api/public/pro/user/me',
-  path: '/api/public/pro/user/me',
+const AuthenticatedOpentokenTokenIdChatRoute =
+  AuthenticatedOpentokenTokenIdChatRouteImport.update({
+    id: '/opentoken_/$tokenId_/chat',
+    path: '/opentoken/$tokenId/chat',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpentokenCreatorUserIdRoute =
+  AuthenticatedOpentokenCreatorUserIdRouteImport.update({
+    id: '/opentoken_/creator/$userId',
+    path: '/opentoken/creator/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedP2pOrderIdRoute = AuthenticatedP2pOrderIdRouteImport.update({
+  id: '/p2p_/order/$id',
+  path: '/p2p/order/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedP2pTakeAdIdRoute =
+  AuthenticatedP2pTakeAdIdRouteImport.update({
+    id: '/p2p_/take/$adId',
+    path: '/p2p/take/$adId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicDocsAiPartnerRoute = ApiPublicDocsAiPartnerRouteImport.update({
+  id: '/api/public/docs/ai-partner',
+  path: '/api/public/docs/ai-partner',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicProOauthTokenRoute = ApiPublicProOauthTokenRouteImport.update({
-  id: '/api/public/pro/oauth/token',
-  path: '/api/public/pro/oauth/token',
+const ApiPublicDocsErrorsRoute = ApiPublicDocsErrorsRouteImport.update({
+  id: '/api/public/docs/errors',
+  path: '/api/public/docs/errors',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicOpenpayConnectConfirmRoute =
-  ApiPublicOpenpayConnectConfirmRouteImport.update({
-    id: '/api/public/openpay/connect/confirm',
-    path: '/api/public/openpay/connect/confirm',
+const ApiPublicDocsExchangeRoute = ApiPublicDocsExchangeRouteImport.update({
+  id: '/api/public/docs/exchange',
+  path: '/api/public/docs/exchange',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsIntegrationsRoute =
+  ApiPublicDocsIntegrationsRouteImport.update({
+    id: '/api/public/docs/integrations',
+    path: '/api/public/docs/integrations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsLedgerRoute = ApiPublicDocsLedgerRouteImport.update({
+  id: '/api/public/docs/ledger',
+  path: '/api/public/docs/ledger',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsMcpRoute = ApiPublicDocsMcpRouteImport.update({
+  id: '/api/public/docs/mcp',
+  path: '/api/public/docs/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsOpenapiRoute = ApiPublicDocsOpenapiRouteImport.update({
+  id: '/api/public/docs/openapi',
+  path: '/api/public/docs/openapi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsOpenpayRoute = ApiPublicDocsOpenpayRouteImport.update({
+  id: '/api/public/docs/openpay',
+  path: '/api/public/docs/openpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsOpenpayAuthRoute =
+  ApiPublicDocsOpenpayAuthRouteImport.update({
+    id: '/api/public/docs/openpay-auth',
+    path: '/api/public/docs/openpay-auth',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsOpenpayToProRoute =
+  ApiPublicDocsOpenpayToProRouteImport.update({
+    id: '/api/public/docs/openpay-to-pro',
+    path: '/api/public/docs/openpay-to-pro',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsPartnerTransferRoute =
+  ApiPublicDocsPartnerTransferRouteImport.update({
+    id: '/api/public/docs/partner-transfer',
+    path: '/api/public/docs/partner-transfer',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicDocsPortalRoute = ApiPublicDocsPortalRouteImport.update({
+  id: '/api/public/docs/portal',
+  path: '/api/public/docs/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsProPayRoute = ApiPublicDocsProPayRouteImport.update({
+  id: '/api/public/docs/pro-pay',
+  path: '/api/public/docs/pro-pay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsQrpayProRoute = ApiPublicDocsQrpayProRouteImport.update({
+  id: '/api/public/docs/qrpay-pro',
+  path: '/api/public/docs/qrpay-pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDocsTokensRoute = ApiPublicDocsTokensRouteImport.update({
+  id: '/api/public/docs/tokens',
+  path: '/api/public/docs/tokens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerEntriesRoute = ApiPublicLedgerEntriesRouteImport.update({
+  id: '/api/public/ledger/entries',
+  path: '/api/public/ledger/entries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedgerStatsRoute = ApiPublicLedgerStatsRouteImport.update({
+  id: '/api/public/ledger/stats',
+  path: '/api/public/ledger/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
+  id: '/api/public/openpay/inbound',
+  path: '/api/public/openpay/inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOpenpayKycWebhookRoute =
+  ApiPublicOpenpayKycWebhookRouteImport.update({
+    id: '/api/public/openpay/kyc-webhook',
+    path: '/api/public/openpay/kyc-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsApproveRoute =
+  ApiPublicPiPaymentsApproveRouteImport.update({
+    id: '/api/public/pi-payments/approve',
+    path: '/api/public/pi-payments/approve',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsCompleteRoute =
+  ApiPublicPiPaymentsCompleteRouteImport.update({
+    id: '/api/public/pi-payments/complete',
+    path: '/api/public/pi-payments/complete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPiPaymentsIncompleteRoute =
+  ApiPublicPiPaymentsIncompleteRouteImport.update({
+    id: '/api/public/pi-payments/incomplete',
+    path: '/api/public/pi-payments/incomplete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicProChargesRoute = ApiPublicProChargesRouteImport.update({
+  id: '/api/public/pro/charges',
+  path: '/api/public/pro/charges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProConfigRoute = ApiPublicProConfigRouteImport.update({
+  id: '/api/public/pro/config',
+  path: '/api/public/pro/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
+  id: '/api/public/push/subscribe',
+  path: '/api/public/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushUnsubscribeRoute =
+  ApiPublicPushUnsubscribeRouteImport.update({
+    id: '/api/public/push/unsubscribe',
+    path: '/api/public/push/unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicLedgerEntriesIdRoute =
@@ -1157,6 +1181,38 @@ const ApiPublicLedgerEntriesIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => ApiPublicLedgerEntriesRoute,
+  } as any)
+const ApiPublicOpenpayConnectConfirmRoute =
+  ApiPublicOpenpayConnectConfirmRouteImport.update({
+    id: '/api/public/openpay/connect/confirm',
+    path: '/api/public/openpay/connect/confirm',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicProChargesIdRoute = ApiPublicProChargesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPublicProChargesRoute,
+} as any)
+const ApiPublicProOauthTokenRoute = ApiPublicProOauthTokenRouteImport.update({
+  id: '/api/public/pro/oauth/token',
+  path: '/api/public/pro/oauth/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProUserBalanceRoute = ApiPublicProUserBalanceRouteImport.update({
+  id: '/api/public/pro/user/balance',
+  path: '/api/public/pro/user/balance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProUserMeRoute = ApiPublicProUserMeRouteImport.update({
+  id: '/api/public/pro/user/me',
+  path: '/api/public/pro/user/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProChargesIdCancelRoute =
+  ApiPublicProChargesIdCancelRouteImport.update({
+    id: '/cancel',
+    path: '/cancel',
+    getParentRoute: () => ApiPublicProChargesIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -1197,6 +1253,7 @@ export interface FileRoutesByFullPath {
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
   '/p2p': typeof AuthenticatedP2pRoute
+  '/partner-api': typeof AuthenticatedPartnerApiRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -1224,6 +1281,7 @@ export interface FileRoutesByFullPath {
   '/docs/errors': typeof DocsErrorsRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/integrations': typeof DocsIntegrationsRoute
   '/docs/ledger': typeof DocsLedgerRoute
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
@@ -1232,6 +1290,7 @@ export interface FileRoutesByFullPath {
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
+  '/pro/authorize': typeof ProAuthorizeRoute
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -1306,6 +1365,7 @@ export interface FileRoutesByFullPath {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/asset/$tokenId/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -1316,6 +1376,7 @@ export interface FileRoutesByFullPath {
   '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/integrations': typeof ApiPublicDocsIntegrationsRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
   '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
@@ -1334,14 +1395,18 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/charges': typeof ApiPublicProChargesRouteWithChildren
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/balance': typeof ApiPublicProUserBalanceRoute
   '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
+  '/api/public/pro/charges/$id/cancel': typeof ApiPublicProChargesIdCancelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1381,6 +1446,7 @@ export interface FileRoutesByTo {
   '/opentoken': typeof AuthenticatedOpentokenRoute
   '/ousd': typeof AuthenticatedOusdRoute
   '/p2p': typeof AuthenticatedP2pRoute
+  '/partner-api': typeof AuthenticatedPartnerApiRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -1408,6 +1474,7 @@ export interface FileRoutesByTo {
   '/docs/errors': typeof DocsErrorsRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/integrations': typeof DocsIntegrationsRoute
   '/docs/ledger': typeof DocsLedgerRoute
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
@@ -1416,6 +1483,7 @@ export interface FileRoutesByTo {
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
+  '/pro/authorize': typeof ProAuthorizeRoute
   '/wiki/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -1490,6 +1558,7 @@ export interface FileRoutesByTo {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/asset/$tokenId/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -1500,6 +1569,7 @@ export interface FileRoutesByTo {
   '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/integrations': typeof ApiPublicDocsIntegrationsRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
   '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
@@ -1518,14 +1588,18 @@ export interface FileRoutesByTo {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/charges': typeof ApiPublicProChargesRouteWithChildren
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/balance': typeof ApiPublicProUserBalanceRoute
   '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
+  '/api/public/pro/charges/$id/cancel': typeof ApiPublicProChargesIdCancelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1567,6 +1641,7 @@ export interface FileRoutesById {
   '/_authenticated/opentoken': typeof AuthenticatedOpentokenRoute
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
   '/_authenticated/p2p': typeof AuthenticatedP2pRoute
+  '/_authenticated/partner-api': typeof AuthenticatedPartnerApiRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -1594,6 +1669,7 @@ export interface FileRoutesById {
   '/docs/errors': typeof DocsErrorsRoute
   '/docs/exchange': typeof DocsExchangeRoute
   '/docs/faq': typeof DocsFaqRoute
+  '/docs/integrations': typeof DocsIntegrationsRoute
   '/docs/ledger': typeof DocsLedgerRoute
   '/docs/mcp': typeof DocsMcpRoute
   '/docs/money': typeof DocsMoneyRoute
@@ -1602,6 +1678,7 @@ export interface FileRoutesById {
   '/docs/tokens': typeof DocsTokensRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
+  '/pro/authorize': typeof ProAuthorizeRoute
   '/wiki_/$slug': typeof WikiSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -1676,6 +1753,7 @@ export interface FileRoutesById {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/_authenticated/asset_/$tokenId_/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/_authenticated/bags_/token/$mint': typeof AuthenticatedBagsTokenMintRoute
   '/_authenticated/openpay/connect/callback': typeof AuthenticatedOpenpayConnectCallbackRoute
@@ -1686,6 +1764,7 @@ export interface FileRoutesById {
   '/api/public/docs/ai-partner': typeof ApiPublicDocsAiPartnerRoute
   '/api/public/docs/errors': typeof ApiPublicDocsErrorsRoute
   '/api/public/docs/exchange': typeof ApiPublicDocsExchangeRoute
+  '/api/public/docs/integrations': typeof ApiPublicDocsIntegrationsRoute
   '/api/public/docs/ledger': typeof ApiPublicDocsLedgerRoute
   '/api/public/docs/mcp': typeof ApiPublicDocsMcpRoute
   '/api/public/docs/openapi': typeof ApiPublicDocsOpenapiRoute
@@ -1704,14 +1783,18 @@ export interface FileRoutesById {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/charges': typeof ApiPublicProChargesRouteWithChildren
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/balance': typeof ApiPublicProUserBalanceRoute
   '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
+  '/api/public/pro/charges/$id/cancel': typeof ApiPublicProChargesIdCancelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1753,6 +1836,7 @@ export interface FileRouteTypes {
     | '/opentoken'
     | '/ousd'
     | '/p2p'
+    | '/partner-api'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -1780,6 +1864,7 @@ export interface FileRouteTypes {
     | '/docs/errors'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/integrations'
     | '/docs/ledger'
     | '/docs/mcp'
     | '/docs/money'
@@ -1788,6 +1873,7 @@ export interface FileRouteTypes {
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
+    | '/pro/authorize'
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -1862,6 +1948,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/pro/checkout/$id'
     | '/asset/$tokenId/chat'
     | '/bags/token/$mint'
     | '/openpay/connect/callback'
@@ -1872,6 +1959,7 @@ export interface FileRouteTypes {
     | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/integrations'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
     | '/api/public/docs/openapi'
@@ -1890,14 +1978,18 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/charges'
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/charges/$id'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/balance'
     | '/api/public/pro/user/me'
+    | '/api/public/pro/charges/$id/cancel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1937,6 +2029,7 @@ export interface FileRouteTypes {
     | '/opentoken'
     | '/ousd'
     | '/p2p'
+    | '/partner-api'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -1964,6 +2057,7 @@ export interface FileRouteTypes {
     | '/docs/errors'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/integrations'
     | '/docs/ledger'
     | '/docs/mcp'
     | '/docs/money'
@@ -1972,6 +2066,7 @@ export interface FileRouteTypes {
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
+    | '/pro/authorize'
     | '/wiki/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -2046,6 +2141,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/pro/checkout/$id'
     | '/asset/$tokenId/chat'
     | '/bags/token/$mint'
     | '/openpay/connect/callback'
@@ -2056,6 +2152,7 @@ export interface FileRouteTypes {
     | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/integrations'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
     | '/api/public/docs/openapi'
@@ -2074,14 +2171,18 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/charges'
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/charges/$id'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/balance'
     | '/api/public/pro/user/me'
+    | '/api/public/pro/charges/$id/cancel'
   id:
     | '__root__'
     | '/'
@@ -2122,6 +2223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opentoken'
     | '/_authenticated/ousd'
     | '/_authenticated/p2p'
+    | '/_authenticated/partner-api'
     | '/_authenticated/profile'
     | '/_authenticated/receive'
     | '/_authenticated/scan'
@@ -2149,6 +2251,7 @@ export interface FileRouteTypes {
     | '/docs/errors'
     | '/docs/exchange'
     | '/docs/faq'
+    | '/docs/integrations'
     | '/docs/ledger'
     | '/docs/mcp'
     | '/docs/money'
@@ -2157,6 +2260,7 @@ export interface FileRouteTypes {
     | '/docs/tokens'
     | '/guides/transfer-pi'
     | '/pay/$to'
+    | '/pro/authorize'
     | '/wiki_/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -2231,6 +2335,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/pro/checkout/$id'
     | '/_authenticated/asset_/$tokenId_/chat'
     | '/_authenticated/bags_/token/$mint'
     | '/_authenticated/openpay/connect/callback'
@@ -2241,6 +2346,7 @@ export interface FileRouteTypes {
     | '/api/public/docs/ai-partner'
     | '/api/public/docs/errors'
     | '/api/public/docs/exchange'
+    | '/api/public/docs/integrations'
     | '/api/public/docs/ledger'
     | '/api/public/docs/mcp'
     | '/api/public/docs/openapi'
@@ -2259,14 +2365,18 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/charges'
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/charges/$id'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/balance'
     | '/api/public/pro/user/me'
+    | '/api/public/pro/charges/$id/cancel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2297,6 +2407,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
   PayToRoute: typeof PayToRoute
+  ProAuthorizeRoute: typeof ProAuthorizeRoute
   WikiSlugRoute: typeof WikiSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -2327,9 +2438,11 @@ export interface RootRouteChildren {
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
   ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
+  ProCheckoutIdRoute: typeof ProCheckoutIdRoute
   ApiPublicDocsAiPartnerRoute: typeof ApiPublicDocsAiPartnerRoute
   ApiPublicDocsErrorsRoute: typeof ApiPublicDocsErrorsRoute
   ApiPublicDocsExchangeRoute: typeof ApiPublicDocsExchangeRoute
+  ApiPublicDocsIntegrationsRoute: typeof ApiPublicDocsIntegrationsRoute
   ApiPublicDocsLedgerRoute: typeof ApiPublicDocsLedgerRoute
   ApiPublicDocsMcpRoute: typeof ApiPublicDocsMcpRoute
   ApiPublicDocsOpenapiRoute: typeof ApiPublicDocsOpenapiRoute
@@ -2348,134 +2461,24 @@ export interface RootRouteChildren {
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
+  ApiPublicProChargesRoute: typeof ApiPublicProChargesRouteWithChildren
   ApiPublicProConfigRoute: typeof ApiPublicProConfigRoute
   ApiPublicPushSubscribeRoute: typeof ApiPublicPushSubscribeRoute
   ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
   ApiPublicProOauthTokenRoute: typeof ApiPublicProOauthTokenRoute
+  ApiPublicProUserBalanceRoute: typeof ApiPublicProUserBalanceRoute
   ApiPublicProUserMeRoute: typeof ApiPublicProUserMeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wiki': {
-      id: '/wiki'
-      path: '/wiki'
-      fullPath: '/wiki'
-      preLoaderRoute: typeof WikiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/website': {
-      id: '/website'
-      path: '/website'
-      fullPath: '/website'
-      preLoaderRoute: typeof WebsiteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/testnet-reward': {
-      id: '/testnet-reward'
-      path: '/testnet-reward'
-      fullPath: '/testnet-reward'
-      preLoaderRoute: typeof TestnetRewardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/regulatory': {
-      id: '/regulatory'
-      path: '/regulatory'
-      fullPath: '/regulatory'
-      preLoaderRoute: typeof RegulatoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pitch': {
-      id: '/pitch'
-      path: '/pitch'
-      fullPath: '/pitch'
-      preLoaderRoute: typeof PitchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/openusd': {
-      id: '/openusd'
-      path: '/openusd'
-      fullPath: '/openusd'
-      preLoaderRoute: typeof OpenusdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal': {
-      id: '/legal'
-      path: '/legal'
-      fullPath: '/legal'
-      preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/funding': {
-      id: '/funding'
-      path: '/funding'
-      fullPath: '/funding'
-      preLoaderRoute: typeof FundingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/authpi': {
-      id: '/authpi'
-      path: '/authpi'
-      fullPath: '/authpi'
-      preLoaderRoute: typeof AuthpiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -2485,389 +2488,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/wiki_/$slug': {
-      id: '/wiki_/$slug'
-      path: '/wiki/$slug'
-      fullPath: '/wiki/$slug'
-      preLoaderRoute: typeof WikiSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pay/$to': {
-      id: '/pay/$to'
-      path: '/pay/$to'
-      fullPath: '/pay/$to'
-      preLoaderRoute: typeof PayToRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides/transfer-pi': {
-      id: '/guides/transfer-pi'
-      path: '/guides/transfer-pi'
-      fullPath: '/guides/transfer-pi'
-      preLoaderRoute: typeof GuidesTransferPiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs/tokens': {
-      id: '/docs/tokens'
-      path: '/tokens'
-      fullPath: '/docs/tokens'
-      preLoaderRoute: typeof DocsTokensRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/pro-pay': {
-      id: '/docs/pro-pay'
-      path: '/pro-pay'
-      fullPath: '/docs/pro-pay'
-      preLoaderRoute: typeof DocsProPayRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/openpay': {
-      id: '/docs/openpay'
-      path: '/openpay'
-      fullPath: '/docs/openpay'
-      preLoaderRoute: typeof DocsOpenpayRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/money': {
-      id: '/docs/money'
-      path: '/money'
-      fullPath: '/docs/money'
-      preLoaderRoute: typeof DocsMoneyRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/mcp': {
-      id: '/docs/mcp'
-      path: '/mcp'
-      fullPath: '/docs/mcp'
-      preLoaderRoute: typeof DocsMcpRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/ledger': {
-      id: '/docs/ledger'
-      path: '/ledger'
-      fullPath: '/docs/ledger'
-      preLoaderRoute: typeof DocsLedgerRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/faq': {
-      id: '/docs/faq'
-      path: '/faq'
-      fullPath: '/docs/faq'
-      preLoaderRoute: typeof DocsFaqRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/exchange': {
-      id: '/docs/exchange'
-      path: '/exchange'
-      fullPath: '/docs/exchange'
-      preLoaderRoute: typeof DocsExchangeRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/errors': {
-      id: '/docs/errors'
-      path: '/errors'
-      fullPath: '/docs/errors'
-      preLoaderRoute: typeof DocsErrorsRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/auth': {
-      id: '/docs/auth'
+    '/auth': {
+      id: '/auth'
       path: '/auth'
-      fullPath: '/docs/auth'
-      preLoaderRoute: typeof DocsAuthRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/api': {
-      id: '/docs/api'
-      path: '/api'
-      fullPath: '/docs/api'
-      preLoaderRoute: typeof DocsApiRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/ai': {
-      id: '/docs/ai'
-      path: '/ai'
-      fullPath: '/docs/ai'
-      preLoaderRoute: typeof DocsAiRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/blog_/$slug': {
-      id: '/blog_/$slug'
-      path: '/blog/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/api/tts': {
-      id: '/api/tts'
-      path: '/api/tts'
-      fullPath: '/api/tts'
-      preLoaderRoute: typeof ApiTtsRouteImport
+    '/authpi': {
+      id: '/authpi'
+      path: '/authpi'
+      fullPath: '/authpi'
+      preLoaderRoute: typeof AuthpiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/testnet-progress': {
-      id: '/admin/testnet-progress'
-      path: '/admin/testnet-progress'
-      fullPath: '/admin/testnet-progress'
-      preLoaderRoute: typeof AdminTestnetProgressRouteImport
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/withdraw': {
-      id: '/_authenticated/withdraw'
-      path: '/withdraw'
-      fullPath: '/withdraw'
-      preLoaderRoute: typeof AuthenticatedWithdrawRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/funding': {
+      id: '/funding'
+      path: '/funding'
+      fullPath: '/funding'
+      preLoaderRoute: typeof FundingRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wc-pay': {
-      id: '/_authenticated/wc-pay'
-      path: '/wc-pay'
-      fullPath: '/wc-pay'
-      preLoaderRoute: typeof AuthenticatedWcPayRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/watchlist': {
-      id: '/_authenticated/watchlist'
-      path: '/watchlist'
-      fullPath: '/watchlist'
-      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/openusd': {
+      id: '/openusd'
+      path: '/openusd'
+      fullPath: '/openusd'
+      preLoaderRoute: typeof OpenusdRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/trust-wallet': {
-      id: '/_authenticated/trust-wallet'
-      path: '/trust-wallet'
-      fullPath: '/trust-wallet'
-      preLoaderRoute: typeof AuthenticatedTrustWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/pitch': {
+      id: '/pitch'
+      path: '/pitch'
+      fullPath: '/pitch'
+      preLoaderRoute: typeof PitchRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/transfer': {
-      id: '/_authenticated/transfer'
-      path: '/transfer'
-      fullPath: '/transfer'
-      preLoaderRoute: typeof AuthenticatedTransferRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/trade': {
-      id: '/_authenticated/trade'
-      path: '/trade'
-      fullPath: '/trade'
-      preLoaderRoute: typeof AuthenticatedTradeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/regulatory': {
+      id: '/regulatory'
+      path: '/regulatory'
+      fullPath: '/regulatory'
+      preLoaderRoute: typeof RegulatoryRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/topup': {
-      id: '/_authenticated/topup'
-      path: '/topup'
-      fullPath: '/topup'
-      preLoaderRoute: typeof AuthenticatedTopupRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tokens': {
-      id: '/_authenticated/tokens'
-      path: '/tokens'
-      fullPath: '/tokens'
-      preLoaderRoute: typeof AuthenticatedTokensRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/swap': {
-      id: '/_authenticated/swap'
-      path: '/swap'
-      fullPath: '/swap'
-      preLoaderRoute: typeof AuthenticatedSwapRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/testnet-reward': {
+      id: '/testnet-reward'
+      path: '/testnet-reward'
+      fullPath: '/testnet-reward'
+      preLoaderRoute: typeof TestnetRewardRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/solana-pay': {
-      id: '/_authenticated/solana-pay'
-      path: '/solana-pay'
-      fullPath: '/solana-pay'
-      preLoaderRoute: typeof AuthenticatedSolanaPayRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/website': {
+      id: '/website'
+      path: '/website'
+      fullPath: '/website'
+      preLoaderRoute: typeof WebsiteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/send': {
-      id: '/_authenticated/send'
-      path: '/send'
-      fullPath: '/send'
-      preLoaderRoute: typeof AuthenticatedSendRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/scan': {
-      id: '/_authenticated/scan'
-      path: '/scan'
-      fullPath: '/scan'
-      preLoaderRoute: typeof AuthenticatedScanRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/receive': {
-      id: '/_authenticated/receive'
-      path: '/receive'
-      fullPath: '/receive'
-      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p': {
-      id: '/_authenticated/p2p'
-      path: '/p2p'
-      fullPath: '/p2p'
-      preLoaderRoute: typeof AuthenticatedP2pRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ousd': {
-      id: '/_authenticated/ousd'
-      path: '/ousd'
-      fullPath: '/ousd'
-      preLoaderRoute: typeof AuthenticatedOusdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken': {
-      id: '/_authenticated/opentoken'
-      path: '/opentoken'
-      fullPath: '/opentoken'
-      preLoaderRoute: typeof AuthenticatedOpentokenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nfts': {
-      id: '/_authenticated/nfts'
-      path: '/nfts'
-      fullPath: '/nfts'
-      preLoaderRoute: typeof AuthenticatedNftsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/metamask': {
-      id: '/_authenticated/metamask'
-      path: '/metamask'
-      fullPath: '/metamask'
-      preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ledger': {
-      id: '/_authenticated/ledger'
-      path: '/ledger'
-      fullPath: '/ledger'
-      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/kyc': {
-      id: '/_authenticated/kyc'
-      path: '/kyc'
-      fullPath: '/kyc'
-      preLoaderRoute: typeof AuthenticatedKycRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/developer': {
-      id: '/_authenticated/developer'
-      path: '/developer'
-      fullPath: '/developer'
-      preLoaderRoute: typeof AuthenticatedDeveloperRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/deposit': {
-      id: '/_authenticated/deposit'
-      path: '/deposit'
-      fullPath: '/deposit'
-      preLoaderRoute: typeof AuthenticatedDepositRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/connect': {
-      id: '/_authenticated/connect'
-      path: '/connect'
-      fullPath: '/connect'
-      preLoaderRoute: typeof AuthenticatedConnectRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chat': {
-      id: '/_authenticated/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthenticatedChatRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/bags': {
-      id: '/_authenticated/bags'
-      path: '/bags'
-      fullPath: '/bags'
-      preLoaderRoute: typeof AuthenticatedBagsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/assets': {
-      id: '/_authenticated/assets'
-      path: '/assets'
-      fullPath: '/assets'
-      preLoaderRoute: typeof AuthenticatedAssetsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/airdrop': {
-      id: '/_authenticated/airdrop'
-      path: '/airdrop'
-      fullPath: '/airdrop'
-      preLoaderRoute: typeof AuthenticatedAirdropRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ai': {
-      id: '/_authenticated/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AuthenticatedAiRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/activity': {
-      id: '/_authenticated/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof AuthenticatedActivityRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/wiki': {
+      id: '/wiki'
+      path: '/wiki'
+      fullPath: '/wiki'
+      preLoaderRoute: typeof WikiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -2877,508 +2614,403 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/telegram/callback': {
-      id: '/auth/telegram/callback'
-      path: '/telegram/callback'
-      fullPath: '/auth/telegram/callback'
-      preLoaderRoute: typeof AuthTelegramCallbackRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ai': {
+      id: '/_authenticated/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/airdrop': {
+      id: '/_authenticated/airdrop'
+      path: '/airdrop'
+      fullPath: '/airdrop'
+      preLoaderRoute: typeof AuthenticatedAirdropRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assets': {
+      id: '/_authenticated/assets'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof AuthenticatedAssetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags': {
+      id: '/_authenticated/bags'
+      path: '/bags'
+      fullPath: '/bags'
+      preLoaderRoute: typeof AuthenticatedBagsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/connect': {
+      id: '/_authenticated/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof AuthenticatedConnectRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/deposit': {
+      id: '/_authenticated/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof AuthenticatedDepositRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/developer': {
+      id: '/_authenticated/developer'
+      path: '/developer'
+      fullPath: '/developer'
+      preLoaderRoute: typeof AuthenticatedDeveloperRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ledger': {
+      id: '/_authenticated/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof AuthenticatedLedgerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metamask': {
+      id: '/_authenticated/metamask'
+      path: '/metamask'
+      fullPath: '/metamask'
+      preLoaderRoute: typeof AuthenticatedMetamaskRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts': {
+      id: '/_authenticated/nfts'
+      path: '/nfts'
+      fullPath: '/nfts'
+      preLoaderRoute: typeof AuthenticatedNftsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken': {
+      id: '/_authenticated/opentoken'
+      path: '/opentoken'
+      fullPath: '/opentoken'
+      preLoaderRoute: typeof AuthenticatedOpentokenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ousd': {
+      id: '/_authenticated/ousd'
+      path: '/ousd'
+      fullPath: '/ousd'
+      preLoaderRoute: typeof AuthenticatedOusdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p': {
+      id: '/_authenticated/p2p'
+      path: '/p2p'
+      fullPath: '/p2p'
+      preLoaderRoute: typeof AuthenticatedP2pRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/partner-api': {
+      id: '/_authenticated/partner-api'
+      path: '/partner-api'
+      fullPath: '/partner-api'
+      preLoaderRoute: typeof AuthenticatedPartnerApiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/receive': {
+      id: '/_authenticated/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AuthenticatedReceiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/send': {
+      id: '/_authenticated/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthenticatedSendRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/solana-pay': {
+      id: '/_authenticated/solana-pay'
+      path: '/solana-pay'
+      fullPath: '/solana-pay'
+      preLoaderRoute: typeof AuthenticatedSolanaPayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/swap': {
+      id: '/_authenticated/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof AuthenticatedSwapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tokens': {
+      id: '/_authenticated/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof AuthenticatedTokensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/topup': {
+      id: '/_authenticated/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof AuthenticatedTopupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trade': {
+      id: '/_authenticated/trade'
+      path: '/trade'
+      fullPath: '/trade'
+      preLoaderRoute: typeof AuthenticatedTradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transfer': {
+      id: '/_authenticated/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof AuthenticatedTransferRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trust-wallet': {
+      id: '/_authenticated/trust-wallet'
+      path: '/trust-wallet'
+      fullPath: '/trust-wallet'
+      preLoaderRoute: typeof AuthenticatedTrustWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/watchlist': {
+      id: '/_authenticated/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wc-pay': {
+      id: '/_authenticated/wc-pay'
+      path: '/wc-pay'
+      fullPath: '/wc-pay'
+      preLoaderRoute: typeof AuthenticatedWcPayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/withdraw': {
+      id: '/_authenticated/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof AuthenticatedWithdrawRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/testnet-progress': {
+      id: '/admin/testnet-progress'
+      path: '/admin/testnet-progress'
+      fullPath: '/admin/testnet-progress'
+      preLoaderRoute: typeof AdminTestnetProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/auth/pi/callback': {
-      id: '/auth/pi/callback'
-      path: '/pi/callback'
-      fullPath: '/auth/pi/callback'
-      preLoaderRoute: typeof AuthPiCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/openpay/callback': {
-      id: '/auth/openpay/callback'
-      path: '/openpay/callback'
-      fullPath: '/auth/openpay/callback'
-      preLoaderRoute: typeof AuthOpenpayCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/api/webhooks/transactions': {
-      id: '/api/webhooks/transactions'
-      path: '/api/webhooks/transactions'
-      fullPath: '/api/webhooks/transactions'
-      preLoaderRoute: typeof ApiWebhooksTransactionsRouteImport
+    '/blog_/$slug': {
+      id: '/blog_/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/circle-mint': {
-      id: '/api/webhooks/circle-mint'
-      path: '/api/webhooks/circle-mint'
-      fullPath: '/api/webhooks/circle-mint'
-      preLoaderRoute: typeof ApiWebhooksCircleMintRouteImport
+    '/docs/ai': {
+      id: '/docs/ai'
+      path: '/ai'
+      fullPath: '/docs/ai'
+      preLoaderRoute: typeof DocsAiRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/api': {
+      id: '/docs/api'
+      path: '/api'
+      fullPath: '/docs/api'
+      preLoaderRoute: typeof DocsApiRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/auth': {
+      id: '/docs/auth'
+      path: '/auth'
+      fullPath: '/docs/auth'
+      preLoaderRoute: typeof DocsAuthRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/errors': {
+      id: '/docs/errors'
+      path: '/errors'
+      fullPath: '/docs/errors'
+      preLoaderRoute: typeof DocsErrorsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/exchange': {
+      id: '/docs/exchange'
+      path: '/exchange'
+      fullPath: '/docs/exchange'
+      preLoaderRoute: typeof DocsExchangeRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/faq': {
+      id: '/docs/faq'
+      path: '/faq'
+      fullPath: '/docs/faq'
+      preLoaderRoute: typeof DocsFaqRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/integrations': {
+      id: '/docs/integrations'
+      path: '/integrations'
+      fullPath: '/docs/integrations'
+      preLoaderRoute: typeof DocsIntegrationsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/ledger': {
+      id: '/docs/ledger'
+      path: '/ledger'
+      fullPath: '/docs/ledger'
+      preLoaderRoute: typeof DocsLedgerRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/mcp': {
+      id: '/docs/mcp'
+      path: '/mcp'
+      fullPath: '/docs/mcp'
+      preLoaderRoute: typeof DocsMcpRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/money': {
+      id: '/docs/money'
+      path: '/money'
+      fullPath: '/docs/money'
+      preLoaderRoute: typeof DocsMoneyRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/openpay': {
+      id: '/docs/openpay'
+      path: '/openpay'
+      fullPath: '/docs/openpay'
+      preLoaderRoute: typeof DocsOpenpayRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/pro-pay': {
+      id: '/docs/pro-pay'
+      path: '/pro-pay'
+      fullPath: '/docs/pro-pay'
+      preLoaderRoute: typeof DocsProPayRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/tokens': {
+      id: '/docs/tokens'
+      path: '/tokens'
+      fullPath: '/docs/tokens'
+      preLoaderRoute: typeof DocsTokensRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/guides/transfer-pi': {
+      id: '/guides/transfer-pi'
+      path: '/guides/transfer-pi'
+      fullPath: '/guides/transfer-pi'
+      preLoaderRoute: typeof GuidesTransferPiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/circle': {
-      id: '/api/webhooks/circle'
-      path: '/api/webhooks/circle'
-      fullPath: '/api/webhooks/circle'
-      preLoaderRoute: typeof ApiWebhooksCircleRouteImport
+    '/pay/$to': {
+      id: '/pay/$to'
+      path: '/pay/$to'
+      fullPath: '/pay/$to'
+      preLoaderRoute: typeof PayToRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/web3auth-auth': {
-      id: '/api/public/web3auth-auth'
-      path: '/api/public/web3auth-auth'
-      fullPath: '/api/public/web3auth-auth'
-      preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
+    '/pro/authorize': {
+      id: '/pro/authorize'
+      path: '/pro/authorize'
+      fullPath: '/pro/authorize'
+      preLoaderRoute: typeof ProAuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/walletconnect-auth': {
-      id: '/api/public/walletconnect-auth'
-      path: '/api/public/walletconnect-auth'
-      fullPath: '/api/public/walletconnect-auth'
-      preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-validate': {
-      id: '/api/public/trustwallet-validate'
-      path: '/api/public/trustwallet-validate'
-      fullPath: '/api/public/trustwallet-validate'
-      preLoaderRoute: typeof ApiPublicTrustwalletValidateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-status': {
-      id: '/api/public/trustwallet-status'
-      path: '/api/public/trustwallet-status'
-      fullPath: '/api/public/trustwallet-status'
-      preLoaderRoute: typeof ApiPublicTrustwalletStatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-search': {
-      id: '/api/public/trustwallet-search'
-      path: '/api/public/trustwallet-search'
-      fullPath: '/api/public/trustwallet-search'
-      preLoaderRoute: typeof ApiPublicTrustwalletSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-quote': {
-      id: '/api/public/trustwallet-quote'
-      path: '/api/public/trustwallet-quote'
-      fullPath: '/api/public/trustwallet-quote'
-      preLoaderRoute: typeof ApiPublicTrustwalletQuoteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-prices': {
-      id: '/api/public/trustwallet-prices'
-      path: '/api/public/trustwallet-prices'
-      fullPath: '/api/public/trustwallet-prices'
-      preLoaderRoute: typeof ApiPublicTrustwalletPricesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trustwallet-listings': {
-      id: '/api/public/trustwallet-listings'
-      path: '/api/public/trustwallet-listings'
-      fullPath: '/api/public/trustwallet-listings'
-      preLoaderRoute: typeof ApiPublicTrustwalletListingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/telegram-auth': {
-      id: '/api/public/telegram-auth'
-      path: '/api/public/telegram-auth'
-      fullPath: '/api/public/telegram-auth'
-      preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/supabase-config': {
-      id: '/api/public/supabase-config'
-      path: '/api/public/supabase-config'
-      fullPath: '/api/public/supabase-config'
-      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/solana-auth': {
-      id: '/api/public/solana-auth'
-      path: '/api/public/solana-auth'
-      fullPath: '/api/public/solana-auth'
-      preLoaderRoute: typeof ApiPublicSolanaAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-link-wallet': {
-      id: '/api/public/pi-link-wallet'
-      path: '/api/public/pi-link-wallet'
-      fullPath: '/api/public/pi-link-wallet'
-      preLoaderRoute: typeof ApiPublicPiLinkWalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-auth': {
-      id: '/api/public/pi-auth'
-      path: '/api/public/pi-auth'
-      fullPath: '/api/public/pi-auth'
-      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-a2u': {
-      id: '/api/public/pi-a2u'
-      path: '/api/public/pi-a2u'
-      fullPath: '/api/public/pi-a2u'
-      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay-auth': {
-      id: '/api/public/openpay-auth'
-      path: '/api/public/openpay-auth'
-      fullPath: '/api/public/openpay-auth'
-      preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/moonpay-webhook': {
-      id: '/api/public/moonpay-webhook'
-      path: '/api/public/moonpay-webhook'
-      fullPath: '/api/public/moonpay-webhook'
-      preLoaderRoute: typeof ApiPublicMoonpayWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/moonpay-sign': {
-      id: '/api/public/moonpay-sign'
-      path: '/api/public/moonpay-sign'
-      fullPath: '/api/public/moonpay-sign'
-      preLoaderRoute: typeof ApiPublicMoonpaySignRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/kyc-webhook': {
-      id: '/api/public/kyc-webhook'
-      path: '/api/public/kyc-webhook'
-      fullPath: '/api/public/kyc-webhook'
-      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/helio-deposit-webhook': {
-      id: '/api/public/helio-deposit-webhook'
-      path: '/api/public/helio-deposit-webhook'
-      fullPath: '/api/public/helio-deposit-webhook'
-      preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/deposit-monitor': {
-      id: '/api/public/deposit-monitor'
-      path: '/api/public/deposit-monitor'
-      fullPath: '/api/public/deposit-monitor'
-      preLoaderRoute: typeof ApiPublicDepositMonitorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/banxa-webhook': {
-      id: '/api/public/banxa-webhook'
-      path: '/api/public/banxa-webhook'
-      fullPath: '/api/public/banxa-webhook'
-      preLoaderRoute: typeof ApiPublicBanxaWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/transfer-fix': {
-      id: '/api/admin/transfer-fix'
-      path: '/api/admin/transfer-fix'
-      fullPath: '/api/admin/transfer-fix'
-      preLoaderRoute: typeof ApiAdminTransferFixRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/p2p-fix': {
-      id: '/api/admin/p2p-fix'
-      path: '/api/admin/p2p-fix'
-      fullPath: '/api/admin/p2p-fix'
-      preLoaderRoute: typeof ApiAdminP2pFixRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/wallet_/receive': {
-      id: '/_authenticated/wallet_/receive'
-      path: '/wallet/receive'
-      fullPath: '/wallet/receive'
-      preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tokens/create': {
-      id: '/_authenticated/tokens/create'
-      path: '/create'
-      fullPath: '/tokens/create'
-      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
-      parentRoute: typeof AuthenticatedTokensRoute
-    }
-    '/_authenticated/p2p_/wallet': {
-      id: '/_authenticated/p2p_/wallet'
-      path: '/p2p/wallet'
-      fullPath: '/p2p/wallet'
-      preLoaderRoute: typeof AuthenticatedP2pWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/terms': {
-      id: '/_authenticated/p2p_/terms'
-      path: '/p2p/terms'
-      fullPath: '/p2p/terms'
-      preLoaderRoute: typeof AuthenticatedP2pTermsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/support': {
-      id: '/_authenticated/p2p_/support'
-      path: '/p2p/support'
-      fullPath: '/p2p/support'
-      preLoaderRoute: typeof AuthenticatedP2pSupportRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/settings': {
-      id: '/_authenticated/p2p_/settings'
-      path: '/p2p/settings'
-      fullPath: '/p2p/settings'
-      preLoaderRoute: typeof AuthenticatedP2pSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/select-payment': {
-      id: '/_authenticated/p2p_/select-payment'
-      path: '/p2p/select-payment'
-      fullPath: '/p2p/select-payment'
-      preLoaderRoute: typeof AuthenticatedP2pSelectPaymentRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/security': {
-      id: '/_authenticated/p2p_/security'
-      path: '/p2p/security'
-      fullPath: '/p2p/security'
-      preLoaderRoute: typeof AuthenticatedP2pSecurityRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/rules': {
-      id: '/_authenticated/p2p_/rules'
-      path: '/p2p/rules'
-      fullPath: '/p2p/rules'
-      preLoaderRoute: typeof AuthenticatedP2pRulesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/reviews': {
-      id: '/_authenticated/p2p_/reviews'
-      path: '/p2p/reviews'
-      fullPath: '/p2p/reviews'
-      preLoaderRoute: typeof AuthenticatedP2pReviewsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/profile': {
-      id: '/_authenticated/p2p_/profile'
-      path: '/p2p/profile'
-      fullPath: '/p2p/profile'
-      preLoaderRoute: typeof AuthenticatedP2pProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/privacy': {
-      id: '/_authenticated/p2p_/privacy'
-      path: '/p2p/privacy'
-      fullPath: '/p2p/privacy'
-      preLoaderRoute: typeof AuthenticatedP2pPrivacyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/payments': {
-      id: '/_authenticated/p2p_/payments'
-      path: '/p2p/payments'
-      fullPath: '/p2p/payments'
-      preLoaderRoute: typeof AuthenticatedP2pPaymentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/payment-ads': {
-      id: '/_authenticated/p2p_/payment-ads'
-      path: '/p2p/payment-ads'
-      fullPath: '/p2p/payment-ads'
-      preLoaderRoute: typeof AuthenticatedP2pPaymentAdsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/payment-account': {
-      id: '/_authenticated/p2p_/payment-account'
-      path: '/p2p/payment-account'
-      fullPath: '/p2p/payment-account'
-      preLoaderRoute: typeof AuthenticatedP2pPaymentAccountRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/orders': {
-      id: '/_authenticated/p2p_/orders'
-      path: '/p2p/orders'
-      fullPath: '/p2p/orders'
-      preLoaderRoute: typeof AuthenticatedP2pOrdersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/messages': {
-      id: '/_authenticated/p2p_/messages'
-      path: '/p2p/messages'
-      fullPath: '/p2p/messages'
-      preLoaderRoute: typeof AuthenticatedP2pMessagesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/merchant': {
-      id: '/_authenticated/p2p_/merchant'
-      path: '/p2p/merchant'
-      fullPath: '/p2p/merchant'
-      preLoaderRoute: typeof AuthenticatedP2pMerchantRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/guide': {
-      id: '/_authenticated/p2p_/guide'
-      path: '/p2p/guide'
-      fullPath: '/p2p/guide'
-      preLoaderRoute: typeof AuthenticatedP2pGuideRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/express': {
-      id: '/_authenticated/p2p_/express'
-      path: '/p2p/express'
-      fullPath: '/p2p/express'
-      preLoaderRoute: typeof AuthenticatedP2pExpressRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/create-new': {
-      id: '/_authenticated/p2p_/create-new'
-      path: '/p2p/create-new'
-      fullPath: '/p2p/create-new'
-      preLoaderRoute: typeof AuthenticatedP2pCreateNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/create': {
-      id: '/_authenticated/p2p_/create'
-      path: '/p2p/create'
-      fullPath: '/p2p/create'
-      preLoaderRoute: typeof AuthenticatedP2pCreateRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/api': {
-      id: '/_authenticated/p2p_/api'
-      path: '/p2p/api'
-      fullPath: '/p2p/api'
-      preLoaderRoute: typeof AuthenticatedP2pApiRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/agreement': {
-      id: '/_authenticated/p2p_/agreement'
-      path: '/p2p/agreement'
-      fullPath: '/p2p/agreement'
-      preLoaderRoute: typeof AuthenticatedP2pAgreementRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/p2p_/admin': {
-      id: '/_authenticated/p2p_/admin'
-      path: '/p2p/admin'
-      fullPath: '/p2p/admin'
-      preLoaderRoute: typeof AuthenticatedP2pAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken_/terminal': {
-      id: '/_authenticated/opentoken_/terminal'
-      path: '/opentoken/terminal'
-      fullPath: '/opentoken/terminal'
-      preLoaderRoute: typeof AuthenticatedOpentokenTerminalRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken_/portfolio': {
-      id: '/_authenticated/opentoken_/portfolio'
-      path: '/opentoken/portfolio'
-      fullPath: '/opentoken/portfolio'
-      preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken_/create': {
-      id: '/_authenticated/opentoken_/create'
-      path: '/opentoken/create'
-      fullPath: '/opentoken/create'
-      preLoaderRoute: typeof AuthenticatedOpentokenCreateRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken_/admin': {
-      id: '/_authenticated/opentoken_/admin'
-      path: '/opentoken/admin'
-      fullPath: '/opentoken/admin'
-      preLoaderRoute: typeof AuthenticatedOpentokenAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/opentoken_/$tokenId': {
-      id: '/_authenticated/opentoken_/$tokenId'
-      path: '/opentoken/$tokenId'
-      fullPath: '/opentoken/$tokenId'
-      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nfts/mint': {
-      id: '/_authenticated/nfts/mint'
-      path: '/mint'
-      fullPath: '/nfts/mint'
-      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
-      parentRoute: typeof AuthenticatedNftsRoute
-    }
-    '/_authenticated/bags_/trade': {
-      id: '/_authenticated/bags_/trade'
-      path: '/bags/trade'
-      fullPath: '/bags/trade'
-      preLoaderRoute: typeof AuthenticatedBagsTradeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/bags_/launch': {
-      id: '/_authenticated/bags_/launch'
-      path: '/bags/launch'
-      fullPath: '/bags/launch'
-      preLoaderRoute: typeof AuthenticatedBagsLaunchRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/bags_/fees': {
-      id: '/_authenticated/bags_/fees'
-      path: '/bags/fees'
-      fullPath: '/bags/fees'
-      preLoaderRoute: typeof AuthenticatedBagsFeesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/assets_/$account': {
-      id: '/_authenticated/assets_/$account'
-      path: '/assets/$account'
-      fullPath: '/assets/$account'
-      preLoaderRoute: typeof AuthenticatedAssetsAccountRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/asset_/$tokenId': {
-      id: '/_authenticated/asset_/$tokenId'
-      path: '/asset/$tokenId'
-      fullPath: '/asset/$tokenId'
-      preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/withdrawals': {
-      id: '/_authenticated/admin/withdrawals'
-      path: '/admin/withdrawals'
-      fullPath: '/admin/withdrawals'
-      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/topup': {
-      id: '/_authenticated/admin/topup'
-      path: '/admin/topup'
-      fullPath: '/admin/topup'
-      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/deposits': {
-      id: '/_authenticated/admin/deposits'
-      path: '/admin/deposits'
-      fullPath: '/admin/deposits'
-      preLoaderRoute: typeof AuthenticatedAdminDepositsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/auth': {
-      id: '/_authenticated/admin/auth'
-      path: '/admin/auth'
-      fullPath: '/admin/auth'
-      preLoaderRoute: typeof AuthenticatedAdminAuthRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/airdrops': {
-      id: '/_authenticated/admin/airdrops'
-      path: '/admin/airdrops'
-      fullPath: '/admin/airdrops'
-      preLoaderRoute: typeof AuthenticatedAdminAirdropsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/wiki_/$slug': {
+      id: '/wiki_/$slug'
+      path: '/wiki/$slug'
+      fullPath: '/wiki/$slug'
+      preLoaderRoute: typeof WikiSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -3388,214 +3020,522 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/push/unsubscribe': {
-      id: '/api/public/push/unsubscribe'
-      path: '/api/public/push/unsubscribe'
-      fullPath: '/api/public/push/unsubscribe'
-      preLoaderRoute: typeof ApiPublicPushUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/push/subscribe': {
-      id: '/api/public/push/subscribe'
-      path: '/api/public/push/subscribe'
-      fullPath: '/api/public/push/subscribe'
-      preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pro/config': {
-      id: '/api/public/pro/config'
-      path: '/api/public/pro/config'
-      fullPath: '/api/public/pro/config'
-      preLoaderRoute: typeof ApiPublicProConfigRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/incomplete': {
-      id: '/api/public/pi-payments/incomplete'
-      path: '/api/public/pi-payments/incomplete'
-      fullPath: '/api/public/pi-payments/incomplete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/complete': {
-      id: '/api/public/pi-payments/complete'
-      path: '/api/public/pi-payments/complete'
-      fullPath: '/api/public/pi-payments/complete'
-      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/pi-payments/approve': {
-      id: '/api/public/pi-payments/approve'
-      path: '/api/public/pi-payments/approve'
-      fullPath: '/api/public/pi-payments/approve'
-      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay/kyc-webhook': {
-      id: '/api/public/openpay/kyc-webhook'
-      path: '/api/public/openpay/kyc-webhook'
-      fullPath: '/api/public/openpay/kyc-webhook'
-      preLoaderRoute: typeof ApiPublicOpenpayKycWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay/inbound': {
-      id: '/api/public/openpay/inbound'
-      path: '/api/public/openpay/inbound'
-      fullPath: '/api/public/openpay/inbound'
-      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ledger/stats': {
-      id: '/api/public/ledger/stats'
-      path: '/api/public/ledger/stats'
-      fullPath: '/api/public/ledger/stats'
-      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ledger/entries': {
-      id: '/api/public/ledger/entries'
-      path: '/api/public/ledger/entries'
-      fullPath: '/api/public/ledger/entries'
-      preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/tokens': {
-      id: '/api/public/docs/tokens'
-      path: '/api/public/docs/tokens'
-      fullPath: '/api/public/docs/tokens'
-      preLoaderRoute: typeof ApiPublicDocsTokensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/qrpay-pro': {
-      id: '/api/public/docs/qrpay-pro'
-      path: '/api/public/docs/qrpay-pro'
-      fullPath: '/api/public/docs/qrpay-pro'
-      preLoaderRoute: typeof ApiPublicDocsQrpayProRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/pro-pay': {
-      id: '/api/public/docs/pro-pay'
-      path: '/api/public/docs/pro-pay'
-      fullPath: '/api/public/docs/pro-pay'
-      preLoaderRoute: typeof ApiPublicDocsProPayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/portal': {
-      id: '/api/public/docs/portal'
-      path: '/api/public/docs/portal'
-      fullPath: '/api/public/docs/portal'
-      preLoaderRoute: typeof ApiPublicDocsPortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/partner-transfer': {
-      id: '/api/public/docs/partner-transfer'
-      path: '/api/public/docs/partner-transfer'
-      fullPath: '/api/public/docs/partner-transfer'
-      preLoaderRoute: typeof ApiPublicDocsPartnerTransferRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/openpay-to-pro': {
-      id: '/api/public/docs/openpay-to-pro'
-      path: '/api/public/docs/openpay-to-pro'
-      fullPath: '/api/public/docs/openpay-to-pro'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayToProRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/openpay-auth': {
-      id: '/api/public/docs/openpay-auth'
-      path: '/api/public/docs/openpay-auth'
-      fullPath: '/api/public/docs/openpay-auth'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/openpay': {
-      id: '/api/public/docs/openpay'
-      path: '/api/public/docs/openpay'
-      fullPath: '/api/public/docs/openpay'
-      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/openapi': {
-      id: '/api/public/docs/openapi'
-      path: '/api/public/docs/openapi'
-      fullPath: '/api/public/docs/openapi'
-      preLoaderRoute: typeof ApiPublicDocsOpenapiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/mcp': {
-      id: '/api/public/docs/mcp'
-      path: '/api/public/docs/mcp'
-      fullPath: '/api/public/docs/mcp'
-      preLoaderRoute: typeof ApiPublicDocsMcpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/ledger': {
-      id: '/api/public/docs/ledger'
-      path: '/api/public/docs/ledger'
-      fullPath: '/api/public/docs/ledger'
-      preLoaderRoute: typeof ApiPublicDocsLedgerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/exchange': {
-      id: '/api/public/docs/exchange'
-      path: '/api/public/docs/exchange'
-      fullPath: '/api/public/docs/exchange'
-      preLoaderRoute: typeof ApiPublicDocsExchangeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/errors': {
-      id: '/api/public/docs/errors'
-      path: '/api/public/docs/errors'
-      fullPath: '/api/public/docs/errors'
-      preLoaderRoute: typeof ApiPublicDocsErrorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/docs/ai-partner': {
-      id: '/api/public/docs/ai-partner'
-      path: '/api/public/docs/ai-partner'
-      fullPath: '/api/public/docs/ai-partner'
-      preLoaderRoute: typeof ApiPublicDocsAiPartnerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/p2p_/take/$adId': {
-      id: '/_authenticated/p2p_/take/$adId'
-      path: '/p2p/take/$adId'
-      fullPath: '/p2p/take/$adId'
-      preLoaderRoute: typeof AuthenticatedP2pTakeAdIdRouteImport
+    '/_authenticated/admin/airdrops': {
+      id: '/_authenticated/admin/airdrops'
+      path: '/admin/airdrops'
+      fullPath: '/admin/airdrops'
+      preLoaderRoute: typeof AuthenticatedAdminAirdropsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/p2p_/order/$id': {
-      id: '/_authenticated/p2p_/order/$id'
-      path: '/p2p/order/$id'
-      fullPath: '/p2p/order/$id'
-      preLoaderRoute: typeof AuthenticatedP2pOrderIdRouteImport
+    '/_authenticated/admin/auth': {
+      id: '/_authenticated/admin/auth'
+      path: '/admin/auth'
+      fullPath: '/admin/auth'
+      preLoaderRoute: typeof AuthenticatedAdminAuthRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/creator/$userId': {
-      id: '/_authenticated/opentoken_/creator/$userId'
-      path: '/opentoken/creator/$userId'
-      fullPath: '/opentoken/creator/$userId'
-      preLoaderRoute: typeof AuthenticatedOpentokenCreatorUserIdRouteImport
+    '/_authenticated/admin/deposits': {
+      id: '/_authenticated/admin/deposits'
+      path: '/admin/deposits'
+      fullPath: '/admin/deposits'
+      preLoaderRoute: typeof AuthenticatedAdminDepositsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/opentoken_/$tokenId_/chat': {
-      id: '/_authenticated/opentoken_/$tokenId_/chat'
-      path: '/opentoken/$tokenId/chat'
-      fullPath: '/opentoken/$tokenId/chat'
-      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
+    '/_authenticated/admin/topup': {
+      id: '/_authenticated/admin/topup'
+      path: '/admin/topup'
+      fullPath: '/admin/topup'
+      preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/openpay/connect/callback': {
-      id: '/_authenticated/openpay/connect/callback'
-      path: '/openpay/connect/callback'
-      fullPath: '/openpay/connect/callback'
-      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
+    '/_authenticated/admin/withdrawals': {
+      id: '/_authenticated/admin/withdrawals'
+      path: '/admin/withdrawals'
+      fullPath: '/admin/withdrawals'
+      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/asset_/$tokenId': {
+      id: '/_authenticated/asset_/$tokenId'
+      path: '/asset/$tokenId'
+      fullPath: '/asset/$tokenId'
+      preLoaderRoute: typeof AuthenticatedAssetTokenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assets_/$account': {
+      id: '/_authenticated/assets_/$account'
+      path: '/assets/$account'
+      fullPath: '/assets/$account'
+      preLoaderRoute: typeof AuthenticatedAssetsAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/fees': {
+      id: '/_authenticated/bags_/fees'
+      path: '/bags/fees'
+      fullPath: '/bags/fees'
+      preLoaderRoute: typeof AuthenticatedBagsFeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/launch': {
+      id: '/_authenticated/bags_/launch'
+      path: '/bags/launch'
+      fullPath: '/bags/launch'
+      preLoaderRoute: typeof AuthenticatedBagsLaunchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bags_/trade': {
+      id: '/_authenticated/bags_/trade'
+      path: '/bags/trade'
+      fullPath: '/bags/trade'
+      preLoaderRoute: typeof AuthenticatedBagsTradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nfts/mint': {
+      id: '/_authenticated/nfts/mint'
+      path: '/mint'
+      fullPath: '/nfts/mint'
+      preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
+      parentRoute: typeof AuthenticatedNftsRoute
+    }
+    '/_authenticated/opentoken_/$tokenId': {
+      id: '/_authenticated/opentoken_/$tokenId'
+      path: '/opentoken/$tokenId'
+      fullPath: '/opentoken/$tokenId'
+      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/admin': {
+      id: '/_authenticated/opentoken_/admin'
+      path: '/opentoken/admin'
+      fullPath: '/opentoken/admin'
+      preLoaderRoute: typeof AuthenticatedOpentokenAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/create': {
+      id: '/_authenticated/opentoken_/create'
+      path: '/opentoken/create'
+      fullPath: '/opentoken/create'
+      preLoaderRoute: typeof AuthenticatedOpentokenCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/portfolio': {
+      id: '/_authenticated/opentoken_/portfolio'
+      path: '/opentoken/portfolio'
+      fullPath: '/opentoken/portfolio'
+      preLoaderRoute: typeof AuthenticatedOpentokenPortfolioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/terminal': {
+      id: '/_authenticated/opentoken_/terminal'
+      path: '/opentoken/terminal'
+      fullPath: '/opentoken/terminal'
+      preLoaderRoute: typeof AuthenticatedOpentokenTerminalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/admin': {
+      id: '/_authenticated/p2p_/admin'
+      path: '/p2p/admin'
+      fullPath: '/p2p/admin'
+      preLoaderRoute: typeof AuthenticatedP2pAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/agreement': {
+      id: '/_authenticated/p2p_/agreement'
+      path: '/p2p/agreement'
+      fullPath: '/p2p/agreement'
+      preLoaderRoute: typeof AuthenticatedP2pAgreementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/api': {
+      id: '/_authenticated/p2p_/api'
+      path: '/p2p/api'
+      fullPath: '/p2p/api'
+      preLoaderRoute: typeof AuthenticatedP2pApiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/create': {
+      id: '/_authenticated/p2p_/create'
+      path: '/p2p/create'
+      fullPath: '/p2p/create'
+      preLoaderRoute: typeof AuthenticatedP2pCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/create-new': {
+      id: '/_authenticated/p2p_/create-new'
+      path: '/p2p/create-new'
+      fullPath: '/p2p/create-new'
+      preLoaderRoute: typeof AuthenticatedP2pCreateNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/express': {
+      id: '/_authenticated/p2p_/express'
+      path: '/p2p/express'
+      fullPath: '/p2p/express'
+      preLoaderRoute: typeof AuthenticatedP2pExpressRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/guide': {
+      id: '/_authenticated/p2p_/guide'
+      path: '/p2p/guide'
+      fullPath: '/p2p/guide'
+      preLoaderRoute: typeof AuthenticatedP2pGuideRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/merchant': {
+      id: '/_authenticated/p2p_/merchant'
+      path: '/p2p/merchant'
+      fullPath: '/p2p/merchant'
+      preLoaderRoute: typeof AuthenticatedP2pMerchantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/messages': {
+      id: '/_authenticated/p2p_/messages'
+      path: '/p2p/messages'
+      fullPath: '/p2p/messages'
+      preLoaderRoute: typeof AuthenticatedP2pMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/orders': {
+      id: '/_authenticated/p2p_/orders'
+      path: '/p2p/orders'
+      fullPath: '/p2p/orders'
+      preLoaderRoute: typeof AuthenticatedP2pOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/payment-account': {
+      id: '/_authenticated/p2p_/payment-account'
+      path: '/p2p/payment-account'
+      fullPath: '/p2p/payment-account'
+      preLoaderRoute: typeof AuthenticatedP2pPaymentAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/payment-ads': {
+      id: '/_authenticated/p2p_/payment-ads'
+      path: '/p2p/payment-ads'
+      fullPath: '/p2p/payment-ads'
+      preLoaderRoute: typeof AuthenticatedP2pPaymentAdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/payments': {
+      id: '/_authenticated/p2p_/payments'
+      path: '/p2p/payments'
+      fullPath: '/p2p/payments'
+      preLoaderRoute: typeof AuthenticatedP2pPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/privacy': {
+      id: '/_authenticated/p2p_/privacy'
+      path: '/p2p/privacy'
+      fullPath: '/p2p/privacy'
+      preLoaderRoute: typeof AuthenticatedP2pPrivacyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/profile': {
+      id: '/_authenticated/p2p_/profile'
+      path: '/p2p/profile'
+      fullPath: '/p2p/profile'
+      preLoaderRoute: typeof AuthenticatedP2pProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/reviews': {
+      id: '/_authenticated/p2p_/reviews'
+      path: '/p2p/reviews'
+      fullPath: '/p2p/reviews'
+      preLoaderRoute: typeof AuthenticatedP2pReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/rules': {
+      id: '/_authenticated/p2p_/rules'
+      path: '/p2p/rules'
+      fullPath: '/p2p/rules'
+      preLoaderRoute: typeof AuthenticatedP2pRulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/security': {
+      id: '/_authenticated/p2p_/security'
+      path: '/p2p/security'
+      fullPath: '/p2p/security'
+      preLoaderRoute: typeof AuthenticatedP2pSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/select-payment': {
+      id: '/_authenticated/p2p_/select-payment'
+      path: '/p2p/select-payment'
+      fullPath: '/p2p/select-payment'
+      preLoaderRoute: typeof AuthenticatedP2pSelectPaymentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/settings': {
+      id: '/_authenticated/p2p_/settings'
+      path: '/p2p/settings'
+      fullPath: '/p2p/settings'
+      preLoaderRoute: typeof AuthenticatedP2pSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/support': {
+      id: '/_authenticated/p2p_/support'
+      path: '/p2p/support'
+      fullPath: '/p2p/support'
+      preLoaderRoute: typeof AuthenticatedP2pSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/terms': {
+      id: '/_authenticated/p2p_/terms'
+      path: '/p2p/terms'
+      fullPath: '/p2p/terms'
+      preLoaderRoute: typeof AuthenticatedP2pTermsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/wallet': {
+      id: '/_authenticated/p2p_/wallet'
+      path: '/p2p/wallet'
+      fullPath: '/p2p/wallet'
+      preLoaderRoute: typeof AuthenticatedP2pWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tokens/create': {
+      id: '/_authenticated/tokens/create'
+      path: '/create'
+      fullPath: '/tokens/create'
+      preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
+      parentRoute: typeof AuthenticatedTokensRoute
+    }
+    '/_authenticated/wallet_/receive': {
+      id: '/_authenticated/wallet_/receive'
+      path: '/wallet/receive'
+      fullPath: '/wallet/receive'
+      preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/admin/p2p-fix': {
+      id: '/api/admin/p2p-fix'
+      path: '/api/admin/p2p-fix'
+      fullPath: '/api/admin/p2p-fix'
+      preLoaderRoute: typeof ApiAdminP2pFixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/transfer-fix': {
+      id: '/api/admin/transfer-fix'
+      path: '/api/admin/transfer-fix'
+      fullPath: '/api/admin/transfer-fix'
+      preLoaderRoute: typeof ApiAdminTransferFixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/banxa-webhook': {
+      id: '/api/public/banxa-webhook'
+      path: '/api/public/banxa-webhook'
+      fullPath: '/api/public/banxa-webhook'
+      preLoaderRoute: typeof ApiPublicBanxaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/deposit-monitor': {
+      id: '/api/public/deposit-monitor'
+      path: '/api/public/deposit-monitor'
+      fullPath: '/api/public/deposit-monitor'
+      preLoaderRoute: typeof ApiPublicDepositMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/helio-deposit-webhook': {
+      id: '/api/public/helio-deposit-webhook'
+      path: '/api/public/helio-deposit-webhook'
+      fullPath: '/api/public/helio-deposit-webhook'
+      preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/kyc-webhook': {
+      id: '/api/public/kyc-webhook'
+      path: '/api/public/kyc-webhook'
+      fullPath: '/api/public/kyc-webhook'
+      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/moonpay-sign': {
+      id: '/api/public/moonpay-sign'
+      path: '/api/public/moonpay-sign'
+      fullPath: '/api/public/moonpay-sign'
+      preLoaderRoute: typeof ApiPublicMoonpaySignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/moonpay-webhook': {
+      id: '/api/public/moonpay-webhook'
+      path: '/api/public/moonpay-webhook'
+      fullPath: '/api/public/moonpay-webhook'
+      preLoaderRoute: typeof ApiPublicMoonpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/openpay-auth': {
+      id: '/api/public/openpay-auth'
+      path: '/api/public/openpay-auth'
+      fullPath: '/api/public/openpay-auth'
+      preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-a2u': {
+      id: '/api/public/pi-a2u'
+      path: '/api/public/pi-a2u'
+      fullPath: '/api/public/pi-a2u'
+      preLoaderRoute: typeof ApiPublicPiA2uRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-auth': {
+      id: '/api/public/pi-auth'
+      path: '/api/public/pi-auth'
+      fullPath: '/api/public/pi-auth'
+      preLoaderRoute: typeof ApiPublicPiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-link-wallet': {
+      id: '/api/public/pi-link-wallet'
+      path: '/api/public/pi-link-wallet'
+      fullPath: '/api/public/pi-link-wallet'
+      preLoaderRoute: typeof ApiPublicPiLinkWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/solana-auth': {
+      id: '/api/public/solana-auth'
+      path: '/api/public/solana-auth'
+      fullPath: '/api/public/solana-auth'
+      preLoaderRoute: typeof ApiPublicSolanaAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/supabase-config': {
+      id: '/api/public/supabase-config'
+      path: '/api/public/supabase-config'
+      fullPath: '/api/public/supabase-config'
+      preLoaderRoute: typeof ApiPublicSupabaseConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram-auth': {
+      id: '/api/public/telegram-auth'
+      path: '/api/public/telegram-auth'
+      fullPath: '/api/public/telegram-auth'
+      preLoaderRoute: typeof ApiPublicTelegramAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-listings': {
+      id: '/api/public/trustwallet-listings'
+      path: '/api/public/trustwallet-listings'
+      fullPath: '/api/public/trustwallet-listings'
+      preLoaderRoute: typeof ApiPublicTrustwalletListingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-prices': {
+      id: '/api/public/trustwallet-prices'
+      path: '/api/public/trustwallet-prices'
+      fullPath: '/api/public/trustwallet-prices'
+      preLoaderRoute: typeof ApiPublicTrustwalletPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-quote': {
+      id: '/api/public/trustwallet-quote'
+      path: '/api/public/trustwallet-quote'
+      fullPath: '/api/public/trustwallet-quote'
+      preLoaderRoute: typeof ApiPublicTrustwalletQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-search': {
+      id: '/api/public/trustwallet-search'
+      path: '/api/public/trustwallet-search'
+      fullPath: '/api/public/trustwallet-search'
+      preLoaderRoute: typeof ApiPublicTrustwalletSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-status': {
+      id: '/api/public/trustwallet-status'
+      path: '/api/public/trustwallet-status'
+      fullPath: '/api/public/trustwallet-status'
+      preLoaderRoute: typeof ApiPublicTrustwalletStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trustwallet-validate': {
+      id: '/api/public/trustwallet-validate'
+      path: '/api/public/trustwallet-validate'
+      fullPath: '/api/public/trustwallet-validate'
+      preLoaderRoute: typeof ApiPublicTrustwalletValidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/walletconnect-auth': {
+      id: '/api/public/walletconnect-auth'
+      path: '/api/public/walletconnect-auth'
+      fullPath: '/api/public/walletconnect-auth'
+      preLoaderRoute: typeof ApiPublicWalletconnectAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/web3auth-auth': {
+      id: '/api/public/web3auth-auth'
+      path: '/api/public/web3auth-auth'
+      fullPath: '/api/public/web3auth-auth'
+      preLoaderRoute: typeof ApiPublicWeb3authAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/circle': {
+      id: '/api/webhooks/circle'
+      path: '/api/webhooks/circle'
+      fullPath: '/api/webhooks/circle'
+      preLoaderRoute: typeof ApiWebhooksCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/circle-mint': {
+      id: '/api/webhooks/circle-mint'
+      path: '/api/webhooks/circle-mint'
+      fullPath: '/api/webhooks/circle-mint'
+      preLoaderRoute: typeof ApiWebhooksCircleMintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/transactions': {
+      id: '/api/webhooks/transactions'
+      path: '/api/webhooks/transactions'
+      fullPath: '/api/webhooks/transactions'
+      preLoaderRoute: typeof ApiWebhooksTransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/openpay/callback': {
+      id: '/auth/openpay/callback'
+      path: '/openpay/callback'
+      fullPath: '/auth/openpay/callback'
+      preLoaderRoute: typeof AuthOpenpayCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/pi/callback': {
+      id: '/auth/pi/callback'
+      path: '/pi/callback'
+      fullPath: '/auth/pi/callback'
+      preLoaderRoute: typeof AuthPiCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/telegram/callback': {
+      id: '/auth/telegram/callback'
+      path: '/telegram/callback'
+      fullPath: '/auth/telegram/callback'
+      preLoaderRoute: typeof AuthTelegramCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/pro/checkout/$id': {
+      id: '/pro/checkout/$id'
+      path: '/pro/checkout/$id'
+      fullPath: '/pro/checkout/$id'
+      preLoaderRoute: typeof ProCheckoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/asset_/$tokenId_/chat': {
+      id: '/_authenticated/asset_/$tokenId_/chat'
+      path: '/asset/$tokenId/chat'
+      fullPath: '/asset/$tokenId/chat'
+      preLoaderRoute: typeof AuthenticatedAssetTokenIdChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bags_/token/$mint': {
@@ -3605,32 +3545,228 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBagsTokenMintRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/asset_/$tokenId_/chat': {
-      id: '/_authenticated/asset_/$tokenId_/chat'
-      path: '/asset/$tokenId/chat'
-      fullPath: '/asset/$tokenId/chat'
-      preLoaderRoute: typeof AuthenticatedAssetTokenIdChatRouteImport
+    '/_authenticated/openpay/connect/callback': {
+      id: '/_authenticated/openpay/connect/callback'
+      path: '/openpay/connect/callback'
+      fullPath: '/openpay/connect/callback'
+      preLoaderRoute: typeof AuthenticatedOpenpayConnectCallbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/pro/user/me': {
-      id: '/api/public/pro/user/me'
-      path: '/api/public/pro/user/me'
-      fullPath: '/api/public/pro/user/me'
-      preLoaderRoute: typeof ApiPublicProUserMeRouteImport
+    '/_authenticated/opentoken_/$tokenId_/chat': {
+      id: '/_authenticated/opentoken_/$tokenId_/chat'
+      path: '/opentoken/$tokenId/chat'
+      fullPath: '/opentoken/$tokenId/chat'
+      preLoaderRoute: typeof AuthenticatedOpentokenTokenIdChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/opentoken_/creator/$userId': {
+      id: '/_authenticated/opentoken_/creator/$userId'
+      path: '/opentoken/creator/$userId'
+      fullPath: '/opentoken/creator/$userId'
+      preLoaderRoute: typeof AuthenticatedOpentokenCreatorUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/order/$id': {
+      id: '/_authenticated/p2p_/order/$id'
+      path: '/p2p/order/$id'
+      fullPath: '/p2p/order/$id'
+      preLoaderRoute: typeof AuthenticatedP2pOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/p2p_/take/$adId': {
+      id: '/_authenticated/p2p_/take/$adId'
+      path: '/p2p/take/$adId'
+      fullPath: '/p2p/take/$adId'
+      preLoaderRoute: typeof AuthenticatedP2pTakeAdIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/docs/ai-partner': {
+      id: '/api/public/docs/ai-partner'
+      path: '/api/public/docs/ai-partner'
+      fullPath: '/api/public/docs/ai-partner'
+      preLoaderRoute: typeof ApiPublicDocsAiPartnerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/pro/oauth/token': {
-      id: '/api/public/pro/oauth/token'
-      path: '/api/public/pro/oauth/token'
-      fullPath: '/api/public/pro/oauth/token'
-      preLoaderRoute: typeof ApiPublicProOauthTokenRouteImport
+    '/api/public/docs/errors': {
+      id: '/api/public/docs/errors'
+      path: '/api/public/docs/errors'
+      fullPath: '/api/public/docs/errors'
+      preLoaderRoute: typeof ApiPublicDocsErrorsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/openpay/connect/confirm': {
-      id: '/api/public/openpay/connect/confirm'
-      path: '/api/public/openpay/connect/confirm'
-      fullPath: '/api/public/openpay/connect/confirm'
-      preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
+    '/api/public/docs/exchange': {
+      id: '/api/public/docs/exchange'
+      path: '/api/public/docs/exchange'
+      fullPath: '/api/public/docs/exchange'
+      preLoaderRoute: typeof ApiPublicDocsExchangeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/integrations': {
+      id: '/api/public/docs/integrations'
+      path: '/api/public/docs/integrations'
+      fullPath: '/api/public/docs/integrations'
+      preLoaderRoute: typeof ApiPublicDocsIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/ledger': {
+      id: '/api/public/docs/ledger'
+      path: '/api/public/docs/ledger'
+      fullPath: '/api/public/docs/ledger'
+      preLoaderRoute: typeof ApiPublicDocsLedgerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/mcp': {
+      id: '/api/public/docs/mcp'
+      path: '/api/public/docs/mcp'
+      fullPath: '/api/public/docs/mcp'
+      preLoaderRoute: typeof ApiPublicDocsMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openapi': {
+      id: '/api/public/docs/openapi'
+      path: '/api/public/docs/openapi'
+      fullPath: '/api/public/docs/openapi'
+      preLoaderRoute: typeof ApiPublicDocsOpenapiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay': {
+      id: '/api/public/docs/openpay'
+      path: '/api/public/docs/openpay'
+      fullPath: '/api/public/docs/openpay'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay-auth': {
+      id: '/api/public/docs/openpay-auth'
+      path: '/api/public/docs/openpay-auth'
+      fullPath: '/api/public/docs/openpay-auth'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/openpay-to-pro': {
+      id: '/api/public/docs/openpay-to-pro'
+      path: '/api/public/docs/openpay-to-pro'
+      fullPath: '/api/public/docs/openpay-to-pro'
+      preLoaderRoute: typeof ApiPublicDocsOpenpayToProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/partner-transfer': {
+      id: '/api/public/docs/partner-transfer'
+      path: '/api/public/docs/partner-transfer'
+      fullPath: '/api/public/docs/partner-transfer'
+      preLoaderRoute: typeof ApiPublicDocsPartnerTransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/portal': {
+      id: '/api/public/docs/portal'
+      path: '/api/public/docs/portal'
+      fullPath: '/api/public/docs/portal'
+      preLoaderRoute: typeof ApiPublicDocsPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/pro-pay': {
+      id: '/api/public/docs/pro-pay'
+      path: '/api/public/docs/pro-pay'
+      fullPath: '/api/public/docs/pro-pay'
+      preLoaderRoute: typeof ApiPublicDocsProPayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/qrpay-pro': {
+      id: '/api/public/docs/qrpay-pro'
+      path: '/api/public/docs/qrpay-pro'
+      fullPath: '/api/public/docs/qrpay-pro'
+      preLoaderRoute: typeof ApiPublicDocsQrpayProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/docs/tokens': {
+      id: '/api/public/docs/tokens'
+      path: '/api/public/docs/tokens'
+      fullPath: '/api/public/docs/tokens'
+      preLoaderRoute: typeof ApiPublicDocsTokensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/entries': {
+      id: '/api/public/ledger/entries'
+      path: '/api/public/ledger/entries'
+      fullPath: '/api/public/ledger/entries'
+      preLoaderRoute: typeof ApiPublicLedgerEntriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ledger/stats': {
+      id: '/api/public/ledger/stats'
+      path: '/api/public/ledger/stats'
+      fullPath: '/api/public/ledger/stats'
+      preLoaderRoute: typeof ApiPublicLedgerStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/openpay/inbound': {
+      id: '/api/public/openpay/inbound'
+      path: '/api/public/openpay/inbound'
+      fullPath: '/api/public/openpay/inbound'
+      preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/openpay/kyc-webhook': {
+      id: '/api/public/openpay/kyc-webhook'
+      path: '/api/public/openpay/kyc-webhook'
+      fullPath: '/api/public/openpay/kyc-webhook'
+      preLoaderRoute: typeof ApiPublicOpenpayKycWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/approve': {
+      id: '/api/public/pi-payments/approve'
+      path: '/api/public/pi-payments/approve'
+      fullPath: '/api/public/pi-payments/approve'
+      preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/complete': {
+      id: '/api/public/pi-payments/complete'
+      path: '/api/public/pi-payments/complete'
+      fullPath: '/api/public/pi-payments/complete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pi-payments/incomplete': {
+      id: '/api/public/pi-payments/incomplete'
+      path: '/api/public/pi-payments/incomplete'
+      fullPath: '/api/public/pi-payments/incomplete'
+      preLoaderRoute: typeof ApiPublicPiPaymentsIncompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/charges': {
+      id: '/api/public/pro/charges'
+      path: '/api/public/pro/charges'
+      fullPath: '/api/public/pro/charges'
+      preLoaderRoute: typeof ApiPublicProChargesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/config': {
+      id: '/api/public/pro/config'
+      path: '/api/public/pro/config'
+      fullPath: '/api/public/pro/config'
+      preLoaderRoute: typeof ApiPublicProConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/subscribe': {
+      id: '/api/public/push/subscribe'
+      path: '/api/public/push/subscribe'
+      fullPath: '/api/public/push/subscribe'
+      preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/unsubscribe': {
+      id: '/api/public/push/unsubscribe'
+      path: '/api/public/push/unsubscribe'
+      fullPath: '/api/public/push/unsubscribe'
+      preLoaderRoute: typeof ApiPublicPushUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ledger/entries/$id': {
@@ -3639,6 +3775,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/ledger/entries/$id'
       preLoaderRoute: typeof ApiPublicLedgerEntriesIdRouteImport
       parentRoute: typeof ApiPublicLedgerEntriesRoute
+    }
+    '/api/public/openpay/connect/confirm': {
+      id: '/api/public/openpay/connect/confirm'
+      path: '/api/public/openpay/connect/confirm'
+      fullPath: '/api/public/openpay/connect/confirm'
+      preLoaderRoute: typeof ApiPublicOpenpayConnectConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/charges/$id': {
+      id: '/api/public/pro/charges/$id'
+      path: '/$id'
+      fullPath: '/api/public/pro/charges/$id'
+      preLoaderRoute: typeof ApiPublicProChargesIdRouteImport
+      parentRoute: typeof ApiPublicProChargesRoute
+    }
+    '/api/public/pro/oauth/token': {
+      id: '/api/public/pro/oauth/token'
+      path: '/api/public/pro/oauth/token'
+      fullPath: '/api/public/pro/oauth/token'
+      preLoaderRoute: typeof ApiPublicProOauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/user/balance': {
+      id: '/api/public/pro/user/balance'
+      path: '/api/public/pro/user/balance'
+      fullPath: '/api/public/pro/user/balance'
+      preLoaderRoute: typeof ApiPublicProUserBalanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/user/me': {
+      id: '/api/public/pro/user/me'
+      path: '/api/public/pro/user/me'
+      fullPath: '/api/public/pro/user/me'
+      preLoaderRoute: typeof ApiPublicProUserMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/charges/$id/cancel': {
+      id: '/api/public/pro/charges/$id/cancel'
+      path: '/cancel'
+      fullPath: '/api/public/pro/charges/$id/cancel'
+      preLoaderRoute: typeof ApiPublicProChargesIdCancelRouteImport
+      parentRoute: typeof ApiPublicProChargesIdRoute
     }
   }
 }
@@ -3683,6 +3861,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpentokenRoute: typeof AuthenticatedOpentokenRoute
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
   AuthenticatedP2pRoute: typeof AuthenticatedP2pRoute
+  AuthenticatedPartnerApiRoute: typeof AuthenticatedPartnerApiRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
@@ -3765,6 +3944,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpentokenRoute: AuthenticatedOpentokenRoute,
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
   AuthenticatedP2pRoute: AuthenticatedP2pRoute,
+  AuthenticatedPartnerApiRoute: AuthenticatedPartnerApiRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
@@ -3858,6 +4038,7 @@ interface DocsRouteChildren {
   DocsErrorsRoute: typeof DocsErrorsRoute
   DocsExchangeRoute: typeof DocsExchangeRoute
   DocsFaqRoute: typeof DocsFaqRoute
+  DocsIntegrationsRoute: typeof DocsIntegrationsRoute
   DocsLedgerRoute: typeof DocsLedgerRoute
   DocsMcpRoute: typeof DocsMcpRoute
   DocsMoneyRoute: typeof DocsMoneyRoute
@@ -3873,6 +4054,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsErrorsRoute: DocsErrorsRoute,
   DocsExchangeRoute: DocsExchangeRoute,
   DocsFaqRoute: DocsFaqRoute,
+  DocsIntegrationsRoute: DocsIntegrationsRoute,
   DocsLedgerRoute: DocsLedgerRoute,
   DocsMcpRoute: DocsMcpRoute,
   DocsMoneyRoute: DocsMoneyRoute,
@@ -3896,6 +4078,30 @@ const ApiPublicLedgerEntriesRouteWithChildren =
   ApiPublicLedgerEntriesRoute._addFileChildren(
     ApiPublicLedgerEntriesRouteChildren,
   )
+
+interface ApiPublicProChargesIdRouteChildren {
+  ApiPublicProChargesIdCancelRoute: typeof ApiPublicProChargesIdCancelRoute
+}
+
+const ApiPublicProChargesIdRouteChildren: ApiPublicProChargesIdRouteChildren = {
+  ApiPublicProChargesIdCancelRoute: ApiPublicProChargesIdCancelRoute,
+}
+
+const ApiPublicProChargesIdRouteWithChildren =
+  ApiPublicProChargesIdRoute._addFileChildren(
+    ApiPublicProChargesIdRouteChildren,
+  )
+
+interface ApiPublicProChargesRouteChildren {
+  ApiPublicProChargesIdRoute: typeof ApiPublicProChargesIdRouteWithChildren
+}
+
+const ApiPublicProChargesRouteChildren: ApiPublicProChargesRouteChildren = {
+  ApiPublicProChargesIdRoute: ApiPublicProChargesIdRouteWithChildren,
+}
+
+const ApiPublicProChargesRouteWithChildren =
+  ApiPublicProChargesRoute._addFileChildren(ApiPublicProChargesRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -3926,6 +4132,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
   PayToRoute: PayToRoute,
+  ProAuthorizeRoute: ProAuthorizeRoute,
   WikiSlugRoute: WikiSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
@@ -3956,9 +4163,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
   ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
+  ProCheckoutIdRoute: ProCheckoutIdRoute,
   ApiPublicDocsAiPartnerRoute: ApiPublicDocsAiPartnerRoute,
   ApiPublicDocsErrorsRoute: ApiPublicDocsErrorsRoute,
   ApiPublicDocsExchangeRoute: ApiPublicDocsExchangeRoute,
+  ApiPublicDocsIntegrationsRoute: ApiPublicDocsIntegrationsRoute,
   ApiPublicDocsLedgerRoute: ApiPublicDocsLedgerRoute,
   ApiPublicDocsMcpRoute: ApiPublicDocsMcpRoute,
   ApiPublicDocsOpenapiRoute: ApiPublicDocsOpenapiRoute,
@@ -3977,12 +4186,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
+  ApiPublicProChargesRoute: ApiPublicProChargesRouteWithChildren,
   ApiPublicProConfigRoute: ApiPublicProConfigRoute,
   ApiPublicPushSubscribeRoute: ApiPublicPushSubscribeRoute,
   ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
   ApiPublicProOauthTokenRoute: ApiPublicProOauthTokenRoute,
+  ApiPublicProUserBalanceRoute: ApiPublicProUserBalanceRoute,
   ApiPublicProUserMeRoute: ApiPublicProUserMeRoute,
 }
 export const routeTree = rootRouteImport

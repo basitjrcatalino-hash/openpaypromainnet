@@ -87,6 +87,12 @@ const PATHS = [
     icon: Wallet,
   },
   {
+    title: "Pro Connect · Auth & Pay",
+    body: "Native OAuth sign-in and OUSD checkout on Pro. opro_live_ apps, /pro/authorize, charges + poll.",
+    href: "/docs/integrations",
+    icon: KeyRound,
+  },
+  {
     title: "Merchant / checkout (classic)",
     body: "Accept OpenPay Balance via PayButton charges. Poll charge status. Optional Connect for @username identity.",
     href: "/docs/openpay",
@@ -144,6 +150,12 @@ const FEATURES = [
     icon: KeyRound,
   },
   {
+    title: "Pro Connect",
+    desc: "Native Pro OAuth · oprat_ tokens · OUSD checkout charges · poll status",
+    href: "/docs/integrations",
+    icon: ShieldCheck,
+  },
+  {
     title: "Ledger API",
     desc: "Append-only public entries for OpenLedger / accounting pipelines",
     href: "/docs/ledger",
@@ -160,6 +172,7 @@ const FEATURES = [
 const RAW_DOCS = [
   { label: "AI Partner Pack (start here)", href: "/api/public/docs/ai-partner" },
   { label: "Pro Pay · Merchant", href: "/api/public/docs/pro-pay" },
+  { label: "Pro Connect · Auth & Pay", href: "/api/public/docs/integrations" },
   { label: "OpenAPI (Partner + Pro)", href: "/api/public/docs/openapi" },
   { label: "OpenPay integration + auth", href: "/api/public/docs/openpay" },
   { label: "OpenPay Pro auth only", href: "/api/public/docs/openpay-auth" },
@@ -382,6 +395,10 @@ ${MCP_URL}`}</DocsCode>
             <p className="text-lg font-bold">Need the deep dive?</p>
             <p className="mt-2 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
               Start with{" "}
+              <Link to="/docs/integrations" className="font-semibold text-primary hover:underline">
+                Pro Connect
+              </Link>
+              ,{" "}
               <Link to="/docs/openpay" className="font-semibold text-primary hover:underline">
                 Connect & payments
               </Link>{" "}

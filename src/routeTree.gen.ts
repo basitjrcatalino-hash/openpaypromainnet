@@ -188,6 +188,7 @@ import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
 import { Route as AuthenticatedAssetTokenIdChatRouteImport } from './routes/_authenticated/asset_.$tokenId_.chat'
+import { Route as ApiPublicProUserMeRouteImport } from './routes/api/public/pro/user/me'
 import { Route as ApiPublicProOauthTokenRouteImport } from './routes/api/public/pro/oauth/token'
 import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
@@ -1135,6 +1136,11 @@ const AuthenticatedAssetTokenIdChatRoute =
     path: '/asset/$tokenId/chat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicProUserMeRoute = ApiPublicProUserMeRouteImport.update({
+  id: '/api/public/pro/user/me',
+  path: '/api/public/pro/user/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicProOauthTokenRoute = ApiPublicProOauthTokenRouteImport.update({
   id: '/api/public/pro/oauth/token',
   path: '/api/public/pro/oauth/token',
@@ -1335,6 +1341,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1518,6 +1525,7 @@ export interface FileRoutesByTo {
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1703,6 +1711,7 @@ export interface FileRoutesById {
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1888,6 +1897,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -2071,6 +2081,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   id:
     | '__root__'
     | '/'
@@ -2255,6 +2266,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2342,6 +2354,7 @@ export interface RootRouteChildren {
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
   ApiPublicProOauthTokenRoute: typeof ApiPublicProOauthTokenRoute
+  ApiPublicProUserMeRoute: typeof ApiPublicProUserMeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -3599,6 +3612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssetTokenIdChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/pro/user/me': {
+      id: '/api/public/pro/user/me'
+      path: '/api/public/pro/user/me'
+      fullPath: '/api/public/pro/user/me'
+      preLoaderRoute: typeof ApiPublicProUserMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pro/oauth/token': {
       id: '/api/public/pro/oauth/token'
       path: '/api/public/pro/oauth/token'
@@ -3963,6 +3983,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
   ApiPublicProOauthTokenRoute: ApiPublicProOauthTokenRoute,
+  ApiPublicProUserMeRoute: ApiPublicProUserMeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

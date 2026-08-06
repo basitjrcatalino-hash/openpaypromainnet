@@ -464,8 +464,11 @@ function AuthPiPageInner() {
         goPostAuth();
         return;
       }
-      // Local session cannot be validated — clear so we stop looping.
-      await supabase.auth.signOut({ scope: "local" });
+      // Only clear clearly dead tokens — never wipe on transient network errors.
+      const msg = refreshed.error?.message || "";
+      if (/invalid|expired|session missing|refresh.?token/i.test(msg)) {
+        await supabase.auth.signOut({ scope: "local" });
+      }
     })();
     return () => {
       cancelled = true;

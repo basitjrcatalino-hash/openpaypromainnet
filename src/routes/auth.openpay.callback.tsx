@@ -16,41 +16,18 @@ export const Route = createFileRoute("/auth/openpay/callback")({
   component: OpenPayAuthCallbackPage,
 });
 
-/** Survives React Strict Mode remounts (unlike useRef). */
-const exchangedCodes = new Set<string>();
-
-function isUselessErrorText(s: string) {
-  const t = s.trim();
-  return (
-    !t ||
-    t === "0" ||
-    t === "()" ||
-    t === "null" ||
-    t === "undefined" ||
-    /^\d+$/.test(t) ||
-    /^[\s()]+$/.test(t) ||
-    /^OpenPay sign-in failed\s*\(\s*\)$/i.test(t)
-  );
-}
-
-/** Never show bare "0" / "()" / numeric junk from upstream APIs. */
-function humanizeOpenPayError(raw: unknown, fallback: string): string {
-  if (raw == null) return fallback;
-  if (typeof raw === "object") {
-    const o = raw as Record<string, unknown>;
-    // Prefer real fields; skip empty strings (?? does not).
-    const pick = [o.error_description, o.message, o.error, o.msg].find(
-      (v) => typeof v === "string" && !isUselessErrorText(v),
-    );
-    if (pick) return String(pick).trim();
-    const nested = [o.error_description, o.message, o.error, o.msg].find(
-      (v) => v != null && typeof v === "object",
-    );
-    if (nested) return humanizeOpenPayError(nested, fallback);
+function cleanErrorMessage(raw: unknown, fallback: string): string {
+  const s =
+    typeof raw === "string"
+      ? raw.trim()
+      : raw instanceof Error
+        ? raw.message.trim()
+        : typeof raw === "object" && raw && "message" in raw
+          ? String((raw as { message: unknown }).message ?? "").trim()
+          : "";
+  if (!s || s === "0" || s === "()" || /^\d+$/.test(s) || /^[\s()]+$/.test(s)) {
     return fallback;
   }
-  const s = String(raw).trim();
-  if (isUselessErrorText(s)) return fallback;
   return s;
 }
 
@@ -58,7 +35,6 @@ function OpenPayAuthCallbackPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<string | null>(null);
   const ran = useRef(false);
 
   useEffect(() => {
@@ -73,29 +49,20 @@ function OpenPayAuthCallbackPage() {
         setError(
           denied
             ? "Sign-in cancelled — you denied OpenPay access."
-            : humanizeOpenPayError(
+            : cleanErrorMessage(
                 search.error_description || search.error,
-                search.error.trim()
-                  ? `OpenPay sign-in failed: ${search.error}`
-                  : "OpenPay sign-in failed",
+                "OpenPay sign-in failed. Please try again.",
               ),
         );
         return;
       }
       if (!search.code || !search.state) {
-        setError("Missing authorization code from OpenPay. Start again from sign-in.");
+        setError("Missing authorization code from OpenPay.");
         return;
       }
-
-      if (exchangedCodes.has(search.code)) {
-        // In-flight or already finished from a Strict Mode double-mount — wait, don't error.
-        return;
-      }
-      exchangedCodes.add(search.code);
 
       const savedState = sessionStorage.getItem("openpay_oauth_state");
       if (savedState && savedState !== search.state) {
-        exchangedCodes.delete(search.code);
         setError("State mismatch — possible CSRF. Please try again.");
         return;
       }
@@ -107,31 +74,25 @@ function OpenPayAuthCallbackPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ code: search.code, state: search.state }),
         });
-
+        const text = await res.text();
         let body: {
           email?: string;
           password?: string;
           username?: string;
           error?: unknown;
         } = {};
-        const text = await res.text();
         try {
           body = text ? (JSON.parse(text) as typeof body) : {};
         } catch {
           body = {};
         }
-
         if (!res.ok || !body.email || !body.password) {
-          const msg = humanizeOpenPayError(
-            body.error,
-            res.status
-              ? `OpenPay sign-in failed (HTTP ${res.status})`
-              : "OpenPay sign-in failed (network error)",
+          throw new Error(
+            cleanErrorMessage(
+              body.error,
+              `OpenPay sign-in failed (HTTP ${res.status || "network"}). Check Partner API key + redirect URI.`,
+            ),
           );
-          if (!body.error && text) {
-            setDetail(text.slice(0, 160));
-          }
-          throw new Error(msg);
         }
 
         const { error: signInErr } = await supabase.auth.signInWithPassword({
@@ -140,7 +101,7 @@ function OpenPayAuthCallbackPage() {
         });
         if (signInErr) {
           throw new Error(
-            humanizeOpenPayError(signInErr.message, "Could not create your Pro session"),
+            cleanErrorMessage(signInErr.message, "Could not create your Pro session."),
           );
         }
 
@@ -150,13 +111,9 @@ function OpenPayAuthCallbackPage() {
             : "Signed in with OpenPay",
         );
         sessionStorage.removeItem("openpay_oauth_redirect");
-        sessionStorage.removeItem("openpay_oauth_started_local");
         window.location.replace(redirect);
       } catch (e) {
-        exchangedCodes.delete(search.code);
-        setError(
-          humanizeOpenPayError((e as Error)?.message || e, "OpenPay sign-in failed — try again"),
-        );
+        setError(cleanErrorMessage(e, "OpenPay sign-in failed. Please try again."));
       }
     })();
   }, [navigate, search.code, search.state, search.error, search.error_description]);
@@ -168,18 +125,6 @@ function OpenPayAuthCallbackPage() {
           <>
             <h1 className="text-xl font-semibold text-destructive">OpenPay sign-in</h1>
             <p className="mt-3 text-sm text-muted-foreground">{error}</p>
-            {detail ? (
-              <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground/80">
-                {detail}
-              </p>
-            ) : null}
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Tip: use{" "}
-              <a href="https://openpaypro.space/authpi" className="underline">
-                openpaypro.space/authpi
-              </a>{" "}
-              (not localhost) so OAuth callback matches your Partner app redirect URI.
-            </p>
             <button
               type="button"
               onClick={() => navigate({ to: "/authpi" })}

@@ -91,7 +91,10 @@ function EmailAuthPage() {
         go(next);
         return;
       }
-      await supabase.auth.signOut({ scope: "local" });
+      const msg = refreshed.error?.message || "";
+      if (/invalid|expired|session missing|refresh.?token/i.test(msg)) {
+        await supabase.auth.signOut({ scope: "local" });
+      }
     })();
     return () => {
       cancelled = true;

@@ -7,9 +7,10 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 const AUD = "openpay-pro-connect";
 
 function partnerKey(): string {
+  // Prefer the original Partner portal key (OPENPAY_PARTNER_API_KEY / OAUTH app).
   const key = (
-    process.env.OPENPAY_CLIENT_SECRET ||
     process.env.OPENPAY_PARTNER_API_KEY ||
+    process.env.OPENPAY_CLIENT_SECRET ||
     process.env.OPENPAY_API_KEY ||
     process.env.OPENPAY_TRANSFER_API_KEY ||
     ""
@@ -20,7 +21,7 @@ function partnerKey(): string {
   if (!key) throw new Error("OPENPAY_PARTNER_API_KEY / OPENPAY_CLIENT_SECRET not configured");
   if (!/^opk_(live|test)_/i.test(key)) {
     throw new Error(
-      "OPENPAY_CLIENT_SECRET / OPENPAY_PARTNER_API_KEY must be the opk_live_… key from your OpenPay partner app",
+      "OPENPAY_PARTNER_API_KEY must be the opk_live_… key from your OpenPay partner app",
     );
   }
   return key;
@@ -187,16 +188,16 @@ function isUuid(v: string) {
   );
 }
 
-/** Partner app UUID only — ignore legacy slugs like "openpay-pro". */
+/** Partner app UUID — prefer original OPENPAY_OAUTH_CLIENT_ID. */
 function resolveClientId(explicit?: string): string {
   const candidates = [
     explicit,
-    process.env.OPENPAY_CLIENT_ID,
     process.env.OPENPAY_OAUTH_CLIENT_ID,
     process.env.OPENPAY_CONNECT_CLIENT_ID,
+    process.env.OPENPAY_CLIENT_ID,
   ];
   for (const c of candidates) {
-    const v = (c || "").trim();
+    const v = (c || "").trim().replace(/^["']+|["']+$/g, "");
     if (v && isUuid(v)) return v;
   }
   return DEFAULT_CLIENT_ID;

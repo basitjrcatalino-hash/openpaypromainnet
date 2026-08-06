@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanAuthErrorMessage, supabaseUnreachableHint } from "@/lib/auth-error";
+import { getSupabaseUrl } from "@/integrations/supabase/env";
 
 export const Route = createFileRoute("/auth/pi/callback")({
   ssr: false,
@@ -32,14 +34,13 @@ function PiCallbackPage() {
 
     (async () => {
       const frag = parseFragment(window.location.hash);
-      // Some providers put error/token in query string too; check both.
       const search = new URLSearchParams(window.location.search);
       const accessToken = frag.access_token || search.get("access_token") || "";
       const returnedState = frag.state || search.get("state") || "";
       const errParam = frag.error || search.get("error");
 
       if (errParam) {
-        setError(`Pi sign-in failed: ${errParam}`);
+        setError(cleanAuthErrorMessage(errParam, "Pi sign-in failed. Please try again."));
         return;
       }
       if (!accessToken) {
@@ -60,28 +61,50 @@ function PiCallbackPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ accessToken }),
         });
-        const body = (await res.json().catch(() => ({}))) as {
+        const text = await res.text();
+        let body: {
           email?: string;
           password?: string;
           username?: string;
-          error?: string;
-        };
+          error?: unknown;
+        } = {};
+        try {
+          body = text ? (JSON.parse(text) as typeof body) : {};
+        } catch {
+          body = {};
+        }
         if (!res.ok || !body.email || !body.password) {
-          throw new Error(body.error || `Pi backend validation failed (${res.status})`);
+          throw new Error(
+            cleanAuthErrorMessage(
+              body.error,
+              `Pi sign-in failed (HTTP ${res.status || "network"}).`,
+            ),
+          );
         }
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: body.email,
           password: body.password,
         });
-        if (signInErr) throw signInErr;
+        if (signInErr) {
+          throw new Error(
+            cleanAuthErrorMessage(
+              signInErr.message || signInErr,
+              supabaseUnreachableHint(getSupabaseUrl()),
+            ),
+          );
+        }
 
         toast.success(`Signed in as @${body.username}`);
         const redirect = sessionStorage.getItem("pi_oauth_redirect") || "/dashboard";
         sessionStorage.removeItem("pi_oauth_redirect");
-        // Hard redirect so the authenticated layout re-checks the fresh session
         window.location.replace(redirect);
       } catch (e) {
-        setError((e as Error).message || "Pi sign-in failed");
+        const msg = cleanAuthErrorMessage(e, "Pi sign-in failed. Please try again.");
+        if (/failed to fetch|name_not_resolved|unreachable/i.test(msg)) {
+          setError(supabaseUnreachableHint(getSupabaseUrl()));
+        } else {
+          setError(msg);
+        }
       }
     })();
   }, [navigate]);
@@ -94,6 +117,7 @@ function PiCallbackPage() {
             <h1 className="text-xl font-semibold text-destructive">Pi sign-in error</h1>
             <p className="mt-3 text-sm text-muted-foreground">{error}</p>
             <button
+              type="button"
               onClick={() => navigate({ to: "/authpi" })}
               className="mt-6 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
             >
@@ -103,9 +127,7 @@ function PiCallbackPage() {
         ) : (
           <>
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Finishing Pi sign-in…
-            </p>
+            <p className="mt-4 text-sm text-muted-foreground">Finishing Pi sign-in…</p>
           </>
         )}
       </div>

@@ -43,9 +43,8 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           // Deterministic password derived from a server-only secret + uid.
           // Prefer the dedicated PI_AUTH_PASSWORD_SECRET so we don't depend on
           // SUPABASE_SERVICE_ROLE_KEY being readable as plain env on Lovable Cloud.
-          const { getSupabaseServiceRoleKey, hasSupabaseAdminEnv } = await import(
-            "@/integrations/supabase/env.server"
-          );
+          const { getSupabaseServiceRoleKey, hasSupabaseAdminEnv } =
+            await import("@/integrations/supabase/env.server");
           const { getSupabasePublishableKey } = await import("@/integrations/supabase/env");
           if (!hasSupabaseAdminEnv()) {
             return Response.json(
@@ -68,9 +67,7 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           }
 
           const email = `pi-${me.uid}@pi.openpay.local`;
-          const password = createHash("sha256")
-            .update(`${passSecret}:pi:${me.uid}`)
-            .digest("hex");
+          const password = createHash("sha256").update(`${passSecret}:pi:${me.uid}`).digest("hex");
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { provisionPasswordUser } = await import("@/lib/auth-provision.server");
@@ -91,11 +88,13 @@ export const Route = createFileRoute("/api/public/pi-auth")({
             userId = user.id;
           } catch (err) {
             console.error("[pi-auth] provision failed", err);
+            const { cleanAuthErrorMessage } = await import("@/lib/auth-error");
             return Response.json(
               {
-                error:
-                  (err as Error).message ||
+                error: cleanAuthErrorMessage(
+                  err,
                   "Failed to provision Pi user. Check Supabase service role key.",
+                ),
               },
               { status: 500 },
             );
@@ -125,8 +124,9 @@ export const Route = createFileRoute("/api/public/pi-auth")({
           });
         } catch (err) {
           console.error("[pi-auth]", err);
+          const { cleanAuthErrorMessage } = await import("@/lib/auth-error");
           return Response.json(
-            { error: (err as Error).message || "Server error" },
+            { error: cleanAuthErrorMessage(err, "Server error") },
             { status: 500 },
           );
         }

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanAuthErrorMessage, supabaseUnreachableHint } from "@/lib/auth-error";
+import { getSupabaseUrl } from "@/integrations/supabase/env";
 
 export const Route = createFileRoute("/auth/openpay/callback")({
   ssr: false,
@@ -15,21 +17,6 @@ export const Route = createFileRoute("/auth/openpay/callback")({
   }),
   component: OpenPayAuthCallbackPage,
 });
-
-function cleanErrorMessage(raw: unknown, fallback: string): string {
-  const s =
-    typeof raw === "string"
-      ? raw.trim()
-      : raw instanceof Error
-        ? raw.message.trim()
-        : typeof raw === "object" && raw && "message" in raw
-          ? String((raw as { message: unknown }).message ?? "").trim()
-          : "";
-  if (!s || s === "0" || s === "()" || /^\d+$/.test(s) || /^[\s()]+$/.test(s)) {
-    return fallback;
-  }
-  return s;
-}
 
 function OpenPayAuthCallbackPage() {
   const search = Route.useSearch();
@@ -49,7 +36,7 @@ function OpenPayAuthCallbackPage() {
         setError(
           denied
             ? "Sign-in cancelled — you denied OpenPay access."
-            : cleanErrorMessage(
+            : cleanAuthErrorMessage(
                 search.error_description || search.error,
                 "OpenPay sign-in failed. Please try again.",
               ),
@@ -88,7 +75,7 @@ function OpenPayAuthCallbackPage() {
         }
         if (!res.ok || !body.email || !body.password) {
           throw new Error(
-            cleanErrorMessage(
+            cleanAuthErrorMessage(
               body.error,
               `OpenPay sign-in failed (HTTP ${res.status || "network"}). Check Partner API key + redirect URI.`,
             ),
@@ -101,7 +88,10 @@ function OpenPayAuthCallbackPage() {
         });
         if (signInErr) {
           throw new Error(
-            cleanErrorMessage(signInErr.message, "Could not create your Pro session."),
+            cleanAuthErrorMessage(
+              signInErr.message || signInErr,
+              supabaseUnreachableHint(getSupabaseUrl()),
+            ),
           );
         }
 
@@ -113,7 +103,12 @@ function OpenPayAuthCallbackPage() {
         sessionStorage.removeItem("openpay_oauth_redirect");
         window.location.replace(redirect);
       } catch (e) {
-        setError(cleanErrorMessage(e, "OpenPay sign-in failed. Please try again."));
+        const msg = cleanAuthErrorMessage(e, "OpenPay sign-in failed. Please try again.");
+        if (/failed to fetch|name_not_resolved|unreachable|Cannot reach Supabase/i.test(msg)) {
+          setError(supabaseUnreachableHint(getSupabaseUrl()));
+        } else {
+          setError(msg);
+        }
       }
     })();
   }, [navigate, search.code, search.state, search.error, search.error_description]);

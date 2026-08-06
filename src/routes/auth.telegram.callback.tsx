@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanAuthErrorMessage, supabaseUnreachableHint } from "@/lib/auth-error";
+import { getSupabaseUrl } from "@/integrations/supabase/env";
 
 export const Route = createFileRoute("/auth/telegram/callback")({
   ssr: false,
@@ -11,8 +13,7 @@ export const Route = createFileRoute("/auth/telegram/callback")({
     code: typeof s.code === "string" ? s.code : undefined,
     state: typeof s.state === "string" ? s.state : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
-    error_description:
-      typeof s.error_description === "string" ? s.error_description : undefined,
+    error_description: typeof s.error_description === "string" ? s.error_description : undefined,
   }),
   component: TelegramAuthCallbackPage,
 });
@@ -29,7 +30,9 @@ function parseTgAuthResult(): { code?: string; state?: string; error?: string } 
       const decoded = JSON.parse(atob(raw));
       return decoded;
     }
-  } catch {}
+  } catch {
+    /* ignore malformed tgAuthResult */
+  }
   return null;
 }
 
@@ -86,14 +89,23 @@ function TelegramAuthCallbackPage() {
           error?: string;
         };
         if (!res.ok || !body.email || !body.password) {
-          throw new Error(body.error || `Telegram sign-in failed (${res.status})`);
+          throw new Error(
+            cleanAuthErrorMessage(body.error, `Telegram sign-in failed (${res.status})`),
+          );
         }
 
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: body.email,
           password: body.password,
         });
-        if (signInErr) throw signInErr;
+        if (signInErr) {
+          throw new Error(
+            cleanAuthErrorMessage(
+              signInErr.message || signInErr,
+              supabaseUnreachableHint(getSupabaseUrl()),
+            ),
+          );
+        }
 
         toast.success(
           body.username
@@ -103,7 +115,12 @@ function TelegramAuthCallbackPage() {
         sessionStorage.removeItem("telegram_oauth_redirect");
         window.location.replace(redirect);
       } catch (e) {
-        setError((e as Error).message || "Telegram sign-in failed");
+        const msg = cleanAuthErrorMessage(e, "Telegram sign-in failed");
+        if (/failed to fetch|name_not_resolved|unreachable|Cannot reach Supabase/i.test(msg)) {
+          setError(supabaseUnreachableHint(getSupabaseUrl()));
+        } else {
+          setError(msg);
+        }
       }
     })();
   }, [navigate, search.code, search.state, search.error, search.error_description]);

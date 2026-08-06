@@ -435,10 +435,37 @@ function AuthPiPageInner() {
   );
   const [busy, setBusy] = useState(false);
   const [pulseId, setPulseId] = useState<AuthMethod | null>(null);
+  const [supabaseDown, setSupabaseDown] = useState<string | null>(null);
 
   useEffect(() => {
     captureNextParam();
     ensureTopLevelAuthWindow();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/public/health");
+        const body = (await res.json()) as {
+          ok?: boolean;
+          supabase?: { reachable?: boolean | null; host?: string | null };
+          hint?: string | null;
+        };
+        if (cancelled) return;
+        if (body.supabase?.reachable === false) {
+          setSupabaseDown(
+            body.hint ||
+              `Supabase Auth host unreachable (${body.supabase.host || "unknown"}). Sign-in cannot work until the project URL is fixed.`,
+          );
+        }
+      } catch {
+        /* ignore — health is advisory */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -671,6 +698,13 @@ function AuthPiPageInner() {
             <h1 className="text-2xl font-semibold tracking-tight">OpenPay Pro</h1>
             <p className="mt-1 text-sm text-muted-foreground">Sign in to continue</p>
           </div>
+
+          {supabaseDown ? (
+            <div className="mb-4 rounded-2xl border border-destructive/40 bg-destructive/10 px-3 py-3 text-left text-xs leading-relaxed text-destructive">
+              <p className="font-semibold">Auth backend unreachable</p>
+              <p className="mt-1 text-destructive/90">{supabaseDown}</p>
+            </div>
+          ) : null}
 
           <div
             role="listbox"

@@ -134,7 +134,7 @@ function PartnerApiPortalPage() {
   } | null>(null);
   const [setupStep, setSetupStep] = useState(1);
 
-  const apps = appsQ.data ?? [];
+  const apps = useMemo(() => appsQ.data ?? [], [appsQ.data]);
   const selected = useMemo(
     () => apps.find((a: ProAppRow) => a.id === selectedId) ?? apps[0] ?? null,
     [apps, selectedId],
@@ -142,8 +142,7 @@ function PartnerApiPortalPage() {
 
   const chargesQ = useQuery({
     queryKey: ["pro-connect-charges", selected?.id],
-    queryFn: async () =>
-      (await listChargesFn({ data: { id: selected!.id } })) as ProChargeRow[],
+    queryFn: async () => (await listChargesFn({ data: { id: selected!.id } })) as ProChargeRow[],
     enabled: Boolean(selected?.id),
   });
 
@@ -245,16 +244,14 @@ function PartnerApiPortalPage() {
 
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
-  const redirect0 =
-    (selected?.redirect_uris ?? [])[0] || "https://your.app/callback";
+  const redirect0 = (selected?.redirect_uris ?? [])[0] || "https://your.app/callback";
 
   const authorizeSample = selected
     ? `${origin}/pro/authorize?client_id=${encodeURIComponent(selected.client_id)}&redirect_uri=${encodeURIComponent(redirect0)}&scope=profile%20balance%20payments&state=RANDOM`
     : "";
 
   const clientId = selected?.client_id ?? "opro_live_YOUR_CLIENT_ID";
-  const secretPlaceholder =
-    plainSecret?.client_secret ?? "oprs_live_PASTE_SECRET_SHOWN_ONCE";
+  const secretPlaceholder = plainSecret?.client_secret ?? "oprs_live_PASTE_SECRET_SHOWN_ONCE";
 
   const envSample = selected
     ? `# OpenPay Pro Connect — SERVER ONLY (never VITE_ / public)
@@ -612,9 +609,14 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                 one-time <code className="rounded bg-muted px-1">oprs_live_</code> secret.
               </p>
               <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                <li>Local testing: add <code className="rounded bg-muted px-1">http://localhost:3000/callback</code></li>
+                <li>
+                  Local testing: add{" "}
+                  <code className="rounded bg-muted px-1">http://localhost:3000/callback</code>
+                </li>
                 <li>Copy the secret immediately — it is only shown once</li>
-                <li>Never put the secret in <code className="rounded bg-muted px-1">VITE_</code> env</li>
+                <li>
+                  Never put the secret in <code className="rounded bg-muted px-1">VITE_</code> env
+                </li>
               </ul>
               <div className="flex flex-wrap gap-2 pt-1">
                 <Button
@@ -662,9 +664,8 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                     </div>
                   ) : (
                     <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-muted-foreground">
-                      Secret not in memory. Use{" "}
-                      <strong className="text-foreground">Rotate</strong> on the app card if you
-                      need a new one, or paste the secret you saved earlier.
+                      Secret not in memory. Use <strong className="text-foreground">Rotate</strong>{" "}
+                      on the app card if you need a new one, or paste the secret you saved earlier.
                     </div>
                   )}
                   <CodeBlock
@@ -678,7 +679,11 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                     onCopy={() => copy("Authorize URL", authorizeSample)}
                   />
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(1)}>
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setSetupStep(1)}
+                    >
                       Back
                     </Button>
                     <Button className="rounded-full" onClick={() => setSetupStep(3)}>
@@ -695,7 +700,9 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
             <div className="space-y-3">
               <h3 className="text-sm font-bold">Step 3 — Paste into Cursor · Lovable · Replit</h3>
               {!selected ? (
-                <p className="text-xs text-muted-foreground">Create an app first to unlock live prompts.</p>
+                <p className="text-xs text-muted-foreground">
+                  Create an app first to unlock live prompts.
+                </p>
               ) : (
                 <>
                   <p className="text-xs text-muted-foreground">
@@ -760,7 +767,11 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                     </TabsContent>
                   </Tabs>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(2)}>
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setSetupStep(2)}
+                    >
                       Back
                     </Button>
                     <Button className="rounded-full" onClick={() => setSetupStep(4)}>
@@ -821,7 +832,11 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                     />
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="rounded-full" onClick={() => setSetupStep(3)}>
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setSetupStep(3)}
+                    >
                       Back
                     </Button>
                     <Button className="rounded-full" onClick={() => setSetupStep(5)}>
@@ -1134,9 +1149,9 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Use the <strong className="text-foreground">5-step wizard</strong> above: copy
-                  env → paste Cursor / Lovable / Replit prompt → or drop Auth + Pay code. Paid
-                  OUSD credits your receive wallet.
+                  Use the <strong className="text-foreground">5-step wizard</strong> above: copy env
+                  → paste Cursor / Lovable / Replit prompt → or drop Auth + Pay code. Paid OUSD
+                  credits your receive wallet.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -1316,15 +1331,7 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
   );
 }
 
-function CodeBlock({
-  label,
-  value,
-  onCopy,
-}: {
-  label: string;
-  value: string;
-  onCopy: () => void;
-}) {
+function CodeBlock({ label, value, onCopy }: { label: string; value: string; onCopy: () => void }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">

@@ -1,17 +1,8 @@
 import { useEffect, useState } from "react";
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  redirect,
-  useChildMatches,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useChildMatches } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  EmailAuthPanel,
-  captureEmailAuthNextParam,
-} from "@/components/email-auth-panel";
+import { EmailAuthPanel, captureEmailAuthNextParam } from "@/components/email-auth-panel";
 
 /**
  * `/auth` — email sign-in / sign-up.
@@ -76,16 +67,32 @@ function EmailAuthPage() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      if (data.session) {
-        const next =
-          search.next && search.next.startsWith("/") && !search.next.startsWith("//")
-            ? search.next
-            : "/dashboard";
+    void (async () => {
+      // Align with /_authenticated getUser gate — avoid stale-session blink loop.
+      const go = (next: string) => {
         window.location.assign(next);
+      };
+      const next =
+        search.next && search.next.startsWith("/") && !search.next.startsWith("//")
+          ? search.next
+          : "/dashboard";
+
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (data.user) {
+        go(next);
+        return;
       }
-    });
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session || cancelled) return;
+      const refreshed = await supabase.auth.refreshSession();
+      if (cancelled) return;
+      if (refreshed.data.user) {
+        go(next);
+        return;
+      }
+      await supabase.auth.signOut({ scope: "local" });
+    })();
     return () => {
       cancelled = true;
     };
@@ -122,9 +129,7 @@ function EmailAuthPage() {
           </span>
           <span className="min-w-0 flex-1 text-left">
             <span className="block text-base font-semibold text-foreground">Email</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              Email and password
-            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">Email and password</span>
           </span>
         </div>
 

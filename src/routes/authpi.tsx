@@ -1,12 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-} from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Check, ChevronRight, Loader2, Mail } from "lucide-react";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
@@ -454,14 +447,30 @@ function AuthPiPageInner() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+    void (async () => {
+      // Must match /_authenticated (getUser). getSession-only bounce caused
+      // dashboard ↔ authpi blink when local JWT was stale/invalid.
+      const { data } = await supabase.auth.getUser();
       if (cancelled) return;
-      if (data.session) goPostAuth();
-    });
+      if (data.user) {
+        goPostAuth();
+        return;
+      }
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session || cancelled) return;
+      const refreshed = await supabase.auth.refreshSession();
+      if (cancelled) return;
+      if (refreshed.data.user) {
+        goPostAuth();
+        return;
+      }
+      // Local session cannot be validated — clear so we stop looping.
+      await supabase.auth.signOut({ scope: "local" });
+    })();
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, []);
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;

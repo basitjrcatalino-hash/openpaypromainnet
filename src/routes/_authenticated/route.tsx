@@ -14,7 +14,6 @@ import {
   ArrowUpFromLine,
   ArrowLeftRight,
   Compass,
-
   Settings as SettingsIcon,
   LogOut,
   Menu,
@@ -57,7 +56,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useDeveloperMode } from "@/hooks/use-developer-mode";
 
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -84,9 +82,7 @@ import { NotificationBell, NotificationCenter } from "@/components/notification-
 import { useTransactionNotifications } from "@/hooks/use-transaction-notifications";
 import { useP2pOrderNotifications } from "@/hooks/use-p2p-order-notifications";
 import { WalletBalanceHero } from "@/components/wallet/WalletBalanceHero";
-import {
-  WalletSwitcherDialog,
-} from "@/components/wallet/WalletSwitcherDialog";
+import { WalletSwitcherDialog } from "@/components/wallet/WalletSwitcherDialog";
 import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { walletLedgerUsd } from "@/lib/wallet-portfolio";
@@ -105,7 +101,15 @@ const BAGS_CASH_ENABLED = false;
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data, error } = await supabase.auth.getUser();
+    let { data, error } = await supabase.auth.getUser();
+    // After OAuth, getUser can race the refresh — retry once if a local session exists.
+    if (error || !data.user) {
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess.session) {
+        await supabase.auth.refreshSession();
+        ({ data, error } = await supabase.auth.getUser());
+      }
+    }
     if (error || !data.user) throw redirect({ to: "/authpi" });
     if (!BAGS_CASH_ENABLED && location.pathname.startsWith("/bags")) {
       throw redirect({ to: "/dashboard" });
@@ -161,11 +165,21 @@ const FOOTER_TABS = [
 const MORE_NAV = [
   { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
   { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode, desc: "Show your QR & address" },
-  { to: "/trust-wallet", labelKey: "nav.trustWallet", icon: Shield, desc: "Markets, search & safety" },
+  {
+    to: "/trust-wallet",
+    labelKey: "nav.trustWallet",
+    icon: Shield,
+    desc: "Markets, search & safety",
+  },
   { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
   { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
   { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },
-  { to: "/transfer", labelKey: "nav.transfer", icon: ArrowLeftRight, desc: "Move between accounts" },
+  {
+    to: "/transfer",
+    labelKey: "nav.transfer",
+    icon: ArrowLeftRight,
+    desc: "Move between accounts",
+  },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
   { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon, desc: "Security & preferences" },
 ] as const;
@@ -178,8 +192,7 @@ function navActive(pathname: string, to: string) {
     (to === "/trade" && pathname.startsWith("/trade")) ||
     (to === "/wallet" && pathname.startsWith("/wallet")) ||
     (to === "/transfer" && pathname.startsWith("/transfer")) ||
-    (to === "/tokens" &&
-      (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
+    (to === "/tokens" && (pathname.startsWith("/tokens") || pathname.startsWith("/asset/"))) ||
     (to === "/opentoken" &&
       pathname.startsWith("/opentoken") &&
       !pathname.startsWith("/opentoken/create")) ||
@@ -352,7 +365,10 @@ function MobileTabBar({
           side="bottom"
           className="flex max-h-[min(92dvh,640px)] flex-col gap-0 overflow-hidden rounded-t-3xl border-border/60 px-4 pb-0 pt-3 md:hidden"
         >
-          <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/25" aria-hidden />
+          <div
+            className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/25"
+            aria-hidden
+          />
           <SheetHeader className="mb-3 shrink-0 space-y-1 pr-8 text-left">
             <SheetTitle className="text-lg font-bold tracking-tight">
               {navLabel(t, "nav.more")}
@@ -435,17 +451,22 @@ function AuthenticatedLayout() {
   useCurrency();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return localStorage.getItem("sidebar-collapsed") === "1"; } catch { return false; }
-  });
-  const toggleSidebar = () => setSidebarCollapsed((v) => {
-    const next = !v;
     try {
-      localStorage.setItem("sidebar-collapsed", next ? "1" : "0");
+      return localStorage.getItem("sidebar-collapsed") === "1";
     } catch {
-      /* ignore quota / private mode */
+      return false;
     }
-    return next;
   });
+  const toggleSidebar = () =>
+    setSidebarCollapsed((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("sidebar-collapsed", next ? "1" : "0");
+      } catch {
+        /* ignore quota / private mode */
+      }
+      return next;
+    });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const qc = useQueryClient();
   const hideChrome =
@@ -461,10 +482,7 @@ function AuthenticatedLayout() {
     pathname.startsWith("/p2p");
   const isP2p = pathname.startsWith("/p2p");
   const isHome =
-    pathname === "/dashboard" ||
-    pathname === "/dashboard/" ||
-    pathname === "/" ||
-    pathname === "";
+    pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/" || pathname === "";
   const chromeVisible = useChromeScroll(10, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
   const [headerSwitchOpen, setHeaderSwitchOpen] = useState(false);
@@ -548,144 +566,138 @@ function AuthenticatedLayout() {
 
   return (
     <AppLockGate userId={user.id}>
-    <AppMoonPayProvider>
-      <AppPhantomProvider>
-        <CurrencyProvider>
-        <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
-      <div className="relative min-h-screen bg-background text-foreground">
-        {!hideChrome && (
-          <>
-            <MobileAppHeader
-              isHome={isHome}
-              mobileOpen={mobileOpen}
-              onToggleMenu={() => setMobileOpen((v) => !v)}
-              unread={txNotes.unread}
-              onOpenNotifications={() => setNotifOpen(true)}
-              walletName={activeWallet?.name}
-              walletLoading={walletsLoading}
-              onOpenWalletSwitcher={() => setHeaderSwitchOpen(true)}
-            />
+      <AppMoonPayProvider>
+        <AppPhantomProvider>
+          <CurrencyProvider>
+            <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
+              <div className="relative min-h-screen bg-background text-foreground">
+                {!hideChrome && (
+                  <>
+                    <MobileAppHeader
+                      isHome={isHome}
+                      mobileOpen={mobileOpen}
+                      onToggleMenu={() => setMobileOpen((v) => !v)}
+                      unread={txNotes.unread}
+                      onOpenNotifications={() => setNotifOpen(true)}
+                      walletName={activeWallet?.name}
+                      walletLoading={walletsLoading}
+                      onOpenWalletSwitcher={() => setHeaderSwitchOpen(true)}
+                    />
 
-            {/* Spacer matches fixed mobile header height */}
-            <div
-              className="md:hidden"
-              style={{ height: "calc(3.25rem + env(safe-area-inset-top, 0px))" }}
-              aria-hidden
-            />
-          </>
-        )}
+                    {/* Spacer matches fixed mobile header height */}
+                    <div
+                      className="md:hidden"
+                      style={{ height: "calc(3.25rem + env(safe-area-inset-top, 0px))" }}
+                      aria-hidden
+                    />
+                  </>
+                )}
 
-        <div className="mx-auto flex w-full max-w-none">
-          {!hideChrome && (
-            <aside
-              className={cn(
-                "ph-sidebar sticky top-0 hidden h-screen shrink-0 transition-[width,padding] duration-300 ease-out md:flex md:flex-col",
-                sidebarCollapsed ? "w-17 p-2" : "w-70 p-3",
-              )}
-            >
-              {sidebarCollapsed ? (
-                <CollapsedSidebar
-                  pathname={pathname}
-                  onExpand={toggleSidebar}
-                  activeWallet={activeWallet}
-                />
-              ) : (
-                <div className="flex h-full min-h-0 flex-col">
-                  <SidebarInner
-                    wallets={wallets}
-                    activeWallet={activeWallet}
-                    profile={profile}
-                    pathname={pathname}
-                    onSwitchWallet={switchWallet}
-                    unread={txNotes.unread}
-                    onOpenNotifications={() => setNotifOpen(true)}
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleSidebar}
-                    className="mt-1 flex shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-                    title="Collapse sidebar"
+                <div className="mx-auto flex w-full max-w-none">
+                  {!hideChrome && (
+                    <aside
+                      className={cn(
+                        "ph-sidebar sticky top-0 hidden h-screen shrink-0 transition-[width,padding] duration-300 ease-out md:flex md:flex-col",
+                        sidebarCollapsed ? "w-17 p-2" : "w-70 p-3",
+                      )}
+                    >
+                      {sidebarCollapsed ? (
+                        <CollapsedSidebar
+                          pathname={pathname}
+                          onExpand={toggleSidebar}
+                          activeWallet={activeWallet}
+                        />
+                      ) : (
+                        <div className="flex h-full min-h-0 flex-col">
+                          <SidebarInner
+                            wallets={wallets}
+                            activeWallet={activeWallet}
+                            profile={profile}
+                            pathname={pathname}
+                            onSwitchWallet={switchWallet}
+                            unread={txNotes.unread}
+                            onOpenNotifications={() => setNotifOpen(true)}
+                          />
+                          <button
+                            type="button"
+                            onClick={toggleSidebar}
+                            className="mt-1 flex shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                            title="Collapse sidebar"
+                          >
+                            <PanelLeftClose className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </aside>
+                  )}
+
+                  {mobileOpen && !hideChrome && (
+                    <div className="fixed inset-0 z-50 md:hidden">
+                      <div
+                        className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+                        onClick={() => setMobileOpen(false)}
+                      />
+                      <aside className="ph-sidebar relative flex h-full w-76 flex-col overflow-hidden p-3 shadow-2xl animate-in slide-in-from-left duration-300 ease-out">
+                        <SidebarInner
+                          wallets={wallets}
+                          activeWallet={activeWallet}
+                          profile={profile}
+                          pathname={pathname}
+                          onClose={() => setMobileOpen(false)}
+                          onSwitchWallet={switchWallet}
+                          unread={txNotes.unread}
+                          onOpenNotifications={() => {
+                            setMobileOpen(false);
+                            setNotifOpen(true);
+                          }}
+                        />
+                      </aside>
+                    </div>
+                  )}
+
+                  <main
+                    className={cn(
+                      "ot-phantom min-w-0 flex-1",
+                      hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
+                    )}
                   >
-                    <PanelLeftClose className="h-4 w-4" />
-                  </button>
+                    <PageTransition disabled={hideChrome}>
+                      {isP2p ? (
+                        <P2pShell>
+                          <Outlet />
+                        </P2pShell>
+                      ) : (
+                        <Outlet />
+                      )}
+                    </PageTransition>
+                  </main>
                 </div>
-              )}
-            </aside>
-          )}
 
-          {mobileOpen && !hideChrome && (
-            <div className="fixed inset-0 z-50 md:hidden">
-              <div
-                className="absolute inset-0 bg-background/70 backdrop-blur-sm"
-                onClick={() => setMobileOpen(false)}
-              />
-              <aside className="ph-sidebar relative flex h-full w-76 flex-col overflow-hidden p-3 shadow-2xl animate-in slide-in-from-left duration-300 ease-out">
-                <SidebarInner
-                  wallets={wallets}
-                  activeWallet={activeWallet}
-                  profile={profile}
-                  pathname={pathname}
-                  onClose={() => setMobileOpen(false)}
-                  onSwitchWallet={switchWallet}
-                  unread={txNotes.unread}
-                  onOpenNotifications={() => {
-                    setMobileOpen(false);
-                    setNotifOpen(true);
-                  }}
+                {!hideChrome && <MobileTabBar pathname={pathname} mobileOpen={mobileOpen} t={t} />}
+
+                <NotificationCenter
+                  open={notifOpen}
+                  onOpenChange={setNotifOpen}
+                  items={txNotes.items}
+                  onMarkAll={txNotes.markAll}
+                  onClear={txNotes.clearAll}
+                  onMarkOne={txNotes.markOneRead}
                 />
-              </aside>
-            </div>
-          )}
 
-          <main
-            className={cn(
-              "ot-phantom min-w-0 flex-1",
-              hideChrome ? "p-0" : "safe-pb px-4 pt-2 md:px-8 md:pb-8 md:pt-6",
-            )}
-          >
-            <PageTransition disabled={hideChrome}>
-              {isP2p ? (
-                <P2pShell>
-                  <Outlet />
-                </P2pShell>
-              ) : (
-                <Outlet />
-              )}
-            </PageTransition>
-          </main>
-        </div>
-
-        {!hideChrome && (
-          <MobileTabBar
-            pathname={pathname}
-            mobileOpen={mobileOpen}
-            t={t}
-          />
-        )}
-
-        <NotificationCenter
-          open={notifOpen}
-          onOpenChange={setNotifOpen}
-          items={txNotes.items}
-          onMarkAll={txNotes.markAll}
-          onClear={txNotes.clearAll}
-          onMarkOne={txNotes.markOneRead}
-        />
-
-        <WalletSwitcherDialog
-          open={headerSwitchOpen}
-          onOpenChange={setHeaderSwitchOpen}
-          wallets={wallets}
-          activeWalletId={activeWallet?.id}
-          onSelect={switchWalletFromHeader}
-          switching={headerSwitching}
-          currency={headerCurrency}
-        />
-      </div>
-    </ChromeVisibleProvider>
-        </CurrencyProvider>
-      </AppPhantomProvider>
-    </AppMoonPayProvider>
+                <WalletSwitcherDialog
+                  open={headerSwitchOpen}
+                  onOpenChange={setHeaderSwitchOpen}
+                  wallets={wallets}
+                  activeWalletId={activeWallet?.id}
+                  onSelect={switchWalletFromHeader}
+                  switching={headerSwitching}
+                  currency={headerCurrency}
+                />
+              </div>
+            </ChromeVisibleProvider>
+          </CurrencyProvider>
+        </AppPhantomProvider>
+      </AppMoonPayProvider>
     </AppLockGate>
   );
 }
@@ -1077,9 +1089,7 @@ function SidebarInner({
                 "h-[1.15rem] w-[1.15rem] shrink-0",
                 (pathname === "/chat" || pathname.startsWith("/chat/")) && "ph-tab-icon-active",
               )}
-              strokeWidth={
-                pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75
-              }
+              strokeWidth={pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75}
             />
             <span className="truncate">{t("nav.liveChat")}</span>
           </Link>
@@ -1088,9 +1098,7 @@ function SidebarInner({
             onClick={onClose}
             preload="intent"
             aria-current={
-              pathname === "/watchlist" || pathname.startsWith("/watchlist/")
-                ? "page"
-                : undefined
+              pathname === "/watchlist" || pathname.startsWith("/watchlist/") ? "page" : undefined
             }
             className={sideItemClass(
               pathname === "/watchlist" || pathname.startsWith("/watchlist/"),
@@ -1115,9 +1123,7 @@ function SidebarInner({
             aria-current={
               pathname === "/airdrop" || pathname.startsWith("/airdrop/") ? "page" : undefined
             }
-            className={sideItemClass(
-              pathname === "/airdrop" || pathname.startsWith("/airdrop/"),
-            )}
+            className={sideItemClass(pathname === "/airdrop" || pathname.startsWith("/airdrop/"))}
           >
             <Gift
               className={cn(
@@ -1132,7 +1138,10 @@ function SidebarInner({
             <span className="truncate">Airdrops</span>
           </Link>
           <div className="mb-0.5 flex items-center gap-3 rounded-[14px] px-3 py-[0.55rem]">
-            <Code2 className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground" strokeWidth={1.75} />
+            <Code2
+              className="h-[1.15rem] w-[1.15rem] shrink-0 text-muted-foreground"
+              strokeWidth={1.75}
+            />
             <label
               htmlFor="developer-mode"
               className="flex-1 cursor-pointer text-[13.5px] font-semibold tracking-[-0.012em] text-muted-foreground"
@@ -1294,7 +1303,12 @@ function SidebarInner({
                 [
                   { href: "/website", labelKey: "nav.website", Icon: Home, external: false },
                   { href: "/pitch", labelKey: "nav.pitch", Icon: Presentation, external: false },
-                  { href: "/openusd", labelKey: "nav.ousd", Icon: CircleDollarSign, external: false },
+                  {
+                    href: "/openusd",
+                    labelKey: "nav.ousd",
+                    Icon: CircleDollarSign,
+                    external: false,
+                  },
                   { href: "/about", labelKey: "nav.about", Icon: Globe2, external: false },
                   { href: "/blog", labelKey: "nav.blog", Icon: Newspaper, external: false },
                   { href: "/wiki", labelKey: "nav.wiki", Icon: BookMarked, external: false },
@@ -1322,9 +1336,7 @@ function SidebarInner({
                     aria-current={
                       pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined
                     }
-                    className={sideItemClass(
-                      pathname === href || pathname.startsWith(`${href}/`),
-                    )}
+                    className={sideItemClass(pathname === href || pathname.startsWith(`${href}/`))}
                   >
                     <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
                     <span className="min-w-0 flex-1 truncate">{navLabel(t, labelKey)}</span>
@@ -1368,9 +1380,7 @@ function SidebarInner({
                   aria-current={
                     pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined
                   }
-                  className={sideItemClass(
-                    pathname === href || pathname.startsWith(`${href}/`),
-                  )}
+                  className={sideItemClass(pathname === href || pathname.startsWith(`${href}/`))}
                 >
                   <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
                   <span className="min-w-0 flex-1 truncate">{label}</span>

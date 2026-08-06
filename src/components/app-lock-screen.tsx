@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Eye, EyeOff, HelpCircle, Loader2, Lock } from "lucide-react";
+import { Eye, EyeOff, Fingerprint, HelpCircle, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,11 @@ import {
   markSessionUnlocked,
   validateLockPassword,
 } from "@/lib/app-lock";
+import {
+  hasBiometricCredential,
+  isPlatformAuthenticatorAvailable,
+  verifyBiometric,
+} from "@/lib/biometric";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -135,7 +140,42 @@ function AppLockScreen({
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [bioBusy, setBioBusy] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      if (!hasBiometricCredential(userId)) return;
+      const ok = await isPlatformAuthenticatorAvailable();
+      if (!cancelled && ok) setBioAvailable(true);
+    }
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  async function unlockWithBiometrics() {
+    setBioBusy(true);
+    setError(null);
+    try {
+      const ok = await verifyBiometric(userId);
+      if (ok) onUnlocked();
+      else setError("Biometric check failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Biometric check cancelled");
+    } finally {
+      setBioBusy(false);
+    }
+  }
+
+  // Offer the biometric prompt immediately when it's set up on this device.
+  useEffect(() => {
+    if (bioAvailable) void unlockWithBiometrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bioAvailable]);
 
   async function unlock(e?: FormEvent) {
     e?.preventDefault();
@@ -265,6 +305,23 @@ function AppLockScreen({
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Unlock
             </Button>
+
+            {bioAvailable ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={bioBusy}
+                onClick={() => void unlockWithBiometrics()}
+                className="h-14 w-full rounded-full border-[var(--border)] bg-[var(--muted)] text-[16px] font-bold text-[var(--foreground)]"
+              >
+                {bioBusy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Fingerprint className="mr-2 h-4.5 w-4.5" />
+                )}
+                Unlock with Face ID / Fingerprint
+              </Button>
+            ) : null}
           </form>
 
           <button

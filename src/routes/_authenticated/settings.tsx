@@ -27,6 +27,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Lock,
+  Fingerprint,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
@@ -58,6 +59,12 @@ import {
   rememberLockEnabled,
   validateLockPassword,
 } from "@/lib/app-lock";
+import {
+  clearBiometricCredential,
+  hasBiometricCredential,
+  isPlatformAuthenticatorAvailable,
+  registerBiometric,
+} from "@/lib/biometric";
 import { currencyListLabel, getCurrencyMeta, useCurrency, type CurrencyCode } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getLanguageMeta } from "@/i18n/languages";
@@ -996,6 +1003,8 @@ function SettingsPage() {
         <div className="overflow-hidden rounded-2xl bg-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
             <BiometricCard
+              userId={user.id}
+              label={user.email || "OpenPay user"}
               enabled={!!prefs?.biometric_enabled}
               onToggle={(v) => updatePref({ biometric_enabled: v })}
             />
@@ -1625,71 +1634,71 @@ function SettingRow({
 }
 
 function BiometricCard({
+  userId,
+  label,
   enabled,
   onToggle,
 }: {
+  userId: string;
+  label: string;
   enabled: boolean;
   onToggle: (v: boolean) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
+  const [available, setAvailable] = useState(false);
+  const [enrolledHere, setEnrolledHere] = useState(false);
+
+  useEffect(() => {
+    void isPlatformAuthenticatorAvailable().then(setAvailable);
+    setEnrolledHere(hasBiometricCredential(userId));
+  }, [userId]);
+
   async function enroll() {
     setBusy(true);
     try {
-      if (enabled) {
+      if (enabled && enrolledHere) {
+        clearBiometricCredential(userId);
+        setEnrolledHere(false);
         await onToggle(false);
-        toast.success("Biometric disabled");
+        toast.success("Biometric unlock disabled");
         return;
       }
-      if (!("credentials" in navigator) || !window.PublicKeyCredential) {
-        toast.error("Biometric not supported on this device");
-        return;
-      }
-      const challenge = crypto.getRandomValues(new Uint8Array(32));
-      const userId = crypto.getRandomValues(new Uint8Array(16));
-      await navigator.credentials.create({
-        publicKey: {
-          challenge,
-          rp: { name: "OpenPay Pro" },
-          user: { id: userId, name: "openpay-user", displayName: "OpenPay User" },
-          pubKeyCredParams: [
-            { type: "public-key", alg: -7 },
-            { type: "public-key", alg: -257 },
-          ],
-          authenticatorSelection: {
-            userVerification: "preferred",
-            authenticatorAttachment: "platform",
-          },
-          timeout: 60_000,
-          attestation: "none",
-        },
-      });
+      await registerBiometric(userId, label);
+      setEnrolledHere(true);
       await onToggle(true);
-      toast.success("Biometric enabled");
+      toast.success("Biometric unlock enabled on this device");
     } catch (err) {
       toast.error((err as Error).message || "Biometric setup cancelled");
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-        <ShieldCheck className="h-4 w-4" />
+        <Fingerprint className="h-4 w-4" />
       </span>
       <div className="mt-2 text-sm font-semibold">
-        Biometric login{" "}
-        {enabled && <span className="ml-1 text-[10px] uppercase text-mint-foreground">on</span>}
+        Face ID / Fingerprint{" "}
+        {enabled && enrolledHere && (
+          <span className="ml-1 text-[10px] uppercase text-mint-foreground">on</span>
+        )}
       </div>
-      <div className="text-xs text-muted-foreground">Use device biometrics to unlock</div>
+      <div className="text-xs text-muted-foreground">
+        {available
+          ? "Unlock the wallet with your device biometrics instead of typing your password."
+          : "No device biometrics detected on this browser."}
+      </div>
       <Button
         size="sm"
         variant="outline"
         className="mt-3 w-full rounded-full"
         onClick={enroll}
-        disabled={busy}
+        disabled={busy || !available}
       >
         {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-        {enabled ? "Disable" : "Configure"}
+        {enabled && enrolledHere ? "Disable" : "Set up biometrics"}
       </Button>
     </div>
   );

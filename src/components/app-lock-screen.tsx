@@ -305,6 +305,23 @@ function AppLockScreen({
               {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Unlock
             </Button>
+
+            {bioAvailable ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={bioBusy}
+                onClick={() => void unlockWithBiometrics()}
+                className="h-14 w-full rounded-full border-[var(--border)] bg-[var(--muted)] text-[16px] font-bold text-[var(--foreground)]"
+              >
+                {bioBusy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Fingerprint className="mr-2 h-4.5 w-4.5" />
+                )}
+                Unlock with Face ID / Fingerprint
+              </Button>
+            ) : null}
           </form>
 
           <button

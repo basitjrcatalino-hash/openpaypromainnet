@@ -2658,6 +2658,201 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_charges: {
+        Row: {
+          amount: number
+          app_id: string
+          cancel_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          expires_at: string
+          id: string
+          paid_at: string | null
+          payer_user_id: string | null
+          reference: string | null
+          status: string
+          success_url: string | null
+        }
+        Insert: {
+          amount: number
+          app_id: string
+          cancel_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string
+          id?: string
+          paid_at?: string | null
+          payer_user_id?: string | null
+          reference?: string | null
+          status?: string
+          success_url?: string | null
+        }
+        Update: {
+          amount?: number
+          app_id?: string
+          cancel_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string
+          id?: string
+          paid_at?: string | null
+          payer_user_id?: string | null
+          reference?: string | null
+          status?: string
+          success_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_charges_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "pro_oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pro_oauth_apps: {
+        Row: {
+          active: boolean
+          client_id: string
+          client_secret_hash: string
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_user_id: string
+          redirect_uris: string[]
+          scopes: string[]
+          secret_prefix: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          client_secret_hash: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_user_id: string
+          redirect_uris?: string[]
+          scopes?: string[]
+          secret_prefix: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          client_secret_hash?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_user_id?: string
+          redirect_uris?: string[]
+          scopes?: string[]
+          secret_prefix?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      pro_oauth_codes: {
+        Row: {
+          app_id: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          redirect_uri: string
+          scope: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          redirect_uri: string
+          scope?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          redirect_uri?: string
+          scope?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_oauth_codes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "pro_oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pro_oauth_tokens: {
+        Row: {
+          app_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          revoked_at: string | null
+          scope: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          scope?: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          scope?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_oauth_tokens_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "pro_oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

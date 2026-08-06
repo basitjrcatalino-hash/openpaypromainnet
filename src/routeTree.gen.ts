@@ -159,6 +159,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
 import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
+import { Route as ApiPublicProConfigRouteImport } from './routes/api/public/pro/config'
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
@@ -187,6 +188,8 @@ import { Route as AuthenticatedOpentokenTokenIdChatRouteImport } from './routes/
 import { Route as AuthenticatedOpenpayConnectCallbackRouteImport } from './routes/_authenticated/openpay.connect.callback'
 import { Route as AuthenticatedBagsTokenMintRouteImport } from './routes/_authenticated/bags_.token.$mint'
 import { Route as AuthenticatedAssetTokenIdChatRouteImport } from './routes/_authenticated/asset_.$tokenId_.chat'
+import { Route as ApiPublicProUserMeRouteImport } from './routes/api/public/pro/user/me'
+import { Route as ApiPublicProOauthTokenRouteImport } from './routes/api/public/pro/oauth/token'
 import { Route as ApiPublicOpenpayConnectConfirmRouteImport } from './routes/api/public/openpay/connect/confirm'
 import { Route as ApiPublicLedgerEntriesIdRouteImport } from './routes/api/public/ledger/entries.$id'
 
@@ -975,6 +978,11 @@ const ApiPublicPushSubscribeRoute = ApiPublicPushSubscribeRouteImport.update({
   path: '/api/public/push/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicProConfigRoute = ApiPublicProConfigRouteImport.update({
+  id: '/api/public/pro/config',
+  path: '/api/public/pro/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPiPaymentsIncompleteRoute =
   ApiPublicPiPaymentsIncompleteRouteImport.update({
     id: '/api/public/pi-payments/incomplete',
@@ -1128,6 +1136,16 @@ const AuthenticatedAssetTokenIdChatRoute =
     path: '/asset/$tokenId/chat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicProUserMeRoute = ApiPublicProUserMeRouteImport.update({
+  id: '/api/public/pro/user/me',
+  path: '/api/public/pro/user/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProOauthTokenRoute = ApiPublicProOauthTokenRouteImport.update({
+  id: '/api/public/pro/oauth/token',
+  path: '/api/public/pro/oauth/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOpenpayConnectConfirmRoute =
   ApiPublicOpenpayConnectConfirmRouteImport.update({
     id: '/api/public/openpay/connect/confirm',
@@ -1316,11 +1334,14 @@ export interface FileRoutesByFullPath {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1497,11 +1518,14 @@ export interface FileRoutesByTo {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1680,11 +1704,14 @@ export interface FileRoutesById {
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
+  '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
+  '/api/public/pro/oauth/token': typeof ApiPublicProOauthTokenRoute
+  '/api/public/pro/user/me': typeof ApiPublicProUserMeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1863,11 +1890,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -2044,11 +2074,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   id:
     | '__root__'
     | '/'
@@ -2226,11 +2259,14 @@ export interface FileRouteTypes {
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
+    | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
     | '/lovable/email/queue/process'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
+    | '/api/public/pro/oauth/token'
+    | '/api/public/pro/user/me'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2312,10 +2348,13 @@ export interface RootRouteChildren {
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
+  ApiPublicProConfigRoute: typeof ApiPublicProConfigRoute
   ApiPublicPushSubscribeRoute: typeof ApiPublicPushSubscribeRoute
   ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
+  ApiPublicProOauthTokenRoute: typeof ApiPublicProOauthTokenRoute
+  ApiPublicProUserMeRoute: typeof ApiPublicProUserMeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -3370,6 +3409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pro/config': {
+      id: '/api/public/pro/config'
+      path: '/api/public/pro/config'
+      fullPath: '/api/public/pro/config'
+      preLoaderRoute: typeof ApiPublicProConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pi-payments/incomplete': {
       id: '/api/public/pi-payments/incomplete'
       path: '/api/public/pi-payments/incomplete'
@@ -3565,6 +3611,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/asset/$tokenId/chat'
       preLoaderRoute: typeof AuthenticatedAssetTokenIdChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/pro/user/me': {
+      id: '/api/public/pro/user/me'
+      path: '/api/public/pro/user/me'
+      fullPath: '/api/public/pro/user/me'
+      preLoaderRoute: typeof ApiPublicProUserMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pro/oauth/token': {
+      id: '/api/public/pro/oauth/token'
+      path: '/api/public/pro/oauth/token'
+      fullPath: '/api/public/pro/oauth/token'
+      preLoaderRoute: typeof ApiPublicProOauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/openpay/connect/confirm': {
       id: '/api/public/openpay/connect/confirm'
@@ -3917,10 +3977,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,
+  ApiPublicProConfigRoute: ApiPublicProConfigRoute,
   ApiPublicPushSubscribeRoute: ApiPublicPushSubscribeRoute,
   ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
+  ApiPublicProOauthTokenRoute: ApiPublicProOauthTokenRoute,
+  ApiPublicProUserMeRoute: ApiPublicProUserMeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3410,44 +3410,132 @@ export type Database = {
           aave_balance: number
           ada_balance: number
           address: string
+          aero_balance: number
+          akt_balance: number
+          algo_balance: number
+          apt_balance: number
+          arb_balance: number
           aster_balance: number
+          atom_balance: number
           avax_balance: number
+          axs_balance: number
+          babydoge_balance: number
           bch_balance: number
+          bdx_balance: number
+          beam_balance: number
+          beat_balance: number
           bgb_balance: number
+          blur_balance: number
           bnb_balance: number
+          bonk_balance: number
+          brett_balance: number
+          bsv_balance: number
           btc_balance: number
           cake_balance: number
           cash_balance: number
+          cc_balance: number
+          celo_balance: number
+          chz_balance: number
+          comp_balance: number
           created_at: string
+          cro_balance: number
+          crv_balance: number
+          dash_balance: number
           doge_balance: number
           dot_balance: number
+          egld_balance: number
+          ena_balance: number
+          eos_balance: number
+          etc_balance: number
           eth_balance: number
+          ethfi_balance: number
           eurc_balance: number
+          fet_balance: number
+          fil_balance: number
+          flow_balance: number
+          flr_balance: number
+          gala_balance: number
+          gno_balance: number
           googlx_balance: number
           gram_balance: number
+          grt_balance: number
           gt_balance: number
+          hbar_balance: number
+          htx_balance: number
           hype_balance: number
+          icp_balance: number
           id: string
+          imx_balance: number
+          inj_balance: number
+          iota_balance: number
           is_active: boolean
+          jst_balance: number
           jup_balance: number
+          kas_balance: number
+          kava_balance: number
+          kcs_balance: number
+          ldo_balance: number
+          leo_balance: number
           link_balance: number
+          lit_balance: number
+          ltc_balance: number
+          lunc_balance: number
+          m_balance: number
+          mana_balance: number
+          mina_balance: number
+          mkr_balance: number
+          mnt_balance: number
+          morpho_balance: number
           name: string
           near_balance: number
+          neo_balance: number
+          nexo_balance: number
           nflxx_balance: number
+          night_balance: number
+          not_balance: number
           okb_balance: number
           ondo_balance: number
+          op_balance: number
+          ordi_balance: number
           ousd_balance: number
           paxg_balance: number
+          pendle_balance: number
+          pengu_balance: number
+          pepe_balance: number
           pi_balance: number
+          pol_balance: number
           pump_balance: number
+          pyth_balance: number
           pyusd_balance: number
+          qnt_balance: number
+          rain_balance: number
           recovery_hash: string | null
+          render_balance: number
           rlusd_balance: number
+          robo_balance: number
           ron_balance: number
+          rose_balance: number
+          rune_balance: number
+          sand_balance: number
+          sei_balance: number
+          sfp_balance: number
+          shib_balance: number
+          sky_balance: number
+          snx_balance: number
           sol_balance: number
+          spx_balance: number
+          stable_balance: number
+          strk_balance: number
+          stx_balance: number
           sui_balance: number
+          sun_balance: number
+          tao_balance: number
+          theta_balance: number
+          tia_balance: number
+          trump_balance: number
           trx_balance: number
           tslax_balance: number
+          twt_balance: number
           uni_balance: number
           usd1_balance: number
           usdc_balance: number
@@ -3455,54 +3543,152 @@ export type Database = {
           usdt_balance: number
           usdy_balance: number
           user_id: string
+          vet_balance: number
+          virtual_balance: number
+          vvv_balance: number
+          wbt_balance: number
+          wbtc_balance: number
+          wif_balance: number
+          wld_balance: number
           wlfi_balance: number
           xaut_balance: number
+          xdc_balance: number
           xlm_balance: number
+          xmr_balance: number
           xrp_balance: number
           zec_balance: number
+          zro_balance: number
         }
         Insert: {
           aave_balance?: number
           ada_balance?: number
           address: string
+          aero_balance?: number
+          akt_balance?: number
+          algo_balance?: number
+          apt_balance?: number
+          arb_balance?: number
           aster_balance?: number
+          atom_balance?: number
           avax_balance?: number
+          axs_balance?: number
+          babydoge_balance?: number
           bch_balance?: number
+          bdx_balance?: number
+          beam_balance?: number
+          beat_balance?: number
           bgb_balance?: number
+          blur_balance?: number
           bnb_balance?: number
+          bonk_balance?: number
+          brett_balance?: number
+          bsv_balance?: number
           btc_balance?: number
           cake_balance?: number
           cash_balance?: number
+          cc_balance?: number
+          celo_balance?: number
+          chz_balance?: number
+          comp_balance?: number
           created_at?: string
+          cro_balance?: number
+          crv_balance?: number
+          dash_balance?: number
           doge_balance?: number
           dot_balance?: number
+          egld_balance?: number
+          ena_balance?: number
+          eos_balance?: number
+          etc_balance?: number
           eth_balance?: number
+          ethfi_balance?: number
           eurc_balance?: number
+          fet_balance?: number
+          fil_balance?: number
+          flow_balance?: number
+          flr_balance?: number
+          gala_balance?: number
+          gno_balance?: number
           googlx_balance?: number
           gram_balance?: number
+          grt_balance?: number
           gt_balance?: number
+          hbar_balance?: number
+          htx_balance?: number
           hype_balance?: number
+          icp_balance?: number
           id?: string
+          imx_balance?: number
+          inj_balance?: number
+          iota_balance?: number
           is_active?: boolean
+          jst_balance?: number
           jup_balance?: number
+          kas_balance?: number
+          kava_balance?: number
+          kcs_balance?: number
+          ldo_balance?: number
+          leo_balance?: number
           link_balance?: number
+          lit_balance?: number
+          ltc_balance?: number
+          lunc_balance?: number
+          m_balance?: number
+          mana_balance?: number
+          mina_balance?: number
+          mkr_balance?: number
+          mnt_balance?: number
+          morpho_balance?: number
           name: string
           near_balance?: number
+          neo_balance?: number
+          nexo_balance?: number
           nflxx_balance?: number
+          night_balance?: number
+          not_balance?: number
           okb_balance?: number
           ondo_balance?: number
+          op_balance?: number
+          ordi_balance?: number
           ousd_balance?: number
           paxg_balance?: number
+          pendle_balance?: number
+          pengu_balance?: number
+          pepe_balance?: number
           pi_balance?: number
+          pol_balance?: number
           pump_balance?: number
+          pyth_balance?: number
           pyusd_balance?: number
+          qnt_balance?: number
+          rain_balance?: number
           recovery_hash?: string | null
+          render_balance?: number
           rlusd_balance?: number
+          robo_balance?: number
           ron_balance?: number
+          rose_balance?: number
+          rune_balance?: number
+          sand_balance?: number
+          sei_balance?: number
+          sfp_balance?: number
+          shib_balance?: number
+          sky_balance?: number
+          snx_balance?: number
           sol_balance?: number
+          spx_balance?: number
+          stable_balance?: number
+          strk_balance?: number
+          stx_balance?: number
           sui_balance?: number
+          sun_balance?: number
+          tao_balance?: number
+          theta_balance?: number
+          tia_balance?: number
+          trump_balance?: number
           trx_balance?: number
           tslax_balance?: number
+          twt_balance?: number
           uni_balance?: number
           usd1_balance?: number
           usdc_balance?: number
@@ -3510,54 +3696,152 @@ export type Database = {
           usdt_balance?: number
           usdy_balance?: number
           user_id: string
+          vet_balance?: number
+          virtual_balance?: number
+          vvv_balance?: number
+          wbt_balance?: number
+          wbtc_balance?: number
+          wif_balance?: number
+          wld_balance?: number
           wlfi_balance?: number
           xaut_balance?: number
+          xdc_balance?: number
           xlm_balance?: number
+          xmr_balance?: number
           xrp_balance?: number
           zec_balance?: number
+          zro_balance?: number
         }
         Update: {
           aave_balance?: number
           ada_balance?: number
           address?: string
+          aero_balance?: number
+          akt_balance?: number
+          algo_balance?: number
+          apt_balance?: number
+          arb_balance?: number
           aster_balance?: number
+          atom_balance?: number
           avax_balance?: number
+          axs_balance?: number
+          babydoge_balance?: number
           bch_balance?: number
+          bdx_balance?: number
+          beam_balance?: number
+          beat_balance?: number
           bgb_balance?: number
+          blur_balance?: number
           bnb_balance?: number
+          bonk_balance?: number
+          brett_balance?: number
+          bsv_balance?: number
           btc_balance?: number
           cake_balance?: number
           cash_balance?: number
+          cc_balance?: number
+          celo_balance?: number
+          chz_balance?: number
+          comp_balance?: number
           created_at?: string
+          cro_balance?: number
+          crv_balance?: number
+          dash_balance?: number
           doge_balance?: number
           dot_balance?: number
+          egld_balance?: number
+          ena_balance?: number
+          eos_balance?: number
+          etc_balance?: number
           eth_balance?: number
+          ethfi_balance?: number
           eurc_balance?: number
+          fet_balance?: number
+          fil_balance?: number
+          flow_balance?: number
+          flr_balance?: number
+          gala_balance?: number
+          gno_balance?: number
           googlx_balance?: number
           gram_balance?: number
+          grt_balance?: number
           gt_balance?: number
+          hbar_balance?: number
+          htx_balance?: number
           hype_balance?: number
+          icp_balance?: number
           id?: string
+          imx_balance?: number
+          inj_balance?: number
+          iota_balance?: number
           is_active?: boolean
+          jst_balance?: number
           jup_balance?: number
+          kas_balance?: number
+          kava_balance?: number
+          kcs_balance?: number
+          ldo_balance?: number
+          leo_balance?: number
           link_balance?: number
+          lit_balance?: number
+          ltc_balance?: number
+          lunc_balance?: number
+          m_balance?: number
+          mana_balance?: number
+          mina_balance?: number
+          mkr_balance?: number
+          mnt_balance?: number
+          morpho_balance?: number
           name?: string
           near_balance?: number
+          neo_balance?: number
+          nexo_balance?: number
           nflxx_balance?: number
+          night_balance?: number
+          not_balance?: number
           okb_balance?: number
           ondo_balance?: number
+          op_balance?: number
+          ordi_balance?: number
           ousd_balance?: number
           paxg_balance?: number
+          pendle_balance?: number
+          pengu_balance?: number
+          pepe_balance?: number
           pi_balance?: number
+          pol_balance?: number
           pump_balance?: number
+          pyth_balance?: number
           pyusd_balance?: number
+          qnt_balance?: number
+          rain_balance?: number
           recovery_hash?: string | null
+          render_balance?: number
           rlusd_balance?: number
+          robo_balance?: number
           ron_balance?: number
+          rose_balance?: number
+          rune_balance?: number
+          sand_balance?: number
+          sei_balance?: number
+          sfp_balance?: number
+          shib_balance?: number
+          sky_balance?: number
+          snx_balance?: number
           sol_balance?: number
+          spx_balance?: number
+          stable_balance?: number
+          strk_balance?: number
+          stx_balance?: number
           sui_balance?: number
+          sun_balance?: number
+          tao_balance?: number
+          theta_balance?: number
+          tia_balance?: number
+          trump_balance?: number
           trx_balance?: number
           tslax_balance?: number
+          twt_balance?: number
           uni_balance?: number
           usd1_balance?: number
           usdc_balance?: number
@@ -3565,11 +3849,21 @@ export type Database = {
           usdt_balance?: number
           usdy_balance?: number
           user_id?: string
+          vet_balance?: number
+          virtual_balance?: number
+          vvv_balance?: number
+          wbt_balance?: number
+          wbtc_balance?: number
+          wif_balance?: number
+          wld_balance?: number
           wlfi_balance?: number
           xaut_balance?: number
+          xdc_balance?: number
           xlm_balance?: number
+          xmr_balance?: number
           xrp_balance?: number
           zec_balance?: number
+          zro_balance?: number
         }
         Relationships: []
       }
@@ -3949,6 +4243,7 @@ export type Database = {
         Args: { _amount: number; _asset: string; _from: string; _to: string }
         Returns: Json
       }
+      is_trade_market_symbol: { Args: { m: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string

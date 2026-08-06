@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Bot,
   BookOpen,
   Check,
   Copy,
@@ -13,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Shield,
+  Sparkles,
   Trash2,
   Wallet,
 } from "lucide-react";
@@ -31,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { copyText } from "@/lib/clipboard";
+import { getDeveloperPortalProfile } from "@/lib/developer.functions";
 import {
   createProApp,
   deleteProApp,
@@ -48,14 +51,38 @@ export const Route = createFileRoute("/_authenticated/partner-api")({
       {
         name: "description",
         content:
-          "Create OpenPay Pro Connect apps: client ID, client secret, OAuth callback URLs, and Pro Pay charges.",
+          "Beginner-friendly OpenPay Pro Partner API: create apps, copy env, OAuth auth, Pro Pay checkout, and receive OUSD to your wallet.",
       },
     ],
   }),
   component: PartnerApiPortalPage,
 });
 
-type ProAppRow = Awaited<ReturnType<typeof listProApps>>[number];
+/** Explicit row shape — useServerFn return is often untyped in the client bundle. */
+type ProAppRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  logo_url: string | null;
+  website_url: string | null;
+  client_id: string;
+  secret_prefix: string;
+  redirect_uris: string[];
+  scopes: string[];
+  active: boolean;
+  created_at: string;
+};
+
+type ProChargeRow = {
+  id: string;
+  amount: number | string;
+  currency: string;
+  description: string | null;
+  reference: string | null;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+};
 
 function copy(label: string, value: string) {
   void copyText(value).then(
@@ -79,10 +106,15 @@ function PartnerApiPortalPage() {
   const rotateSecretFn = useServerFn(rotateProAppSecret);
   const deleteAppFn = useServerFn(deleteProApp);
   const listChargesFn = useServerFn(listProAppCharges);
+  const getProfile = useServerFn(getDeveloperPortalProfile);
 
   const appsQ = useQuery({
     queryKey: ["pro-connect-apps"],
-    queryFn: () => listApps(),
+    queryFn: async () => (await listApps()) as ProAppRow[],
+  });
+  const profileQ = useQuery({
+    queryKey: ["developer-portal-profile"],
+    queryFn: () => getProfile(),
   });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -100,16 +132,28 @@ function PartnerApiPortalPage() {
     client_secret: string;
   } | null>(null);
 
+  const apps = appsQ.data ?? [];
   const selected = useMemo(
-    () => (appsQ.data ?? []).find((a) => a.id === selectedId) ?? (appsQ.data ?? [])[0] ?? null,
-    [appsQ.data, selectedId],
+    () => apps.find((a: ProAppRow) => a.id === selectedId) ?? apps[0] ?? null,
+    [apps, selectedId],
   );
 
   const chargesQ = useQuery({
     queryKey: ["pro-connect-charges", selected?.id],
-    queryFn: () => listChargesFn({ data: { id: selected!.id } }),
+    queryFn: async () =>
+      (await listChargesFn({ data: { id: selected!.id } })) as ProChargeRow[],
     enabled: Boolean(selected?.id),
   });
+
+  const wallet = profileQ.data?.activeWallet;
+  const username = profileQ.data?.username;
+  const walletAddress = wallet?.address ?? "";
+  const receiveHandle = useMemo(() => {
+    if (walletAddress) return walletAddress;
+    if (username) return `@${username.replace(/^@+/, "")}`;
+    if (profileQ.data?.userId) return `uid_${profileQ.data.userId}`;
+    return "";
+  }, [walletAddress, username, profileQ.data?.userId]);
 
   function resetForm(app?: ProAppRow | null) {
     setName(app?.name ?? "");
@@ -166,7 +210,7 @@ function PartnerApiPortalPage() {
   const rotateSecret = useMutation({
     mutationFn: (id: string) => rotateSecretFn({ data: { id } }),
     onSuccess: (res, id) => {
-      const app = (appsQ.data ?? []).find((a) => a.id === id);
+      const app = apps.find((a: ProAppRow) => a.id === id);
       setPlainSecret({
         client_id: app?.client_id ?? "",
         client_secret: res.client_secret,
@@ -198,16 +242,92 @@ function PartnerApiPortalPage() {
 
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
+  const redirect0 =
+    (selected?.redirect_uris ?? [])[0] || "https://your.app/callback";
 
   const authorizeSample = selected
-    ? `${origin}/pro/authorize?client_id=${encodeURIComponent(selected.client_id)}&redirect_uri=${encodeURIComponent((selected.redirect_uris ?? [])[0] || "https://your.app/callback")}&scope=profile%20balance&state=RANDOM`
+    ? `${origin}/pro/authorize?client_id=${encodeURIComponent(selected.client_id)}&redirect_uri=${encodeURIComponent(redirect0)}&scope=profile%20balance%20payments&state=RANDOM`
     : "";
 
   const envSample = selected
-    ? `PRO_CLIENT_ID="${selected.client_id}"
-PRO_CLIENT_SECRET="oprs_live_…"   # shown once at create / rotate
-PRO_REDIRECT_URI="${(selected.redirect_uris ?? [])[0] || "https://your.app/callback"}"
-PRO_API_BASE="${origin}/api/public/pro"`
+    ? `# OpenPay Pro Connect — server only (never VITE_)
+PRO_CLIENT_ID="${selected.client_id}"
+PRO_CLIENT_SECRET="oprs_live_…"
+PRO_REDIRECT_URI="${redirect0}"
+PRO_API_BASE="${origin}/api/public/pro"
+# Where Pro Pay credits land (your merchant wallet)
+PRO_RECEIVE_WALLET="${walletAddress || "0x…"}"
+PRO_RECEIVE_HANDLE="${receiveHandle || "@you"}"`
+    : "";
+
+  const chargeCurl = selected
+    ? `curl -X POST "${origin}/api/public/pro/charges" \\
+  -u "${selected.client_id}:YOUR_CLIENT_SECRET" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "amount": 12.50,
+    "description": "Order #1001",
+    "reference": "ord_1001",
+    "success_url": "https://your.app/paid",
+    "cancel_url": "https://your.app/cancel"
+  }'`
+    : "";
+
+  const aiPrompt = selected
+    ? `Integrate OpenPay Pro Connect into this project (beginner-friendly).
+
+## Credentials (server only — never VITE_ / browser)
+PRO_CLIENT_ID=${selected.client_id}
+PRO_CLIENT_SECRET=<paste secret from Partner API portal — shown once>
+PRO_REDIRECT_URI=${redirect0}
+PRO_API_BASE=${origin}/api/public/pro
+
+## Merchant receive wallet (OUSD lands here when users pay)
+Wallet address: ${walletAddress || "(create a wallet in OpenPay Pro Settings first)"}
+Handle: ${receiveHandle || "@you"}
+
+## Docs to fetch first
+1) ${origin}/docs/integrations
+2) ${origin}/api/public/docs/integrations
+3) ${origin}/api/public/pro/config
+
+## Build these flows
+1) **Auth (OpenPay Pro Auth)**
+   - Redirect user to: ${origin}/pro/authorize?client_id=…&redirect_uri=…&scope=profile%20balance%20payments&state=…
+   - On callback, POST ${origin}/api/public/pro/oauth/token with Basic auth (client_id:client_secret) + code
+   - Store access_token (oprat_…) server-side
+
+2) **Checkout (Pro Pay)**
+   - POST ${origin}/api/public/pro/charges → get checkout_url
+   - Redirect buyer to checkout_url
+   - Poll GET ${origin}/api/public/pro/charges/{id} until paid|canceled|expired
+   - No webhooks — poll only
+   - Paid OUSD credits the app owner's Pro wallet (${walletAddress || "merchant wallet"})
+
+3) **User APIs**
+   - GET /api/public/pro/user/me (Bearer oprat_)
+   - GET /api/public/pro/user/balance (requires balance scope)
+
+Rules: exact-match redirect_uri, currency OUSD, secrets on server only.`
+    : "";
+
+  const lovablePrompt = selected
+    ? `@${origin}/api/public/docs/integrations
+@${origin}/llms.txt
+
+Build a simple checkout + "Sign in with OpenPay Pro" using Pro Connect.
+
+Env (server secrets, not VITE_):
+PRO_CLIENT_ID=${selected.client_id}
+PRO_CLIENT_SECRET=…
+PRO_REDIRECT_URI=${redirect0}
+PRO_API_BASE=${origin}/api/public/pro
+
+Flows:
+1) Connect button → ${origin}/pro/authorize → callback → exchange code for oprat_
+2) Create charge → redirect checkout_url → poll until paid
+Paid funds credit merchant wallet ${walletAddress || "0x…"} on OpenPay Pro.
+No charge webhooks — poll. Exact redirect_uri match.`
     : "";
 
   if (appsQ.isLoading) {
@@ -222,12 +342,15 @@ PRO_API_BASE="${origin}/api/public/pro"`
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-24">
       <div className="space-y-2">
         <Badge variant="secondary" className="rounded-full">
-          Partner API
+          Partner API · Easy setup
         </Badge>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">OpenPay Pro Connect</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+          Connect any app in minutes
+        </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Register your app like the OpenPay Partner portal — get a client ID, set OAuth callback
-          URLs, and accept OUSD with Pro Pay. Secrets stay on your server only.
+          Create an app, copy env vars, paste an AI prompt into Cursor / Lovable / Replit, and ship
+          Auth + Pro Pay. Payments credit <strong className="text-foreground">your</strong> OpenPay
+          Pro wallet address.
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Button
@@ -243,7 +366,13 @@ PRO_API_BASE="${origin}/api/public/pro"`
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <Link to="/docs/integrations">
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-              Integration docs
+              Full docs
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link to="/docs/ai">
+              <Bot className="mr-1.5 h-3.5 w-3.5" />
+              AI Partner Pack
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="rounded-full">
@@ -252,24 +381,106 @@ PRO_API_BASE="${origin}/api/public/pro"`
               <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
             </a>
           </Button>
-          <Button asChild variant="outline" size="sm" className="rounded-full">
-            <Link to="/developer">Developer tools</Link>
-          </Button>
         </div>
       </div>
 
+      {/* Beginner steps */}
+      <section className="rounded-3xl border border-border/60 bg-card p-5">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          Beginner path
+        </p>
+        <ol className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              n: "1",
+              t: "Create app",
+              d: "Name + exact callback URL → get client ID & secret",
+            },
+            {
+              n: "2",
+              t: "Copy env",
+              d: "Paste PRO_* vars on your server (never VITE_)",
+            },
+            {
+              n: "3",
+              t: "Auth + Pay",
+              d: "/pro/authorize → token → POST /charges → poll",
+            },
+            {
+              n: "4",
+              t: "Get paid",
+              d: "OUSD credits your Pro wallet address below",
+            },
+          ].map((s) => (
+            <li
+              key={s.n}
+              className="rounded-2xl border border-border/40 bg-muted/20 px-3 py-3"
+            >
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                {s.n}
+              </span>
+              <p className="mt-2 text-sm font-bold">{s.t}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{s.d}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Receive wallet */}
+      <section className="space-y-3 rounded-3xl border border-primary/25 bg-primary/5 p-5">
+        <div className="flex items-center gap-2">
+          <Wallet className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-bold">Your receive wallet (where payments land)</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          When a user pays a Pro Pay charge for <em>your</em> Connect app, OUSD is credited to this
+          OpenPay Pro wallet. Set it up once — every checkout pays you here.
+        </p>
+        {!walletAddress ? (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+            <p className="font-semibold text-amber-800 dark:text-amber-300">No wallet yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Create a wallet in Settings or Dashboard, then return here.
+            </p>
+            <Button asChild size="sm" className="mt-3 rounded-full">
+              <Link to="/settings">Open Settings</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <FieldRow
+              label="Wallet address"
+              value={walletAddress}
+              onCopy={() => copy("Wallet address", walletAddress)}
+            />
+            <FieldRow
+              label="Receive handle"
+              value={receiveHandle}
+              onCopy={() => copy("Handle", receiveHandle)}
+            />
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline" className="rounded-full">
+            <Link to="/receive">Open Receive</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="rounded-full">
+            <a href="/docs/integrations#charges">How Pro Pay credits you</a>
+          </Button>
+        </div>
+      </section>
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
-        {/* App list */}
         <aside className="space-y-2 rounded-3xl border border-border/60 bg-card p-3">
           <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Your apps
           </p>
-          {(appsQ.data ?? []).length === 0 ? (
+          {apps.length === 0 ? (
             <p className="px-2 py-8 text-center text-sm text-muted-foreground">
               No apps yet. Create one to get credentials.
             </p>
           ) : (
-            (appsQ.data ?? []).map((app) => (
+            apps.map((app: ProAppRow) => (
               <button
                 key={app.id}
                 type="button"
@@ -309,7 +520,6 @@ PRO_API_BASE="${origin}/api/public/pro"`
           )}
         </aside>
 
-        {/* Detail */}
         <div className="space-y-4">
           {!selected ? (
             <section className="rounded-3xl border border-dashed border-border/60 bg-card/50 p-8 text-center">
@@ -424,7 +634,7 @@ PRO_API_BASE="${origin}/api/public/pro"`
                     OAuth callback / redirect URIs
                   </p>
                   <ul className="space-y-1.5">
-                    {(selected.redirect_uris ?? []).map((uri) => (
+                    {(selected.redirect_uris ?? []).map((uri: string) => (
                       <li
                         key={uri}
                         className="flex items-center gap-2 rounded-xl border border-border/40 bg-muted/20 px-3 py-2 font-mono text-[12px]"
@@ -452,7 +662,7 @@ PRO_API_BASE="${origin}/api/public/pro"`
                     Scopes
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {(selected.scopes ?? ["profile", "balance", "payments"]).map((s) => (
+                    {(selected.scopes ?? ["profile", "balance", "payments"]).map((s: string) => (
                       <Badge key={s} variant="secondary" className="rounded-full">
                         {s}
                       </Badge>
@@ -464,69 +674,81 @@ PRO_API_BASE="${origin}/api/public/pro"`
               <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
                 <div className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold">Integration quickstart</h3>
+                  <h3 className="text-base font-bold">Easy integration — copy & paste</h3>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Authorize users at <code className="rounded bg-muted px-1">/pro/authorize</code>,
-                  exchange codes at{" "}
-                  <code className="rounded bg-muted px-1">/api/public/pro/oauth/token</code>, create
-                  charges at <code className="rounded bg-muted px-1">/api/public/pro/charges</code>.
+                  Auth at <code className="rounded bg-muted px-1">/pro/authorize</code> · token at{" "}
+                  <code className="rounded bg-muted px-1">/api/public/pro/oauth/token</code> · pay
+                  at <code className="rounded bg-muted px-1">/api/public/pro/charges</code>. Paid
+                  OUSD → your wallet above.
                 </p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Env (server)
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 rounded-full text-xs"
-                      onClick={() => copy("Env", envSample)}
-                    >
-                      <Copy className="mr-1 h-3 w-3" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="overflow-x-auto rounded-2xl border border-border/50 bg-muted/40 p-3 text-[11px] leading-relaxed">
-                    <code>{envSample}</code>
-                  </pre>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Authorize URL
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 rounded-full text-xs"
-                      onClick={() => copy("Authorize URL", authorizeSample)}
-                    >
-                      <Copy className="mr-1 h-3 w-3" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="overflow-x-auto rounded-2xl border border-border/50 bg-muted/40 p-3 text-[11px] leading-relaxed break-all">
-                    <code>{authorizeSample}</code>
-                  </pre>
-                </div>
+
+                <CodeBlock
+                  label="Env (server)"
+                  value={envSample}
+                  onCopy={() => copy("Env", envSample)}
+                />
+                <CodeBlock
+                  label="Authorize URL"
+                  value={authorizeSample}
+                  onCopy={() => copy("Authorize URL", authorizeSample)}
+                />
+                <CodeBlock
+                  label="Create charge (cURL)"
+                  value={chargeCurl}
+                  onCopy={() => copy("cURL", chargeCurl)}
+                />
+
                 <div className="grid gap-2 sm:grid-cols-3">
                   <QuickLink
                     href="/docs/integrations#auth"
-                    title="OAuth Auth"
+                    title="1. OAuth Auth"
                     body="Consent → code → oprat_ token"
                   />
                   <QuickLink
                     href="/docs/integrations#charges"
-                    title="Pro Pay"
+                    title="2. Pro Pay"
                     body="POST /charges → checkout → poll"
                   />
                   <QuickLink
                     href="/api/public/pro/config"
-                    title="Discovery"
+                    title="3. Discovery"
                     body="Public endpoint map"
                     external
                   />
+                </div>
+              </section>
+
+              {/* AI paste */}
+              <section className="space-y-3 rounded-3xl border border-border/60 bg-card p-5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h3 className="text-base font-bold">AI setup — Cursor · Lovable · Replit</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Paste one prompt into your AI tool. It will wire Auth, checkout, env, and receive
+                  wallet using your live client ID.
+                </p>
+                <CodeBlock
+                  label="Cursor / Claude / ChatGPT"
+                  value={aiPrompt}
+                  onCopy={() => copy("AI prompt", aiPrompt)}
+                />
+                <CodeBlock
+                  label="Lovable"
+                  value={lovablePrompt}
+                  onCopy={() => copy("Lovable prompt", lovablePrompt)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <Link to="/docs/ai">More AI prompts</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <a href="/api/public/docs/integrations" target="_blank" rel="noreferrer">
+                      Raw markdown feed
+                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                    </a>
+                  </Button>
                 </div>
               </section>
 
@@ -540,9 +762,10 @@ PRO_API_BASE="${origin}/api/public/pro"`
                     <p className="px-4 py-8 text-center text-sm text-muted-foreground">
                       No charges yet. Create one via{" "}
                       <code className="rounded bg-muted px-1">POST /api/public/pro/charges</code>.
+                      Paid amounts credit your wallet address.
                     </p>
                   ) : (
-                    (chargesQ.data ?? []).map((c) => (
+                    (chargesQ.data ?? []).map((c: ProChargeRow) => (
                       <div
                         key={c.id}
                         className="flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
@@ -575,7 +798,7 @@ PRO_API_BASE="${origin}/api/public/pro"`
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="Create Connect app"
-        description="Like openpy.space/partner-api — register name, website, and exact callback URLs."
+        description="Name your app and add exact OAuth callback URLs — same idea as openpy.space/partner-api."
         name={name}
         setName={setName}
         descriptionValue={description}
@@ -617,7 +840,8 @@ PRO_API_BASE="${origin}/api/public/pro"`
             <DialogTitle>Copy your credentials</DialogTitle>
             <DialogDescription>
               The client secret is shown once. Store it in server secrets — never in{" "}
-              <code className="rounded bg-muted px-1">VITE_</code> env vars.
+              <code className="rounded bg-muted px-1">VITE_</code> env vars. Then paste the AI
+              prompt below into Cursor or Lovable.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -652,6 +876,33 @@ PRO_API_BASE="${origin}/api/public/pro"`
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function CodeBlock({
+  label,
+  value,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" onClick={onCopy}>
+          <Copy className="mr-1 h-3 w-3" />
+          Copy
+        </Button>
+      </div>
+      <pre className="max-h-56 overflow-auto rounded-2xl border border-border/50 bg-muted/40 p-3 text-[11px] leading-relaxed break-all whitespace-pre-wrap">
+        <code>{value}</code>
+      </pre>
     </div>
   );
 }

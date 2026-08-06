@@ -11,6 +11,7 @@ import {
   MCP_URL,
   PARTNER_API,
   PARTNER_PORTAL,
+  PRO_PARTNER_PORTAL,
 } from "@/lib/docs-nav";
 
 export const Route = createFileRoute("/docs/ai")({
@@ -54,6 +55,55 @@ const FEEDS = [
   { label: "OpenAPI YAML", href: "/api/public/docs/openapi", tip: "Schemas for codegen" },
   { label: "llms.txt index", href: "/llms.txt", tip: "Discovery index" },
   { label: "llms-full.txt", href: "/llms-full.txt", tip: "Long-context dump" },
+  {
+    label: "Pro Connect (integrations)",
+    href: "/api/public/docs/integrations",
+    tip: "Auth + Pro Pay on openpaypro.space",
+  },
+] as const;
+
+const PRO_CONNECT_PROMPTS = [
+  {
+    tool: "Cursor · Claude — Pro Connect",
+    body: `Integrate OpenPay Pro Connect (NOT openpy Partner opk_live_).
+
+Fetch first:
+1) https://openpaypro.space/api/public/docs/integrations
+2) https://openpaypro.space/api/public/pro/config
+3) https://openpaypro.space/docs/integrations
+
+Credentials from ${PRO_PARTNER_PORTAL} (server only):
+PRO_CLIENT_ID=opro_live_…
+PRO_CLIENT_SECRET=oprs_live_…
+PRO_REDIRECT_URI=https://your.app/callback
+PRO_API_BASE=https://openpaypro.space/api/public/pro
+
+Build:
+1) Auth — redirect to /pro/authorize → exchange code at /oauth/token → store oprat_
+2) Pay — POST /charges → redirect checkout_url → poll GET /charges/:id
+Paid OUSD credits the Connect app owner's OpenPay Pro wallet.
+No charge webhooks. Exact redirect_uri. Never put secrets in VITE_.`,
+  },
+  {
+    tool: "Lovable — Pro Connect",
+    body: `@https://openpaypro.space/api/public/docs/integrations
+@https://openpaypro.space/llms.txt
+
+Build "Sign in with OpenPay Pro" + checkout:
+- Env: PRO_CLIENT_ID, PRO_CLIENT_SECRET, PRO_REDIRECT_URI, PRO_API_BASE
+- Authorize: https://openpaypro.space/pro/authorize
+- Charges: POST https://openpaypro.space/api/public/pro/charges
+- Poll until paid. Funds land in the merchant's Pro wallet.
+Get keys at ${PRO_PARTNER_PORTAL}`,
+  },
+  {
+    tool: "Replit / ChatGPT — Pro Connect",
+    body: `Use OpenPay Pro Connect API base https://openpaypro.space/api/public/pro
+Read https://openpaypro.space/api/public/docs/integrations
+Implement Auth (/pro/authorize → /oauth/token) and Pro Pay (/charges + poll).
+Secrets: PRO_CLIENT_ID (opro_live_), PRO_CLIENT_SECRET (oprs_live_), PRO_REDIRECT_URI
+Keys: ${PRO_PARTNER_PORTAL}`,
+  },
 ] as const;
 
 const PROMPTS = [
@@ -220,7 +270,12 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
         </ul>
       </DocsSection>
 
-      <DocsSection id="prompts" eyebrow="02" title="Copy-paste prompts">
+      <DocsSection id="prompts" eyebrow="02" title="Copy-paste prompts (OpenPay Partner)">
+        <p className="mb-4 text-sm text-muted-foreground">
+          For <strong className="text-foreground">openpy.space</strong> Partner keys (
+          <code className="text-foreground">opk_live_</code>). For Pro-native Auth + Pay, use the
+          section below.
+        </p>
         <div className="space-y-4">
           {PROMPTS.map((p) => (
             <Card key={p.tool} className="rounded-2xl border-border/60 bg-muted/20 p-5">
@@ -234,8 +289,32 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
         </div>
       </DocsSection>
 
+      <DocsSection id="pro-connect" eyebrow="02b" title="Pro Connect prompts (Auth + Pay on Pro)">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Use these when integrating{" "}
+          <strong className="text-foreground">openpaypro.space</strong> — client IDs start with{" "}
+          <code className="text-foreground">opro_live_</code>. Create an app at{" "}
+          <a href={PRO_PARTNER_PORTAL} className="font-semibold text-primary hover:underline">
+            Partner API
+          </a>
+          ; paid charges credit your Pro wallet.
+        </p>
+        <div className="space-y-4">
+          {PRO_CONNECT_PROMPTS.map((p) => (
+            <Card key={p.tool} className="rounded-2xl border-border/60 bg-muted/20 p-5">
+              <div className="mb-3 flex items-center gap-2 text-base font-bold">
+                <Bot className="h-5 w-5 text-primary" />
+                {p.tool}
+              </div>
+              <DocsCode>{p.body}</DocsCode>
+            </Card>
+          ))}
+        </div>
+      </DocsSection>
+
       <DocsSection id="features" eyebrow="03" title="What partners can integrate">
-        <DocsCode>{`Auth / Connect     → openpy.space/connect → POST /oauth/token → opa_live_
+        <DocsCode>{`# OpenPay Partner (openpy.space)
+Auth / Connect     → openpy.space/connect → POST /oauth/token → opa_live_
 Payments           → POST /charges → checkout_url → poll GET /charges/:id
 Payouts            → POST /transfers + Idempotency-Key
 Account resolve    → GET /accounts/@user|OP…|email
@@ -243,9 +322,14 @@ OpenPay → Pro      → note pro_xfer:@user:ref → POST ${INBOUND_API}
 Top-up (product)   → ${DOCS_BASE}/topup (Pi, MoonPay, Helio, Solana Pay, Banxa, Circle…)
 Reconcile          → ${LEDGER_API_BASE}/entries
 Agents (read-only) → ${MCP_URL}
+Partner API base   → ${PARTNER_API}
 
-Partner API base
-${PARTNER_API}`}</DocsCode>
+# OpenPay Pro Connect (openpaypro.space)
+Pro Auth           → /pro/authorize → POST /api/public/pro/oauth/token → oprat_
+Pro Pay            → POST /api/public/pro/charges → checkout → poll
+Receive wallet     → paid OUSD credits app owner's Pro wallet
+Portal             → ${PRO_PARTNER_PORTAL}
+Pro API base       → ${DOCS_BASE}/api/public/pro`}</DocsCode>
         <p className="text-base text-muted-foreground">
           Full narrative + Node examples:{" "}
           <Link to="/docs/openpay" className="font-semibold text-primary hover:underline">
@@ -265,13 +349,18 @@ ${PARTNER_API}`}</DocsCode>
       <DocsSection id="rules" eyebrow="04" title="Security rules for agents">
         <ol className="list-decimal space-y-3 pl-5 text-base leading-relaxed text-muted-foreground md:text-[1.125rem]">
           <li>
-            Keep <code className="text-foreground">opk_live_…</code> on the server only — never{" "}
+            Keep <code className="text-foreground">opk_live_…</code> /{" "}
+            <code className="text-foreground">oprs_live_…</code> on the server only — never{" "}
             <code className="text-foreground">VITE_</code> / client env.
           </li>
           <li>Exact-match OAuth redirect URIs in the Partner portal.</li>
           <li>Idempotency on every payout and Pro inbound credit.</li>
           <li>No partner charge webhooks — poll until paid / canceled / expired.</li>
           <li>OUSD is a ledger/network asset, not a public EVM/SPL contract.</li>
+          <li>
+            Pro Pay credits the Connect app owner’s OpenPay Pro wallet (see Partner API → receive
+            wallet).
+          </li>
         </ol>
         <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Copy className="h-4 w-4" />

@@ -14,6 +14,11 @@ import {
   markSessionUnlocked,
   validateLockPassword,
 } from "@/lib/app-lock";
+import {
+  hasBiometricCredential,
+  isPlatformAuthenticatorAvailable,
+  verifyBiometric,
+} from "@/lib/biometric";
 import { cn } from "@/lib/utils";
 
 type Props = {

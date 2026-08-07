@@ -168,6 +168,7 @@ import { Route as ApiPublicProChargesRouteImport } from './routes/api/public/pro
 import { Route as ApiPublicPiPaymentsIncompleteRouteImport } from './routes/api/public/pi-payments/incomplete'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
+import { Route as ApiPublicOpenpayPortfolioRouteImport } from './routes/api/public/openpay/portfolio'
 import { Route as ApiPublicOpenpayKycWebhookRouteImport } from './routes/api/public/openpay/kyc-webhook'
 import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
@@ -1035,6 +1036,12 @@ const ApiPublicPiPaymentsApproveRoute =
     path: '/api/public/pi-payments/approve',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOpenpayPortfolioRoute =
+  ApiPublicOpenpayPortfolioRouteImport.update({
+    id: '/api/public/openpay/portfolio',
+    path: '/api/public/openpay/portfolio',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOpenpayKycWebhookRoute =
   ApiPublicOpenpayKycWebhookRouteImport.update({
     id: '/api/public/openpay/kyc-webhook',
@@ -1392,6 +1399,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
+  '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -1585,6 +1593,7 @@ export interface FileRoutesByTo {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
+  '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -1780,6 +1789,7 @@ export interface FileRoutesById {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
   '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
+  '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
   '/api/public/pi-payments/incomplete': typeof ApiPublicPiPaymentsIncompleteRoute
@@ -1975,6 +1985,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/openpay/kyc-webhook'
+    | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -2168,6 +2179,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/openpay/kyc-webhook'
+    | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -2362,6 +2374,7 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/inbound'
     | '/api/public/openpay/kyc-webhook'
+    | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
     | '/api/public/pi-payments/incomplete'
@@ -2458,6 +2471,7 @@ export interface RootRouteChildren {
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicOpenpayInboundRoute: typeof ApiPublicOpenpayInboundRoute
   ApiPublicOpenpayKycWebhookRoute: typeof ApiPublicOpenpayKycWebhookRoute
+  ApiPublicOpenpayPortfolioRoute: typeof ApiPublicOpenpayPortfolioRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
   ApiPublicPiPaymentsIncompleteRoute: typeof ApiPublicPiPaymentsIncompleteRoute
@@ -3587,6 +3601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPiPaymentsApproveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/openpay/portfolio': {
+      id: '/api/public/openpay/portfolio'
+      path: '/api/public/openpay/portfolio'
+      fullPath: '/api/public/openpay/portfolio'
+      preLoaderRoute: typeof ApiPublicOpenpayPortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/openpay/kyc-webhook': {
       id: '/api/public/openpay/kyc-webhook'
       path: '/api/public/openpay/kyc-webhook'
@@ -4183,6 +4204,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicOpenpayInboundRoute: ApiPublicOpenpayInboundRoute,
   ApiPublicOpenpayKycWebhookRoute: ApiPublicOpenpayKycWebhookRoute,
+  ApiPublicOpenpayPortfolioRoute: ApiPublicOpenpayPortfolioRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,
   ApiPublicPiPaymentsIncompleteRoute: ApiPublicPiPaymentsIncompleteRoute,

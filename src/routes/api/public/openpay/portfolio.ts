@@ -17,7 +17,7 @@ async function handle(request: Request, identifier: string) {
   const {
     authorizePartnerRead,
     getPartnerPortfolio,
-    portfolioErrorStatus,
+    normalizePortfolioError,
   } = await import("@/lib/openpay-portfolio.server");
 
   const auth = await authorizePartnerRead(request);
@@ -34,8 +34,8 @@ async function handle(request: Request, identifier: string) {
     });
     return json(payload);
   } catch (err) {
-    const code = (err as Error).message || "server_error";
-    return json({ ok: false, error: code }, portfolioErrorStatus(code));
+    const { code, status } = normalizePortfolioError(err);
+    return json({ ok: false, error: code }, status);
   }
 }
 

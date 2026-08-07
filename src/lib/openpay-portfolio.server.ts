@@ -30,11 +30,13 @@ function sha256(v: string) {
 export async function authorizePartnerRead(
   request: Request,
 ): Promise<PartnerAuth | { error: string; status: number }> {
-  const key =
+  const key = (
     request.headers.get("x-api-key") ||
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
-    "";
+    request.headers.get("authorization")?.replace(/^Bearer\b\s*/i, "") ||
+    ""
+  ).trim();
   if (!key) return { error: "missing_api_key", status: 401 };
+
 
   const { partnerKeyFromEnv } = await import("@/lib/openpay-inbound.server");
   const master = partnerKeyFromEnv();

@@ -195,7 +195,18 @@ export async function getPartnerPortfolio(opts: {
   };
 }
 
+const KNOWN_CODES = new Set(["invalid_request", "forbidden", "user_not_found"]);
+
+/** Map any thrown error to a machine-readable code (never leak stack text). */
+export function normalizePortfolioError(err: unknown): { code: string; status: number } {
+  const raw = (err as Error)?.message || "server_error";
+  if (KNOWN_CODES.has(raw)) return { code: raw, status: portfolioErrorStatus(raw) };
+  console.error("[openpay-portfolio]", err);
+  return { code: "server_error", status: 500 };
+}
+
 export function portfolioErrorStatus(code: string): number {
+
   switch (code) {
     case "invalid_request":
       return 400;

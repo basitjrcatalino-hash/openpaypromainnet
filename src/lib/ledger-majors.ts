@@ -1373,7 +1373,7 @@ export async function fetchMajorUsdPrices(
         );
         for (const { assetId, majorId } of chunk) {
           const p = byId.get(assetId);
-          if (p && p > 0) out[majorId] = p;
+          if (p && p > 0 && isLedgerMajorId(majorId)) out[majorId] = p;
         }
       }
     } catch {

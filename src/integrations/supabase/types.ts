@@ -3633,6 +3633,45 @@ export type Database = {
           },
         ]
       }
+      turnkey_wallets: {
+        Row: {
+          created_at: string
+          evm_address: string | null
+          id: string
+          kind: string
+          label: string | null
+          solana_address: string | null
+          sub_organization_id: string | null
+          updated_at: string
+          user_id: string | null
+          wallet_id: string
+        }
+        Insert: {
+          created_at?: string
+          evm_address?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          solana_address?: string | null
+          sub_organization_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_id: string
+        }
+        Update: {
+          created_at?: string
+          evm_address?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          solana_address?: string | null
+          sub_organization_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_id?: string
+        }
+        Relationships: []
+      }
       tx_email_webhook_config: {
         Row: {
           enabled: boolean

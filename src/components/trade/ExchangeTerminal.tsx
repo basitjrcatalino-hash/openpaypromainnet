@@ -27,6 +27,8 @@ export function ExchangeTerminal({
 }) {
   const chartHost = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(420);
+  // OKX-style resizable bottom dock (orders / trades / positions)
+  const [dockSize, setDockSize] = useState<"sm" | "md" | "full">("md");
 
   useEffect(() => {
     const el = chartHost.current;
@@ -60,14 +62,42 @@ export function ExchangeTerminal({
             {periods}
           </div>
         ) : null}
-        <div ref={chartHost} className="min-h-[240px] flex-[1.6]">
-          {chart(chartHeight)}
-        </div>
-        <div className="flex min-h-[180px] flex-1 flex-col overflow-y-auto overscroll-contain border-t border-border/40">
-          {dock}
+        {dockSize !== "full" ? (
+          <div
+            ref={chartHost}
+            className={cn("min-h-[240px]", dockSize === "sm" ? "flex-[2.6]" : "flex-[1.15]")}
+          >
+            {chart(chartHeight)}
+          </div>
+        ) : null}
+        <div
+          className={cn(
+            "flex min-h-0 flex-col border-t border-border/40",
+            dockSize === "full" ? "flex-1" : dockSize === "md" ? "flex-1" : "h-[132px] shrink-0",
+          )}
+        >
+          <div className="flex shrink-0 items-center justify-end gap-1 px-2 py-1">
+            {(["sm", "md", "full"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setDockSize(s)}
+                className={cn(
+                  "rounded px-2 py-0.5 text-[10px] font-semibold uppercase",
+                  dockSize === s
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s === "sm" ? "Compact" : s === "md" ? "Expanded" : "Full"}
+              </button>
+            ))}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{dock}</div>
         </div>
 
       </section>
+
 
       <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background">
         <div className="min-h-0 flex-[1.25] overflow-hidden p-1.5">{book}</div>

@@ -51,6 +51,7 @@ import {
   Scale,
   ScanLine,
   LayoutGrid,
+  Wrench,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";

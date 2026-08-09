@@ -3918,6 +3918,7 @@ export type Database = {
           okb_balance: number
           ondo_balance: number
           op_balance: number
+          opro_balance: number
           ordi_balance: number
           ousd_balance: number
           paxg_balance: number
@@ -4071,6 +4072,7 @@ export type Database = {
           okb_balance?: number
           ondo_balance?: number
           op_balance?: number
+          opro_balance?: number
           ordi_balance?: number
           ousd_balance?: number
           paxg_balance?: number
@@ -4224,6 +4226,7 @@ export type Database = {
           okb_balance?: number
           ondo_balance?: number
           op_balance?: number
+          opro_balance?: number
           ordi_balance?: number
           ousd_balance?: number
           paxg_balance?: number

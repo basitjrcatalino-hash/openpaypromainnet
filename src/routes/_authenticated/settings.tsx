@@ -70,6 +70,12 @@ import { useLanguage } from "@/lib/language";
 import { getLanguageMeta } from "@/i18n/languages";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import {
+  generateAvatarDataUrl,
+  randomIdentity,
+  usernameFromDisplayName,
+} from "@/lib/random-identity";
+
 import type { Json, Tables } from "@/integrations/supabase/types";
 import {
   createFreshRecoveryWallet,
@@ -215,6 +221,8 @@ function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  const autoFilledRef = useRef(false);
+
   useEffect(() => {
     if (profile) {
       if (profile.display_name && !displayName) setDisplayName(profile.display_name);
@@ -222,6 +230,36 @@ function SettingsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.display_name, profile?.username]);
+
+  // No "unknown" profiles: give new accounts a random name, username and avatar.
+  useEffect(() => {
+    if (!profile || autoFilledRef.current) return;
+    const needsName = !profile.display_name?.trim();
+    const needsUsername = !profile.username?.trim();
+    const needsAvatar = !profile.avatar_url?.trim();
+    if (!needsName && !needsUsername && !needsAvatar) return;
+    autoFilledRef.current = true;
+
+    const seed = randomIdentity();
+    const dn = needsName ? seed.displayName : (profile.display_name as string);
+    const un = needsUsername ? usernameFromDisplayName(dn) : (profile.username as string);
+    const av = needsAvatar ? generateAvatarDataUrl(dn) : (profile.avatar_url as string);
+
+    setDisplayName(dn);
+    setUsername(un);
+    void (async () => {
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id,
+        display_name: dn,
+        username: un,
+        avatar_url: av,
+        updated_at: new Date().toISOString(),
+      });
+      if (!error) qc.invalidateQueries({ queryKey: ["profile", user.id] });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
 
   function resetAddDialog() {
     setNewName("");

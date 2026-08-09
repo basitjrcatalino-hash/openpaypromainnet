@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -9,7 +9,10 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
+  Image as ImageIcon,
   KeyRound,
+  Upload,
+
   Loader2,
   Pencil,
   Plus,
@@ -1426,15 +1429,33 @@ function AppFormDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="app-logo">Logo URL</Label>
-            <Input
-              id="app-logo"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://your.app/logo.png"
-              className="h-10 rounded-xl"
-            />
+            <Label htmlFor="app-logo">Logo</Label>
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="App logo preview"
+                  className="h-11 w-11 shrink-0 rounded-xl border border-border object-cover"
+                />
+              ) : (
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-dashed border-border text-muted-foreground">
+                  <ImageIcon className="h-4 w-4" />
+                </div>
+              )}
+              <Input
+                id="app-logo"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://your.app/logo.png"
+                className="h-10 flex-1 rounded-xl"
+              />
+              <LogoUploadButton onUploaded={setLogoUrl} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Paste a URL or upload an image (PNG/JPG/SVG, max 300KB).
+            </p>
           </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="app-redirects">OAuth callback / redirect URIs</Label>
             <Textarea
@@ -1462,7 +1483,69 @@ function AppFormDialog({
   );
 }
 
+function LogoUploadButton({ onUploaded }: { onUploaded: (url: string) => void }) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    if (file.size > 300_000) {
+      toast.error("Image must be under 300KB");
+      return;
+    }
+    setBusy(true);
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      onUploaded(dataUrl);
+      toast.success("Logo added");
+    } catch {
+      toast.error("Could not read that image");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (f) void handleFile(f);
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 shrink-0 rounded-xl"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+      >
+        {busy ? (
+          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+        ) : (
+          <Upload className="mr-1.5 h-4 w-4" />
+        )}
+        Upload
+      </Button>
+    </>
+  );
+}
+
 function FieldRow({
+
   label,
   value,
   hint,

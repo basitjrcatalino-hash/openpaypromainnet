@@ -327,6 +327,44 @@ function Dashboard() {
     }
   }
 
+  /** Record one portfolio snapshot per UTC day so Analytics can chart history. */
+  useEffect(() => {
+    if (!wallet?.id || !(totalUsd > 0)) return;
+    const key = `op.snapshot.${user.id}.${new Date().toISOString().slice(0, 10)}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch {
+      /* ignore */
+    }
+    const breakdown = [
+      ...ledgerAssets
+        .filter((a) => a.balance > 0 && a.priceUsd > 0)
+        .map((a) => ({
+          symbol: a.symbol,
+          name: a.name,
+          balance: a.balance,
+          priceUsd: a.priceUsd,
+          valueUsd: a.balance * a.priceUsd,
+        })),
+      ...holdingsList
+        .filter((h) => h.tokens && Number(h.balance ?? 0) > 0)
+        .map((h) => ({
+          symbol: h.tokens!.symbol,
+          name: h.tokens!.name,
+          balance: Number(h.balance ?? 0),
+          priceUsd: Number(h.tokens!.price_usd ?? 0),
+          valueUsd: Number(h.balance ?? 0) * Number(h.tokens!.price_usd ?? 0),
+        })),
+    ];
+    void recordPortfolioSnapshot(supabase, {
+      userId: user.id,
+      walletId: wallet.id,
+      totalUsd,
+      breakdown,
+    });
+  }, [wallet?.id, totalUsd, ledgerAssets, holdingsList, user.id]);
+
   const change24hUsd =
     ledgerAssets.reduce(
       (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),

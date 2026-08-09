@@ -662,13 +662,15 @@ function AuthenticatedLayout() {
                     )}
                   >
                     <PageTransition disabled={hideChrome}>
-                      {isP2p ? (
-                        <P2pShell>
+                      <MaintenanceGate>
+                        {isP2p ? (
+                          <P2pShell>
+                            <Outlet />
+                          </P2pShell>
+                        ) : (
                           <Outlet />
-                        </P2pShell>
-                      ) : (
-                        <Outlet />
-                      )}
+                        )}
+                      </MaintenanceGate>
                     </PageTransition>
                   </main>
                 </div>

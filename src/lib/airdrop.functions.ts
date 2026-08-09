@@ -182,7 +182,8 @@ export const listAirdropCampaigns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await db(context.supabase)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await db(supabaseAdmin)
       .from("airdrop_campaigns")
       .select("*")
       .order("created_at", { ascending: false });

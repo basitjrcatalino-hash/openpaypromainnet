@@ -768,35 +768,72 @@ function TradePage() {
         source={quote?.source}
       />
 
-      <div className="flex shrink-0 gap-4 overflow-x-auto border-b border-border/40 px-3 scrollbar-none">
-        {(
-          [
-            ["chart", "Chart"],
-            ["trade", "Trade"],
-            ["info", "Info"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => {
-              setView(id);
-              if (id === "trade") setDockExpanded(false);
-            }}
-            className={cn(
-              "relative shrink-0 pb-2 pt-1 text-[13px] font-semibold press",
-              view === id ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {label}
-            {view === id ? (
-              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
-            ) : null}
-          </button>
-        ))}
-      </div>
+      {pro ? null : (
+        <div className="flex shrink-0 gap-4 overflow-x-auto border-b border-border/40 px-3 scrollbar-none">
+          {(
+            [
+              ["chart", "Chart"],
+              ["trade", "Trade"],
+              ["info", "Info"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                setView(id);
+                if (id === "trade") setDockExpanded(false);
+              }}
+              className={cn(
+                "relative shrink-0 pb-2 pt-1 text-[13px] font-semibold press",
+                view === id ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {label}
+              {view === id ? (
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      {pro ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <ExchangeTerminal
+            periods={periodNodes}
+            markets={
+              <TradePairSearch
+                mode={mode}
+                market={market}
+                quotes={quotesQ.data}
+                majors={majorsQ.data}
+                onSelect={(m) => {
+                  setMarket(m);
+                  setAmount("");
+                  setPct(0);
+                }}
+              />
+            }
+            chart={(h) => (
+              <TradingViewEmbed
+                key={`pro-${tvSymbol}-${tvInterval}`}
+                kind="advanced-chart"
+                symbol={tvSymbol}
+                interval={tvInterval}
+                height={h}
+                className="rounded-none"
+              />
+            )}
+            book={orderBookNode}
+            trades={<RecentTrades trades={recentQ.data} loading={recentQ.isLoading} />}
+            form={orderFormNode}
+            dock={dockNode}
+          />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-hidden">
+
         {view === "chart" ? (
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border/30 px-2 py-1 scrollbar-none">

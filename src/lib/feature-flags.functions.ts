@@ -33,12 +33,17 @@ export const updateFeatureFlag = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => UpdateSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: Record<string, unknown> = {
+    const patch: {
+      updated_at: string;
+      updated_by: string;
+      enabled?: boolean;
+      message?: string | null;
+    } = {
       updated_at: new Date().toISOString(),
       updated_by: context.userId,
     };
-    if (data.enabled !== undefined) patch["enabled"] = data.enabled;
-    if (data.message !== undefined) patch["message"] = data.message || null;
+    if (data.enabled !== undefined) patch.enabled = data.enabled;
+    if (data.message !== undefined) patch.message = data.message || null;
 
     const { error } = await context.supabase
       .from("feature_flags")

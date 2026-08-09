@@ -148,6 +148,8 @@ import { Route as AuthenticatedOpentokenCreateRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpentokenAdminRouteImport } from './routes/_authenticated/opentoken_.admin'
 import { Route as AuthenticatedOpentokenTokenIdRouteImport } from './routes/_authenticated/opentoken_.$tokenId'
 import { Route as AuthenticatedNftsMintRouteImport } from './routes/_authenticated/nfts.mint'
+import { Route as AuthenticatedExchangeOrbitRouteImport } from './routes/_authenticated/exchange.orbit'
+import { Route as AuthenticatedExchangeExploreRouteImport } from './routes/_authenticated/exchange.explore'
 import { Route as AuthenticatedBagsTradeRouteImport } from './routes/_authenticated/bags_.trade'
 import { Route as AuthenticatedBagsLaunchRouteImport } from './routes/_authenticated/bags_.launch'
 import { Route as AuthenticatedBagsFeesRouteImport } from './routes/_authenticated/bags_.fees'
@@ -927,6 +929,18 @@ const AuthenticatedNftsMintRoute = AuthenticatedNftsMintRouteImport.update({
   path: '/mint',
   getParentRoute: () => AuthenticatedNftsRoute,
 } as any)
+const AuthenticatedExchangeOrbitRoute =
+  AuthenticatedExchangeOrbitRouteImport.update({
+    id: '/exchange/orbit',
+    path: '/exchange/orbit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedExchangeExploreRoute =
+  AuthenticatedExchangeExploreRouteImport.update({
+    id: '/exchange/explore',
+    path: '/exchange/explore',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBagsTradeRoute = AuthenticatedBagsTradeRouteImport.update({
   id: '/bags_/trade',
   path: '/bags/trade',
@@ -1326,6 +1340,8 @@ export interface FileRoutesByFullPath {
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
+  '/exchange/explore': typeof AuthenticatedExchangeExploreRoute
+  '/exchange/orbit': typeof AuthenticatedExchangeOrbitRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -1522,6 +1538,8 @@ export interface FileRoutesByTo {
   '/bags/fees': typeof AuthenticatedBagsFeesRoute
   '/bags/launch': typeof AuthenticatedBagsLaunchRoute
   '/bags/trade': typeof AuthenticatedBagsTradeRoute
+  '/exchange/explore': typeof AuthenticatedExchangeExploreRoute
+  '/exchange/orbit': typeof AuthenticatedExchangeOrbitRoute
   '/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/opentoken/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/opentoken/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -1720,6 +1738,8 @@ export interface FileRoutesById {
   '/_authenticated/bags_/fees': typeof AuthenticatedBagsFeesRoute
   '/_authenticated/bags_/launch': typeof AuthenticatedBagsLaunchRoute
   '/_authenticated/bags_/trade': typeof AuthenticatedBagsTradeRoute
+  '/_authenticated/exchange/explore': typeof AuthenticatedExchangeExploreRoute
+  '/_authenticated/exchange/orbit': typeof AuthenticatedExchangeOrbitRoute
   '/_authenticated/nfts/mint': typeof AuthenticatedNftsMintRoute
   '/_authenticated/opentoken_/$tokenId': typeof AuthenticatedOpentokenTokenIdRoute
   '/_authenticated/opentoken_/admin': typeof AuthenticatedOpentokenAdminRoute
@@ -1918,6 +1938,8 @@ export interface FileRouteTypes {
     | '/bags/fees'
     | '/bags/launch'
     | '/bags/trade'
+    | '/exchange/explore'
+    | '/exchange/orbit'
     | '/nfts/mint'
     | '/opentoken/$tokenId'
     | '/opentoken/admin'
@@ -2114,6 +2136,8 @@ export interface FileRouteTypes {
     | '/bags/fees'
     | '/bags/launch'
     | '/bags/trade'
+    | '/exchange/explore'
+    | '/exchange/orbit'
     | '/nfts/mint'
     | '/opentoken/$tokenId'
     | '/opentoken/admin'
@@ -2311,6 +2335,8 @@ export interface FileRouteTypes {
     | '/_authenticated/bags_/fees'
     | '/_authenticated/bags_/launch'
     | '/_authenticated/bags_/trade'
+    | '/_authenticated/exchange/explore'
+    | '/_authenticated/exchange/orbit'
     | '/_authenticated/nfts/mint'
     | '/_authenticated/opentoken_/$tokenId'
     | '/_authenticated/opentoken_/admin'
@@ -3488,6 +3514,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNftsMintRouteImport
       parentRoute: typeof AuthenticatedNftsRoute
     }
+    '/_authenticated/exchange/orbit': {
+      id: '/_authenticated/exchange/orbit'
+      path: '/exchange/orbit'
+      fullPath: '/exchange/orbit'
+      preLoaderRoute: typeof AuthenticatedExchangeOrbitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exchange/explore': {
+      id: '/_authenticated/exchange/explore'
+      path: '/exchange/explore'
+      fullPath: '/exchange/explore'
+      preLoaderRoute: typeof AuthenticatedExchangeExploreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bags_/trade': {
       id: '/_authenticated/bags_/trade'
       path: '/bags/trade'
@@ -3951,6 +3991,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBagsFeesRoute: typeof AuthenticatedBagsFeesRoute
   AuthenticatedBagsLaunchRoute: typeof AuthenticatedBagsLaunchRoute
   AuthenticatedBagsTradeRoute: typeof AuthenticatedBagsTradeRoute
+  AuthenticatedExchangeExploreRoute: typeof AuthenticatedExchangeExploreRoute
+  AuthenticatedExchangeOrbitRoute: typeof AuthenticatedExchangeOrbitRoute
   AuthenticatedOpentokenTokenIdRoute: typeof AuthenticatedOpentokenTokenIdRoute
   AuthenticatedOpentokenAdminRoute: typeof AuthenticatedOpentokenAdminRoute
   AuthenticatedOpentokenCreateRoute: typeof AuthenticatedOpentokenCreateRoute
@@ -4035,6 +4077,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBagsFeesRoute: AuthenticatedBagsFeesRoute,
   AuthenticatedBagsLaunchRoute: AuthenticatedBagsLaunchRoute,
   AuthenticatedBagsTradeRoute: AuthenticatedBagsTradeRoute,
+  AuthenticatedExchangeExploreRoute: AuthenticatedExchangeExploreRoute,
+  AuthenticatedExchangeOrbitRoute: AuthenticatedExchangeOrbitRoute,
   AuthenticatedOpentokenTokenIdRoute: AuthenticatedOpentokenTokenIdRoute,
   AuthenticatedOpentokenAdminRoute: AuthenticatedOpentokenAdminRoute,
   AuthenticatedOpentokenCreateRoute: AuthenticatedOpentokenCreateRoute,

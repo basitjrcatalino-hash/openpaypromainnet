@@ -56,6 +56,8 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { useDeveloperMode } from "@/hooks/use-developer-mode";
+import { useAppMode } from "@/lib/app-mode";
+import { ExchangeTabBar } from "@/components/exchange/ExchangeTabBar";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -452,6 +454,7 @@ function AuthenticatedLayout() {
   // Re-render the whole shell (Outlet, sidebar, sheets) when display currency changes
   useCurrency();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { mode: appMode } = useAppMode();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem("sidebar-collapsed") === "1";
@@ -677,7 +680,12 @@ function AuthenticatedLayout() {
                   </main>
                 </div>
 
-                {!hideChrome && <MobileTabBar pathname={pathname} mobileOpen={mobileOpen} t={t} />}
+                {!hideChrome &&
+                  (appMode === "exchange" ? (
+                    <ExchangeTabBar pathname={pathname} mobileOpen={mobileOpen} />
+                  ) : (
+                    <MobileTabBar pathname={pathname} mobileOpen={mobileOpen} t={t} />
+                  ))}
 
                 <NotificationCenter
                   open={notifOpen}

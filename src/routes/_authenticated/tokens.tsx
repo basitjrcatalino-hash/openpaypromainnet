@@ -197,10 +197,11 @@ function TokensPage() {
       }
     });
 
-    // Pin PI directly under OUSD (OUSD is rendered above this list),
-    // then Fabric Protocol (ROBO) directly under PI.
-    const rest = ids.filter((id) => id !== "pi" && id !== "robo");
+    // Pin OpenPay Pro (OPRO) directly under OUSD (OUSD is rendered above this
+    // list), then PI, then Fabric Protocol (ROBO).
+    const rest = ids.filter((id) => id !== "osol" && id !== "pi" && id !== "robo");
     const pinned: MajorTokenId[] = [];
+    if (ids.includes("osol")) pinned.push("osol");
     if (ids.includes("pi")) pinned.push("pi");
     if (ids.includes("robo")) pinned.push("robo");
     ids = [...pinned, ...rest];

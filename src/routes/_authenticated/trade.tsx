@@ -132,6 +132,7 @@ function TradePage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dockTab, setDockTab] = useState<DockTab>("orders");
   const [dockExpanded, setDockExpanded] = useState(false);
+  const [dockSize, setDockSize] = useState<DockSize>("md");
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);

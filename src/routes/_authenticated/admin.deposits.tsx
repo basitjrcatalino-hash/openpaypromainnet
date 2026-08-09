@@ -100,6 +100,8 @@ function AdminDepositsPage() {
   const [chainForm, setChainForm] = useState({ ...emptyChain });
   const [tokenForm, setTokenForm] = useState({ ...emptyToken });
   const [addressForm, setAddressForm] = useState({ ...emptyAddress });
+  const [poolForm, setPoolForm] = useState({ chain_id: "", addresses: "", label: "" });
+
 
   const chains: Row[] = data?.chains ?? [];
   const tokens: Row[] = data?.tokens ?? [];

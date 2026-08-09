@@ -35,6 +35,7 @@ import {
   LineChart,
   HelpCircle,
   MessageCircle,
+  LifeBuoy,
   Bot,
   Search,
   Code2,
@@ -1132,6 +1133,23 @@ function SidebarInner({
               strokeWidth={pathname === "/chat" || pathname.startsWith("/chat/") ? 2.25 : 1.75}
             />
             <span className="truncate">{t("nav.liveChat")}</span>
+          </Link>
+
+          <Link
+            to="/support"
+            onClick={onClose}
+            preload="intent"
+            aria-current={pathname === "/support" ? "page" : undefined}
+            className={sideItemClass(pathname === "/support")}
+          >
+            <LifeBuoy
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                pathname === "/support" && "ph-tab-icon-active",
+              )}
+              strokeWidth={pathname === "/support" ? 2.25 : 1.75}
+            />
+            <span className="truncate">Support</span>
           </Link>
           <Link
             to="/watchlist"

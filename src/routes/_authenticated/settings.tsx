@@ -70,6 +70,12 @@ import { useLanguage } from "@/lib/language";
 import { getLanguageMeta } from "@/i18n/languages";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import {
+  generateAvatarDataUrl,
+  randomIdentity,
+  usernameFromDisplayName,
+} from "@/lib/random-identity";
+
 import type { Json, Tables } from "@/integrations/supabase/types";
 import {
   createFreshRecoveryWallet,

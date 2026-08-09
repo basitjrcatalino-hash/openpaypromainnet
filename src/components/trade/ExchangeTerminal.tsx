@@ -63,9 +63,10 @@ export function ExchangeTerminal({
         <div ref={chartHost} className="min-h-[240px] flex-[1.6]">
           {chart(chartHeight)}
         </div>
-        <div className="flex min-h-[180px] flex-1 flex-col overflow-hidden border-t border-border/40">
+        <div className="flex min-h-[180px] flex-1 flex-col overflow-y-auto overscroll-contain border-t border-border/40">
           {dock}
         </div>
+
       </section>
 
       <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background">

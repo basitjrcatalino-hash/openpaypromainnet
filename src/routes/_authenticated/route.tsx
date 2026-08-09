@@ -73,6 +73,7 @@ import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { PageTransition } from "@/components/wallet/PageTransition";
+import { MaintenanceGate } from "@/components/maintenance-gate";
 import { CurrencyProvider } from "@/components/currency-provider";
 import { useTranslation } from "react-i18next";
 import "@/i18n";

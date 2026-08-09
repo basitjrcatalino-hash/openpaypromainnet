@@ -454,6 +454,7 @@ function AuthenticatedLayout() {
   // Re-render the whole shell (Outlet, sidebar, sheets) when display currency changes
   useCurrency();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { mode: appMode } = useAppMode();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem("sidebar-collapsed") === "1";

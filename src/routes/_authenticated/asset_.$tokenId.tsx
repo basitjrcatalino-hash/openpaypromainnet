@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,6 +77,12 @@ import {
 } from "@/components/wallet/TokenMarketInsights";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
+  beforeLoad: ({ params }) => {
+    // Legacy id: OpenPay Pro was previously listed as OSOL.
+    if (params.tokenId === "osol") {
+      throw redirect({ to: "/asset/$tokenId", params: { tokenId: "opro" } });
+    }
+  },
   head: ({ params }) => {
     const major = getMajorToken(params.tokenId);
     const title =

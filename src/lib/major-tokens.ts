@@ -12,10 +12,10 @@
  * - EURC  0x1abaea1f7c830bd89acc67ec4af516284b1bc33c (Ethereum)
  */
 
-import osolLogo from "@/assets/openpay-pro-logo.png.asset.json";
+import oproLogo from "@/assets/openpay-pro-logo.png.asset.json";
 
 /** OpenPay Pro (OPRO) uses the official OpenPay Pro mark. */
-const OSOL_LOGO_URL = osolLogo.url;
+const OPRO_LOGO_URL = oproLogo.url;
 
 export type MajorTokenId =
   | "btc"
@@ -161,7 +161,7 @@ export type MajorTokenId =
   | "lunc"
   | "gno"
   | "robo"
-  | "osol";
+  | "opro";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -2355,13 +2355,13 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "ROBO (Fabric Protocol) is an AI-focused token listed on OpenPay Pro Tokens, Spot, and Perpetuals. Prices refresh from CoinGecko when available.",
   },
-  osol: {
-    id: "osol",
+  opro: {
+    id: "opro",
     name: "OpenPay Pro",
     symbol: "OPRO",
     network: "OpenPay",
     category: "OpenPay asset",
-    logoUrl: OSOL_LOGO_URL,
+    logoUrl: OPRO_LOGO_URL,
     website: "https://openpaypro.space",
     coingeckoId: "solana",
     createdLabel: "OpenPay Pro",
@@ -4474,7 +4474,7 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     athDate: null,
     atlDate: null,
   },
-  osol: {
+  opro: {
     price: 74,
     change24h: 0,
     marketCap: 4.3e10,

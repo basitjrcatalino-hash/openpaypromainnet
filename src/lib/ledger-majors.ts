@@ -150,6 +150,7 @@ export const SPX_SWAP_ID = "__spx__";
 export const LUNC_SWAP_ID = "__lunc__";
 export const GNO_SWAP_ID = "__gno__";
 export const ROBO_SWAP_ID = "__robo__";
+export const OPRO_SWAP_ID = "__opro__";
 
 /** Ledger-backed majors — mirrors MAJOR_TOKENS (full catalog). */
 export const LEDGER_MAJOR_SWAP_IDS = {
@@ -296,6 +297,7 @@ export const LEDGER_MAJOR_SWAP_IDS = {
   lunc: LUNC_SWAP_ID,
   gno: GNO_SWAP_ID,
   robo: ROBO_SWAP_ID,
+  opro: OPRO_SWAP_ID,
 } as const;
 
 export type LedgerMajorId = keyof typeof LEDGER_MAJOR_SWAP_IDS;
@@ -450,7 +452,8 @@ export type LedgerAssetCode =
   | "SPX"
   | "LUNC"
   | "GNO"
-  | "ROBO";
+  | "ROBO"
+  | "OPRO";
 
 export const LEDGER_MAJOR_ASSET_CODES = [
   "BTC",
@@ -596,6 +599,7 @@ export const LEDGER_MAJOR_ASSET_CODES = [
   "LUNC",
   "GNO",
   "ROBO",
+  "OPRO",
 ] as const satisfies ReadonlyArray<Exclude<LedgerAssetCode, "OUSD">>;
 
 export const LEDGER_ASSET_CODES = [
@@ -747,6 +751,7 @@ export const LEDGER_BALANCE_COLUMN: Record<LedgerMajorId, string> = {
   lunc: "lunc_balance",
   gno: "gno_balance",
   robo: "robo_balance",
+  opro: "opro_balance",
 };
 
 const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
@@ -1036,6 +1041,8 @@ const SWAP_ID_TO_MAJOR: Record<string, LedgerMajorId> = {
   gno: "gno",
   [ROBO_SWAP_ID]: "robo",
   robo: "robo",
+  [OPRO_SWAP_ID]: "opro",
+  opro: "opro",
 };
 
 export function isLedgerMajorSwapId(id: string): boolean {
@@ -1106,6 +1113,7 @@ export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
   if (id === "sui") return "sui";
   if (id === "near") return "near";
   if (id === "pi") return "pi";
+  if (id === "opro") return "solana";
   if (
     id === "sol" ||
     id === "usdc" ||
@@ -1306,6 +1314,7 @@ const FALLBACK_USD: Record<LedgerMajorId, number> = {
   lunc: 0.000055,
   gno: 125,
   robo: 0.0128,
+  opro: 74,
 };
 
 /** Live PI/USD used by display currency (π) — refreshed by fetchMajorUsdPrices. */

@@ -135,6 +135,36 @@ function TradePage() {
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);
+  /** Exchange (Pro) mode — full desk layout, opt-in and persisted. */
+  const [exchangeMode, setExchangeMode] = useState(false);
+  const [wide, setWide] = useState(false);
+
+  useEffect(() => {
+    try {
+      setExchangeMode(window.localStorage.getItem("op.trade.exchange") === "1");
+    } catch {
+      /* ignore */
+    }
+    const mq = window.matchMedia("(min-width: 1180px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  function toggleExchangeMode() {
+    setExchangeMode((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem("op.trade.exchange", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+
 
   // Shared order form state
   const [orderType, setOrderType] = useState<SpotOrderKind>("limit");

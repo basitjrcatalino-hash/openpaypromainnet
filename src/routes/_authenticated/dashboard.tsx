@@ -318,8 +318,35 @@ function Dashboard() {
     }
   }
 
+  const change24hUsd = ledgerAssets.reduce(
+    (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),
+    0,
+  );
+
+  const modeSwitch = (
+    <div className="mb-4 flex justify-center">
+      <AppModeSwitch mode={appMode} onChange={setAppMode} />
+    </div>
+  );
+
+  if (appMode === "exchange") {
+    return (
+      <div className="mx-auto w-full">
+        {modeSwitch}
+        <ExchangeHome
+          userId={user.id}
+          totalUsd={totalUsd}
+          change24hUsd={change24hUsd}
+          currency={currency}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full animate-page-in">
+      {modeSwitch}
+
       {/* Flat balance hero */}
       {walletLoading && !wallet ? (
         <div className="flex flex-col items-center gap-3 py-6">

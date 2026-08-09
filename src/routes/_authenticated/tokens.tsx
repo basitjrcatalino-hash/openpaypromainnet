@@ -199,9 +199,9 @@ function TokensPage() {
 
     // Pin OpenPay Pro (OPRO) directly under OUSD (OUSD is rendered above this
     // list), then PI, then Fabric Protocol (ROBO).
-    const rest = ids.filter((id) => id !== "osol" && id !== "pi" && id !== "robo");
+    const rest = ids.filter((id) => id !== "opro" && id !== "pi" && id !== "robo");
     const pinned: MajorTokenId[] = [];
-    if (ids.includes("osol")) pinned.push("osol");
+    if (ids.includes("opro")) pinned.push("opro");
     if (ids.includes("pi")) pinned.push("pi");
     if (ids.includes("robo")) pinned.push("robo");
     ids = [...pinned, ...rest];

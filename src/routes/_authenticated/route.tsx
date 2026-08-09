@@ -154,9 +154,13 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.trustWallet") return "Trust Wallet";
   if (labelKey === "nav.pitch") return "Pitch Deck";
   if (labelKey === "nav.website") return "Website";
+  if (labelKey === "nav.turnkey") return "Turnkey";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
 }
+
+
+
 
 /** Primary mobile tabs — 5 max. Deposit / P2P / History / OpenToken live in More. */
 const FOOTER_TABS = [
@@ -185,6 +189,12 @@ const MORE_NAV = [
     desc: "Move between accounts",
   },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
+  {
+    to: "/turnkey",
+    labelKey: "nav.turnkey",
+    icon: Shield,
+    desc: "Turnkey secure wallets",
+  },
   { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon, desc: "Security & preferences" },
 ] as const;
 

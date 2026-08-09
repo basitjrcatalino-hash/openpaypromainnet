@@ -115,6 +115,7 @@ import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/p
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
+import { Route as ApiPublicAlchemyDepositWebhookRouteImport } from './routes/api/public/alchemy-deposit-webhook'
 import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
@@ -747,6 +748,12 @@ const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
   path: '/api/public/banxa-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAlchemyDepositWebhookRoute =
+  ApiPublicAlchemyDepositWebhookRouteImport.update({
+    id: '/api/public/alchemy-deposit-webhook',
+    path: '/api/public/alchemy-deposit-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminTransferFixRoute = ApiAdminTransferFixRouteImport.update({
   id: '/api/admin/transfer-fix',
   path: '/api/admin/transfer-fix',
@@ -1375,6 +1382,7 @@ export interface FileRoutesByFullPath {
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
+  '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1573,6 +1581,7 @@ export interface FileRoutesByTo {
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
+  '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1773,6 +1782,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
+  '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1973,6 +1983,7 @@ export interface FileRouteTypes {
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
+    | '/api/public/alchemy-deposit-webhook'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2171,6 +2182,7 @@ export interface FileRouteTypes {
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
+    | '/api/public/alchemy-deposit-webhook'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2370,6 +2382,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet_/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
+    | '/api/public/alchemy-deposit-webhook'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2478,6 +2491,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiAdminP2pFixRoute: typeof ApiAdminP2pFixRoute
   ApiAdminTransferFixRoute: typeof ApiAdminTransferFixRoute
+  ApiPublicAlchemyDepositWebhookRoute: typeof ApiPublicAlchemyDepositWebhookRoute
   ApiPublicBanxaWebhookRoute: typeof ApiPublicBanxaWebhookRoute
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -3281,6 +3295,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/banxa-webhook'
       fullPath: '/api/public/banxa-webhook'
       preLoaderRoute: typeof ApiPublicBanxaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/alchemy-deposit-webhook': {
+      id: '/api/public/alchemy-deposit-webhook'
+      path: '/api/public/alchemy-deposit-webhook'
+      fullPath: '/api/public/alchemy-deposit-webhook'
+      preLoaderRoute: typeof ApiPublicAlchemyDepositWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/transfer-fix': {
@@ -4246,6 +4267,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiAdminP2pFixRoute: ApiAdminP2pFixRoute,
   ApiAdminTransferFixRoute: ApiAdminTransferFixRoute,
+  ApiPublicAlchemyDepositWebhookRoute: ApiPublicAlchemyDepositWebhookRoute,
   ApiPublicBanxaWebhookRoute: ApiPublicBanxaWebhookRoute,
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

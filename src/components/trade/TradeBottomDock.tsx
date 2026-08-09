@@ -64,6 +64,9 @@ export function TradeBottomDock({
   onGoTrade?: () => void;
   expanded?: boolean;
   onExpanded?: (open: boolean) => void;
+  size?: DockSize;
+  onSize?: (s: DockSize) => void;
+
   openOrders?: SpotOrder[];
   orderHistory?: SpotOrder[];
   tradeHistory?: TradeHistoryRow[];

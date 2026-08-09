@@ -143,6 +143,18 @@ function AdminDepositsPage() {
     onError: onErr,
   });
 
+  const addPool = useMutation({
+    mutationFn: (payload: { chain_id: string; addresses: string; label?: string }) =>
+      poolFn({ data: payload }),
+    onSuccess: (res: any) => {
+      toast.success(`${res.added} address(es) added · ${res.registered} registered with indexer`);
+      setPoolForm({ chain_id: "", addresses: "", label: "" });
+      void invalidate();
+    },
+    onError: onErr,
+  });
+
+
   const remove = useMutation({
     mutationFn: (p: { table: "deposit_chains" | "deposit_tokens" | "deposit_addresses"; id: string }) =>
       deleteFn({ data: p }),

@@ -9,7 +9,10 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
+  Image as ImageIcon,
   KeyRound,
+  Upload,
+
   Loader2,
   Pencil,
   Plus,

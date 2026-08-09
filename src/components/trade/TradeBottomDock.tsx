@@ -16,6 +16,8 @@ export type DockTab =
   | "positions"
   | "assets";
 
+export type DockSize = "sm" | "md" | "full";
+
 export type TradeHistoryRow = {
   id: string;
   side: string;

@@ -51,6 +51,7 @@ import {
   Scale,
   ScanLine,
   LayoutGrid,
+  Wrench,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
@@ -73,6 +74,7 @@ import { cn } from "@/lib/utils";
 import { listUserWallets, shortAddress } from "@/lib/wallet-utils";
 import { formatCurrency, useCurrency } from "@/lib/currency";
 import { PageTransition } from "@/components/wallet/PageTransition";
+import { MaintenanceGate } from "@/components/maintenance-gate";
 import { CurrencyProvider } from "@/components/currency-provider";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
@@ -662,13 +664,15 @@ function AuthenticatedLayout() {
                     )}
                   >
                     <PageTransition disabled={hideChrome}>
-                      {isP2p ? (
-                        <P2pShell>
+                      <MaintenanceGate>
+                        {isP2p ? (
+                          <P2pShell>
+                            <Outlet />
+                          </P2pShell>
+                        ) : (
                           <Outlet />
-                        </P2pShell>
-                      ) : (
-                        <Outlet />
-                      )}
+                        )}
+                      </MaintenanceGate>
                     </PageTransition>
                   </main>
                 </div>
@@ -1471,6 +1475,22 @@ function SidebarInner({
                 strokeWidth={pathname === "/admin/deposits" ? 2.25 : 1.75}
               />
               <span className="truncate">{t("nav.depositGateway")}</span>
+            </Link>
+            <Link
+              to="/admin/maintenance"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/maintenance" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/maintenance")}
+            >
+              <Wrench
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/maintenance" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/maintenance" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Maintenance</span>
             </Link>
           </SideSection>
         ) : null}

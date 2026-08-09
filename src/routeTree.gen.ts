@@ -155,6 +155,7 @@ import { Route as AuthenticatedAssetsAccountRouteImport } from './routes/_authen
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAdminMaintenanceRouteImport } from './routes/_authenticated/admin.maintenance'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
 import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
@@ -964,6 +965,12 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminMaintenanceRoute =
+  AuthenticatedAdminMaintenanceRouteImport.update({
+    id: '/admin/maintenance',
+    path: '/admin/maintenance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminDepositsRoute =
   AuthenticatedAdminDepositsRouteImport.update({
     id: '/admin/deposits',
@@ -1311,6 +1318,7 @@ export interface FileRoutesByFullPath {
   '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
+  '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1506,6 +1514,7 @@ export interface FileRoutesByTo {
   '/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
+  '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1703,6 +1712,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/airdrops': typeof AuthenticatedAdminAirdropsRoute
   '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
+  '/_authenticated/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1900,6 +1910,7 @@ export interface FileRouteTypes {
     | '/admin/airdrops'
     | '/admin/auth'
     | '/admin/deposits'
+    | '/admin/maintenance'
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
@@ -2095,6 +2106,7 @@ export interface FileRouteTypes {
     | '/admin/airdrops'
     | '/admin/auth'
     | '/admin/deposits'
+    | '/admin/maintenance'
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
@@ -2291,6 +2303,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/airdrops'
     | '/_authenticated/admin/auth'
     | '/_authenticated/admin/deposits'
+    | '/_authenticated/admin/maintenance'
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
     | '/_authenticated/asset_/$tokenId'
@@ -3524,6 +3537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/maintenance': {
+      id: '/_authenticated/admin/maintenance'
+      path: '/admin/maintenance'
+      fullPath: '/admin/maintenance'
+      preLoaderRoute: typeof AuthenticatedAdminMaintenanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/deposits': {
       id: '/_authenticated/admin/deposits'
       path: '/admin/deposits'
@@ -3923,6 +3943,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAirdropsRoute: typeof AuthenticatedAdminAirdropsRoute
   AuthenticatedAdminAuthRoute: typeof AuthenticatedAdminAuthRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
+  AuthenticatedAdminMaintenanceRoute: typeof AuthenticatedAdminMaintenanceRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
@@ -4006,6 +4027,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAirdropsRoute: AuthenticatedAdminAirdropsRoute,
   AuthenticatedAdminAuthRoute: AuthenticatedAdminAuthRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
+  AuthenticatedAdminMaintenanceRoute: AuthenticatedAdminMaintenanceRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,

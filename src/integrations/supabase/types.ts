@@ -906,6 +906,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          enabled: boolean
+          feature_group: string
+          feature_key: string
+          id: string
+          label: string
+          message: string | null
+          path_prefix: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          feature_group?: string
+          feature_key: string
+          id?: string
+          label: string
+          message?: string | null
+          path_prefix: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          feature_group?: string
+          feature_key?: string
+          id?: string
+          label?: string
+          message?: string | null
+          path_prefix?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       global_chat_messages: {
         Row: {
           body: string

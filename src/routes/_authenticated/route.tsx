@@ -154,9 +154,12 @@ function navLabel(t: (key: string) => string, labelKey: string) {
   if (labelKey === "nav.trustWallet") return "Trust Wallet";
   if (labelKey === "nav.pitch") return "Pitch Deck";
   if (labelKey === "nav.website") return "Website";
+  if (labelKey === "nav.turnkey") return "Turnkey";
   const leaf = labelKey.includes(".") ? labelKey.slice(labelKey.lastIndexOf(".") + 1) : labelKey;
   return leaf.charAt(0).toUpperCase() + leaf.slice(1);
-  if (labelKey === "nav.turnkey") return "Turnkey";
+}
+
+
 
 
 /** Primary mobile tabs — 5 max. Deposit / P2P / History / OpenToken live in More. */

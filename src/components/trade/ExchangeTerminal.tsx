@@ -27,6 +27,8 @@ export function ExchangeTerminal({
 }) {
   const chartHost = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(420);
+  // OKX-style resizable bottom dock (orders / trades / positions)
+  const [dockSize, setDockSize] = useState<"sm" | "md" | "full">("md");
 
   useEffect(() => {
     const el = chartHost.current;

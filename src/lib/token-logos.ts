@@ -1,8 +1,8 @@
 import { MAJOR_TOKEN_IDS, MAJOR_TOKENS } from "@/lib/major-tokens";
-import openPayProLogo from "@/assets/openpay-pro-logo.png.asset.json";
+import ousdLogo from "@/assets/ousd-logo.png.asset.json";
 
-/** Official OpenPay Pro brand mark */
-export const OUSD_LOGO_URL = openPayProLogo.url;
+/** Official OUSD token mark */
+export const OUSD_LOGO_URL = ousdLogo.url;
 
 
 /** Local SVG fallback if the remote mark is unavailable */

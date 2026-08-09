@@ -111,7 +111,7 @@ export function TradeBottomDock({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {onSize && isExpanded ? (
-            <div className="mr-0.5 hidden items-center gap-0.5 sm:flex">
+            <div className="mr-0.5 flex items-center gap-0.5">
               {(["sm", "md", "full"] as const).map((s) => (
                 <button
                   key={s}

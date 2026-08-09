@@ -324,10 +324,21 @@ function Dashboard() {
     }
   }
 
-  const change24hUsd = ledgerAssets.reduce(
-    (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),
-    0,
-  );
+  const change24hUsd =
+    ledgerAssets.reduce(
+      (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),
+      0,
+    ) +
+    holdingsList.reduce(
+      (sum, h) =>
+        sum +
+        Number(h.balance ?? 0) *
+          Number(h.tokens?.price_usd ?? 0) *
+          (Number(h.tokens?.change_24h ?? 0) / 100),
+      0,
+    );
+  const change24hPct = totalUsd > 0 ? (change24hUsd / totalUsd) * 100 : 0;
+
 
   const modeSwitch = (
     <div className="mb-4 flex justify-center">

@@ -241,7 +241,8 @@ export const createAirdropCampaign = createServerFn({ method: "POST" })
       created_by: userId,
     };
 
-    const { data: created, error } = await db(supabase)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await db(supabaseAdmin)
       .from("airdrop_campaigns")
       .insert(row)
       .select("*")
@@ -307,7 +308,8 @@ export const updateAirdropCampaign = createServerFn({ method: "POST" })
       throw new Error("Claim code is required for code campaigns");
     }
 
-    const { data: updated, error } = await db(context.supabase)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: updated, error } = await db(supabaseAdmin)
       .from("airdrop_campaigns")
       .update(patch)
       .eq("id", id)
@@ -328,7 +330,8 @@ export const setAirdropStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => StatusSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: updated, error } = await db(context.supabase)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: updated, error } = await db(supabaseAdmin)
       .from("airdrop_campaigns")
       .update({ status: data.status })
       .eq("id", data.id)
@@ -344,7 +347,9 @@ export const listLiveAirdrops = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await db(context.supabase)
       .from("airdrop_campaigns")
-      .select("*")
+      .select(
+        "id, slug, title, subtitle, description, notes, asset, amount_per_claim, claim_mode, status, starts_at, ends_at, total_budget, max_claims, claimed_count, distributed_amount, require_wallet, require_kyc, requirements, cover_url, badge, created_by, created_at, updated_at",
+      )
       .eq("status", "live")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);

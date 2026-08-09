@@ -623,6 +623,71 @@ function AdminDepositsPage() {
             </div>
           </Card>
 
+          {/* ------------------------------------------- per-user address pool */}
+          <Card className="space-y-4 rounded-2xl border-border/60 bg-card/60 p-4">
+            <div>
+              <div className="font-semibold">Per-user address pool</div>
+              <p className="text-[11px] text-muted-foreground">
+                Paste addresses from your custody / MPC provider. Each is assigned to exactly one
+                user on their first deposit and registered with the Alchemy Address Activity
+                webhook so transfers are detected automatically.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Chain">
+                <select
+                  className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm"
+                  value={poolForm.chain_id}
+                  onChange={(e) => setPoolForm({ ...poolForm, chain_id: e.target.value })}
+                >
+                  <option value="">Select chain…</option>
+                  {chains.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Label">
+                <Input
+                  value={poolForm.label}
+                  onChange={(e) => setPoolForm({ ...poolForm, label: e.target.value })}
+                  placeholder="Custody pool batch 1"
+                />
+              </Field>
+            </div>
+            <Field label="Addresses (one per line)">
+              <textarea
+                rows={5}
+                value={poolForm.addresses}
+                onChange={(e) => setPoolForm({ ...poolForm, addresses: e.target.value })}
+                className="w-full rounded-xl border border-border/60 bg-background p-3 font-mono text-xs"
+                placeholder={"0x…\n0x…"}
+              />
+            </Field>
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={addPool.isPending || !poolForm.chain_id || !poolForm.addresses.trim()}
+              onClick={() =>
+                addPool.mutate({
+                  chain_id: poolForm.chain_id,
+                  addresses: poolForm.addresses,
+                  label: poolForm.label || undefined,
+                })
+              }
+            >
+              {addPool.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-1 h-4 w-4" />
+              )}
+              Add to pool
+            </Button>
+          </Card>
+
+
+
           {addresses.map((a) => (
             <Card key={a.id} className="rounded-2xl border-border/60 bg-card/60 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">

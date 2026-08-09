@@ -61,6 +61,7 @@ import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
@@ -160,6 +161,7 @@ import { Route as AuthenticatedAssetsAccountRouteImport } from './routes/_authen
 import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authenticated/asset_.$tokenId'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
+import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminMaintenanceRouteImport } from './routes/_authenticated/admin.maintenance'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
@@ -468,6 +470,11 @@ const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
 const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
   id: '/swap',
   path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
@@ -998,6 +1005,12 @@ const AuthenticatedAdminTopupRoute = AuthenticatedAdminTopupRouteImport.update({
   path: '/admin/topup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSupportRoute =
+  AuthenticatedAdminSupportRouteImport.update({
+    id: '/admin/support',
+    path: '/admin/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminMaintenanceRoute =
   AuthenticatedAdminMaintenanceRouteImport.update({
     id: '/admin/maintenance',
@@ -1315,6 +1328,7 @@ export interface FileRoutesByFullPath {
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -1354,6 +1368,7 @@ export interface FileRoutesByFullPath {
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1516,6 +1531,7 @@ export interface FileRoutesByTo {
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -1555,6 +1571,7 @@ export interface FileRoutesByTo {
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/asset/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1719,6 +1736,7 @@ export interface FileRoutesById {
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
@@ -1758,6 +1776,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/_authenticated/asset_/$tokenId': typeof AuthenticatedAssetTokenIdRoute
@@ -1922,6 +1941,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/settings'
     | '/solana-pay'
+    | '/support'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -1961,6 +1981,7 @@ export interface FileRouteTypes {
     | '/admin/auth'
     | '/admin/deposits'
     | '/admin/maintenance'
+    | '/admin/support'
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
@@ -2123,6 +2144,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/settings'
     | '/solana-pay'
+    | '/support'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -2162,6 +2184,7 @@ export interface FileRouteTypes {
     | '/admin/auth'
     | '/admin/deposits'
     | '/admin/maintenance'
+    | '/admin/support'
     | '/admin/topup'
     | '/admin/withdrawals'
     | '/asset/$tokenId'
@@ -2325,6 +2348,7 @@ export interface FileRouteTypes {
     | '/_authenticated/send'
     | '/_authenticated/settings'
     | '/_authenticated/solana-pay'
+    | '/_authenticated/support'
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
@@ -2364,6 +2388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/auth'
     | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/maintenance'
+    | '/_authenticated/admin/support'
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
     | '/_authenticated/asset_/$tokenId'
@@ -2941,6 +2966,13 @@ declare module '@tanstack/react-router' {
       path: '/swap'
       fullPath: '/swap'
       preLoaderRoute: typeof AuthenticatedSwapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/solana-pay': {
@@ -3636,6 +3668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTopupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/support': {
+      id: '/_authenticated/admin/support'
+      path: '/admin/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/maintenance': {
       id: '/_authenticated/admin/maintenance'
       path: '/admin/maintenance'
@@ -4030,6 +4069,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSolanaPayRoute: typeof AuthenticatedSolanaPayRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
@@ -4045,6 +4085,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuthRoute: typeof AuthenticatedAdminAuthRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminMaintenanceRoute: typeof AuthenticatedAdminMaintenanceRoute
+  AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAssetTokenIdRoute: typeof AuthenticatedAssetTokenIdRoute
@@ -4118,6 +4159,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSolanaPayRoute: AuthenticatedSolanaPayRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
@@ -4133,6 +4175,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuthRoute: AuthenticatedAdminAuthRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminMaintenanceRoute: AuthenticatedAdminMaintenanceRoute,
+  AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAssetTokenIdRoute: AuthenticatedAssetTokenIdRoute,

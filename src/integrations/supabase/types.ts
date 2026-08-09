@@ -3306,6 +3306,98 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          image_url: string | null
+          role: string
+          sender_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role?: string
+          sender_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role?: string
+          sender_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          ai_enabled: boolean
+          category: string
+          created_at: string
+          display_name: string | null
+          id: string
+          kyc_status: string | null
+          last_message_at: string
+          openpay_account: string | null
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+          username: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          ai_enabled?: boolean
+          category?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          kyc_status?: string | null
+          last_message_at?: string
+          openpay_account?: string | null
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          ai_enabled?: boolean
+          category?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          kyc_status?: string | null
+          last_message_at?: string
+          openpay_account?: string | null
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string

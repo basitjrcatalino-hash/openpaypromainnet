@@ -1113,6 +1113,7 @@ export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
   if (id === "sui") return "sui";
   if (id === "near") return "near";
   if (id === "pi") return "pi";
+  if (id === "opro") return "solana";
   if (
     id === "sol" ||
     id === "usdc" ||

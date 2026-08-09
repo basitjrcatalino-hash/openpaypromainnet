@@ -460,39 +460,54 @@ export type Database = {
       deposit_addresses: {
         Row: {
           address: string
+          assigned_at: string | null
           chain_id: string
           created_at: string
           created_by: string | null
+          derivation_index: number | null
           id: string
           is_active: boolean
           label: string | null
           memo_tag: string | null
+          provider: string | null
+          provider_ref: string | null
           token_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           address: string
+          assigned_at?: string | null
           chain_id: string
           created_at?: string
           created_by?: string | null
+          derivation_index?: number | null
           id?: string
           is_active?: boolean
           label?: string | null
           memo_tag?: string | null
+          provider?: string | null
+          provider_ref?: string | null
           token_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           address?: string
+          assigned_at?: string | null
           chain_id?: string
           created_at?: string
           created_by?: string | null
+          derivation_index?: number | null
           id?: string
           is_active?: boolean
           label?: string | null
           memo_tag?: string | null
+          provider?: string | null
+          provider_ref?: string | null
           token_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -670,6 +685,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deposit_webhook_events: {
+        Row: {
+          created_at: string
+          event_type: string | null
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+          processing_error: string | null
+          provider: string
+          provider_event_id: string
+          received_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          provider: string
+          provider_event_id: string
+          received_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          provider?: string
+          provider_event_id?: string
+          received_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       deposits: {
         Row: {
@@ -4477,6 +4534,32 @@ export type Database = {
         Returns: Json
       }
       backfill_ledger_entries: { Args: never; Returns: Json }
+      claim_deposit_address: {
+        Args: { _chain_id: string; _user_id: string }
+        Returns: {
+          address: string
+          assigned_at: string | null
+          chain_id: string
+          created_at: string
+          created_by: string | null
+          derivation_index: number | null
+          id: string
+          is_active: boolean
+          label: string | null
+          memo_tag: string | null
+          provider: string | null
+          provider_ref: string | null
+          token_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deposit_addresses"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_first_admin: { Args: never; Returns: boolean }
       credit_platform_fee_asset: {
         Args: {

@@ -35,19 +35,40 @@ export const getDepositConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const db = context.supabase;
-    const [{ data: chains }, { data: tokens }, { data: addresses }] = await Promise.all([
+    const [{ data: chains }, { data: tokens }] = await Promise.all([
       db.from("deposit_chains").select("*").eq("is_enabled", true).order("sort_order"),
       db.from("deposit_tokens").select("*").eq("status", "active").order("sort_order"),
-      db.from("deposit_addresses").select("*").eq("is_active", true),
     ]);
+
+    // Claim a personal receive address per enabled chain when a pool exists.
+    try {
+      const adminDb = await admin();
+      const { assignUserDepositAddress } = await import("./deposit-address.server");
+      for (const chain of chains ?? []) {
+        if (chain.maintenance_mode) continue;
+        await assignUserDepositAddress(adminDb, context.userId, chain);
+      }
+    } catch (err) {
+      console.error("[deposit address]", (err as Error).message);
+    }
+
+    // Personal addresses win over shared platform addresses.
+    const { data: addresses } = await db
+      .from("deposit_addresses")
+      .select("*")
+      .eq("is_active", true)
+      .or(`user_id.eq.${context.userId},user_id.is.null`)
+      .order("user_id", { ascending: false, nullsFirst: false });
+
     return {
       chains: chains ?? [],
       tokens: (tokens ?? []).filter((t: any) => t.deposit_enabled),
-      addresses: addresses ?? [],
+      addresses: (addresses ?? []).filter((a: any) => a.provider !== "pool" || a.user_id),
       /** Credits always land in Funding wallet balances. */
       deposit_account: "funding" as const,
     };
   });
+
 
 export const listMyDeposits = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -357,7 +378,94 @@ export const adminSaveAddress = createServerFn({ method: "POST" })
     return row;
   });
 
+/**
+ * Load a pool of custody-provider addresses for a chain. Each is handed out to
+ * exactly one user on their first deposit and registered with the indexer.
+ */
+export const adminAddAddressPool = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        chain_id: z.string().uuid(),
+        addresses: z.string().trim().min(20).max(20000),
+        label: z.string().trim().max(80).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = await admin();
+    const { isValidAddressFor, logDepositEvent } = await import("./deposit-gateway.server");
+    const { registerAddressWithIndexer } = await import("./deposit-address.server");
+
+    const { data: chain } = await db
+      .from("deposit_chains")
+      .select("id, key, name, family")
+      .eq("id", data.chain_id)
+      .maybeSingle();
+    if (!chain) throw new Error("Chain not found");
+
+    const list = Array.from(
+      new Set(
+        data.addresses
+          .split(/[\s,;]+/)
+          .map((a) => a.trim())
+          .filter(Boolean),
+      ),
+    );
+    const invalid = list.filter((a) => !isValidAddressFor(chain.family, a));
+    if (invalid.length) throw new Error(`Invalid ${chain.name} address: ${invalid[0]}`);
+    if (!list.length) throw new Error("No addresses provided");
+    if (list.length > 500) throw new Error("Add at most 500 addresses at a time");
+
+    const { data: existingRows } = await db
+      .from("deposit_addresses")
+      .select("address")
+      .eq("chain_id", chain.id);
+    const existing = new Set(
+      (existingRows ?? []).map((r: any) => String(r.address).toLowerCase()),
+    );
+    const rows = list
+      .filter((address) => !existing.has(address.toLowerCase()))
+      .map((address) => ({
+        chain_id: chain.id,
+        token_id: null,
+        address,
+        label: data.label || `${chain.name} pool`,
+        provider: "pool",
+        is_active: true,
+        created_by: context.userId,
+      }));
+    if (!rows.length) return { added: 0, registered: 0 };
+    const { data: inserted, error } = await db
+      .from("deposit_addresses")
+      .insert(rows)
+      .select("id, address");
+    if (error) throw new Error(error.message);
+
+
+    let registered = 0;
+    if (chain.family === "evm") {
+      for (const r of inserted ?? []) {
+        const res = await registerAddressWithIndexer(chain.key, r.address);
+        if (res.ok) registered += 1;
+      }
+    }
+    await logDepositEvent(
+      db,
+      null,
+      "address.pool_added",
+      { chain: chain.key, count: inserted?.length ?? 0, registered },
+      context.userId,
+    );
+    return { added: inserted?.length ?? 0, registered };
+  });
+
+
+
 export const adminDeleteRow = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({ table: z.enum(["deposit_tokens", "deposit_addresses", "deposit_chains"]), id: z.string().uuid() }).parse(d),

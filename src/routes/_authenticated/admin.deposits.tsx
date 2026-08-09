@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { shortAddress, timeAgo } from "@/lib/wallet-utils";
 import {
+  adminAddAddressPool,
   adminDepositAction,
   adminDepositOverview,
   adminDeleteRow,
@@ -22,6 +23,7 @@ import {
   adminSaveChain,
   adminSaveToken,
 } from "@/lib/deposit-gateway.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/deposits")({
   component: AdminDepositsPage,
@@ -82,9 +84,11 @@ function AdminDepositsPage() {
   const saveChainFn = useServerFn(adminSaveChain);
   const saveTokenFn = useServerFn(adminSaveToken);
   const saveAddressFn = useServerFn(adminSaveAddress);
+  const poolFn = useServerFn(adminAddAddressPool);
   const deleteFn = useServerFn(adminDeleteRow);
   const pauseFn = useServerFn(adminPauseAll);
   const actionFn = useServerFn(adminDepositAction);
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-deposit-overview"],
@@ -96,6 +100,8 @@ function AdminDepositsPage() {
   const [chainForm, setChainForm] = useState({ ...emptyChain });
   const [tokenForm, setTokenForm] = useState({ ...emptyToken });
   const [addressForm, setAddressForm] = useState({ ...emptyAddress });
+  const [poolForm, setPoolForm] = useState({ chain_id: "", addresses: "", label: "" });
+
 
   const chains: Row[] = data?.chains ?? [];
   const tokens: Row[] = data?.tokens ?? [];
@@ -140,6 +146,18 @@ function AdminDepositsPage() {
     },
     onError: onErr,
   });
+
+  const addPool = useMutation({
+    mutationFn: (payload: { chain_id: string; addresses: string; label?: string }) =>
+      poolFn({ data: payload }),
+    onSuccess: (res: any) => {
+      toast.success(`${res.added} address(es) added · ${res.registered} registered with indexer`);
+      setPoolForm({ chain_id: "", addresses: "", label: "" });
+      void invalidate();
+    },
+    onError: onErr,
+  });
+
 
   const remove = useMutation({
     mutationFn: (p: { table: "deposit_chains" | "deposit_tokens" | "deposit_addresses"; id: string }) =>
@@ -604,6 +622,71 @@ function AdminDepositsPage() {
               </Button>
             </div>
           </Card>
+
+          {/* ------------------------------------------- per-user address pool */}
+          <Card className="space-y-4 rounded-2xl border-border/60 bg-card/60 p-4">
+            <div>
+              <div className="font-semibold">Per-user address pool</div>
+              <p className="text-[11px] text-muted-foreground">
+                Paste addresses from your custody / MPC provider. Each is assigned to exactly one
+                user on their first deposit and registered with the Alchemy Address Activity
+                webhook so transfers are detected automatically.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Chain">
+                <select
+                  className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm"
+                  value={poolForm.chain_id}
+                  onChange={(e) => setPoolForm({ ...poolForm, chain_id: e.target.value })}
+                >
+                  <option value="">Select chain…</option>
+                  {chains.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Label">
+                <Input
+                  value={poolForm.label}
+                  onChange={(e) => setPoolForm({ ...poolForm, label: e.target.value })}
+                  placeholder="Custody pool batch 1"
+                />
+              </Field>
+            </div>
+            <Field label="Addresses (one per line)">
+              <textarea
+                rows={5}
+                value={poolForm.addresses}
+                onChange={(e) => setPoolForm({ ...poolForm, addresses: e.target.value })}
+                className="w-full rounded-xl border border-border/60 bg-background p-3 font-mono text-xs"
+                placeholder={"0x…\n0x…"}
+              />
+            </Field>
+            <Button
+              type="button"
+              className="rounded-full"
+              disabled={addPool.isPending || !poolForm.chain_id || !poolForm.addresses.trim()}
+              onClick={() =>
+                addPool.mutate({
+                  chain_id: poolForm.chain_id,
+                  addresses: poolForm.addresses,
+                  label: poolForm.label || undefined,
+                })
+              }
+            >
+              {addPool.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-1 h-4 w-4" />
+              )}
+              Add to pool
+            </Button>
+          </Card>
+
+
 
           {addresses.map((a) => (
             <Card key={a.id} className="rounded-2xl border-border/60 bg-card/60 p-4">

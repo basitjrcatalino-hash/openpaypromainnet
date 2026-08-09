@@ -1531,6 +1531,22 @@ function SidebarInner({
               <span className="truncate">{t("nav.depositGateway")}</span>
             </Link>
             <Link
+              to="/admin/support"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/support" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/support")}
+            >
+              <LifeBuoy
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/support" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/support" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Support</span>
+            </Link>
+            <Link
               to="/admin/maintenance"
               onClick={onClose}
               preload="intent"

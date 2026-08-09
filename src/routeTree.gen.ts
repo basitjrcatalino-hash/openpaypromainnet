@@ -54,6 +54,7 @@ import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedWcPayRouteImport } from './routes/_authenticated/wc-pay'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedTurnkeyRouteImport } from './routes/_authenticated/turnkey'
 import { Route as AuthenticatedTrustWalletRouteImport } from './routes/_authenticated/trust-wallet'
 import { Route as AuthenticatedTransferRouteImport } from './routes/_authenticated/transfer'
 import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
@@ -430,6 +431,11 @@ const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTurnkeyRoute = AuthenticatedTurnkeyRouteImport.update({
+  id: '/turnkey',
+  path: '/turnkey',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTrustWalletRoute =
@@ -1308,6 +1314,7 @@ export interface FileRoutesByFullPath {
   '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
+  '/turnkey': typeof AuthenticatedTurnkeyRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
@@ -1507,6 +1514,7 @@ export interface FileRoutesByTo {
   '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
+  '/turnkey': typeof AuthenticatedTurnkeyRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/wc-pay': typeof AuthenticatedWcPayRoute
@@ -1708,6 +1716,7 @@ export interface FileRoutesById {
   '/_authenticated/trade': typeof AuthenticatedTradeRoute
   '/_authenticated/transfer': typeof AuthenticatedTransferRoute
   '/_authenticated/trust-wallet': typeof AuthenticatedTrustWalletRoute
+  '/_authenticated/turnkey': typeof AuthenticatedTurnkeyRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/wc-pay': typeof AuthenticatedWcPayRoute
@@ -1909,6 +1918,7 @@ export interface FileRouteTypes {
     | '/trade'
     | '/transfer'
     | '/trust-wallet'
+    | '/turnkey'
     | '/wallet'
     | '/watchlist'
     | '/wc-pay'
@@ -2108,6 +2118,7 @@ export interface FileRouteTypes {
     | '/trade'
     | '/transfer'
     | '/trust-wallet'
+    | '/turnkey'
     | '/wallet'
     | '/watchlist'
     | '/wc-pay'
@@ -2308,6 +2319,7 @@ export interface FileRouteTypes {
     | '/_authenticated/trade'
     | '/_authenticated/transfer'
     | '/_authenticated/trust-wallet'
+    | '/_authenticated/turnkey'
     | '/_authenticated/wallet'
     | '/_authenticated/watchlist'
     | '/_authenticated/wc-pay'
@@ -2868,6 +2880,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/turnkey': {
+      id: '/_authenticated/turnkey'
+      path: '/turnkey'
+      fullPath: '/turnkey'
+      preLoaderRoute: typeof AuthenticatedTurnkeyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/trust-wallet': {
@@ -3997,6 +4016,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTradeRoute: typeof AuthenticatedTradeRoute
   AuthenticatedTransferRoute: typeof AuthenticatedTransferRoute
   AuthenticatedTrustWalletRoute: typeof AuthenticatedTrustWalletRoute
+  AuthenticatedTurnkeyRoute: typeof AuthenticatedTurnkeyRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
   AuthenticatedWcPayRoute: typeof AuthenticatedWcPayRoute
@@ -4083,6 +4103,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTradeRoute: AuthenticatedTradeRoute,
   AuthenticatedTransferRoute: AuthenticatedTransferRoute,
   AuthenticatedTrustWalletRoute: AuthenticatedTrustWalletRoute,
+  AuthenticatedTurnkeyRoute: AuthenticatedTurnkeyRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
   AuthenticatedWcPayRoute: AuthenticatedWcPayRoute,

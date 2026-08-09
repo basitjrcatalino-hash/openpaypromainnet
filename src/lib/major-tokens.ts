@@ -12,9 +12,9 @@
  * - EURC  0x1abaea1f7c830bd89acc67ec4af516284b1bc33c (Ethereum)
  */
 
-import osolLogo from "@/assets/ousd-logo.png.asset.json";
+import osolLogo from "@/assets/openpay-pro-logo.png.asset.json";
 
-/** OpenSOL uses the OpenUSD-style OpenPay mark. */
+/** OpenPay Pro (OPRO) uses the official OpenPay Pro mark. */
 const OSOL_LOGO_URL = osolLogo.url;
 
 export type MajorTokenId =
@@ -2357,8 +2357,8 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
   },
   osol: {
     id: "osol",
-    name: "OpenSOL",
-    symbol: "OSOL",
+    name: "OpenPay Pro",
+    symbol: "OPRO",
     network: "OpenPay",
     category: "OpenPay asset",
     logoUrl: OSOL_LOGO_URL,
@@ -2368,7 +2368,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     createdAt: "2026-01-01T00:00:00.000Z",
     native: false,
     about:
-      "OpenSOL (OSOL) is an OpenPay Pro network asset that tracks the live market price of Solana (SOL) 1:1. Pricing refreshes from the same CoinGecko SOL feed used on /asset/sol, so OSOL always quotes the SOL price inside OpenPay Pro.",
+      "OpenPay Pro (OPRO) is the OpenPay Pro network asset that tracks the live market price of Solana (SOL) 1:1. Pricing refreshes from the same CoinGecko SOL feed used on /asset/sol, so OPRO always quotes the SOL price inside OpenPay Pro.",
   },
 };
 

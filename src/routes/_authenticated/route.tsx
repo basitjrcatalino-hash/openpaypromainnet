@@ -1475,6 +1475,22 @@ function SidebarInner({
               />
               <span className="truncate">{t("nav.depositGateway")}</span>
             </Link>
+            <Link
+              to="/admin/maintenance"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/maintenance" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/maintenance")}
+            >
+              <Wrench
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/maintenance" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/maintenance" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Maintenance</span>
+            </Link>
           </SideSection>
         ) : null}
       </nav>

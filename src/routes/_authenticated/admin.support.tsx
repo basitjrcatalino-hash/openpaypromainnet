@@ -123,7 +123,7 @@ function AdminSupportPage() {
 
   const patch = useMutation({
     mutationFn: async (input: { status?: string; ai_enabled?: boolean; priority?: string }) =>
-      update({ data: { ticketId: activeId as string, ...(input as never) } }),
+      update({ data: { ticketId: activeId as string, ...input } as never }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["support-admin-thread", activeId] });
       void qc.invalidateQueries({ queryKey: ["support-admin-tickets"] });

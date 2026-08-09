@@ -382,6 +382,38 @@ function Dashboard() {
         />
       )}
 
+      {/* Today's PnL — tap for full analytics */}
+      <Link
+        to="/analytics"
+        className="mx-auto mb-5 flex w-fit items-center gap-2 rounded-full bg-muted/50 px-3.5 py-1.5 press"
+        aria-label="Open portfolio analytics"
+      >
+        <span
+          className={cn(
+            "text-sm font-bold tabular-nums",
+            change24hUsd >= 0 ? "text-success" : "text-destructive",
+          )}
+        >
+          {hideBalance
+            ? "••••"
+            : `${change24hUsd >= 0 ? "+" : "−"}${formatCurrency(Math.abs(change24hUsd), currency)}`}
+        </span>
+        <span
+          className={cn(
+            "text-xs font-semibold",
+            change24hUsd >= 0 ? "text-success" : "text-destructive",
+          )}
+        >
+          {hideBalance
+            ? ""
+            : `${change24hPct >= 0 ? "+" : ""}${change24hPct.toFixed(2)}%`}
+        </span>
+        <span className="text-[11px] font-medium text-muted-foreground">Today · PnL</span>
+        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+      </Link>
+
+
+
       {/* Circular actions */}
       <div className="mb-6 flex items-start justify-center gap-3.5 sm:gap-6">
         {PRIMARY_ACTIONS.map((a) => (

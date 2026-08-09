@@ -16,7 +16,11 @@ import { RecentTrades } from "@/components/trade/RecentTrades";
 import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
 import { ExchangeTerminal } from "@/components/trade/ExchangeTerminal";
-import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
+import {
+  TradeBottomDock,
+  type DockTab,
+  type DockSize,
+} from "@/components/trade/TradeBottomDock";
 
 import {
   TradeTokenAnalysis,
@@ -132,12 +136,12 @@ function TradePage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dockTab, setDockTab] = useState<DockTab>("orders");
   const [dockExpanded, setDockExpanded] = useState(false);
+  const [dockSize, setDockSize] = useState<DockSize>("md");
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);
   /** Exchange (Pro) mode — full desk layout, opt-in and persisted. */
   const [exchangeMode, setExchangeMode] = useState(false);
-  const [wide, setWide] = useState(false);
 
   useEffect(() => {
     try {
@@ -145,11 +149,6 @@ function TradePage() {
     } catch {
       /* ignore */
     }
-    const mq = window.matchMedia("(min-width: 1180px)");
-    const sync = () => setWide(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
   }, []);
 
   function toggleExchangeMode() {
@@ -566,7 +565,7 @@ function TradePage() {
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;
-  const pro = exchangeMode && wide;
+  const pro = exchangeMode;
 
   const orderFormNode =
     mode === "futures" ? (
@@ -668,6 +667,9 @@ function TradePage() {
       onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}
       expanded={pro ? true : dockExpanded}
       onExpanded={pro ? undefined : setDockExpanded}
+      size={dockSize}
+      onSize={pro ? undefined : setDockSize}
+
       openOrders={openOrdersQ.data ?? []}
       orderHistory={orderHistQ.data ?? []}
       tradeHistory={tradeHistQ.data ?? []}
@@ -720,26 +722,27 @@ function TradePage() {
             setDockExpanded(false);
           }}
         />
-        {wide ? (
-          <button
-            type="button"
-            onClick={toggleExchangeMode}
-            aria-pressed={exchangeMode}
-            className={cn(
-              "hidden shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold press lg:inline-flex",
-              exchangeMode
-                ? "border-[#ffad0a]/50 bg-[#ffad0a]/12 text-[#ffad0a]"
-                : "border-border/60 text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {exchangeMode ? (
-              <Smartphone className="h-3.5 w-3.5" />
-            ) : (
-              <LayoutGrid className="h-3.5 w-3.5" />
-            )}
-            {exchangeMode ? "Simple mode" : "Exchange mode"}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={toggleExchangeMode}
+          aria-pressed={exchangeMode}
+          title={exchangeMode ? "Switch to Simple mode" : "Switch to Exchange mode"}
+          className={cn(
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold press",
+            exchangeMode
+              ? "border-[#ffad0a]/50 bg-[#ffad0a]/12 text-[#ffad0a]"
+              : "border-border/60 text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {exchangeMode ? (
+            <Smartphone className="h-3.5 w-3.5" />
+          ) : (
+            <LayoutGrid className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden sm:inline">
+            {exchangeMode ? "Simple" : "Exchange"}
+          </span>
+        </button>
         <Link
           to="/asset/$tokenId/chat"
           params={{ tokenId: market.toLowerCase() }}

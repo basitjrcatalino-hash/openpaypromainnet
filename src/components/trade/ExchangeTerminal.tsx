@@ -43,11 +43,12 @@ export function ExchangeTerminal({
   return (
     <div
       className={cn(
-        "grid h-full min-h-0 grid-cols-[240px_minmax(0,1fr)_290px_320px] gap-px bg-border/40",
+        "flex h-full min-h-0 flex-col gap-px overflow-y-auto overscroll-contain bg-border/40",
+        "xl:grid xl:grid-cols-[240px_minmax(0,1fr)_290px_320px] xl:overflow-hidden",
         className,
       )}
     >
-      <aside className="flex min-h-0 flex-col overflow-hidden bg-background">
+      <aside className="hidden min-h-0 flex-col overflow-hidden bg-background xl:flex">
         <div className="shrink-0 border-b border-border/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Markets
         </div>
@@ -65,7 +66,10 @@ export function ExchangeTerminal({
         {dockSize !== "full" ? (
           <div
             ref={chartHost}
-            className={cn("min-h-[240px]", dockSize === "sm" ? "flex-[2.6]" : "flex-[1.15]")}
+            className={cn(
+              "min-h-[240px] shrink-0 xl:shrink",
+              dockSize === "sm" ? "h-[62dvh] xl:h-auto xl:flex-[2.6]" : "h-[42dvh] xl:h-auto xl:flex-[1.15]",
+            )}
           >
             {chart(chartHeight)}
           </div>
@@ -73,7 +77,11 @@ export function ExchangeTerminal({
         <div
           className={cn(
             "flex min-h-0 flex-col border-t border-border/40",
-            dockSize === "full" ? "flex-1" : dockSize === "md" ? "flex-1" : "h-[132px] shrink-0",
+            dockSize === "full"
+              ? "min-h-[60dvh] flex-1"
+              : dockSize === "md"
+                ? "min-h-[38dvh] flex-1 xl:min-h-0"
+                : "h-[132px] shrink-0",
           )}
         >
           <div className="flex shrink-0 items-center justify-end gap-1 px-2 py-1">
@@ -99,7 +107,7 @@ export function ExchangeTerminal({
       </section>
 
 
-      <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background">
+      <section className="flex min-h-[420px] min-w-0 flex-col overflow-hidden bg-background xl:min-h-0">
         <div className="min-h-0 flex-[1.25] overflow-hidden p-1.5">{book}</div>
         <div className="min-h-0 flex-1 overflow-hidden border-t border-border/40 p-1.5">
           <p className="pb-1 text-[11px] font-semibold text-muted-foreground">Recent trades</p>
@@ -107,9 +115,10 @@ export function ExchangeTerminal({
         </div>
       </section>
 
-      <aside className="min-h-0 overflow-y-auto overscroll-contain bg-background px-2 py-2">
+      <aside className="min-h-0 overflow-y-auto overscroll-contain bg-background px-2 py-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {form}
       </aside>
     </div>
   );
+
 }

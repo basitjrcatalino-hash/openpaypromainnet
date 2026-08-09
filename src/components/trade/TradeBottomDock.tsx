@@ -16,6 +16,8 @@ export type DockTab =
   | "positions"
   | "assets";
 
+export type DockSize = "sm" | "md" | "full";
+
 export type TradeHistoryRow = {
   id: string;
   side: string;
@@ -43,6 +45,9 @@ export function TradeBottomDock({
   onGoTrade,
   expanded,
   onExpanded,
+  size = "md",
+  onSize,
+
   openOrders = [],
   orderHistory = [],
   tradeHistory = [],
@@ -61,6 +66,9 @@ export function TradeBottomDock({
   onGoTrade?: () => void;
   expanded?: boolean;
   onExpanded?: (open: boolean) => void;
+  size?: DockSize;
+  onSize?: (s: DockSize) => void;
+
   openOrders?: SpotOrder[];
   orderHistory?: SpotOrder[];
   tradeHistory?: TradeHistoryRow[];
@@ -102,6 +110,25 @@ export function TradeBottomDock({
           ))}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {onSize && isExpanded ? (
+            <div className="mr-0.5 flex items-center gap-0.5">
+              {(["sm", "md", "full"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onSize(s)}
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase press",
+                    size === s
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s === "sm" ? "Compact" : s === "md" ? "Expanded" : "Full"}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {onGoTrade ? (
             <Button
               type="button"
@@ -128,7 +155,12 @@ export function TradeBottomDock({
       </div>
 
       {isExpanded ? (
-        <div className="max-h-[36dvh] overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div
+          className={cn(
+            "overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+            size === "sm" ? "max-h-[22dvh]" : size === "full" ? "max-h-[70dvh]" : "max-h-[36dvh]",
+          )}
+        >
           {tab === "orders" ? (
             mode === "spot" ? (
               !openOrders.length ? (

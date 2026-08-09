@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { SpotOrderKind } from "@/lib/trade-advanced";
-import { AlertTriangle, ExternalLink, MessageCircle, X } from "lucide-react";
+import { AlertTriangle, ExternalLink, LayoutGrid, MessageCircle, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 
@@ -15,7 +15,9 @@ import { OrderBook } from "@/components/trade/OrderBook";
 import { RecentTrades } from "@/components/trade/RecentTrades";
 import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
+import { ExchangeTerminal } from "@/components/trade/ExchangeTerminal";
 import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
+
 import {
   TradeTokenAnalysis,
   TradeTokenInfo,
@@ -133,6 +135,36 @@ function TradePage() {
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);
+  /** Exchange (Pro) mode — full desk layout, opt-in and persisted. */
+  const [exchangeMode, setExchangeMode] = useState(false);
+  const [wide, setWide] = useState(false);
+
+  useEffect(() => {
+    try {
+      setExchangeMode(window.localStorage.getItem("op.trade.exchange") === "1");
+    } catch {
+      /* ignore */
+    }
+    const mq = window.matchMedia("(min-width: 1180px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  function toggleExchangeMode() {
+    setExchangeMode((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem("op.trade.exchange", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+
 
   // Shared order form state
   const [orderType, setOrderType] = useState<SpotOrderKind>("limit");
@@ -534,6 +566,138 @@ function TradePage() {
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;
+  const pro = exchangeMode && wide;
+
+  const orderFormNode =
+    mode === "futures" ? (
+      <ExchangeOrderForm
+        mode="futures"
+        market={market}
+        markPrice={price}
+        orderType={orderType}
+        onOrderType={setOrderType}
+        limitPrice={limitPrice}
+        onLimitPrice={setLimitPrice}
+        amount={amount}
+        onAmount={setAmount}
+        pct={pct}
+        onPct={applyPct}
+        busy={formBusy}
+        action={futAction}
+        onAction={setFutAction}
+        leverage={leverage}
+        onLeverage={setLeverage}
+        shortLeverage={shortLeverage}
+        onShortLeverage={setShortLeverage}
+        marginAsset={marginAsset}
+        onMarginAsset={setMarginAsset}
+        available={tradingBal}
+        hasLong={hasLong}
+        hasShort={hasShort}
+        tpPrice={tpPrice}
+        onTpPrice={setTpPrice}
+        slPrice={slPrice}
+        onSlPrice={setSlPrice}
+        useTpsl={useTpsl}
+        onUseTpsl={setUseTpsl}
+        onSubmitLong={() => onFuturesSubmit("long")}
+        onSubmitShort={() => onFuturesSubmit("short")}
+      />
+    ) : (
+      <ExchangeOrderForm
+        mode="spot"
+        market={market}
+        markPrice={price}
+        orderType={orderType}
+        onOrderType={setOrderType}
+        limitPrice={limitPrice}
+        onLimitPrice={setLimitPrice}
+        amount={amount}
+        onAmount={setAmount}
+        pct={pct}
+        onPct={applyPct}
+        busy={formBusy}
+        side={spotSide}
+        onSide={(s) => {
+          setSpotSide(s);
+          setAmount("");
+          setPct(0);
+        }}
+        payAsset={payAsset}
+        onPayAsset={setPayAsset}
+        availableQuote={spotQuote}
+        availableBase={spotBase}
+        fundingQuote={fundingQuote}
+        fundingBase={fundingBase}
+        tpPrice={tpPrice}
+        onTpPrice={setTpPrice}
+        slPrice={slPrice}
+        onSlPrice={setSlPrice}
+        useTpsl={useTpsl}
+        onUseTpsl={setUseTpsl}
+        onSubmit={() => spotM.mutate()}
+      />
+    );
+
+  const orderBookNode = (
+    <OrderBook
+      book={depthQ.data}
+      baseSymbol={market}
+      midOverride={mid}
+      loading={depthQ.isLoading}
+      change24h={change}
+      fundingRate={quote?.fundingRate}
+      showFunding={mode === "futures"}
+      onPriceClick={(px) => {
+        setOrderType("limit");
+        setLimitPrice(String(px));
+      }}
+    />
+  );
+
+  const dockNode = (
+    <TradeBottomDock
+      mode={mode}
+      market={market}
+      tab={dockTab}
+      onTab={setDockTab}
+      positions={mode === "futures" ? marketPositions : []}
+      markPrice={price}
+      onClosePosition={requestClosePosition}
+      closingId={closeM.isPending ? closeM.variables : null}
+      onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}
+      expanded={pro ? true : dockExpanded}
+      onExpanded={pro ? undefined : setDockExpanded}
+      openOrders={openOrdersQ.data ?? []}
+      orderHistory={orderHistQ.data ?? []}
+      tradeHistory={tradeHistQ.data ?? []}
+      assets={[
+        { symbol: "USDT (Spot)", amount: Number(balQ.data?.balances?.spot?.USDT ?? 0) },
+        { symbol: "OUSD (Spot)", amount: Number(balQ.data?.balances?.spot?.OUSD ?? 0) },
+        { symbol: "USDC (Spot)", amount: Number(balQ.data?.balances?.spot?.USDC ?? 0) },
+        { symbol: `${market} (Spot)`, amount: spotBase },
+        { symbol: `${marginAsset} (Futures)`, amount: tradingBal },
+      ].filter((a) => a.amount > 0 || a.symbol.includes("OUSD") || a.symbol.includes("USDT"))}
+      onCancelOrder={(id) => cancelM.mutate(id)}
+      cancellingId={cancelM.isPending ? cancelM.variables : null}
+    />
+  );
+
+  const periodNodes = PERP_CHART_PERIODS.map((p) => (
+    <button
+      key={p}
+      type="button"
+      onClick={() => setPeriod(p)}
+      className={cn(
+        "shrink-0 px-2.5 py-1 text-[11px] font-semibold press",
+        period === p
+          ? "rounded bg-muted/70 text-foreground"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {p === "LIVE" ? "1m" : p}
+    </button>
+  ));
 
   return (
     <div className="ot-phantom flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-background">
@@ -556,6 +720,26 @@ function TradePage() {
             setDockExpanded(false);
           }}
         />
+        {wide ? (
+          <button
+            type="button"
+            onClick={toggleExchangeMode}
+            aria-pressed={exchangeMode}
+            className={cn(
+              "hidden shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold press lg:inline-flex",
+              exchangeMode
+                ? "border-[#ffad0a]/50 bg-[#ffad0a]/12 text-[#ffad0a]"
+                : "border-border/60 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {exchangeMode ? (
+              <Smartphone className="h-3.5 w-3.5" />
+            ) : (
+              <LayoutGrid className="h-3.5 w-3.5" />
+            )}
+            {exchangeMode ? "Simple mode" : "Exchange mode"}
+          </button>
+        ) : null}
         <Link
           to="/asset/$tokenId/chat"
           params={{ tokenId: market.toLowerCase() }}
@@ -564,6 +748,7 @@ function TradePage() {
         >
           <MessageCircle className="h-4 w-4" />
         </Link>
+
       </header>
 
       <TradePairHeader
@@ -583,35 +768,72 @@ function TradePage() {
         source={quote?.source}
       />
 
-      <div className="flex shrink-0 gap-4 overflow-x-auto border-b border-border/40 px-3 scrollbar-none">
-        {(
-          [
-            ["chart", "Chart"],
-            ["trade", "Trade"],
-            ["info", "Info"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => {
-              setView(id);
-              if (id === "trade") setDockExpanded(false);
-            }}
-            className={cn(
-              "relative shrink-0 pb-2 pt-1 text-[13px] font-semibold press",
-              view === id ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {label}
-            {view === id ? (
-              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
-            ) : null}
-          </button>
-        ))}
-      </div>
+      {pro ? null : (
+        <div className="flex shrink-0 gap-4 overflow-x-auto border-b border-border/40 px-3 scrollbar-none">
+          {(
+            [
+              ["chart", "Chart"],
+              ["trade", "Trade"],
+              ["info", "Info"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                setView(id);
+                if (id === "trade") setDockExpanded(false);
+              }}
+              className={cn(
+                "relative shrink-0 pb-2 pt-1 text-[13px] font-semibold press",
+                view === id ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {label}
+              {view === id ? (
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      {pro ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <ExchangeTerminal
+            periods={periodNodes}
+            markets={
+              <TradePairSearch
+                mode={mode}
+                market={market}
+                quotes={quotesQ.data}
+                majors={majorsQ.data}
+                onSelect={(m) => {
+                  setMarket(m);
+                  setAmount("");
+                  setPct(0);
+                }}
+              />
+            }
+            chart={(h) => (
+              <TradingViewEmbed
+                key={`pro-${tvSymbol}-${tvInterval}`}
+                kind="advanced-chart"
+                symbol={tvSymbol}
+                interval={tvInterval}
+                height={h}
+                className="rounded-none"
+              />
+            )}
+            book={orderBookNode}
+            trades={<RecentTrades trades={recentQ.data} loading={recentQ.isLoading} />}
+            form={orderFormNode}
+            dock={dockNode}
+          />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-hidden">
+
         {view === "chart" ? (
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border/30 px-2 py-1 scrollbar-none">
@@ -897,36 +1119,11 @@ function TradePage() {
             </p>
           </div>
         ) : null}
-      </div>
+        </div>
+      )}
 
-      <TradeBottomDock
-        mode={mode}
-        market={market}
-        tab={dockTab}
-        onTab={setDockTab}
-        positions={mode === "futures" ? marketPositions : []}
-        markPrice={price}
-        onClosePosition={requestClosePosition}
-        closingId={closeM.isPending ? closeM.variables : null}
-        onGoTrade={view !== "trade" ? () => setView("trade") : undefined}
-        expanded={dockExpanded}
-        onExpanded={setDockExpanded}
-        openOrders={openOrdersQ.data ?? []}
-        orderHistory={orderHistQ.data ?? []}
-        tradeHistory={tradeHistQ.data ?? []}
-        assets={[
-          { symbol: "USDT (Spot)", amount: Number(balQ.data?.balances?.spot?.USDT ?? 0) },
-          { symbol: "OUSD (Spot)", amount: Number(balQ.data?.balances?.spot?.OUSD ?? 0) },
-          { symbol: "USDC (Spot)", amount: Number(balQ.data?.balances?.spot?.USDC ?? 0) },
-          { symbol: `${market} (Spot)`, amount: spotBase },
-          {
-            symbol: `${marginAsset} (Futures)`,
-            amount: tradingBal,
-          },
-        ].filter((a) => a.amount > 0 || a.symbol.includes("OUSD") || a.symbol.includes("USDT"))}
-        onCancelOrder={(id) => cancelM.mutate(id)}
-        cancellingId={cancelM.isPending ? cancelM.variables : null}
-      />
+      {pro ? null : dockNode}
+
 
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">

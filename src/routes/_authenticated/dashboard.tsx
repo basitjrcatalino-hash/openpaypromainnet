@@ -106,7 +106,9 @@ function Dashboard() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { mode: appMode, setMode: setAppMode } = useAppMode();
   const [moreOpen, setMoreOpen] = useState(false);
+
   const [tab, setTab] = useState<"tokens" | "collectibles">("tokens");
   const [searchOpen, setSearchOpen] = useState(false);
   const [tokenQuery, setTokenQuery] = useState("");

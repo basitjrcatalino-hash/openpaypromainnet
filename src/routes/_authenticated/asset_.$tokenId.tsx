@@ -77,6 +77,12 @@ import {
 } from "@/components/wallet/TokenMarketInsights";
 
 export const Route = createFileRoute("/_authenticated/asset_/$tokenId")({
+  beforeLoad: ({ params }) => {
+    // Legacy id: OpenPay Pro was previously listed as OSOL.
+    if (params.tokenId === "osol") {
+      throw redirect({ to: "/asset/$tokenId", params: { tokenId: "opro" } });
+    }
+  },
   head: ({ params }) => {
     const major = getMajorToken(params.tokenId);
     const title =

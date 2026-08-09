@@ -60,6 +60,10 @@ import { portfolioUsdTotals } from "@/lib/account-portfolio";
 import { ACCOUNT_IDS } from "@/lib/account-transfer";
 import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
 import type { CurrencyCode } from "@/lib/currency";
+import { useAppMode } from "@/lib/app-mode";
+import { AppModeSwitch } from "@/components/exchange/AppModeSwitch";
+import { ExchangeHome } from "@/components/exchange/ExchangeHome";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Wallet — OpenPay Pro" }] }),

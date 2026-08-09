@@ -84,9 +84,11 @@ function AdminDepositsPage() {
   const saveChainFn = useServerFn(adminSaveChain);
   const saveTokenFn = useServerFn(adminSaveToken);
   const saveAddressFn = useServerFn(adminSaveAddress);
+  const poolFn = useServerFn(adminAddAddressPool);
   const deleteFn = useServerFn(adminDeleteRow);
   const pauseFn = useServerFn(adminPauseAll);
   const actionFn = useServerFn(adminDepositAction);
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-deposit-overview"],

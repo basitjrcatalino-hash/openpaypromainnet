@@ -1113,7 +1113,7 @@ export function networkForMajor(id: LedgerMajorId): SwapNetworkId {
   if (id === "sui") return "sui";
   if (id === "near") return "near";
   if (id === "pi") return "pi";
-  if (id === "opro") return "solana";
+  if (id === "opro") return "openpay";
   if (
     id === "sol" ||
     id === "usdc" ||
@@ -1162,6 +1162,7 @@ export function majorForNetwork(network: SwapNetworkId): LedgerMajorId | null {
   if (network === "near") return "near";
   if (network === "polkadot") return "dot";
   if (network === "pi") return "pi";
+  if (network === "openpay") return "opro";
   return null;
 }
 

@@ -12,6 +12,11 @@
  * - EURC  0x1abaea1f7c830bd89acc67ec4af516284b1bc33c (Ethereum)
  */
 
+import osolLogo from "@/assets/ousd-logo.png.asset.json";
+
+/** OpenSOL uses the OpenUSD-style OpenPay mark. */
+const OSOL_LOGO_URL = osolLogo.url;
+
 export type MajorTokenId =
   | "btc"
   | "eth"
@@ -155,7 +160,8 @@ export type MajorTokenId =
   | "spx"
   | "lunc"
   | "gno"
-  | "robo";
+  | "robo"
+  | "osol";
 
 export type MajorTokenDef = {
   id: MajorTokenId;
@@ -2349,6 +2355,21 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     about:
       "ROBO (Fabric Protocol) is an AI-focused token listed on OpenPay Pro Tokens, Spot, and Perpetuals. Prices refresh from CoinGecko when available.",
   },
+  osol: {
+    id: "osol",
+    name: "OpenSOL",
+    symbol: "OSOL",
+    network: "OpenPay",
+    category: "OpenPay asset",
+    logoUrl: OSOL_LOGO_URL,
+    website: "https://openpaypro.space",
+    coingeckoId: "solana",
+    createdLabel: "OpenPay Pro",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    native: false,
+    about:
+      "OpenSOL (OSOL) is an OpenPay Pro network asset that tracks the live market price of Solana (SOL) 1:1. Pricing refreshes from the same CoinGecko SOL feed used on /asset/sol, so OSOL always quotes the SOL price inside OpenPay Pro.",
+  },
 };
 
 export const MAJOR_TOKEN_IDS = Object.keys(MAJOR_TOKENS) as MajorTokenId[];
@@ -4452,6 +4473,18 @@ const FALLBACK_MARKET: Record<MajorTokenId, Omit<MajorMarketSnapshot, "id" | "sp
     atl: 0,
     athDate: null,
     atlDate: null,
+  },
+  osol: {
+    price: 74,
+    change24h: 0,
+    marketCap: 4.3e10,
+    volume24h: 5.7e9,
+    totalSupply: 631_250_000,
+    circulatingSupply: 579_590_000,
+    ath: 293.31,
+    atl: 0.5,
+    athDate: "2025-01-01T00:00:00.000Z",
+    atlDate: "2020-05-01T00:00:00.000Z",
   },
 };
 

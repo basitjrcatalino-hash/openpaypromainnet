@@ -237,7 +237,7 @@ function AnalyticsPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl animate-page-in pb-10">
-      <PageHeader title="Analytics" subtitle="Track gains, losses and history" />
+      <PageHeader title="Analytics" backTo="/dashboard" />
 
       {/* Summary */}
       <section className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -301,8 +301,8 @@ function AnalyticsPage() {
               <AreaChart data={series} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="pv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" vertical={false} />
@@ -317,8 +317,8 @@ function AnalyticsPage() {
                 <Tooltip
                   formatter={(v: number | string) => money(Number(v))}
                   contentStyle={{
-                    background: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
                     borderRadius: 12,
                     fontSize: 12,
                   }}
@@ -326,7 +326,7 @@ function AnalyticsPage() {
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   fill="url(#pv)"
                 />
@@ -360,8 +360,8 @@ function AnalyticsPage() {
                 <Tooltip
                   formatter={(v: number | string) => money(Number(v))}
                   contentStyle={{
-                    background: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
                     borderRadius: 12,
                     fontSize: 12,
                   }}
@@ -370,7 +370,7 @@ function AnalyticsPage() {
                   {assetRows.map((a) => (
                     <Cell
                       key={a.symbol}
-                      fill={a.pnl24hUsd >= 0 ? "hsl(var(--success))" : "hsl(var(--destructive))"}
+                      fill={a.pnl24hUsd >= 0 ? "var(--success)" : "var(--destructive)"}
                     />
                   ))}
                 </Bar>

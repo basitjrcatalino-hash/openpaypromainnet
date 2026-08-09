@@ -32,6 +32,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Star,
+  LineChart,
   HelpCircle,
   MessageCircle,
   Bot,

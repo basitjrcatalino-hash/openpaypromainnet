@@ -17,6 +17,7 @@ import {
   BookOpen,
   MessageCircle,
   CircleDollarSign,
+  LineChart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
@@ -63,6 +64,7 @@ import type { CurrencyCode } from "@/lib/currency";
 import { useAppMode } from "@/lib/app-mode";
 import { AppModeSwitch } from "@/components/exchange/AppModeSwitch";
 import { ExchangeHome } from "@/components/exchange/ExchangeHome";
+import { recordPortfolioSnapshot } from "@/lib/portfolio-analytics";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -93,6 +95,7 @@ const PRIMARY_ACTIONS = [
 ] as const;
 
 const MORE_ACTIONS = [
+  { label: "Analytics", icon: LineChart, to: "/analytics" },
   { label: "OpenToken", icon: BookOpen, to: "/opentoken" },
   { label: "Trust Wallet", icon: Shield, to: "/trust-wallet" },
   { label: "Live Chat", icon: MessageCircle, to: "/chat" },
@@ -324,10 +327,59 @@ function Dashboard() {
     }
   }
 
-  const change24hUsd = ledgerAssets.reduce(
-    (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),
-    0,
-  );
+  /** Record one portfolio snapshot per UTC day so Analytics can chart history. */
+  useEffect(() => {
+    if (!wallet?.id || !(totalUsd > 0)) return;
+    const key = `op.snapshot.${user.id}.${new Date().toISOString().slice(0, 10)}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch {
+      /* ignore */
+    }
+    const breakdown = [
+      ...ledgerAssets
+        .filter((a) => a.balance > 0 && a.priceUsd > 0)
+        .map((a) => ({
+          symbol: a.symbol,
+          name: a.name,
+          balance: a.balance,
+          priceUsd: a.priceUsd,
+          valueUsd: a.balance * a.priceUsd,
+        })),
+      ...holdingsList
+        .filter((h) => h.tokens && Number(h.balance ?? 0) > 0)
+        .map((h) => ({
+          symbol: h.tokens!.symbol,
+          name: h.tokens!.name,
+          balance: Number(h.balance ?? 0),
+          priceUsd: Number(h.tokens!.price_usd ?? 0),
+          valueUsd: Number(h.balance ?? 0) * Number(h.tokens!.price_usd ?? 0),
+        })),
+    ];
+    void recordPortfolioSnapshot(supabase, {
+      userId: user.id,
+      walletId: wallet.id,
+      totalUsd,
+      breakdown,
+    });
+  }, [wallet?.id, totalUsd, ledgerAssets, holdingsList, user.id]);
+
+  const change24hUsd =
+    ledgerAssets.reduce(
+      (sum, a) => sum + a.balance * (a.priceUsd > 0 ? a.priceUsd : 0) * (a.change24h / 100),
+      0,
+    ) +
+    holdingsList.reduce(
+      (sum, h) =>
+        sum +
+        Number(h.balance ?? 0) *
+          Number(h.tokens?.price_usd ?? 0) *
+          (Number(h.tokens?.change_24h ?? 0) / 100),
+      0,
+    );
+  const change24hPct = totalUsd > 0 ? (change24hUsd / totalUsd) * 100 : 0;
+
 
   const modeSwitch = (
     <div className="mb-4 flex justify-center">
@@ -370,6 +422,38 @@ function Dashboard() {
           onCopyAddress={copyAddress}
         />
       )}
+
+      {/* Today's PnL — tap for full analytics */}
+      <Link
+        to="/analytics"
+        className="mx-auto mb-5 flex w-fit items-center gap-2 rounded-full bg-muted/50 px-3.5 py-1.5 press"
+        aria-label="Open portfolio analytics"
+      >
+        <span
+          className={cn(
+            "text-sm font-bold tabular-nums",
+            change24hUsd >= 0 ? "text-success" : "text-destructive",
+          )}
+        >
+          {hideBalance
+            ? "••••"
+            : `${change24hUsd >= 0 ? "+" : "−"}${formatCurrency(Math.abs(change24hUsd), currency)}`}
+        </span>
+        <span
+          className={cn(
+            "text-xs font-semibold",
+            change24hUsd >= 0 ? "text-success" : "text-destructive",
+          )}
+        >
+          {hideBalance
+            ? ""
+            : `${change24hPct >= 0 ? "+" : ""}${change24hPct.toFixed(2)}%`}
+        </span>
+        <span className="text-[11px] font-medium text-muted-foreground">Today · PnL</span>
+        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+      </Link>
+
+
 
       {/* Circular actions */}
       <div className="mb-6 flex items-start justify-center gap-3.5 sm:gap-6">

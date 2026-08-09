@@ -82,6 +82,7 @@ import { Route as AuthenticatedConnectRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedBagsRouteImport } from './routes/_authenticated/bags'
 import { Route as AuthenticatedAssetsRouteImport } from './routes/_authenticated/assets'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAirdropRouteImport } from './routes/_authenticated/airdrop'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
@@ -572,6 +573,11 @@ const AuthenticatedBagsRoute = AuthenticatedBagsRouteImport.update({
 const AuthenticatedAssetsRoute = AuthenticatedAssetsRouteImport.update({
   id: '/assets',
   path: '/assets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAirdropRoute = AuthenticatedAirdropRouteImport.update({
@@ -1287,6 +1293,7 @@ export interface FileRoutesByFullPath {
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
   '/airdrop': typeof AuthenticatedAirdropRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -1487,6 +1494,7 @@ export interface FileRoutesByTo {
   '/activity': typeof AuthenticatedActivityRoute
   '/ai': typeof AuthenticatedAiRoute
   '/airdrop': typeof AuthenticatedAirdropRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/assets': typeof AuthenticatedAssetsRoute
   '/bags': typeof AuthenticatedBagsRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -1689,6 +1697,7 @@ export interface FileRoutesById {
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
   '/_authenticated/airdrop': typeof AuthenticatedAirdropRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/assets': typeof AuthenticatedAssetsRoute
   '/_authenticated/bags': typeof AuthenticatedBagsRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
@@ -1891,6 +1900,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/ai'
     | '/airdrop'
+    | '/analytics'
     | '/assets'
     | '/bags'
     | '/chat'
@@ -2091,6 +2101,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/ai'
     | '/airdrop'
+    | '/analytics'
     | '/assets'
     | '/bags'
     | '/chat'
@@ -2292,6 +2303,7 @@ export interface FileRouteTypes {
     | '/_authenticated/activity'
     | '/_authenticated/ai'
     | '/_authenticated/airdrop'
+    | '/_authenticated/analytics'
     | '/_authenticated/assets'
     | '/_authenticated/bags'
     | '/_authenticated/chat'
@@ -3076,6 +3088,13 @@ declare module '@tanstack/react-router' {
       path: '/assets'
       fullPath: '/assets'
       preLoaderRoute: typeof AuthenticatedAssetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/airdrop': {
@@ -3989,6 +4008,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
   AuthenticatedAirdropRoute: typeof AuthenticatedAirdropRoute
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedAssetsRoute: typeof AuthenticatedAssetsRoute
   AuthenticatedBagsRoute: typeof AuthenticatedBagsRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
@@ -4076,6 +4096,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
   AuthenticatedAirdropRoute: AuthenticatedAirdropRoute,
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedAssetsRoute: AuthenticatedAssetsRoute,
   AuthenticatedBagsRoute: AuthenticatedBagsRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,

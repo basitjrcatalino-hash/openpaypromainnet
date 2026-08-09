@@ -2804,6 +2804,48 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_snapshots: {
+        Row: {
+          breakdown: Json
+          created_at: string
+          funding_usd: number
+          id: string
+          p2p_usd: number
+          snapshot_date: string
+          spot_usd: number
+          total_usd: number
+          trading_usd: number
+          user_id: string
+          wallet_id: string | null
+        }
+        Insert: {
+          breakdown?: Json
+          created_at?: string
+          funding_usd?: number
+          id?: string
+          p2p_usd?: number
+          snapshot_date?: string
+          spot_usd?: number
+          total_usd?: number
+          trading_usd?: number
+          user_id: string
+          wallet_id?: string | null
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string
+          funding_usd?: number
+          id?: string
+          p2p_usd?: number
+          snapshot_date?: string
+          spot_usd?: number
+          total_usd?: number
+          trading_usd?: number
+          user_id?: string
+          wallet_id?: string | null
+        }
+        Relationships: []
+      }
       pro_charges: {
         Row: {
           amount: number

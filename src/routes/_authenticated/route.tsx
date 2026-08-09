@@ -32,6 +32,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Star,
+  LineChart,
   HelpCircle,
   MessageCircle,
   Bot,
@@ -1097,6 +1098,23 @@ function SidebarInner({
         </SideSection>
 
         <SideSection label={t("nav.explore")}>
+          <Link
+            to="/analytics"
+            onClick={onClose}
+            preload="intent"
+            aria-current={pathname === "/analytics" ? "page" : undefined}
+            className={sideItemClass(pathname === "/analytics")}
+          >
+            <LineChart
+              className={cn(
+                "h-[1.15rem] w-[1.15rem] shrink-0",
+                pathname === "/analytics" && "ph-tab-icon-active",
+              )}
+              strokeWidth={pathname === "/analytics" ? 2.25 : 1.75}
+            />
+            <span className="truncate">Analytics</span>
+          </Link>
+
           <Link
             to="/chat"
             onClick={onClose}

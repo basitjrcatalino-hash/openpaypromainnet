@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/wallet/PageHeader";
 import { cn } from "@/lib/utils";
 import { shortAddress, timeAgo } from "@/lib/wallet-utils";
 import {
+  adminAddAddressPool,
   adminDepositAction,
   adminDepositOverview,
   adminDeleteRow,
@@ -22,6 +23,7 @@ import {
   adminSaveChain,
   adminSaveToken,
 } from "@/lib/deposit-gateway.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/deposits")({
   component: AdminDepositsPage,

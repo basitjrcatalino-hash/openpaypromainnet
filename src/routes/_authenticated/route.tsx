@@ -185,6 +185,12 @@ const MORE_NAV = [
     desc: "Move between accounts",
   },
   { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
+  {
+    to: "/turnkey",
+    labelKey: "nav.turnkey",
+    icon: Shield,
+    desc: "Turnkey secure wallets",
+  },
   { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon, desc: "Security & preferences" },
 ] as const;
 

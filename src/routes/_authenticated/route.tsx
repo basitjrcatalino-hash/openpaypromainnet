@@ -56,6 +56,8 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { useDeveloperMode } from "@/hooks/use-developer-mode";
+import { useAppMode } from "@/lib/app-mode";
+import { ExchangeTabBar } from "@/components/exchange/ExchangeTabBar";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -677,7 +679,12 @@ function AuthenticatedLayout() {
                   </main>
                 </div>
 
-                {!hideChrome && <MobileTabBar pathname={pathname} mobileOpen={mobileOpen} t={t} />}
+                {!hideChrome &&
+                  (appMode === "exchange" ? (
+                    <ExchangeTabBar pathname={pathname} mobileOpen={mobileOpen} />
+                  ) : (
+                    <MobileTabBar pathname={pathname} mobileOpen={mobileOpen} t={t} />
+                  ))}
 
                 <NotificationCenter
                   open={notifOpen}

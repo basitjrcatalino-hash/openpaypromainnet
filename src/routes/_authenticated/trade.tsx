@@ -142,7 +142,6 @@ function TradePage() {
   const [chartHeight, setChartHeight] = useState(320);
   /** Exchange (Pro) mode — full desk layout, opt-in and persisted. */
   const [exchangeMode, setExchangeMode] = useState(false);
-  const [wide, setWide] = useState(false);
 
   useEffect(() => {
     try {
@@ -150,11 +149,6 @@ function TradePage() {
     } catch {
       /* ignore */
     }
-    const mq = window.matchMedia("(min-width: 1180px)");
-    const sync = () => setWide(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
   }, []);
 
   function toggleExchangeMode() {
@@ -571,7 +565,7 @@ function TradePage() {
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;
-  const pro = exchangeMode && wide;
+  const pro = exchangeMode;
 
   const orderFormNode =
     mode === "futures" ? (
@@ -742,7 +736,7 @@ function TradePage() {
           ) : (
             <LayoutGrid className="h-3.5 w-3.5" />
           )}
-          <span className="hidden xs:inline sm:inline">
+          <span className="hidden sm:inline">
             {exchangeMode ? "Simple" : "Exchange"}
           </span>
         </button>

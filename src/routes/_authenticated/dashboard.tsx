@@ -17,6 +17,7 @@ import {
   BookOpen,
   MessageCircle,
   CircleDollarSign,
+  LineChart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
@@ -63,6 +64,7 @@ import type { CurrencyCode } from "@/lib/currency";
 import { useAppMode } from "@/lib/app-mode";
 import { AppModeSwitch } from "@/components/exchange/AppModeSwitch";
 import { ExchangeHome } from "@/components/exchange/ExchangeHome";
+import { recordPortfolioSnapshot } from "@/lib/portfolio-analytics";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -93,6 +95,7 @@ const PRIMARY_ACTIONS = [
 ] as const;
 
 const MORE_ACTIONS = [
+  { label: "Analytics", icon: LineChart, to: "/analytics" },
   { label: "OpenToken", icon: BookOpen, to: "/opentoken" },
   { label: "Trust Wallet", icon: Shield, to: "/trust-wallet" },
   { label: "Live Chat", icon: MessageCircle, to: "/chat" },

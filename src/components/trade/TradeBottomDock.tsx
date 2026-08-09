@@ -128,7 +128,12 @@ export function TradeBottomDock({
       </div>
 
       {isExpanded ? (
-        <div className="max-h-[36dvh] overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div
+          className={cn(
+            "overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+            size === "sm" ? "max-h-[22dvh]" : size === "full" ? "max-h-[70dvh]" : "max-h-[36dvh]",
+          )}
+        >
           {tab === "orders" ? (
             mode === "spot" ? (
               !openOrders.length ? (

@@ -725,26 +725,27 @@ function TradePage() {
             setDockExpanded(false);
           }}
         />
-        {wide ? (
-          <button
-            type="button"
-            onClick={toggleExchangeMode}
-            aria-pressed={exchangeMode}
-            className={cn(
-              "hidden shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold press lg:inline-flex",
-              exchangeMode
-                ? "border-[#ffad0a]/50 bg-[#ffad0a]/12 text-[#ffad0a]"
-                : "border-border/60 text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {exchangeMode ? (
-              <Smartphone className="h-3.5 w-3.5" />
-            ) : (
-              <LayoutGrid className="h-3.5 w-3.5" />
-            )}
-            {exchangeMode ? "Simple mode" : "Exchange mode"}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={toggleExchangeMode}
+          aria-pressed={exchangeMode}
+          title={exchangeMode ? "Switch to Simple mode" : "Switch to Exchange mode"}
+          className={cn(
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold press",
+            exchangeMode
+              ? "border-[#ffad0a]/50 bg-[#ffad0a]/12 text-[#ffad0a]"
+              : "border-border/60 text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {exchangeMode ? (
+            <Smartphone className="h-3.5 w-3.5" />
+          ) : (
+            <LayoutGrid className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden xs:inline sm:inline">
+            {exchangeMode ? "Simple" : "Exchange"}
+          </span>
+        </button>
         <Link
           to="/asset/$tokenId/chat"
           params={{ tokenId: market.toLowerCase() }}

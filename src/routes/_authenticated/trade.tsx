@@ -667,6 +667,9 @@ function TradePage() {
       onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}
       expanded={pro ? true : dockExpanded}
       onExpanded={pro ? undefined : setDockExpanded}
+      size={dockSize}
+      onSize={pro ? undefined : setDockSize}
+
       openOrders={openOrdersQ.data ?? []}
       orderHistory={orderHistQ.data ?? []}
       tradeHistory={tradeHistQ.data ?? []}

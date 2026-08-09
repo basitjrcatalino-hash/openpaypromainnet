@@ -271,10 +271,10 @@ export const adminUpdateSupportTicket = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context))) throw new Error("Forbidden");
-    const patch: Record<string, unknown> = {};
-    if (data.status) patch["status"] = data.status;
-    if (data.priority) patch["priority"] = data.priority;
-    if (typeof data.ai_enabled === "boolean") patch["ai_enabled"] = data.ai_enabled;
+    const patch: { status?: string; priority?: string; ai_enabled?: boolean } = {};
+    if (data.status) patch.status = data.status;
+    if (data.priority) patch.priority = data.priority;
+    if (typeof data.ai_enabled === "boolean") patch.ai_enabled = data.ai_enabled;
     if (!Object.keys(patch).length) return { ok: true };
     const { error } = await context.supabase
       .from("support_tickets")

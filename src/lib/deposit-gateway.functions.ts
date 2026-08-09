@@ -419,20 +419,31 @@ export const adminAddAddressPool = createServerFn({ method: "POST" })
     if (!list.length) throw new Error("No addresses provided");
     if (list.length > 500) throw new Error("Add at most 500 addresses at a time");
 
-    const rows = list.map((address) => ({
-      chain_id: chain.id,
-      token_id: null,
-      address,
-      label: data.label || `${chain.name} pool`,
-      provider: "pool",
-      is_active: true,
-      created_by: context.userId,
-    }));
+    const { data: existingRows } = await db
+      .from("deposit_addresses")
+      .select("address")
+      .eq("chain_id", chain.id);
+    const existing = new Set(
+      (existingRows ?? []).map((r: any) => String(r.address).toLowerCase()),
+    );
+    const rows = list
+      .filter((address) => !existing.has(address.toLowerCase()))
+      .map((address) => ({
+        chain_id: chain.id,
+        token_id: null,
+        address,
+        label: data.label || `${chain.name} pool`,
+        provider: "pool",
+        is_active: true,
+        created_by: context.userId,
+      }));
+    if (!rows.length) return { added: 0, registered: 0 };
     const { data: inserted, error } = await db
       .from("deposit_addresses")
-      .upsert(rows, { onConflict: "chain_id,address", ignoreDuplicates: true })
+      .insert(rows)
       .select("id, address");
     if (error) throw new Error(error.message);
+
 
     let registered = 0;
     if (chain.family === "evm") {

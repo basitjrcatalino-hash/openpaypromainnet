@@ -15,7 +15,9 @@ import { OrderBook } from "@/components/trade/OrderBook";
 import { RecentTrades } from "@/components/trade/RecentTrades";
 import { TradePairSearch } from "@/components/trade/TradePairSearch";
 import { ExchangeOrderForm } from "@/components/trade/ExchangeOrderForm";
+import { ExchangeTerminal } from "@/components/trade/ExchangeTerminal";
 import { TradeBottomDock, type DockTab } from "@/components/trade/TradeBottomDock";
+
 import {
   TradeTokenAnalysis,
   TradeTokenInfo,

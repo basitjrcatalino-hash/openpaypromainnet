@@ -43,6 +43,9 @@ export function TradeBottomDock({
   onGoTrade,
   expanded,
   onExpanded,
+  size = "md",
+  onSize,
+
   openOrders = [],
   orderHistory = [],
   tradeHistory = [],

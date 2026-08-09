@@ -1426,15 +1426,33 @@ function AppFormDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="app-logo">Logo URL</Label>
-            <Input
-              id="app-logo"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://your.app/logo.png"
-              className="h-10 rounded-xl"
-            />
+            <Label htmlFor="app-logo">Logo</Label>
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="App logo preview"
+                  className="h-11 w-11 shrink-0 rounded-xl border border-border object-cover"
+                />
+              ) : (
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-dashed border-border text-muted-foreground">
+                  <ImageIcon className="h-4 w-4" />
+                </div>
+              )}
+              <Input
+                id="app-logo"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://your.app/logo.png"
+                className="h-10 flex-1 rounded-xl"
+              />
+              <LogoUploadButton onUploaded={setLogoUrl} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Paste a URL or upload an image (PNG/JPG/SVG, max 300KB).
+            </p>
           </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="app-redirects">OAuth callback / redirect URIs</Label>
             <Textarea

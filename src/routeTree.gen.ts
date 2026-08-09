@@ -61,6 +61,7 @@ import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTopupRouteImport } from './routes/_authenticated/topup'
 import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated/tokens'
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
@@ -468,6 +469,11 @@ const AuthenticatedTokensRoute = AuthenticatedTokensRouteImport.update({
 const AuthenticatedSwapRoute = AuthenticatedSwapRouteImport.update({
   id: '/swap',
   path: '/swap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
@@ -1315,6 +1321,7 @@ export interface FileRoutesByFullPath {
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -1516,6 +1523,7 @@ export interface FileRoutesByTo {
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
@@ -1719,6 +1727,7 @@ export interface FileRoutesById {
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/solana-pay': typeof AuthenticatedSolanaPayRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
@@ -1922,6 +1931,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/settings'
     | '/solana-pay'
+    | '/support'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -2123,6 +2133,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/settings'
     | '/solana-pay'
+    | '/support'
     | '/swap'
     | '/tokens'
     | '/topup'
@@ -2325,6 +2336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/send'
     | '/_authenticated/settings'
     | '/_authenticated/solana-pay'
+    | '/_authenticated/support'
     | '/_authenticated/swap'
     | '/_authenticated/tokens'
     | '/_authenticated/topup'
@@ -2941,6 +2953,13 @@ declare module '@tanstack/react-router' {
       path: '/swap'
       fullPath: '/swap'
       preLoaderRoute: typeof AuthenticatedSwapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/solana-pay': {
@@ -4030,6 +4049,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSolanaPayRoute: typeof AuthenticatedSolanaPayRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
@@ -4118,6 +4138,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSolanaPayRoute: AuthenticatedSolanaPayRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,

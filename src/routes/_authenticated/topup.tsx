@@ -45,7 +45,19 @@ import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): {
+    openpay_charge?: string;
+    openpay_ref?: string;
+    openpay_tx?: string;
+    openpay_return?: string;
+    openpay_cancel?: string;
+    banxa_return?: string;
+    banxa_ext?: string;
+    onramp_return?: string;
+    onramp_ref?: string;
+  } => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
     openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
     openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,

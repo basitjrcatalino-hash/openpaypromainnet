@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { to: "/dashboard", label: "Home", icon: LayoutGrid },
   { to: "/exchange/explore", label: "Explore", icon: Compass },
-  { to: "/exchange/orbit", label: "Orbit", icon: Orbit },
+  { to: "/exchange/orbit", label: "Network", icon: Orbit },
   { to: "/assets", label: "Assets", icon: PieChart },
 ] as const;
 

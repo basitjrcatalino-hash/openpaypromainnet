@@ -12,13 +12,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/exchange/orbit")({
   head: () => ({
     meta: [
-      { title: "Orbit feed · OpenPay Pro Exchange" },
+      { title: "Network feed · OpenPay Pro Exchange" },
       {
         name: "description",
         content:
-          "Share market calls and read what other OpenPay Pro traders are posting in the Orbit community feed.",
+          "Share market calls and read what other OpenPay Pro traders are posting in the Network community feed.",
       },
-      { property: "og:title", content: "Orbit feed · OpenPay Pro Exchange" },
+      { property: "og:title", content: "Network feed · OpenPay Pro Exchange" },
       {
         property: "og:description",
         content: "Trader posts, market tags and likes inside OpenPay Pro Exchange mode.",

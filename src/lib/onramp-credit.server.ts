@@ -52,12 +52,13 @@ export async function creditOnrampOrder(opts: {
     userWalletId: walletId,
     grossAmount: gross,
     counterparty: `onramp:${String(opts.orderId).slice(0, 12)}`,
+    memo: "Onramp.money top-up",
     txHash,
   });
 
   return {
     ok: true,
     alreadyCredited: false,
-    amount: Number((credited as { net?: number })?.net ?? gross),
+    amount: Number(credited.netAmount ?? gross),
   };
 }

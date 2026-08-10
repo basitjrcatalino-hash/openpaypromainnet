@@ -341,6 +341,8 @@ function MobileTabBar({
   const chromeVisible = useChromeVisible();
   const [moreOpen, setMoreOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { developerMode } = useDeveloperMode();
+
   const { code: currency, setCode: setCurrency, meta: currencyMeta } = useCurrency();
   const moreActive = moreNavActive(pathname);
 

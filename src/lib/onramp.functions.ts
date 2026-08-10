@@ -96,5 +96,5 @@ export const syncOnrampOrder = createServerFn({ method: "POST" })
       coinAmount: order.coinAmount ?? null,
     });
 
-    return { ok: true as const, pending: false, status: "completed", ...result };
+    return { pending: false, status: "completed", ...result };
   });

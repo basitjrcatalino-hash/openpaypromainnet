@@ -446,40 +446,56 @@ function MobileTabBar({
                 </span>
               </button>
             </li>
-            {MORE_NAV.map((item) => {
-              const Icon = item.icon;
-              const active = navActive(pathname, item.to);
+            {MORE_SECTIONS.map((section) => {
+              const items = section.items.filter((i) => !i.dev || developerMode);
+              if (items.length === 0) return null;
               return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    preload="intent"
-                    onClick={() => setMoreOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl px-3.5 py-3 press",
-                      active
-                        ? "bg-primary/12 text-primary"
-                        : "bg-muted/40 text-foreground hover:bg-muted/70",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                        active ? "bg-primary/15" : "bg-background/80",
-                      )}
-                    >
-                      <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.85} />
-                    </span>
-                    <span className="min-w-0 flex-1 text-left">
-                      <span className="block text-sm font-bold tracking-tight">
-                        {navLabel(t, item.labelKey)}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">{item.desc}</span>
-                    </span>
-                  </Link>
+                <li key={section.title}>
+                  <p className="px-1 pb-1.5 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {section.title}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const active = navActive(pathname, item.to);
+                      return (
+                        <li key={item.to}>
+                          <Link
+                            to={item.to}
+                            preload="intent"
+                            onClick={() => setMoreOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 rounded-2xl px-3.5 py-3 press",
+                              active
+                                ? "bg-primary/12 text-primary"
+                                : "bg-muted/40 text-foreground hover:bg-muted/70",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                                active ? "bg-primary/15" : "bg-background/80",
+                              )}
+                            >
+                              <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.85} />
+                            </span>
+                            <span className="min-w-0 flex-1 text-left">
+                              <span className="block text-sm font-bold tracking-tight">
+                                {item.label}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {item.desc}
+                              </span>
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </li>
               );
             })}
+
           </ul>
         </SheetContent>
       </Sheet>

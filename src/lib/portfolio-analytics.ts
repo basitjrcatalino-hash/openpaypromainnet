@@ -187,19 +187,24 @@ export function buildAssetPnl(
   assets: { symbol: string; name: string; balance: number; priceUsd: number; change24h: number }[],
   firstSnapshot?: PortfolioSnapshot | null,
 ): AssetPnlRow[] {
-  const held = assets.filter((a) => a.balance > 0 && a.priceUsd > 0);
-  const total = held.reduce((s, a) => s + a.balance * a.priceUsd, 0);
+  const held = (assets ?? []).filter(
+    (a) => a && Number(a.balance) > 0 && Number(a.priceUsd) > 0,
+  );
+  const total = held.reduce((s, a) => s + Number(a.balance) * Number(a.priceUsd), 0);
   const baseline = new Map<string, number>();
   for (const b of firstSnapshot?.breakdown ?? []) {
-    baseline.set(b.symbol.toUpperCase(), Number(b.valueUsd ?? 0));
+    const sym = String(b?.symbol ?? "").toUpperCase();
+    if (!sym) continue;
+    baseline.set(sym, Number(b?.valueUsd ?? 0));
   }
   return held
     .map((a) => {
-      const valueUsd = a.balance * a.priceUsd;
-      const before = baseline.get(a.symbol.toUpperCase());
+      const symbol = String(a.symbol ?? "");
+      const valueUsd = Number(a.balance) * Number(a.priceUsd);
+      const before = symbol ? baseline.get(symbol.toUpperCase()) : undefined;
       return {
-        symbol: a.symbol,
-        name: a.name,
+        symbol,
+        name: a.name ?? symbol,
         balance: a.balance,
         priceUsd: a.priceUsd,
         valueUsd,

@@ -111,6 +111,7 @@ import { Route as ApiPublicPiLinkWalletRouteImport } from './routes/api/public/p
 import { Route as ApiPublicPiAuthRouteImport } from './routes/api/public/pi-auth'
 import { Route as ApiPublicPiA2uRouteImport } from './routes/api/public/pi-a2u'
 import { Route as ApiPublicOpenpayAuthRouteImport } from './routes/api/public/openpay-auth'
+import { Route as ApiPublicOnrampWebhookRouteImport } from './routes/api/public/onramp-webhook'
 import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
 import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
 import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
@@ -729,6 +730,11 @@ const ApiPublicPiA2uRoute = ApiPublicPiA2uRouteImport.update({
 const ApiPublicOpenpayAuthRoute = ApiPublicOpenpayAuthRouteImport.update({
   id: '/api/public/openpay-auth',
   path: '/api/public/openpay-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOnrampWebhookRoute = ApiPublicOnrampWebhookRouteImport.update({
+  id: '/api/public/onramp-webhook',
+  path: '/api/public/onramp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicMoonpayWebhookRoute = ApiPublicMoonpayWebhookRouteImport.update({
@@ -1419,6 +1425,7 @@ export interface FileRoutesByFullPath {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
+  '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -1622,6 +1629,7 @@ export interface FileRoutesByTo {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
+  '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -1827,6 +1835,7 @@ export interface FileRoutesById {
   '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
+  '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
   '/api/public/openpay-auth': typeof ApiPublicOpenpayAuthRoute
   '/api/public/pi-a2u': typeof ApiPublicPiA2uRoute
   '/api/public/pi-auth': typeof ApiPublicPiAuthRoute
@@ -2032,6 +2041,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
+    | '/api/public/onramp-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -2235,6 +2245,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
+    | '/api/public/onramp-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -2439,6 +2450,7 @@ export interface FileRouteTypes {
     | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
+    | '/api/public/onramp-webhook'
     | '/api/public/openpay-auth'
     | '/api/public/pi-a2u'
     | '/api/public/pi-auth'
@@ -2548,6 +2560,7 @@ export interface RootRouteChildren {
   ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicMoonpaySignRoute: typeof ApiPublicMoonpaySignRoute
   ApiPublicMoonpayWebhookRoute: typeof ApiPublicMoonpayWebhookRoute
+  ApiPublicOnrampWebhookRoute: typeof ApiPublicOnrampWebhookRoute
   ApiPublicOpenpayAuthRoute: typeof ApiPublicOpenpayAuthRoute
   ApiPublicPiA2uRoute: typeof ApiPublicPiA2uRoute
   ApiPublicPiAuthRoute: typeof ApiPublicPiAuthRoute
@@ -3316,6 +3329,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/openpay-auth'
       fullPath: '/api/public/openpay-auth'
       preLoaderRoute: typeof ApiPublicOpenpayAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/onramp-webhook': {
+      id: '/api/public/onramp-webhook'
+      path: '/api/public/onramp-webhook'
+      fullPath: '/api/public/onramp-webhook'
+      preLoaderRoute: typeof ApiPublicOnrampWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/moonpay-webhook': {
@@ -4360,6 +4380,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicMoonpaySignRoute: ApiPublicMoonpaySignRoute,
   ApiPublicMoonpayWebhookRoute: ApiPublicMoonpayWebhookRoute,
+  ApiPublicOnrampWebhookRoute: ApiPublicOnrampWebhookRoute,
   ApiPublicOpenpayAuthRoute: ApiPublicOpenpayAuthRoute,
   ApiPublicPiA2uRoute: ApiPublicPiA2uRoute,
   ApiPublicPiAuthRoute: ApiPublicPiAuthRoute,

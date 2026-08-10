@@ -17,6 +17,7 @@ export type TopupProvider =
   | "banxa_google_pay"
   | "banxa_card"
   | "banxa_bank"
+  | "onramp"
   | "scan_pay"
   | "wallet_ousd"
   | "wallet_usdt"
@@ -117,6 +118,13 @@ const PROVIDER: Record<
       "You’ll complete a bank transfer via Banxa (ACH, SEPA, Faster Payments, or PayID). Settlement can take longer than cards; OUSD credits when Banxa marks the order complete.",
     fees: "Bank network and Banxa fees apply on their side. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Banxa",
+  },
+  onramp: {
+    name: "Onramp.money",
+    blurb:
+      "You’ll complete KYC and pay via Onramp.money using local bank rails (UPI, IMPS, SEPA, bank transfer). The stablecoin settles to OpenPay Pro and OUSD credits once the order completes.",
+    fees: "Onramp.money charges its own on-ramp fee and FX spread. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "Onramp.money",
   },
   scan_pay: {
     name: "Scan to pay",

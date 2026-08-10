@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, type LucideIcon } from "lucide-react";
+import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, Landmark, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import { CircleMintDepositPanel } from "@/components/circle-mint-deposit-panel";
 import { CashPayDepositPanel } from "@/components/cash-pay-deposit-panel";
 import { BanxaDepositPanel } from "@/components/banxa-deposit-panel";
 import { ScanToPayDepositPanel } from "@/components/scan-to-pay-deposit-panel";
+import { OnrampDepositPanel } from "@/components/onramp-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -44,7 +45,19 @@ import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): {
+    openpay_charge?: string;
+    openpay_ref?: string;
+    openpay_tx?: string;
+    openpay_return?: string;
+    openpay_cancel?: string;
+    banxa_return?: string;
+    banxa_ext?: string;
+    onramp_return?: string;
+    onramp_ref?: string;
+  } => ({
     openpay_charge: typeof s.openpay_charge === "string" ? s.openpay_charge : undefined,
     openpay_ref: typeof s.openpay_ref === "string" ? s.openpay_ref : undefined,
     openpay_tx: typeof s.openpay_tx === "string" ? s.openpay_tx : undefined,
@@ -52,6 +65,8 @@ export const Route = createFileRoute("/_authenticated/topup")({
     openpay_cancel: s.openpay_cancel ? "1" : undefined,
     banxa_return: s.banxa_return ? "1" : undefined,
     banxa_ext: typeof s.banxa_ext === "string" ? s.banxa_ext : undefined,
+    onramp_return: s.onramp_return ? "1" : undefined,
+    onramp_ref: typeof s.onramp_ref === "string" ? s.onramp_ref : undefined,
   }),
   component: TopUpPage,
 });
@@ -69,6 +84,7 @@ type Method =
   | "wallet_usdc"
   | "wallet_sol"
   | BanxaTopupMethodKey
+  | "onramp"
   | "scan_pay";
 
 type WalletLedgerMethod = "wallet_usdt" | "wallet_usdc" | "wallet_sol";
@@ -160,6 +176,12 @@ const methods: {
     label: "Bank Transfer",
     icon: Building2,
     desc: "Banxa · ACH / SEPA / Faster Payments / PayID → OUSD",
+  },
+  {
+    id: "onramp",
+    label: "Onramp.money",
+    icon: Landmark,
+    desc: "Local bank rails (UPI / IMPS / SEPA) · onramp & offramp → OUSD",
   },
   {
     id: "usdc",
@@ -576,6 +598,7 @@ function TopUpPage() {
       method === "circle_mint" ||
       method === "cash_pay" ||
       method === "scan_pay" ||
+      method === "onramp" ||
       isBanxaTopupMethod(method)
     ) {
       setDepositReady(true);
@@ -773,6 +796,8 @@ function TopUpPage() {
                         ? `Continue with card`
                         : method === "banxa_bank"
                           ? `Continue with bank transfer`
+                          : method === "onramp"
+                            ? `Continue with Onramp.money`
                           : method === "scan_pay"
                             ? `Continue with Scan to pay`
                             : `Continue with Pi`;
@@ -806,6 +831,8 @@ function TopUpPage() {
                         ? "Card (Banxa)"
                         : method === "banxa_bank"
                           ? "Bank Transfer (Banxa)"
+                          : method === "onramp"
+                            ? "Onramp.money"
                           : method === "scan_pay"
                             ? "Scan to pay"
                             : "OpenPay Balance";
@@ -831,6 +858,8 @@ function TopUpPage() {
                       ? "Card"
                       : method === "banxa_bank"
                         ? "Bank Transfer"
+                        : method === "onramp"
+                          ? "Onramp.money"
                         : method === "scan_pay"
                           ? "Scan to pay"
                           : "Crypto Deposit";
@@ -1351,6 +1380,34 @@ function TopUpPage() {
           </div>
           <BanxaDepositPanel
             methodKey={method}
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "onramp" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <div className="rounded-2xl bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatOUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via Onramp.money · credited as OUSD after confirmation
+            </p>
+          </div>
+          <OnrampDepositPanel
             amountUsd={amtNum}
             walletId={wallet?.id}
             onSuccess={refreshAfterHelioDeposit}

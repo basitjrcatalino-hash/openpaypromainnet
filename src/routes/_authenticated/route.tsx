@@ -172,33 +172,67 @@ const FOOTER_TABS = [
   { to: "/tokens", labelKey: "nav.discover", icon: Search },
 ] as const;
 
-const MORE_NAV = [
-  { to: "/deposit", labelKey: "nav.deposit", icon: ArrowDownToLine, desc: "Fund your wallet" },
-  { to: "/wallet/receive", labelKey: "nav.receive", icon: QrCode, desc: "Show your QR & address" },
+type MoreItem = {
+  to: string;
+  label: string;
+  icon: typeof Wallet;
+  desc: string;
+  dev?: boolean;
+};
+
+const MORE_SECTIONS: { title: string; items: MoreItem[] }[] = [
   {
-    to: "/trust-wallet",
-    labelKey: "nav.trustWallet",
-    icon: Shield,
-    desc: "Markets, search & safety",
+    title: "Money",
+    items: [
+      { to: "/topup", label: "Top Up", icon: CircleDollarSign, desc: "Buy with card, cash, voucher" },
+      { to: "/deposit", label: "Deposit", icon: ArrowDownToLine, desc: "Crypto deposit addresses" },
+      { to: "/wallet/receive", label: "Receive", icon: QrCode, desc: "Show your QR & address" },
+      { to: "/send", label: "Send", icon: ArrowUpFromLine, desc: "Pay an address or @username" },
+      { to: "/transfer", label: "Transfer", icon: ArrowLeftRight, desc: "Move between accounts" },
+      { to: "/swap", label: "Swap", icon: ArrowLeftRight, desc: "Convert between tokens" },
+      { to: "/withdraw", label: "Withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
+      { to: "/scan", label: "Scan & Pay", icon: ScanLine, desc: "Scan a payment QR" },
+      { to: "/activity", label: "History", icon: History, desc: "Transaction history" },
+    ],
   },
-  { to: "/opentoken", labelKey: "nav.openToken", icon: BookOpen, desc: "Launch & trade coins" },
-  { to: "/p2p", labelKey: "nav.p2p", icon: Users, desc: "Peer marketplace" },
-  { to: "/activity", labelKey: "nav.history", icon: History, desc: "Transaction history" },
   {
-    to: "/transfer",
-    labelKey: "nav.transfer",
-    icon: ArrowLeftRight,
-    desc: "Move between accounts",
+    title: "Markets",
+    items: [
+      { to: "/tokens", label: "Tokens", icon: CircleDollarSign, desc: "Browse all assets" },
+      { to: "/trade", label: "Trade", icon: CandlestickChart, desc: "Spot & perpetual trading" },
+      { to: "/opentoken", label: "OpenToken", icon: BookOpen, desc: "Launch & trade coins" },
+      { to: "/p2p", label: "P2P Market", icon: Users, desc: "Peer marketplace with escrow" },
+      { to: "/nfts", label: "NFTs", icon: LayoutGrid, desc: "Collect & mint NFTs" },
+      { to: "/watchlist", label: "Watchlist", icon: Star, desc: "Your starred markets" },
+      { to: "/analytics", label: "Analytics", icon: LineChart, desc: "PnL, gains & history" },
+      { to: "/trust-wallet", label: "Trust Wallet", icon: Shield, desc: "Markets, search & safety" },
+    ],
   },
-  { to: "/withdraw", labelKey: "nav.withdraw", icon: ArrowUpFromLine, desc: "Cash out" },
   {
-    to: "/turnkey",
-    labelKey: "nav.turnkey",
-    icon: Shield,
-    desc: "Turnkey secure wallets",
+    title: "Account",
+    items: [
+      { to: "/profile", label: "Profile", icon: Users, desc: "Name, username & avatar" },
+      { to: "/kyc", label: "Verification", icon: Shield, desc: "KYC status & identity" },
+      { to: "/airdrop", label: "Rewards", icon: Gift, desc: "Airdrops & campaigns" },
+      { to: "/turnkey", label: "Turnkey", icon: KeyRound, desc: "Turnkey secure wallets" },
+      { to: "/settings", label: "Settings", icon: SettingsIcon, desc: "Security & preferences" },
+    ],
   },
-  { to: "/settings", labelKey: "nav.settings", icon: SettingsIcon, desc: "Security & preferences" },
-] as const;
+  {
+    title: "Help & AI",
+    items: [
+      { to: "/ai", label: "OpenPay AI", icon: Bot, desc: "Ask the wallet assistant" },
+      { to: "/support", label: "Support", icon: LifeBuoy, desc: "Live chat with our team" },
+      { to: "/ledger", label: "Ledger API", icon: ScrollText, desc: "Public ledger & API", dev: true },
+      { to: "/connect", label: "Agent Connect", icon: Code2, desc: "MCP & AI agents", dev: true },
+      { to: "/developer", label: "Developer", icon: Wrench, desc: "Keys, apps & webhooks", dev: true },
+      { to: "/partner-api", label: "Partner API", icon: KeyRound, desc: "Connect apps to Pro", dev: true },
+    ],
+  },
+];
+
+const MORE_NAV = MORE_SECTIONS.flatMap((s) => s.items);
+
 
 function navActive(pathname: string, to: string) {
   return (
@@ -307,6 +341,8 @@ function MobileTabBar({
   const chromeVisible = useChromeVisible();
   const [moreOpen, setMoreOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { developerMode } = useDeveloperMode();
+
   const { code: currency, setCode: setCurrency, meta: currencyMeta } = useCurrency();
   const moreActive = moreNavActive(pathname);
 
@@ -412,40 +448,56 @@ function MobileTabBar({
                 </span>
               </button>
             </li>
-            {MORE_NAV.map((item) => {
-              const Icon = item.icon;
-              const active = navActive(pathname, item.to);
+            {MORE_SECTIONS.map((section) => {
+              const items = section.items.filter((i) => !i.dev || developerMode);
+              if (items.length === 0) return null;
               return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    preload="intent"
-                    onClick={() => setMoreOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl px-3.5 py-3 press",
-                      active
-                        ? "bg-primary/12 text-primary"
-                        : "bg-muted/40 text-foreground hover:bg-muted/70",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                        active ? "bg-primary/15" : "bg-background/80",
-                      )}
-                    >
-                      <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.85} />
-                    </span>
-                    <span className="min-w-0 flex-1 text-left">
-                      <span className="block text-sm font-bold tracking-tight">
-                        {navLabel(t, item.labelKey)}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">{item.desc}</span>
-                    </span>
-                  </Link>
+                <li key={section.title}>
+                  <p className="px-1 pb-1.5 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {section.title}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const active = navActive(pathname, item.to);
+                      return (
+                        <li key={item.to}>
+                          <Link
+                            to={item.to}
+                            preload="intent"
+                            onClick={() => setMoreOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 rounded-2xl px-3.5 py-3 press",
+                              active
+                                ? "bg-primary/12 text-primary"
+                                : "bg-muted/40 text-foreground hover:bg-muted/70",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                                active ? "bg-primary/15" : "bg-background/80",
+                              )}
+                            >
+                              <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.85} />
+                            </span>
+                            <span className="min-w-0 flex-1 text-left">
+                              <span className="block text-sm font-bold tracking-tight">
+                                {item.label}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {item.desc}
+                              </span>
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </li>
               );
             })}
+
           </ul>
         </SheetContent>
       </Sheet>

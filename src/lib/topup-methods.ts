@@ -18,6 +18,7 @@ export type TopupMethodKey =
   | "banxa_google_pay"
   | "banxa_card"
   | "banxa_bank"
+  | "onramp"
   | "scan_pay";
 
 export type TopupMethodSeed = {
@@ -136,6 +137,14 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     description:
       "Banxa · bank transfer (ACH / SEPA / Faster Payments / PayID) → OUSD",
     sort_order: 12,
+    enabled: true,
+  },
+  {
+    method_key: "onramp",
+    label: "Onramp.money",
+    description:
+      "Local bank rails (UPI / IMPS / SEPA / bank transfer) · onramp & offramp widget → OUSD",
+    sort_order: 17,
     enabled: true,
   },
   {

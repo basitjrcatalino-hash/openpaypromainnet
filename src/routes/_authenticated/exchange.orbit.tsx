@@ -44,7 +44,7 @@ function OrbitPage() {
       await createPost(body, symbol.trim().toUpperCase() || null);
       setBody("");
       setSymbol("");
-      toast.success("Posted to Orbit");
+      toast.success("Posted to Network");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not post");
     } finally {
@@ -54,7 +54,7 @@ function OrbitPage() {
 
   return (
     <div className="animate-page-in pb-6">
-      <h1 className="mb-4 text-xl font-black tracking-tight">Orbit</h1>
+      <h1 className="mb-4 text-xl font-black tracking-tight">Network</h1>
 
       <div className="mb-6 rounded-2xl bg-muted/40 p-3">
         <textarea

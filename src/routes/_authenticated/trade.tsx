@@ -420,13 +420,18 @@ function TradePage() {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       notifySuccess("Position opened from Trading", { sound: "send" });
       setAmount("");
       setPct(0);
-      void qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      setDockTab("positions");
+      setDockExpanded(true);
+      await qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      void posQ.refetch();
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
     },
+
     onError: (e: Error) => toast.error(e.message),
   });
 

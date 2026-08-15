@@ -311,7 +311,8 @@ export function TradeBottomDock({
                     side: p.side,
                     sizeUsd: p.size_usd,
                     entryPrice: p.entry_price,
-                    markPrice,
+                    markPrice: Number(priceByMarket?.[p.market] ?? markPrice) || markPrice,
+
                     margin: p.margin,
                   });
                   return (

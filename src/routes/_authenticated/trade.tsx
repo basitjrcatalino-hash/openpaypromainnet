@@ -662,6 +662,13 @@ function TradePage() {
     />
   );
 
+  const priceByMarket: Record<string, number> = {};
+  for (const p of openPositions) {
+    const q = quoteByMarket(quotesQ.data, p.market);
+    const px = Number(q?.markPrice || q?.price || 0);
+    if (px > 0) priceByMarket[p.market] = px;
+  }
+
   const dockNode = (
     <TradeBottomDock
       mode={mode}
@@ -670,6 +677,8 @@ function TradePage() {
       onTab={setDockTab}
       positions={mode === "futures" ? openPositions : []}
       markPrice={price}
+      priceByMarket={priceByMarket}
+
       onClosePosition={requestClosePosition}
       closingId={closeM.isPending ? closeM.variables : null}
       onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}

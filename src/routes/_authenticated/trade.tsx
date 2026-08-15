@@ -804,7 +804,10 @@ function TradePage() {
       {pro ? (
         <div className="min-h-0 flex-1 overflow-hidden">
           <ExchangeTerminal
+            dockSize={dockSize}
+            onDockSize={setDockSize}
             periods={periodNodes}
+
             markets={
               <TradePairSearch
                 mode={mode}

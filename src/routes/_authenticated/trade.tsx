@@ -660,7 +660,7 @@ function TradePage() {
       market={market}
       tab={dockTab}
       onTab={setDockTab}
-      positions={mode === "futures" ? marketPositions : []}
+      positions={mode === "futures" ? openPositions : []}
       markPrice={price}
       onClosePosition={requestClosePosition}
       closingId={closeM.isPending ? closeM.variables : null}
@@ -668,7 +668,8 @@ function TradePage() {
       expanded={pro ? true : dockExpanded}
       onExpanded={pro ? undefined : setDockExpanded}
       size={dockSize}
-      onSize={pro ? undefined : setDockSize}
+      onSize={setDockSize}
+
 
       openOrders={openOrdersQ.data ?? []}
       orderHistory={orderHistQ.data ?? []}

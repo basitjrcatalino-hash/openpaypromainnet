@@ -502,7 +502,10 @@ function TradePage() {
         notifySuccess(spotSide === "buy" ? "Spot buy filled" : "Spot sell filled", {
           sound: spotSide === "buy" ? "receive" : "send",
         });
+        setDockTab("tradeHistory");
+        setDockExpanded(true);
       }
+
       setAmount("");
       setPct(0);
       void qc.invalidateQueries({ queryKey: ["account-balances"] });

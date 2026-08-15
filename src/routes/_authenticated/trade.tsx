@@ -420,13 +420,18 @@ function TradePage() {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       notifySuccess("Position opened from Trading", { sound: "send" });
       setAmount("");
       setPct(0);
-      void qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      setDockTab("positions");
+      setDockExpanded(true);
+      await qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      void posQ.refetch();
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      void qc.invalidateQueries({ queryKey: ["spot-trade-history"] });
     },
+
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -497,7 +502,10 @@ function TradePage() {
         notifySuccess(spotSide === "buy" ? "Spot buy filled" : "Spot sell filled", {
           sound: spotSide === "buy" ? "receive" : "send",
         });
+        setDockTab("tradeHistory");
+        setDockExpanded(true);
       }
+
       setAmount("");
       setPct(0);
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
@@ -654,21 +662,31 @@ function TradePage() {
     />
   );
 
+  const priceByMarket: Record<string, number> = {};
+  for (const p of openPositions) {
+    const q = quoteByMarket(quotesQ.data, p.market);
+    const px = Number(q?.markPrice || q?.price || 0);
+    if (px > 0) priceByMarket[p.market] = px;
+  }
+
   const dockNode = (
     <TradeBottomDock
       mode={mode}
       market={market}
       tab={dockTab}
       onTab={setDockTab}
-      positions={mode === "futures" ? marketPositions : []}
+      positions={mode === "futures" ? openPositions : []}
       markPrice={price}
+      priceByMarket={priceByMarket}
+
       onClosePosition={requestClosePosition}
       closingId={closeM.isPending ? closeM.variables : null}
       onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}
       expanded={pro ? true : dockExpanded}
       onExpanded={pro ? undefined : setDockExpanded}
       size={dockSize}
-      onSize={pro ? undefined : setDockSize}
+      onSize={setDockSize}
+
 
       openOrders={openOrdersQ.data ?? []}
       orderHistory={orderHistQ.data ?? []}
@@ -804,7 +822,10 @@ function TradePage() {
       {pro ? (
         <div className="min-h-0 flex-1 overflow-hidden">
           <ExchangeTerminal
+            dockSize={dockSize}
+            onDockSize={setDockSize}
             periods={periodNodes}
+
             markets={
               <TradePairSearch
                 mode={mode}

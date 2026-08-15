@@ -40,6 +40,7 @@ export function TradeBottomDock({
   onTab,
   positions,
   markPrice,
+  priceByMarket,
   onClosePosition,
   closingId,
   onGoTrade,
@@ -61,6 +62,7 @@ export function TradeBottomDock({
   onTab: (t: DockTab) => void;
   positions: PerpPosition[];
   markPrice: number;
+  priceByMarket?: Partial<Record<string, number>>;
   onClosePosition: (id: string) => void;
   closingId?: string | null;
   onGoTrade?: () => void;
@@ -76,6 +78,7 @@ export function TradeBottomDock({
   onCancelOrder?: (id: string) => void;
   cancellingId?: string | null;
 }) {
+
   const open = positions.filter((p) => p.status === "open");
   const isExpanded = expanded ?? true;
   const openCount = mode === "spot" ? openOrders.length : open.length;
@@ -308,7 +311,8 @@ export function TradeBottomDock({
                     side: p.side,
                     sizeUsd: p.size_usd,
                     entryPrice: p.entry_price,
-                    markPrice,
+                    markPrice: Number(priceByMarket?.[p.market] ?? markPrice) || markPrice,
+
                     margin: p.margin,
                   });
                   return (

@@ -15,6 +15,8 @@ export function ExchangeTerminal({
   dock,
   periods,
   className,
+  dockSize: dockSizeProp,
+  onDockSize,
 }: {
   markets: ReactNode;
   chart: (height: number) => ReactNode;
@@ -24,11 +26,18 @@ export function ExchangeTerminal({
   dock: ReactNode;
   periods?: ReactNode;
   className?: string;
+  dockSize?: "sm" | "md" | "full";
+  onDockSize?: (s: "sm" | "md" | "full") => void;
 }) {
   const chartHost = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(420);
   // OKX-style resizable bottom dock (orders / trades / positions)
-  const [dockSize, setDockSize] = useState<"sm" | "md" | "full">("md");
+  const [dockSizeLocal, setDockSizeLocal] = useState<"sm" | "md" | "full">("md");
+  const dockSize = dockSizeProp ?? dockSizeLocal;
+  const setDockSize = (s: "sm" | "md" | "full") => {
+    setDockSizeLocal(s);
+    onDockSize?.(s);
+  };
 
   useEffect(() => {
     const el = chartHost.current;
@@ -39,6 +48,7 @@ export function ExchangeTerminal({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
 
   return (
     <div

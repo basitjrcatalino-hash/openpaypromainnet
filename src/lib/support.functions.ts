@@ -182,12 +182,16 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
       const text = (result.text ?? "").trim();
       if (!text) return { aiReplied: false };
 
-      await supabase.from("support_messages").insert({
+      // RLS only lets a customer insert their own role='user' rows, so the
+      // assistant reply is written with the privileged server client.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: aiErr } = await supabaseAdmin.from("support_messages").insert({
         ticket_id: data.ticketId,
         sender_id: null,
         role: "ai",
         body: text,
       });
+      if (aiErr) return { aiReplied: false };
       return { aiReplied: true };
     } catch {
       return { aiReplied: false };

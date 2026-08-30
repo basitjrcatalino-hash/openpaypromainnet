@@ -47,6 +47,12 @@ import {
   processSpotOrders,
 } from "@/lib/spot-orders.functions";
 import { limitIsMarketable, type SpotOrder } from "@/lib/spot-orders";
+import { isTriggerKind } from "@/lib/trade-advanced";
+import {
+  placeTriggerOrder,
+  processTriggerOrders,
+  setPositionTpSl,
+} from "@/lib/trade-advanced.functions";
 import {
   isPerpMarket,
   marketToMajorId,
@@ -120,6 +126,9 @@ function TradePage() {
   const listOrders = useServerFn(listSpotOrders);
   const processOrders = useServerFn(processSpotOrders);
   const listTradeHist = useServerFn(listSpotTradeHistory);
+  const placeTrigger = useServerFn(placeTriggerOrder);
+  const processTriggers = useServerFn(processTriggerOrders);
+  const setTpSl = useServerFn(setPositionTpSl);
 
   const initialMarket: PerpMarket =
     search.market && isPerpMarket(search.market)
@@ -179,6 +188,8 @@ function TradePage() {
   const [tpPrice, setTpPrice] = useState("");
   const [slPrice, setSlPrice] = useState("");
   const [useTpsl, setUseTpsl] = useState(false);
+  const [triggerPrice, setTriggerPrice] = useState("");
+  const [trailPercent, setTrailPercent] = useState("");
 
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
@@ -401,6 +412,58 @@ function TradePage() {
     }
   }
 
+  /** Place a resting stop / trailing-stop order instead of executing now. */
+  async function submitTriggerOrder(side: "buy" | "sell") {
+    const qty = Number(amount);
+    if (!(qty > 0)) throw new Error("Enter an amount");
+    const trig = Number(triggerPrice);
+    const trail = Number(trailPercent);
+    if (orderType !== "trailing_stop" && !(trig > 0)) {
+      throw new Error("Enter a trigger price");
+    }
+    if (orderType === "trailing_stop" && !(trail > 0)) {
+      throw new Error("Enter a trail distance (%)");
+    }
+    if (orderType === "stop_limit" && !(Number(limitPrice) > 0)) {
+      throw new Error("Enter a limit price");
+    }
+    return placeTrigger({
+      data: {
+        market,
+        side,
+        order_type: orderType as "stop_limit" | "stop_market" | "trailing_stop",
+        amount: qty,
+        pay_asset: payAsset,
+        ...(orderType === "trailing_stop"
+          ? { trail_percent: trail, trail_ref: price > 0 ? price : undefined }
+          : {
+              trigger_price: trig,
+              trigger_direction: (side === "buy" ? "above" : "below") as
+                | "above"
+                | "below",
+            }),
+        ...(orderType === "stop_limit" ? { price: Number(limitPrice) } : {}),
+      },
+    });
+  }
+
+  function onTriggerPlaced() {
+    notifySuccess("Trigger order placed — waiting for trigger", { sound: "send" });
+    setAmount("");
+    setPct(0);
+    setDockTab("orders");
+    setDockExpanded(true);
+    void qc.invalidateQueries({ queryKey: ["spot-orders-open"] });
+    void qc.invalidateQueries({ queryKey: ["spot-orders-history"] });
+    void processTriggers({ data: { market } }).catch(() => undefined);
+  }
+
+  const triggerM = useMutation({
+    mutationFn: (side: "buy" | "sell") => submitTriggerOrder(side),
+    onSuccess: onTriggerPlaced,
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const openM = useMutation({
     mutationFn: (side: PerpSide) => {
       const lev = side === "short" ? shortLeverage : leverage;
@@ -420,7 +483,19 @@ function TradePage() {
         },
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (pos: unknown) => {
+      const id = (pos as { id?: string } | null)?.id;
+      const tp = Number(tpPrice);
+      const sl = Number(slPrice);
+      if (useTpsl && id && (tp > 0 || sl > 0)) {
+        try {
+          await setTpSl({
+            data: { id, take_profit: tp > 0 ? tp : null, stop_loss: sl > 0 ? sl : null },
+          });
+        } catch {
+          toast.error("Position opened, but TP/SL could not be set");
+        }
+      }
       notifySuccess("Position opened from Trading", { sound: "send" });
       setAmount("");
       setPct(0);
@@ -454,6 +529,11 @@ function TradePage() {
       const px =
         orderType === "limit" && Number(limitPrice) > 0 ? Number(limitPrice) : price;
       if (!(px > 0)) throw new Error("No market price");
+
+      if (isTriggerKind(orderType)) {
+        const order = await submitTriggerOrder(spotSide);
+        return { kind: "trigger" as const, order };
+      }
 
       if (orderType === "limit") {
         const order = await placeLimit({
@@ -490,6 +570,10 @@ function TradePage() {
       return { kind: "market" as const, res };
     },
     onSuccess: (result) => {
+      if (result.kind === "trigger") {
+        onTriggerPlaced();
+        return;
+      }
       if (result.kind === "limit") {
         if (result.order.status === "filled") {
           notifySuccess("Limit filled", { sound: "receive" });
@@ -547,6 +631,10 @@ function TradePage() {
         return;
       }
       setCloseTarget(pos);
+      return;
+    }
+    if (isTriggerKind(orderType)) {
+      triggerM.mutate(side === "long" ? "buy" : "sell");
       return;
     }
     openM.mutate(side);
@@ -607,6 +695,10 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
+        triggerPrice={triggerPrice}
+        onTriggerPrice={setTriggerPrice}
+        trailPercent={trailPercent}
+        onTrailPercent={setTrailPercent}
         onSubmitLong={() => onFuturesSubmit("long")}
         onSubmitShort={() => onFuturesSubmit("short")}
       />
@@ -642,6 +734,10 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
+        triggerPrice={triggerPrice}
+        onTriggerPrice={setTriggerPrice}
+        trailPercent={trailPercent}
+        onTrailPercent={setTrailPercent}
         onSubmit={() => spotM.mutate()}
       />
     );
@@ -924,6 +1020,10 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
+                  triggerPrice={triggerPrice}
+                  onTriggerPrice={setTriggerPrice}
+                  trailPercent={trailPercent}
+                  onTrailPercent={setTrailPercent}
                   onSubmitLong={() => onFuturesSubmit("long")}
                   onSubmitShort={() => onFuturesSubmit("short")}
                 />
@@ -959,6 +1059,10 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
+                  triggerPrice={triggerPrice}
+                  onTriggerPrice={setTriggerPrice}
+                  trailPercent={trailPercent}
+                  onTrailPercent={setTrailPercent}
                   onSubmit={() => spotM.mutate()}
                 />
               )}

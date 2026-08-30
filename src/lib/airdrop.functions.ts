@@ -178,6 +178,37 @@ const ClaimSchema = z.object({
   claim_code: z.string().trim().max(40).optional().nullable(),
 });
 
+/** Claim codes live in the service-role-only `airdrop_campaign_secrets` table. */
+async function fetchClaimCode(admin: any, campaignId: string): Promise<string | null> {
+  const { data } = await admin
+    .from("airdrop_campaign_secrets")
+    .select("claim_code")
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+  return (data?.claim_code as string | null) ?? null;
+}
+
+async function writeClaimCode(
+  admin: any,
+  campaignId: string,
+  code: string | null,
+): Promise<void> {
+  if (code) {
+    const { error } = await admin
+      .from("airdrop_campaign_secrets")
+      .upsert(
+        { campaign_id: campaignId, claim_code: code, updated_at: new Date().toISOString() },
+        { onConflict: "campaign_id" },
+      );
+    if (error) {
+      if (/duplicate|unique/i.test(error.message)) throw new Error("Claim code already exists");
+      throw new Error(error.message);
+    }
+  } else {
+    await admin.from("airdrop_campaign_secrets").delete().eq("campaign_id", campaignId);
+  }
+}
+
 export const listAirdropCampaigns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -188,7 +219,18 @@ export const listAirdropCampaigns = createServerFn({ method: "GET" })
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map((r: Record<string, unknown>) => mapCampaign(r, false));
+    const { data: secrets } = await db(supabaseAdmin)
+      .from("airdrop_campaign_secrets")
+      .select("campaign_id, claim_code");
+    const codes = new Map<string, string>(
+      (secrets ?? []).map((s: { campaign_id: string; claim_code: string }) => [
+        s.campaign_id,
+        s.claim_code,
+      ]),
+    );
+    return (data ?? []).map((r: Record<string, unknown>) =>
+      mapCampaign({ ...r, claim_code: codes.get(String(r.id)) ?? null }, false),
+    );
   });
 
 export const createAirdropCampaign = createServerFn({ method: "POST" })
@@ -227,7 +269,6 @@ export const createAirdropCampaign = createServerFn({ method: "POST" })
       asset: data.asset,
       amount_per_claim: round8(data.amount_per_claim),
       claim_mode: data.claim_mode,
-      claim_code: claimCode,
       status: data.status ?? "draft",
       starts_at: data.starts_at || null,
       ends_at: data.ends_at || null,
@@ -253,7 +294,8 @@ export const createAirdropCampaign = createServerFn({ method: "POST" })
       }
       throw new Error(error.message);
     }
-    return mapCampaign(created as Record<string, unknown>, false);
+    await writeClaimCode(db(supabaseAdmin), String((created as { id: string }).id), claimCode);
+    return mapCampaign({ ...(created as Record<string, unknown>), claim_code: claimCode }, false);
   });
 
 export const updateAirdropCampaign = createServerFn({ method: "POST" })
@@ -276,11 +318,12 @@ export const updateAirdropCampaign = createServerFn({ method: "POST" })
       patch.amount_per_claim = round8(rest.amount_per_claim);
     }
     if (rest.claim_mode != null) patch.claim_mode = rest.claim_mode;
-    if (rest.claim_code !== undefined) {
-      patch.claim_code = rest.claim_code?.trim()
-        ? rest.claim_code.trim().toUpperCase()
-        : null;
-    }
+    const nextCode =
+      rest.claim_code === undefined
+        ? undefined
+        : rest.claim_code?.trim()
+          ? rest.claim_code.trim().toUpperCase()
+          : null;
     if (rest.status != null) patch.status = rest.status;
     if (rest.starts_at !== undefined) patch.starts_at = rest.starts_at || null;
     if (rest.ends_at !== undefined) patch.ends_at = rest.ends_at || null;
@@ -303,7 +346,7 @@ export const updateAirdropCampaign = createServerFn({ method: "POST" })
     if (rest.badge !== undefined) patch.badge = rest.badge?.trim() || null;
 
     const mode = (patch.claim_mode as string | undefined) ?? undefined;
-    const code = patch.claim_code as string | null | undefined;
+    const code = nextCode;
     if (mode === "code" && (code === null || code === "")) {
       throw new Error("Claim code is required for code campaigns");
     }
@@ -322,7 +365,12 @@ export const updateAirdropCampaign = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
     if (!updated) throw new Error("Campaign not found");
-    return mapCampaign(updated as Record<string, unknown>, false);
+    if (nextCode !== undefined) await writeClaimCode(db(supabaseAdmin), id, nextCode);
+    const existingCode = nextCode !== undefined ? nextCode : await fetchClaimCode(db(supabaseAdmin), id);
+    return mapCampaign(
+      { ...(updated as Record<string, unknown>), claim_code: existingCode },
+      false,
+    );
   });
 
 export const setAirdropStatus = createServerFn({ method: "POST" })
@@ -400,7 +448,7 @@ export const claimAirdrop = createServerFn({ method: "POST" })
 
     if (campaign.claim_mode === "code") {
       const entered = (data.claim_code ?? "").trim().toUpperCase();
-      const expected = String(campaign.claim_code ?? "").toUpperCase();
+      const expected = String((await fetchClaimCode(admin, campaign.id)) ?? "").toUpperCase();
       if (!entered || entered !== expected) {
         throw new Error("Invalid claim code");
       }

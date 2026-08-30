@@ -8,21 +8,30 @@ import {
 } from "react";
 
 type ChromeVisibleApi = {
+  /** Header visibility (scroll up shows, scroll down hides). */
+  headerVisible: boolean;
+  /** Footer visibility (scroll up shows, scroll down hides). */
+  footerVisible: boolean;
+  /** @deprecated Use headerVisible or footerVisible. */
   visible: boolean;
   /** Temporarily force-hide header/tabbar (e.g. Trade Long/Short menu). */
   setForceHidden: (hidden: boolean) => void;
 };
 
 const ChromeVisibleContext = createContext<ChromeVisibleApi>({
+  headerVisible: true,
+  footerVisible: true,
   visible: true,
   setForceHidden: () => {},
 });
 
 export function ChromeVisibleProvider({
-  value,
+  headerVisible,
+  footerVisible,
   children,
 }: {
-  value: boolean;
+  headerVisible: boolean;
+  footerVisible: boolean;
   children: ReactNode;
 }) {
   const [forceHidden, setForceHiddenState] = useState(false);
@@ -32,15 +41,27 @@ export function ChromeVisibleProvider({
 
   const api = useMemo<ChromeVisibleApi>(
     () => ({
-      visible: forceHidden ? false : value,
+      headerVisible: forceHidden ? false : headerVisible,
+      footerVisible: forceHidden ? false : footerVisible,
+      visible: forceHidden ? false : headerVisible,
       setForceHidden,
     }),
-    [forceHidden, value, setForceHidden],
+    [forceHidden, headerVisible, footerVisible, setForceHidden],
   );
 
   return (
     <ChromeVisibleContext.Provider value={api}>{children}</ChromeVisibleContext.Provider>
   );
+}
+
+/** True when header should be shown. */
+export function useHeaderVisible() {
+  return useContext(ChromeVisibleContext).headerVisible;
+}
+
+/** True when footer/tabbar should be shown. */
+export function useFooterVisible() {
+  return useContext(ChromeVisibleContext).footerVisible;
 }
 
 /** True when header + tabbar should be shown. */
@@ -52,3 +73,4 @@ export function useChromeVisible() {
 export function useChromeForceHidden() {
   return useContext(ChromeVisibleContext).setForceHidden;
 }
+

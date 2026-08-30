@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftRight, Compass, LayoutGrid, Orbit, PieChart } from "lucide-react";
-import { useChromeVisible } from "@/hooks/chrome-visible";
+import { useFooterVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -21,8 +21,9 @@ export function ExchangeTabBar({
   pathname: string;
   mobileOpen: boolean;
 }) {
-  const chromeVisible = useChromeVisible();
-  const hidden = mobileOpen || !chromeVisible;
+  const footerVisible = useFooterVisible();
+  const hidden = mobileOpen || !footerVisible;
+
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);

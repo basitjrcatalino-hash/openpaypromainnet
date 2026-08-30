@@ -345,7 +345,7 @@ function MobileTabBar({
   mobileOpen: boolean;
   t: (key: string) => string;
 }) {
-  const chromeVisible = useChromeVisible();
+  const footerVisible = useFooterVisible();
   const [moreOpen, setMoreOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const { developerMode } = useDeveloperMode();
@@ -362,13 +362,14 @@ function MobileTabBar({
       <nav
         className={cn(
           "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
-          chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
-          (!chromeVisible || mobileOpen) && "pointer-events-none",
+          footerVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
+          (!footerVisible || mobileOpen) && "pointer-events-none",
           mobileOpen && "opacity-0",
         )}
         aria-label="Primary"
-        aria-hidden={mobileOpen || !chromeVisible}
+        aria-hidden={mobileOpen || !footerVisible}
       >
+
         <div
           className="mx-auto flex max-w-md items-center justify-around px-1"
           style={{ height: "var(--ph-tabbar-content)" }}

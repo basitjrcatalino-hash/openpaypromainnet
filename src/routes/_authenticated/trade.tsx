@@ -47,6 +47,12 @@ import {
   processSpotOrders,
 } from "@/lib/spot-orders.functions";
 import { limitIsMarketable, type SpotOrder } from "@/lib/spot-orders";
+import { isTriggerKind } from "@/lib/trade-advanced";
+import {
+  placeTriggerOrder,
+  processTriggerOrders,
+  setPositionTpSl,
+} from "@/lib/trade-advanced.functions";
 import {
   isPerpMarket,
   marketToMajorId,
@@ -120,6 +126,9 @@ function TradePage() {
   const listOrders = useServerFn(listSpotOrders);
   const processOrders = useServerFn(processSpotOrders);
   const listTradeHist = useServerFn(listSpotTradeHistory);
+  const placeTrigger = useServerFn(placeTriggerOrder);
+  const processTriggers = useServerFn(processTriggerOrders);
+  const setTpSl = useServerFn(setPositionTpSl);
 
   const initialMarket: PerpMarket =
     search.market && isPerpMarket(search.market)
@@ -179,6 +188,8 @@ function TradePage() {
   const [tpPrice, setTpPrice] = useState("");
   const [slPrice, setSlPrice] = useState("");
   const [useTpsl, setUseTpsl] = useState(false);
+  const [triggerPrice, setTriggerPrice] = useState("");
+  const [trailPercent, setTrailPercent] = useState("");
 
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
@@ -607,6 +618,10 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
+        triggerPrice={triggerPrice}
+        onTriggerPrice={setTriggerPrice}
+        trailPercent={trailPercent}
+        onTrailPercent={setTrailPercent}
         onSubmitLong={() => onFuturesSubmit("long")}
         onSubmitShort={() => onFuturesSubmit("short")}
       />
@@ -642,6 +657,10 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
+        triggerPrice={triggerPrice}
+        onTriggerPrice={setTriggerPrice}
+        trailPercent={trailPercent}
+        onTrailPercent={setTrailPercent}
         onSubmit={() => spotM.mutate()}
       />
     );
@@ -924,6 +943,10 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
+                  triggerPrice={triggerPrice}
+                  onTriggerPrice={setTriggerPrice}
+                  trailPercent={trailPercent}
+                  onTrailPercent={setTrailPercent}
                   onSubmitLong={() => onFuturesSubmit("long")}
                   onSubmitShort={() => onFuturesSubmit("short")}
                 />
@@ -959,6 +982,10 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
+                  triggerPrice={triggerPrice}
+                  onTriggerPrice={setTriggerPrice}
+                  trailPercent={trailPercent}
+                  onTrailPercent={setTrailPercent}
                   onSubmit={() => spotM.mutate()}
                 />
               )}

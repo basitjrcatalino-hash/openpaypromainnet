@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Input } from "@/components/ui/input";
-import { useChromeVisible } from "@/hooks/chrome-visible";
+import { useFooterVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
+
 
 type ExploreDockProps = {
   query: string;
@@ -32,17 +33,19 @@ export function ExploreDock({
   className,
 }: ExploreDockProps) {
   const [mounted, setMounted] = useState(false);
-  const chromeVisible = useChromeVisible();
+  const footerVisible = useFooterVisible();
   useEffect(() => setMounted(true), []);
+
   if (!mounted) return null;
 
   return createPortal(
     <div
       className={cn(
         "ph-dock md:hidden transition-transform duration-300 ease-out",
-        chromeVisible ? "translate-y-0" : "translate-y-[calc(100%+1rem)]",
-        !chromeVisible && "pointer-events-none",
+        footerVisible ? "translate-y-0" : "translate-y-[calc(100%+1rem)]",
+        !footerVisible && "pointer-events-none",
         className,
+
       )}
       role="search"
     >

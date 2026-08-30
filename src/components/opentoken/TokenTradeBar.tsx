@@ -2,8 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { useChromeVisible } from "@/hooks/chrome-visible";
+import { useFooterVisible } from "@/hooks/chrome-visible";
 import { formatOUSD, formatPct } from "@/lib/wallet-utils";
+
 import { cn } from "@/lib/utils";
 
 type TokenTradeBarProps = {
@@ -18,8 +19,9 @@ type TokenTradeBarProps = {
  */
 export function TokenTradeBar({ price, change, onBuy }: TokenTradeBarProps) {
   const [mounted, setMounted] = useState(false);
-  const chromeVisible = useChromeVisible();
+  const footerVisible = useFooterVisible();
   const up = change >= 0;
+
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
@@ -29,9 +31,10 @@ export function TokenTradeBar({ price, change, onBuy }: TokenTradeBarProps) {
       className={cn(
         "ph-trade-bar border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur-xl lg:hidden",
         "transition-[transform,bottom] duration-300 ease-out",
-        chromeVisible ? "translate-y-0" : "translate-y-full",
+        footerVisible ? "translate-y-0" : "translate-y-full",
       )}
-      data-chrome={chromeVisible ? "visible" : "hidden"}
+      data-chrome={footerVisible ? "visible" : "hidden"}
+
     >
       <div className="mx-auto flex max-w-lg items-center gap-3">
         <div className="min-w-0 flex-1">

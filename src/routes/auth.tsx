@@ -5,7 +5,6 @@ import { ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
 import { Button } from "@/components/ui/button";
-import { startPiSignIn } from "@/lib/pi-signin";
 
 const POST_AUTH_KEY = "post_auth_redirect";
 
@@ -175,32 +174,6 @@ function OpenPayAuthPage() {
                 <ChevronRight className="h-4 w-4" />
               </span>
             )}
-          </Button>
-
-          <div className="my-4 flex items-center gap-3">
-            <span className="h-px flex-1 bg-white/10" />
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">or</span>
-            <span className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              try {
-                startPiSignIn({ redirectTo: postAuthTarget() });
-              } catch (err) {
-                toast.error((err as Error).message || "Could not start Pi sign-in");
-              }
-            }}
-            className="h-12 w-full rounded-xl border-white/12 bg-white/5 text-base font-semibold hover:bg-white/10"
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-[#7d4bd1] text-sm font-bold text-white">
-                &#960;
-              </span>
-              Continue with Pi Network
-            </span>
           </Button>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">

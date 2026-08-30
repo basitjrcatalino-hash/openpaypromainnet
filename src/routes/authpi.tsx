@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronRight, Loader2, Mail, ShieldCheck } from "lucide-react";
@@ -120,7 +120,6 @@ const METHODS: {
 ];
 
 function AuthPiPage() {
-  const navigate = useNavigate();
   const search = Route.useSearch();
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<AuthMethod>(
@@ -287,7 +286,6 @@ function AuthPiPage() {
           </p>
         </div>
       </div>
-      <span className="sr-only">{navigate ? "" : ""}</span>
     </div>
   );
 }

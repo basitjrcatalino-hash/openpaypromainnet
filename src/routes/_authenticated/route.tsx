@@ -560,8 +560,10 @@ function AuthenticatedLayout() {
   const isP2p = pathname.startsWith("/p2p");
   const isHome =
     pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/" || pathname === "";
-  const chromeVisible = useChromeScroll(10, pathname);
+  const headerVisible = useChromeScroll(10, pathname);
+  const footerVisible = useFooterScroll(6, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
+
   const [headerSwitchOpen, setHeaderSwitchOpen] = useState(false);
   const [headerSwitching, setHeaderSwitching] = useState(false);
   const txNotes = useTransactionNotifications(user.id);

@@ -93,8 +93,14 @@ import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { walletLedgerUsd } from "@/lib/wallet-portfolio";
 import { fetchMajorMarkets } from "@/lib/major-tokens";
-import { ChromeVisibleProvider, useChromeVisible } from "@/hooks/chrome-visible";
+import {
+  ChromeVisibleProvider,
+  useHeaderVisible,
+  useFooterVisible,
+} from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
+import { useFooterScroll } from "@/hooks/use-footer-scroll";
+
 import { P2pShell } from "@/components/p2p/P2pShell";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";
@@ -279,14 +285,15 @@ function MobileAppHeader({
   walletLoading?: boolean;
   onOpenWalletSwitcher?: () => void;
 }) {
-  const chromeVisible = useChromeVisible();
+  const headerVisible = useHeaderVisible();
   return (
     <header
       className={cn(
         "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1 px-2 py-2 transition-transform duration-300 ease-out md:hidden",
-        chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
+        headerVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
       )}
     >
+
       <button
         onClick={onToggleMenu}
         className="justify-self-start rounded-full p-2 text-primary press"
@@ -338,7 +345,7 @@ function MobileTabBar({
   mobileOpen: boolean;
   t: (key: string) => string;
 }) {
-  const chromeVisible = useChromeVisible();
+  const footerVisible = useFooterVisible();
   const [moreOpen, setMoreOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const { developerMode } = useDeveloperMode();
@@ -355,13 +362,14 @@ function MobileTabBar({
       <nav
         className={cn(
           "ph-tabbar fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out md:hidden",
-          chromeVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
-          (!chromeVisible || mobileOpen) && "pointer-events-none",
+          footerVisible && !mobileOpen ? "translate-y-0" : "translate-y-full",
+          (!footerVisible || mobileOpen) && "pointer-events-none",
           mobileOpen && "opacity-0",
         )}
         aria-label="Primary"
-        aria-hidden={mobileOpen || !chromeVisible}
+        aria-hidden={mobileOpen || !footerVisible}
       >
+
         <div
           className="mx-auto flex max-w-md items-center justify-around px-1"
           style={{ height: "var(--ph-tabbar-content)" }}
@@ -552,8 +560,10 @@ function AuthenticatedLayout() {
   const isP2p = pathname.startsWith("/p2p");
   const isHome =
     pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/" || pathname === "";
-  const chromeVisible = useChromeScroll(10, pathname);
+  const headerVisible = useChromeScroll(10, pathname);
+  const footerVisible = useFooterScroll(6, pathname);
   const [notifOpen, setNotifOpen] = useState(false);
+
   const [headerSwitchOpen, setHeaderSwitchOpen] = useState(false);
   const [headerSwitching, setHeaderSwitching] = useState(false);
   const txNotes = useTransactionNotifications(user.id);
@@ -638,7 +648,11 @@ function AuthenticatedLayout() {
       <AppMoonPayProvider>
         <AppPhantomProvider>
           <CurrencyProvider>
-            <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
+            <ChromeVisibleProvider
+              headerVisible={hideChrome ? true : headerVisible}
+              footerVisible={hideChrome ? true : footerVisible}
+            >
+
               <div className="relative min-h-screen bg-background text-foreground">
                 {!hideChrome && (
                   <>

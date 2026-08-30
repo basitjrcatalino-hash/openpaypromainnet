@@ -10,8 +10,9 @@ import type {
   TokenInsightList,
   TokenInsightNews,
 } from "@/lib/token-insights.functions";
-import { useChromeVisible } from "@/hooks/chrome-visible";
+import { useFooterVisible } from "@/hooks/chrome-visible";
 import { cn } from "@/lib/utils";
+
 import { formatUSD } from "@/lib/wallet-utils";
 
 /** Official OKX mark — five squares in an X */
@@ -317,8 +318,9 @@ export function PhantomAssetTradeBar({
   onTrade: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const chromeVisible = useChromeVisible();
+  const footerVisible = useFooterVisible();
   useEffect(() => setMounted(true), []);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -326,9 +328,10 @@ export function PhantomAssetTradeBar({
       className={cn(
         "ph-trade-bar border-t border-border/50 bg-background/95 px-4 py-3 backdrop-blur-xl",
         "transition-[transform,bottom] duration-300 ease-out",
-        chromeVisible ? "translate-y-0" : "translate-y-full",
+        footerVisible ? "translate-y-0" : "translate-y-full",
       )}
-      data-chrome={chromeVisible ? "visible" : "hidden"}
+      data-chrome={footerVisible ? "visible" : "hidden"}
+
     >
       <div className="mx-auto flex max-w-lg items-center gap-3">
         <div className="min-w-0 flex-1 text-sm font-medium text-foreground">

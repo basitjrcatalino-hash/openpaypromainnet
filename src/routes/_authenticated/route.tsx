@@ -648,7 +648,11 @@ function AuthenticatedLayout() {
       <AppMoonPayProvider>
         <AppPhantomProvider>
           <CurrencyProvider>
-            <ChromeVisibleProvider value={hideChrome ? true : chromeVisible}>
+            <ChromeVisibleProvider
+              headerVisible={hideChrome ? true : headerVisible}
+              footerVisible={hideChrome ? true : footerVisible}
+            >
+
               <div className="relative min-h-screen bg-background text-foreground">
                 {!hideChrome && (
                   <>

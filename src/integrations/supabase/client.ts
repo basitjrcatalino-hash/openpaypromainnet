@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { brokeredPreviewStorage } from './previewAuthStorage';
 import {
   getSupabasePublishableKey,
   getSupabaseUrl,
@@ -50,7 +51,7 @@ function createSupabaseClient() {
       fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
     },
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storage: brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
     }

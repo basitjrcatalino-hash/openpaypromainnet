@@ -285,14 +285,15 @@ function MobileAppHeader({
   walletLoading?: boolean;
   onOpenWalletSwitcher?: () => void;
 }) {
-  const chromeVisible = useChromeVisible();
+  const headerVisible = useHeaderVisible();
   return (
     <header
       className={cn(
         "ph-header safe-pt fixed inset-x-0 top-0 z-40 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1 px-2 py-2 transition-transform duration-300 ease-out md:hidden",
-        chromeVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
+        headerVisible ? "translate-y-0" : "-translate-y-full pointer-events-none",
       )}
     >
+
       <button
         onClick={onToggleMenu}
         className="justify-self-start rounded-full p-2 text-primary press"

@@ -22,6 +22,6 @@ export const Route = createFileRoute("/")({
         await supabase.auth.signOut({ scope: "local" });
       }
     }
-    throw redirect({ to: "/authpi" });
+    throw redirect({ to: "/auth" });
   },
 });

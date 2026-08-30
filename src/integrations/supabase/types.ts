@@ -55,12 +55,37 @@ export type Database = {
           },
         ]
       }
+      airdrop_campaign_secrets: {
+        Row: {
+          campaign_id: string
+          claim_code: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          claim_code: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          claim_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airdrop_campaign_secrets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "airdrop_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       airdrop_campaigns: {
         Row: {
           amount_per_claim: number
           asset: string
           badge: string | null
-          claim_code: string | null
           claim_mode: Database["public"]["Enums"]["airdrop_claim_mode"]
           claimed_count: number
           cover_url: string | null
@@ -87,7 +112,6 @@ export type Database = {
           amount_per_claim: number
           asset: string
           badge?: string | null
-          claim_code?: string | null
           claim_mode?: Database["public"]["Enums"]["airdrop_claim_mode"]
           claimed_count?: number
           cover_url?: string | null
@@ -114,7 +138,6 @@ export type Database = {
           amount_per_claim?: number
           asset?: string
           badge?: string | null
-          claim_code?: string | null
           claim_mode?: Database["public"]["Enums"]["airdrop_claim_mode"]
           claimed_count?: number
           cover_url?: string | null

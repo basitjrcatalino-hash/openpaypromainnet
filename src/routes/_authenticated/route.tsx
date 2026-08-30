@@ -93,8 +93,14 @@ import { WalletAvatar } from "@/components/wallet/WalletAvatar";
 import { CurrencyPickerSheet } from "@/components/wallet/CurrencyPickerSheet";
 import { walletLedgerUsd } from "@/lib/wallet-portfolio";
 import { fetchMajorMarkets } from "@/lib/major-tokens";
-import { ChromeVisibleProvider, useChromeVisible } from "@/hooks/chrome-visible";
+import {
+  ChromeVisibleProvider,
+  useHeaderVisible,
+  useFooterVisible,
+} from "@/hooks/chrome-visible";
 import { useChromeScroll } from "@/hooks/use-chrome-scroll";
+import { useFooterScroll } from "@/hooks/use-footer-scroll";
+
 import { P2pShell } from "@/components/p2p/P2pShell";
 import { AppMoonPayProvider } from "@/components/moonpay-provider";
 import { AppPhantomProvider } from "@/components/phantom-provider";

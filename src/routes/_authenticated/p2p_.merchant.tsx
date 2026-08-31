@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { MerchantBadge, MerchantTierLabel } from "@/components/p2p/MerchantBadge";
 import { P2pMenuCard, P2pHubLayout, P2pHubPill } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
-import { getKycStatus } from "@/lib/kyc.functions";
 import {
   applyMerchant,
   cancelMerchantApplication,
@@ -45,7 +44,6 @@ export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
 
 function MerchantPage() {
   const qc = useQueryClient();
-  const fetchKyc = useServerFn(getKycStatus);
   const [note, setNote] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [merchantRegion, setMerchantRegion] = useState("");

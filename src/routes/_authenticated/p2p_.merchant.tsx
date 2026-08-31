@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { MerchantBadge, MerchantTierLabel } from "@/components/p2p/MerchantBadge";
 import { P2pMenuCard, P2pHubLayout, P2pHubPill } from "@/components/p2p/P2pSubpage";
 import { supabase } from "@/integrations/supabase/client";
-import { getKycStatus } from "@/lib/kyc.functions";
 import {
   applyMerchant,
   cancelMerchantApplication,
@@ -45,7 +44,6 @@ export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
 
 function MerchantPage() {
   const qc = useQueryClient();
-  const fetchKyc = useServerFn(getKycStatus);
   const [note, setNote] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [merchantRegion, setMerchantRegion] = useState("");
@@ -69,21 +67,14 @@ function MerchantPage() {
     enabled: !!userQ.data,
     queryFn: fetchMerchantProgramStatus,
   });
-  const kycQ = useQuery({
-    queryKey: ["kyc-status", userQ.data],
-    enabled: !!userQ.data,
-    queryFn: () => fetchKyc(),
-  });
-
   const merchant = merchantQ.data;
   const canList = merchantCanList(merchant);
   const hasVerified = merchantHasVerifiedBadge(merchant) || !!programQ.data?.has_verified_badge;
   const pending = appQ.data?.status === "pending" ? appQ.data : null;
-  const kycOk = (kycQ.data as { kyc_status?: string } | undefined)?.kyc_status === "verified";
   const p2pOusd = Number(programQ.data?.p2p_ousd ?? 0);
   const fundedOk = p2pOusd >= MIN_P2P_OUSD;
   const detailsOk = merchantName.trim().length >= 2 && merchantRegion.trim().length >= 2;
-  const applyReady = kycOk && fundedOk && detailsOk;
+  const applyReady = fundedOk && detailsOk;
   const daysLeft = Number(programQ.data?.verified_badge_days_left ?? 0);
   const milestones = programQ.data?.milestones ?? [];
   const claimable = milestones.some((m) => m.reached && !m.claimed);
@@ -94,12 +85,6 @@ function MerchantPage() {
   }, [merchant?.merchant_name, merchant?.merchant_region, merchantName, merchantRegion]);
 
   const applyChecks = [
-    {
-      ok: kycOk,
-      label: "Complete KYC verification",
-      detail: kycOk ? "Verified" : "Required for merchant approval",
-      to: "/kyc" as const,
-    },
     {
       ok: detailsOk,
       label: "Merchant details",
@@ -251,7 +236,7 @@ function MerchantPage() {
       <div>
         <h2 className="text-xl font-bold tracking-tight">1. Become a merchant</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          KYC + details + {MIN_P2P_OUSD} OUSD in P2P, then admin review
+          Details + {MIN_P2P_OUSD} OUSD in P2P, then admin review
         </p>
         <P2pMenuCard className="mt-4">
           {applyChecks.map((c) => (

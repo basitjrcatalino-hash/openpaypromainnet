@@ -406,16 +406,7 @@ export const claimAirdrop = createServerFn({ method: "POST" })
       }
     }
 
-    if (campaign.require_kyc) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("kyc_status")
-        .eq("id", userId)
-        .maybeSingle();
-      if (profile?.kyc_status !== "verified") {
-        throw new Error("Complete KYC verification before claiming this airdrop");
-      }
-    }
+    // KYC verification is disabled platform-wide — no identity gate on claims.
 
     const { fetchActiveWallet } = await import("./wallet-utils");
     const col = balanceColumn(asset);

@@ -218,7 +218,7 @@ const MORE_SECTIONS: { title: string; items: MoreItem[] }[] = [
     title: "Account",
     items: [
       { to: "/profile", label: "Profile", icon: Users, desc: "Name, username & avatar" },
-      { to: "/kyc", label: "Verification", icon: Shield, desc: "KYC status & identity" },
+      
       { to: "/airdrop", label: "Rewards", icon: Gift, desc: "Airdrops & campaigns" },
       { to: "/turnkey", label: "Turnkey", icon: KeyRound, desc: "Turnkey secure wallets" },
       { to: "/settings", label: "Settings", icon: SettingsIcon, desc: "Security & preferences" },

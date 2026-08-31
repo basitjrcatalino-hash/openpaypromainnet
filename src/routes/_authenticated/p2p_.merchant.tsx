@@ -251,7 +251,7 @@ function MerchantPage() {
       <div>
         <h2 className="text-xl font-bold tracking-tight">1. Become a merchant</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          KYC + details + {MIN_P2P_OUSD} OUSD in P2P, then admin review
+          Details + {MIN_P2P_OUSD} OUSD in P2P, then admin review
         </p>
         <P2pMenuCard className="mt-4">
           {applyChecks.map((c) => (

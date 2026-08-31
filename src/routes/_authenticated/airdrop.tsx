@@ -247,17 +247,8 @@ function AirdropCard({
           <span className="inline-flex items-center gap-2">
             <Wallet className="h-3.5 w-3.5" />
             OpenPay Pro wallet required
-            {c.require_kyc ? " · KYC verified" : ""}
             {remaining != null ? ` · ${remaining} left` : ""}
           </span>
-          {c.require_kyc ? (
-            <Link
-              to="/kyc"
-              className="font-semibold text-primary underline-offset-2 hover:underline"
-            >
-              Set up KYC
-            </Link>
-          ) : null}
         </div>
 
         {claimed ? (

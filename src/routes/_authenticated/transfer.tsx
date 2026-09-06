@@ -345,9 +345,9 @@ function PickerSheet({
   children: ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <button type="button" className="absolute inset-0" aria-label="Close" onClick={onClose} />
-      <div className="relative z-10 max-h-[70vh] w-full max-w-lg overflow-hidden rounded-t-3xl border border-border bg-card sm:rounded-3xl">
+      <div className="relative z-10 max-h-[80vh] w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold">{title}</h2>
           <button

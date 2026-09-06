@@ -21,6 +21,7 @@ export type TopupMethodKey =
   | "banxa_bank"
   | "onramp"
   | "paymongo"
+  | "paypal"
   | "scan_pay";
 
 export type TopupMethodSeed = {
@@ -161,6 +162,13 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     label: "QR Ph & e-wallets",
     description: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
     sort_order: 18,
+    enabled: true,
+  },
+  {
+    method_key: "paypal",
+    label: "PayPal",
+    description: "PayPal, Pay Later, Venmo or card · approve → OUSD",
+    sort_order: 19,
     enabled: true,
   },
   {

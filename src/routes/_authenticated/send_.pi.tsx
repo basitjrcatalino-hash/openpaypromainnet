@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ExternalLink, Loader2, Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -24,7 +24,6 @@ import {
   getPiWalletError,
   isValidPiWalletAddress,
   normalizePiWalletAddress,
-  piTxExplorerUrl,
 } from "@/lib/pi-payout";
 
 const searchSchema = z.object({
@@ -62,12 +61,6 @@ const SEND_STAGES = [
   "Confirming on network…",
 ] as const;
 
-type Receipt = {
-  amount: number;
-  to: string;
-  txid: string;
-  horizon: string | null;
-};
 
 function SendToPiWalletPage() {
   const { user } = Route.useRouteContext();
@@ -82,7 +75,7 @@ function SendToPiWalletPage() {
   const [memo, setMemo] = useState((search.memo ?? "").slice(0, 28));
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState(0);
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  
 
   const { data: wallet, isLoading: loadingBalance } = useQuery({
     queryKey: ["pi-send-wallet", user.id],
@@ -144,13 +137,18 @@ function SendToPiWalletPage() {
       const res = (await sendToPi({
         data: { to: dest, amount: Number(amountNum.toFixed(2)), memo: memo.trim().slice(0, 28) },
       })) as { pi_txid?: string; horizon?: string | null };
-      const txid = String(res.pi_txid || "");
       toast.success(`Sent ${formatNumber(amountNum, 2)} OUSD to Pi Wallet`);
-      setReceipt({ amount: amountNum, to: dest, txid, horizon: res.horizon ?? null });
-      setWalletTo("");
-      setAmount("");
-      setMemo("");
       await qc.invalidateQueries({ queryKey: ["pi-send-wallet", user.id] });
+      await qc.invalidateQueries({ queryKey: ["transactions"] });
+      void navigate({
+        to: "/pi-send-success",
+        search: {
+          amount: amountNum,
+          to: dest,
+          txid: String(res.pi_txid || ""),
+          horizon: res.horizon ?? "",
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Transfer to Pi Wallet failed");
     } finally {
@@ -337,36 +335,6 @@ function SendToPiWalletPage() {
         </div>
       ) : null}
 
-      {/* Receipt */}
-      {receipt ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-[20px] bg-ios-card p-6 text-center">
-            <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15">
-              <OusdIcon className="size-7" />
-            </span>
-            <p className="mt-3 text-[15px] text-ios-secondary">Sent to Pi Wallet</p>
-            <p className="text-2xl font-semibold tabular-nums">
-              {formatNumber(receipt.amount, 2)} OUSD
-            </p>
-            <p className="mt-1 break-all font-mono text-[11px] text-ios-secondary">
-              {receipt.to}
-            </p>
-            {receipt.txid ? (
-              <a
-                href={piTxExplorerUrl(receipt.txid, receipt.horizon)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ios-blue"
-              >
-                View on Pi Explorer <ExternalLink className="size-3.5" />
-              </a>
-            ) : null}
-            <Button className="ios-active mt-5 h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90" onClick={() => setReceipt(null)}>
-              Done
-            </Button>
-          </div>
-        </div>
-      ) : null}
     </IosPageShell>
   );
 }

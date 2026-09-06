@@ -62,12 +62,6 @@ const SEND_STAGES = [
   "Confirming on network…",
 ] as const;
 
-type Receipt = {
-  amount: number;
-  to: string;
-  txid: string;
-  horizon: string | null;
-};
 
 function SendToPiWalletPage() {
   const { user } = Route.useRouteContext();
@@ -342,36 +336,6 @@ function SendToPiWalletPage() {
         </div>
       ) : null}
 
-      {/* Receipt */}
-      {receipt ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-[20px] bg-ios-card p-6 text-center">
-            <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15">
-              <OusdIcon className="size-7" />
-            </span>
-            <p className="mt-3 text-[15px] text-ios-secondary">Sent to Pi Wallet</p>
-            <p className="text-2xl font-semibold tabular-nums">
-              {formatNumber(receipt.amount, 2)} OUSD
-            </p>
-            <p className="mt-1 break-all font-mono text-[11px] text-ios-secondary">
-              {receipt.to}
-            </p>
-            {receipt.txid ? (
-              <a
-                href={piTxExplorerUrl(receipt.txid, receipt.horizon)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ios-blue"
-              >
-                View on Pi Explorer <ExternalLink className="size-3.5" />
-              </a>
-            ) : null}
-            <Button className="ios-active mt-5 h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90" onClick={() => setReceipt(null)}>
-              Done
-            </Button>
-          </div>
-        </div>
-      ) : null}
     </IosPageShell>
   );
 }

@@ -771,47 +771,45 @@ function SendPage() {
           <SelectedChip asset={selected} onChange={() => setStep("asset")} />
 
           {selected.kind === "OUSD" && (
-            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
-              <button
-                type="button"
-                onClick={() => setRail("wallet")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "wallet"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Pro wallet
-              </button>
-              <button
-                type="button"
-                onClick={() => setRail("openpay")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "openpay"
-                    ? "bg-[#0070BA] text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                OpenPay balance
-              </button>
-              <button
-                type="button"
-                onClick={() => setRail("pi")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "pi"
-                    ? "bg-[#7B3FE4] text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Pi Wallet
-              </button>
+            <IosSegmented
+              value={rail}
+              onChange={(id) => setRail(id)}
+              options={[
+                { id: "wallet", label: "OpenPay Pro" },
+                { id: "openpay", label: "OpenPay" },
+                { id: "pi", label: "Pi Wallet" },
+              ]}
+            />
+          )}
+
+          {rail === "pi" && (
+            <div>
+              <IosSectionLabel>Ways to send</IosSectionLabel>
+              <IosSettingsGroup>
+                <button
+                  type="button"
+                  onClick={() => void navigate({ to: "/send/pi" })}
+                  className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F7931A]/15 text-[18px] font-bold text-[#F7931A]">
+                    π
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[16px] font-semibold text-ios-label">
+                      Send to Pi Wallet
+                    </span>
+                    <span className="block text-[12px] leading-snug text-ios-secondary">
+                      Credit OpenUSD (OUSD) to a Pi Wallet G-address
+                    </span>
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ios-tertiary" />
+                </button>
+              </IosSettingsGroup>
             </div>
           )}
 
-          <div className="rounded-3xl border border-border bg-card p-4">
+          <div className="rounded-[16px] bg-ios-card p-4">
+
             {rail === "openpay" && (
               <div className="mb-4 rounded-2xl border border-[#0070BA]/30 bg-[#0070BA]/10 px-3 py-3">
                 {openPayLinkLoading ? (

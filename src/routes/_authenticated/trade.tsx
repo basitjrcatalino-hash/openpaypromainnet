@@ -175,14 +175,14 @@ function TradePage() {
   const [futAction, setFutAction] = useState<"open" | "close">("open");
   const [leverage, setLeverage] = useState(3);
   const [shortLeverage, setShortLeverage] = useState(3);
-  const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("USDT");
+  const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("OUSD");
   const [tpPrice, setTpPrice] = useState("");
   const [slPrice, setSlPrice] = useState("");
   const [useTpsl, setUseTpsl] = useState(false);
 
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
-  const [payAsset, setPayAsset] = useState<SpotPay>("USDT");
+  const [payAsset, setPayAsset] = useState<SpotPay>("OUSD");
   /** Confirm close position (Phantom-style TxConfirmModal). */
   const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
 
@@ -367,7 +367,7 @@ function TradePage() {
     const spot = balQ.data.balances.spot;
     const current = Number(spot[payAsset] ?? 0) || 0;
     if (current > 0) return;
-    const preferred = (["USDT", "OUSD", "USDC"] as const).find(
+    const preferred = (["OUSD"] as const).find(
       (a) => (Number(spot[a] ?? 0) || 0) > 0,
     );
     if (preferred && preferred !== payAsset) setPayAsset(preferred);

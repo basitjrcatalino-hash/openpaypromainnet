@@ -54,8 +54,8 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
 import { useIsDesktopViewport } from "@/hooks/use-mobile";
-import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
-import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.png.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.png.asset.json";
 
 export type AssetBuyTarget = {
   id: string;

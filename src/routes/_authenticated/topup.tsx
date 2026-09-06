@@ -44,8 +44,8 @@ import {
   type LedgerTopupAsset,
 } from "@/lib/ledger-topup.functions";
 import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
-import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
-import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.png.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),

@@ -128,6 +128,8 @@ const ALL_METHODS: {
   id: PaymentMethod;
   label: string;
   logoUrl?: string;
+  /** Render logo with contain + white bg (wide/non-square brand logos) */
+  logoContain?: boolean;
   icon?: typeof CreditCard;
   helioMark?: boolean;
   desc: string;
@@ -178,13 +180,15 @@ const ALL_METHODS: {
     id: "paymongo",
     label: "QR Ph & e-wallets",
     logoUrl: qrPhLogoAsset.url,
+    logoContain: true,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "paypal",
     label: "PayPal",
     logoUrl: paypalLogoAsset.url,
-    desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
+    logoContain: true,
+    desc: "PayPal or card · approve → OUSD",
   },
   {
     id: "usdc",

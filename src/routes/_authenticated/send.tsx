@@ -45,13 +45,20 @@ import {
   type RecentRecipient,
 } from "@/lib/recent-recipients";
 import { twValidate, twRiskLabel } from "@/lib/trustwallet-client";
+import { sendOusdToPiWallet, getPiPayoutStatus } from "@/lib/pi-payout.functions";
+import {
+  PI_PAYOUT_MAX_OUSD,
+  PI_PAYOUT_MIN_OUSD,
+  isValidPiWalletAddress,
+  normalizePiWalletAddress,
+} from "@/lib/pi-payout";
 
 const sendSearchSchema = z.object({
   to: z.string().optional(),
   amount: z.string().optional(),
   asset: z.enum(LEDGER_ASSET_CODES).optional(),
   token: z.string().uuid().optional(),
-  rail: z.enum(["wallet", "openpay"]).optional(),
+  rail: z.enum(["wallet", "openpay", "pi"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/send")({
@@ -60,7 +67,7 @@ export const Route = createFileRoute("/_authenticated/send")({
   component: SendPage,
 });
 
-type Rail = "wallet" | "openpay";
+type Rail = "wallet" | "openpay" | "pi";
 type Step = "asset" | "recipient" | "amount";
 
 type SendableAsset = {
@@ -94,6 +101,7 @@ function SendPage() {
   const sendOpenPay = useServerFn(sendViaOpenPay);
   const resolveOP = useServerFn(resolveOpenPayAccount);
   const getOpenPayLink = useServerFn(getOpenPayLinkStatus);
+  const sendToPi = useServerFn(sendOusdToPiWallet);
   const startOpenPayOAuth = useServerFn(startOpenPayConnect);
 
   const [step, setStep] = useState<Step>("asset");
@@ -101,7 +109,9 @@ function SendPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [connectBusy, setConnectBusy] = useState(false);
   const [assetQuery, setAssetQuery] = useState("");
-  const [rail, setRail] = useState<Rail>(search.rail === "openpay" ? "openpay" : "wallet");
+  const [rail, setRail] = useState<Rail>(
+    search.rail === "openpay" ? "openpay" : search.rail === "pi" ? "pi" : "wallet",
+  );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [to, setTo] = useState(search.to ?? "");
   const [amount, setAmount] = useState(search.amount ?? "");
@@ -148,6 +158,12 @@ function SendPage() {
     queryFn: () => getOpenPayLink(),
   });
   const openPayLinked = !!openPayLink?.linked;
+
+  const { data: piStatus } = useQuery({
+    queryKey: ["pi-payout-status"],
+    staleTime: 5 * 60_000,
+    queryFn: () => getPiPayoutStatus(),
+  });
   const linkedOpenPayChoices = useMemo(() => {
     if (!openPayLinked || !openPayLink) return [] as Array<{ value: string; label: string }>;
     const choices: Array<{ value: string; label: string }> = [];
@@ -320,6 +336,7 @@ function SendPage() {
     }
 
     if (search.rail === "openpay") setRail("openpay");
+    else if (search.rail === "pi") setRail("pi");
     else if (search.rail === "wallet") setRail("wallet");
 
     if (search.token) {
@@ -361,7 +378,7 @@ function SendPage() {
   }, [deepLinkHandled, rail, to]);
 
   useEffect(() => {
-    if (selected?.kind !== "OUSD" && rail === "openpay") setRail("wallet");
+    if (selected?.kind !== "OUSD" && rail !== "wallet") setRail("wallet");
   }, [selected?.kind, rail]);
 
   function pickAsset(asset: SendableAsset) {
@@ -518,6 +535,16 @@ function SendPage() {
       toast.error(`Insufficient ${selected.symbol}`);
       return;
     }
+    if (rail === "pi") {
+      if (amountNum < PI_PAYOUT_MIN_OUSD) {
+        toast.error(`Minimum ${PI_PAYOUT_MIN_OUSD} OUSD to a Pi Wallet`);
+        return;
+      }
+      if (amountNum > PI_PAYOUT_MAX_OUSD) {
+        toast.error(`Maximum ${PI_PAYOUT_MAX_OUSD.toLocaleString()} OUSD per transfer`);
+        return;
+      }
+    }
     setConfirmOpen(true);
   }
 
@@ -528,6 +555,15 @@ function SendPage() {
     }
     if (!to.trim()) {
       toast.error(rail === "openpay" ? "Enter @username" : "Enter recipient");
+      return;
+    }
+    if (rail === "pi") {
+      if (!isValidPiWalletAddress(to)) {
+        toast.error("Enter a valid Pi Wallet address (56 characters, starts with G)");
+        return;
+      }
+      setTo(normalizePiWalletAddress(to));
+      setStep("amount");
       return;
     }
     if (rail === "openpay" && !opPreview && !opError) {
@@ -541,7 +577,20 @@ function SendPage() {
     if (!selected || !wallet || !amountValid) return;
     setBusy(true);
     try {
-      if (rail === "openpay") {
+      if (rail === "pi") {
+        if (selected.kind !== "OUSD") throw new Error("Pi Wallet payout supports OUSD only");
+        const res = await sendToPi({
+          data: {
+            to: normalizePiWalletAddress(to),
+            amount: amountNum,
+            memo: memo.trim().slice(0, 28) || null,
+          },
+        });
+        notifySuccess(
+          `Sent ${formatNumber(amountNum, 2)} OUSD to Pi Wallet · tx ${shortAddress(res.pi_txid, 6, 6)}`,
+          { sound: "send" },
+        );
+      } else if (rail === "openpay") {
         if (selected.kind !== "OUSD") throw new Error("OpenPay rail supports OUSD only");
         await sendOpenPay({
           data: { to: to.trim(), amount: amountNum, note: memo || null },
@@ -715,7 +764,7 @@ function SendPage() {
           <SelectedChip asset={selected} onChange={() => setStep("asset")} />
 
           {selected.kind === "OUSD" && (
-            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
               <button
                 type="button"
                 onClick={() => setRail("wallet")}
@@ -739,6 +788,18 @@ function SendPage() {
                 )}
               >
                 OpenPay balance
+              </button>
+              <button
+                type="button"
+                onClick={() => setRail("pi")}
+                className={cn(
+                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
+                  rail === "pi"
+                    ? "bg-[#7B3FE4] text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Pi Wallet
               </button>
             </div>
           )}
@@ -817,8 +878,35 @@ function SendPage() {
               </div>
             )}
 
+            {rail === "pi" && (
+              <div className="mb-4 space-y-2 rounded-2xl border border-[#7B3FE4]/30 bg-[#7B3FE4]/10 px-3 py-3 text-xs leading-relaxed">
+                <p className="font-semibold text-foreground">
+                  Paying OpenUSD on the Pi blockchain
+                </p>
+                <p className="text-muted-foreground">
+                  The recipient must open their Pi Wallet and enable the OUSD token first
+                  (Pi Wallet → Tokens → enable OUSD). Without it the transfer is rejected before
+                  any balance is touched.
+                </p>
+                <p className="text-muted-foreground">
+                  Minimum {PI_PAYOUT_MIN_OUSD} OUSD · maximum{" "}
+                  {PI_PAYOUT_MAX_OUSD.toLocaleString()} OUSD per transfer. Notes are sent on-chain
+                  and limited to 28 characters.
+                </p>
+                {piStatus && !piStatus.configured && (
+                  <p className="font-semibold text-destructive">
+                    Pi Wallet payout is temporarily unavailable.
+                  </p>
+                )}
+              </div>
+            )}
+
             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {rail === "openpay" ? "OpenPay wallet" : "Address or @username"}
+              {rail === "openpay"
+                ? "OpenPay wallet"
+                : rail === "pi"
+                  ? "Pi Wallet address"
+                  : "Address or @username"}
             </label>
             {rail === "openpay" && openPayLinked && linkedOpenPayChoices.length > 0 && (
               <div className="mb-2">
@@ -854,7 +942,11 @@ function SendPage() {
                 }}
                 onBlur={rail === "openpay" && openPayLinked ? verifyOpenPay : undefined}
                 placeholder={
-                  rail === "openpay" ? "OP… or @username" : "0x… or @username"
+                  rail === "openpay"
+                    ? "OP… or @username"
+                    : rail === "pi"
+                      ? "G… Pi Wallet address"
+                      : "0x… or @username"
                 }
                 className="h-12 rounded-2xl"
                 autoFocus={rail !== "openpay" || openPayLinked}
@@ -1028,7 +1120,9 @@ function SendPage() {
             disabled={
               rail === "openpay"
                 ? !openPayLinked || !to.trim()
-                : !to.trim()
+                : rail === "pi"
+                  ? !to.trim() || !isValidPiWalletAddress(to)
+                  : !to.trim()
             }
             onClick={continueFromRecipient}
           >
@@ -1120,20 +1214,33 @@ function SendPage() {
                   value:
                     rail === "openpay"
                       ? opPreview?.account_number || to
-                      : to.startsWith("0x")
+                      : rail === "pi"
+                        ? shortAddress(normalizePiWalletAddress(to), 8, 6)
+                        : to.startsWith("0x")
                         ? shortAddress(to, 8, 6)
                         : to,
                   mono: rail !== "openpay",
                 },
                 {
                   label: "Via",
-                  value: rail === "openpay" ? "OpenPay balance" : "OpenPay Pro wallet",
+                  value:
+                    rail === "openpay"
+                      ? "OpenPay balance"
+                      : rail === "pi"
+                        ? "Pi blockchain (OUSD)"
+                        : "OpenPay Pro wallet",
                 },
                 ...(memo.trim() ? [{ label: "Note", value: memo.trim() }] : []),
               ]
             : []
         }
-        confirmLabel={rail === "openpay" ? "Send via OpenPay" : `Send ${selected?.symbol ?? ""}`}
+        confirmLabel={
+          rail === "openpay"
+            ? "Send via OpenPay"
+            : rail === "pi"
+              ? "Send to Pi Wallet"
+              : `Send ${selected?.symbol ?? ""}`
+        }
         busy={busy}
         variant={rail === "openpay" ? "openpay" : "default"}
         onConfirm={() => void confirmSend()}

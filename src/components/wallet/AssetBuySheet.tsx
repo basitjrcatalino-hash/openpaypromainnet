@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, QrCode, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
@@ -41,6 +41,7 @@ import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { fetchMajorUsdPrices, LEDGER_MAJOR_SWAP_IDS } from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
+import { PaymongoDepositPanel } from "@/components/paymongo-deposit-panel";
 import {
   OUSD_LOGO_URL,
   PI_NETWORK_LOGO_URL,
@@ -73,6 +74,7 @@ type PaymentMethod =
   | "pi"
   | "openpay_checkout"
   | "moonpay"
+  | "paymongo"
   | "helio"
   | "usdc";
 type BuyStep = "amount" | "method" | "deposit";
@@ -167,6 +169,12 @@ const ALL_METHODS: {
     label: "MoonPay",
     icon: CreditCard,
     desc: "Card / Apple Pay / Google Pay → OUSD",
+  },
+  {
+    id: "paymongo",
+    label: "QR Ph & e-wallets",
+    icon: QrCode,
+    desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "usdc",
@@ -639,7 +647,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") {
+        if (method === "helio" || method === "usdc" || method === "paymongo") {
           setDepositReady(true);
           setStep("deposit");
           setConfirmOpen(false);
@@ -671,7 +679,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") {
+        if (method === "helio" || method === "usdc" || method === "paymongo") {
           setDepositReady(true);
           setStep("deposit");
           setConfirmOpen(false);
@@ -714,7 +722,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") {
+        if (method === "helio" || method === "usdc" || method === "paymongo") {
           setDepositReady(true);
           setStep("deposit");
           setConfirmOpen(false);
@@ -746,7 +754,7 @@ export function AssetBuySheet({
         return;
       }
 
-      if (method === "helio" || method === "usdc") {
+      if (method === "helio" || method === "usdc" || method === "paymongo") {
         setDepositReady(true);
         setStep("deposit");
         setConfirmOpen(false);
@@ -775,18 +783,22 @@ export function AssetBuySheet({
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
       : method === "moonpay"
         ? `Buy with Card`
-        : method === "usdc"
-          ? `Pay with USDC`
-          : method === "helio"
-            ? `Deposit crypto`
-            : openpayShort
-              ? `Amount exceeds OpenPay balance`
-              : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+        : method === "paymongo"
+          ? `Continue with QR Ph`
+          : method === "usdc"
+            ? `Pay with USDC`
+            : method === "helio"
+              ? `Deposit crypto`
+              : openpayShort
+                ? `Amount exceeds OpenPay balance`
+                : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
     : walletPayCta
       ? walletPayCta
       : method === "moonpay"
         ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with Card`
-        : method === "pi"
+        : method === "paymongo"
+          ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with QR Ph`
+          : method === "pi"
           ? isMajor
             ? `Buy ${token.symbol} with Pi`
             : graduated
@@ -1248,6 +1260,39 @@ export function AssetBuySheet({
         </div>
       )}
 
+      {/* —— Step 3: Deposit (PayMongo QR Ph) —— */}
+      {step === "deposit" && depositReady && method === "paymongo" && (
+        <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto">
+          <div className="rounded-2xl bg-muted/50 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via QR Ph · PayMongo (GCash, Maya, GrabPay, banks)
+              {!isOusd ? ` · then buy ${token.symbol}` : null}
+            </p>
+          </div>
+          <PaymongoDepositPanel
+            amountUsd={amtNum}
+            walletId={walletId}
+            onSuccess={() => {
+              void invalidateAfterTopup();
+              if (isOusd) onClose();
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change amount or method
+          </Button>
+        </div>
+      )}
+
       {/* —— Step 3: Deposit —— */}
       {step === "deposit" && depositReady && (method === "helio" || method === "usdc") && (
         <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto">
@@ -1328,11 +1373,13 @@ export function AssetBuySheet({
                   ? "Pi Network"
                   : method === "moonpay"
                     ? "Card (MoonPay)"
-                    : method === "usdc"
-                      ? "USDC Pay"
-                      : method === "helio"
-                        ? "Crypto Deposit"
-                        : "OpenPay",
+                    : method === "paymongo"
+                      ? "QR Ph (PayMongo)"
+                      : method === "usdc"
+                        ? "USDC Pay"
+                        : method === "helio"
+                          ? "Crypto Deposit"
+                          : "OpenPay",
           },
           ...((isWalletPayMethod(method) && !(isOusd && method === "wallet_ousd"))
             ? [

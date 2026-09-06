@@ -172,7 +172,9 @@ function OpenDexPage() {
       const ids = [majorIdFromSwapId(from), majorIdFromSwapId(to)].filter(
         (id): id is LedgerMajorId => id != null,
       );
-      return ids.length ? majorPricesFn({ data: { ids } }) : Promise.resolve({});
+      return ids.length
+        ? majorPricesFn({ data: { ids } })
+        : Promise.resolve({} as Record<string, number>);
     },
     staleTime: 10_000,
     refetchInterval: confirmOpen ? 4_000 : 20_000,

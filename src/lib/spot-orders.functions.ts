@@ -10,8 +10,6 @@ import {
   OUSD_SWAP_ID,
   PI_SWAP_ID,
   SOL_SWAP_ID,
-  USDC_SWAP_ID,
-  USDT_SWAP_ID,
 } from "@/lib/opendex.functions";
 import { PERP_MARKETS, marketToMajorId, type PerpMarket } from "@/lib/perp";
 import { SPOT_TAKER_FEE_BPS } from "@/lib/platform-treasury";
@@ -33,9 +31,7 @@ const MAJOR_SWAP: Record<PerpMarket, string> = {
 };
 
 const PAY_SWAP: Record<SpotPayAsset, string> = {
-  USDT: USDT_SWAP_ID,
   OUSD: OUSD_SWAP_ID,
-  USDC: USDC_SWAP_ID,
 };
 
 const PlaceSchema = z.object({

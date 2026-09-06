@@ -16,8 +16,8 @@ export function getPaymongoSecretKey(): string {
 }
 
 export function getPhpPerUsd(): number {
-  const n = Number(process.env["PAYMONGO_PHP_PER_USD"] || 61);
-  return Number.isFinite(n) && n > 0 ? n : 61;
+  const n = Number(process.env["PAYMONGO_PHP_PER_USD"] || 62.72);
+  return Number.isFinite(n) && n > 0 ? n : 62.72;
 }
 
 export function isPaymongoConfigured(): boolean {

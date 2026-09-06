@@ -913,7 +913,7 @@ function SendPage() {
               </div>
             )}
 
-            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="mb-2 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
               {rail === "openpay"
                 ? "OpenPay wallet"
                 : rail === "pi"
@@ -960,7 +960,7 @@ function SendPage() {
                       ? "G… Pi Wallet address"
                       : "0x… or @username"
                 }
-                className="h-12 rounded-2xl"
+                className="ios-field focus-visible:ring-2 focus-visible:ring-ios-blue/35"
                 autoFocus={rail !== "openpay" || openPayLinked}
                 disabled={rail === "openpay" && !openPayLinked}
               />
@@ -969,7 +969,7 @@ function SendPage() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 shrink-0 rounded-2xl"
+                  className="ios-active h-12 w-12 shrink-0 rounded-[12px] border-0 bg-ios-fill text-ios-blue"
                   aria-label="Copy OpenPay wallet"
                   onClick={() => void copyLinkedOpenPayWallet()}
                 >
@@ -988,7 +988,7 @@ function SendPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0 rounded-2xl"
+                    className="ios-active h-12 w-12 shrink-0 rounded-[12px] border-0 bg-ios-fill text-ios-blue"
                     aria-label="Scan QR"
                     disabled={rail === "openpay" && !openPayLinked}
                   >
@@ -1085,11 +1085,11 @@ function SendPage() {
 
           {recentRecipients.length > 0 && (
             <div>
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="mb-2 flex items-center gap-1.5 px-1 text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
                 <Clock className="h-3.5 w-3.5" />
                 Recent
               </div>
-              <ul className="overflow-hidden rounded-2xl bg-card">
+              <ul className="overflow-hidden rounded-[16px] bg-ios-card [&>li+li]:border-t [&>li+li]:border-ios-separator">
                 {recentRecipients.map((r) => (
                   <li key={r.address}>
                     <button
@@ -1099,7 +1099,7 @@ function SendPage() {
                         setOpPreview(null);
                         setOpError(null);
                       }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left press hover:bg-muted/40"
+                      className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
                     >
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                         {(r.label ?? r.address).replace(/^@/, "").slice(0, 2).toUpperCase()}
@@ -1128,7 +1128,7 @@ function SendPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90"
             disabled={
               rail === "openpay"
                 ? !openPayLinked || !to.trim()
@@ -1147,14 +1147,14 @@ function SendPage() {
         <div className="space-y-5">
           <SelectedChip asset={selected} onChange={() => setStep("asset")} />
 
-          <div className="rounded-3xl border border-border bg-card px-4 py-8 text-center">
+          <div className="rounded-[16px] bg-ios-card px-4 py-8 text-center">
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
               inputMode="decimal"
               placeholder="0"
               autoFocus
-              className="w-full bg-transparent text-center text-5xl font-bold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/40"
+              className="w-full bg-transparent text-center text-[64px] font-bold tracking-[-0.04em] tabular-nums text-ios-label outline-none placeholder:text-ios-tertiary sm:text-[72px]"
             />
             <div className="mt-2 text-sm text-muted-foreground">
               {amountValid ? `≈ ${formatUSD(usdEstimate)}` : selected.symbol}
@@ -1164,7 +1164,7 @@ function SendPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm">
+          <div className="flex items-center justify-between rounded-[16px] bg-ios-card px-4 py-3 text-[15px]">
             <span className="text-muted-foreground">
               Available{" "}
               <span className="font-semibold text-foreground">
@@ -1181,7 +1181,7 @@ function SendPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
               Note (optional)
             </label>
             <Textarea
@@ -1189,14 +1189,14 @@ function SendPage() {
               onChange={(e) => setMemo(e.target.value)}
               maxLength={140}
               rows={2}
-              className="rounded-2xl"
+              className="rounded-[12px] border-0 bg-ios-fill text-[17px]"
               placeholder="Add a note"
             />
           </div>
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90"
             disabled={!amountValid || insufficient}
             onClick={continueFromAmount}
           >
@@ -1266,7 +1266,7 @@ function SelectedChip({ asset, onChange }: { asset: SendableAsset; onChange: () 
     <button
       type="button"
       onClick={onChange}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-left transition hover:bg-muted/40"
+      className="ios-active flex w-full items-center gap-3 rounded-[16px] bg-ios-card px-4 py-3 text-left"
     >
       <AssetAvatar asset={asset} className="h-9 w-9" />
       <div className="min-w-0 flex-1">
@@ -1275,7 +1275,7 @@ function SelectedChip({ asset, onChange }: { asset: SendableAsset; onChange: () 
           {formatNumber(asset.balance, asset.balance < 1 ? 6 : 4)} available
         </div>
       </div>
-      <span className="text-xs font-medium text-primary">Change</span>
+      <span className="text-[13px] font-semibold text-ios-blue">Change</span>
     </button>
   );
 }

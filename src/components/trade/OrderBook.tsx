@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
+
 
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";

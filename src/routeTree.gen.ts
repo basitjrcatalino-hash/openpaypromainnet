@@ -68,6 +68,7 @@ import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedPaymentSuccessRouteImport } from './routes/_authenticated/payment-success'
 import { Route as AuthenticatedPartnerApiRouteImport } from './routes/_authenticated/partner-api'
 import { Route as AuthenticatedP2pRouteImport } from './routes/_authenticated/p2p'
 import { Route as AuthenticatedOusdRouteImport } from './routes/_authenticated/ousd'
@@ -508,6 +509,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPaymentSuccessRoute =
+  AuthenticatedPaymentSuccessRouteImport.update({
+    id: '/payment-success',
+    path: '/payment-success',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPartnerApiRoute = AuthenticatedPartnerApiRouteImport.update({
   id: '/partner-api',
   path: '/partner-api',
@@ -1328,6 +1335,7 @@ export interface FileRoutesByFullPath {
   '/ousd': typeof AuthenticatedOusdRoute
   '/p2p': typeof AuthenticatedP2pRoute
   '/partner-api': typeof AuthenticatedPartnerApiRoute
+  '/payment-success': typeof AuthenticatedPaymentSuccessRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -1532,6 +1540,7 @@ export interface FileRoutesByTo {
   '/ousd': typeof AuthenticatedOusdRoute
   '/p2p': typeof AuthenticatedP2pRoute
   '/partner-api': typeof AuthenticatedPartnerApiRoute
+  '/payment-success': typeof AuthenticatedPaymentSuccessRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -1738,6 +1747,7 @@ export interface FileRoutesById {
   '/_authenticated/ousd': typeof AuthenticatedOusdRoute
   '/_authenticated/p2p': typeof AuthenticatedP2pRoute
   '/_authenticated/partner-api': typeof AuthenticatedPartnerApiRoute
+  '/_authenticated/payment-success': typeof AuthenticatedPaymentSuccessRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -1944,6 +1954,7 @@ export interface FileRouteTypes {
     | '/ousd'
     | '/p2p'
     | '/partner-api'
+    | '/payment-success'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -2148,6 +2159,7 @@ export interface FileRouteTypes {
     | '/ousd'
     | '/p2p'
     | '/partner-api'
+    | '/payment-success'
     | '/profile'
     | '/receive'
     | '/scan'
@@ -2353,6 +2365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ousd'
     | '/_authenticated/p2p'
     | '/_authenticated/partner-api'
+    | '/_authenticated/payment-success'
     | '/_authenticated/profile'
     | '/_authenticated/receive'
     | '/_authenticated/scan'
@@ -3028,6 +3041,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payment-success': {
+      id: '/_authenticated/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof AuthenticatedPaymentSuccessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/partner-api': {
@@ -4083,6 +4103,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOusdRoute: typeof AuthenticatedOusdRoute
   AuthenticatedP2pRoute: typeof AuthenticatedP2pRoute
   AuthenticatedPartnerApiRoute: typeof AuthenticatedPartnerApiRoute
+  AuthenticatedPaymentSuccessRoute: typeof AuthenticatedPaymentSuccessRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
@@ -4173,6 +4194,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOusdRoute: AuthenticatedOusdRoute,
   AuthenticatedP2pRoute: AuthenticatedP2pRoute,
   AuthenticatedPartnerApiRoute: AuthenticatedPartnerApiRoute,
+  AuthenticatedPaymentSuccessRoute: AuthenticatedPaymentSuccessRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,

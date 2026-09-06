@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, QrCode, Wallet, X } from "lucide-react";
@@ -245,6 +245,7 @@ export function AssetBuySheet({
   returnPath,
 }: Props) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   // Subscribe so fiat labels refresh when display currency changes
   useCurrency();
   const isDesktop = useIsDesktopViewport();
@@ -430,6 +431,16 @@ export function AssetBuySheet({
     );
     await invalidateAfterBuy();
     onClose();
+    void navigate({
+      to: "/payment-success",
+      search: {
+        amount: res.usd_spent,
+        asset: res.symbol,
+        method: payAsset,
+        type: "buy",
+        quantity: res.token_amount,
+      },
+    });
   }
 
   /** Graduated OpenTokens: spend OUSD / USDT / USDC / SOL on OpenDEX for the token. */
@@ -461,6 +472,16 @@ export function AssetBuySheet({
     );
     await invalidateAfterBuy();
     onClose();
+    void navigate({
+      to: "/payment-success",
+      search: {
+        amount: usdAmount,
+        asset: token.symbol,
+        method: payAsset,
+        type: "buy",
+        quantity: res.amount_out,
+      },
+    });
   }
 
   async function executeTokenBuy(usdAmount: number, payAsset: BuyPayAsset = "OUSD") {
@@ -497,6 +518,16 @@ export function AssetBuySheet({
     if (res.graduated) notifySuccess("Token graduated to OpenDEX!", { sound: "success" });
     await invalidateAfterBuy();
     onClose();
+    void navigate({
+      to: "/payment-success",
+      search: {
+        amount: usdAmount,
+        asset: token.symbol,
+        method: payAsset,
+        type: "buy",
+        quantity: res.token_amount,
+      },
+    });
   }
 
   async function invalidateAfterBuy() {
@@ -519,6 +550,21 @@ export function AssetBuySheet({
       qc.invalidateQueries({ queryKey: ["recent-txs"] }),
       qc.invalidateQueries({ queryKey: ["openpay-linked-balance", userId] }),
     ]);
+  }
+
+  async function showExternalTopupSuccess(paymentMethod: string) {
+    await invalidateAfterTopup();
+    if (!isOusd) return;
+    onClose();
+    void navigate({
+      to: "/payment-success",
+      search: {
+        amount: amtNum,
+        asset: "OUSD",
+        method: paymentMethod,
+        type: "topup",
+      },
+    });
   }
 
   async function startOpenPayCheckout(amt: number) {
@@ -1289,8 +1335,7 @@ export function AssetBuySheet({
             amountUsd={amtNum}
             walletId={walletId}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess("PayPal");
             }}
           />
           <Button
@@ -1322,8 +1367,7 @@ export function AssetBuySheet({
             amountUsd={amtNum}
             walletId={walletId}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess("QR Ph");
             }}
           />
           <Button
@@ -1355,8 +1399,7 @@ export function AssetBuySheet({
             product={method === "usdc" ? "usdc" : "crypto"}
             amountUsd={amtNum}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess(method === "usdc" ? "USDC Pay" : "Crypto Deposit");
             }}
           />
           <Button
@@ -1480,11 +1523,12 @@ export function AssetBuySheet({
             setMoonpayVisible(false);
             setBusy(true);
             try {
+              if (!walletId) throw new Error("Select an active wallet first");
               await creditMoonPay({
                 data: {
                   amount: paid,
                   moonpayTransactionId: id,
-                  walletId: walletId!,
+                  walletId,
                 },
               });
               notifySuccess(`${formatUSD(paid)} OUSD credited from MoonPay`, { sound: "receive" });
@@ -1497,6 +1541,16 @@ export function AssetBuySheet({
               } else {
                 await invalidateAfterTopup();
                 onClose();
+                void navigate({
+                  to: "/payment-success",
+                  search: {
+                    amount: paid,
+                    asset: "OUSD",
+                    method: "MoonPay",
+                    type: "topup",
+                    reference: id,
+                  },
+                });
               }
             } catch (err) {
               const msg = (err as Error).message || "MoonPay credit failed";

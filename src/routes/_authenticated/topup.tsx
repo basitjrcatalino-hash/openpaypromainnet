@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -253,6 +253,7 @@ function HelioMark({ className }: { className?: string }) {
 
 function TopUpPage() {
   const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/topup" });
   const [amount, setAmount] = useState("25");
@@ -588,6 +589,16 @@ function TopUpPage() {
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       qc.invalidateQueries({ queryKey: ["ledger-entries"] });
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+      void navigate({
+        to: "/payment-success",
+        search: {
+          amount: r.amount,
+          asset: "OUSD",
+          method: "MoonPay",
+          type: "topup",
+          reference: txId,
+        },
+      });
       setAmount("");
     } catch (err) {
       toast.error((err as Error).message || "Could not credit MoonPay payment");
@@ -604,7 +615,12 @@ function TopUpPage() {
     qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
     qc.invalidateQueries({ queryKey: ["ledger-entries"] });
     qc.invalidateQueries({ queryKey: ["ledger-overview"] });
-  }, [qc, user.id, wallet?.id]);
+    const paymentMethod = methods.find((item) => item.id === method)?.label ?? "Payment";
+    void navigate({
+      to: "/payment-success",
+      search: { amount: amtNum, asset: "OUSD", method: paymentMethod, type: "topup" },
+    });
+  }, [amtNum, method, navigate, qc, user.id, wallet?.id]);
 
   async function submit(e?: FormEvent) {
     e?.preventDefault();
@@ -717,6 +733,10 @@ function TopUpPage() {
         setAmount("");
         setConfirmOpen(false);
         setStep("amount");
+        void navigate({
+          to: "/payment-success",
+          search: { amount: res.amount, asset: "OUSD", method: payAsset, type: "topup" },
+        });
         return;
       }
       // pi
@@ -732,6 +752,16 @@ function TopUpPage() {
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
       setAmount("");
       setConfirmOpen(false);
+      void navigate({
+        to: "/payment-success",
+        search: {
+          amount: parsed.data.amount,
+          asset: "OUSD",
+          method: "Pi Network",
+          type: "topup",
+          reference: paymentId,
+        },
+      });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

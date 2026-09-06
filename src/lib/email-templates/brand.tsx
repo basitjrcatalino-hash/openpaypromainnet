@@ -8,11 +8,14 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
   Text,
 } from '@react-email/components'
+
+import logoAsset from '../../assets/openpay-pro-logo.png.asset.json'
 
 /**
  * OpenPay Pro shared email shell.
@@ -23,6 +26,7 @@ import {
 export const BRAND = {
   name: 'OpenPay Pro',
   url: 'https://openpaypro.space',
+  logoUrl: `https://openpaypro.space${logoAsset.url}`,
   accent: '#ab9ff2',
   accentSoft: '#c9beff',
   ink: '#0b0b0f',
@@ -36,7 +40,7 @@ export const BRAND = {
 export const main = {
   backgroundColor: '#ffffff',
   fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica, Arial, sans-serif",
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
   margin: '0',
   padding: '24px 0',
 }
@@ -50,10 +54,32 @@ export const card = {
   padding: '28px 26px',
 }
 
+const brandHeader = {
+  margin: '0 0 26px',
+}
+
+const logo = {
+  width: '42px',
+  height: '42px',
+  borderRadius: '50%',
+  objectFit: 'contain' as const,
+  verticalAlign: 'middle',
+}
+
+const wordmark = {
+  paddingLeft: '12px',
+  color: '#ffffff',
+  fontSize: '18px',
+  lineHeight: '1.2',
+  fontWeight: 700 as const,
+  letterSpacing: '0',
+  verticalAlign: 'middle',
+}
+
 export const eyebrow = {
   margin: '0 0 14px',
   fontSize: '11px',
-  letterSpacing: '0.16em',
+  letterSpacing: '0.1em',
   textTransform: 'uppercase' as const,
   color: BRAND.accent,
   fontWeight: 700 as const,
@@ -61,17 +87,17 @@ export const eyebrow = {
 
 export const h1 = {
   margin: '0 0 12px',
-  fontSize: '23px',
-  lineHeight: '1.25',
-  letterSpacing: '-0.02em',
-  fontWeight: 700 as const,
+  fontSize: '25px',
+  lineHeight: '1.28',
+  letterSpacing: '0',
+  fontWeight: 750 as const,
   color: '#ffffff',
 }
 
 export const text = {
   margin: '0 0 16px',
   fontSize: '15px',
-  lineHeight: '1.6',
+  lineHeight: '1.65',
   color: BRAND.text,
 }
 
@@ -92,7 +118,7 @@ export const amount = {
   margin: '0 0 6px',
   fontSize: '32px',
   fontWeight: 800 as const,
-  letterSpacing: '-0.03em',
+  letterSpacing: '0',
   color: '#ffffff',
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
 }
@@ -179,6 +205,22 @@ export function BrandEmail({
       <Body style={main}>
         <Container style={container}>
           <Section style={card}>
+            <table role="presentation" cellPadding="0" cellSpacing="0" style={brandHeader}>
+              <tbody>
+                <tr>
+                  <td>
+                    <Img
+                      src={BRAND.logoUrl}
+                      width="42"
+                      height="42"
+                      alt="OpenPay Pro"
+                      style={logo}
+                    />
+                  </td>
+                  <td style={wordmark}>OpenPay Pro</td>
+                </tr>
+              </tbody>
+            </table>
             <Text style={eyebrow}>{eyebrowText}</Text>
             <Heading style={h1}>{heading}</Heading>
             {children}

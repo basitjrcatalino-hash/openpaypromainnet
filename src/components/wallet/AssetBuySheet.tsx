@@ -552,6 +552,21 @@ export function AssetBuySheet({
     ]);
   }
 
+  async function showExternalTopupSuccess(paymentMethod: string) {
+    await invalidateAfterTopup();
+    if (!isOusd) return;
+    onClose();
+    void navigate({
+      to: "/payment-success",
+      search: {
+        amount: amtNum,
+        asset: "OUSD",
+        method: paymentMethod,
+        type: "topup",
+      },
+    });
+  }
+
   async function startOpenPayCheckout(amt: number) {
     const link = await getLink();
     if (!link?.linked) {
@@ -1320,8 +1335,7 @@ export function AssetBuySheet({
             amountUsd={amtNum}
             walletId={walletId}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess("PayPal");
             }}
           />
           <Button
@@ -1353,8 +1367,7 @@ export function AssetBuySheet({
             amountUsd={amtNum}
             walletId={walletId}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess("QR Ph");
             }}
           />
           <Button
@@ -1386,8 +1399,7 @@ export function AssetBuySheet({
             product={method === "usdc" ? "usdc" : "crypto"}
             amountUsd={amtNum}
             onSuccess={() => {
-              void invalidateAfterTopup();
-              if (isOusd) onClose();
+              void showExternalTopupSuccess(method === "usdc" ? "USDC Pay" : "Crypto Deposit");
             }}
           />
           <Button
@@ -1511,11 +1523,12 @@ export function AssetBuySheet({
             setMoonpayVisible(false);
             setBusy(true);
             try {
+              if (!walletId) throw new Error("Select an active wallet first");
               await creditMoonPay({
                 data: {
                   amount: paid,
                   moonpayTransactionId: id,
-                  walletId: walletId!,
+                  walletId,
                 },
               });
               notifySuccess(`${formatUSD(paid)} OUSD credited from MoonPay`, { sound: "receive" });
@@ -1528,6 +1541,16 @@ export function AssetBuySheet({
               } else {
                 await invalidateAfterTopup();
                 onClose();
+                void navigate({
+                  to: "/payment-success",
+                  search: {
+                    amount: paid,
+                    asset: "OUSD",
+                    method: "MoonPay",
+                    type: "topup",
+                    reference: id,
+                  },
+                });
               }
             } catch (err) {
               const msg = (err as Error).message || "MoonPay credit failed";

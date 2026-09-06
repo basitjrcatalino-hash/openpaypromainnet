@@ -589,6 +589,16 @@ function TopUpPage() {
       qc.invalidateQueries({ queryKey: ["txs", wallet?.id] });
       qc.invalidateQueries({ queryKey: ["ledger-entries"] });
       qc.invalidateQueries({ queryKey: ["ledger-overview"] });
+      void navigate({
+        to: "/payment-success",
+        search: {
+          amount: r.amount,
+          asset: "OUSD",
+          method: "MoonPay",
+          type: "topup",
+          reference: txId,
+        },
+      });
       setAmount("");
     } catch (err) {
       toast.error((err as Error).message || "Could not credit MoonPay payment");

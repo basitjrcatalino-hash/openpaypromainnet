@@ -306,8 +306,7 @@ export function AssetBuySheet({
     const byKey = new Map(cfg.map((c) => [c.method_key, c]));
     return base
       .filter((m) => {
-        // Wallet spend is not a deposit rail — always available for buys.
-        if (isWalletPayMethod(m.id)) return true;
+        // Every method (including wallet balances) is admin-controllable.
         const c = byKey.get(configKey(m.id));
         // Missing admin row → still show; only hide when explicitly disabled.
         return !c || c.enabled !== false;

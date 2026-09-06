@@ -11,6 +11,7 @@ export type TopupMethodKey =
   | "solana_pay"
   | "circle_mint"
   | "cash_pay"
+  | "wallet_ousd"
   | "wallet_usdt"
   | "wallet_usdc"
   | "wallet_sol"

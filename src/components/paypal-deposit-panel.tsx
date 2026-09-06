@@ -216,9 +216,9 @@ export function PaypalDepositPanel({
         <p className="mt-2 px-1 text-xs text-muted-foreground">{active.hint}</p>
       </div>
 
-      <div className="rounded-2xl bg-card px-3 py-3">
-        <div className="mx-auto w-full max-w-xl">
-          <div ref={host} className="min-h-[52px]" />
+      <div className="rounded-2xl bg-card px-3 py-3 md:mx-auto md:w-full md:max-w-xl">
+        <div className="flex justify-center">
+          <div ref={host} className="min-h-[52px] w-full max-w-md" />
         </div>
         {!ready && !error ? (
           <p className="flex items-center justify-center gap-1.5 px-1 text-xs text-muted-foreground">

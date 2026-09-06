@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WikiRouteImport } from './routes/wiki'
 import { Route as WebsiteRouteImport } from './routes/website'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -32,6 +33,7 @@ import { Route as WikiSlugRouteImport } from './routes/wiki_.$slug'
 import { Route as ProAuthorizeRouteImport } from './routes/pro.authorize'
 import { Route as PayToRouteImport } from './routes/pay.$to'
 import { Route as GuidesTransferPiRouteImport } from './routes/guides.transfer-pi'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DocsTokensRouteImport } from './routes/docs.tokens'
 import { Route as DocsProPayRouteImport } from './routes/docs.pro-pay'
 import { Route as DocsOpenpayRouteImport } from './routes/docs.openpay'
@@ -92,6 +94,7 @@ import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticat
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ProCheckoutIdRouteImport } from './routes/pro.checkout.$id'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthTelegramCallbackRouteImport } from './routes/auth.telegram.callback'
 import { Route as AuthPiCallbackRouteImport } from './routes/auth.pi.callback'
 import { Route as AuthOpenpayCallbackRouteImport } from './routes/auth.openpay.callback'
@@ -172,7 +175,11 @@ import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminAirdropsRouteImport } from './routes/_authenticated/admin.airdrops'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPushUnsubscribeRouteImport } from './routes/api/public/push/unsubscribe'
 import { Route as ApiPublicPushSubscribeRouteImport } from './routes/api/public/push/subscribe'
 import { Route as ApiPublicProConfigRouteImport } from './routes/api/public/pro/config'
@@ -224,6 +231,11 @@ const WikiRoute = WikiRouteImport.update({
 const WebsiteRoute = WebsiteRouteImport.update({
   id: '/website',
   path: '/website',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
@@ -328,6 +340,11 @@ const PayToRoute = PayToRouteImport.update({
 const GuidesTransferPiRoute = GuidesTransferPiRouteImport.update({
   id: '/guides/transfer-pi',
   path: '/guides/transfer-pi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsTokensRoute = DocsTokensRouteImport.update({
@@ -633,6 +650,11 @@ const Char91DotmcpChar93ListToolsRoute =
 const ProCheckoutIdRoute = ProCheckoutIdRouteImport.update({
   id: '/pro/checkout/$id',
   path: '/pro/checkout/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthTelegramCallbackRoute = AuthTelegramCallbackRouteImport.update({
@@ -1071,12 +1093,34 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPushUnsubscribeRoute =
   ApiPublicPushUnsubscribeRouteImport.update({
     id: '/api/public/push/unsubscribe',
@@ -1325,6 +1369,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -1386,6 +1431,7 @@ export interface FileRoutesByFullPath {
   '/docs/openpay': typeof DocsOpenpayRoute
   '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/pro/authorize': typeof ProAuthorizeRoute
@@ -1470,6 +1516,7 @@ export interface FileRoutesByFullPath {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/asset/$tokenId/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
@@ -1506,7 +1553,11 @@ export interface FileRoutesByFullPath {
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
@@ -1532,6 +1583,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -1593,6 +1645,7 @@ export interface FileRoutesByTo {
   '/docs/openpay': typeof DocsOpenpayRoute
   '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/pro/authorize': typeof ProAuthorizeRoute
@@ -1677,6 +1730,7 @@ export interface FileRoutesByTo {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/asset/$tokenId/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/bags/token/$mint': typeof AuthenticatedBagsTokenMintRoute
@@ -1713,7 +1767,11 @@ export interface FileRoutesByTo {
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
@@ -1741,6 +1799,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -1802,6 +1861,7 @@ export interface FileRoutesById {
   '/docs/openpay': typeof DocsOpenpayRoute
   '/docs/pro-pay': typeof DocsProPayRoute
   '/docs/tokens': typeof DocsTokensRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/guides/transfer-pi': typeof GuidesTransferPiRoute
   '/pay/$to': typeof PayToRoute
   '/pro/authorize': typeof ProAuthorizeRoute
@@ -1886,6 +1946,7 @@ export interface FileRoutesById {
   '/auth/openpay/callback': typeof AuthOpenpayCallbackRoute
   '/auth/pi/callback': typeof AuthPiCallbackRoute
   '/auth/telegram/callback': typeof AuthTelegramCallbackRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/pro/checkout/$id': typeof ProCheckoutIdRoute
   '/_authenticated/asset_/$tokenId_/chat': typeof AuthenticatedAssetTokenIdChatRoute
   '/_authenticated/bags_/token/$mint': typeof AuthenticatedBagsTokenMintRoute
@@ -1922,7 +1983,11 @@ export interface FileRoutesById {
   '/api/public/pro/config': typeof ApiPublicProConfigRoute
   '/api/public/push/subscribe': typeof ApiPublicPushSubscribeRoute
   '/api/public/push/unsubscribe': typeof ApiPublicPushUnsubscribeRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/public/ledger/entries/$id': typeof ApiPublicLedgerEntriesIdRoute
   '/api/public/openpay/connect/confirm': typeof ApiPublicOpenpayConnectConfirmRoute
   '/api/public/pro/charges/$id': typeof ApiPublicProChargesIdRouteWithChildren
@@ -1950,6 +2015,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2011,6 +2077,7 @@ export interface FileRouteTypes {
     | '/docs/openpay'
     | '/docs/pro-pay'
     | '/docs/tokens'
+    | '/email/unsubscribe'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/pro/authorize'
@@ -2095,6 +2162,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/lovable/email/suppression'
     | '/pro/checkout/$id'
     | '/asset/$tokenId/chat'
     | '/bags/token/$mint'
@@ -2131,7 +2199,11 @@ export interface FileRouteTypes {
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/charges/$id'
@@ -2157,6 +2229,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2218,6 +2291,7 @@ export interface FileRouteTypes {
     | '/docs/openpay'
     | '/docs/pro-pay'
     | '/docs/tokens'
+    | '/email/unsubscribe'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/pro/authorize'
@@ -2302,6 +2376,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/lovable/email/suppression'
     | '/pro/checkout/$id'
     | '/asset/$tokenId/chat'
     | '/bags/token/$mint'
@@ -2338,7 +2413,11 @@ export interface FileRouteTypes {
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/charges/$id'
@@ -2365,6 +2444,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2426,6 +2506,7 @@ export interface FileRouteTypes {
     | '/docs/openpay'
     | '/docs/pro-pay'
     | '/docs/tokens'
+    | '/email/unsubscribe'
     | '/guides/transfer-pi'
     | '/pay/$to'
     | '/pro/authorize'
@@ -2510,6 +2591,7 @@ export interface FileRouteTypes {
     | '/auth/openpay/callback'
     | '/auth/pi/callback'
     | '/auth/telegram/callback'
+    | '/lovable/email/suppression'
     | '/pro/checkout/$id'
     | '/_authenticated/asset_/$tokenId_/chat'
     | '/_authenticated/bags_/token/$mint'
@@ -2546,7 +2628,11 @@ export interface FileRouteTypes {
     | '/api/public/pro/config'
     | '/api/public/push/subscribe'
     | '/api/public/push/unsubscribe'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/api/public/ledger/entries/$id'
     | '/api/public/openpay/connect/confirm'
     | '/api/public/pro/charges/$id'
@@ -2574,6 +2660,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WebsiteRoute: typeof WebsiteRoute
   WikiRoute: typeof WikiRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
@@ -2582,6 +2669,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GuidesTransferPiRoute: typeof GuidesTransferPiRoute
   PayToRoute: typeof PayToRoute
   ProAuthorizeRoute: typeof ProAuthorizeRoute
@@ -2617,6 +2705,7 @@ export interface RootRouteChildren {
   ApiWebhooksCircleRoute: typeof ApiWebhooksCircleRoute
   ApiWebhooksCircleMintRoute: typeof ApiWebhooksCircleMintRoute
   ApiWebhooksTransactionsRoute: typeof ApiWebhooksTransactionsRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ProCheckoutIdRoute: typeof ProCheckoutIdRoute
   ApiPublicDocsAiPartnerRoute: typeof ApiPublicDocsAiPartnerRoute
   ApiPublicDocsErrorsRoute: typeof ApiPublicDocsErrorsRoute
@@ -2646,7 +2735,11 @@ export interface RootRouteChildren {
   ApiPublicProConfigRoute: typeof ApiPublicProConfigRoute
   ApiPublicPushSubscribeRoute: typeof ApiPublicPushSubscribeRoute
   ApiPublicPushUnsubscribeRoute: typeof ApiPublicPushUnsubscribeRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
   ApiPublicOpenpayConnectConfirmRoute: typeof ApiPublicOpenpayConnectConfirmRoute
   ApiPublicProOauthTokenRoute: typeof ApiPublicProOauthTokenRoute
   ApiPublicProUserBalanceRoute: typeof ApiPublicProUserBalanceRoute
@@ -2667,6 +2760,13 @@ declare module '@tanstack/react-router' {
       path: '/website'
       fullPath: '/website'
       preLoaderRoute: typeof WebsiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/testnet-reward': {
@@ -2814,6 +2914,13 @@ declare module '@tanstack/react-router' {
       path: '/guides/transfer-pi'
       fullPath: '/guides/transfer-pi'
       preLoaderRoute: typeof GuidesTransferPiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/tokens': {
@@ -3234,6 +3341,13 @@ declare module '@tanstack/react-router' {
       path: '/pro/checkout/$id'
       fullPath: '/pro/checkout/$id'
       preLoaderRoute: typeof ProCheckoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/telegram/callback': {
@@ -3796,11 +3910,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
       fullPath: '/lovable/email/queue/process'
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/push/unsubscribe': {
@@ -4420,6 +4562,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WebsiteRoute: WebsiteRoute,
   WikiRoute: WikiRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
@@ -4429,6 +4572,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
   BlogSlugRoute: BlogSlugRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GuidesTransferPiRoute: GuidesTransferPiRoute,
   PayToRoute: PayToRoute,
   ProAuthorizeRoute: ProAuthorizeRoute,
@@ -4464,6 +4608,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksCircleRoute: ApiWebhooksCircleRoute,
   ApiWebhooksCircleMintRoute: ApiWebhooksCircleMintRoute,
   ApiWebhooksTransactionsRoute: ApiWebhooksTransactionsRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ProCheckoutIdRoute: ProCheckoutIdRoute,
   ApiPublicDocsAiPartnerRoute: ApiPublicDocsAiPartnerRoute,
   ApiPublicDocsErrorsRoute: ApiPublicDocsErrorsRoute,
@@ -4493,7 +4638,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicProConfigRoute: ApiPublicProConfigRoute,
   ApiPublicPushSubscribeRoute: ApiPublicPushSubscribeRoute,
   ApiPublicPushUnsubscribeRoute: ApiPublicPushUnsubscribeRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
   ApiPublicOpenpayConnectConfirmRoute: ApiPublicOpenpayConnectConfirmRoute,
   ApiPublicProOauthTokenRoute: ApiPublicProOauthTokenRoute,
   ApiPublicProUserBalanceRoute: ApiPublicProUserBalanceRoute,

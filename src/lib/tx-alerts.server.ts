@@ -290,30 +290,43 @@ async function markTxEmailSent(
   }
 }
 
-function buildTxEmailHtml(alert: ReturnType<typeof formatAlert>, tx: TxLike) {
+/** Render the branded OpenPay Pro transaction email (shared React Email template). */
+async function buildTxEmailHtml(
+  alert: ReturnType<typeof formatAlert>,
+  tx: TxLike,
+): Promise<string> {
   const appUrl = appBaseUrl();
-  const accent = alert.kind === "receive" ? "#14F195" : alert.kind === "send" ? "#AB9FF2" : "#38bdf8";
-  const status = String(tx.status ?? "confirmed");
-  return `
-    <div style="font-family:Inter,Segoe UI,Arial,sans-serif;background:#0b0b0f;color:#f5f5f7;padding:24px">
-      <div style="max-width:480px;margin:0 auto;background:#16161d;border-radius:16px;padding:24px;border:1px solid #2a2a35">
-        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:${accent}">OpenPay Pro</p>
-        <h1 style="margin:0 0 8px;font-size:22px;letter-spacing:-0.02em">${escapeHtml(alert.title)}</h1>
-        <p style="margin:0 0 4px;font-size:28px;font-weight:800;letter-spacing:-0.03em;color:#fff">${escapeHtml(alert.amountLabel)}</p>
-        <p style="margin:0 0 20px;color:#c4c4cc;line-height:1.5">${escapeHtml(alert.body)}</p>
-        <table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:13px;color:#a1a1aa">
-          <tr><td style="padding:6px 0">Status</td><td style="padding:6px 0;text-align:right;color:#f5f5f7">${escapeHtml(status)}</td></tr>
-          ${
-            tx.counterparty
-              ? `<tr><td style="padding:6px 0">Counterparty</td><td style="padding:6px 0;text-align:right;color:#f5f5f7;font-family:ui-monospace,monospace">${escapeHtml(String(tx.counterparty).slice(0, 42))}</td></tr>`
-              : ""
-          }
-        </table>
-        <a href="${appUrl}${alert.url}" style="display:inline-block;background:${accent};color:#0b0b0f;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:999px">View activity</a>
-        <p style="margin:20px 0 0;font-size:11px;color:#71717a">You’re receiving this because Email alerts are on in OpenPay Pro Settings. Manage at ${escapeHtml(appUrl)}/settings</p>
-      </div>
-    </div>
-  `;
+  const isTopup =
+    String(tx.type ?? "") === "topup" ||
+    String(tx.memo ?? "").toLowerCase().includes("top-up") ||
+    String(tx.counterparty ?? "").toLowerCase().startsWith("topup");
+
+  const [{ render }, React, mod] = await Promise.all([
+    import("@react-email/render"),
+    import("react"),
+    isTopup
+      ? import("@/lib/email-templates/topup-credited")
+      : import("@/lib/email-templates/transaction-alert"),
+  ]);
+
+  const props = isTopup
+    ? {
+        amountLabel: alert.amountLabel,
+        method: tx.memo?.trim() || "Top up",
+        reference: tx.id ?? null,
+        actionUrl: `${appUrl}${alert.url}`,
+      }
+    : {
+        title: alert.title,
+        amountLabel: alert.amountLabel,
+        message: alert.body,
+        status: String(tx.status ?? "confirmed"),
+        counterparty: tx.counterparty ?? null,
+        reference: tx.id ?? null,
+        actionUrl: `${appUrl}${alert.url}`,
+      };
+
+  return render(React.createElement(mod.default as never, props as never));
 }
 
 function buildTxEmailText(alert: ReturnType<typeof formatAlert>, tx: TxLike) {
@@ -435,7 +448,7 @@ async function sendTxEmail(
   if (await alreadySentTxEmail(admin, messageId)) return;
 
   const subject = `${alert.title} · ${alert.amountLabel}`;
-  const html = buildTxEmailHtml(alert, tx);
+  const html = await buildTxEmailHtml(alert, tx);
   const text = buildTxEmailText(alert, tx);
   const label = `tx-${String(tx.type ?? "activity")}`;
   const hasLovable = Boolean(process.env.LOVABLE_API_KEY?.trim());

@@ -122,6 +122,8 @@ const METHODS: {
 function AuthPiPage() {
   const search = Route.useSearch();
   const [mounted, setMounted] = useState(false);
+  // Pi Browser only allows Pi sign-in — other providers are restricted there.
+  const piOnly = mounted && isPiBrowser();
   const [selected, setSelected] = useState<AuthMethod>(
     () => (search.method as AuthMethod | undefined) ?? "openpay",
   );
@@ -135,8 +137,12 @@ function AuthPiPage() {
   }, []);
 
   useEffect(() => {
+    if (piOnly) {
+      setSelected("pi");
+      return;
+    }
     if (search.method) setSelected(search.method as AuthMethod);
-  }, [search.method]);
+  }, [search.method, piOnly]);
 
   useEffect(() => {
     let cancelled = false;

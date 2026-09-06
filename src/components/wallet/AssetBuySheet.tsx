@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, Loader2, Link2, QrCode, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
@@ -41,6 +41,7 @@ import { executeOpenDexSwap, OUSD_SWAP_ID } from "@/lib/opendex.functions";
 import { fetchMajorUsdPrices, LEDGER_MAJOR_SWAP_IDS } from "@/lib/ledger-majors";
 import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
 import { HelioDepositPanel } from "@/components/helio-deposit-panel";
+import { PaymongoDepositPanel } from "@/components/paymongo-deposit-panel";
 import {
   OUSD_LOGO_URL,
   PI_NETWORK_LOGO_URL,

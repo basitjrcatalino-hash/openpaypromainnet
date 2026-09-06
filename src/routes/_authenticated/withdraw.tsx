@@ -341,11 +341,44 @@ function WithdrawPage() {
               {destKind === "openpay"
                 ? "OpenPay accounts start with OP (example: OPxxxxxxxx)."
                 : "Use your Pi Network mainnet wallet address (usually starts with G)."}{" "}
-              Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
-              {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}) until
-              admin pays out.
+              {useInstantPi ? (
+                <>Paid instantly as OpenUSD (OUSD) on the Pi blockchain.</>
+              ) : (
+                <>
+                  Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
+                  {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)})
+                  until admin pays out.
+                </>
+              )}
             </p>
           </div>
+
+          {piEligible ? (
+            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() => setInstantPi(true)}
+                className={cn(
+                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Instant on-chain · no fee
+              </button>
+              <button
+                type="button"
+                onClick={() => setInstantPi(false)}
+                className={cn(
+                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  !instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Admin payout · {feePercent}% fee
+              </button>
+            </div>
+          ) : null}
+
+
 
           <Button
             type="button"

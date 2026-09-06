@@ -647,7 +647,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") {
+        if (method === "helio" || method === "usdc" || method === "paymongo") {
           setDepositReady(true);
           setStep("deposit");
           setConfirmOpen(false);
@@ -679,7 +679,7 @@ export function AssetBuySheet({
           setConfirmOpen(false);
           return;
         }
-        if (method === "helio" || method === "usdc") {
+        if (method === "helio" || method === "usdc" || method === "paymongo") {
           setDepositReady(true);
           setStep("deposit");
           setConfirmOpen(false);

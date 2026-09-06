@@ -445,7 +445,7 @@ function WithdrawPage() {
             <button
               type="button"
               className="rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary disabled:opacity-40"
-              disabled={bal < min}
+              disabled={bal < effMin}
               onClick={() => setAmount(String(Math.floor(bal * 100) / 100))}
             >
               Max

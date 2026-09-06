@@ -18,7 +18,7 @@ import { notifySuccess } from "@/lib/notify-success";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PageHeader } from "@/components/wallet/PageHeader";
+import { IosPageShell } from "@/components/ios/IosPageShell";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { OusdIcon } from "@/components/ousd-icon";
@@ -210,16 +210,19 @@ function WithdrawPage() {
   };
 
   return (
-    <div className="ot-phantom ph-page mx-auto min-h-[70vh] max-w-lg pb-24">
-      <PageHeader
-        title={titles[step]}
-        backTo={step === "destination" ? "/assets" : undefined}
-        onBack={step === "amount" ? () => setStep("destination") : undefined}
-      />
+    <IosPageShell
+      title={titles[step]}
+      onBack={
+        step === "amount"
+          ? () => setStep("destination")
+          : () => void navigate({ to: "/assets" })
+      }
+      backLabel={step === "amount" ? "Withdraw to" : "Assets"}
+    >
 
       {step === "destination" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-3 rounded-[16px] bg-ios-card px-4 py-3">
             <OusdIcon className="h-10 w-10 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-[15px] font-semibold">OUSD</p>
@@ -229,7 +232,7 @@ function WithdrawPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+          <div className="grid grid-cols-4 gap-1 rounded-[12px] bg-ios-fill p-1">
             {WITHDRAWAL_DEST_KINDS.map((k) => (
               <button
                 key={k.id}
@@ -240,10 +243,10 @@ function WithdrawPage() {
                   setWithdrawVia("rail");
                 }}
                 className={cn(
-                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  "rounded-[9px] px-2 py-2 text-[13px] font-semibold transition",
                   destKind === k.id && withdrawVia === "rail"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-ios-card text-ios-label shadow-sm"
+                    : "text-ios-secondary",
                 )}
               >
                 {k.label}
@@ -253,10 +256,10 @@ function WithdrawPage() {
               type="button"
               onClick={() => setWithdrawVia("p2p")}
               className={cn(
-                "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                "rounded-[9px] px-2 py-2 text-[13px] font-semibold transition",
                 withdrawVia === "p2p"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-ios-card text-ios-label shadow-sm"
+                  : "text-ios-secondary",
               )}
             >
               P2P
@@ -264,19 +267,19 @@ function WithdrawPage() {
           </div>
 
           {withdrawVia === "p2p" ? (
-            <div className="space-y-3 rounded-3xl border border-border bg-card p-4">
+            <div className="space-y-3 rounded-[16px] bg-ios-card p-4">
               <p className="text-[15px] font-semibold">Cash out via P2P</p>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 Move OUSD into your P2P account, then sell to a merchant for local payment methods
                 (GCash, bank, etc.). Escrow protects both sides until release.
               </p>
               <div className="grid gap-2">
-                <Button asChild className="h-12 w-full rounded-full text-base font-semibold">
+                <Button asChild className="ios-active h-[50px] w-full rounded-[14px] text-[17px] font-semibold">
                   <Link to="/transfer" search={{ from: "funding", to: "p2p", asset: "OUSD" }}>
                     Transfer to P2P
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="h-12 w-full rounded-full text-base font-semibold">
+                <Button asChild variant="outline" className="ios-active h-[50px] w-full rounded-[14px] text-[17px] font-semibold">
                   <Link to="/p2p">Open P2P market</Link>
                 </Button>
               </div>
@@ -287,8 +290,8 @@ function WithdrawPage() {
             </div>
           ) : (
             <>
-          <div className="rounded-3xl border border-border bg-card p-4">
-            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="rounded-[16px] bg-ios-card p-4">
+            <label className="mb-2 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
               {destKind === "openpay" ? "OpenPay address" : "Pi mainnet wallet"}
             </label>
             <div className="flex gap-2">
@@ -301,7 +304,7 @@ function WithdrawPage() {
                   if (detected) setDestKind(detected);
                 }}
                 placeholder={destMeta.placeholder}
-                className="h-12 rounded-2xl font-mono text-sm"
+                className="ios-field font-mono text-[14px] focus-visible:ring-2 focus-visible:ring-ios-blue/35"
                 autoCapitalize="characters"
                 autoFocus
               />
@@ -329,7 +332,7 @@ function WithdrawPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0 rounded-2xl"
+                    className="ios-active h-12 w-12 shrink-0 rounded-[12px] border-0 bg-ios-fill text-ios-blue"
                     aria-label="Scan QR"
                   >
                     <Camera className="h-4 w-4" />
@@ -354,13 +357,13 @@ function WithdrawPage() {
           </div>
 
           {piEligible ? (
-            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-[12px] bg-ios-fill p-1">
               <button
                 type="button"
                 onClick={() => setInstantPi(true)}
                 className={cn(
-                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
-                  instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                  "rounded-[9px] px-2 py-2 text-[13px] font-semibold transition",
+                  instantPi ? "bg-ios-card text-ios-label shadow-sm" : "text-muted-foreground",
                 )}
               >
                 Instant on-chain · no fee
@@ -369,8 +372,8 @@ function WithdrawPage() {
                 type="button"
                 onClick={() => setInstantPi(false)}
                 className={cn(
-                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
-                  !instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                  "rounded-[9px] px-2 py-2 text-[13px] font-semibold transition",
+                  !instantPi ? "bg-ios-card text-ios-label shadow-sm" : "text-muted-foreground",
                 )}
               >
                 Admin payout · {feePercent}% fee
@@ -382,7 +385,7 @@ function WithdrawPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] text-[17px] font-semibold"
             disabled={!destValid}
             onClick={() => setStep("amount")}
           >
@@ -398,7 +401,7 @@ function WithdrawPage() {
           <button
             type="button"
             onClick={() => setStep("destination")}
-            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left press hover:bg-muted/40"
+            className="ios-active flex w-full items-center gap-3 rounded-[16px] bg-ios-card px-4 py-3 text-left"
           >
             <OusdIcon className="h-10 w-10 shrink-0" />
             <div className="min-w-0 flex-1">
@@ -412,7 +415,7 @@ function WithdrawPage() {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
 
-          <div className="rounded-3xl border border-border bg-card px-4 py-8 text-center">
+          <div className="rounded-[16px] bg-ios-card px-4 py-8 text-center">
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
@@ -435,7 +438,7 @@ function WithdrawPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm">
+          <div className="flex items-center justify-between rounded-[16px] bg-ios-card px-4 py-3 text-[15px]">
             <span className="text-muted-foreground">
               Available{" "}
               <span className="font-semibold text-foreground">
@@ -485,12 +488,12 @@ function WithdrawPage() {
               />
             </button>
             {detailsOpen ? (
-              <div className="mt-2 space-y-3 rounded-3xl border border-border bg-card p-4">
+              <div className="space-y-3 rounded-[16px] bg-ios-card p-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label
                       htmlFor="wd-name"
-                      className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                      className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary"
                     >
                       Name
                     </label>
@@ -505,7 +508,7 @@ function WithdrawPage() {
                   <div>
                     <label
                       htmlFor="wd-user"
-                      className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                      className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary"
                     >
                       Username
                     </label>
@@ -521,7 +524,7 @@ function WithdrawPage() {
                 <div>
                   <label
                     htmlFor="wd-note"
-                    className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary"
                   >
                     Note
                   </label>
@@ -540,7 +543,7 @@ function WithdrawPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] text-[17px] font-semibold"
             disabled={!canSubmit || ctxQ.isLoading}
             onClick={() => setConfirmOpen(true)}
           >
@@ -704,6 +707,6 @@ function WithdrawPage() {
           </ul>
         )}
       </section>
-    </div>
+    </IosPageShell>
   );
 }

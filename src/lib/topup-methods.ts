@@ -157,6 +157,13 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     enabled: true,
   },
   {
+    method_key: "paymongo",
+    label: "QR Ph & e-wallets",
+    description: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
+    sort_order: 18,
+    enabled: true,
+  },
+  {
     method_key: "scan_pay",
     label: "Scan to pay",
     description:

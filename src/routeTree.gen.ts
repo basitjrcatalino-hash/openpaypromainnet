@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WikiRouteImport } from './routes/wiki'
 import { Route as WebsiteRouteImport } from './routes/website'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TestnetRewardRouteImport } from './routes/testnet-reward'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -230,6 +231,11 @@ const WikiRoute = WikiRouteImport.update({
 const WebsiteRoute = WebsiteRouteImport.update({
   id: '/website',
   path: '/website',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestnetRewardRoute = TestnetRewardRouteImport.update({
@@ -1363,6 +1369,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -1576,6 +1583,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -1791,6 +1799,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testnet-reward': typeof TestnetRewardRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/website': typeof WebsiteRoute
   '/wiki': typeof WikiRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -2006,6 +2015,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2219,6 +2229,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2433,6 +2444,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testnet-reward'
+    | '/unsubscribe'
     | '/website'
     | '/wiki'
     | '/.mcp/list-tools'
@@ -2648,6 +2660,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestnetRewardRoute: typeof TestnetRewardRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WebsiteRoute: typeof WebsiteRoute
   WikiRoute: typeof WikiRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
@@ -2747,6 +2760,13 @@ declare module '@tanstack/react-router' {
       path: '/website'
       fullPath: '/website'
       preLoaderRoute: typeof WebsiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/testnet-reward': {
@@ -4542,6 +4562,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestnetRewardRoute: TestnetRewardRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WebsiteRoute: WebsiteRoute,
   WikiRoute: WikiRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,

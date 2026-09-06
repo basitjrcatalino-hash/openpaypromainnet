@@ -11,7 +11,7 @@ import {
 export const PERP_MARKETS = REGISTRY_MARKETS;
 export type PerpMarket = RegistryPerpMarket;
 
-export const PERP_MARGIN_ASSETS = ["USDT", "OUSD", "USDC"] as const;
+export const PERP_MARGIN_ASSETS = ["OUSD"] as const;
 export type PerpMarginAsset = (typeof PERP_MARGIN_ASSETS)[number];
 
 export type PerpSide = "long" | "short";

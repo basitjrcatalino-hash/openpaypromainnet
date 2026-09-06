@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import {
@@ -110,6 +110,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
   const [levOpen, setLevOpen] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
   const [tpslLocal, setTpslLocal] = useState(false);
+  const [marginMode, setMarginMode] = useState<"cross" | "isolated">("isolated");
+
 
   const useTpsl = props.useTpsl ?? tpslLocal;
   const setUseTpsl = props.onUseTpsl ?? setTpslLocal;
@@ -214,13 +216,23 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.mode === "futures" ? (
         <div className="flex gap-1">
-          <button
-            type="button"
-            className="flex flex-1 items-center justify-between rounded-md bg-muted/60 px-2 py-1.5 text-[11px] font-semibold text-foreground"
-          >
-            Isolated
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          </button>
+          <div className="flex flex-1 gap-0.5 rounded-md bg-muted/60 p-0.5">
+            {(["cross", "isolated"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMarginMode(m)}
+                className={cn(
+                  "flex-1 rounded py-1 text-[10px] font-bold capitalize press",
+                  marginMode === m
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground",
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => setLevOpen(true)}
@@ -232,6 +244,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           </button>
         </div>
       ) : null}
+
 
       <select
         value={props.orderType}
@@ -311,39 +324,50 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         </div>
       </div>
 
-      <div className="space-y-1 px-0.5 pt-0.5">
-        <div className="relative flex items-center justify-between">
-          <div className="absolute inset-x-1 top-1/2 h-px -translate-y-1/2 bg-muted-foreground/25" />
+      <div className="space-y-1 px-0.5 pt-1">
+        <div className="relative flex h-4 items-center">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={props.pct}
+            onChange={(e) => props.onPct(Number(e.target.value))}
+            aria-label="Order size percentage"
+            className="ph-pct-slider w-full"
+            style={{ "--pct": `${props.pct}%` } as React.CSSProperties}
+          />
+        </div>
+        <div className="flex justify-between text-[9px] text-muted-foreground">
           {PCTS.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => props.onPct(p)}
-              className={cn(
-                "relative z-1 h-2.5 w-2.5 rounded-full border press",
-                props.pct >= p && p > 0
-                  ? "border-[#ffad0a] bg-[#ffad0a]"
-                  : "border-muted-foreground/50 bg-background",
-              )}
-              aria-label={`${p}%`}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between text-[9px] text-muted-foreground">
-          {PCTS.map((p) => (
-            <span key={p}>{p}%</span>
+              className={cn("press", props.pct === p && "font-bold text-foreground")}
+            >
+              {p}%
+            </button>
           ))}
         </div>
       </div>
 
       {props.mode === "spot" ? (
         <div className="flex h-8 items-center justify-between rounded-md bg-muted/40 px-2.5 text-[11px]">
-          <span className="text-muted-foreground">Total</span>
+          <span className="text-muted-foreground">Order value</span>
           <span className="font-semibold tabular-nums">
-            {total > 0 ? `${formatNumber(total, 2)} USDT` : "—"}
+            {total > 0 ? `${formatNumber(total, 2)} ${props.payAsset}` : "—"}
           </span>
         </div>
-      ) : null}
+      ) : (
+        <div className="flex h-8 items-center justify-between rounded-md bg-muted/40 px-2.5 text-[11px]">
+          <span className="text-muted-foreground">Order value</span>
+          <span className="font-semibold tabular-nums">
+            {perpNotional > 0 ? `${formatNumber(perpNotional, 2)} USDT` : "—"}
+          </span>
+        </div>
+      )}
+
 
       {props.mode === "futures" ? (
         <div className="flex items-center justify-between text-[10px] text-muted-foreground">

@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { SpotOrderKind } from "@/lib/trade-advanced";
+import { liquidationPrice } from "@/lib/trade-advanced";
+
 import { AlertTriangle, ExternalLink, LayoutGrid, MessageCircle, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
@@ -185,6 +187,9 @@ function TradePage() {
   const [payAsset, setPayAsset] = useState<SpotPay>("OUSD");
   /** Confirm close position (Phantom-style TxConfirmModal). */
   const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
+  /** Pre-trade confirmation for new orders (OKX-style order preview). */
+  const [confirmOrder, setConfirmOrder] = useState<null | "spot" | "long" | "short">(null);
+
 
   useEffect(() => {
     const marketMatch =
@@ -549,7 +554,13 @@ function TradePage() {
       setCloseTarget(pos);
       return;
     }
-    openM.mutate(side);
+    const baseAmt = Number(amount);
+    if (!(baseAmt > 0)) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    setConfirmOrder(side);
+
   }
 
   const closePreview = (() => {
@@ -569,6 +580,24 @@ function TradePage() {
     const major = getMajorToken(closeTarget.market.toLowerCase());
     return { mark, pnl, fee, receive, logoUrl: major?.logoUrl };
   })();
+
+  /** OKX-style pre-trade preview for the confirmation drawer. */
+  const orderPreview = (() => {
+    if (!confirmOrder) return null;
+    const qty = Number(amount);
+    const px = orderType === "limit" && Number(limitPrice) > 0 ? Number(limitPrice) : price;
+    const notional = qty * px;
+    const logoUrl = getMajorToken(market.toLowerCase())?.logoUrl;
+    if (confirmOrder === "spot") {
+      return { qty, px, notional, logoUrl, lev: 0, margin: 0, fee: 0, liq: 0 };
+    }
+    const lev = confirmOrder === "short" ? shortLeverage : leverage;
+    const margin = lev > 0 ? notional / lev : 0;
+    const fee = applyPerpNotionalFee(margin, lev).fee;
+    const liq = liquidationPrice(confirmOrder, px, lev);
+    return { qty, px, notional, logoUrl, lev, margin, fee, liq };
+  })();
+
 
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
@@ -642,7 +671,13 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
-        onSubmit={() => spotM.mutate()}
+        onSubmit={() => {
+          if (!(Number(amount) > 0)) {
+            toast.error("Enter an amount");
+            return;
+          }
+          setConfirmOrder("spot");
+        }}
       />
     );
 
@@ -653,14 +688,17 @@ function TradePage() {
       midOverride={mid}
       loading={depthQ.isLoading}
       change24h={change}
+      markPrice={price}
       fundingRate={quote?.fundingRate}
       showFunding={mode === "futures"}
       onPriceClick={(px) => {
         setOrderType("limit");
         setLimitPrice(String(px));
       }}
+      onSizeClick={(sz) => setAmount(String(sz))}
     />
   );
+
 
   const priceByMarket: Record<string, number> = {};
   for (const p of openPositions) {
@@ -959,7 +997,13 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
-                  onSubmit={() => spotM.mutate()}
+                  onSubmit={() => {
+          if (!(Number(amount) > 0)) {
+            toast.error("Enter an amount");
+            return;
+          }
+          setConfirmOrder("spot");
+        }}
                 />
               )}
             </div>
@@ -994,13 +1038,16 @@ function TradePage() {
                     midOverride={mid}
                     loading={depthQ.isLoading}
                     change24h={change}
+                    markPrice={price}
                     fundingRate={quote?.fundingRate}
                     showFunding={mode === "futures"}
                     onPriceClick={(px) => {
                       setOrderType("limit");
                       setLimitPrice(String(px));
                     }}
+                    onSizeClick={(sz) => setAmount(String(sz))}
                   />
+
                 ) : (
                   <RecentTrades trades={recentQ.data} loading={recentQ.isLoading} />
                 )}
@@ -1251,6 +1298,108 @@ function TradePage() {
           closeM.mutate(closeTarget.id);
         }}
       />
+
+      <TxConfirmModal
+        open={Boolean(confirmOrder)}
+        onOpenChange={(open) => {
+          if (!open && !formBusy) setConfirmOrder(null);
+        }}
+        title="Confirm order"
+        description={
+          confirmOrder === "spot"
+            ? `${market} · ${spotSide === "buy" ? "Buy" : "Sell"} · ${orderType === "limit" ? "Limit" : "Market"}`
+            : confirmOrder
+              ? `${market}USDT · ${confirmOrder.toUpperCase()} ${orderPreview?.lev ?? 0}×`
+              : undefined
+        }
+        icon={
+          orderPreview?.logoUrl ? (
+            <img
+              src={orderPreview.logoUrl}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover ring-4 ring-card"
+            />
+          ) : (
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-muted text-lg font-bold ring-4 ring-card">
+              {market.slice(0, 1)}
+            </div>
+          )
+        }
+        amount={
+          orderPreview ? (
+            <span>
+              {formatNumber(orderPreview.qty, 6)} {market}
+            </span>
+          ) : undefined
+        }
+        subtitle={
+          orderPreview
+            ? `≈ ${formatNumber(orderPreview.notional, 2)} ${confirmOrder === "spot" ? payAsset : marginAsset}`
+            : undefined
+        }
+        rows={
+          orderPreview
+            ? confirmOrder === "spot"
+              ? [
+                  { label: "Side", value: spotSide === "buy" ? "Buy" : "Sell" },
+                  { label: "Type", value: orderType === "limit" ? "Limit" : "Market" },
+                  {
+                    label: orderType === "limit" ? "Limit price" : "Mark price",
+                    value: formatNumber(orderPreview.px, orderPreview.px >= 1000 ? 1 : 2),
+                    mono: true,
+                  },
+                  {
+                    label: "Order value",
+                    value: `${formatNumber(orderPreview.notional, 2)} ${payAsset}`,
+                    mono: true,
+                  },
+                ]
+              : [
+                  { label: "Side", value: confirmOrder === "long" ? "Long" : "Short" },
+                  { label: "Leverage", value: `${orderPreview.lev}×` },
+                  {
+                    label: "Entry",
+                    value: formatNumber(orderPreview.px, orderPreview.px >= 1000 ? 1 : 2),
+                    mono: true,
+                  },
+                  {
+                    label: "Margin",
+                    value: `${formatNumber(orderPreview.margin, 4)} ${marginAsset}`,
+                    mono: true,
+                  },
+                  {
+                    label: `Fee (${PERP_TAKER_FEE_BPS / 100}% taker)`,
+                    value: `${formatNumber(orderPreview.fee, 4)} ${marginAsset}`,
+                    mono: true,
+                  },
+                  {
+                    label: "Est. liquidation",
+                    value: formatNumber(orderPreview.liq, orderPreview.liq >= 1000 ? 1 : 2),
+                    mono: true,
+                  },
+                ]
+            : []
+        }
+        notice={
+          <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+            Market prices move fast — the final fill price may differ slightly from this preview.
+          </p>
+        }
+        confirmLabel={formBusy ? "Placing…" : "Confirm order"}
+        busy={formBusy}
+        variant={
+          confirmOrder === "short" || (confirmOrder === "spot" && spotSide === "sell")
+            ? "destructive"
+            : "success"
+        }
+        onConfirm={() => {
+          if (!confirmOrder) return;
+          if (confirmOrder === "spot") spotM.mutate();
+          else openM.mutate(confirmOrder);
+          setConfirmOrder(null);
+        }}
+      />
     </div>
+
   );
 }

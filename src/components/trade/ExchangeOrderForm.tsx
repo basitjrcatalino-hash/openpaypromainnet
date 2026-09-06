@@ -214,13 +214,23 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.mode === "futures" ? (
         <div className="flex gap-1">
-          <button
-            type="button"
-            className="flex flex-1 items-center justify-between rounded-md bg-muted/60 px-2 py-1.5 text-[11px] font-semibold text-foreground"
-          >
-            Isolated
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          </button>
+          <div className="flex flex-1 gap-0.5 rounded-md bg-muted/60 p-0.5">
+            {(["cross", "isolated"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMarginMode(m)}
+                className={cn(
+                  "flex-1 rounded py-1 text-[10px] font-bold capitalize press",
+                  marginMode === m
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground",
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => setLevOpen(true)}
@@ -232,6 +242,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
           </button>
         </div>
       ) : null}
+
 
       <select
         value={props.orderType}

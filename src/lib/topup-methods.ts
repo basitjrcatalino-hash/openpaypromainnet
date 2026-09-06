@@ -20,6 +20,7 @@ export type TopupMethodKey =
   | "banxa_card"
   | "banxa_bank"
   | "onramp"
+  | "paymongo"
   | "scan_pay";
 
 export type TopupMethodSeed = {

@@ -367,7 +367,7 @@ function TradePage() {
     const spot = balQ.data.balances.spot;
     const current = Number(spot[payAsset] ?? 0) || 0;
     if (current > 0) return;
-    const preferred = (["USDT", "OUSD", "USDC"] as const).find(
+    const preferred = (["OUSD"] as const).find(
       (a) => (Number(spot[a] ?? 0) || 0) > 0,
     );
     if (preferred && preferred !== payAsset) setPayAsset(preferred);

@@ -399,7 +399,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.mode === "futures" ? (
         <div className="flex gap-1 rounded-md bg-muted/40 p-0.5">
-          {PERP_MARGIN_ASSETS.map((a) => (
+          {PERP_MARGIN_ASSETS.filter((a) => a === "OUSD").map((a) => (
             <button
               key={a}
               type="button"
@@ -415,7 +415,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         </div>
       ) : (
         <div className="flex gap-1 rounded-md bg-muted/40 p-0.5">
-          {(["USDT", "OUSD", "USDC"] as SpotPayAsset[]).map((a) => (
+          {(["OUSD"] as SpotPayAsset[]).map((a) => (
             <button
               key={a}
               type="button"

@@ -18,6 +18,7 @@ export type TopupProvider =
   | "banxa_card"
   | "banxa_bank"
   | "onramp"
+  | "paymongo"
   | "scan_pay"
   | "wallet_ousd"
   | "wallet_usdt"
@@ -125,6 +126,13 @@ const PROVIDER: Record<
       "You’ll complete KYC and pay via Onramp.money using local bank rails (UPI, IMPS, SEPA, bank transfer). The stablecoin settles to OpenPay Pro and OUSD credits once the order completes.",
     fees: "Onramp.money charges its own on-ramp fee and FX spread. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Onramp.money",
+  },
+  paymongo: {
+    name: "QR Ph & e-wallets",
+    blurb:
+      "You’ll scan one QR Ph code with GCash, Maya, GrabPay, or any QR Ph bank app. The amount is charged in PHP at the current rate and OUSD credits once PayMongo confirms the payment.",
+    fees: "PayMongo charges its own processing fee on the PHP amount. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "PayMongo",
   },
   scan_pay: {
     name: "Scan to pay",

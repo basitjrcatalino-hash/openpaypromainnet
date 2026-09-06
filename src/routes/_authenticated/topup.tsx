@@ -20,6 +20,7 @@ import { CashPayDepositPanel } from "@/components/cash-pay-deposit-panel";
 import { BanxaDepositPanel } from "@/components/banxa-deposit-panel";
 import { ScanToPayDepositPanel } from "@/components/scan-to-pay-deposit-panel";
 import { OnrampDepositPanel } from "@/components/onramp-deposit-panel";
+import { PaymongoDepositPanel } from "@/components/paymongo-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -85,6 +86,7 @@ type Method =
   | "wallet_sol"
   | BanxaTopupMethodKey
   | "onramp"
+  | "paymongo"
   | "scan_pay";
 
 type WalletLedgerMethod = "wallet_usdt" | "wallet_usdc" | "wallet_sol";
@@ -182,6 +184,12 @@ const methods: {
     label: "Onramp.money",
     icon: Landmark,
     desc: "Local bank rails (UPI / IMPS / SEPA) · onramp & offramp → OUSD",
+  },
+  {
+    id: "paymongo",
+    label: "QR Ph & e-wallets",
+    icon: QrCode,
+    desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "usdc",
@@ -598,6 +606,7 @@ function TopUpPage() {
       method === "cash_pay" ||
       method === "scan_pay" ||
       method === "onramp" ||
+      method === "paymongo" ||
       isBanxaTopupMethod(method)
     ) {
       setDepositReady(true);
@@ -797,6 +806,8 @@ function TopUpPage() {
                           ? `Continue with bank transfer`
                           : method === "onramp"
                             ? `Continue with Onramp.money`
+                          : method === "paymongo"
+                            ? `Continue with QR Ph`
                           : method === "scan_pay"
                             ? `Continue with Scan to pay`
                             : `Continue with Pi`;
@@ -832,6 +843,8 @@ function TopUpPage() {
                           ? "Bank Transfer (Banxa)"
                           : method === "onramp"
                             ? "Onramp.money"
+                          : method === "paymongo"
+                            ? "QR Ph (PayMongo)"
                           : method === "scan_pay"
                             ? "Scan to pay"
                             : "OpenPay Balance";
@@ -859,6 +872,8 @@ function TopUpPage() {
                         ? "Bank Transfer"
                         : method === "onramp"
                           ? "Onramp.money"
+                        : method === "paymongo"
+                          ? "QR Ph & e-wallets"
                         : method === "scan_pay"
                           ? "Scan to pay"
                           : "Crypto Deposit";
@@ -1407,6 +1422,27 @@ function TopUpPage() {
             </p>
           </div>
           <OnrampDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "paymongo" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <PaymongoDepositPanel
             amountUsd={amtNum}
             walletId={wallet?.id}
             onSuccess={refreshAfterHelioDeposit}

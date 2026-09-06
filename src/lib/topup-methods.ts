@@ -20,6 +20,7 @@ export type TopupMethodKey =
   | "banxa_card"
   | "banxa_bank"
   | "onramp"
+  | "paymongo"
   | "scan_pay";
 
 export type TopupMethodSeed = {
@@ -153,6 +154,13 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     description:
       "Local bank rails (UPI / IMPS / SEPA / bank transfer) · onramp & offramp widget → OUSD",
     sort_order: 17,
+    enabled: true,
+  },
+  {
+    method_key: "paymongo",
+    label: "QR Ph & e-wallets",
+    description: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
+    sort_order: 18,
     enabled: true,
   },
   {

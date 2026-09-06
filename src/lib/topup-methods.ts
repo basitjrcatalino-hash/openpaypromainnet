@@ -90,6 +90,13 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     enabled: true,
   },
   {
+    method_key: "wallet_ousd",
+    label: "Wallet OUSD",
+    description: "Pay with your OpenPay Pro OUSD balance · buy any token",
+    sort_order: 13,
+    enabled: true,
+  },
+  {
     method_key: "wallet_usdt",
     label: "Wallet USDT",
     description: "Pay with your OpenPay Pro USDT balance → OUSD 1:1",

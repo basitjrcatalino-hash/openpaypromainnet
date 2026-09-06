@@ -552,7 +552,13 @@ function TradePage() {
       setCloseTarget(pos);
       return;
     }
-    openM.mutate(side);
+    const baseAmt = Number(amount);
+    if (!(baseAmt > 0)) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    setConfirmOrder(side);
+
   }
 
   const closePreview = (() => {

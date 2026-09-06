@@ -264,37 +264,50 @@ function DepthRow({
   side,
   price,
   amount,
-  maxAmt,
+  total,
+  maxTotal,
   priceDigits,
   amtDigits,
-  onClick,
+  onPrice,
+  onSize,
 }: {
   side: "ask" | "bid";
   price: number;
   amount: number;
-  maxAmt: number;
+  total: number;
+  maxTotal: number;
   priceDigits: number;
   amtDigits: number;
-  onClick?: (price: number) => void;
+  onPrice?: (price: number) => void;
+  onSize?: (amount: number) => void;
 }) {
-  const pct = Math.min(100, (amount / maxAmt) * 100);
+  const pct = Math.min(100, (total / maxTotal) * 100);
   const color = side === "ask" ? "#f6465d" : "#0ecb81";
   return (
-    <button
-      type="button"
-      onClick={() => onClick?.(price)}
-      className="relative flex w-full items-center justify-between overflow-hidden rounded-sm px-0.5 py-0.5 text-left press"
-    >
+    <div className="relative grid grid-cols-[1fr_1fr_1fr] items-center gap-1 overflow-hidden rounded-sm px-0.5 py-0.5">
       <span
         className="pointer-events-none absolute inset-y-0 right-0 opacity-20"
         style={{ width: `${pct}%`, backgroundColor: color }}
       />
-      <span className="relative font-semibold tabular-nums" style={{ color }}>
+      <button
+        type="button"
+        onClick={() => onPrice?.(price)}
+        className="relative text-left font-semibold tabular-nums press"
+        style={{ color }}
+      >
         {formatNumber(price, priceDigits)}
-      </span>
-      <span className="relative tabular-nums text-muted-foreground">
+      </button>
+      <button
+        type="button"
+        onClick={() => onSize?.(amount)}
+        className="relative text-right tabular-nums text-foreground/80 press"
+      >
         {formatNumber(amount, amtDigits)}
+      </button>
+      <span className="relative text-right tabular-nums text-muted-foreground">
+        {formatNumber(total, amtDigits)}
       </span>
-    </button>
+    </div>
   );
 }
+

@@ -74,6 +74,7 @@ type PaymentMethod =
   | "pi"
   | "openpay_checkout"
   | "moonpay"
+  | "paymongo"
   | "helio"
   | "usdc";
 type BuyStep = "amount" | "method" | "deposit";
@@ -168,6 +169,12 @@ const ALL_METHODS: {
     label: "MoonPay",
     icon: CreditCard,
     desc: "Card / Apple Pay / Google Pay → OUSD",
+  },
+  {
+    id: "paymongo",
+    label: "QR Ph & e-wallets",
+    icon: QrCode,
+    desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "usdc",

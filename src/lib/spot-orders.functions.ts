@@ -39,7 +39,7 @@ const PlaceSchema = z.object({
   side: z.enum(["buy", "sell"]),
   price: z.number().positive().max(1e12),
   amount: z.number().positive().max(1e12),
-  pay_asset: z.enum(["USDT", "OUSD", "USDC"]),
+  pay_asset: z.enum(["OUSD"]),
   client_order_id: z.string().max(64).optional(),
 });
 
@@ -326,7 +326,7 @@ const MarketTradeSchema = z.object({
   side: z.enum(["buy", "sell"]),
   amount: z.number().positive().max(1e12),
   price: z.number().positive().max(1e12),
-  pay_asset: z.enum(["USDT", "OUSD", "USDC"]),
+  pay_asset: z.enum(["OUSD"]),
 });
 
 /** Market Spot buy/sell settled against the Spot account bucket. */

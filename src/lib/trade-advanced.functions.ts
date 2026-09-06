@@ -12,7 +12,7 @@ const TriggerSchema = z.object({
   side: z.enum(["buy", "sell"]),
   order_type: z.enum(["stop_limit", "stop_market", "trailing_stop"]),
   amount: z.number().positive().max(1e12),
-  pay_asset: z.enum(["USDT", "OUSD", "USDC"]),
+  pay_asset: z.enum(["OUSD"]),
   trigger_price: z.number().positive().max(1e12).optional(),
   trigger_direction: z.enum(["above", "below"]).optional(),
   price: z.number().positive().max(1e12).optional(),
@@ -60,7 +60,7 @@ export const placeOcoOrder = createServerFn({ method: "POST" })
         market: z.enum(PERP_MARKETS),
         side: z.enum(["buy", "sell"]),
         amount: z.number().positive().max(1e12),
-        pay_asset: z.enum(["USDT", "OUSD", "USDC"]),
+        pay_asset: z.enum(["OUSD"]),
         limit_price: z.number().positive().max(1e12),
         stop_price: z.number().positive().max(1e12),
       })

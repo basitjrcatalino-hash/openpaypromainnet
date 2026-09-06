@@ -44,6 +44,8 @@ import {
   type LedgerTopupAsset,
 } from "@/lib/ledger-topup.functions";
 import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -190,13 +192,13 @@ const methods: {
   {
     id: "paymongo",
     label: "QR Ph & e-wallets",
-    icon: QrCode,
+    logoUrl: qrPhLogoAsset.url,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "paypal",
     label: "PayPal",
-    icon: Wallet,
+    logoUrl: paypalLogoAsset.url,
     desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
   },
   {

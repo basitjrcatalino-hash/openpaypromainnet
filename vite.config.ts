@@ -112,6 +112,10 @@ export default defineConfig({
         "loglevel-package": path.resolve(rootDir, "node_modules/loglevel/lib/loglevel.js"),
         deepmerge: path.resolve(rootDir, "src/shims/deepmerge.ts"),
         "json-stable-stringify": path.resolve(rootDir, "src/shims/json-stable-stringify.ts"),
+        // React Email pulls `entities`; a nested v7 copy breaks SSR (no ./lib/decode.js).
+        "entities/lib/decode.js": path.resolve(rootDir, "node_modules/entities/lib/decode.js"),
+        "entities/lib/encode.js": path.resolve(rootDir, "node_modules/entities/lib/encode.js"),
+        entities: path.resolve(rootDir, "node_modules/entities"),
       },
       dedupe: [
         "react",

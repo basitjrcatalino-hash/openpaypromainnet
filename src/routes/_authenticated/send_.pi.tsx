@@ -144,13 +144,18 @@ function SendToPiWalletPage() {
       const res = (await sendToPi({
         data: { to: dest, amount: Number(amountNum.toFixed(2)), memo: memo.trim().slice(0, 28) },
       })) as { pi_txid?: string; horizon?: string | null };
-      const txid = String(res.pi_txid || "");
       toast.success(`Sent ${formatNumber(amountNum, 2)} OUSD to Pi Wallet`);
-      setReceipt({ amount: amountNum, to: dest, txid, horizon: res.horizon ?? null });
-      setWalletTo("");
-      setAmount("");
-      setMemo("");
       await qc.invalidateQueries({ queryKey: ["pi-send-wallet", user.id] });
+      await qc.invalidateQueries({ queryKey: ["transactions"] });
+      void navigate({
+        to: "/pi-send-success",
+        search: {
+          amount: amountNum,
+          to: dest,
+          txid: String(res.pi_txid || ""),
+          horizon: res.horizon ?? "",
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Transfer to Pi Wallet failed");
     } finally {

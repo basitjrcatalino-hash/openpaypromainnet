@@ -99,6 +99,8 @@ function WithdrawPage() {
   const [username, setUsername] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [instantPi, setInstantPi] = useState(true);
+
   const [hydrated, setHydrated] = useState(false);
 
   const destMeta = WITHDRAWAL_DEST_KINDS.find((k) => k.id === destKind) ?? WITHDRAWAL_DEST_KINDS[0];

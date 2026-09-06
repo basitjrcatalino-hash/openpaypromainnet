@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, Landmark, type LucideIcon } from "lucide-react";
+import { Loader2, Link2, CheckCircle2, CreditCard, ChevronRight, Building2, QrCode, Landmark, Wallet, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";
 import { z } from "zod";
@@ -21,6 +21,7 @@ import { BanxaDepositPanel } from "@/components/banxa-deposit-panel";
 import { ScanToPayDepositPanel } from "@/components/scan-to-pay-deposit-panel";
 import { OnrampDepositPanel } from "@/components/onramp-deposit-panel";
 import { PaymongoDepositPanel } from "@/components/paymongo-deposit-panel";
+import { PaypalDepositPanel } from "@/components/paypal-deposit-panel";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
@@ -87,6 +88,7 @@ type Method =
   | BanxaTopupMethodKey
   | "onramp"
   | "paymongo"
+  | "paypal"
   | "scan_pay";
 
 type WalletLedgerMethod = "wallet_usdt" | "wallet_usdc" | "wallet_sol";
@@ -190,6 +192,12 @@ const methods: {
     label: "QR Ph & e-wallets",
     icon: QrCode,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
+  },
+  {
+    id: "paypal",
+    label: "PayPal",
+    icon: Wallet,
+    desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
   },
   {
     id: "usdc",
@@ -607,6 +615,7 @@ function TopUpPage() {
       method === "scan_pay" ||
       method === "onramp" ||
       method === "paymongo" ||
+      method === "paypal" ||
       isBanxaTopupMethod(method)
     ) {
       setDepositReady(true);
@@ -808,6 +817,8 @@ function TopUpPage() {
                             ? `Continue with Onramp.money`
                           : method === "paymongo"
                             ? `Continue with QR Ph`
+                          : method === "paypal"
+                            ? `Continue with PayPal`
                           : method === "scan_pay"
                             ? `Continue with Scan to pay`
                             : `Continue with Pi`;
@@ -845,6 +856,8 @@ function TopUpPage() {
                             ? "Onramp.money"
                           : method === "paymongo"
                             ? "QR Ph (PayMongo)"
+                          : method === "paypal"
+                            ? "PayPal"
                           : method === "scan_pay"
                             ? "Scan to pay"
                             : "OpenPay Balance";
@@ -874,6 +887,8 @@ function TopUpPage() {
                           ? "Onramp.money"
                         : method === "paymongo"
                           ? "QR Ph & e-wallets"
+                        : method === "paypal"
+                          ? "PayPal"
                         : method === "scan_pay"
                           ? "Scan to pay"
                           : "Crypto Deposit";
@@ -1422,6 +1437,27 @@ function TopUpPage() {
             </p>
           </div>
           <OnrampDepositPanel
+            amountUsd={amtNum}
+            walletId={wallet?.id}
+            onSuccess={refreshAfterHelioDeposit}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change payment method
+          </Button>
+        </div>
+      )}
+
+      {step === "deposit" && depositReady && method === "paypal" && (
+        <div className="flex flex-1 flex-col space-y-4">
+          <PaypalDepositPanel
             amountUsd={amtNum}
             walletId={wallet?.id}
             onSuccess={refreshAfterHelioDeposit}

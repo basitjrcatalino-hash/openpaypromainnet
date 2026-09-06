@@ -19,6 +19,7 @@ export type TopupProvider =
   | "banxa_bank"
   | "onramp"
   | "paymongo"
+  | "paypal"
   | "scan_pay"
   | "wallet_ousd"
   | "wallet_usdt"
@@ -126,6 +127,14 @@ const PROVIDER: Record<
       "You’ll complete KYC and pay via Onramp.money using local bank rails (UPI, IMPS, SEPA, bank transfer). The stablecoin settles to OpenPay Pro and OUSD credits once the order completes.",
     fees: "Onramp.money charges its own on-ramp fee and FX spread. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Onramp.money",
+  },
+  paypal: {
+    name: "PayPal",
+    blurb:
+      "You approve the payment in PayPal (balance, bank, card, Pay Later or Venmo). OUSD is credited as soon as PayPal confirms the payment.",
+
+    fees: "PayPal charges its own processing fee. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
+    thirdParty: "PayPal",
   },
   paymongo: {
     name: "QR Ph & e-wallets",

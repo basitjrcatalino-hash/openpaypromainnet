@@ -653,14 +653,17 @@ function TradePage() {
       midOverride={mid}
       loading={depthQ.isLoading}
       change24h={change}
+      markPrice={price}
       fundingRate={quote?.fundingRate}
       showFunding={mode === "futures"}
       onPriceClick={(px) => {
         setOrderType("limit");
         setLimitPrice(String(px));
       }}
+      onSizeClick={(sz) => setAmount(String(sz))}
     />
   );
+
 
   const priceByMarket: Record<string, number> = {};
   for (const p of openPositions) {

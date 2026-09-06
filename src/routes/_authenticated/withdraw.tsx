@@ -166,6 +166,31 @@ function WithdrawPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const piPayoutM = useMutation({
+    mutationFn: () =>
+      sendPiFn({
+        data: { to: dest.trim(), amount: amtNum, memo: note.trim() || null },
+      }),
+    onSuccess: (res: any) => {
+      const url = piTxExplorerUrl(res?.pi_txid ?? "", res?.horizon ?? null);
+      notifySuccess(
+        `Sent ${formatNumber(amtNum, 2)} OUSD to Pi Wallet${url ? "" : ""}`,
+        { sound: "send" },
+      );
+      setAmount("");
+      setNote("");
+      setConfirmOpen(false);
+      setStep("destination");
+      void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
+      void qc.invalidateQueries({ queryKey: ["my-withdrawals"] });
+      void qc.invalidateQueries({ queryKey: ["wallet"] });
+      void qc.invalidateQueries({ queryKey: ["activity"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
+
   const cancelM = useMutation({
     mutationFn: (id: string) => cancelW({ data: { id } }),
     onSuccess: () => {

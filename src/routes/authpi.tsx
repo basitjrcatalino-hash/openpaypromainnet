@@ -174,7 +174,8 @@ function AuthPiPage() {
     }
   }
 
-  const selectedOpt = METHODS.find((m) => m.id === selected)!;
+  const visibleMethods = piOnly ? METHODS.filter((m) => m.id === "pi") : METHODS;
+  const selectedOpt = visibleMethods.find((m) => m.id === selected) ?? visibleMethods[0];
 
   return (
     <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0a0a14] px-4 py-10 text-white">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 import {

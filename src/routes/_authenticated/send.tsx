@@ -27,7 +27,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { OusdIcon } from "@/components/ousd-icon";
-import { PageHeader } from "@/components/wallet/PageHeader";
+import { IosPageShell } from "@/components/ios/IosPageShell";
+import {
+  IosSectionLabel,
+  IosSegmented,
+  IosSettingsGroup,
+} from "@/components/ios/IosSettingsGroup";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";

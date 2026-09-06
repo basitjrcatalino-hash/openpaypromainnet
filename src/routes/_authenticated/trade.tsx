@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { SpotOrderKind } from "@/lib/trade-advanced";
+import { liquidationPrice } from "@/lib/trade-advanced";
+
 import { AlertTriangle, ExternalLink, LayoutGrid, MessageCircle, Smartphone, X } from "lucide-react";
 import { toast } from "sonner";
 import { notifySuccess } from "@/lib/notify-success";

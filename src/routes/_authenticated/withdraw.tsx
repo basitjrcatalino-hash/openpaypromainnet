@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -202,6 +202,7 @@ function WithdrawPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const navigate = useNavigate();
   const rows = useMemo(() => (histQ.data ?? []) as any[], [histQ.data]);
 
   const titles: Record<Step, string> = {

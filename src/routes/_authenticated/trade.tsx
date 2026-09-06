@@ -175,14 +175,14 @@ function TradePage() {
   const [futAction, setFutAction] = useState<"open" | "close">("open");
   const [leverage, setLeverage] = useState(3);
   const [shortLeverage, setShortLeverage] = useState(3);
-  const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("USDT");
+  const [marginAsset, setMarginAsset] = useState<PerpMarginAsset>("OUSD");
   const [tpPrice, setTpPrice] = useState("");
   const [slPrice, setSlPrice] = useState("");
   const [useTpsl, setUseTpsl] = useState(false);
 
   // Spot
   const [spotSide, setSpotSide] = useState<"buy" | "sell">("buy");
-  const [payAsset, setPayAsset] = useState<SpotPay>("USDT");
+  const [payAsset, setPayAsset] = useState<SpotPay>("OUSD");
   /** Confirm close position (Phantom-style TxConfirmModal). */
   const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
 

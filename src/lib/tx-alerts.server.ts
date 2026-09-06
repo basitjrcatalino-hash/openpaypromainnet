@@ -448,7 +448,7 @@ async function sendTxEmail(
   if (await alreadySentTxEmail(admin, messageId)) return;
 
   const subject = `${alert.title} · ${alert.amountLabel}`;
-  const html = buildTxEmailHtml(alert, tx);
+  const html = await buildTxEmailHtml(alert, tx);
   const text = buildTxEmailText(alert, tx);
   const label = `tx-${String(tx.type ?? "activity")}`;
   const hasLovable = Boolean(process.env.LOVABLE_API_KEY?.trim());

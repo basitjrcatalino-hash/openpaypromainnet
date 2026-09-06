@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Download } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

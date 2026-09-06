@@ -54,8 +54,8 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
 import { useIsDesktopViewport } from "@/hooks/use-mobile";
-import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
-import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.png.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.png.asset.json";
 
 export type AssetBuyTarget = {
   id: string;
@@ -128,6 +128,8 @@ const ALL_METHODS: {
   id: PaymentMethod;
   label: string;
   logoUrl?: string;
+  /** Render logo with contain + white bg (wide/non-square brand logos) */
+  logoContain?: boolean;
   icon?: typeof CreditCard;
   helioMark?: boolean;
   desc: string;
@@ -178,13 +180,15 @@ const ALL_METHODS: {
     id: "paymongo",
     label: "QR Ph & e-wallets",
     logoUrl: qrPhLogoAsset.url,
+    logoContain: true,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "paypal",
     label: "PayPal",
     logoUrl: paypalLogoAsset.url,
-    desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
+    logoContain: true,
+    desc: "PayPal or card · approve → OUSD",
   },
   {
     id: "usdc",
@@ -1145,6 +1149,7 @@ export function AssetBuySheet({
                       className={cn(
                         "grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full",
                         m.logoUrl && "bg-background",
+                        m.logoContain && "bg-white ring-1 ring-border/60",
                         m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                         m.id === "helio" &&
                           "bg-linear-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",
@@ -1154,7 +1159,14 @@ export function AssetBuySheet({
                       )}
                     >
                       {m.logoUrl ? (
-                        <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                        <img
+                          src={m.logoUrl}
+                          alt=""
+                          className={cn(
+                            "h-full w-full",
+                            m.logoContain ? "object-contain p-1.5" : "object-cover",
+                          )}
+                        />
                       ) : m.helioMark ? (
                         <HelioMark className="h-5 w-5" />
                       ) : Icon ? (

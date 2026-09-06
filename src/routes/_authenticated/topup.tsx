@@ -44,8 +44,8 @@ import {
   type LedgerTopupAsset,
 } from "@/lib/ledger-topup.functions";
 import { fetchMajorUsdPrices } from "@/lib/ledger-majors";
-import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
-import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.png.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/topup")({
   head: () => ({ meta: [{ title: "Top Up — OpenPay Pro Wallet" }] }),
@@ -110,6 +110,8 @@ const methods: {
   id: Method;
   label: string;
   logoUrl?: string;
+  /** Render logo with contain + white bg (wide/non-square brand logos) */
+  logoContain?: boolean;
   icon?: LucideIcon;
   helioMark?: boolean;
   solanaMark?: boolean;
@@ -193,13 +195,15 @@ const methods: {
     id: "paymongo",
     label: "QR Ph & e-wallets",
     logoUrl: qrPhLogoAsset.url,
+    logoContain: true,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "paypal",
     label: "PayPal",
     logoUrl: paypalLogoAsset.url,
-    desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
+    logoContain: true,
+    desc: "PayPal or card · approve → OUSD",
   },
   {
     id: "usdc",
@@ -1161,7 +1165,11 @@ function TopUpPage() {
                   <span
                     className={cn(
                       "grid h-11 w-11 place-items-center overflow-hidden rounded-full",
-                      selected ? "bg-primary/15 ring-2 ring-primary/35" : "bg-muted",
+                      m.logoContain
+                        ? "bg-white ring-1 ring-border/60"
+                        : selected
+                          ? "bg-primary/15 ring-2 ring-primary/35"
+                          : "bg-muted",
                       m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                       m.id === "helio" && "bg-[#9945FF]/15 text-[#9945FF]",
                       m.id === "solana_pay" && "bg-[#14F195]/20 text-[#0ea5e9]",
@@ -1173,7 +1181,14 @@ function TopUpPage() {
                     )}
                   >
                     {m.logoUrl ? (
-                      <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={m.logoUrl}
+                        alt=""
+                        className={cn(
+                          "h-full w-full",
+                          m.logoContain ? "object-contain p-1.5" : "object-cover",
+                        )}
+                      />
                     ) : m.helioMark ? (
                       <HelioMark className="h-5 w-5" />
                     ) : m.solanaMark ? (

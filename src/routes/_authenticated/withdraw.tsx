@@ -41,6 +41,14 @@ import {
   detectDestinationKind,
   type WithdrawalDestKind,
 } from "@/lib/withdraw-ousd";
+import { getPiPayoutStatus, sendOusdToPiWallet } from "@/lib/pi-payout.functions";
+import {
+  PI_PAYOUT_MAX_OUSD,
+  PI_PAYOUT_MIN_OUSD,
+  isValidPiWalletAddress,
+  piTxExplorerUrl,
+} from "@/lib/pi-payout";
+
 
 export const Route = createFileRoute("/_authenticated/withdraw")({
   head: () => ({ meta: [{ title: "Withdraw OUSD — OpenPay Pro" }] }),
@@ -66,6 +74,16 @@ function WithdrawPage() {
   const ctxQ = useQuery({ queryKey: ["withdraw-ctx"], queryFn: () => getCtx() });
   const histQ = useQuery({ queryKey: ["my-withdrawals"], queryFn: () => listW() });
 
+  const piStatusFn = useServerFn(getPiPayoutStatus);
+  const sendPiFn = useServerFn(sendOusdToPiWallet);
+  const piStatusQ = useQuery({
+    queryKey: ["pi-payout-status"],
+    queryFn: () => piStatusFn(),
+    staleTime: 60_000,
+  });
+  const piInstantAvailable = Boolean(piStatusQ.data?.configured);
+
+
   const bal = ctxQ.data?.wallet?.ousd_balance ?? 0;
   const min = ctxQ.data?.min_ousd ?? WITHDRAWAL_MIN_OUSD;
   const feeBps = ctxQ.data?.fee_bps ?? WITHDRAWAL_FEE_BPS;
@@ -81,6 +99,8 @@ function WithdrawPage() {
   const [username, setUsername] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [instantPi, setInstantPi] = useState(true);
+
   const [hydrated, setHydrated] = useState(false);
 
   const destMeta = WITHDRAWAL_DEST_KINDS.find((k) => k.id === destKind) ?? WITHDRAWAL_DEST_KINDS[0];
@@ -99,15 +119,26 @@ function WithdrawPage() {
     }
   }, [ctxQ.data, hydrated]);
 
+  const piEligible =
+    withdrawVia === "rail" &&
+    destKind === "pi" &&
+    piInstantAvailable &&
+    isValidPiWalletAddress(dest);
+  const useInstantPi = piEligible && instantPi;
+
   const amtNum = Number(amount);
-  const feeSplit = calcWithdrawalFee(
-    Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0,
-    feeBps,
-  );
-  const amountValid = Number.isFinite(amtNum) && amtNum >= min;
+  const effMin = useInstantPi ? Math.max(min, PI_PAYOUT_MIN_OUSD) : min;
+  const feeSplit = useInstantPi
+    ? { fee: 0, net: Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0 }
+    : calcWithdrawalFee(Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0, feeBps);
+  const amountValid =
+    Number.isFinite(amtNum) &&
+    amtNum >= effMin &&
+    (!useInstantPi || amtNum <= PI_PAYOUT_MAX_OUSD);
   const insufficient = amountValid && amtNum > bal + 1e-12;
   const destValid = isValidDestinationAddress(dest, destKind);
   const canSubmit = amountValid && !insufficient && destValid;
+
 
   const createM = useMutation({
     mutationFn: () =>
@@ -134,6 +165,31 @@ function WithdrawPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const piPayoutM = useMutation({
+    mutationFn: () =>
+      sendPiFn({
+        data: { to: dest.trim(), amount: amtNum, memo: note.trim() || null },
+      }),
+    onSuccess: (res: any) => {
+      const url = piTxExplorerUrl(res?.pi_txid ?? "", res?.horizon ?? null);
+      notifySuccess(
+        `Sent ${formatNumber(amtNum, 2)} OUSD to Pi Wallet${url ? "" : ""}`,
+        { sound: "send" },
+      );
+      setAmount("");
+      setNote("");
+      setConfirmOpen(false);
+      setStep("destination");
+      void qc.invalidateQueries({ queryKey: ["withdraw-ctx"] });
+      void qc.invalidateQueries({ queryKey: ["my-withdrawals"] });
+      void qc.invalidateQueries({ queryKey: ["wallet"] });
+      void qc.invalidateQueries({ queryKey: ["activity"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
 
   const cancelM = useMutation({
     mutationFn: (id: string) => cancelW({ data: { id } }),
@@ -285,11 +341,44 @@ function WithdrawPage() {
               {destKind === "openpay"
                 ? "OpenPay accounts start with OP (example: OPxxxxxxxx)."
                 : "Use your Pi Network mainnet wallet address (usually starts with G)."}{" "}
-              Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
-              {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)}) until
-              admin pays out.
+              {useInstantPi ? (
+                <>Paid instantly as OpenUSD (OUSD) on the Pi blockchain.</>
+              ) : (
+                <>
+                  Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} (
+                  {shortAddress(ctxQ.data?.treasury_address ?? WITHDRAWAL_TREASURY_ADDRESS, 6, 4)})
+                  until admin pays out.
+                </>
+              )}
             </p>
           </div>
+
+          {piEligible ? (
+            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() => setInstantPi(true)}
+                className={cn(
+                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Instant on-chain · no fee
+              </button>
+              <button
+                type="button"
+                onClick={() => setInstantPi(false)}
+                className={cn(
+                  "rounded-xl px-2 py-2.5 text-xs font-semibold transition press",
+                  !instantPi ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Admin payout · {feePercent}% fee
+              </button>
+            </div>
+          ) : null}
+
+
 
           <Button
             type="button"
@@ -334,7 +423,12 @@ function WithdrawPage() {
             />
             <div className="mt-2 text-sm text-muted-foreground">OUSD</div>
             {amount.length > 0 && !amountValid && (
-              <div className="mt-2 text-sm text-destructive">Minimum {min} OUSD</div>
+              <div className="mt-2 text-sm text-destructive">
+                {useInstantPi && Number(amount) > PI_PAYOUT_MAX_OUSD
+                  ? `Maximum ${PI_PAYOUT_MAX_OUSD.toLocaleString()} OUSD per transfer`
+                  : `Minimum ${effMin} OUSD`}
+              </div>
+
             )}
             {insufficient && (
               <div className="mt-2 text-sm text-destructive">Insufficient balance</div>
@@ -351,7 +445,7 @@ function WithdrawPage() {
             <button
               type="button"
               className="rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary disabled:opacity-40"
-              disabled={bal < min}
+              disabled={bal < effMin}
               onClick={() => setAmount(String(Math.floor(bal * 100) / 100))}
             >
               Max
@@ -454,8 +548,17 @@ function WithdrawPage() {
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
-            Full amount is deducted now ({feePercent}% fee + net payout). Status stays{" "}
-            <strong>pending</strong> until admin approves or rejects.{" "}
+            {useInstantPi ? (
+              <>
+                Paid straight to the Pi Wallet on the Pi blockchain, usually within seconds. The
+                recipient must have OUSD enabled in Pi Wallet.{" "}
+              </>
+            ) : (
+              <>
+                Full amount is deducted now ({feePercent}% fee + net payout). Status stays{" "}
+                <strong>pending</strong> until admin approves or rejects.{" "}
+              </>
+            )}
             <Link to="/activity" className="underline underline-offset-2">
               Activity
             </Link>
@@ -466,11 +569,17 @@ function WithdrawPage() {
       <TxConfirmModal
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Confirm withdraw"
-        description="OUSD locks until admin pays out"
+        title={useInstantPi ? "Confirm Pi Wallet payout" : "Confirm withdraw"}
+        description={
+          useInstantPi ? "Sent on the Pi blockchain" : "OUSD locks until admin pays out"
+        }
         icon={<OusdIcon className="h-14 w-14" />}
         amount={`${formatNumber(amtNum, 2)} OUSD`}
-        subtitle={`You receive ${formatNumber(feeSplit.net, 2)} after ${feePercent}% fee`}
+        subtitle={
+          useInstantPi
+            ? "Recipient gets the full amount"
+            : `You receive ${formatNumber(feeSplit.net, 2)} after ${feePercent}% fee`
+        }
         rows={[
           { label: "Asset", value: "OUSD" },
           {
@@ -480,20 +589,40 @@ function WithdrawPage() {
           },
           {
             label: "Via",
-            value: destKind === "openpay" ? "OpenPay (OP…)" : "Pi mainnet",
+            value:
+              destKind === "openpay"
+                ? "OpenPay (OP…)"
+                : useInstantPi
+                  ? "Pi blockchain · instant"
+                  : "Pi mainnet",
           },
-          { label: "Fee", value: `${formatNumber(feeSplit.fee, 2)} OUSD` },
+          {
+            label: "Fee",
+            value: useInstantPi ? "No fee" : `${formatNumber(feeSplit.fee, 2)} OUSD`,
+          },
           ...(note.trim() ? [{ label: "Note", value: note.trim() }] : []),
         ]}
         notice={
-          <p>
-            Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} until payout. You can cancel
-            while status is pending.
-          </p>
+          useInstantPi ? (
+            <p>
+              The recipient must have OpenUSD (OUSD) enabled in Pi Wallet. If not, nothing is
+              deducted.
+            </p>
+          ) : (
+            <p>
+              Funds lock to @{ctxQ.data?.treasury_username ?? "openpay"} until payout. You can
+              cancel while status is pending.
+            </p>
+          )
         }
-        confirmLabel={`Lock & withdraw ${formatNumber(amtNum, 2)} OUSD`}
-        busy={createM.isPending}
-        onConfirm={() => createM.mutate()}
+        confirmLabel={
+          useInstantPi
+            ? `Send ${formatNumber(amtNum, 2)} OUSD`
+            : `Lock & withdraw ${formatNumber(amtNum, 2)} OUSD`
+        }
+        busy={useInstantPi ? piPayoutM.isPending : createM.isPending}
+        onConfirm={() => (useInstantPi ? piPayoutM.mutate() : createM.mutate())}
+
       />
 
       <section className="mt-10">

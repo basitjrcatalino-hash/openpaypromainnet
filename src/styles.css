@@ -2254,3 +2254,37 @@ html.solana-pay-open body > div[style*="z-index:50"] {
     animation: none;
   }
 }
+
+/* Exchange order-size slider (OKX-style track with amber fill) */
+.ph-pct-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #ffad0a 0%,
+    #ffad0a var(--pct, 0%),
+    color-mix(in oklab, var(--muted-foreground) 30%, transparent) var(--pct, 0%),
+    color-mix(in oklab, var(--muted-foreground) 30%, transparent) 100%
+  );
+  outline: none;
+  cursor: pointer;
+}
+.ph-pct-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #ffad0a;
+  border: 2px solid var(--background);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.ph-pct-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #ffad0a;
+  border: 2px solid var(--background);
+}

@@ -86,7 +86,7 @@ function PaymentSuccessPage() {
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Button asChild variant="outline" className="h-12 rounded-full">
-            <Link to="/history"><ReceiptText className="mr-2 h-4 w-4" /> View activity</Link>
+            <Link to="/activity"><ReceiptText className="mr-2 h-4 w-4" /> View activity</Link>
           </Button>
           <Button asChild className="h-12 rounded-full font-bold">
             <Link to="/dashboard">Done</Link>

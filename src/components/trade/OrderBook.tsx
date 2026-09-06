@@ -28,6 +28,8 @@ function nextFundingCountdown(now = Date.now()): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+type BookView = "both" | "bids" | "asks";
+
 export function OrderBook({
   book,
   baseSymbol,
@@ -35,6 +37,8 @@ export function OrderBook({
   loading,
   change24h,
   onPriceClick,
+  onSizeClick,
+  markPrice,
   fundingRate,
   showFunding,
 }: {
@@ -44,12 +48,15 @@ export function OrderBook({
   loading?: boolean;
   change24h?: number;
   onPriceClick?: (price: number) => void;
+  onSizeClick?: (amount: number) => void;
+  markPrice?: number;
   fundingRate?: number;
   showFunding?: boolean;
 }) {
   const mid = midOverride && midOverride > 0 ? midOverride : book?.mid ?? 0;
   const ticks = useMemo(() => precisionOptions(mid), [mid]);
   const [tickIdx, setTickIdx] = useState(0);
+  const [view, setView] = useState<BookView>("both");
   const [countdown, setCountdown] = useState(() => nextFundingCountdown());
   const tick = ticks[Math.min(tickIdx, ticks.length - 1)] ?? 0;
 
@@ -59,19 +66,26 @@ export function OrderBook({
     return () => window.clearInterval(id);
   }, [showFunding]);
 
-  const asks = useMemo(
-    () => aggregateLevels(book?.asks ?? [], tick, "ask").slice(0, 8).reverse(),
-    [book?.asks, tick],
-  );
-  const bids = useMemo(
-    () => aggregateLevels(book?.bids ?? [], tick, "bid").slice(0, 8),
-    [book?.bids, tick],
-  );
+  const rows = view === "both" ? 8 : 17;
+
+  // Cumulative totals run outward from the spread, like OKX / Binance.
+  const asks = useMemo(() => {
+    const levels = aggregateLevels(book?.asks ?? [], tick, "ask").slice(0, rows);
+    let run = 0;
+    return levels.map((l) => ({ ...l, total: (run += l.amount) })).reverse();
+  }, [book?.asks, tick, rows]);
+
+  const bids = useMemo(() => {
+    const levels = aggregateLevels(book?.bids ?? [], tick, "bid").slice(0, rows);
+    let run = 0;
+    return levels.map((l) => ({ ...l, total: (run += l.amount) }));
+  }, [book?.bids, tick, rows]);
+
   const { buyPct, sellPct } = buySellRatio(book);
-  const maxAmt = Math.max(
+  const maxTotal = Math.max(
     0.0001,
-    ...asks.map((l) => l.amount),
-    ...bids.map((l) => l.amount),
+    ...asks.map((l) => l.total),
+    ...bids.map((l) => l.total),
   );
 
   const priceDigits = mid >= 1000 ? 1 : mid >= 1 ? 2 : 4;
@@ -81,6 +95,35 @@ export function OrderBook({
     fundingRate != null && Number.isFinite(fundingRate)
       ? `${formatNumber(fundingRate, 5)}%`
       : "—";
+
+  const askRows = asks.map((l) => (
+    <DepthRow
+      key={`a-${l.price}`}
+      side="ask"
+      price={l.price}
+      amount={l.amount}
+      total={l.total}
+      maxTotal={maxTotal}
+      priceDigits={priceDigits}
+      amtDigits={amtDigits}
+      onPrice={onPriceClick}
+      onSize={onSizeClick}
+    />
+  ));
+  const bidRows = bids.map((l) => (
+    <DepthRow
+      key={`b-${l.price}`}
+      side="bid"
+      price={l.price}
+      amount={l.amount}
+      total={l.total}
+      maxTotal={maxTotal}
+      priceDigits={priceDigits}
+      amtDigits={amtDigits}
+      onPrice={onPriceClick}
+      onSize={onSizeClick}
+    />
+  ));
 
   return (
     <div className="flex h-full min-h-0 flex-col text-[11px]">
@@ -93,80 +136,36 @@ export function OrderBook({
         </div>
       ) : null}
 
-      <div className="mb-1 flex items-center justify-between gap-1 px-0.5 text-[10px] text-muted-foreground">
-        <span>Price (₮)</span>
-        <span>Amount ({baseSymbol})</span>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
-        {loading && !asks.length ? (
-          <div className="space-y-1 py-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-4 animate-pulse rounded bg-muted/40" />
-            ))}
-          </div>
-        ) : (
-          asks.map((l) => (
-            <DepthRow
-              key={`a-${l.price}`}
-              side="ask"
-              price={l.price}
-              amount={l.amount}
-              maxAmt={maxAmt}
-              priceDigits={priceDigits}
-              amtDigits={amtDigits}
-              onClick={onPriceClick}
-            />
-          ))
-        )}
-      </div>
-
-      <div className="my-1.5 px-0.5">
-        <p
-          className={cn(
-            "text-base font-bold tabular-nums leading-none",
-            up ? "text-[#0ecb81]" : "text-[#f6465d]",
-          )}
-        >
-          {mid > 0 ? formatNumber(mid, priceDigits) : "—"}
-        </p>
-        <p
-          className={cn(
-            "mt-0.5 text-[10px] font-semibold tabular-nums",
-            up ? "text-[#0ecb81]" : "text-[#f6465d]",
-          )}
-        >
-          {(change24h ?? 0) >= 0 ? "+" : ""}
-          {formatNumber(change24h ?? 0, 2)}%
-        </p>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
-        {bids.map((l) => (
-          <DepthRow
-            key={`b-${l.price}`}
-            side="bid"
-            price={l.price}
-            amount={l.amount}
-            maxAmt={maxAmt}
-            priceDigits={priceDigits}
-            amtDigits={amtDigits}
-            onClick={onPriceClick}
-          />
-        ))}
-      </div>
-
-      <div className="mt-2 flex h-1.5 overflow-hidden rounded-sm bg-muted">
-        <div className="bg-[#0ecb81]" style={{ width: `${buyPct}%` }} />
-        <div className="bg-[#f6465d]" style={{ width: `${sellPct}%` }} />
-      </div>
-      <div className="mt-1 flex items-center justify-between text-[10px] font-semibold">
-        <span className="text-[#0ecb81]">B {buyPct}%</span>
+      <div className="mb-1 flex items-center gap-1 px-0.5">
+        <div className="flex gap-0.5">
+          {(
+            [
+              ["both", "Both"],
+              ["bids", "Bids"],
+              ["asks", "Asks"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setView(id)}
+              aria-pressed={view === id}
+              className={cn(
+                "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase press",
+                view === id
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <select
-          aria-label="Price precision"
+          aria-label="Price grouping"
           value={tickIdx}
           onChange={(e) => setTickIdx(Number(e.target.value))}
-          className="h-5 rounded border-0 bg-muted/60 px-1 text-[9px] font-semibold text-foreground outline-none"
+          className="ml-auto h-5 rounded border-0 bg-muted/60 px-1 text-[9px] font-semibold text-foreground outline-none"
         >
           {ticks.map((t, i) => (
             <option key={t} value={i}>
@@ -174,11 +173,92 @@ export function OrderBook({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="mb-1 grid grid-cols-[1fr_1fr_1fr] gap-1 px-0.5 text-[9px] uppercase tracking-wide text-muted-foreground">
+        <span>Price</span>
+        <span className="text-right">Amount ({baseSymbol})</span>
+        <span className="text-right">Total</span>
+      </div>
+
+      {view !== "bids" ? (
+        <div
+          className={cn(
+            "min-h-0 space-y-0.5 overflow-hidden",
+            view === "both" ? "flex-1" : "flex-[3]",
+          )}
+        >
+          {loading && !asks.length ? (
+            <div className="space-y-1 py-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-4 animate-pulse rounded bg-muted/40" />
+              ))}
+            </div>
+          ) : (
+            askRows
+          )}
+        </div>
+      ) : null}
+
+      <div className="sticky top-0 z-1 my-1.5 flex items-end justify-between gap-2 bg-background px-0.5">
+        <div>
+          <p
+            className={cn(
+              "flex items-center gap-1 text-base font-bold tabular-nums leading-none",
+              up ? "text-[#0ecb81]" : "text-[#f6465d]",
+            )}
+          >
+            {up ? (
+              <ArrowUp className="h-3.5 w-3.5" strokeWidth={3} />
+            ) : (
+              <ArrowDown className="h-3.5 w-3.5" strokeWidth={3} />
+            )}
+            {mid > 0 ? formatNumber(mid, priceDigits) : "—"}
+          </p>
+          <p
+            className={cn(
+              "mt-0.5 text-[10px] font-semibold tabular-nums",
+              up ? "text-[#0ecb81]" : "text-[#f6465d]",
+            )}
+          >
+            {(change24h ?? 0) >= 0 ? "+" : ""}
+            {formatNumber(change24h ?? 0, 2)}%
+          </p>
+        </div>
+        {markPrice && markPrice > 0 ? (
+          <p className="pb-0.5 text-right text-[9px] leading-tight text-muted-foreground">
+            Mark
+            <br />
+            <span className="font-semibold tabular-nums text-foreground">
+              {formatNumber(markPrice, priceDigits)}
+            </span>
+          </p>
+        ) : null}
+      </div>
+
+      {view !== "asks" ? (
+        <div
+          className={cn(
+            "min-h-0 space-y-0.5 overflow-hidden",
+            view === "both" ? "flex-1" : "flex-[3]",
+          )}
+        >
+          {bidRows}
+        </div>
+      ) : null}
+
+      <div className="mt-2 flex h-1.5 overflow-hidden rounded-sm bg-muted">
+        <div className="bg-[#0ecb81]" style={{ width: `${buyPct}%` }} />
+        <div className="bg-[#f6465d]" style={{ width: `${sellPct}%` }} />
+      </div>
+      <div className="mt-1 flex items-center justify-between text-[10px] font-semibold">
+        <span className="text-[#0ecb81]">B {buyPct}%</span>
         <span className="text-[#f6465d]">{sellPct}% S</span>
       </div>
     </div>
   );
 }
+
 
 function DepthRow({
   side,

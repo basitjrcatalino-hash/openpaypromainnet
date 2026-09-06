@@ -1149,6 +1149,7 @@ export function AssetBuySheet({
                       className={cn(
                         "grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full",
                         m.logoUrl && "bg-background",
+                        m.logoContain && "bg-white ring-1 ring-border/60",
                         m.id === "moonpay" && "bg-[#7D00FE]/15 text-[#7D00FE]",
                         m.id === "helio" &&
                           "bg-linear-to-br from-[#9945FF]/25 to-[#14F195]/20 text-[#9945FF]",

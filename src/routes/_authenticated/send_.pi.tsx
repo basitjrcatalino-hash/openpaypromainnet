@@ -194,7 +194,7 @@ function SendToPiWalletPage() {
             <OusdIcon className="size-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold">Pi Wallet · OpenUSD</p>
+            <p className="text-[15px] font-semibold text-ios-label">Pi Wallet · OpenUSD</p>
             <p className="mt-0.5 text-[13px] text-ios-secondary">
               The recipient must enable OUSD in Pi Wallet (Tokens) before they can receive it.
               Transfers to a wallet without the trustline are rejected before any debit.
@@ -325,7 +325,7 @@ function SendToPiWalletPage() {
               <span className="absolute inset-0 animate-ping rounded-full bg-primary/25" />
               <Loader2 className="size-8 animate-spin text-primary" />
             </span>
-            <p className="mt-4 text-sm font-semibold">Sending to Pi Wallet</p>
+            <p className="mt-4 text-[15px] font-semibold text-ios-label">Sending to Pi Wallet</p>
             <p className="mt-1 text-[13px] text-ios-secondary">{SEND_STAGES[stage]}</p>
             {Number.isFinite(amountNum) && amountNum > 0 ? (
               <p className="mt-3 text-lg font-semibold tabular-nums">
@@ -344,11 +344,11 @@ function SendToPiWalletPage() {
             <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15">
               <OusdIcon className="size-7" />
             </span>
-            <p className="mt-3 text-sm text-muted-foreground">Sent to Pi Wallet</p>
+            <p className="mt-3 text-[15px] text-ios-secondary">Sent to Pi Wallet</p>
             <p className="text-2xl font-semibold tabular-nums">
               {formatNumber(receipt.amount, 2)} OUSD
             </p>
-            <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+            <p className="mt-1 break-all font-mono text-[11px] text-ios-secondary">
               {receipt.to}
             </p>
             {receipt.txid ? (
@@ -356,7 +356,7 @@ function SendToPiWalletPage() {
                 href={piTxExplorerUrl(receipt.txid, receipt.horizon)}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary"
+                className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ios-blue"
               >
                 View on Pi Explorer <ExternalLink className="size-3.5" />
               </a>

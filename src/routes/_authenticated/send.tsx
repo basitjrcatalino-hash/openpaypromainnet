@@ -898,6 +898,13 @@ function SendPage() {
                     Pi Wallet payout is temporarily unavailable.
                   </p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void navigate({ to: "/send/pi" })}
+                  className="font-semibold text-[#7B3FE4] underline-offset-2 hover:underline"
+                >
+                  Open the full Send to Pi Wallet page →
+                </button>
               </div>
             )}
 

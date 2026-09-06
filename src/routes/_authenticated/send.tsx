@@ -705,60 +705,59 @@ function SendPage() {
               <IosSectionLabel>{assetQuery.trim() ? "Results" : "Your tokens"}</IosSectionLabel>
               <IosSettingsGroup>
 
-              {filteredAssets.map((a, i) => {
-                const valueUsd = a.balance * (a.priceUsd || 0);
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() => pickAsset(a)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition press hover:bg-muted/45 active:bg-muted/60",
-                      i > 0 && "border-t border-border/50",
-                    )}
-                  >
-                    <AssetAvatar asset={a} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[15px] font-semibold text-foreground">
-                        {a.name}
-                      </div>
-                      <div className="text-[13px] text-muted-foreground">{a.symbol}</div>
-                    </div>
-                    <div className="min-w-0 text-right">
-                      <div className="text-[15px] font-semibold tabular-nums text-foreground">
-                        {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
-                      </div>
-                      <div className="text-[13px] tabular-nums text-muted-foreground">
-                        {formatUSD(valueUsd)}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                  </button>
-                );
-              })}
-              {filteredAssets.length === 0 && (
-                <div className="px-4 py-12 text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    {assetQuery.trim() ? "No tokens found" : "No assets to send yet"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {assetQuery.trim()
-                      ? `Nothing matches “${assetQuery.trim()}”`
-                      : "Buy or receive tokens to get started"}
-                  </p>
-                  {assetQuery.trim() ? (
+                {filteredAssets.map((a) => {
+                  const valueUsd = a.balance * (a.priceUsd || 0);
+                  return (
                     <button
+                      key={a.key}
                       type="button"
-                      onClick={() => setAssetQuery("")}
-                      className="mt-4 text-sm font-semibold text-primary"
+                      onClick={() => pickAsset(a)}
+                      className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
                     >
-                      Clear search
+                      <AssetAvatar asset={a} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[16px] font-semibold text-ios-label">
+                          {a.name}
+                        </div>
+                        <div className="text-[12px] text-ios-secondary">{a.symbol}</div>
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <div className="text-[16px] font-semibold tabular-nums text-ios-label">
+                          {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
+                        </div>
+                        <div className="text-[12px] tabular-nums text-ios-secondary">
+                          {formatUSD(valueUsd)}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-ios-tertiary" />
                     </button>
-                  ) : null}
-                </div>
-              )}
+                  );
+                })}
+                {filteredAssets.length === 0 && (
+                  <div className="px-4 py-12 text-center">
+                    <p className="text-[16px] font-semibold text-ios-label">
+                      {assetQuery.trim() ? "No tokens found" : "No assets to send yet"}
+                    </p>
+                    <p className="mt-1 text-[13px] text-ios-secondary">
+                      {assetQuery.trim()
+                        ? `Nothing matches “${assetQuery.trim()}”`
+                        : "Buy or receive tokens to get started"}
+                    </p>
+                    {assetQuery.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => setAssetQuery("")}
+                        className="ios-active mt-4 text-[15px] font-semibold text-ios-blue"
+                      >
+                        Clear search
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+              </IosSettingsGroup>
             </div>
           )}
+
         </div>
       )}
 

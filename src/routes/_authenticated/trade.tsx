@@ -581,6 +581,24 @@ function TradePage() {
     return { mark, pnl, fee, receive, logoUrl: major?.logoUrl };
   })();
 
+  /** OKX-style pre-trade preview for the confirmation drawer. */
+  const orderPreview = (() => {
+    if (!confirmOrder) return null;
+    const qty = Number(amount);
+    const px = orderType === "limit" && Number(limitPrice) > 0 ? Number(limitPrice) : price;
+    const notional = qty * px;
+    const logoUrl = getMajorToken(market.toLowerCase())?.logoUrl;
+    if (confirmOrder === "spot") {
+      return { qty, px, notional, logoUrl, lev: 0, margin: 0, fee: 0, liq: 0 };
+    }
+    const lev = confirmOrder === "short" ? shortLeverage : leverage;
+    const margin = lev > 0 ? notional / lev : 0;
+    const fee = applyPerpNotionalFee(margin, lev).fee;
+    const liq = liquidationPrice(confirmOrder, px, lev);
+    return { qty, px, notional, logoUrl, lev, margin, fee, liq };
+  })();
+
+
   const formBusy = openM.isPending || closeM.isPending || spotM.isPending;
 
   const mid = depthQ.data?.mid && depthQ.data.mid > 0 ? depthQ.data.mid : price;

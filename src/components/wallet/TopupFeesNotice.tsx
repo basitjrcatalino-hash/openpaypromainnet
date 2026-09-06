@@ -129,8 +129,10 @@ const PROVIDER: Record<
     thirdParty: "Onramp.money",
   },
   paypal: {
-    title: "PayPal",
-    how: "You approve the payment in PayPal (balance, bank, card, Pay Later or Venmo). OUSD is credited as soon as PayPal confirms the payment.",
+    name: "PayPal",
+    blurb:
+      "You approve the payment in PayPal (balance, bank, card, Pay Later or Venmo). OUSD is credited as soon as PayPal confirms the payment.",
+
     fees: "PayPal charges its own processing fee. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "PayPal",
   },

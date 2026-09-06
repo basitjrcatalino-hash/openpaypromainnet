@@ -74,6 +74,16 @@ function WithdrawPage() {
   const ctxQ = useQuery({ queryKey: ["withdraw-ctx"], queryFn: () => getCtx() });
   const histQ = useQuery({ queryKey: ["my-withdrawals"], queryFn: () => listW() });
 
+  const piStatusFn = useServerFn(getPiPayoutStatus);
+  const sendPiFn = useServerFn(sendOusdToPiWallet);
+  const piStatusQ = useQuery({
+    queryKey: ["pi-payout-status"],
+    queryFn: () => piStatusFn(),
+    staleTime: 60_000,
+  });
+  const piInstantAvailable = Boolean(piStatusQ.data?.configured);
+
+
   const bal = ctxQ.data?.wallet?.ousd_balance ?? 0;
   const min = ctxQ.data?.min_ousd ?? WITHDRAWAL_MIN_OUSD;
   const feeBps = ctxQ.data?.fee_bps ?? WITHDRAWAL_FEE_BPS;

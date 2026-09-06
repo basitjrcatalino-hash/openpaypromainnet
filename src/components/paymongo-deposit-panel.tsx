@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,26 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
     }
   };
 
+  const downloadQr = async () => {
+    if (!qr) return;
+    try {
+      const response = await fetch(qr.url);
+      if (!response.ok) throw new Error("Could not download QR code");
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `openpay-qrph-${qr.intentId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+      toast.success("QR code saved to your device");
+    } catch {
+      toast.error("Could not save the QR code. Press and hold the image to save it.");
+    }
+  };
+
   if (configured === false) {
     return (
       <div className={cn("rounded-2xl bg-card px-4 py-4 text-sm text-muted-foreground", className)}>
@@ -136,9 +156,26 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
             {formatOUSD(amountUsd)}
           </p>
           <p className="text-xs text-muted-foreground">{active.hint}</p>
+          <div className="mx-auto max-w-sm rounded-xl bg-muted/50 px-4 py-3 text-left">
+            <p className="text-xs font-semibold text-foreground">How to pay</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
+              <li>Save the QR code, or scan it using another device.</li>
+              <li>Open GCash, Maya, or any QR Ph-supported banking app.</li>
+              <li>Choose Scan QR, select the saved image, and confirm the exact amount.</li>
+              <li>Keep this page open while your OUSD is credited automatically.</li>
+            </ol>
+          </div>
           <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for payment…
           </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={downloadQr}
+          >
+            <Download className="mr-2 h-4 w-4" /> Save QR code
+          </Button>
           <Button
             type="button"
             variant="ghost"

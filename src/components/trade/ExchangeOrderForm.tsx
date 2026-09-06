@@ -110,6 +110,8 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
   const [levOpen, setLevOpen] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
   const [tpslLocal, setTpslLocal] = useState(false);
+  const [marginMode, setMarginMode] = useState<"cross" | "isolated">("isolated");
+
 
   const useTpsl = props.useTpsl ?? tpslLocal;
   const setUseTpsl = props.onUseTpsl ?? setTpslLocal;

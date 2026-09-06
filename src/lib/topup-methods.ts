@@ -11,6 +11,7 @@ export type TopupMethodKey =
   | "solana_pay"
   | "circle_mint"
   | "cash_pay"
+  | "wallet_ousd"
   | "wallet_usdt"
   | "wallet_usdc"
   | "wallet_sol"
@@ -86,6 +87,13 @@ export const TOPUP_METHOD_CATALOG: readonly TopupMethodSeed[] = [
     description:
       "Phantom CASH (Solana SPL) · ledger balance or Solana Pay QR → OUSD 1:1",
     sort_order: 8,
+    enabled: true,
+  },
+  {
+    method_key: "wallet_ousd",
+    label: "Wallet OUSD",
+    description: "Pay with your OpenPay Pro OUSD balance · buy any token",
+    sort_order: 13,
     enabled: true,
   },
   {

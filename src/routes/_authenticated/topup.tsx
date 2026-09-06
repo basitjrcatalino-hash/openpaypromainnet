@@ -309,8 +309,7 @@ function TopUpPage() {
     // Hide only when admin explicitly disabled (maintenance). Missing row → still show.
     return methods
       .filter((m) => {
-        // Wallet ledger spend is always available (not a third-party deposit rail).
-        if (isWalletLedgerMethod(m.id)) return true;
+        // Every method (including wallet balances) is admin-controllable.
         const c = byKey.get(m.id);
         return !c || c.enabled !== false;
       })

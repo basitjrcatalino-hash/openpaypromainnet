@@ -42,7 +42,7 @@ function loadPaypalSdk(clientId: string): Promise<PaypalButtonsApi> {
       currency: "USD",
       intent: "capture",
       components: "buttons,messages",
-      "enable-funding": "venmo,paylater,card",
+      "enable-funding": "card",
     });
     script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
     script.async = true;
@@ -217,13 +217,15 @@ export function PaypalDepositPanel({
       </div>
 
       <div className="rounded-2xl bg-card px-3 py-3">
-        <div ref={host} className="min-h-[52px]" />
+        <div className="mx-auto w-full max-w-xl">
+          <div ref={host} className="min-h-[52px]" />
+        </div>
         {!ready && !error ? (
-          <p className="inline-flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
+          <p className="flex items-center justify-center gap-1.5 px-1 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading PayPal…
           </p>
         ) : null}
-        {error ? <p className="px-1 text-xs text-destructive">{error}</p> : null}
+        {error ? <p className="px-1 text-center text-xs text-destructive">{error}</p> : null}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ExternalLink, Loader2, Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -24,7 +24,6 @@ import {
   getPiWalletError,
   isValidPiWalletAddress,
   normalizePiWalletAddress,
-  piTxExplorerUrl,
 } from "@/lib/pi-payout";
 
 const searchSchema = z.object({
@@ -76,7 +75,7 @@ function SendToPiWalletPage() {
   const [memo, setMemo] = useState((search.memo ?? "").slice(0, 28));
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState(0);
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  
 
   const { data: wallet, isLoading: loadingBalance } = useQuery({
     queryKey: ["pi-send-wallet", user.id],

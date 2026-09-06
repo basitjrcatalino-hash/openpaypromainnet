@@ -193,7 +193,9 @@ function AuthPiPage() {
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight">OpenPay Pro</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Choose how you want to sign in
+              {piOnly
+                ? "Sign in with your Pi Network account"
+                : "Choose how you want to sign in"}
             </p>
           </div>
 

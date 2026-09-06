@@ -66,6 +66,10 @@ const SwapSchema = z.object({
   expected_out: z.number().positive().optional(),
 });
 
+const MajorPriceSchema = z.object({
+  ids: z.array(z.string()).min(1).max(20),
+});
+
 function round8(n: number) {
   return Math.round(n * 1e8) / 1e8;
 }
@@ -83,6 +87,17 @@ type QuoteToken = {
 };
 
 const WALLET_COLS = walletMajorSelect("id, user_id, ousd_balance");
+
+export const getOpenDexMajorPrices = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => MajorPriceSchema.parse(d))
+  .handler(async ({ data }) => {
+    const ids = data.ids.filter((id): id is LedgerMajorId =>
+      Object.prototype.hasOwnProperty.call(LEDGER_MAJOR_SWAP_IDS, id),
+    );
+    if (!ids.length) return {} as Record<string, number>;
+    return mergeTrustWalletMajorPrices(await fetchMajorUsdPrices(ids), ids);
+  });
 
 export const executeOpenDexSwap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

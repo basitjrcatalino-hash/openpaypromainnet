@@ -33,6 +33,7 @@ import { OUSD_LOGO_URL } from "@/lib/token-logos";
 import { OusdIcon } from "@/components/ousd-icon";
 import {
   executeOpenDexSwap,
+  getOpenDexMajorPrices,
   OUSD_SWAP_ID,
   PI_SWAP_ID,
   BTC_SWAP_ID,
@@ -127,6 +128,7 @@ function OpenDexPage() {
   const { token: tokenParam, asset: assetParam } = Route.useSearch();
   const qc = useQueryClient();
   const swapFn = useServerFn(executeOpenDexSwap);
+  const majorPricesFn = useServerFn(getOpenDexMajorPrices);
 
   const [from, setFrom] = useState(OUSD_SWAP_ID);
   const [to, setTo] = useState("");
@@ -160,6 +162,24 @@ function OpenDexPage() {
     queryFn: fetchMajorMarkets,
   });
 
+  const {
+    data: executionPrices,
+    refetch: refreshExecutionPrices,
+    isFetching: refreshingQuote,
+  } = useQuery({
+    queryKey: ["opendex-execution-prices", from, to],
+    queryFn: () => {
+      const ids = [majorIdFromSwapId(from), majorIdFromSwapId(to)].filter(
+        (id): id is LedgerMajorId => id != null,
+      );
+      return ids.length
+        ? majorPricesFn({ data: { ids } })
+        : Promise.resolve({} as Record<string, number>);
+    },
+    staleTime: 10_000,
+    refetchInterval: confirmOpen ? 4_000 : 20_000,
+  });
+
   const majorTokens: SwapToken[] = useMemo(() => {
     return LEDGER_MAJOR_IDS.map((id) => {
       const def = MAJOR_TOKENS[id];
@@ -168,7 +188,7 @@ function OpenDexPage() {
         id: MAJOR_SWAP_IDS[id],
         name: def.name,
         symbol: def.symbol,
-        price_usd: m.price > 0 ? m.price : 0,
+        price_usd: Number(executionPrices?.[id]) > 0 ? Number(executionPrices?.[id]) : m.price > 0 ? m.price : 0,
         logo_url: def.logoUrl,
         status: "quote",
         is_verified: true,
@@ -177,7 +197,7 @@ function OpenDexPage() {
         network: networkForMajor(id),
       } satisfies SwapToken;
     });
-  }, [majorMarkets]);
+  }, [majorMarkets, executionPrices]);
 
   const piToken = majorTokens.find((t) => t.majorId === "pi")!;
 
@@ -451,6 +471,12 @@ function OpenDexPage() {
     }
   }
 
+  async function openConfirmation() {
+    if (!canSwap) return;
+    if (fromMajorId || toMajorId) await refreshExecutionPrices();
+    setConfirmOpen(true);
+  }
+
   const canSwap =
     !busy &&
     amt > 0 &&
@@ -589,11 +615,11 @@ function OpenDexPage() {
       )}
 
       <Button
-        onClick={() => setConfirmOpen(true)}
-        disabled={!canSwap}
+        onClick={() => void openConfirmation()}
+        disabled={!canSwap || refreshingQuote}
         className="h-14 w-full rounded-full text-base font-semibold"
       >
-        {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+        {busy || refreshingQuote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
         {!wallet
           ? "Create a wallet first"
           : !fromToken || !toToken

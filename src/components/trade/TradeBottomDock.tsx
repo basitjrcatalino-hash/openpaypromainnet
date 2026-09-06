@@ -111,6 +111,57 @@ export function TradeBottomDock({
     { id: "assets", label: "Assets" },
   ];
 
+  const exportRows = (): Record<string, unknown>[] => {
+    if (tab === "orders")
+      return (mode === "spot" ? openOrders : []).map((o) => ({
+        market: o.market,
+        side: o.side,
+        type: o.order_type,
+        price: o.price,
+        amount: o.amount,
+        filled: o.filled,
+        asset: o.pay_asset,
+        status: o.status,
+        created_at: o.created_at,
+      }));
+    if (tab === "orderHistory")
+      return orderHistory.map((o) => ({
+        market: o.market,
+        side: o.side,
+        type: o.order_type,
+        price: o.price,
+        amount: o.amount,
+        filled: o.filled,
+        avg_fill_price: o.avg_fill_price ?? "",
+        status: o.status,
+        created_at: o.created_at,
+      }));
+    if (tab === "tradeHistory")
+      return tradeHistory.map((t) => ({
+        symbol: t.token_symbol ?? market,
+        side: t.side,
+        amount: t.amount,
+        price: t.price ?? "",
+        memo: t.memo ?? "",
+        created_at: t.created_at,
+      }));
+    if (tab === "positions")
+      return open.map((p) => ({
+        market: p.market,
+        side: p.side,
+        leverage: p.leverage,
+        entry_price: p.entry_price,
+        size_usd: p.size_usd,
+        margin: p.margin,
+        margin_asset: p.margin_asset,
+        liquidation_price: p.liquidation_price ?? "",
+        opened_at: p.created_at,
+      }));
+    return assets.map((a) => ({ symbol: a.symbol, amount: a.amount }));
+  };
+
+  const canExport = exportRows().length > 0;
+
   return (
     <section className="shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-md">
       <div className="flex items-center justify-between gap-1 px-2 py-1.5">

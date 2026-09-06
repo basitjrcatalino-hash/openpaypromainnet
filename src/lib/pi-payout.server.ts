@@ -97,9 +97,42 @@ function nativeBalance(acc: HorizonAccount): number {
   return Number((acc.balances || []).find((b) => b.asset_type === "native")?.balance || 0);
 }
 
+export const TESTNET_HORIZON = "https://api.testnet.minepi.com";
+export const TESTNET_PASSPHRASE = "Pi Testnet";
+
+/**
+ * Candidate networks to try, in order. When PI_HORIZON_URL is pinned we only
+ * use that one; otherwise we probe both Pi networks because the OUSD asset may
+ * only be issued on one of them.
+ */
+function candidateNetworks(cfg: PiPayoutConfig): PiPayoutConfig[] {
+  if (process.env["PI_HORIZON_URL"]) return [cfg];
+  const seen = new Set<string>();
+  const list: PiPayoutConfig[] = [];
+  for (const n of [
+    cfg,
+    { ...cfg, horizon: DEFAULT_HORIZON, passphrase: DEFAULT_PASSPHRASE },
+    { ...cfg, horizon: TESTNET_HORIZON, passphrase: TESTNET_PASSPHRASE },
+  ]) {
+    if (seen.has(n.horizon)) continue;
+    seen.add(n.horizon);
+    list.push(n);
+  }
+  return list;
+}
+
+async function tryGet<T>(horizon: string, path: string): Promise<T | null> {
+  try {
+    return await horizonGet<T>(horizon, path);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Verify the destination is activated, has an OUSD trustline, and that the
  * payout wallet holds enough OUSD + native PI for fees. Throws PiPayoutError.
+ * Returns the network config that should be used to submit.
  */
 export async function preflightPiPayout(cfg: PiPayoutConfig, dest: string, amount: number) {
   let sender: Keypair;
@@ -111,19 +144,46 @@ export async function preflightPiPayout(cfg: PiPayoutConfig, dest: string, amoun
   if (dest === sender.publicKey())
     throw new PiPayoutError("Cannot send OUSD to the OpenPay payout wallet.");
 
-  const destAccount = await horizonGet<HorizonAccount>(cfg.horizon, `/accounts/${dest}`);
-  const hasTrust = (destAccount.balances || []).some(
-    (b) => b.asset_code === TOKEN_CODE && b.asset_issuer === cfg.issuer,
-  );
-  if (!hasTrust) throw new PiPayoutError(TRUSTLINE_MSG);
+  const networks = candidateNetworks(cfg);
+  let destSeenAnywhere = false;
+  let trustSeenAnywhere = false;
+  let lastError: PiPayoutError | null = null;
 
-  const source = await horizonGet<HorizonAccount>(cfg.horizon, `/accounts/${sender.publicKey()}`);
-  if (balanceOf(source, TOKEN_CODE, cfg.issuer) < amount)
-    throw new PiPayoutError(NO_LIQUIDITY_MSG);
-  if (nativeBalance(source) < 0.01) throw new PiPayoutError(MAINTENANCE_MSG);
+  for (const net of networks) {
+    const destAccount = await tryGet<HorizonAccount>(net.horizon, `/accounts/${dest}`);
+    if (!destAccount) continue;
+    destSeenAnywhere = true;
 
-  return { sender, source };
+    const hasTrust = (destAccount.balances || []).some(
+      (b) => b.asset_code === TOKEN_CODE && b.asset_issuer === net.issuer,
+    );
+    if (!hasTrust) continue;
+    trustSeenAnywhere = true;
+
+    const source = await tryGet<HorizonAccount>(net.horizon, `/accounts/${sender.publicKey()}`);
+    if (!source) {
+      lastError = new PiPayoutError(MAINTENANCE_MSG);
+      continue;
+    }
+    if (balanceOf(source, TOKEN_CODE, net.issuer) < amount) {
+      lastError = new PiPayoutError(NO_LIQUIDITY_MSG);
+      continue;
+    }
+    if (nativeBalance(source) < 0.01) {
+      lastError = new PiPayoutError(MAINTENANCE_MSG);
+      continue;
+    }
+    return { sender, source, cfg: net };
+  }
+
+  if (!destSeenAnywhere)
+    throw new PiPayoutError(
+      "That Pi Wallet is not activated on this network. Open it in Pi Wallet, then try again.",
+    );
+  if (!trustSeenAnywhere) throw new PiPayoutError(TRUSTLINE_MSG);
+  throw lastError ?? new PiPayoutError(MAINTENANCE_MSG);
 }
+
 
 /** Build, sign and submit the OUSD payment on the Pi network. Returns the tx hash. */
 export async function submitPiPayout(

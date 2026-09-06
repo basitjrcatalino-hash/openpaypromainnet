@@ -202,9 +202,12 @@ function AuthPiPage() {
           <div
             role="tablist"
             aria-label="Sign-in methods"
-            className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/30 p-1.5"
+            className={cn(
+              "grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-1.5",
+              visibleMethods.length === 1 ? "grid-cols-1" : "grid-cols-3",
+            )}
           >
-            {METHODS.map((m) => {
+            {visibleMethods.map((m) => {
               const on = selected === m.id;
               return (
                 <button

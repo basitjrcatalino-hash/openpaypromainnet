@@ -117,15 +117,26 @@ function WithdrawPage() {
     }
   }, [ctxQ.data, hydrated]);
 
+  const piEligible =
+    withdrawVia === "rail" &&
+    destKind === "pi" &&
+    piInstantAvailable &&
+    isValidPiWalletAddress(dest);
+  const useInstantPi = piEligible && instantPi;
+
   const amtNum = Number(amount);
-  const feeSplit = calcWithdrawalFee(
-    Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0,
-    feeBps,
-  );
-  const amountValid = Number.isFinite(amtNum) && amtNum >= min;
+  const effMin = useInstantPi ? Math.max(min, PI_PAYOUT_MIN_OUSD) : min;
+  const feeSplit = useInstantPi
+    ? { fee: 0, net: Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0 }
+    : calcWithdrawalFee(Number.isFinite(amtNum) && amtNum > 0 ? amtNum : 0, feeBps);
+  const amountValid =
+    Number.isFinite(amtNum) &&
+    amtNum >= effMin &&
+    (!useInstantPi || amtNum <= PI_PAYOUT_MAX_OUSD);
   const insufficient = amountValid && amtNum > bal + 1e-12;
   const destValid = isValidDestinationAddress(dest, destKind);
   const canSubmit = amountValid && !insufficient && destValid;
+
 
   const createM = useMutation({
     mutationFn: () =>

@@ -37,7 +37,7 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
 
   const [providerId, setProviderId] = useState("");
   const [configured, setConfigured] = useState<boolean | null>(null);
-  const [phpRate, setPhpRate] = useState(61);
+  const [phpRate, setPhpRate] = useState(62.72);
   const [busy, setBusy] = useState(false);
   const [qr, setQr] = useState<{ url: string; intentId: string; php: number } | null>(null);
   const [paid, setPaid] = useState(false);

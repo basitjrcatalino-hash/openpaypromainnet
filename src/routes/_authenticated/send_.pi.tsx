@@ -9,7 +9,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/wallet/PageHeader";
+import { IosPageShell } from "@/components/ios/IosPageShell";
+import { useNavigate } from "@tanstack/react-router";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { OusdIcon } from "@/components/ousd-icon";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ function SendToPiWalletPage() {
   const { user } = Route.useRouteContext();
   const search = Route.useSearch();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const sendToPi = useServerFn(sendOusdToPiWallet);
   const payoutStatus = useServerFn(getPiPayoutStatus);
 
@@ -157,15 +159,19 @@ function SendToPiWalletPage() {
   }
 
   const fieldClass =
-    "h-12 rounded-xl border-border/60 bg-muted/50 text-base shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-primary/35";
+    "ios-field focus-visible:ring-2 focus-visible:ring-ios-blue/35";
 
   return (
-    <div className="mx-auto w-full max-w-lg px-4 pb-28">
-      <PageHeader title="Send to Pi Wallet" backTo="/send" />
+    <IosPageShell
+      title="Send to Pi Wallet"
+      subtitle="OpenUSD (OUSD) on the Pi blockchain"
+      onBack={() => void navigate({ to: "/send" })}
+      backLabel="Send"
+    >
 
       {/* Balance */}
-      <section className="rounded-2xl border border-border/60 bg-card p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <section className="rounded-[16px] bg-ios-card p-4">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
           Your balance
         </p>
         {loadingBalance ? (
@@ -176,20 +182,20 @@ function SendToPiWalletPage() {
             <span className="text-base font-medium text-muted-foreground">OUSD</span>
           </p>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-[13px] text-ios-secondary">
           Debits your OpenPay Pro OUSD and credits OpenUSD in the recipient&rsquo;s Pi Wallet.
         </p>
       </section>
 
       {/* Trustline explainer */}
-      <section className="mt-3 rounded-2xl border border-border/60 bg-card p-4">
+      <section className="rounded-[16px] bg-ios-card p-4">
         <div className="flex items-start gap-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <OusdIcon className="size-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold">Pi Wallet · OpenUSD</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-[15px] font-semibold text-ios-label">Pi Wallet · OpenUSD</p>
+            <p className="mt-0.5 text-[13px] text-ios-secondary">
               The recipient must enable OUSD in Pi Wallet (Tokens) before they can receive it.
               Transfers to a wallet without the trustline are rejected before any debit.
             </p>
@@ -198,17 +204,17 @@ function SendToPiWalletPage() {
       </section>
 
       {status && status.configured === false ? (
-        <p className="mt-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+        <p className="rounded-[16px] border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
           Pi Wallet payout is temporarily unavailable. Please try again shortly.
         </p>
       ) : null}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="mt-3 space-y-4">
-        <section className="space-y-4 rounded-2xl border border-border/60 bg-card p-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <section className="space-y-4 rounded-[16px] bg-ios-card p-4">
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <label htmlFor="pi-address" className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="pi-address" className="text-[13px] font-semibold text-ios-secondary">
                 Pi Wallet address
               </label>
               <QrScannerButton
@@ -238,14 +244,14 @@ function SendToPiWalletPage() {
             {walletTo.trim() && destError ? (
               <p className="mt-1.5 text-xs text-destructive">{destError}</p>
             ) : (
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 text-[13px] text-ios-secondary">
                 Paste the G-address from Pi Wallet → Receive, or tap scan to use the camera.
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="pi-amount" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <label htmlFor="pi-amount" className="mb-1.5 block text-[13px] font-semibold text-ios-secondary">
               Amount (OUSD)
             </label>
             <Input
@@ -256,7 +262,7 @@ function SendToPiWalletPage() {
               placeholder={PI_PAYOUT_MIN_OUSD.toFixed(2)}
               className={cn(fieldClass, "font-semibold tabular-nums")}
             />
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-[13px] text-ios-secondary">
               Min {formatNumber(PI_PAYOUT_MIN_OUSD, 2)} · Max {formatNumber(PI_PAYOUT_MAX_OUSD, 2)} OUSD
               per transaction
             </p>
@@ -273,7 +279,7 @@ function SendToPiWalletPage() {
           </div>
 
           <div>
-            <label htmlFor="pi-memo" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <label htmlFor="pi-memo" className="mb-1.5 block text-[13px] font-semibold text-ios-secondary">
               Memo (optional)
             </label>
             <Input
@@ -288,7 +294,7 @@ function SendToPiWalletPage() {
         </section>
 
         {preview ? (
-          <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-500">
+          <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[13px] font-semibold text-emerald-500">
             Preview: send to Pi Wallet {preview}
             {Number.isFinite(amountNum) && amountNum > 0
               ? ` · ${formatNumber(amountNum, 2)} OUSD`
@@ -296,7 +302,7 @@ function SendToPiWalletPage() {
           </p>
         ) : null}
 
-        <Button type="submit" size="lg" className="h-12 w-full rounded-xl" disabled={!canSubmit}>
+        <Button type="submit" size="lg" className="ios-active h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90" disabled={!canSubmit}>
           {submitting ? (
             <>
               <Loader2 className="size-4 animate-spin" /> Sending…
@@ -308,25 +314,25 @@ function SendToPiWalletPage() {
           )}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">OUSD on Pi Wallet</p>
+        <p className="text-center text-[13px] text-ios-secondary">OUSD on Pi Wallet</p>
       </form>
 
       {/* Sending overlay */}
       {submitting ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xs rounded-2xl border border-border/60 bg-card p-6 text-center">
+          <div className="w-full max-w-xs rounded-[20px] bg-ios-card p-6 text-center">
             <span className="relative mx-auto flex size-12 items-center justify-center">
               <span className="absolute inset-0 animate-ping rounded-full bg-primary/25" />
               <Loader2 className="size-8 animate-spin text-primary" />
             </span>
-            <p className="mt-4 text-sm font-semibold">Sending to Pi Wallet</p>
-            <p className="mt-1 text-xs text-muted-foreground">{SEND_STAGES[stage]}</p>
+            <p className="mt-4 text-[15px] font-semibold text-ios-label">Sending to Pi Wallet</p>
+            <p className="mt-1 text-[13px] text-ios-secondary">{SEND_STAGES[stage]}</p>
             {Number.isFinite(amountNum) && amountNum > 0 ? (
               <p className="mt-3 text-lg font-semibold tabular-nums">
                 {formatNumber(amountNum, 2)} OUSD
               </p>
             ) : null}
-            {preview ? <p className="text-xs text-muted-foreground">{preview}</p> : null}
+            {preview ? <p className="text-[13px] text-ios-secondary">{preview}</p> : null}
           </div>
         </div>
       ) : null}
@@ -334,15 +340,15 @@ function SendToPiWalletPage() {
       {/* Receipt */}
       {receipt ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center">
+          <div className="w-full max-w-sm rounded-[20px] bg-ios-card p-6 text-center">
             <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15">
               <OusdIcon className="size-7" />
             </span>
-            <p className="mt-3 text-sm text-muted-foreground">Sent to Pi Wallet</p>
+            <p className="mt-3 text-[15px] text-ios-secondary">Sent to Pi Wallet</p>
             <p className="text-2xl font-semibold tabular-nums">
               {formatNumber(receipt.amount, 2)} OUSD
             </p>
-            <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+            <p className="mt-1 break-all font-mono text-[11px] text-ios-secondary">
               {receipt.to}
             </p>
             {receipt.txid ? (
@@ -350,17 +356,17 @@ function SendToPiWalletPage() {
                 href={piTxExplorerUrl(receipt.txid, receipt.horizon)}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary"
+                className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ios-blue"
               >
                 View on Pi Explorer <ExternalLink className="size-3.5" />
               </a>
             ) : null}
-            <Button className="mt-5 h-11 w-full rounded-xl" onClick={() => setReceipt(null)}>
+            <Button className="ios-active mt-5 h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90" onClick={() => setReceipt(null)}>
               Done
             </Button>
           </div>
         </div>
       ) : null}
-    </div>
+    </IosPageShell>
   );
 }

@@ -27,7 +27,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { OusdIcon } from "@/components/ousd-icon";
-import { PageHeader } from "@/components/wallet/PageHeader";
+import { IosPageShell } from "@/components/ios/IosPageShell";
+import {
+  IosSectionLabel,
+  IosSegmented,
+  IosSettingsGroup,
+} from "@/components/ios/IosSettingsGroup";
 import { QrScannerButton } from "@/components/qr-scanner";
 import { TxConfirmModal } from "@/components/wallet/TxConfirmModal";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
@@ -653,25 +658,33 @@ function SendPage() {
   }
 
   const titles: Record<Step, string> = {
-    asset: "Select asset",
+    asset: "Send",
     recipient: "Send to",
     amount: "Enter amount",
   };
+  const subtitles: Record<Step, string> = {
+    asset: "Pay anyone on OpenPay Pro",
+    recipient:
+      rail === "openpay"
+        ? "OpenPay balance"
+        : rail === "pi"
+          ? "Credit OUSD to a Pi Wallet G-address"
+          : "Address or @username",
+    amount: selected ? `${selected.name} · ${selected.symbol}` : "",
+  };
 
   return (
-    <div className="ot-phantom ph-page min-h-[70vh] pb-8">
-      <PageHeader title={titles[step]} onBack={goBack} />
-
+    <IosPageShell title={titles[step]} subtitle={subtitles[step]} onBack={goBack}>
       {step === "asset" && (
-        <div className="space-y-3">
-          {/* Phantom-style search */}
+        <div className="space-y-4">
+          {/* iOS search field */}
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ios-secondary" />
             <Input
               value={assetQuery}
               onChange={(e) => setAssetQuery(e.target.value)}
               placeholder="Search tokens"
-              className="h-12 rounded-2xl border-0 bg-muted/80 pl-10 pr-10 text-[15px] placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+              className="ios-field pl-10 pr-10 focus-visible:ring-2 focus-visible:ring-ios-blue/35"
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -680,7 +693,7 @@ function SendPage() {
               <button
                 type="button"
                 onClick={() => setAssetQuery("")}
-                className="absolute right-2.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground press"
+                className="ios-active absolute right-2.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-ios-secondary"
                 aria-label="Clear search"
               >
                 <X className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -689,73 +702,67 @@ function SendPage() {
           </div>
 
           {holdingsLoading && !wallet ? (
-            <div className="grid place-items-center py-16 text-sm text-muted-foreground">
-              <Loader2 className="mb-2 h-5 w-5 animate-spin" /> Loading assets…
+            <div className="grid place-items-center py-16 text-[15px] text-ios-secondary">
+              <Loader2 className="ios-spinner mb-2 h-5 w-5" /> Loading assets…
             </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl bg-card">
-              <div className="flex items-center justify-between px-4 pb-1 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {assetQuery.trim() ? "Results" : "Your tokens"}
-                </p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">
-                  {filteredAssets.length}
-                </p>
-              </div>
-              {filteredAssets.map((a, i) => {
-                const valueUsd = a.balance * (a.priceUsd || 0);
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() => pickAsset(a)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition press hover:bg-muted/45 active:bg-muted/60",
-                      i > 0 && "border-t border-border/50",
-                    )}
-                  >
-                    <AssetAvatar asset={a} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[15px] font-semibold text-foreground">
-                        {a.name}
-                      </div>
-                      <div className="text-[13px] text-muted-foreground">{a.symbol}</div>
-                    </div>
-                    <div className="min-w-0 text-right">
-                      <div className="text-[15px] font-semibold tabular-nums text-foreground">
-                        {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
-                      </div>
-                      <div className="text-[13px] tabular-nums text-muted-foreground">
-                        {formatUSD(valueUsd)}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                  </button>
-                );
-              })}
-              {filteredAssets.length === 0 && (
-                <div className="px-4 py-12 text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    {assetQuery.trim() ? "No tokens found" : "No assets to send yet"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {assetQuery.trim()
-                      ? `Nothing matches “${assetQuery.trim()}”`
-                      : "Buy or receive tokens to get started"}
-                  </p>
-                  {assetQuery.trim() ? (
+            <div>
+              <IosSectionLabel>{assetQuery.trim() ? "Results" : "Your tokens"}</IosSectionLabel>
+              <IosSettingsGroup>
+
+                {filteredAssets.map((a) => {
+                  const valueUsd = a.balance * (a.priceUsd || 0);
+                  return (
                     <button
+                      key={a.key}
                       type="button"
-                      onClick={() => setAssetQuery("")}
-                      className="mt-4 text-sm font-semibold text-primary"
+                      onClick={() => pickAsset(a)}
+                      className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
                     >
-                      Clear search
+                      <AssetAvatar asset={a} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[16px] font-semibold text-ios-label">
+                          {a.name}
+                        </div>
+                        <div className="text-[12px] text-ios-secondary">{a.symbol}</div>
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <div className="text-[16px] font-semibold tabular-nums text-ios-label">
+                          {formatNumber(a.balance, a.balance < 1 ? 6 : 4)}
+                        </div>
+                        <div className="text-[12px] tabular-nums text-ios-secondary">
+                          {formatUSD(valueUsd)}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-ios-tertiary" />
                     </button>
-                  ) : null}
-                </div>
-              )}
+                  );
+                })}
+                {filteredAssets.length === 0 && (
+                  <div className="px-4 py-12 text-center">
+                    <p className="text-[16px] font-semibold text-ios-label">
+                      {assetQuery.trim() ? "No tokens found" : "No assets to send yet"}
+                    </p>
+                    <p className="mt-1 text-[13px] text-ios-secondary">
+                      {assetQuery.trim()
+                        ? `Nothing matches “${assetQuery.trim()}”`
+                        : "Buy or receive tokens to get started"}
+                    </p>
+                    {assetQuery.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => setAssetQuery("")}
+                        className="ios-active mt-4 text-[15px] font-semibold text-ios-blue"
+                      >
+                        Clear search
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+              </IosSettingsGroup>
             </div>
           )}
+
         </div>
       )}
 
@@ -764,47 +771,45 @@ function SendPage() {
           <SelectedChip asset={selected} onChange={() => setStep("asset")} />
 
           {selected.kind === "OUSD" && (
-            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/40 p-1">
-              <button
-                type="button"
-                onClick={() => setRail("wallet")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "wallet"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Pro wallet
-              </button>
-              <button
-                type="button"
-                onClick={() => setRail("openpay")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "openpay"
-                    ? "bg-[#0070BA] text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                OpenPay balance
-              </button>
-              <button
-                type="button"
-                onClick={() => setRail("pi")}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-xs font-semibold transition",
-                  rail === "pi"
-                    ? "bg-[#7B3FE4] text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Pi Wallet
-              </button>
+            <IosSegmented
+              value={rail}
+              onChange={(id) => setRail(id)}
+              options={[
+                { id: "wallet", label: "OpenPay Pro" },
+                { id: "openpay", label: "OpenPay" },
+                { id: "pi", label: "Pi Wallet" },
+              ]}
+            />
+          )}
+
+          {rail === "pi" && (
+            <div>
+              <IosSectionLabel>Ways to send</IosSectionLabel>
+              <IosSettingsGroup>
+                <button
+                  type="button"
+                  onClick={() => void navigate({ to: "/send/pi" })}
+                  className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F7931A]/15 text-[18px] font-bold text-[#F7931A]">
+                    π
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[16px] font-semibold text-ios-label">
+                      Send to Pi Wallet
+                    </span>
+                    <span className="block text-[12px] leading-snug text-ios-secondary">
+                      Credit OpenUSD (OUSD) to a Pi Wallet G-address
+                    </span>
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ios-tertiary" />
+                </button>
+              </IosSettingsGroup>
             </div>
           )}
 
-          <div className="rounded-3xl border border-border bg-card p-4">
+          <div className="rounded-[16px] bg-ios-card p-4">
+
             {rail === "openpay" && (
               <div className="mb-4 rounded-2xl border border-[#0070BA]/30 bg-[#0070BA]/10 px-3 py-3">
                 {openPayLinkLoading ? (
@@ -908,7 +913,7 @@ function SendPage() {
               </div>
             )}
 
-            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="mb-2 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
               {rail === "openpay"
                 ? "OpenPay wallet"
                 : rail === "pi"
@@ -955,7 +960,7 @@ function SendPage() {
                       ? "G… Pi Wallet address"
                       : "0x… or @username"
                 }
-                className="h-12 rounded-2xl"
+                className="ios-field focus-visible:ring-2 focus-visible:ring-ios-blue/35"
                 autoFocus={rail !== "openpay" || openPayLinked}
                 disabled={rail === "openpay" && !openPayLinked}
               />
@@ -964,7 +969,7 @@ function SendPage() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 shrink-0 rounded-2xl"
+                  className="ios-active h-12 w-12 shrink-0 rounded-[12px] border-0 bg-ios-fill text-ios-blue"
                   aria-label="Copy OpenPay wallet"
                   onClick={() => void copyLinkedOpenPayWallet()}
                 >
@@ -983,7 +988,7 @@ function SendPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0 rounded-2xl"
+                    className="ios-active h-12 w-12 shrink-0 rounded-[12px] border-0 bg-ios-fill text-ios-blue"
                     aria-label="Scan QR"
                     disabled={rail === "openpay" && !openPayLinked}
                   >
@@ -1080,11 +1085,11 @@ function SendPage() {
 
           {recentRecipients.length > 0 && (
             <div>
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="mb-2 flex items-center gap-1.5 px-1 text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
                 <Clock className="h-3.5 w-3.5" />
                 Recent
               </div>
-              <ul className="overflow-hidden rounded-2xl bg-card">
+              <ul className="overflow-hidden rounded-[16px] bg-ios-card [&>li+li]:border-t [&>li+li]:border-ios-separator">
                 {recentRecipients.map((r) => (
                   <li key={r.address}>
                     <button
@@ -1094,7 +1099,7 @@ function SendPage() {
                         setOpPreview(null);
                         setOpError(null);
                       }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left press hover:bg-muted/40"
+                      className="ios-active flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ios-fill"
                     >
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                         {(r.label ?? r.address).replace(/^@/, "").slice(0, 2).toUpperCase()}
@@ -1123,7 +1128,7 @@ function SendPage() {
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90"
             disabled={
               rail === "openpay"
                 ? !openPayLinked || !to.trim()
@@ -1142,14 +1147,14 @@ function SendPage() {
         <div className="space-y-5">
           <SelectedChip asset={selected} onChange={() => setStep("asset")} />
 
-          <div className="rounded-3xl border border-border bg-card px-4 py-8 text-center">
+          <div className="rounded-[16px] bg-ios-card px-4 py-8 text-center">
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
               inputMode="decimal"
               placeholder="0"
               autoFocus
-              className="w-full bg-transparent text-center text-5xl font-bold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/40"
+              className="w-full bg-transparent text-center text-[64px] font-bold tracking-[-0.04em] tabular-nums text-ios-label outline-none placeholder:text-ios-tertiary sm:text-[72px]"
             />
             <div className="mt-2 text-sm text-muted-foreground">
               {amountValid ? `≈ ${formatUSD(usdEstimate)}` : selected.symbol}
@@ -1159,7 +1164,7 @@ function SendPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm">
+          <div className="flex items-center justify-between rounded-[16px] bg-ios-card px-4 py-3 text-[15px]">
             <span className="text-muted-foreground">
               Available{" "}
               <span className="font-semibold text-foreground">
@@ -1176,7 +1181,7 @@ function SendPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.04em] text-ios-secondary">
               Note (optional)
             </label>
             <Textarea
@@ -1184,14 +1189,14 @@ function SendPage() {
               onChange={(e) => setMemo(e.target.value)}
               maxLength={140}
               rows={2}
-              className="rounded-2xl"
+              className="rounded-[12px] border-0 bg-ios-fill text-[17px]"
               placeholder="Add a note"
             />
           </div>
 
           <Button
             type="button"
-            className="h-12 w-full rounded-full text-base font-semibold"
+            className="ios-active h-[50px] w-full rounded-[14px] bg-ios-blue text-[17px] font-semibold text-white hover:bg-ios-blue/90"
             disabled={!amountValid || insufficient}
             onClick={continueFromAmount}
           >
@@ -1252,7 +1257,7 @@ function SendPage() {
         variant={rail === "openpay" ? "openpay" : "default"}
         onConfirm={() => void confirmSend()}
       />
-    </div>
+    </IosPageShell>
   );
 }
 
@@ -1261,7 +1266,7 @@ function SelectedChip({ asset, onChange }: { asset: SendableAsset; onChange: () 
     <button
       type="button"
       onClick={onChange}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-left transition hover:bg-muted/40"
+      className="ios-active flex w-full items-center gap-3 rounded-[16px] bg-ios-card px-4 py-3 text-left"
     >
       <AssetAvatar asset={asset} className="h-9 w-9" />
       <div className="min-w-0 flex-1">
@@ -1270,7 +1275,7 @@ function SelectedChip({ asset, onChange }: { asset: SendableAsset; onChange: () 
           {formatNumber(asset.balance, asset.balance < 1 ? 6 : 4)} available
         </div>
       </div>
-      <span className="text-xs font-medium text-primary">Change</span>
+      <span className="text-[13px] font-semibold text-ios-blue">Change</span>
     </button>
   );
 }

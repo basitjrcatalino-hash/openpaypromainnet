@@ -783,18 +783,22 @@ export function AssetBuySheet({
       ? `Buy ${valid ? formatUSD(amtNum) : ""} OUSD with Pi`
       : method === "moonpay"
         ? `Buy with Card`
-        : method === "usdc"
-          ? `Pay with USDC`
-          : method === "helio"
-            ? `Deposit crypto`
-            : openpayShort
-              ? `Amount exceeds OpenPay balance`
-              : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
+        : method === "paymongo"
+          ? `Continue with QR Ph`
+          : method === "usdc"
+            ? `Pay with USDC`
+            : method === "helio"
+              ? `Deposit crypto`
+              : openpayShort
+                ? `Amount exceeds OpenPay balance`
+                : `Pay ${valid ? formatUSD(amtNum) : ""} with OpenPay`
     : walletPayCta
       ? walletPayCta
       : method === "moonpay"
         ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with Card`
-        : method === "pi"
+        : method === "paymongo"
+          ? `Buy ${isMajor ? token.symbol : `$${token.symbol}`} with QR Ph`
+          : method === "pi"
           ? isMajor
             ? `Buy ${token.symbol} with Pi`
             : graduated

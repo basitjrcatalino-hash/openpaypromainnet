@@ -1159,7 +1159,14 @@ export function AssetBuySheet({
                       )}
                     >
                       {m.logoUrl ? (
-                        <img src={m.logoUrl} alt="" className="h-full w-full object-cover" />
+                        <img
+                          src={m.logoUrl}
+                          alt=""
+                          className={cn(
+                            "h-full w-full",
+                            m.logoContain ? "object-contain p-1.5" : "object-cover",
+                          )}
+                        />
                       ) : m.helioMark ? (
                         <HelioMark className="h-5 w-5" />
                       ) : Icon ? (

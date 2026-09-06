@@ -1260,6 +1260,39 @@ export function AssetBuySheet({
         </div>
       )}
 
+      {/* —— Step 3: Deposit (PayMongo QR Ph) —— */}
+      {step === "deposit" && depositReady && method === "paymongo" && (
+        <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto">
+          <div className="rounded-2xl bg-muted/50 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Paying exactly</p>
+            <p className="text-xl font-bold tabular-nums">{formatUSD(amtNum)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              via QR Ph · PayMongo (GCash, Maya, GrabPay, banks)
+              {!isOusd ? ` · then buy ${token.symbol}` : null}
+            </p>
+          </div>
+          <PaymongoDepositPanel
+            amountUsd={amtNum}
+            walletId={walletId}
+            onSuccess={() => {
+              void invalidateAfterTopup();
+              if (isOusd) onClose();
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setDepositReady(false);
+              setStep("method");
+            }}
+          >
+            Change amount or method
+          </Button>
+        </div>
+      )}
+
       {/* —— Step 3: Deposit —— */}
       {step === "deposit" && depositReady && (method === "helio" || method === "usdc") && (
         <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto">
@@ -1340,11 +1373,13 @@ export function AssetBuySheet({
                   ? "Pi Network"
                   : method === "moonpay"
                     ? "Card (MoonPay)"
-                    : method === "usdc"
-                      ? "USDC Pay"
-                      : method === "helio"
-                        ? "Crypto Deposit"
-                        : "OpenPay",
+                    : method === "paymongo"
+                      ? "QR Ph (PayMongo)"
+                      : method === "usdc"
+                        ? "USDC Pay"
+                        : method === "helio"
+                          ? "Crypto Deposit"
+                          : "OpenPay",
           },
           ...((isWalletPayMethod(method) && !(isOusd && method === "wallet_ousd"))
             ? [

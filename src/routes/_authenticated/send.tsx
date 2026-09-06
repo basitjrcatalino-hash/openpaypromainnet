@@ -653,25 +653,33 @@ function SendPage() {
   }
 
   const titles: Record<Step, string> = {
-    asset: "Select asset",
+    asset: "Send",
     recipient: "Send to",
     amount: "Enter amount",
   };
+  const subtitles: Record<Step, string> = {
+    asset: "Pay anyone on OpenPay Pro",
+    recipient:
+      rail === "openpay"
+        ? "OpenPay balance"
+        : rail === "pi"
+          ? "Credit OUSD to a Pi Wallet G-address"
+          : "Address or @username",
+    amount: selected ? `${selected.name} · ${selected.symbol}` : "",
+  };
 
   return (
-    <div className="ot-phantom ph-page min-h-[70vh] pb-8">
-      <PageHeader title={titles[step]} onBack={goBack} />
-
+    <IosPageShell title={titles[step]} subtitle={subtitles[step]} onBack={goBack}>
       {step === "asset" && (
-        <div className="space-y-3">
-          {/* Phantom-style search */}
+        <div className="space-y-4">
+          {/* iOS search field */}
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ios-secondary" />
             <Input
               value={assetQuery}
               onChange={(e) => setAssetQuery(e.target.value)}
               placeholder="Search tokens"
-              className="h-12 rounded-2xl border-0 bg-muted/80 pl-10 pr-10 text-[15px] placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+              className="ios-field pl-10 pr-10 focus-visible:ring-2 focus-visible:ring-ios-blue/35"
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -680,7 +688,7 @@ function SendPage() {
               <button
                 type="button"
                 onClick={() => setAssetQuery("")}
-                className="absolute right-2.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground press"
+                className="ios-active absolute right-2.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-ios-secondary"
                 aria-label="Clear search"
               >
                 <X className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -689,19 +697,14 @@ function SendPage() {
           </div>
 
           {holdingsLoading && !wallet ? (
-            <div className="grid place-items-center py-16 text-sm text-muted-foreground">
-              <Loader2 className="mb-2 h-5 w-5 animate-spin" /> Loading assets…
+            <div className="grid place-items-center py-16 text-[15px] text-ios-secondary">
+              <Loader2 className="ios-spinner mb-2 h-5 w-5" /> Loading assets…
             </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl bg-card">
-              <div className="flex items-center justify-between px-4 pb-1 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {assetQuery.trim() ? "Results" : "Your tokens"}
-                </p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">
-                  {filteredAssets.length}
-                </p>
-              </div>
+            <div>
+              <IosSectionLabel>{assetQuery.trim() ? "Results" : "Your tokens"}</IosSectionLabel>
+              <IosSettingsGroup>
+
               {filteredAssets.map((a, i) => {
                 const valueUsd = a.balance * (a.priceUsd || 0);
                 return (

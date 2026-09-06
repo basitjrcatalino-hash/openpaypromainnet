@@ -2149,3 +2149,108 @@ html.solana-pay-open body > div[style*="z-index:50"] {
     transition: none;
   }
 }
+
+/* ============================================================
+   iOS design layer — Send / Withdraw money flows
+   ============================================================ */
+:root {
+  --ios-bg: #f2f2f7;
+  --ios-card: #ffffff;
+  --ios-label: #1c1c1e;
+  --ios-secondary: #8e8e93;
+  --ios-tertiary: #c7c7cc;
+  --ios-blue: #007aff;
+  --ios-red: #ff3b30;
+  --ios-green: #34c759;
+  --ios-fill: #f2f2f7;
+  --ios-separator: #e5e5ea;
+  --ios-track: rgb(118 118 128 / 0.12);
+  --ios-pill: #ffffff;
+}
+
+.dark {
+  --ios-bg: #000000;
+  --ios-card: #1c1c1e;
+  --ios-label: #ffffff;
+  --ios-secondary: rgb(255 255 255 / 0.55);
+  --ios-tertiary: rgb(255 255 255 / 0.25);
+  --ios-blue: #0a84ff;
+  --ios-fill: rgb(255 255 255 / 0.1);
+  --ios-separator: rgb(255 255 255 / 0.1);
+  --ios-track: rgb(255 255 255 / 0.1);
+  --ios-pill: #636366;
+}
+
+@theme inline {
+  --color-ios-bg: var(--ios-bg);
+  --color-ios-card: var(--ios-card);
+  --color-ios-label: var(--ios-label);
+  --color-ios-secondary: var(--ios-secondary);
+  --color-ios-tertiary: var(--ios-tertiary);
+  --color-ios-blue: var(--ios-blue);
+  --color-ios-red: var(--ios-red);
+  --color-ios-green: var(--ios-green);
+  --color-ios-fill: var(--ios-fill);
+  --color-ios-separator: var(--ios-separator);
+  --color-ios-track: var(--ios-track);
+  --color-ios-pill: var(--ios-pill);
+}
+
+@utility ios-liquid-header {
+  backdrop-filter: saturate(180%) blur(20px);
+  background: color-mix(in srgb, var(--ios-bg) 82%, transparent);
+}
+
+@utility ios-active {
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+}
+
+@utility ios-page-enter {
+  animation: ios-fade-up 0.35s ease-out;
+}
+
+@utility ios-spinner {
+  animation: ios-spin 0.8s linear infinite;
+}
+
+@utility ios-field {
+  height: 3rem;
+  border-radius: 12px;
+  border: 0;
+  background: var(--ios-fill);
+  color: var(--ios-label);
+  font-size: 17px;
+  box-shadow: none;
+  &::placeholder {
+    color: var(--ios-secondary);
+  }
+}
+
+@keyframes ios-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ios-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-page-enter {
+    animation: none;
+  }
+}

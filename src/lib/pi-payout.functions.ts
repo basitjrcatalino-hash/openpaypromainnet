@@ -66,13 +66,16 @@ export const sendOusdToPiWallet = createServerFn({ method: "POST" })
     const memo = String(data.memo || "").trim().slice(0, 28);
 
     // ---- On-chain pre-checks (before any debit) ----
+    let net = cfg;
     try {
-      await preflightPiPayout(cfg, dest, amount);
+      const pre = await preflightPiPayout(cfg, dest, amount);
+      net = pre.cfg;
     } catch (e) {
       throw new Error(
         e instanceof PiPayoutError || e instanceof Error ? e.message : MAINTENANCE_MSG,
       );
     }
+
 
     // ---- Balance check + debit ----
     const { fetchActiveWallet } = await import("./wallet-utils");

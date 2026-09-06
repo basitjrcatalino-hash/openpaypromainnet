@@ -54,6 +54,8 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatOUSD, formatUSD } from "@/lib/wallet-utils";
 import { useCurrency } from "@/lib/currency";
 import { useIsDesktopViewport } from "@/hooks/use-mobile";
+import qrPhLogoAsset from "@/assets/qr-ph-logo.svg.asset.json";
+import paypalLogoAsset from "@/assets/paypal-logo.svg.asset.json";
 
 export type AssetBuyTarget = {
   id: string;
@@ -175,13 +177,13 @@ const ALL_METHODS: {
   {
     id: "paymongo",
     label: "QR Ph & e-wallets",
-    icon: QrCode,
+    logoUrl: qrPhLogoAsset.url,
     desc: "PayMongo · GCash, Maya, GrabPay, banks · scan QR Ph → OUSD",
   },
   {
     id: "paypal",
     label: "PayPal",
-    icon: Wallet,
+    logoUrl: paypalLogoAsset.url,
     desc: "PayPal, Pay Later, Venmo or card · approve → OUSD",
   },
   {

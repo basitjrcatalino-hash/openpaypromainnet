@@ -651,7 +651,13 @@ function TradePage() {
         onSlPrice={setSlPrice}
         useTpsl={useTpsl}
         onUseTpsl={setUseTpsl}
-        onSubmit={() => spotM.mutate()}
+        onSubmit={() => {
+          if (!(Number(amount) > 0)) {
+            toast.error("Enter an amount");
+            return;
+          }
+          setConfirmOrder("spot");
+        }}
       />
     );
 
@@ -971,7 +977,13 @@ function TradePage() {
                   onSlPrice={setSlPrice}
                   useTpsl={useTpsl}
                   onUseTpsl={setUseTpsl}
-                  onSubmit={() => spotM.mutate()}
+                  onSubmit={() => {
+          if (!(Number(amount) > 0)) {
+            toast.error("Enter an amount");
+            return;
+          }
+          setConfirmOrder("spot");
+        }}
                 />
               )}
             </div>

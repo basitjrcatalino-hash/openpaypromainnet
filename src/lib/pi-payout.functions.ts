@@ -130,7 +130,7 @@ export const sendOusdToPiWallet = createServerFn({ method: "POST" })
 
     // ---- Submit chain payment (refund on any failure) ----
     try {
-      const txid = await submitPiPayout(cfg, dest, amount, memo);
+      const txid = await submitPiPayout(net, dest, amount, memo);
       await supabase
         .from("transactions")
         .update({ status: "confirmed", memo: `${note} · tx:${txid}`.slice(0, 500) })
@@ -142,7 +142,7 @@ export const sendOusdToPiWallet = createServerFn({ method: "POST" })
         to: dest,
         amount,
         asset: "OUSD",
-        horizon: cfg.horizon,
+        horizon: net.horizon,
       };
     } catch (chainErr) {
       const reason =

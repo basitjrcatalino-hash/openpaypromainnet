@@ -2,7 +2,7 @@ import type { PerpMarket } from "@/lib/perp";
 
 export type SpotOrderSide = "buy" | "sell";
 export type SpotOrderStatus = "open" | "partial" | "filled" | "cancelled";
-export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
+export type SpotPayAsset = "OUSD";
 export type SpotOrderType =
   | "market"
   | "limit"

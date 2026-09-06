@@ -30,7 +30,7 @@ const PCTS = [0, 25, 50, 75, 100] as const;
 const SPOT_FEE_RATE = SPOT_TAKER_FEE_BPS / 10_000;
 
 export type SpotSide = "buy" | "sell";
-export type SpotPayAsset = "USDT" | "OUSD" | "USDC";
+export type SpotPayAsset = "OUSD";
 export type OrderType = SpotOrderKind;
 
 type SharedProps = {

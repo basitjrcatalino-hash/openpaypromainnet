@@ -101,7 +101,7 @@ export const Route = createFileRoute("/_authenticated/trade")({
 
 type ViewTab = "chart" | "trade" | "info";
 type InfoTab = "overview" | "news" | "alerts";
-type SpotPay = "USDT" | "OUSD" | "USDC";
+type SpotPay = "OUSD";
 
 function TradePage() {
   const search = Route.useSearch();

@@ -203,6 +203,17 @@ export function TradeBottomDock({
               ))}
             </div>
           ) : null}
+          {isExpanded && canExport ? (
+            <button
+              type="button"
+              aria-label="Export CSV"
+              title="Export CSV"
+              onClick={() => downloadCsv(`${market}-${tab}`, exportRows())}
+              className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground press hover:bg-muted/50"
+            >
+              <Download className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
           {onGoTrade ? (
             <Button
               type="button"

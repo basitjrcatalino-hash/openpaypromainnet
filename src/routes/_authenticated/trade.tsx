@@ -185,6 +185,9 @@ function TradePage() {
   const [payAsset, setPayAsset] = useState<SpotPay>("OUSD");
   /** Confirm close position (Phantom-style TxConfirmModal). */
   const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
+  /** Pre-trade confirmation for new orders (OKX-style order preview). */
+  const [confirmOrder, setConfirmOrder] = useState<null | "spot" | "long" | "short">(null);
+
 
   useEffect(() => {
     const marketMatch =

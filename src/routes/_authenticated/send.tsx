@@ -1254,7 +1254,7 @@ function SendPage() {
         variant={rail === "openpay" ? "openpay" : "default"}
         onConfirm={() => void confirmSend()}
       />
-    </div>
+    </IosPageShell>
   );
 }
 

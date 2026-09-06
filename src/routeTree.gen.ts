@@ -125,6 +125,7 @@ import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/tran
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
+import { Route as AuthenticatedSendPiRouteImport } from './routes/_authenticated/send_.pi'
 import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
 import { Route as AuthenticatedP2pTermsRouteImport } from './routes/_authenticated/p2p_.terms'
 import { Route as AuthenticatedP2pSupportRouteImport } from './routes/_authenticated/p2p_.support'
@@ -808,6 +809,11 @@ const AuthenticatedTokensCreateRoute =
     path: '/create',
     getParentRoute: () => AuthenticatedTokensRoute,
   } as any)
+const AuthenticatedSendPiRoute = AuthenticatedSendPiRouteImport.update({
+  id: '/send_/pi',
+  path: '/send/pi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedP2pWalletRoute = AuthenticatedP2pWalletRouteImport.update({
   id: '/p2p_/wallet',
   path: '/p2p/wallet',
@@ -1421,6 +1427,7 @@ export interface FileRoutesByFullPath {
   '/p2p/support': typeof AuthenticatedP2pSupportRoute
   '/p2p/terms': typeof AuthenticatedP2pTermsRoute
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
+  '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
@@ -1626,6 +1633,7 @@ export interface FileRoutesByTo {
   '/p2p/support': typeof AuthenticatedP2pSupportRoute
   '/p2p/terms': typeof AuthenticatedP2pTermsRoute
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
+  '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
@@ -1833,6 +1841,7 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/support': typeof AuthenticatedP2pSupportRoute
   '/_authenticated/p2p_/terms': typeof AuthenticatedP2pTermsRoute
   '/_authenticated/p2p_/wallet': typeof AuthenticatedP2pWalletRoute
+  '/_authenticated/send_/pi': typeof AuthenticatedSendPiRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
@@ -2040,6 +2049,7 @@ export interface FileRouteTypes {
     | '/p2p/support'
     | '/p2p/terms'
     | '/p2p/wallet'
+    | '/send/pi'
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
@@ -2245,6 +2255,7 @@ export interface FileRouteTypes {
     | '/p2p/support'
     | '/p2p/terms'
     | '/p2p/wallet'
+    | '/send/pi'
     | '/tokens/create'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
@@ -2451,6 +2462,7 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/support'
     | '/_authenticated/p2p_/terms'
     | '/_authenticated/p2p_/wallet'
+    | '/_authenticated/send_/pi'
     | '/_authenticated/tokens/create'
     | '/_authenticated/wallet_/receive'
     | '/api/admin/p2p-fix'
@@ -3442,6 +3454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTokensCreateRouteImport
       parentRoute: typeof AuthenticatedTokensRoute
     }
+    '/_authenticated/send_/pi': {
+      id: '/_authenticated/send_/pi'
+      path: '/send/pi'
+      fullPath: '/send/pi'
+      preLoaderRoute: typeof AuthenticatedSendPiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/p2p_/wallet': {
       id: '/_authenticated/p2p_/wallet'
       path: '/p2p/wallet'
@@ -4164,6 +4183,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedP2pSupportRoute: typeof AuthenticatedP2pSupportRoute
   AuthenticatedP2pTermsRoute: typeof AuthenticatedP2pTermsRoute
   AuthenticatedP2pWalletRoute: typeof AuthenticatedP2pWalletRoute
+  AuthenticatedSendPiRoute: typeof AuthenticatedSendPiRoute
   AuthenticatedWalletReceiveRoute: typeof AuthenticatedWalletReceiveRoute
   AuthenticatedAssetTokenIdChatRoute: typeof AuthenticatedAssetTokenIdChatRoute
   AuthenticatedBagsTokenMintRoute: typeof AuthenticatedBagsTokenMintRoute
@@ -4255,6 +4275,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedP2pSupportRoute: AuthenticatedP2pSupportRoute,
   AuthenticatedP2pTermsRoute: AuthenticatedP2pTermsRoute,
   AuthenticatedP2pWalletRoute: AuthenticatedP2pWalletRoute,
+  AuthenticatedSendPiRoute: AuthenticatedSendPiRoute,
   AuthenticatedWalletReceiveRoute: AuthenticatedWalletReceiveRoute,
   AuthenticatedAssetTokenIdChatRoute: AuthenticatedAssetTokenIdChatRoute,
   AuthenticatedBagsTokenMintRoute: AuthenticatedBagsTokenMintRoute,

@@ -122,6 +122,8 @@ const METHODS: {
 function AuthPiPage() {
   const search = Route.useSearch();
   const [mounted, setMounted] = useState(false);
+  // Pi Browser only allows Pi sign-in — other providers are restricted there.
+  const piOnly = mounted && isPiBrowser();
   const [selected, setSelected] = useState<AuthMethod>(
     () => (search.method as AuthMethod | undefined) ?? "openpay",
   );
@@ -135,8 +137,12 @@ function AuthPiPage() {
   }, []);
 
   useEffect(() => {
+    if (piOnly) {
+      setSelected("pi");
+      return;
+    }
     if (search.method) setSelected(search.method as AuthMethod);
-  }, [search.method]);
+  }, [search.method, piOnly]);
 
   useEffect(() => {
     let cancelled = false;
@@ -168,7 +174,8 @@ function AuthPiPage() {
     }
   }
 
-  const selectedOpt = METHODS.find((m) => m.id === selected)!;
+  const visibleMethods = piOnly ? METHODS.filter((m) => m.id === "pi") : METHODS;
+  const selectedOpt = visibleMethods.find((m) => m.id === selected) ?? visibleMethods[0];
 
   return (
     <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0a0a14] px-4 py-10 text-white">
@@ -186,16 +193,21 @@ function AuthPiPage() {
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight">OpenPay Pro</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Choose how you want to sign in
+              {piOnly
+                ? "Sign in with your Pi Network account"
+                : "Choose how you want to sign in"}
             </p>
           </div>
 
           <div
             role="tablist"
             aria-label="Sign-in methods"
-            className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/30 p-1.5"
+            className={cn(
+              "grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-1.5",
+              visibleMethods.length === 1 ? "grid-cols-1" : "grid-cols-3",
+            )}
           >
-            {METHODS.map((m) => {
+            {visibleMethods.map((m) => {
               const on = selected === m.id;
               return (
                 <button

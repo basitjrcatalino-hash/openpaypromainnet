@@ -423,7 +423,12 @@ function WithdrawPage() {
             />
             <div className="mt-2 text-sm text-muted-foreground">OUSD</div>
             {amount.length > 0 && !amountValid && (
-              <div className="mt-2 text-sm text-destructive">Minimum {min} OUSD</div>
+              <div className="mt-2 text-sm text-destructive">
+                {useInstantPi && Number(amount) > PI_PAYOUT_MAX_OUSD
+                  ? `Maximum ${PI_PAYOUT_MAX_OUSD.toLocaleString()} OUSD per transfer`
+                  : `Minimum ${effMin} OUSD`}
+              </div>
+
             )}
             {insufficient && (
               <div className="mt-2 text-sm text-destructive">Insufficient balance</div>

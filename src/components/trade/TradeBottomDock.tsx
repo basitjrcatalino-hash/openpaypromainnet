@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronUp, Download } from "lucide-react";
+import { ChevronUp, Download, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,8 @@ import { unrealizedPnl, type PerpPosition } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
 import type { SpotOrder } from "@/lib/spot-orders";
 import type { PerpMarket } from "@/lib/perp";
+import type { SharePnl } from "@/components/trade/SharePnlDialog";
+
 
 export type DockTab =
   | "orders"
@@ -17,6 +19,8 @@ export type DockTab =
   | "assets";
 
 export type DockSize = "sm" | "md" | "full";
+export type DockScope = "pair" | "all";
+
 
 export type TradeHistoryRow = {
   id: string;
@@ -75,6 +79,9 @@ export function TradeBottomDock({
   assets = [],
   onCancelOrder,
   cancellingId,
+  scope = "pair",
+  onScope,
+  onShare,
 }: {
   mode: TradeMode;
   market: PerpMarket;
@@ -97,11 +104,15 @@ export function TradeBottomDock({
   assets?: AssetBalanceRow[];
   onCancelOrder?: (id: string) => void;
   cancellingId?: string | null;
+  scope?: DockScope;
+  onScope?: (s: DockScope) => void;
+  onShare?: (d: SharePnl) => void;
 }) {
 
   const open = positions.filter((p) => p.status === "open");
   const isExpanded = expanded ?? true;
   const openCount = mode === "spot" ? openOrders.length : open.length;
+  const showScope = tab === "orderHistory" || tab === "tradeHistory";
 
   const tabs: { id: DockTab; label: string }[] = [
     { id: "orders", label: `Open (${openCount})` },
@@ -111,9 +122,123 @@ export function TradeBottomDock({
     { id: "assets", label: "Assets" },
   ];
 
+  const positionsList = (list: PerpPosition[]) => (
+    <ul className="space-y-2 pb-1">
+      {list.map((p) => {
+        const mark = Number(priceByMarket?.[p.market] ?? markPrice) || markPrice;
+        const pnl = unrealizedPnl({
+          side: p.side,
+          sizeUsd: p.size_usd,
+          entryPrice: p.entry_price,
+          markPrice: mark,
+          margin: p.margin,
+        });
+        const pnlPct = p.margin > 0 ? (pnl / p.margin) * 100 : 0;
+        return (
+          <li
+            key={p.id}
+            className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-card/60 px-3 py-2.5"
+          >
+            <div className="min-w-0">
+              <p className="text-xs font-bold">
+                <span
+                  className={cn(
+                    "mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase",
+                    p.side === "long"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-rose-500/15 text-rose-400",
+                  )}
+                >
+                  {p.side}
+                </span>
+                {p.market} · {p.leverage}×
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Entry {formatNumber(p.entry_price, 2)} · Mark {formatNumber(mark, 2)} · Margin{" "}
+                {formatNumber(p.margin, 2)} {p.margin_asset}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                Size {formatNumber(p.size_usd, 2)} {p.margin_asset}
+                {p.liquidation_price ? ` · Liq ${formatNumber(p.liquidation_price, 2)}` : ""}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p
+                className={cn(
+                  "text-xs font-bold tabular-nums",
+                  pnl >= 0 ? "text-emerald-400" : "text-rose-400",
+                )}
+              >
+                {pnl >= 0 ? "+" : ""}
+                {formatNumber(pnl, 2)}
+              </p>
+              <p
+                className={cn(
+                  "text-[10px] font-semibold tabular-nums",
+                  pnl >= 0 ? "text-emerald-400" : "text-rose-400",
+                )}
+              >
+                {pnlPct >= 0 ? "+" : ""}
+                {pnlPct.toFixed(2)}%
+              </p>
+              <div className="mt-1 flex items-center justify-end gap-1">
+                {onShare ? (
+                  <button
+                    type="button"
+                    aria-label="Share PnL"
+                    title="Share PnL"
+                    onClick={() =>
+                      onShare({
+                        market: p.market,
+                        side: p.side,
+                        leverage: p.leverage,
+                        entryPrice: p.entry_price,
+                        markPrice: mark,
+                        pnl,
+                        pnlPct,
+                        amount: p.entry_price > 0 ? p.size_usd / p.entry_price : null,
+                        quote: p.margin_asset,
+                        mode: "futures",
+                        at: p.created_at,
+                      })
+                    }
+                    className="grid h-6 w-6 place-items-center rounded-full border border-border/60 text-muted-foreground press hover:text-foreground"
+                  >
+                    <Share2 className="h-3 w-3" />
+                  </button>
+                ) : null}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 rounded-full px-2 text-[10px]"
+                  disabled={closingId === p.id}
+                  onClick={() => onClosePosition(p.id)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+
   const exportRows = (): Record<string, unknown>[] => {
+    if (tab === "orders" && mode !== "spot")
+      return open.map((p) => ({
+        market: p.market,
+        side: p.side,
+        leverage: p.leverage,
+        entry_price: p.entry_price,
+        size_usd: p.size_usd,
+        margin: p.margin,
+        opened_at: p.created_at,
+      }));
     if (tab === "orders")
-      return (mode === "spot" ? openOrders : []).map((o) => ({
+      return openOrders.map((o) => ({
         market: o.market,
         side: o.side,
         type: o.order_type,
@@ -124,6 +249,7 @@ export function TradeBottomDock({
         status: o.status,
         created_at: o.created_at,
       }));
+
     if (tab === "orderHistory")
       return orderHistory.map((o) => ({
         market: o.market,
@@ -184,7 +310,25 @@ export function TradeBottomDock({
           ))}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {onScope && isExpanded && showScope ? (
+            <div className="mr-1 flex items-center gap-0.5 rounded-md bg-muted/40 p-0.5">
+              {(["pair", "all"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onScope(s)}
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[10px] font-semibold press",
+                    scope === s ? "bg-background text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {s === "pair" ? market : "All"}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {onSize && isExpanded ? (
+
             <div className="mr-0.5 flex items-center gap-0.5">
               {(["sm", "md", "full"] as const).map((s) => (
                 <button
@@ -304,9 +448,11 @@ export function TradeBottomDock({
                   ))}
                 </ul>
               )
+            ) : open.length ? (
+              positionsList(open)
             ) : (
               <Empty>
-                <p className="font-semibold text-foreground">No orders found</p>
+                <p className="font-semibold text-foreground">No open positions</p>
                 <p className="mt-1 text-muted-foreground">
                   Transfer funds to your trading account to start trading.
                 </p>
@@ -319,6 +465,7 @@ export function TradeBottomDock({
                 </Link>
               </Empty>
             )
+
           ) : null}
 
           {tab === "orderHistory" ? (
@@ -350,31 +497,73 @@ export function TradeBottomDock({
 
           {tab === "tradeHistory" ? (
             !tradeHistory.length ? (
-              <Empty>No trades for {market} yet.</Empty>
+              <Empty>No trades {scope === "all" ? "yet" : `for ${market} yet`}.</Empty>
             ) : (
               <ul className="space-y-2 pb-1">
-                {tradeHistory.map((tx) => (
-                  <li
-                    key={tx.id}
-                    className="rounded-xl border border-border/50 bg-card/40 px-3 py-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold">
-                        {tx.token_symbol ?? market} · {tx.side || tx.memo?.slice(0, 24)}
+                {tradeHistory.map((tx) => {
+                  const sym = tx.token_symbol ?? market;
+                  const value = tx.price != null ? Number(tx.price) * Number(tx.amount) : null;
+                  return (
+                    <li
+                      key={tx.id}
+                      className="rounded-xl border border-border/50 bg-card/40 px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold">
+                          <span
+                            className={cn(
+                              "mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase",
+                              /buy|long/i.test(tx.side)
+                                ? "bg-emerald-500/15 text-emerald-400"
+                                : "bg-rose-500/15 text-rose-400",
+                            )}
+                          >
+                            {tx.side || "trade"}
+                          </span>
+                          {sym}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(tx.created_at).toLocaleString()}
+                          </span>
+                          {onShare ? (
+                            <button
+                              type="button"
+                              aria-label="Share trade"
+                              title="Share trade"
+                              onClick={() =>
+                                onShare({
+                                  market: sym,
+                                  side: tx.side || "trade",
+                                  entryPrice: tx.price ?? null,
+                                  amount: tx.amount,
+                                  pnlPct: 0,
+                                  pnl: value,
+                                  quote: "OUSD",
+                                  mode: "spot",
+                                  at: tx.created_at,
+                                })
+                              }
+                              className="grid h-6 w-6 place-items-center rounded-full border border-border/60 text-muted-foreground press hover:text-foreground"
+                            >
+                              <Share2 className="h-3 w-3" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        Amt {formatNumber(tx.amount, 6)} {sym}
+                        {tx.price != null ? ` · $${formatNumber(tx.price, 2)}` : ""}
+                        {value != null ? ` · Value $${formatNumber(value, 2)}` : ""}
+                        {tx.memo ? ` · ${tx.memo}` : ""}
                       </p>
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(tx.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Amt {formatNumber(tx.amount, 6)}
-                      {tx.price != null ? ` · $${formatNumber(tx.price, 2)}` : ""}
-                    </p>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )
           ) : null}
+
 
           {tab === "positions" ? (
             mode === "spot" ? (
@@ -387,66 +576,9 @@ export function TradeBottomDock({
             ) : !open.length ? (
               <Empty>No open positions. Open long / short on Trade.</Empty>
             ) : (
-              <ul className="space-y-2 pb-1">
-                {open.map((p) => {
-                  const pnl = unrealizedPnl({
-                    side: p.side,
-                    sizeUsd: p.size_usd,
-                    entryPrice: p.entry_price,
-                    markPrice: Number(priceByMarket?.[p.market] ?? markPrice) || markPrice,
-
-                    margin: p.margin,
-                  });
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-card/60 px-3 py-2.5"
-                    >
-                      <div>
-                        <p className="text-xs font-bold">
-                          <span
-                            className={cn(
-                              "mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase",
-                              p.side === "long"
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "bg-rose-500/15 text-rose-400",
-                            )}
-                          >
-                            {p.side}
-                          </span>
-                          {p.market} · {p.leverage}×
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          Entry {formatNumber(p.entry_price, 2)} · Margin{" "}
-                          {formatNumber(p.margin, 2)} {p.margin_asset}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            "text-xs font-bold tabular-nums",
-                            pnl >= 0 ? "text-emerald-400" : "text-rose-400",
-                          )}
-                        >
-                          {pnl >= 0 ? "+" : ""}
-                          {formatNumber(pnl, 2)}
-                        </p>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="mt-1 h-6 rounded-full px-2 text-[10px]"
-                          disabled={closingId === p.id}
-                          onClick={() => onClosePosition(p.id)}
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              positionsList(open)
             )
+
           ) : null}
 
           {tab === "assets" ? (

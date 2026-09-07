@@ -22,7 +22,9 @@ import {
   TradeBottomDock,
   type DockTab,
   type DockSize,
+  type DockScope,
 } from "@/components/trade/TradeBottomDock";
+import { SharePnlDialog, type SharePnl } from "@/components/trade/SharePnlDialog";
 
 import {
   TradeTokenAnalysis,
@@ -139,6 +141,8 @@ function TradePage() {
   const [dockTab, setDockTab] = useState<DockTab>("orders");
   const [dockExpanded, setDockExpanded] = useState(false);
   const [dockSize, setDockSize] = useState<DockSize>("md");
+  const [dockScope, setDockScope] = useState<DockScope>("pair");
+  const [shareCard, setShareCard] = useState<SharePnl | null>(null);
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);
@@ -319,17 +323,20 @@ function TradePage() {
   });
 
   const orderHistQ = useQuery({
-    queryKey: ["spot-orders-history", market],
+    queryKey: ["spot-orders-history", market, dockScope],
     staleTime: 15_000,
-    enabled: mode === "spot" && dockExpanded && dockTab === "orderHistory",
-    queryFn: (): Promise<SpotOrder[]> => listOrders({ data: { market, status: "history" } }),
+    enabled: mode === "spot" && dockExpanded,
+    queryFn: (): Promise<SpotOrder[]> =>
+      listOrders({
+        data: dockScope === "all" ? { status: "history" } : { market, status: "history" },
+      }),
   });
 
   const tradeHistQ = useQuery({
-    queryKey: ["spot-trade-history", market],
+    queryKey: ["spot-trade-history", market, dockScope],
     staleTime: 15_000,
-    enabled: dockExpanded && dockTab === "tradeHistory",
-    queryFn: () => listTradeHist({ data: { market } }),
+    enabled: dockExpanded,
+    queryFn: () => listTradeHist({ data: dockScope === "all" ? {} : { market } }),
   });
 
   // Poll resting limits for fill
@@ -736,6 +743,9 @@ function TradePage() {
         { symbol: `${market} (Spot)`, amount: spotBase },
         { symbol: `${marginAsset} (Futures)`, amount: tradingBal },
       ].filter((a) => a.amount > 0 || a.symbol.includes("OUSD") || a.symbol.includes("USDT"))}
+      scope={dockScope}
+      onScope={setDockScope}
+      onShare={(d) => setShareCard(d)}
       onCancelOrder={(id) => cancelM.mutate(id)}
       cancellingId={cancelM.isPending ? cancelM.variables : null}
     />
@@ -1399,6 +1409,9 @@ function TradePage() {
           setConfirmOrder(null);
         }}
       />
+      {shareCard ? (
+        <SharePnlDialog data={shareCard} onClose={() => setShareCard(null)} />
+      ) : null}
     </div>
 
   );

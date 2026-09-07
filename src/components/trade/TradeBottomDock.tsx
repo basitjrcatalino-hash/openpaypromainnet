@@ -576,66 +576,9 @@ export function TradeBottomDock({
             ) : !open.length ? (
               <Empty>No open positions. Open long / short on Trade.</Empty>
             ) : (
-              <ul className="space-y-2 pb-1">
-                {open.map((p) => {
-                  const pnl = unrealizedPnl({
-                    side: p.side,
-                    sizeUsd: p.size_usd,
-                    entryPrice: p.entry_price,
-                    markPrice: Number(priceByMarket?.[p.market] ?? markPrice) || markPrice,
-
-                    margin: p.margin,
-                  });
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-card/60 px-3 py-2.5"
-                    >
-                      <div>
-                        <p className="text-xs font-bold">
-                          <span
-                            className={cn(
-                              "mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase",
-                              p.side === "long"
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "bg-rose-500/15 text-rose-400",
-                            )}
-                          >
-                            {p.side}
-                          </span>
-                          {p.market} · {p.leverage}×
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          Entry {formatNumber(p.entry_price, 2)} · Margin{" "}
-                          {formatNumber(p.margin, 2)} {p.margin_asset}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn(
-                            "text-xs font-bold tabular-nums",
-                            pnl >= 0 ? "text-emerald-400" : "text-rose-400",
-                          )}
-                        >
-                          {pnl >= 0 ? "+" : ""}
-                          {formatNumber(pnl, 2)}
-                        </p>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="mt-1 h-6 rounded-full px-2 text-[10px]"
-                          disabled={closingId === p.id}
-                          onClick={() => onClosePosition(p.id)}
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              positionsList(open)
             )
+
           ) : null}
 
           {tab === "assets" ? (

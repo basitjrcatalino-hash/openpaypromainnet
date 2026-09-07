@@ -66,7 +66,9 @@ export function TradeBottomDock({
   markPrice,
   priceByMarket,
   onClosePosition,
+  onCloseAllPositions,
   closingId,
+  closingAll = false,
   onGoTrade,
   expanded,
   onExpanded,
@@ -91,7 +93,9 @@ export function TradeBottomDock({
   markPrice: number;
   priceByMarket?: Partial<Record<string, number>>;
   onClosePosition: (id: string) => void;
+  onCloseAllPositions?: () => void;
   closingId?: string | null;
+  closingAll?: boolean;
   onGoTrade?: () => void;
   expanded?: boolean;
   onExpanded?: (open: boolean) => void;
@@ -289,7 +293,12 @@ export function TradeBottomDock({
   const canExport = exportRows().length > 0;
 
   return (
-    <section className="shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-md">
+    <section
+      className={cn(
+        "shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-md",
+        size === "full" && isExpanded && "flex min-h-0 flex-1 flex-col",
+      )}
+    >
       <div className="flex items-center justify-between gap-1 px-2 py-1.5">
         <div className="flex min-w-0 flex-1 gap-2.5 overflow-x-auto text-[11px] font-semibold scrollbar-none">
           {tabs.map((t) => (
@@ -310,6 +319,18 @@ export function TradeBottomDock({
           ))}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {mode === "futures" && open.length > 0 && onCloseAllPositions && isExpanded ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 rounded-md px-2 text-[10px] font-semibold"
+              disabled={closingAll || Boolean(closingId)}
+              onClick={onCloseAllPositions}
+            >
+              {closingAll ? "Closing…" : "Close all"}
+            </Button>
+          ) : null}
           {onScope && isExpanded && showScope ? (
             <div className="mr-1 flex items-center gap-0.5 rounded-md bg-muted/40 p-0.5">
               {(["pair", "all"] as const).map((s) => (
@@ -387,7 +408,11 @@ export function TradeBottomDock({
         <div
           className={cn(
             "overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-            size === "sm" ? "max-h-[22dvh]" : size === "full" ? "max-h-[70dvh]" : "max-h-[36dvh]",
+            size === "sm"
+              ? "max-h-[22dvh]"
+              : size === "full"
+                ? "min-h-0 flex-1"
+                : "max-h-[36dvh]",
           )}
         >
           {tab === "orders" ? (

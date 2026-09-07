@@ -189,6 +189,7 @@ function TradePage() {
   const [payAsset, setPayAsset] = useState<SpotPay>("OUSD");
   /** Confirm close position (Phantom-style TxConfirmModal). */
   const [closeTarget, setCloseTarget] = useState<PerpPosition | null>(null);
+  const [closeAllOpen, setCloseAllOpen] = useState(false);
   /** Pre-trade confirmation for new orders (OKX-style order preview). */
   const [confirmOrder, setConfirmOrder] = useState<null | "spot" | "long" | "short">(null);
 
@@ -454,6 +455,26 @@ function TradePage() {
       void qc.invalidateQueries({ queryKey: ["account-balances"] });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const closeAllM = useMutation({
+    mutationFn: async () => {
+      for (const position of openPositions) {
+        await closePos({ data: { id: position.id } });
+      }
+    },
+    onSuccess: () => {
+      notifySuccess("All positions closed — PnL to Trading", { sound: "receive" });
+      setCloseAllOpen(false);
+      void qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      void qc.invalidateQueries({ queryKey: ["account-balances"] });
+    },
+    onError: (e: Error) => {
+      setCloseAllOpen(false);
+      void qc.invalidateQueries({ queryKey: ["perp-positions"] });
+      void qc.invalidateQueries({ queryKey: ["account-balances"] });
+      toast.error(e.message);
+    },
   });
 
   const spotM = useMutation({
@@ -723,7 +744,9 @@ function TradePage() {
       priceByMarket={priceByMarket}
 
       onClosePosition={requestClosePosition}
+      onCloseAllPositions={() => setCloseAllOpen(true)}
       closingId={closeM.isPending ? closeM.variables : null}
+      closingAll={closeAllM.isPending}
       onGoTrade={!pro && view !== "trade" ? () => setView("trade") : undefined}
       expanded={pro ? true : dockExpanded}
       onExpanded={pro ? undefined : setDockExpanded}
@@ -883,7 +906,7 @@ function TradePage() {
       )}
 
       {pro ? (
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className={cn("min-h-0 flex-1 overflow-hidden", dockSize === "full" && "hidden")}>
           <ExchangeTerminal
             dockSize={dockSize}
             onDockSize={setDockSize}
@@ -1242,6 +1265,29 @@ function TradePage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <TxConfirmModal
+        open={closeAllOpen}
+        onOpenChange={(open) => {
+          if (!open && !closeAllM.isPending) setCloseAllOpen(false);
+        }}
+        title="Close all positions?"
+        description={`${openPositions.length} open ${openPositions.length === 1 ? "position" : "positions"}`}
+        rows={[
+          { label: "Positions", value: String(openPositions.length) },
+          { label: "Settlement", value: "OUSD trading balance" },
+        ]}
+        notice={
+          <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+            Every open futures position will close at its current market price. Final PnL may change
+            while the orders are processed.
+          </p>
+        }
+        confirmLabel={closeAllM.isPending ? "Closing all…" : "Close all positions"}
+        busy={closeAllM.isPending}
+        variant="destructive"
+        onConfirm={() => closeAllM.mutate()}
+      />
 
       <TxConfirmModal
         open={Boolean(closeTarget)}

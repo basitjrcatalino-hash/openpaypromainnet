@@ -18,7 +18,7 @@ import {
 export function FundAccountSheet({
   open,
   onOpenChange,
-  asset = "USDT",
+  asset = "OUSD",
   mode,
 }: {
   open: boolean;

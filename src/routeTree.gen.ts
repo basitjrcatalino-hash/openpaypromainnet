@@ -128,6 +128,7 @@ import { Route as ApiPublicAlchemyDepositWebhookRouteImport } from './routes/api
 import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
+import { Route as AuthenticatedTradePnlRouteImport } from './routes/_authenticated/trade.pnl'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedSendPiRouteImport } from './routes/_authenticated/send_.pi'
 import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
@@ -832,6 +833,11 @@ const AuthenticatedWalletReceiveRoute =
     path: '/wallet/receive',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTradePnlRoute = AuthenticatedTradePnlRouteImport.update({
+  id: '/pnl',
+  path: '/pnl',
+  getParentRoute: () => AuthenticatedTradeRoute,
+} as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
     id: '/create',
@@ -1405,7 +1411,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
-  '/trade': typeof AuthenticatedTradeRoute
+  '/trade': typeof AuthenticatedTradeRouteWithChildren
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1483,6 +1489,7 @@ export interface FileRoutesByFullPath {
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -1619,7 +1626,7 @@ export interface FileRoutesByTo {
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
-  '/trade': typeof AuthenticatedTradeRoute
+  '/trade': typeof AuthenticatedTradeRouteWithChildren
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1697,6 +1704,7 @@ export interface FileRoutesByTo {
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -1835,7 +1843,7 @@ export interface FileRoutesById {
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
-  '/_authenticated/trade': typeof AuthenticatedTradeRoute
+  '/_authenticated/trade': typeof AuthenticatedTradeRouteWithChildren
   '/_authenticated/transfer': typeof AuthenticatedTransferRoute
   '/_authenticated/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/_authenticated/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1913,6 +1921,7 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/wallet': typeof AuthenticatedP2pWalletRoute
   '/_authenticated/send_/pi': typeof AuthenticatedSendPiRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
+  '/_authenticated/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -2129,6 +2138,7 @@ export interface FileRouteTypes {
     | '/p2p/wallet'
     | '/send/pi'
     | '/tokens/create'
+    | '/trade/pnl'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -2343,6 +2353,7 @@ export interface FileRouteTypes {
     | '/p2p/wallet'
     | '/send/pi'
     | '/tokens/create'
+    | '/trade/pnl'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -2558,6 +2569,7 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/wallet'
     | '/_authenticated/send_/pi'
     | '/_authenticated/tokens/create'
+    | '/_authenticated/trade/pnl'
     | '/_authenticated/wallet_/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -3581,6 +3593,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/trade/pnl': {
+      id: '/_authenticated/trade/pnl'
+      path: '/pnl'
+      fullPath: '/trade/pnl'
+      preLoaderRoute: typeof AuthenticatedTradePnlRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
+    }
     '/_authenticated/tokens/create': {
       id: '/_authenticated/tokens/create'
       path: '/create'
@@ -4264,6 +4283,17 @@ const AuthenticatedTokensRouteChildren: AuthenticatedTokensRouteChildren = {
 const AuthenticatedTokensRouteWithChildren =
   AuthenticatedTokensRoute._addFileChildren(AuthenticatedTokensRouteChildren)
 
+interface AuthenticatedTradeRouteChildren {
+  AuthenticatedTradePnlRoute: typeof AuthenticatedTradePnlRoute
+}
+
+const AuthenticatedTradeRouteChildren: AuthenticatedTradeRouteChildren = {
+  AuthenticatedTradePnlRoute: AuthenticatedTradePnlRoute,
+}
+
+const AuthenticatedTradeRouteWithChildren =
+  AuthenticatedTradeRoute._addFileChildren(AuthenticatedTradeRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
@@ -4296,7 +4326,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
-  AuthenticatedTradeRoute: typeof AuthenticatedTradeRoute
+  AuthenticatedTradeRoute: typeof AuthenticatedTradeRouteWithChildren
   AuthenticatedTransferRoute: typeof AuthenticatedTransferRoute
   AuthenticatedTrustWalletRoute: typeof AuthenticatedTrustWalletRoute
   AuthenticatedTurnkeyRoute: typeof AuthenticatedTurnkeyRoute
@@ -4389,7 +4419,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
-  AuthenticatedTradeRoute: AuthenticatedTradeRoute,
+  AuthenticatedTradeRoute: AuthenticatedTradeRouteWithChildren,
   AuthenticatedTransferRoute: AuthenticatedTransferRoute,
   AuthenticatedTrustWalletRoute: AuthenticatedTrustWalletRoute,
   AuthenticatedTurnkeyRoute: AuthenticatedTurnkeyRoute,

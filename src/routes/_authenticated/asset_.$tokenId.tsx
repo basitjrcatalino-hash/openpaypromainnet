@@ -850,16 +850,22 @@ function PhantomAssetDetail() {
                 }}
               />
             )}
-            {isMajor && majorDef?.moonpayCode && (
-              <MoreRow
-                logoUrl={majorDef.logoUrl}
-                label={`Buy ${majorDef.symbol} on MoonPay`}
-                onClick={() => {
-                  setMoreOpen(false);
-                  setMoonpayOpen(true);
-                }}
-              />
-            )}
+            <MoreRow
+              logoUrl={meta.logo}
+              label={`Buy ${meta.symbol}`}
+              onClick={() => {
+                setMoreOpen(false);
+                setBuyOpen(true);
+              }}
+            />
+            <MoreRow
+              icon={Share2}
+              label={`Share ${meta.symbol}`}
+              onClick={() => {
+                setMoreOpen(false);
+                setShareOpen(true);
+              }}
+            />
             <MoreRow
               icon={ArrowLeftRight}
               label="OpenDEX Swap"

@@ -448,9 +448,11 @@ export function TradeBottomDock({
                   ))}
                 </ul>
               )
+            ) : open.length ? (
+              positionsList(open)
             ) : (
               <Empty>
-                <p className="font-semibold text-foreground">No orders found</p>
+                <p className="font-semibold text-foreground">No open positions</p>
                 <p className="mt-1 text-muted-foreground">
                   Transfer funds to your trading account to start trading.
                 </p>
@@ -463,6 +465,7 @@ export function TradeBottomDock({
                 </Link>
               </Empty>
             )
+
           ) : null}
 
           {tab === "orderHistory" ? (

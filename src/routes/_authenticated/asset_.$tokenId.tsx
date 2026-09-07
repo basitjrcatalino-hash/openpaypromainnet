@@ -15,6 +15,7 @@ import {
   Plus,
   QrCode,
   Send,
+  Share2,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -70,7 +71,7 @@ import {
   type LedgerAssetCode,
   walletMajorSelect,
 } from "@/lib/ledger-majors";
-import { MoonPayBuyOverlay } from "@/components/moonpay-buy-overlay";
+import { ShareTokenDialog } from "@/components/wallet/ShareTokenDialog";
 import {
   PhantomAssetTradeBar,
   TokenMarketInsights,
@@ -138,7 +139,7 @@ function PhantomAssetDetail() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
-  const [moonpayOpen, setMoonpayOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const watch = useWatchlist(user.id);
   const watchKey = isOusd
     ? ousdWatchKey()
@@ -850,16 +851,22 @@ function PhantomAssetDetail() {
                 }}
               />
             )}
-            {isMajor && majorDef?.moonpayCode && (
-              <MoreRow
-                logoUrl={majorDef.logoUrl}
-                label={`Buy ${majorDef.symbol} on MoonPay`}
-                onClick={() => {
-                  setMoreOpen(false);
-                  setMoonpayOpen(true);
-                }}
-              />
-            )}
+            <MoreRow
+              logoUrl={meta.logo ?? undefined}
+              label={`Buy ${meta.symbol}`}
+              onClick={() => {
+                setMoreOpen(false);
+                setBuyOpen(true);
+              }}
+            />
+            <MoreRow
+              icon={Share2}
+              label={`Share ${meta.symbol}`}
+              onClick={() => {
+                setMoreOpen(false);
+                setShareOpen(true);
+              }}
+            />
             <MoreRow
               icon={ArrowLeftRight}
               label="OpenDEX Swap"
@@ -933,20 +940,20 @@ function PhantomAssetDetail() {
         }}
       />
 
-      {isMajor && majorDef?.moonpayCode && (
-        <MoonPayBuyOverlay
-          visible={moonpayOpen}
-          amount={50}
-          externalCustomerId={user.id}
-          externalTransactionId={`major-${majorDef.id}-${Date.now()}`}
-          defaultCurrencyCode={majorDef.moonpayCode}
-          onClose={() => setMoonpayOpen(false)}
-          onTransactionCompleted={async () => {
-            toast.success(`${meta.symbol} purchase submitted via MoonPay`);
-            setMoonpayOpen(false);
-          }}
-        />
-      )}
+      <ShareTokenDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        data={{
+          symbol: meta.symbol,
+          name: meta.name,
+          logoUrl: meta.logo,
+          price: meta.price,
+          change24h: meta.change,
+          marketCap: meta.marketCap,
+          volume24h: meta.volume24h,
+          network: meta.network,
+        }}
+      />
 
       {/* Phantom market-cap + lavender Trade CTA */}
       <PhantomAssetTradeBar

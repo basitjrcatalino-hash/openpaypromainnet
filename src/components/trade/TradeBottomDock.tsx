@@ -19,6 +19,8 @@ export type DockTab =
   | "assets";
 
 export type DockSize = "sm" | "md" | "full";
+export type DockScope = "pair" | "all";
+
 
 export type TradeHistoryRow = {
   id: string;

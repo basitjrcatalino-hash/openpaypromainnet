@@ -260,7 +260,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.orderType === "stop_limit" || props.orderType === "stop_market" ? (
         <Field
-          label="Trigger price (USDT)"
+          label="Trigger price (OUSD)"
           value={props.triggerPrice ?? ""}
           onChange={(v) => props.onTriggerPrice?.(v)}
           placeholder={props.markPrice > 0 ? formatNumber(props.markPrice, priceDigits) : "0"}
@@ -278,7 +278,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
 
       {props.orderType === "limit" || props.orderType === "stop_limit" ? (
         <div>
-          <span className="mb-1 block text-[10px] text-muted-foreground">Price (USDT)</span>
+          <span className="mb-1 block text-[10px] text-muted-foreground">Price (OUSD)</span>
           <div className="flex gap-1">
             <input
               value={props.limitPrice}
@@ -363,7 +363,7 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         <div className="flex h-8 items-center justify-between rounded-md bg-muted/40 px-2.5 text-[11px]">
           <span className="text-muted-foreground">Order value</span>
           <span className="font-semibold tabular-nums">
-            {perpNotional > 0 ? `${formatNumber(perpNotional, 2)} USDT` : "—"}
+            {perpNotional > 0 ? `${formatNumber(perpNotional, 2)} OUSD` : "—"}
           </span>
         </div>
       )}
@@ -471,16 +471,16 @@ export function ExchangeOrderForm(props: ExchangeOrderFormProps) {
         {useTpsl ? (
           <div className="grid grid-cols-2 gap-1.5">
             <Field
-              label="TP price"
+              label="TP price (OUSD)"
               value={props.tpPrice ?? ""}
               onChange={(v) => props.onTpPrice?.(v)}
-              placeholder="USDT"
+              placeholder="OUSD"
             />
             <Field
-              label="SL price"
+              label="SL price (OUSD)"
               value={props.slPrice ?? ""}
               onChange={(v) => props.onSlPrice?.(v)}
-              placeholder="USDT"
+              placeholder="OUSD"
             />
           </div>
         ) : null}

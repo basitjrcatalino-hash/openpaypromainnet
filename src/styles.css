@@ -319,6 +319,11 @@
     font-weight: 600;
     letter-spacing: 0.02em;
   }
+  /* Keep legacy micro-copy legible without changing compact layouts. */
+  :where(.text-\[8px\], .text-\[9px\], .text-\[10px\], .text-\[11px\], .text-\[12px\]) {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
   .ph-tab-icon-active {
     filter: drop-shadow(0 0 6px color-mix(in oklab, var(--primary-glow) 70%, transparent));
   }

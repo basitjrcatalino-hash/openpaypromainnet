@@ -324,7 +324,7 @@ function TradePage() {
   const orderHistQ = useQuery({
     queryKey: ["spot-orders-history", market, dockScope],
     staleTime: 15_000,
-    enabled: mode === "spot" && dockExpanded,
+    enabled: mode === "spot" && (dockExpanded || exchangeMode),
     queryFn: (): Promise<SpotOrder[]> =>
       listOrders({
         data: dockScope === "all" ? { status: "history" } : { market, status: "history" },
@@ -334,7 +334,7 @@ function TradePage() {
   const tradeHistQ = useQuery({
     queryKey: ["spot-trade-history", market, dockScope],
     staleTime: 15_000,
-    enabled: dockExpanded,
+    enabled: dockExpanded || exchangeMode,
     queryFn: () => listTradeHist({ data: dockScope === "all" ? {} : { market } }),
   });
 

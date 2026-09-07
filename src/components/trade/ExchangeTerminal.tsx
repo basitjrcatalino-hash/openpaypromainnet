@@ -54,11 +54,13 @@ export function ExchangeTerminal({
     <div
       className={cn(
         "flex h-full min-h-0 flex-col gap-px overflow-y-auto overscroll-contain bg-border/40",
-        "xl:grid xl:grid-cols-[240px_minmax(0,1fr)_290px_320px] xl:overflow-hidden",
+        dockSize === "full"
+          ? "xl:grid xl:grid-cols-1 xl:overflow-hidden"
+          : "xl:grid xl:grid-cols-[240px_minmax(0,1fr)_290px_320px] xl:overflow-hidden",
         className,
       )}
     >
-      <aside className="hidden min-h-0 flex-col overflow-hidden bg-background xl:flex">
+      <aside className={cn("hidden min-h-0 flex-col overflow-hidden bg-background xl:flex", dockSize === "full" && "xl:hidden")}>
         <div className="shrink-0 border-b border-border/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Markets
         </div>
@@ -68,7 +70,7 @@ export function ExchangeTerminal({
       </aside>
 
       <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background">
-        {periods ? (
+        {periods && dockSize !== "full" ? (
           <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border/30 px-2 py-1 scrollbar-none">
             {periods}
           </div>
@@ -117,7 +119,7 @@ export function ExchangeTerminal({
       </section>
 
 
-      <section className="flex min-h-[420px] min-w-0 flex-col overflow-hidden bg-background xl:min-h-0">
+      <section className={cn("flex min-h-[420px] min-w-0 flex-col overflow-hidden bg-background xl:min-h-0", dockSize === "full" && "hidden")}>
         <div className="min-h-0 flex-[1.25] overflow-hidden p-1.5">{book}</div>
         <div className="min-h-0 flex-1 overflow-hidden border-t border-border/40 p-1.5">
           <p className="pb-1 text-[11px] font-semibold text-muted-foreground">Recent trades</p>
@@ -125,7 +127,7 @@ export function ExchangeTerminal({
         </div>
       </section>
 
-      <aside className="min-h-0 overflow-y-auto overscroll-contain bg-background px-2 py-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <aside className={cn("min-h-0 overflow-y-auto overscroll-contain bg-background px-2 py-2 pb-[max(1rem,env(safe-area-inset-bottom))]", dockSize === "full" && "hidden")}>
         {form}
       </aside>
     </div>

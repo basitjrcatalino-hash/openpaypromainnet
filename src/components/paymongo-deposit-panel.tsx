@@ -135,7 +135,7 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
       <div className={cn("grid place-items-center gap-2 rounded-2xl bg-card px-4 py-8", className)}>
         <CheckCircle2 className="h-10 w-10 text-emerald-500" />
         <p className="text-sm font-semibold">Payment received</p>
-        <p className="text-xs text-muted-foreground">{formatOUSD(amountUsd)} credited</p>
+        <p className="text-sm text-muted-foreground">{formatOUSD(amountUsd)} credited</p>
       </div>
     );
   }
@@ -155,17 +155,17 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
             ₱{qr.php.toLocaleString(undefined, { minimumFractionDigits: 2 })} ·{" "}
             {formatOUSD(amountUsd)}
           </p>
-          <p className="text-xs text-muted-foreground">{active.hint}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{active.hint}</p>
           <div className="mx-auto max-w-sm rounded-xl bg-muted/50 px-4 py-3 text-left">
-            <p className="text-xs font-semibold text-foreground">How to pay</p>
-            <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
+            <p className="text-sm font-semibold text-foreground">How to pay</p>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-muted-foreground">
               <li>Save the QR code, or scan it using another device.</li>
               <li>Open GCash, Maya, or any QR Ph-supported banking app.</li>
               <li>Choose Scan QR, select the saved image, and confirm the exact amount.</li>
               <li>Keep this page open while your OUSD is credited automatically.</li>
             </ol>
           </div>
-          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for payment…
           </p>
           <Button
@@ -179,7 +179,7 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
           <Button
             type="button"
             variant="ghost"
-            className="w-full text-xs"
+            className="w-full text-sm"
             onClick={() => setQr(null)}
           >
             <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> New QR code
@@ -188,16 +188,16 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
       ) : (
         <>
           <div className="rounded-2xl bg-card px-4 py-3">
-            <p className="text-xs text-muted-foreground">You pay</p>
+            <p className="text-sm text-muted-foreground">You pay</p>
             <p className="text-xl font-bold tabular-nums">
               ₱{(amountUsd * phpRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               1 OUSD = $1.00 · ₱{phpRate} per USD
             </p>
           </div>
           <div>
-            <p className="mb-2 px-1 text-xs text-muted-foreground">
+            <p className="mb-2 px-1 text-sm leading-relaxed text-muted-foreground">
               Pick the app you’ll open to scan. Every option uses the same QR Ph code.
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -207,7 +207,7 @@ export function PaymongoDepositPanel({ amountUsd, walletId, className, onSuccess
                   type="button"
                   onClick={() => setProviderId(p.id)}
                   className={cn(
-                    "rounded-xl border px-2 py-3 text-xs font-semibold transition press",
+                    "rounded-xl border px-2 py-3 text-sm font-semibold transition press",
                     p.id === providerId
                       ? "border-primary bg-primary/10 text-foreground"
                       : "border-border/60 bg-card text-muted-foreground",

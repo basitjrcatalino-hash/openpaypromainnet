@@ -497,31 +497,73 @@ export function TradeBottomDock({
 
           {tab === "tradeHistory" ? (
             !tradeHistory.length ? (
-              <Empty>No trades for {market} yet.</Empty>
+              <Empty>No trades {scope === "all" ? "yet" : `for ${market} yet`}.</Empty>
             ) : (
               <ul className="space-y-2 pb-1">
-                {tradeHistory.map((tx) => (
-                  <li
-                    key={tx.id}
-                    className="rounded-xl border border-border/50 bg-card/40 px-3 py-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold">
-                        {tx.token_symbol ?? market} · {tx.side || tx.memo?.slice(0, 24)}
+                {tradeHistory.map((tx) => {
+                  const sym = tx.token_symbol ?? market;
+                  const value = tx.price != null ? Number(tx.price) * Number(tx.amount) : null;
+                  return (
+                    <li
+                      key={tx.id}
+                      className="rounded-xl border border-border/50 bg-card/40 px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold">
+                          <span
+                            className={cn(
+                              "mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase",
+                              /buy|long/i.test(tx.side)
+                                ? "bg-emerald-500/15 text-emerald-400"
+                                : "bg-rose-500/15 text-rose-400",
+                            )}
+                          >
+                            {tx.side || "trade"}
+                          </span>
+                          {sym}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(tx.created_at).toLocaleString()}
+                          </span>
+                          {onShare ? (
+                            <button
+                              type="button"
+                              aria-label="Share trade"
+                              title="Share trade"
+                              onClick={() =>
+                                onShare({
+                                  market: sym,
+                                  side: tx.side || "trade",
+                                  entryPrice: tx.price ?? null,
+                                  amount: tx.amount,
+                                  pnlPct: 0,
+                                  pnl: value,
+                                  quote: "OUSD",
+                                  mode: "spot",
+                                  at: tx.created_at,
+                                })
+                              }
+                              className="grid h-6 w-6 place-items-center rounded-full border border-border/60 text-muted-foreground press hover:text-foreground"
+                            >
+                              <Share2 className="h-3 w-3" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        Amt {formatNumber(tx.amount, 6)} {sym}
+                        {tx.price != null ? ` · $${formatNumber(tx.price, 2)}` : ""}
+                        {value != null ? ` · Value $${formatNumber(value, 2)}` : ""}
+                        {tx.memo ? ` · ${tx.memo}` : ""}
                       </p>
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(tx.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Amt {formatNumber(tx.amount, 6)}
-                      {tx.price != null ? ` · $${formatNumber(tx.price, 2)}` : ""}
-                    </p>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )
           ) : null}
+
 
           {tab === "positions" ? (
             mode === "spot" ? (

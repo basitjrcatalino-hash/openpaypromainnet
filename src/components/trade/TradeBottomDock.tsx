@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronUp, Download } from "lucide-react";
+import { ChevronUp, Download, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,8 @@ import { unrealizedPnl, type PerpPosition } from "@/lib/perp";
 import type { TradeMode } from "@/lib/exchange-depth";
 import type { SpotOrder } from "@/lib/spot-orders";
 import type { PerpMarket } from "@/lib/perp";
+import type { SharePnl } from "@/components/trade/SharePnlDialog";
+
 
 export type DockTab =
   | "orders"

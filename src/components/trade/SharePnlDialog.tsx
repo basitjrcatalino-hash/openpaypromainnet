@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Download, Share2, X } from "lucide-react";
+import { ArrowLeft, Copy, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import logoAsset from "@/assets/openpay-pro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 
@@ -21,7 +22,16 @@ export type SharePnl = {
 
 const ACCENT = "#ab9ff2";
 
-function drawCard(canvas: HTMLCanvasElement, d: SharePnl) {
+function loadLogo(): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = logoAsset.url;
+  });
+}
+
+async function drawCard(canvas: HTMLCanvasElement, d: SharePnl) {
   const W = 1080;
   const H = 1350;
   canvas.width = W;
@@ -47,12 +57,21 @@ function drawCard(canvas: HTMLCanvasElement, d: SharePnl) {
   const col = up ? "#34d399" : "#fb7185";
 
   ctx.textBaseline = "top";
+  const logo = await loadLogo();
+  if (logo) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(120, 120, 40, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(logo, 80, 80, 80, 80);
+    ctx.restore();
+  }
   ctx.fillStyle = ACCENT;
   ctx.font = "800 40px Inter, system-ui, -apple-system, sans-serif";
-  ctx.fillText("OpenPay Pro", 80, 90);
+  ctx.fillText("OpenPay Pro", 184, 88);
   ctx.fillStyle = "rgba(255,255,255,0.45)";
   ctx.font = "600 26px Inter, system-ui, sans-serif";
-  ctx.fillText(d.mode === "futures" ? "Perpetual Futures" : "Spot Trade", 80, 146);
+  ctx.fillText(d.mode === "futures" ? "Perpetual Futures" : "Spot Trade", 184, 140);
 
   // pill
   const label = `${d.side.toUpperCase()}${d.leverage ? `  ${d.leverage}×` : ""}`;
@@ -110,15 +129,20 @@ function drawCard(canvas: HTMLCanvasElement, d: SharePnl) {
   ctx.fillText("Trade spot & futures on openpaypro.space", 80, H - 120);
 }
 
-export function SharePnlDialog({ data, onClose }: { data: SharePnl; onClose: () => void }) {
+export function SharePnlPage({ data, onBack }: { data: SharePnl; onBack: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
-    drawCard(c, data);
-    setUrl(c.toDataURL("image/png"));
+    let active = true;
+    void drawCard(c, data).then(() => {
+      if (active) setUrl(c.toDataURL("image/png"));
+    });
+    return () => {
+      active = false;
+    };
   }, [data]);
 
   const fileName = useMemo(
@@ -172,18 +196,17 @@ export function SharePnlDialog({ data, onClose }: { data: SharePnl; onClose: () 
   const up = Number(data.pnl ?? data.pnlPct ?? 0) >= 0;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-3xl border border-border/60 bg-card p-4 shadow-2xl">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-bold">Share PnL</p>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground press hover:bg-muted/60"
-          >
-            <X className="h-4 w-4" />
-          </button>
+    <main className="min-h-dvh bg-background px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="mx-auto w-full max-w-lg">
+        <div className="mb-5 grid grid-cols-[2.5rem_1fr_2.5rem] items-center">
+          <Button type="button" variant="ghost" size="icon" aria-label="Back to trade" onClick={onBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <img src={logoAsset.url} alt="OpenPay Pro" className="h-7 w-7 rounded-full object-contain" />
+            <h1 className="text-base font-bold">Share PnL</h1>
+          </div>
+          <span aria-hidden="true" />
         </div>
         <canvas ref={canvasRef} className="hidden" />
         {url ? (
@@ -191,12 +214,12 @@ export function SharePnlDialog({ data, onClose }: { data: SharePnl; onClose: () 
             src={url}
             alt={`${data.market} PnL card`}
             className={cn(
-              "w-full rounded-2xl border",
+              "mx-auto w-full max-w-sm rounded-2xl border shadow-2xl",
               up ? "border-emerald-500/30" : "border-rose-500/30",
             )}
           />
         ) : null}
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mx-auto mt-5 grid w-full max-w-sm grid-cols-3 gap-2">
           <Button type="button" variant="outline" className="h-10 rounded-xl text-xs" onClick={copy}>
             <Copy className="mr-1 h-3.5 w-3.5" /> Copy
           </Button>
@@ -208,6 +231,6 @@ export function SharePnlDialog({ data, onClose }: { data: SharePnl; onClose: () 
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -24,7 +24,6 @@ import {
   type DockSize,
   type DockScope,
 } from "@/components/trade/TradeBottomDock";
-import { SharePnlDialog, type SharePnl } from "@/components/trade/SharePnlDialog";
 
 import {
   TradeTokenAnalysis,
@@ -142,7 +141,6 @@ function TradePage() {
   const [dockExpanded, setDockExpanded] = useState(false);
   const [dockSize, setDockSize] = useState<DockSize>("md");
   const [dockScope, setDockScope] = useState<DockScope>("pair");
-  const [shareCard, setShareCard] = useState<SharePnl | null>(null);
   const [bookPane, setBookPane] = useState<"book" | "trades">("book");
   const chartHostRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(320);
@@ -745,7 +743,24 @@ function TradePage() {
       ].filter((a) => a.amount > 0 || a.symbol.includes("OUSD") || a.symbol.includes("USDT"))}
       scope={dockScope}
       onScope={setDockScope}
-      onShare={(d) => setShareCard(d)}
+      onShare={(d) => {
+        void navigate({
+          to: "/trade/pnl",
+          search: {
+            market: d.market,
+            side: d.side,
+            leverage: d.leverage ?? undefined,
+            entryPrice: d.entryPrice ?? undefined,
+            markPrice: d.markPrice ?? undefined,
+            pnl: d.pnl ?? undefined,
+            pnlPct: d.pnlPct ?? undefined,
+            amount: d.amount ?? undefined,
+            quote: d.quote ?? "OUSD",
+            mode: d.mode,
+            at: d.at,
+          },
+        });
+      }}
       onCancelOrder={(id) => cancelM.mutate(id)}
       cancellingId={cancelM.isPending ? cancelM.variables : null}
     />
@@ -1409,9 +1424,6 @@ function TradePage() {
           setConfirmOrder(null);
         }}
       />
-      {shareCard ? (
-        <SharePnlDialog data={shareCard} onClose={() => setShareCard(null)} />
-      ) : null}
     </div>
 
   );

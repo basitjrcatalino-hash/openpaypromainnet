@@ -906,7 +906,7 @@ function TradePage() {
       )}
 
       {pro ? (
-        <div className={cn("min-h-0 flex-1 overflow-hidden", dockSize === "full" && "hidden")}>
+        <div className="min-h-0 flex-1 overflow-hidden">
           <ExchangeTerminal
             dockSize={dockSize}
             onDockSize={setDockSize}

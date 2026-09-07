@@ -745,7 +745,7 @@ function TradePage() {
       onScope={setDockScope}
       onShare={(d) => {
         void navigate({
-          to: "/trade/pnl",
+          to: "/share-pnl",
           search: {
             market: d.market,
             side: d.side,

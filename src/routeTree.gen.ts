@@ -65,6 +65,7 @@ import { Route as AuthenticatedTokensRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSwapRouteImport } from './routes/_authenticated/swap'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSolanaPayRouteImport } from './routes/_authenticated/solana-pay'
+import { Route as AuthenticatedSharePnlRouteImport } from './routes/_authenticated/share-pnl'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
@@ -128,7 +129,6 @@ import { Route as ApiPublicAlchemyDepositWebhookRouteImport } from './routes/api
 import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
 import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authenticated/wallet_.receive'
-import { Route as AuthenticatedTradePnlRouteImport } from './routes/_authenticated/trade.pnl'
 import { Route as AuthenticatedTokensCreateRouteImport } from './routes/_authenticated/tokens.create'
 import { Route as AuthenticatedSendPiRouteImport } from './routes/_authenticated/send_.pi'
 import { Route as AuthenticatedP2pWalletRouteImport } from './routes/_authenticated/p2p_.wallet'
@@ -504,6 +504,11 @@ const AuthenticatedSolanaPayRoute = AuthenticatedSolanaPayRouteImport.update({
   path: '/solana-pay',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSharePnlRoute = AuthenticatedSharePnlRouteImport.update({
+  id: '/share-pnl',
+  path: '/share-pnl',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -833,11 +838,6 @@ const AuthenticatedWalletReceiveRoute =
     path: '/wallet/receive',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTradePnlRoute = AuthenticatedTradePnlRouteImport.update({
-  id: '/pnl',
-  path: '/pnl',
-  getParentRoute: () => AuthenticatedTradeRoute,
-} as any)
 const AuthenticatedTokensCreateRoute =
   AuthenticatedTokensCreateRouteImport.update({
     id: '/create',
@@ -1406,12 +1406,13 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/share-pnl': typeof AuthenticatedSharePnlRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
-  '/trade': typeof AuthenticatedTradeRouteWithChildren
+  '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1489,7 +1490,6 @@ export interface FileRoutesByFullPath {
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
-  '/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -1621,12 +1621,13 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRoute
   '/send': typeof AuthenticatedSendRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/share-pnl': typeof AuthenticatedSharePnlRoute
   '/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/support': typeof AuthenticatedSupportRoute
   '/swap': typeof AuthenticatedSwapRoute
   '/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/topup': typeof AuthenticatedTopupRoute
-  '/trade': typeof AuthenticatedTradeRouteWithChildren
+  '/trade': typeof AuthenticatedTradeRoute
   '/transfer': typeof AuthenticatedTransferRoute
   '/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1704,7 +1705,6 @@ export interface FileRoutesByTo {
   '/p2p/wallet': typeof AuthenticatedP2pWalletRoute
   '/send/pi': typeof AuthenticatedSendPiRoute
   '/tokens/create': typeof AuthenticatedTokensCreateRoute
-  '/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/wallet/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -1838,12 +1838,13 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/share-pnl': typeof AuthenticatedSharePnlRoute
   '/_authenticated/solana-pay': typeof AuthenticatedSolanaPayRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/swap': typeof AuthenticatedSwapRoute
   '/_authenticated/tokens': typeof AuthenticatedTokensRouteWithChildren
   '/_authenticated/topup': typeof AuthenticatedTopupRoute
-  '/_authenticated/trade': typeof AuthenticatedTradeRouteWithChildren
+  '/_authenticated/trade': typeof AuthenticatedTradeRoute
   '/_authenticated/transfer': typeof AuthenticatedTransferRoute
   '/_authenticated/trust-wallet': typeof AuthenticatedTrustWalletRoute
   '/_authenticated/turnkey': typeof AuthenticatedTurnkeyRoute
@@ -1921,7 +1922,6 @@ export interface FileRoutesById {
   '/_authenticated/p2p_/wallet': typeof AuthenticatedP2pWalletRoute
   '/_authenticated/send_/pi': typeof AuthenticatedSendPiRoute
   '/_authenticated/tokens/create': typeof AuthenticatedTokensCreateRoute
-  '/_authenticated/trade/pnl': typeof AuthenticatedTradePnlRoute
   '/_authenticated/wallet_/receive': typeof AuthenticatedWalletReceiveRoute
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
@@ -2055,6 +2055,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/send'
     | '/settings'
+    | '/share-pnl'
     | '/solana-pay'
     | '/support'
     | '/swap'
@@ -2138,7 +2139,6 @@ export interface FileRouteTypes {
     | '/p2p/wallet'
     | '/send/pi'
     | '/tokens/create'
-    | '/trade/pnl'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -2270,6 +2270,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/send'
     | '/settings'
+    | '/share-pnl'
     | '/solana-pay'
     | '/support'
     | '/swap'
@@ -2353,7 +2354,6 @@ export interface FileRouteTypes {
     | '/p2p/wallet'
     | '/send/pi'
     | '/tokens/create'
-    | '/trade/pnl'
     | '/wallet/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -2486,6 +2486,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/_authenticated/send'
     | '/_authenticated/settings'
+    | '/_authenticated/share-pnl'
     | '/_authenticated/solana-pay'
     | '/_authenticated/support'
     | '/_authenticated/swap'
@@ -2569,7 +2570,6 @@ export interface FileRouteTypes {
     | '/_authenticated/p2p_/wallet'
     | '/_authenticated/send_/pi'
     | '/_authenticated/tokens/create'
-    | '/_authenticated/trade/pnl'
     | '/_authenticated/wallet_/receive'
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
@@ -3152,6 +3152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSolanaPayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/share-pnl': {
+      id: '/_authenticated/share-pnl'
+      path: '/share-pnl'
+      fullPath: '/share-pnl'
+      preLoaderRoute: typeof AuthenticatedSharePnlRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -3592,13 +3599,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/wallet/receive'
       preLoaderRoute: typeof AuthenticatedWalletReceiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/trade/pnl': {
-      id: '/_authenticated/trade/pnl'
-      path: '/pnl'
-      fullPath: '/trade/pnl'
-      preLoaderRoute: typeof AuthenticatedTradePnlRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
     }
     '/_authenticated/tokens/create': {
       id: '/_authenticated/tokens/create'
@@ -4283,17 +4283,6 @@ const AuthenticatedTokensRouteChildren: AuthenticatedTokensRouteChildren = {
 const AuthenticatedTokensRouteWithChildren =
   AuthenticatedTokensRoute._addFileChildren(AuthenticatedTokensRouteChildren)
 
-interface AuthenticatedTradeRouteChildren {
-  AuthenticatedTradePnlRoute: typeof AuthenticatedTradePnlRoute
-}
-
-const AuthenticatedTradeRouteChildren: AuthenticatedTradeRouteChildren = {
-  AuthenticatedTradePnlRoute: AuthenticatedTradePnlRoute,
-}
-
-const AuthenticatedTradeRouteWithChildren =
-  AuthenticatedTradeRoute._addFileChildren(AuthenticatedTradeRouteChildren)
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
@@ -4321,12 +4310,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSharePnlRoute: typeof AuthenticatedSharePnlRoute
   AuthenticatedSolanaPayRoute: typeof AuthenticatedSolanaPayRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedSwapRoute: typeof AuthenticatedSwapRoute
   AuthenticatedTokensRoute: typeof AuthenticatedTokensRouteWithChildren
   AuthenticatedTopupRoute: typeof AuthenticatedTopupRoute
-  AuthenticatedTradeRoute: typeof AuthenticatedTradeRouteWithChildren
+  AuthenticatedTradeRoute: typeof AuthenticatedTradeRoute
   AuthenticatedTransferRoute: typeof AuthenticatedTransferRoute
   AuthenticatedTrustWalletRoute: typeof AuthenticatedTrustWalletRoute
   AuthenticatedTurnkeyRoute: typeof AuthenticatedTurnkeyRoute
@@ -4414,12 +4404,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSharePnlRoute: AuthenticatedSharePnlRoute,
   AuthenticatedSolanaPayRoute: AuthenticatedSolanaPayRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedSwapRoute: AuthenticatedSwapRoute,
   AuthenticatedTokensRoute: AuthenticatedTokensRouteWithChildren,
   AuthenticatedTopupRoute: AuthenticatedTopupRoute,
-  AuthenticatedTradeRoute: AuthenticatedTradeRouteWithChildren,
+  AuthenticatedTradeRoute: AuthenticatedTradeRoute,
   AuthenticatedTransferRoute: AuthenticatedTransferRoute,
   AuthenticatedTrustWalletRoute: AuthenticatedTrustWalletRoute,
   AuthenticatedTurnkeyRoute: AuthenticatedTurnkeyRoute,

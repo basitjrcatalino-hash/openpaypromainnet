@@ -17,7 +17,7 @@ const searchSchema = z.object({
   at: z.string().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/trade/pnl")({
+export const Route = createFileRoute("/_authenticated/share-pnl")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [

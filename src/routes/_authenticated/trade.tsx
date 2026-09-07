@@ -1409,6 +1409,9 @@ function TradePage() {
           setConfirmOrder(null);
         }}
       />
+      {shareCard ? (
+        <SharePnlDialog data={shareCard} onClose={() => setShareCard(null)} />
+      ) : null}
     </div>
 
   );

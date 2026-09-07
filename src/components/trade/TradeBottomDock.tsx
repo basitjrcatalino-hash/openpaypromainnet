@@ -227,8 +227,18 @@ export function TradeBottomDock({
 
 
   const exportRows = (): Record<string, unknown>[] => {
+    if (tab === "orders" && mode !== "spot")
+      return open.map((p) => ({
+        market: p.market,
+        side: p.side,
+        leverage: p.leverage,
+        entry_price: p.entry_price,
+        size_usd: p.size_usd,
+        margin: p.margin,
+        opened_at: p.created_at,
+      }));
     if (tab === "orders")
-      return (mode === "spot" ? openOrders : []).map((o) => ({
+      return openOrders.map((o) => ({
         market: o.market,
         side: o.side,
         type: o.order_type,
@@ -239,6 +249,7 @@ export function TradeBottomDock({
         status: o.status,
         created_at: o.created_at,
       }));
+
     if (tab === "orderHistory")
       return orderHistory.map((o) => ({
         market: o.market,

@@ -310,7 +310,25 @@ export function TradeBottomDock({
           ))}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {onScope && isExpanded && showScope ? (
+            <div className="mr-1 flex items-center gap-0.5 rounded-md bg-muted/40 p-0.5">
+              {(["pair", "all"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onScope(s)}
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[10px] font-semibold press",
+                    scope === s ? "bg-background text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {s === "pair" ? market : "All"}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {onSize && isExpanded ? (
+
             <div className="mr-0.5 flex items-center gap-0.5">
               {(["sm", "md", "full"] as const).map((s) => (
                 <button

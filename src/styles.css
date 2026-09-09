@@ -319,15 +319,13 @@
     font-weight: 600;
     letter-spacing: 0.02em;
   }
-  /* Keep legacy micro-copy legible without changing compact layouts. */
+  /* Lift only the unreadably tiny sizes; keep dense layouts intact. */
   .text-\[8px\],
   .text-\[9px\],
-  .text-\[10px\],
-  .text-\[11px\],
-  .text-\[12px\] {
-    font-size: 0.8125rem !important;
-    line-height: 1.4 !important;
+  .text-\[10px\] {
+    font-size: 0.6875rem;
   }
+
   .ph-tab-icon-active {
     filter: drop-shadow(0 0 6px color-mix(in oklab, var(--primary-glow) 70%, transparent));
   }

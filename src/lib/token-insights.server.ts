@@ -1,4 +1,4 @@
-export const TOKEN_INSIGHTS_MODEL = "inclusionai/ling-3.0-flash:free";
+export const TOKEN_INSIGHTS_MODEL = "inclusionai/ling-3.0-flash";
 
 export type TokenInsightNews = {
   headline: string;

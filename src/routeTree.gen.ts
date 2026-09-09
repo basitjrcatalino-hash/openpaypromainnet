@@ -170,6 +170,7 @@ import { Route as AuthenticatedAssetTokenIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
 import { Route as AuthenticatedAdminTopupRouteImport } from './routes/_authenticated/admin.topup'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
+import { Route as AuthenticatedAdminScannerRouteImport } from './routes/_authenticated/admin.scanner'
 import { Route as AuthenticatedAdminMaintenanceRouteImport } from './routes/_authenticated/admin.maintenance'
 import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
 import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin.auth'
@@ -1065,6 +1066,12 @@ const AuthenticatedAdminSupportRoute =
     path: '/admin/support',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminScannerRoute =
+  AuthenticatedAdminScannerRouteImport.update({
+    id: '/admin/scanner',
+    path: '/admin/scanner',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminMaintenanceRoute =
   AuthenticatedAdminMaintenanceRouteImport.update({
     id: '/admin/maintenance',
@@ -1449,6 +1456,7 @@ export interface FileRoutesByFullPath {
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/admin/scanner': typeof AuthenticatedAdminScannerRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1664,6 +1672,7 @@ export interface FileRoutesByTo {
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/admin/scanner': typeof AuthenticatedAdminScannerRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -1881,6 +1890,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/_authenticated/admin/deposits': typeof AuthenticatedAdminDepositsRoute
   '/_authenticated/admin/maintenance': typeof AuthenticatedAdminMaintenanceRoute
+  '/_authenticated/admin/scanner': typeof AuthenticatedAdminScannerRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/admin/topup': typeof AuthenticatedAdminTopupRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
@@ -2098,6 +2108,7 @@ export interface FileRouteTypes {
     | '/admin/auth'
     | '/admin/deposits'
     | '/admin/maintenance'
+    | '/admin/scanner'
     | '/admin/support'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -2313,6 +2324,7 @@ export interface FileRouteTypes {
     | '/admin/auth'
     | '/admin/deposits'
     | '/admin/maintenance'
+    | '/admin/scanner'
     | '/admin/support'
     | '/admin/topup'
     | '/admin/withdrawals'
@@ -2529,6 +2541,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/auth'
     | '/_authenticated/admin/deposits'
     | '/_authenticated/admin/maintenance'
+    | '/_authenticated/admin/scanner'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/topup'
     | '/_authenticated/admin/withdrawals'
@@ -3887,6 +3900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/scanner': {
+      id: '/_authenticated/admin/scanner'
+      path: '/admin/scanner'
+      fullPath: '/admin/scanner'
+      preLoaderRoute: typeof AuthenticatedAdminScannerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/maintenance': {
       id: '/_authenticated/admin/maintenance'
       path: '/admin/maintenance'
@@ -4328,6 +4348,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuthRoute: typeof AuthenticatedAdminAuthRoute
   AuthenticatedAdminDepositsRoute: typeof AuthenticatedAdminDepositsRoute
   AuthenticatedAdminMaintenanceRoute: typeof AuthenticatedAdminMaintenanceRoute
+  AuthenticatedAdminScannerRoute: typeof AuthenticatedAdminScannerRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
   AuthenticatedAdminTopupRoute: typeof AuthenticatedAdminTopupRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
@@ -4422,6 +4443,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuthRoute: AuthenticatedAdminAuthRoute,
   AuthenticatedAdminDepositsRoute: AuthenticatedAdminDepositsRoute,
   AuthenticatedAdminMaintenanceRoute: AuthenticatedAdminMaintenanceRoute,
+  AuthenticatedAdminScannerRoute: AuthenticatedAdminScannerRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
   AuthenticatedAdminTopupRoute: AuthenticatedAdminTopupRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,

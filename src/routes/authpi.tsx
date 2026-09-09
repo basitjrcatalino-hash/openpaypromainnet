@@ -1,15 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronRight, Loader2, Mail, ShieldCheck } from "lucide-react";
-import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
+import { ChevronRight, Loader2, ShieldCheck } from "lucide-react";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
-import { EmailAuthPanel, captureEmailAuthNextParam } from "@/components/email-auth-panel";
 
 const POST_AUTH_KEY = "post_auth_redirect";
 
@@ -53,8 +50,7 @@ export const Route = createFileRoute("/authpi")({
     const mode = typeof s.mode === "string" ? s.mode.toLowerCase() : undefined;
     const next = typeof s.next === "string" ? s.next : undefined;
     return {
-      method:
-        method === "email" || method === "openpay" || method === "pi" ? method : undefined,
+      method: method === "pi" ? method : undefined,
       mode: mode === "signin" || mode === "signup" ? mode : undefined,
       next: next && next.startsWith("/") && !next.startsWith("//") ? next : undefined,
     };
@@ -65,12 +61,12 @@ export const Route = createFileRoute("/authpi")({
       {
         name: "description",
         content:
-          "Sign in to OpenPay Pro with your OpenPay account, Pi Network, or email to manage OUSD, Pi, tokens, and NFTs.",
+          "Sign in to OpenPay Pro with your Pi Network account to manage OUSD, Pi, tokens, and NFTs.",
       },
       { property: "og:title", content: "Sign in — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Sign in with OpenPay, Pi Network, or email.",
+        content: "Sign in with Pi Network.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -81,68 +77,15 @@ export const Route = createFileRoute("/authpi")({
   component: AuthPiPage,
 });
 
-type AuthMethod = "openpay" | "pi" | "email";
-
-const METHODS: {
-  id: AuthMethod;
-  label: string;
-  desc: string;
-  accent: string;
-  accentFg: string;
-  logoUrl?: string;
-  logoFit?: "cover" | "contain";
-}[] = [
-  {
-    id: "openpay",
-    label: "OpenPay",
-    desc: "Sign in with your OpenPay account",
-    accent: OPENPAY_BRAND_BLUE,
-    accentFg: "#ffffff",
-    logoUrl: OPENPAY_LOGO_WHITE,
-    logoFit: "contain",
-  },
-  {
-    id: "pi",
-    label: "Pi Network",
-    desc: "Continue with your Pi username",
-    accent: "#7038A1",
-    accentFg: "#ffffff",
-    logoUrl: PI_NETWORK_AUTH_LOGO,
-    logoFit: "cover",
-  },
-  {
-    id: "email",
-    label: "Email",
-    desc: "Sign in or create an account with email",
-    accent: "#6366f1",
-    accentFg: "#ffffff",
-  },
-];
-
 function AuthPiPage() {
-  const search = Route.useSearch();
   const [mounted, setMounted] = useState(false);
-  // Pi Browser only allows Pi sign-in — other providers are restricted there.
-  const piOnly = mounted && isPiBrowser();
-  const [selected, setSelected] = useState<AuthMethod>(
-    () => (search.method as AuthMethod | undefined) ?? "openpay",
-  );
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     captureNextParam();
-    captureEmailAuthNextParam();
     ensureTopLevelAuthWindow();
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (piOnly) {
-      setSelected("pi");
-      return;
-    }
-    if (search.method) setSelected(search.method as AuthMethod);
-  }, [search.method, piOnly]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,14 +101,10 @@ function AuthPiPage() {
 
   if (!mounted) return null;
 
-  async function continueWith(method: AuthMethod) {
-    if (busy || method === "email") return;
+  async function onContinue() {
+    if (busy) return;
     setBusy(true);
     try {
-      if (method === "openpay") {
-        await startOpenPaySignIn({ redirectTo: postAuthTarget() });
-        return;
-      }
       await handlePiSignIn();
     } catch (err) {
       const message = (err as Error).message || "Sign-in failed";
@@ -174,13 +113,10 @@ function AuthPiPage() {
     }
   }
 
-  const visibleMethods = piOnly ? METHODS.filter((m) => m.id === "pi") : METHODS;
-  const selectedOpt = visibleMethods.find((m) => m.id === selected) ?? visibleMethods[0];
-
   return (
     <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0a0a14] px-4 py-10 text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        <div className="absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#1652f0]/25 blur-[120px]" />
+        <div className="absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#7038A1]/25 blur-[120px]" />
         <div className="absolute bottom-[-6rem] right-[-4rem] h-80 w-80 rounded-full bg-[#7038A1]/25 blur-[120px]" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#0a0a14]/60 to-[#0a0a14]" />
       </div>
@@ -193,88 +129,42 @@ function AuthPiPage() {
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight">OpenPay Pro</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {piOnly
-                ? "Sign in with your Pi Network account"
-                : "Choose how you want to sign in"}
+              Sign in with your Pi Network account
             </p>
           </div>
 
-          <div
-            role="tablist"
-            aria-label="Sign-in methods"
-            className={cn(
-              "grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-1.5",
-              visibleMethods.length === 1 ? "grid-cols-1" : "grid-cols-3",
-            )}
-          >
-            {visibleMethods.map((m) => {
-              const on = selected === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  disabled={busy}
-                  onClick={() => setSelected(m.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200",
-                    on
-                      ? "bg-white/10 shadow-lg shadow-black/30 ring-1 ring-white/15"
-                      : "opacity-70 hover:opacity-100",
-                  )}
-                >
-                  <span
-                    className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl"
-                    style={{ backgroundColor: m.accent }}
-                  >
-                    {m.logoUrl ? (
-                      <img
-                        src={m.logoUrl}
-                        alt=""
-                        className={cn(
-                          "h-full w-full",
-                          m.logoFit === "contain" ? "object-contain p-1.5" : "object-cover",
-                        )}
-                        draggable={false}
-                      />
-                    ) : (
-                      <Mail className="h-5 w-5 text-white" strokeWidth={2} />
-                    )}
-                  </span>
-                  <span className="text-[11px] font-semibold leading-tight">{m.label}</span>
-                </button>
-              );
-            })}
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/30 p-6">
+            <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl" style={{ backgroundColor: "#7038A1" }}>
+              <img
+                src={PI_NETWORK_AUTH_LOGO}
+                alt=""
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            </span>
+            <div className="text-center">
+              <p className="text-base font-semibold">Pi Network</p>
+              <p className="text-sm text-muted-foreground">Continue with your Pi username</p>
+            </div>
           </div>
 
-          <p className="mt-4 text-center text-xs text-muted-foreground">{selectedOpt.desc}</p>
-
-          <div className="mt-5">
-            {selected === "email" ? (
-              <EmailAuthPanel
-                busy={busy}
-                setBusy={setBusy}
-                initialMode={search.mode ?? "signin"}
-              />
-            ) : (
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() => void continueWith(selected)}
-                className="h-12 w-full rounded-full text-base font-semibold transition hover:brightness-110 active:scale-[0.99]"
-                style={{ backgroundColor: selectedOpt.accent, color: selectedOpt.accentFg }}
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <span className="inline-flex items-center gap-1.5">
-                    Continue with {selectedOpt.label}
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                )}
-              </Button>
-            )}
+          <div className="mt-6">
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void onContinue()}
+              className="h-12 w-full rounded-full text-base font-semibold transition hover:brightness-110 active:scale-[0.99]"
+              style={{ backgroundColor: "#7038A1", color: "#ffffff" }}
+            >
+              {busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  Continue with Pi Network
+                  <ChevronRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
           </div>
 
           <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">

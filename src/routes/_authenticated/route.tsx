@@ -1628,6 +1628,22 @@ function SidebarInner({
               />
               <span className="truncate">Admin · Maintenance</span>
             </Link>
+            <Link
+              to="/admin/scanner"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/scanner" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/scanner")}
+            >
+              <Wrench
+                className={cn(
+                  "h-[1.15rem] w-[1.15rem] shrink-0",
+                  pathname === "/admin/scanner" && "ph-tab-icon-active",
+                )}
+                strokeWidth={pathname === "/admin/scanner" ? 2.25 : 1.75}
+              />
+              <span className="truncate">Admin · Scanner</span>
+            </Link>
           </SideSection>
         ) : null}
       </nav>

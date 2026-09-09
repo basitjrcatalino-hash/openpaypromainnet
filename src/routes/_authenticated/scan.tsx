@@ -337,7 +337,7 @@ function ScanPage() {
       <div className="absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         {!showMyQr && (
           <p className="mx-auto mb-7 max-w-xs text-center text-[13px] font-medium leading-snug text-white/65">
-            Point at a Receive wallet QR — opens Send with the address filled in
+            Reads OpenPay Pro, OpenPay, Pi Wallet and QR Ph codes — opens the right screen for you
           </p>
         )}
 

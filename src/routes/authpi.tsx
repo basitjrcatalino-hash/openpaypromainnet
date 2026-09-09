@@ -1,15 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronRight, Loader2, Mail, ShieldCheck } from "lucide-react";
-import { OPENPAY_BRAND_BLUE, OPENPAY_LOGO_WHITE, startOpenPaySignIn } from "@/lib/openpay-auth";
+import { ChevronRight, Loader2, ShieldCheck } from "lucide-react";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
-import { EmailAuthPanel, captureEmailAuthNextParam } from "@/components/email-auth-panel";
 
 const POST_AUTH_KEY = "post_auth_redirect";
 

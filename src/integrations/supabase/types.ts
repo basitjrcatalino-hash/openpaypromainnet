@@ -4084,6 +4084,7 @@ export type Database = {
           qnt_balance: number
           rain_balance: number
           recovery_hash: string | null
+          removed_at: string | null
           render_balance: number
           rlusd_balance: number
           robo_balance: number
@@ -4238,6 +4239,7 @@ export type Database = {
           qnt_balance?: number
           rain_balance?: number
           recovery_hash?: string | null
+          removed_at?: string | null
           render_balance?: number
           rlusd_balance?: number
           robo_balance?: number
@@ -4392,6 +4394,7 @@ export type Database = {
           qnt_balance?: number
           rain_balance?: number
           recovery_hash?: string | null
+          removed_at?: string | null
           render_balance?: number
           rlusd_balance?: number
           robo_balance?: number
@@ -5549,6 +5552,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      remove_openpay_wallet: { Args: { p_wallet_id: string }; Returns: Json }
       spot_cancel_order: {
         Args: { _order_id: string }
         Returns: {

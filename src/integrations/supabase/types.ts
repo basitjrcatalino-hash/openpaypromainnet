@@ -3157,6 +3157,42 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_targets: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          id: string
+          label: string
+          message: string | null
+          sort_order: number
+          target_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          message?: string | null
+          sort_order?: number
+          target_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          message?: string | null
+          sort_order?: number
+          target_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       spot_fills: {
         Row: {
           amount: number

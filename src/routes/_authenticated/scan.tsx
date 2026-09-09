@@ -16,8 +16,8 @@ import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
-import { parsePaymentQr } from "@/lib/parse-payment-qr";
-import { isWalletConnectPayLink, normalizeWalletConnectPayLink } from "@/lib/walletconnect-pay";
+import { routeScannedQr } from "@/lib/scan-router";
+import { useScanTargets } from "@/lib/scan-targets";
 import { isEmbeddedFrame, scanQrFromFile, usePhantomQrScanner } from "@/lib/qr-camera";
 import { buildReceiveQrPayload, walletQrDataUrl } from "@/lib/receive-qr";
 import { shortAddress } from "@/lib/wallet-utils";
@@ -99,6 +99,7 @@ function ScanPage() {
   });
 
   const unlockScanner = scanner.unlock;
+  const { flags: scanFlags, messages: scanMessages } = useScanTargets();
 
   useEffect(() => {
     finishRef.current = async (text: string) => {
@@ -111,79 +112,39 @@ function ScanPage() {
         /* ignore */
       }
 
-      if (isWalletConnectPayLink(text)) {
-        if (alive.current) toast.success("WalletConnect Pay link scanned");
-        void navigate({
-          to: "/wc-pay",
-          search: { link: normalizeWalletConnectPayLink(text) },
-        });
-        return;
-      }
+      const decision = routeScannedQr(text, scanFlags, scanMessages);
 
-      const parsed = parsePaymentQr(text);
-      if (!parsed.to) {
-        handled.current = false;
-        unlockScanner();
-        setFlash(false);
-        const preview = text.trim().slice(0, 48);
-        if (alive.current) {
-          toast.error(
-            preview
-              ? `QR has no payment address (${preview}${text.trim().length > 48 ? "…" : ""})`
-              : "QR decoded empty — try Photos or hold steadier",
-          );
-        }
-        return;
-      }
-
-      // Accept Pro wallet receive QRs (bare 0x, openpay:, /pay/0x links).
-      const isPro =
-        parsed.kind === "pro_wallet" || /^0x[a-fA-F0-9]{40}$/i.test(parsed.to.trim());
-      if (!isPro) {
+      const reject = (message: string, kind: "error" | "info" = "error") => {
         handled.current = false;
         unlockScanner();
         setFlash(false);
         if (alive.current) {
-          toast.error(
-            "Scan an OpenPay Pro wallet receive QR (any token). OpenPay @handles use Send → OpenPay.",
-          );
+          if (kind === "info") toast.info(message);
+          else toast.error(message);
         }
-        return;
-      }
-
-      if (alive.current) {
-        const label = parsed.token
-          ? "OpenPay Pro token QR scanned"
-          : parsed.asset
-            ? `OpenPay Pro ${parsed.asset} QR scanned`
-            : "OpenPay Pro wallet scanned";
-        toast.success(label);
-      }
-
-      const sendSearch: {
-        to: string;
-        rail: "wallet";
-        amount?: string;
-        token?: string;
-        asset?: import("@/lib/ledger-majors").LedgerAssetCode;
-      } = {
-        to: parsed.to,
-        rail: "wallet",
-        ...(parsed.amount ? { amount: parsed.amount } : {}),
       };
 
-      if (parsed.token) {
-        sendSearch.token = parsed.token;
-      } else {
-        sendSearch.asset = parsed.asset ?? "OUSD";
+      if (decision.status === "unknown" || decision.status === "disabled") {
+        reject(decision.toast);
+        return;
       }
 
+      if (decision.status === "info") {
+        reject(
+          `${decision.toast} — pay bank & e-wallet QR from Top Up → QR Ph`,
+          "info",
+        );
+        return;
+      }
+
+      if (alive.current) toast.success(decision.toast);
+
       void navigate({
-        to: "/send",
-        search: sendSearch,
+        to: decision.to,
+        search: decision.search as never,
       });
     };
-  }, [navigate, unlockScanner]);
+  }, [navigate, unlockScanner, scanFlags, scanMessages]);
 
   useEffect(() => {
     alive.current = true;
@@ -376,7 +337,7 @@ function ScanPage() {
       <div className="absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         {!showMyQr && (
           <p className="mx-auto mb-7 max-w-xs text-center text-[13px] font-medium leading-snug text-white/65">
-            Point at a Receive wallet QR — opens Send with the address filled in
+            Reads OpenPay Pro, OpenPay, Pi Wallet and QR Ph codes — opens the right screen for you
           </p>
         )}
 

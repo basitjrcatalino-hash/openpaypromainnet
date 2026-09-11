@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronRight, Loader2, ShieldCheck } from "lucide-react";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";

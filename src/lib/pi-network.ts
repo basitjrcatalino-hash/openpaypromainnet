@@ -35,7 +35,8 @@ declare global {
 }
 
 const SDK_URL = "https://sdk.minepi.com/pi-sdk.js";
-const SCOPES = ["username", "payments"];
+// Sign-in only needs the username scope (Pi SDK auth docs).
+const SCOPES = ["username"];
 const LINK_SCOPES = ["username", "payments", "wallet_address"];
 let sdkPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;

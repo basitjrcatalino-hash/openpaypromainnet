@@ -80,6 +80,7 @@ export const Route = createFileRoute("/authpi")({
 function AuthPiPage() {
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const autoRan = useRef(false);
 
   useEffect(() => {
     captureNextParam();
@@ -92,7 +93,22 @@ function AuthPiPage() {
     void (async () => {
       const { data } = await supabase.auth.getUser();
       if (cancelled) return;
-      if (data.user) goPostAuth();
+      if (data.user) {
+        goPostAuth();
+        return;
+      }
+      // Auto-trigger Pi authentication on load inside the Pi Browser.
+      if (autoRan.current || !isPiBrowser()) return;
+      autoRan.current = true;
+      setBusy(true);
+      try {
+        await handlePiSignIn();
+      } catch (err) {
+        if (cancelled) return;
+        const message = (err as Error).message || "Sign-in failed";
+        if (!/reject|cancel|denied/i.test(message)) toast.error(message);
+        setBusy(false);
+      }
     })();
     return () => {
       cancelled = true;

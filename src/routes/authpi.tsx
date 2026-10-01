@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
+import { ArcConnectModal } from "@/components/arc/ArcConnectModal";
+import type { ArcNetworkId } from "@/lib/arc-wallet";
+import { startWalletConnectSignIn } from "@/lib/walletconnect-auth";
 
 const POST_AUTH_KEY = "post_auth_redirect";
 
@@ -81,6 +84,8 @@ function AuthPiPage() {
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
   const autoRan = useRef(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [arcNet, setArcNet] = useState<ArcNetworkId>("testnet");
 
   useEffect(() => {
     captureNextParam();
@@ -181,7 +186,27 @@ function AuthPiPage() {
                 </span>
               )}
             </Button>
+            {!isPiBrowser() && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setWalletOpen(true)}
+                className="mt-3 h-12 w-full rounded-full text-base font-semibold"
+              >
+                Connect wallet (Arc · WalletConnect)
+              </Button>
+            )}
           </div>
+          <ArcConnectModal
+            open={walletOpen}
+            onOpenChange={setWalletOpen}
+            network={arcNet}
+            onNetworkChange={setArcNet}
+            onConnected={async (provider) => {
+              await startWalletConnectSignIn({ provider, redirectTo: postAuthTarget() });
+            }}
+          />
 
           <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
             By continuing you agree to OpenPay&apos;s{" "}

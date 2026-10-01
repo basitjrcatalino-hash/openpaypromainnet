@@ -72,6 +72,7 @@
     "@wallet-standard/app": "^1.1.1",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
+    "@walletconnect/ethereum-provider": "^2.25.0",
     "@walletconnect/pay": "^1.0.9",
     "@web3auth/modal": "^11.3.0",
     "ai": "^7.0.37",

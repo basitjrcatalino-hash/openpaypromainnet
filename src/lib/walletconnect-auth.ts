@@ -83,7 +83,10 @@ async function buildSiweMessage(challenge: WcSignInChallenge, address: string): 
   ].join("\n");
 }
 
-export async function startWalletConnectSignIn(opts?: { redirectTo?: string }): Promise<void> {
+export async function startWalletConnectSignIn(opts?: {
+  redirectTo?: string;
+  provider?: EthereumProvider;
+}): Promise<void> {
   if (typeof window === "undefined") return;
 
   const origin = encodeURIComponent(window.location.origin);
@@ -95,9 +98,21 @@ export async function startWalletConnectSignIn(opts?: { redirectTo?: string }): 
     throw new Error(challenge.error || `Could not start WalletConnect sign-in (${createRes.status})`);
   }
 
-  const address = await connectEvmAddress();
-  const message = await buildSiweMessage(challenge, address);
-  const signature = await personalSign(address, message);
+  let address: string;
+  let signature: string;
+  let message: string;
+  if (opts?.provider) {
+    const p = opts.provider;
+    const accounts = (await p.request({ method: "eth_requestAccounts" })) as string[];
+    if (!accounts?.[0]) throw new Error("No account returned from wallet");
+    address = await checksumAddress(accounts[0]);
+    message = await buildSiweMessage(challenge, address);
+    signature = (await p.request({ method: "personal_sign", params: [message, address] })) as string;
+  } else {
+    address = await connectEvmAddress();
+    message = await buildSiweMessage(challenge, address);
+    signature = await personalSign(address, message);
+  }
 
   const verifyRes = await fetch("/api/public/walletconnect-auth", {
     method: "POST",

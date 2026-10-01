@@ -213,6 +213,9 @@ function CryptoWalletPage() {
             </p>
           </section>
 
+          <Link to="/arc" className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 font-semibold hover:bg-muted/40">
+            Connect external wallet on Arc <ArrowUpRight className="h-4 w-4" />
+          </Link>
           <div className="mb-8 grid grid-cols-4 gap-2">
             <ActionCard to="/wallet/receive" icon={QrCode} label="Receive" primary />
             <ActionCard to="/send" icon={ArrowUpRight} label="Send" />

@@ -15,6 +15,13 @@
       "when": 1791150714331,
       "tag": "0001_restrict_chat_and_pm_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791151107939,
+      "tag": "0002_lock_chat_follows_media",
+      "breakpoints": true
     }
   ]
 }

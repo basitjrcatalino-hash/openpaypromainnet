@@ -85,7 +85,7 @@ function AuthPiPage() {
   const [busy, setBusy] = useState(false);
   const autoRan = useRef(false);
   const [walletOpen, setWalletOpen] = useState(false);
-  const [arcNet, setArcNet] = useState<ArcNetworkId>("testnet");
+  const [arcNet, setArcNet] = useState<ArcNetworkId>("mainnet");
 
   useEffect(() => {
     captureNextParam();

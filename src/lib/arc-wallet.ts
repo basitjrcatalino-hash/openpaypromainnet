@@ -19,7 +19,6 @@ export type ArcChain = {
   available: boolean;
 };
 
-const mainnetChainId = Number(import.meta.env.VITE_ARC_MAINNET_CHAIN_ID || 0);
 
 export const ARC_CHAINS: Record<ArcNetworkId, ArcChain> = {
   testnet: {
@@ -28,15 +27,15 @@ export const ARC_CHAINS: Record<ArcNetworkId, ArcChain> = {
     name: "Arc Testnet",
     rpcUrl: "https://rpc.testnet.arc.network",
     explorer: "https://testnet.arcscan.app",
-    available: true,
+    available: false,
   },
   mainnet: {
     id: "mainnet",
-    chainId: mainnetChainId,
+    chainId: 5042,
     name: "Arc Mainnet",
-    rpcUrl: (import.meta.env.VITE_ARC_MAINNET_RPC_URL as string) || "",
-    explorer: (import.meta.env.VITE_ARC_MAINNET_EXPLORER as string) || "",
-    available: mainnetChainId > 0,
+    rpcUrl: "https://rpc.mainnet.arc.io",
+    explorer: "https://explorer.arc.io",
+    available: true,
   },
 };
 
@@ -128,10 +127,10 @@ export async function createWalletConnectProvider(
   if (!projectId) throw new Error("WalletConnect is not configured.");
   const { EthereumProvider } = await import("@walletconnect/ethereum-provider");
   const chain = ARC_CHAINS[network];
-  const optionalChains = [ARC_CHAINS.testnet.chainId, 1] as number[];
-  if (ARC_CHAINS.mainnet.available) optionalChains.unshift(ARC_CHAINS.mainnet.chainId);
-  const rpcMap: Record<number, string> = { [ARC_CHAINS.testnet.chainId]: ARC_CHAINS.testnet.rpcUrl };
-  if (ARC_CHAINS.mainnet.available) rpcMap[ARC_CHAINS.mainnet.chainId] = ARC_CHAINS.mainnet.rpcUrl;
+  void chain;
+  const main = ARC_CHAINS.mainnet;
+  const optionalChains = [main.chainId] as number[];
+  const rpcMap: Record<number, string> = { [main.chainId]: main.rpcUrl };
   const provider = await EthereumProvider.init({
     projectId,
     showQrModal: false,
@@ -145,7 +144,7 @@ export async function createWalletConnectProvider(
     },
   });
   provider.on("display_uri", (uri: string) => onUri(uri));
-  await provider.connect({ optionalChains: [chain.chainId] } as never);
+  await provider.connect({ optionalChains: [main.chainId] } as never);
   return provider as unknown as Eip1193;
 }
 

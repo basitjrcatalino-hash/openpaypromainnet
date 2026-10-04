@@ -119,8 +119,8 @@ export function ArcConnectModal({
         </div>
 
         {onNetworkChange && view === "list" && (
-          <div className="mx-4 mb-3 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
-            {(["testnet", "mainnet"] as const).map((n) => (
+          <div className="mx-4 mb-3 hidden bg-muted p-1">
+            {(["mainnet"] as const).map((n) => (
               <button
                 key={n}
                 type="button"

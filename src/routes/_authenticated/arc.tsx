@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/arc")({
 });
 
 function ArcPage() {
-  const [network, setNetwork] = useState<ArcNetworkId>("testnet");
+  const [network, setNetwork] = useState<ArcNetworkId>("mainnet");
   const [linked, setLinked] = useState<LinkedArcWallet | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -37,7 +37,7 @@ function ArcPage() {
     const l = loadLinkedWallet();
     if (l) {
       setLinked(l);
-      setNetwork(l.network);
+      setNetwork("mainnet");
     }
   }, []);
 
@@ -61,8 +61,8 @@ function ArcPage() {
         </div>
       </header>
 
-      <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
-        {(["testnet", "mainnet"] as const).map((n) => (
+      <div className="mb-4 hidden bg-muted p-1">
+        {(["mainnet"] as const).map((n) => (
           <button
             key={n}
             type="button"

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  */
 export function RouteProgress() {
   const status = useRouterState({ select: (s) => s.status });
-  const isPending = useRouterState({ select: (s) => s.isLoading || s.isTransitioning });
+  const isPending = useRouterState({ select: (s) => s.isLoading });
   const active = isPending || status === "pending";
   const [visible, setVisible] = useState(false);
 

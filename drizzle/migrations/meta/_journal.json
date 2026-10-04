@@ -8,6 +8,13 @@
       "when": 1790817900511,
       "tag": "0000_restrict_public_reads_to_signed_in",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791150714331,
+      "tag": "0001_restrict_chat_and_pm_reads",
+      "breakpoints": true
     }
   ]
 }

@@ -214,6 +214,7 @@ function SolanaConnectPanel() {
 
 function MultichainConnectPanel() {
   const [client, setClient] = useState<MetamaskMultichainClient | null>(null);
+  const [mm, setMm] = useState<MultichainModule | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [ready, setReady] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -223,8 +224,10 @@ function MultichainConnectPanel() {
     let mounted = true;
     async function init() {
       try {
-        const { getMetamaskMultichainClient } = await loadMultichain();
-        const c = await getMetamaskMultichainClient();
+        const mod = await loadMultichain();
+        const c = await mod.getMetamaskMultichainClient();
+        if (!mounted) return;
+        setMm(mod);
         if (!mounted) return;
         setClient(c);
         c.on("wallet_sessionChanged", (s) => {

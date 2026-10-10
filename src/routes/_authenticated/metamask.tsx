@@ -323,7 +323,7 @@ function MultichainConnectPanel() {
                             className="truncate font-mono text-[10px] text-muted-foreground"
                             title={a}
                           >
-                            {shortCaipAccount(a)}
+                            {mm ? mm.shortCaipAccount(a) : a}
                           </div>
                         ))}
                       </div>

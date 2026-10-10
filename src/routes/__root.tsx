@@ -1,4 +1,3 @@
-import type { ErrorComponentProps } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -71,9 +70,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: ErrorComponentProps) {
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
-  const detail = (error as Error | undefined)?.message?.trim() || "";
+  const detail = error?.message?.trim() || "";
   const isRenderLoop = /Minified React error #301|Too many re-renders/i.test(detail);
 
   useEffect(() => {
@@ -123,9 +122,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: async ({ location }) => {
+    if (location.pathname.startsWith("/lovable/")) return;
     // Runs before child routes that touch supabase (auth gate, index redirect).
-    if (!location.pathname.startsWith("/lovable/")) await ensureBrowserSupabaseConfig();
-    return {};
+    await ensureBrowserSupabaseConfig();
   },
   head: () => ({
     meta: [

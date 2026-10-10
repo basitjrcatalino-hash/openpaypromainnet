@@ -5,20 +5,16 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/wallet/PageHeader";
-import {
-  getMetamaskSolanaClient,
-  shortSolAddress,
-  type MetamaskSolanaClient,
-} from "@/lib/metamask-solana";
-import {
-  accountsInScope,
-  getMetamaskMultichainClient,
-  MM_DEFAULT_SCOPES,
-  sessionScopeKeys,
-  shortCaipAccount,
-  type MetamaskMultichainClient,
-  type SessionData,
+// Type-only imports: the MetaMask SDKs are browser-only and crash the server
+// bundle if statically imported (routeTree imports every route for SSR).
+import type { MetamaskSolanaClient } from "@/lib/metamask-solana";
+import type {
+  MetamaskMultichainClient,
+  SessionData,
 } from "@/lib/metamask-multichain";
+
+const loadSolana = () => import("@/lib/metamask-solana");
+const loadMultichain = () => import("@/lib/metamask-multichain");
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/metamask")({

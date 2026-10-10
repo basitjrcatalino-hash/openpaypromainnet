@@ -239,7 +239,7 @@ async function createPiOusdPayment(
       ? `OpenPay Pro donate: ${memo.replace(/^OpenPay Pro:\s*/i, "")}`
       : memo;
 
-  await window.Pi.authenticate(SCOPES, (payment) => {
+  await window.Pi.authenticate(["username", "payments"], (payment) => {
     void completeIncomplete(payment);
   });
 

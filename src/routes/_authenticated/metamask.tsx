@@ -5,20 +5,21 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/wallet/PageHeader";
-import {
-  getMetamaskSolanaClient,
-  shortSolAddress,
-  type MetamaskSolanaClient,
-} from "@/lib/metamask-solana";
-import {
-  accountsInScope,
-  getMetamaskMultichainClient,
-  MM_DEFAULT_SCOPES,
-  sessionScopeKeys,
-  shortCaipAccount,
-  type MetamaskMultichainClient,
-  type SessionData,
+// Type-only imports: the MetaMask SDKs are browser-only and crash the server
+// bundle if statically imported (routeTree imports every route for SSR).
+import type { MetamaskSolanaClient } from "@/lib/metamask-solana";
+import type {
+  MetamaskMultichainClient,
+  SessionData,
 } from "@/lib/metamask-multichain";
+
+const loadSolana = () => import("@/lib/metamask-solana");
+const loadMultichain = () => import("@/lib/metamask-multichain");
+type MultichainModule = Awaited<ReturnType<typeof loadMultichain>>;
+
+function shortSolAddress(address: string): string {
+  return address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
+}
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/metamask")({
@@ -91,6 +92,7 @@ function SolanaConnectPanel() {
     let mounted = true;
     async function init() {
       try {
+        const { getMetamaskSolanaClient } = await loadSolana();
         const c = await getMetamaskSolanaClient();
         if (!mounted) return;
         setClient(c);
@@ -212,6 +214,7 @@ function SolanaConnectPanel() {
 
 function MultichainConnectPanel() {
   const [client, setClient] = useState<MetamaskMultichainClient | null>(null);
+  const [mm, setMm] = useState<MultichainModule | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [ready, setReady] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -221,8 +224,10 @@ function MultichainConnectPanel() {
     let mounted = true;
     async function init() {
       try {
-        const c = await getMetamaskMultichainClient();
+        const mod = await loadMultichain();
+        const c = await mod.getMetamaskMultichainClient();
         if (!mounted) return;
+        setMm(mod);
         setClient(c);
         c.on("wallet_sessionChanged", (s) => {
           if (mounted) setSession(s ?? null);
@@ -246,10 +251,10 @@ function MultichainConnectPanel() {
   }, []);
 
   const handleConnect = useCallback(async () => {
-    if (!client) return;
+    if (!client || !mm) return;
     setConnecting(true);
     try {
-      await client.connect([...MM_DEFAULT_SCOPES], []);
+      await client.connect([...mm.MM_DEFAULT_SCOPES], []);
       const s = await client.provider.getSession();
       setSession(s ?? null);
       toast.success("MetaMask connected (EVM + Solana)");
@@ -258,7 +263,7 @@ function MultichainConnectPanel() {
     } finally {
       setConnecting(false);
     }
-  }, [client]);
+  }, [client, mm]);
 
   const handleDisconnect = useCallback(async () => {
     if (!client) return;
@@ -274,7 +279,7 @@ function MultichainConnectPanel() {
     }
   }, [client]);
 
-  const scopes = sessionScopeKeys(session);
+  const scopes = mm ? mm.sessionScopeKeys(session) : [];
   const isConnected = scopes.length > 0;
 
   return (
@@ -304,7 +309,7 @@ function MultichainConnectPanel() {
             <div className="mb-2 text-sm font-semibold">Connected scopes</div>
             <ul className="space-y-2">
               {scopes.map((scope) => {
-                const accounts = accountsInScope(session, scope);
+                const accounts = mm ? mm.accountsInScope(session, scope) : [];
                 return (
                   <li key={scope} className="rounded-2xl bg-muted/50 px-3 py-2.5">
                     <div className="font-mono text-[11px] font-semibold text-foreground">
@@ -318,7 +323,7 @@ function MultichainConnectPanel() {
                             className="truncate font-mono text-[10px] text-muted-foreground"
                             title={a}
                           >
-                            {shortCaipAccount(a)}
+                            {mm ? mm.shortCaipAccount(a) : a}
                           </div>
                         ))}
                       </div>

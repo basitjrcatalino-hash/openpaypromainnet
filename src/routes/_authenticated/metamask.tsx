@@ -87,6 +87,7 @@ function SolanaConnectPanel() {
     let mounted = true;
     async function init() {
       try {
+        const { getMetamaskSolanaClient } = await loadSolana();
         const c = await getMetamaskSolanaClient();
         if (!mounted) return;
         setClient(c);
@@ -217,6 +218,7 @@ function MultichainConnectPanel() {
     let mounted = true;
     async function init() {
       try {
+        const { getMetamaskMultichainClient } = await loadMultichain();
         const c = await getMetamaskMultichainClient();
         if (!mounted) return;
         setClient(c);

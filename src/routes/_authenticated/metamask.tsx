@@ -15,6 +15,11 @@ import type {
 
 const loadSolana = () => import("@/lib/metamask-solana");
 const loadMultichain = () => import("@/lib/metamask-multichain");
+type MultichainModule = Awaited<ReturnType<typeof loadMultichain>>;
+
+function shortSolAddress(address: string): string {
+  return address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
+}
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/metamask")({

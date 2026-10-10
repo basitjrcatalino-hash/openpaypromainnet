@@ -5,6 +5,7 @@ import {
   useRouter,
   useRouterState,
   HeadContent,
+  type ErrorComponentProps,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -70,9 +71,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
-  const detail = error?.message?.trim() || "";
+  const detail = (error as Error | undefined)?.message?.trim() || "";
   const isRenderLoop = /Minified React error #301|Too many re-renders/i.test(detail);
 
   useEffect(() => {

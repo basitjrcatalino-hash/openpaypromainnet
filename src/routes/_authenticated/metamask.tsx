@@ -228,7 +228,6 @@ function MultichainConnectPanel() {
         const c = await mod.getMetamaskMultichainClient();
         if (!mounted) return;
         setMm(mod);
-        if (!mounted) return;
         setClient(c);
         c.on("wallet_sessionChanged", (s) => {
           if (mounted) setSession(s ?? null);
@@ -252,10 +251,10 @@ function MultichainConnectPanel() {
   }, []);
 
   const handleConnect = useCallback(async () => {
-    if (!client) return;
+    if (!client || !mm) return;
     setConnecting(true);
     try {
-      await client.connect([...MM_DEFAULT_SCOPES], []);
+      await client.connect([...mm.MM_DEFAULT_SCOPES], []);
       const s = await client.provider.getSession();
       setSession(s ?? null);
       toast.success("MetaMask connected (EVM + Solana)");
@@ -264,7 +263,7 @@ function MultichainConnectPanel() {
     } finally {
       setConnecting(false);
     }
-  }, [client]);
+  }, [client, mm]);
 
   const handleDisconnect = useCallback(async () => {
     if (!client) return;
@@ -280,7 +279,7 @@ function MultichainConnectPanel() {
     }
   }, [client]);
 
-  const scopes = sessionScopeKeys(session);
+  const scopes = mm ? mm.sessionScopeKeys(session) : [];
   const isConnected = scopes.length > 0;
 
   return (
@@ -310,7 +309,7 @@ function MultichainConnectPanel() {
             <div className="mb-2 text-sm font-semibold">Connected scopes</div>
             <ul className="space-y-2">
               {scopes.map((scope) => {
-                const accounts = accountsInScope(session, scope);
+                const accounts = mm ? mm.accountsInScope(session, scope) : [];
                 return (
                   <li key={scope} className="rounded-2xl bg-muted/50 px-3 py-2.5">
                     <div className="font-mono text-[11px] font-semibold text-foreground">

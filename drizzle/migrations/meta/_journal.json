@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792022620213,
+      "tag": "0000_pin_email_fn_search_path",
+      "breakpoints": true
+    }
+  ]
+}

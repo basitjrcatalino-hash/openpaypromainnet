@@ -1,5 +1,6 @@
-import { createPublicClient, custom, createWalletClient, formatUnits, getAddress, type EIP1193Provider, http } from "viem";
+import { createPublicClient, custom, createWalletClient, formatUnits, getAddress, type EIP1193Provider, http, erc20Abi, parseUnits } from "viem";
 import { arcMainnet, validateArcPayment } from "./arc-network";
+import { verifyArcPreparedTransfer, type ArcPreparedTransfer } from "./openpay-arc";
 import { supabase } from "@/integrations/supabase/client";
 
 export function arcProvider(): EIP1193Provider {
@@ -71,6 +72,22 @@ export async function arcPayment(amount: string, recipient: string) {
   const result = await new AppKit().send({ from: { adapter, chain: "Arc" }, to: getAddress(recipient), amount, token: "USDC" });
   if (result.state === "error") throw new Error(result.errorMessage || "Transfer failed.");
   return result;
+}
+
+export async function submitOpenPayArcTransfer(prepared: ArcPreparedTransfer, amount: string, recipient: string, expectedAddress: `0x${string}`) {
+  verifyArcPreparedTransfer(prepared, amount, recipient);
+  await switchToArc();
+  const address = await connectArcWallet();
+  if (address.toLowerCase() !== expectedAddress.toLowerCase()) throw new Error("Wallet account changed. Reconnect and review the payment again.");
+  const publicClient = createPublicClient({ chain: arcMainnet, transport: http() });
+  if (await publicClient.getChainId() !== arcMainnet.id) throw new Error("Unexpected Arc network.");
+  await publicClient.simulateContract({ account: address, address: prepared.transaction.to as `0x${string}`, abi: erc20Abi, functionName: "transfer", args: [getAddress(recipient), parseUnits(amount, 6)] });
+  const wallet = createWalletClient({ chain: arcMainnet, transport: custom(arcProvider()) });
+  const txHash = await wallet.sendTransaction({ account: address, to: prepared.transaction.to as `0x${string}`, data: prepared.transaction.data as `0x${string}`, value: 0n });
+  try {
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, timeout: 60000 });
+    return { state: receipt.status === "success" ? "success" : "error", txHash };
+  } catch { return { state: "pending", txHash }; }
 }
 
 export async function bridgeToArc(amount: string, source: "Base" | "Ethereum" | "Arbitrum") {

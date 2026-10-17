@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { ArrowDownLeft, ArrowUpRight, Copy, Link2, Loader2, RefreshCw, Wallet } from "lucide-react";
+import type { EIP1193Provider } from "viem";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { arcBalance, arcPayment, bridgeToArc, connectArcWallet, verifyArcWallet, submitOpenPayArcTransfer } from "@/lib/arc-wallet";
+import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import { getOpenPayArcSnapshot, prepareOpenPayArcPayment } from "@/lib/openpay-arc.functions";
 import { fetchAuthMethodFlags } from "@/lib/auth-methods";
 
 export default function ArcWalletPanel() {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [provider, setProvider] = useState<EIP1193Provider | null>(null);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const afterConnect = useRef<((p: EIP1193Provider) => Promise<void>) | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [linked, setLinked] = useState(false);
   const [busy, setBusy] = useState(false);

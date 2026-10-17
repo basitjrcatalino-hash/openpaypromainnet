@@ -15,7 +15,7 @@ import {
   Text,
 } from '@react-email/components'
 
-import logoAsset from '../../assets/openpay-pro-logo.png.asset.json'
+import logoAsset from '../../assets/openpay-pro-icon.png.asset.json'
 
 /**
  * OpenPay Pro shared email shell.

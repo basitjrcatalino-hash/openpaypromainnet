@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import logoAsset from "@/assets/openpay-pro-logo.png.asset.json";
+import logoAsset from "@/assets/openpay-pro-icon.png.asset.json";
 import { formatNumber } from "@/lib/wallet-utils";
 
 export type ShareTokenData = {

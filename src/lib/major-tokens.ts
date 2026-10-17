@@ -12,7 +12,7 @@
  * - EURC  0x1abaea1f7c830bd89acc67ec4af516284b1bc33c (Ethereum)
  */
 
-import oproLogo from "@/assets/openpay-pro-logo.png.asset.json";
+import oproLogo from "@/assets/openpay-pro-icon.png.asset.json";
 
 /** OpenPay Pro (OPRO) uses the official OpenPay Pro mark. */
 const OPRO_LOGO_URL = oproLogo.url;

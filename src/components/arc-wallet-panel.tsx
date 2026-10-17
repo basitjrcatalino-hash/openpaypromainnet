@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { ArrowDownLeft, ArrowUpRight, Copy, Link2, Loader2, RefreshCw, Wallet } from "lucide-react";
+import type { EIP1193Provider } from "viem";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { arcBalance, arcPayment, bridgeToArc, connectArcWallet, verifyArcWallet, submitOpenPayArcTransfer } from "@/lib/arc-wallet";
+import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import { getOpenPayArcSnapshot, prepareOpenPayArcPayment } from "@/lib/openpay-arc.functions";
 import { fetchAuthMethodFlags } from "@/lib/auth-methods";
 
 export default function ArcWalletPanel() {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [walletProvider, setWalletProvider] = useState<EIP1193Provider | null>(null);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const afterConnect = useRef<((p: EIP1193Provider) => Promise<void>) | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [linked, setLinked] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,8 +45,22 @@ export default function ArcWalletPanel() {
     setBusy(true);
     try { await action(); } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); }
   }
+  function requestConnect(next?: (p: EIP1193Provider) => Promise<void>) {
+    afterConnect.current = next ?? null;
+    setConnectOpen(true);
+  }
+  async function handleSelect(selected: EIP1193Provider) {
+    setConnectOpen(false);
+    await run(async () => {
+      setWalletProvider(selected);
+      setAddress(await connectArcWallet(selected));
+      setReceipt(null);
+      if (afterConnect.current) await afterConnect.current(selected);
+    });
+  }
   const accessEnabled = flags.data?.arc.enabled === true && !flags.isError;
   return <div className="space-y-8">
+    <ArcConnectDialog open={connectOpen} onOpenChange={setConnectOpen} busy={busy} onSelect={p => void handleSelect(p)} />
     <section className="border-y border-border py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-sm text-muted-foreground">Arc Mainnet · USDC</p><p className="mt-2 text-4xl font-semibold tabular-nums">{!address ? "—" : balance.isError ? "Unavailable" : balance.isPending ? "…" : Number(balance.data).toLocaleString(undefined, { maximumFractionDigits: 6 })}</p></div>
@@ -49,9 +68,9 @@ export default function ArcWalletPanel() {
       </div>
       {address && <div className="mt-4 flex items-center gap-2"><p className="min-w-0 break-all font-mono text-sm">{address}</p><Button size="icon" variant="ghost" aria-label="Copy wallet address" onClick={() => void navigator.clipboard.writeText(address).then(() => toast.success("Address copied"))}><Copy className="h-4 w-4" /></Button></div>}
       <div className="mt-5 flex flex-wrap gap-3">
-        <Button disabled={busy || !accessEnabled} onClick={() => void run(async () => { setAddress(await connectArcWallet()); setReceipt(null); })}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}{address ? "Change wallet" : "Connect wallet"}</Button>
-        {signedIn && address && <Button variant="outline" disabled={busy || linked || !accessEnabled} onClick={() => void run(async () => { const verified = await verifyArcWallet("link"); setAddress(verified); setLinked(true); toast.success("Wallet linked to your existing account"); })}><Link2 className="h-4 w-4" />{linked ? "Wallet linked" : "Link to my account"}</Button>}
-        {!signedIn && <Button variant="outline" disabled={busy || !accessEnabled} onClick={() => void run(async () => { await verifyArcWallet("login"); window.location.assign("/dashboard"); })}>Sign in with linked wallet</Button>}
+        <Button disabled={busy || !accessEnabled} onClick={() => requestConnect()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}{address ? "Change wallet" : "Connect wallet"}</Button>
+        {signedIn && address && <Button variant="outline" disabled={busy || linked || !accessEnabled} onClick={() => void run(async () => { const verified = await verifyArcWallet("link", walletProvider ?? undefined); setAddress(verified); setLinked(true); toast.success("Wallet linked to your existing account"); })}><Link2 className="h-4 w-4" />{linked ? "Wallet linked" : "Link to my account"}</Button>}
+        {!signedIn && <Button variant="outline" disabled={busy || !accessEnabled} onClick={() => requestConnect(async p => { await verifyArcWallet("login", p); window.location.assign("/dashboard"); })}>Sign in with linked wallet</Button>}
       </div>
       {!signedIn && <p className="mt-4 text-sm text-muted-foreground">Existing account? <Link to="/authpi" search={{ next: "/arc" }} className="text-primary underline">Sign in to link your wallet</Link></p>}
       {(flags.isError || (!flags.isPending && !accessEnabled)) && <p role="status" className="mt-4 text-sm text-destructive">Arc wallet access is currently unavailable.</p>}
@@ -63,10 +82,10 @@ export default function ArcWalletPanel() {
         if (current.error || current.data?.arc.enabled !== true) throw new Error("Arc wallet access is unavailable.");
         setReceipt(null);
         if (mode === "send") {
-          const result = provider === "openpay" ? await submitOpenPayArcTransfer(await prepareFn({ data: { address, amount, recipient } }), amount, recipient, address) : await arcPayment(amount, recipient);
+          const result = provider === "openpay" ? await submitOpenPayArcTransfer(await prepareFn({ data: { address, amount, recipient } }), amount, recipient, address) : await arcPayment(amount, recipient, walletProvider ?? undefined);
           setReceipt({ state: result.state, amount, network: "Arc Mainnet", transactions: result.txHash ? [{ hash: result.txHash, url: `https://explorer.arc.io/tx/${result.txHash}` }] : [] });
         }
-        else { const result = await bridgeToArc(amount, source); setReceipt({ state: result.state, amount, network: `${source} → Arc`, transactions: result.steps.flatMap(step => step.txHash ? [{ hash: step.txHash, url: step.explorerUrl }] : []) }); }
+        else { const result = await bridgeToArc(amount, source, walletProvider ?? undefined); setReceipt({ state: result.state, amount, network: `${source} → Arc`, transactions: result.steps.flatMap(step => step.txHash ? [{ hash: step.txHash, url: step.explorerUrl }] : []) }); }
         void balance.refetch();
         if (signedIn) void partner.refetch();
       }); }}>

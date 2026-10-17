@@ -3,22 +3,23 @@ import { arcMainnet, validateArcPayment } from "./arc-network";
 import { verifyArcPreparedTransfer, type ArcPreparedTransfer } from "./openpay-arc";
 import { supabase } from "@/integrations/supabase/client";
 
-export function arcProvider(): EIP1193Provider {
+export function arcProvider(preferred?: EIP1193Provider): EIP1193Provider {
+  if (preferred) return preferred;
   const provider = (window as unknown as { ethereum?: EIP1193Provider }).ethereum;
   if (!provider) throw new Error("Open this page in an EVM wallet browser or install an EVM wallet extension.");
   return provider;
 }
 
-export async function connectArcWallet() {
-  const provider = arcProvider();
+export async function connectArcWallet(preferred?: EIP1193Provider) {
+  const provider = arcProvider(preferred);
   const addresses = await provider.request({ method: "eth_requestAccounts" });
   const first = addresses[0];
   if (!first) throw new Error("No wallet account was selected.");
   return getAddress(first);
 }
 
-export async function switchToArc() {
-  const provider = arcProvider();
+export async function switchToArc(preferred?: EIP1193Provider) {
+  const provider = arcProvider(preferred);
   try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x13b2" }] }); }
   catch (error) {
     if ((error as { code?: number }).code !== 4902) throw error;
@@ -36,8 +37,8 @@ export async function arcBalance(address: `0x${string}`) {
   return formatUnits(await client.getBalance({ address }), 18);
 }
 
-export async function verifyArcWallet(purpose: "link" | "login") {
-  const address = await connectArcWallet();
+export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP1193Provider) {
+  const address = await connectArcWallet(preferred);
   const { data } = await supabase.auth.getSession();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (data.session) headers.Authorization = `Bearer ${data.session.access_token}`;
@@ -48,7 +49,7 @@ export async function verifyArcWallet(purpose: "link" | "login") {
     return result;
   };
   const challenge = await call({ action: "challenge", address, purpose });
-  const wallet = createWalletClient({ transport: custom(arcProvider()) });
+  const wallet = createWalletClient({ transport: custom(arcProvider(preferred)) });
   const signature = await wallet.signMessage({ account: address, message: challenge.message });
   const result = await call({ action: "verify", id: challenge.id, signature, purpose });
   if (purpose === "login") {
@@ -60,29 +61,29 @@ export async function verifyArcWallet(purpose: "link" | "login") {
   return address;
 }
 
-export async function arcPayment(amount: string, recipient: string) {
+export async function arcPayment(amount: string, recipient: string, preferred?: EIP1193Provider) {
   validateArcPayment(amount, recipient);
-  await switchToArc();
-  const address = await connectArcWallet();
+  await switchToArc(preferred);
+  const address = await connectArcWallet(preferred);
   await arcBalance(address);
   const [{ AppKit }, { createViemAdapterFromProvider }] = await Promise.all([
     import("@circle-fin/app-kit"), import("@circle-fin/adapter-viem-v2"),
   ]);
-  const adapter = await createViemAdapterFromProvider({ provider: arcProvider() });
+  const adapter = await createViemAdapterFromProvider({ provider: arcProvider(preferred) });
   const result = await new AppKit().send({ from: { adapter, chain: "Arc" }, to: getAddress(recipient), amount, token: "USDC" });
   if (result.state === "error") throw new Error(result.errorMessage || "Transfer failed.");
   return result;
 }
 
-export async function submitOpenPayArcTransfer(prepared: ArcPreparedTransfer, amount: string, recipient: string, expectedAddress: `0x${string}`) {
+export async function submitOpenPayArcTransfer(prepared: ArcPreparedTransfer, amount: string, recipient: string, expectedAddress: `0x${string}`, preferred?: EIP1193Provider) {
   verifyArcPreparedTransfer(prepared, amount, recipient);
-  await switchToArc();
-  const address = await connectArcWallet();
+  await switchToArc(preferred);
+  const address = await connectArcWallet(preferred);
   if (address.toLowerCase() !== expectedAddress.toLowerCase()) throw new Error("Wallet account changed. Reconnect and review the payment again.");
   const publicClient = createPublicClient({ chain: arcMainnet, transport: http() });
   if (await publicClient.getChainId() !== arcMainnet.id) throw new Error("Unexpected Arc network.");
   await publicClient.simulateContract({ account: address, address: prepared.transaction.to as `0x${string}`, abi: erc20Abi, functionName: "transfer", args: [getAddress(recipient), parseUnits(amount, 6)] });
-  const wallet = createWalletClient({ chain: arcMainnet, transport: custom(arcProvider()) });
+  const wallet = createWalletClient({ chain: arcMainnet, transport: custom(arcProvider(preferred)) });
   const txHash = await wallet.sendTransaction({ account: address, to: prepared.transaction.to as `0x${string}`, data: prepared.transaction.data as `0x${string}`, value: 0n });
   try {
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, timeout: 60000 });
@@ -90,14 +91,14 @@ export async function submitOpenPayArcTransfer(prepared: ArcPreparedTransfer, am
   } catch { return { state: "pending", txHash }; }
 }
 
-export async function bridgeToArc(amount: string, source: "Base" | "Ethereum" | "Arbitrum") {
+export async function bridgeToArc(amount: string, source: "Base" | "Ethereum" | "Arbitrum", preferred?: EIP1193Provider) {
   validateArcPayment(amount);
-  const address = await connectArcWallet();
+  const address = await connectArcWallet(preferred);
   await arcBalance(address);
   const [{ AppKit }, { createViemAdapterFromProvider }] = await Promise.all([
     import("@circle-fin/app-kit"), import("@circle-fin/adapter-viem-v2"),
   ]);
-  const adapter = await createViemAdapterFromProvider({ provider: arcProvider() });
+  const adapter = await createViemAdapterFromProvider({ provider: arcProvider(preferred) });
   const result = await new AppKit().bridge({ from: { adapter, chain: source }, to: { adapter, chain: "Arc" }, amount });
   return result;
 }

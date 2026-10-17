@@ -45,7 +45,7 @@ export function ArcConnectDialog({ open, onOpenChange, onSelect, busy }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-3xl p-0 overflow-hidden" showCloseButton={false}>
+      <DialogContent className="max-w-sm rounded-3xl p-0 overflow-hidden [&>button]:hidden">
         <div className="flex items-center justify-between px-5 pt-4">
           <a href="https://docs.arc.io/app-kit" target="_blank" rel="noopener noreferrer" aria-label="Arc wallet help" className="text-primary">
             <HelpCircle className="h-6 w-6" />

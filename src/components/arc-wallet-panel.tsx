@@ -17,7 +17,7 @@ import { fetchAuthMethodFlags } from "@/lib/auth-methods";
 
 export default function ArcWalletPanel() {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
-  const [provider, setProvider] = useState<EIP1193Provider | null>(null);
+  const [walletProvider, setWalletProvider] = useState<EIP1193Provider | null>(null);
   const [connectOpen, setConnectOpen] = useState(false);
   const afterConnect = useRef<((p: EIP1193Provider) => Promise<void>) | null>(null);
   const [signedIn, setSignedIn] = useState(false);
@@ -52,7 +52,7 @@ export default function ArcWalletPanel() {
   async function handleSelect(selected: EIP1193Provider) {
     setConnectOpen(false);
     await run(async () => {
-      setProvider(selected);
+      setWalletProvider(selected);
       setAddress(await connectArcWallet(selected));
       setReceipt(null);
       if (afterConnect.current) await afterConnect.current(selected);
@@ -69,7 +69,7 @@ export default function ArcWalletPanel() {
       {address && <div className="mt-4 flex items-center gap-2"><p className="min-w-0 break-all font-mono text-sm">{address}</p><Button size="icon" variant="ghost" aria-label="Copy wallet address" onClick={() => void navigator.clipboard.writeText(address).then(() => toast.success("Address copied"))}><Copy className="h-4 w-4" /></Button></div>}
       <div className="mt-5 flex flex-wrap gap-3">
         <Button disabled={busy || !accessEnabled} onClick={() => requestConnect()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}{address ? "Change wallet" : "Connect wallet"}</Button>
-        {signedIn && address && <Button variant="outline" disabled={busy || linked || !accessEnabled} onClick={() => void run(async () => { const verified = await verifyArcWallet("link", provider ?? undefined); setAddress(verified); setLinked(true); toast.success("Wallet linked to your existing account"); })}><Link2 className="h-4 w-4" />{linked ? "Wallet linked" : "Link to my account"}</Button>}
+        {signedIn && address && <Button variant="outline" disabled={busy || linked || !accessEnabled} onClick={() => void run(async () => { const verified = await verifyArcWallet("link", walletProvider ?? undefined); setAddress(verified); setLinked(true); toast.success("Wallet linked to your existing account"); })}><Link2 className="h-4 w-4" />{linked ? "Wallet linked" : "Link to my account"}</Button>}
         {!signedIn && <Button variant="outline" disabled={busy || !accessEnabled} onClick={() => requestConnect(async p => { await verifyArcWallet("login", p); window.location.assign("/dashboard"); })}>Sign in with linked wallet</Button>}
       </div>
       {!signedIn && <p className="mt-4 text-sm text-muted-foreground">Existing account? <Link to="/authpi" search={{ next: "/arc" }} className="text-primary underline">Sign in to link your wallet</Link></p>}

@@ -82,7 +82,7 @@ export default function ArcWalletPanel() {
         if (current.error || current.data?.arc.enabled !== true) throw new Error("Arc wallet access is unavailable.");
         setReceipt(null);
         if (mode === "send") {
-          const result = provider === "openpay" ? await submitOpenPayArcTransfer(await prepareFn({ data: { address, amount, recipient } }), amount, recipient, address) : await arcPayment(amount, recipient);
+          const result = provider === "openpay" ? await submitOpenPayArcTransfer(await prepareFn({ data: { address, amount, recipient } }), amount, recipient, address) : await arcPayment(amount, recipient, walletProvider ?? undefined);
           setReceipt({ state: result.state, amount, network: "Arc Mainnet", transactions: result.txHash ? [{ hash: result.txHash, url: `https://explorer.arc.io/tx/${result.txHash}` }] : [] });
         }
         else { const result = await bridgeToArc(amount, source); setReceipt({ state: result.state, amount, network: `${source} → Arc`, transactions: result.steps.flatMap(step => step.txHash ? [{ hash: step.txHash, url: step.explorerUrl }] : []) }); }

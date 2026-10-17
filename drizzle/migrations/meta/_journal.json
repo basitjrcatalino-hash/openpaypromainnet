@@ -8,6 +8,13 @@
       "when": 1792022620213,
       "tag": "0000_pin_email_fn_search_path",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792234571567,
+      "tag": "0001_arc_wallet_linking",
+      "breakpoints": true
     }
   ]
 }

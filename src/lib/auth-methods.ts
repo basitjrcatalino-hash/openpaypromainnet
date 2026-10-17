@@ -3,6 +3,7 @@
  * Admin toggles visibility via `auth_methods.enabled` (hide during maintenance).
  */
 export type AuthMethodKey =
+  | "arc"
   | "openpay"
   | "phantom"
   | "solana"
@@ -22,6 +23,13 @@ export type AuthMethodSeed = {
 };
 
 export const AUTH_METHOD_CATALOG: readonly AuthMethodSeed[] = [
+  {
+    method_key: "arc",
+    label: "Arc Wallet",
+    description: "Sign in with your linked EVM wallet",
+    sort_order: 0,
+    enabled: true,
+  },
   {
     method_key: "openpay",
     label: "OpenPay",
@@ -108,7 +116,7 @@ export async function fetchAuthMethodFlags(
   supabase: { from: (t: string) => any },
 ): Promise<Record<AuthMethodKey, { enabled: boolean; message: string | null }>> {
   const fallback = Object.fromEntries(
-    AUTH_METHOD_CATALOG.map((m) => [m.method_key, { enabled: true, message: null }]),
+    AUTH_METHOD_CATALOG.map((m) => [m.method_key, { enabled: m.method_key !== "arc", message: null }]),
   ) as Record<AuthMethodKey, { enabled: boolean; message: string | null }>;
 
   try {

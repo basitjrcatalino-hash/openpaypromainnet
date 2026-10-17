@@ -210,6 +210,57 @@ export type Database = {
           },
         ]
       }
+      arc_auth_challenges: {
+        Row: {
+          address: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          message: string
+          purpose: string
+          user_id: string | null
+        }
+        Insert: {
+          address: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          message: string
+          purpose: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string
+          purpose?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      arc_wallet_links: {
+        Row: {
+          address: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       asset_chat_messages: {
         Row: {
           body: string

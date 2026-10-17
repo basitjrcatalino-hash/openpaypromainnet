@@ -1,4 +1,5 @@
 # Arc transition
+- [ ] Integrate OpenPay Arc partner API securely with network discovery, balance reads, payment status, and wallet-approved transfers.
 - [x] Add real-network Arc App Kit wallet connection, balance, send, and bridge entry point.
 - [x] Implement verified wallet linking to existing accounts without changing balances or profiles.
 - [x] Add Arc wallet sign-in with admin visibility controls and preserved legacy account access.

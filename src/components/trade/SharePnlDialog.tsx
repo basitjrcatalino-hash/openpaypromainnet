@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Copy, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import logoAsset from "@/assets/openpay-pro-logo.png.asset.json";
+import logoAsset from "@/assets/openpay-pro-icon.png.asset.json";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/wallet-utils";
 

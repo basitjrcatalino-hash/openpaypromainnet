@@ -3,7 +3,8 @@
 export const OPENPAY_BRAND_BLUE = "#1652f0";
 export const OPENPAY_LOGO_WHITE = "https://openpy.space/openpay-o-white.svg";
 /** Official full-color auth logo (per https://openpy.space/openpay-auth). */
-export const OPENPAY_AUTH_LOGO = "https://openpy.space/openpay-auth-logo.png";
+import openPayIcon from "@/assets/openpay-pro-icon.png.asset.json";
+export const OPENPAY_AUTH_LOGO = openPayIcon.url;
 /** OpenPay AI assistant mascot (animated GIF). */
 export const OPENPAY_AI_AVATAR =
   "https://i.ibb.co/FS3vY41/grok-video-9d6a8e79-086b-4e46-b1b0-e0852f6cefd02-ezgif-com-video-to-gif-converter.gif";

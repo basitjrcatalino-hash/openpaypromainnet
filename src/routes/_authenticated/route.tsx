@@ -1517,6 +1517,16 @@ function SidebarInner({
         {isAdmin ? (
           <SideSection label="Admin">
             <Link
+              to="/admin/auth"
+              onClick={onClose}
+              preload="intent"
+              aria-current={pathname === "/admin/auth" ? "page" : undefined}
+              className={sideItemClass(pathname === "/admin/auth")}
+            >
+              <Wrench className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={1.75} />
+              <span className="truncate">Admin · Sign-in methods</span>
+            </Link>
+            <Link
               to="/p2p/admin"
               onClick={onClose}
               preload="intent"

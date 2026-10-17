@@ -45,8 +45,22 @@ export default function ArcWalletPanel() {
     setBusy(true);
     try { await action(); } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); }
   }
+  function requestConnect(next?: (p: EIP1193Provider) => Promise<void>) {
+    afterConnect.current = next ?? null;
+    setConnectOpen(true);
+  }
+  async function handleSelect(selected: EIP1193Provider) {
+    setConnectOpen(false);
+    await run(async () => {
+      setProvider(selected);
+      setAddress(await connectArcWallet(selected));
+      setReceipt(null);
+      if (afterConnect.current) await afterConnect.current(selected);
+    });
+  }
   const accessEnabled = flags.data?.arc.enabled === true && !flags.isError;
   return <div className="space-y-8">
+    <ArcConnectDialog open={connectOpen} onOpenChange={setConnectOpen} busy={busy} onSelect={p => void handleSelect(p)} />
     <section className="border-y border-border py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-sm text-muted-foreground">Arc Mainnet · USDC</p><p className="mt-2 text-4xl font-semibold tabular-nums">{!address ? "—" : balance.isError ? "Unavailable" : balance.isPending ? "…" : Number(balance.data).toLocaleString(undefined, { maximumFractionDigits: 6 })}</p></div>

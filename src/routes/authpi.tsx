@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronRight, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, Loader2, ShieldCheck, Mail, Wallet, Send } from "lucide-react";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
+import { useQuery } from "@tanstack/react-query";
+import { AUTH_METHOD_CATALOG, fetchAuthMethodFlags, isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
+import { EmailAuthPanel } from "@/components/email-auth-panel";
+import { AuthProviderPanel } from "@/components/auth-provider-panels";
 
 const POST_AUTH_KEY = "post_auth_redirect";
 
@@ -50,23 +54,23 @@ export const Route = createFileRoute("/authpi")({
     const mode = typeof s.mode === "string" ? s.mode.toLowerCase() : undefined;
     const next = typeof s.next === "string" ? s.next : undefined;
     return {
-      method: method === "pi" ? method : undefined,
+      method: method && isAuthMethodKey(method) ? method : undefined,
       mode: mode === "signin" || mode === "signup" ? mode : undefined,
       next: next && next.startsWith("/") && !next.startsWith("//") ? next : undefined,
     };
   },
   head: () => ({
     meta: [
-      { title: "Sign in — OpenPay Pro Wallet" },
+      { title: "Sign-in options — OpenPay Pro Wallet" },
       {
         name: "description",
         content:
-          "Sign in to OpenPay Pro with your Pi Network account to manage OUSD, Pi, tokens, and NFTs.",
+          "Sign in to OpenPay Pro with email, Pi Network, OpenPay, or your connected wallet.",
       },
-      { property: "og:title", content: "Sign in — OpenPay Pro Wallet" },
+      { property: "og:title", content: "Sign-in options — OpenPay Pro Wallet" },
       {
         property: "og:description",
-        content: "Sign in with Pi Network.",
+        content: "Choose an available OpenPay Pro sign-in method.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -81,6 +85,14 @@ function AuthPiPage() {
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
   const autoRan = useRef(false);
+  const search = Route.useSearch();
+  const [selected, setSelected] = useState<AuthMethodKey | null>(null);
+  const flags = useQuery({ queryKey: ["auth-methods"], queryFn: () => fetchAuthMethodFlags(supabase), refetchInterval: 15_000, refetchOnWindowFocus: true });
+  const enabled = (method: AuthMethodKey) => flags.data?.[method]?.enabled === true;
+
+  useEffect(() => {
+    if (search.method && isAuthMethodKey(search.method)) setSelected(search.method);
+  }, [search.method]);
 
   useEffect(() => {
     captureNextParam();
@@ -98,7 +110,7 @@ function AuthPiPage() {
         return;
       }
       // Auto-trigger Pi authentication on load inside the Pi Browser.
-      if (autoRan.current || !isPiBrowser()) return;
+      if (autoRan.current || !isPiBrowser() || !enabled("pi")) return;
       autoRan.current = true;
       setBusy(true);
       try {
@@ -113,12 +125,12 @@ function AuthPiPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [flags.data]);
 
   if (!mounted) return null;
 
   async function onContinue() {
-    if (busy) return;
+    if (busy || !enabled("pi")) return;
     setBusy(true);
     try {
       await handlePiSignIn();
@@ -129,80 +141,56 @@ function AuthPiPage() {
     }
   }
 
+  async function continueWith(method: AuthMethodKey) {
+    const current = await flags.refetch();
+    if (current.error || !current.data?.[method]?.enabled) {
+      toast.error(current.data?.[method]?.message || "This sign-in method is unavailable.");
+      return;
+    }
+    if (method === "email" || method === "phantom" || method === "metamask" || method === "privy") {
+      setSelected(method);
+      return;
+    }
+    if (method === "pi") { await onContinue(); return; }
+    setBusy(true);
+    try {
+      const redirectTo = postAuthTarget();
+      if (method === "openpay") await (await import("@/lib/openpay-auth")).startOpenPaySignIn({ redirectTo });
+      if (method === "solana") await (await import("@/lib/solana-auth")).startSolanaSignIn({ redirectTo });
+      if (method === "walletconnect") await (await import("@/lib/walletconnect-auth")).startWalletConnectSignIn({ redirectTo });
+      if (method === "telegram") await (await import("@/lib/telegram-auth")).startTelegramSignIn({ redirectTo });
+    } catch (error) { toast.error((error as Error).message || "Sign-in failed"); }
+    finally { setBusy(false); }
+  }
+
+  const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key) && (!isPiBrowser() || m.method_key === "pi"));
+  const active = selected && enabled(selected) && (!isPiBrowser() || selected === "pi") ? selected : null;
+  const logos: Partial<Record<AuthMethodKey, string>> = { phantom: "/auth-phantom.png", solana: "/auth-solana.png", metamask: "/auth-metamask.png", pi: PI_NETWORK_AUTH_LOGO, telegram: "/auth-telegram.svg" };
+
   return (
-    <div className="dark relative flex min-h-screen items-center justify-center overflow-y-auto bg-[#0a0a14] px-4 py-10 text-white">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        <div className="absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#7038A1]/25 blur-[120px]" />
-        <div className="absolute bottom-[-6rem] right-[-4rem] h-80 w-80 rounded-full bg-[#7038A1]/25 blur-[120px]" />
-        <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#0a0a14]/60 to-[#0a0a14]" />
-      </div>
-
+    <div className="dark flex min-h-dvh items-center justify-center bg-background px-4 py-10 text-foreground">
       <div className="w-full max-w-md">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:p-8">
-          <div className="mb-7 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
-              <ShieldCheck className="h-3.5 w-3.5" /> Secure wallet access
-            </span>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight">OpenPay Pro</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Sign in with your Pi Network account
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/30 p-6">
-            <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl" style={{ backgroundColor: "#7038A1" }}>
-              <img
-                src={PI_NETWORK_AUTH_LOGO}
-                alt=""
-                className="h-full w-full object-cover"
-                draggable={false}
-              />
-            </span>
-            <div className="text-center">
-              <p className="text-base font-semibold">Pi Network</p>
-              <p className="text-sm text-muted-foreground">Continue with your Pi username</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Button
-              type="button"
-              disabled={busy}
-              onClick={() => void onContinue()}
-              className="h-12 w-full rounded-full text-base font-semibold transition hover:brightness-110 active:scale-[0.99]"
-              style={{ backgroundColor: "#7038A1", color: "#ffffff" }}
-            >
-              {busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <span className="inline-flex items-center gap-1.5">
-                  Continue with Pi Network
-                  <ChevronRight className="h-4 w-4" />
-                </span>
-              )}
-            </Button>
-          </div>
-
-          <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
-            By continuing you agree to OpenPay&apos;s{" "}
-            <Link to="/terms" className="font-medium text-foreground hover:underline">
-              Terms
-            </Link>
-            ,{" "}
-            <Link to="/privacy" className="font-medium text-foreground hover:underline">
-              Privacy Policy
-            </Link>
-            ,{" "}
-            <Link to="/regulatory" className="font-medium text-foreground hover:underline">
-              Regulatory Status
-            </Link>
-            , and{" "}
-            <Link to="/legal" className="font-medium text-foreground hover:underline">
-              Software License
-            </Link>
-            .
-          </p>
-        </div>
+        <header className="mb-8 text-center">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Secure wallet access</span>
+          <h1 className="mt-4 text-3xl font-semibold">OpenPay Pro</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Sign in to your account</p>
+        </header>
+        {flags.isPending ? <div className="grid h-32 place-items-center"><Loader2 aria-label="Loading sign-in methods" className="h-6 w-6 animate-spin" /></div> : flags.isError ? <div className="space-y-4 text-center"><p className="text-sm text-destructive">Sign-in options could not be loaded.</p><Button variant="outline" onClick={() => void flags.refetch()}>Try again</Button></div> : active ? <div className="space-y-5">
+          <Button variant="ghost" disabled={busy} onClick={() => setSelected(null)}><ArrowLeft className="h-4 w-4" /> All sign-in options</Button>
+          <h2 className="text-center text-lg font-semibold">{AUTH_METHOD_CATALOG.find(m => m.method_key === active)?.label}</h2>
+          {active === "email" && <EmailAuthPanel busy={busy} setBusy={setBusy} initialMode={search.mode === "signup" ? "signup" : "signin"} />}
+          {(active === "phantom" || active === "metamask") && <AuthProviderPanel method={active} busy={busy} setBusy={setBusy} />}
+          {active === "privy" && <p role="status" className="text-center text-sm text-muted-foreground">Privy sign-in is temporarily unavailable. Please choose another sign-in method.</p>}
+          {active === "pi" && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith("pi")}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Pi Network"}</Button>}
+          {(active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}
+        </div> : <div className="space-y-2">
+          {methods.map(method => <Button key={method.method_key} variant="outline" disabled={busy} onClick={() => void continueWith(method.method_key)} className="h-auto min-h-16 w-full justify-start gap-4 rounded-lg border-border bg-card px-4 py-3 text-left hover:bg-muted">
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">{logos[method.method_key] ? <img src={logos[method.method_key]} alt="" className="h-8 w-8 object-contain" /> : method.method_key === "email" ? <Mail className="h-5 w-5" /> : method.method_key === "telegram" ? <Send className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}</span>
+            <span className="min-w-0 flex-1 whitespace-normal"><span className="block text-sm font-semibold">{method.label}</span><span className="mt-0.5 block text-xs font-normal text-muted-foreground">{method.description}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Button>)}
+          {!methods.length && <p role="status" className="py-6 text-center text-sm text-muted-foreground">Sign-in is temporarily unavailable.</p>}
+        </div>}
+        <p className="mt-7 text-center text-xs leading-relaxed text-muted-foreground">By continuing you agree to OpenPay’s <Link to="/terms" className="text-foreground hover:underline">Terms</Link>, <Link to="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>, <Link to="/regulatory" className="text-foreground hover:underline">Regulatory Status</Link>, and <Link to="/legal" className="text-foreground hover:underline">Software License</Link>.</p>
       </div>
     </div>
   );

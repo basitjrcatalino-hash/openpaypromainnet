@@ -18,7 +18,14 @@ import {
 } from "@/lib/auth-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/auth")({
-  head: () => ({ meta: [{ title: "Admin · Auth methods" }] }),
+  head: () => ({ meta: [
+    { title: "Sign-in controls — OpenPay Pro Admin" },
+    { name: "description", content: "Manage individual OpenPay Pro sign-in methods and maintenance visibility." },
+    { property: "og:title", content: "Sign-in controls — OpenPay Pro Admin" },
+    { property: "og:description", content: "Administrator controls for OpenPay Pro sign-in availability." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminAuthPage,
 });
 
@@ -114,7 +121,7 @@ function AdminAuthPage() {
         <div>
           <div className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight">Auth methods</h1>
+            <h1 className="text-xl font-bold">Sign-in methods</h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Show or hide each sign-in rail on{" "}
@@ -162,7 +169,12 @@ function AdminAuthPage() {
           Toggle each method independently. Optional maintenance message shows if someone deep-links
           a disabled method.
         </p>
-        {methodsQ.isLoading ? (
+        {methodsQ.isError ? (
+          <div className="space-y-2">
+            <p role="alert" className="text-sm text-destructive">Could not load sign-in controls. Please try again.</p>
+            <Button variant="outline" onClick={() => void methodsQ.refetch()}>Try again</Button>
+          </div>
+        ) : methodsQ.isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         ) : !rows.length ? (
           <p className="text-sm text-muted-foreground">No methods configured.</p>
@@ -189,6 +201,8 @@ function AdminAuthPage() {
                       </span>
                       <Switch
                         checked={!!m.enabled}
+                        aria-label={`Enable ${m.label} sign-in`}
+                        disabled={methodM.isPending || allM.isPending}
                         onCheckedChange={(v) => methodM.mutate({ id: m.id, enabled: v })}
                       />
                     </div>

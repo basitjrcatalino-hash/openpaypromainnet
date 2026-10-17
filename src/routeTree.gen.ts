@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as ArcRouteImport } from './routes/arc'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthpiRouteImport } from './routes/authpi'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -146,6 +147,7 @@ import { Route as AuthenticatedWalletReceiveRouteImport } from './routes/_authen
 import { Route as ApiAdminP2pFixRouteImport } from './routes/api/admin/p2p-fix'
 import { Route as ApiAdminTransferFixRouteImport } from './routes/api/admin/transfer-fix'
 import { Route as ApiPublicAlchemyDepositWebhookRouteImport } from './routes/api/public/alchemy-deposit-webhook'
+import { Route as ApiPublicArcAuthRouteImport } from './routes/api/public/arc-auth'
 import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/banxa-webhook'
 import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -237,6 +239,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArcRoute = ArcRouteImport.update({
+  id: '/arc',
+  path: '/arc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -943,6 +950,11 @@ const ApiPublicAlchemyDepositWebhookRoute =
     path: '/api/public/alchemy-deposit-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicArcAuthRoute = ApiPublicArcAuthRouteImport.update({
+  id: '/api/public/arc-auth',
+  path: '/api/public/arc-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBanxaWebhookRoute = ApiPublicBanxaWebhookRouteImport.update({
   id: '/api/public/banxa-webhook',
   path: '/api/public/banxa-webhook',
@@ -1368,6 +1380,7 @@ const ApiPublicProChargesIdCancelRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/arc': typeof ArcRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
@@ -1502,6 +1515,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
+  '/api/public/arc-auth': typeof ApiPublicArcAuthRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1584,6 +1598,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/arc': typeof ArcRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
@@ -1718,6 +1733,7 @@ export interface FileRoutesByTo {
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
+  '/api/public/arc-auth': typeof ApiPublicArcAuthRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -1802,6 +1818,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/arc': typeof ArcRoute
   '/auth': typeof AuthRouteWithChildren
   '/authpi': typeof AuthpiRoute
   '/blog': typeof BlogRoute
@@ -1936,6 +1953,7 @@ export interface FileRoutesById {
   '/api/admin/p2p-fix': typeof ApiAdminP2pFixRoute
   '/api/admin/transfer-fix': typeof ApiAdminTransferFixRoute
   '/api/public/alchemy-deposit-webhook': typeof ApiPublicAlchemyDepositWebhookRoute
+  '/api/public/arc-auth': typeof ApiPublicArcAuthRoute
   '/api/public/banxa-webhook': typeof ApiPublicBanxaWebhookRoute
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -2020,6 +2038,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/arc'
     | '/auth'
     | '/authpi'
     | '/blog'
@@ -2154,6 +2173,7 @@ export interface FileRouteTypes {
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
     | '/api/public/alchemy-deposit-webhook'
+    | '/api/public/arc-auth'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2236,6 +2256,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/arc'
     | '/auth'
     | '/authpi'
     | '/blog'
@@ -2370,6 +2391,7 @@ export interface FileRouteTypes {
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
     | '/api/public/alchemy-deposit-webhook'
+    | '/api/public/arc-auth'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2453,6 +2475,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/arc'
     | '/auth'
     | '/authpi'
     | '/blog'
@@ -2587,6 +2610,7 @@ export interface FileRouteTypes {
     | '/api/admin/p2p-fix'
     | '/api/admin/transfer-fix'
     | '/api/public/alchemy-deposit-webhook'
+    | '/api/public/arc-auth'
     | '/api/public/banxa-webhook'
     | '/api/public/deposit-monitor'
     | '/api/public/health'
@@ -2671,6 +2695,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ArcRoute: typeof ArcRoute
   AuthRoute: typeof AuthRouteWithChildren
   AuthpiRoute: typeof AuthpiRoute
   BlogRoute: typeof BlogRoute
@@ -2704,6 +2729,7 @@ export interface RootRouteChildren {
   ApiAdminP2pFixRoute: typeof ApiAdminP2pFixRoute
   ApiAdminTransferFixRoute: typeof ApiAdminTransferFixRoute
   ApiPublicAlchemyDepositWebhookRoute: typeof ApiPublicAlchemyDepositWebhookRoute
+  ApiPublicArcAuthRoute: typeof ApiPublicArcAuthRoute
   ApiPublicBanxaWebhookRoute: typeof ApiPublicBanxaWebhookRoute
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -2792,6 +2818,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/arc': {
+      id: '/arc'
+      path: '/arc'
+      fullPath: '/arc'
+      preLoaderRoute: typeof ArcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -3732,6 +3765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAlchemyDepositWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/arc-auth': {
+      id: '/api/public/arc-auth'
+      path: '/api/public/arc-auth'
+      fullPath: '/api/public/arc-auth'
+      preLoaderRoute: typeof ApiPublicArcAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/banxa-webhook': {
       id: '/api/public/banxa-webhook'
       path: '/api/public/banxa-webhook'
@@ -4591,6 +4631,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  ArcRoute: ArcRoute,
   AuthRoute: AuthRouteWithChildren,
   AuthpiRoute: AuthpiRoute,
   BlogRoute: BlogRoute,
@@ -4625,6 +4666,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminP2pFixRoute: ApiAdminP2pFixRoute,
   ApiAdminTransferFixRoute: ApiAdminTransferFixRoute,
   ApiPublicAlchemyDepositWebhookRoute: ApiPublicAlchemyDepositWebhookRoute,
+  ApiPublicArcAuthRoute: ApiPublicArcAuthRoute,
   ApiPublicBanxaWebhookRoute: ApiPublicBanxaWebhookRoute,
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

@@ -65,7 +65,7 @@ export const Route = createFileRoute("/authpi")({
       {
         name: "description",
         content:
-          "Sign in to OpenPay Pro with email, Pi Network, OpenPay, or your connected wallet.",
+          "Sign in to OpenPay Pro with your linked Arc wallet or existing account.",
       },
       { property: "og:title", content: "Sign-in options — OpenPay Pro Wallet" },
       {
@@ -155,6 +155,7 @@ function AuthPiPage() {
     setBusy(true);
     try {
       const redirectTo = postAuthTarget();
+      if (method === "arc") { await (await import("@/lib/arc-wallet")).verifyArcWallet("login"); goPostAuth(); }
       if (method === "openpay") await (await import("@/lib/openpay-auth")).startOpenPaySignIn({ redirectTo });
       if (method === "solana") await (await import("@/lib/solana-auth")).startSolanaSignIn({ redirectTo });
       if (method === "walletconnect") await (await import("@/lib/walletconnect-auth")).startWalletConnectSignIn({ redirectTo });
@@ -163,8 +164,8 @@ function AuthPiPage() {
     finally { setBusy(false); }
   }
 
-  const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key) && (!isPiBrowser() || m.method_key === "pi"));
-  const active = selected && enabled(selected) && (!isPiBrowser() || selected === "pi") ? selected : null;
+  const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key));
+  const active = selected && enabled(selected) ? selected : null;
   const logos: Partial<Record<AuthMethodKey, string>> = { phantom: "/auth-phantom.png", solana: "/auth-solana.png", metamask: "/auth-metamask.png", pi: PI_NETWORK_AUTH_LOGO, telegram: "/auth-telegram.svg" };
 
   return (
@@ -174,6 +175,7 @@ function AuthPiPage() {
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Secure wallet access</span>
           <h1 className="mt-4 text-3xl font-semibold">OpenPay Pro</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to your account</p>
+          <Link to="/arc" className="mt-3 inline-block text-sm font-medium text-primary">Powered by Arc · Connect wallet</Link>
         </header>
         {flags.isPending ? <div className="grid h-32 place-items-center"><Loader2 aria-label="Loading sign-in methods" className="h-6 w-6 animate-spin" /></div> : flags.isError ? <div className="space-y-4 text-center"><p className="text-sm text-destructive">Sign-in options could not be loaded.</p><Button variant="outline" onClick={() => void flags.refetch()}>Try again</Button></div> : active ? <div className="space-y-5">
           <Button variant="ghost" disabled={busy} onClick={() => setSelected(null)}><ArrowLeft className="h-4 w-4" /> All sign-in options</Button>
@@ -182,7 +184,7 @@ function AuthPiPage() {
           {(active === "phantom" || active === "metamask") && <AuthProviderPanel method={active} busy={busy} setBusy={setBusy} />}
           {active === "privy" && <p role="status" className="text-center text-sm text-muted-foreground">Privy sign-in is temporarily unavailable. Please choose another sign-in method.</p>}
           {active === "pi" && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith("pi")}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Pi Network"}</Button>}
-          {(active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}
+          {(active === "arc" || active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}
         </div> : <div className="space-y-2">
           {methods.map(method => <Button key={method.method_key} variant="outline" disabled={busy} onClick={() => void continueWith(method.method_key)} className="h-auto min-h-16 w-full justify-start gap-4 rounded-lg border-border bg-card px-4 py-3 text-left hover:bg-muted">
             <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">{logos[method.method_key] ? <img src={logos[method.method_key]} alt="" className="h-8 w-8 object-contain" /> : method.method_key === "email" ? <Mail className="h-5 w-5" /> : method.method_key === "telegram" ? <Send className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}</span>

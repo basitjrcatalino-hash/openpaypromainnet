@@ -8,7 +8,7 @@ function client(data: unknown, error: unknown = null) {
 
 describe("admin sign-in visibility", () => {
   test("all existing sign-in methods are available in the catalog", () => {
-    assert.deepEqual(AUTH_METHOD_KEYS, ["openpay", "phantom", "solana", "walletconnect", "metamask", "pi", "telegram", "email", "privy"]);
+    assert.deepEqual(AUTH_METHOD_KEYS, ["arc", "openpay", "phantom", "solana", "walletconnect", "metamask", "pi", "telegram", "email", "privy"]);
   });
   test("every individual disabled method stays disabled", async () => {
     for (const method of AUTH_METHOD_KEYS) {

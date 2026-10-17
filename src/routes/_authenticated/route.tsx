@@ -1514,6 +1514,7 @@ function SidebarInner({
           ) : null}
         </div>
 
+        <Link to="/arc" onClick={onClose} className={sideItemClass(pathname === "/arc")}><Wallet className="h-[1.15rem] w-[1.15rem] shrink-0" /><span className="truncate">Arc Wallet</span></Link>
         {isAdmin ? (
           <SideSection label="Admin">
             <Link

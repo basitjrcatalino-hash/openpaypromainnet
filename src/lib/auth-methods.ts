@@ -103,7 +103,7 @@ export type AuthMethodRow = {
   maintenance_message: string | null;
 };
 
-/** Public (pre-login) fetch of auth method flags. Falls back to all-enabled catalog. */
+/** Public flags: failed reads must not expose maintenance-disabled methods. */
 export async function fetchAuthMethodFlags(
   supabase: { from: (t: string) => any },
 ): Promise<Record<AuthMethodKey, { enabled: boolean; message: string | null }>> {
@@ -115,7 +115,8 @@ export async function fetchAuthMethodFlags(
     const { data, error } = await supabase
       .from("auth_methods")
       .select("method_key, enabled, maintenance_message");
-    if (error || !data?.length) return fallback;
+    if (error) throw new Error(error.message || "Could not load sign-in methods");
+    if (!data?.length) return fallback;
     const out = { ...fallback };
     for (const row of data as {
       method_key: string;
@@ -129,7 +130,7 @@ export async function fetchAuthMethodFlags(
       };
     }
     return out;
-  } catch {
-    return fallback;
+  } catch (error) {
+    throw error;
   }
 }

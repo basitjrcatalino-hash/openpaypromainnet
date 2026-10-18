@@ -15,7 +15,7 @@ export const PHANTOM_REDIRECT_URL_ENV =
 
 /** @deprecated Use getPhantomRedirectUrl() — kept for docs/fallback. */
 export const PHANTOM_REDIRECT_URL =
-  PHANTOM_REDIRECT_URL_ENV || "https://openpaypro.space/auth/callback";
+  PHANTOM_REDIRECT_URL_ENV || "https://openpaypi.space/auth/callback";
 
 export const PHANTOM_APP_NAME = "OpenPay Pro";
 
@@ -71,8 +71,8 @@ export function getPhantomProviderConfig() {
 
 /** Origins / redirects to allowlist in Phantom Portal for this project. */
 export const PHANTOM_PORTAL_ALLOWLIST_HINTS = [
-  "https://openpaypro.space",
-  "https://openpaypro.space/auth/callback",
+  "https://openpaypi.space",
+  "https://openpaypi.space/auth/callback",
   "https://openpaypromainnet.lovable.app",
   "https://openpaypromainnet.lovable.app/auth/callback",
   "https://openpaypromainnet.vercel.app",

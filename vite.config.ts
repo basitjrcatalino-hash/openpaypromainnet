@@ -164,22 +164,8 @@ export default defineConfig({
       },
     },
     ssr: {
-      // Do not externalize buffer — use the browser shim so SSR never ships a broken CJS binding.
-      external: ["base64-js", "ieee754", "@moonpay/moonpay-react"],
-      noExternal: [
-        "buffer",
-        "events",
-        "loglevel",
-        "loglevel-package",
-        "deepmerge",
-        "json-stable-stringify",
-        // Browser-only wallet SDKs: must be bundled (and unenv-polyfilled) for the
-        // worker SSR build. Left external they emit raw `node:process` imports that
-        // workerd cannot resolve → every route 500s.
-        "@privy-io/react-auth",
-        /^@web3auth\//,
-        /^@phantom\//,
-      ],
+      // Workers cannot resolve external npm modules at runtime. Bundle every dependency.
+      noExternal: true,
 
       resolve: {
         conditions: ["browser", "module", "import", "default"],

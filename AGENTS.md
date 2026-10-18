@@ -10,6 +10,8 @@
 <!-- LOVABLE:END -->
 
 - Keep authentication SDK panels in lazy, client-only provider boundaries so restoring sign-in options cannot introduce SSR startup crashes.
+- Use /auth as the shared sign-in/signup surface with an Outlet for OAuth callbacks and redirect /authpi there; this preserves existing callback and bookmarked URLs.
+- Provision Arc wallet accounts only after consuming a verified server-stored signup challenge, reusing existing wallet links and profile triggers without writing balances; this prevents duplicate identities and free credit.
 - The public sign-in list reads the shared auth-method flags and refuses to display methods when that read fails, so admin maintenance switches are not bypassed by network errors.
 - Arc integration uses App Kit only in dynamically imported browser actions; wallet signatures use one-time server-stored challenges and link existing account IDs, never convert Pi or ledger balances into on-chain USDC.
 - OpenPay Arc partner calls stay in server helpers behind authenticated functions; transfers require a linked wallet, verified mainnet USDC calldata and browser-side simulation/signing so partner credentials never grant custody or ledger credit.

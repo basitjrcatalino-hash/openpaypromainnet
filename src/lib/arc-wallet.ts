@@ -37,7 +37,7 @@ export async function arcBalance(address: `0x${string}`) {
   return formatUnits(await client.getBalance({ address }), 18);
 }
 
-export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP1193Provider) {
+export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP1193Provider, allowSignup = false) {
   const address = await connectArcWallet(preferred);
   const { data } = await supabase.auth.getSession();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -48,7 +48,7 @@ export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP
     if (!res.ok) throw new Error(result.error || "Wallet verification failed.");
     return result;
   };
-  const challenge = await call({ action: "challenge", address, purpose });
+  const challenge = await call({ action: "challenge", address, purpose, allowSignup });
   const wallet = createWalletClient({ transport: custom(arcProvider(preferred)) });
   const signature = await wallet.signMessage({ account: address, message: challenge.message });
   const result = await call({ action: "verify", id: challenge.id, signature, purpose });

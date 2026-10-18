@@ -15,6 +15,13 @@
       "when": 1792234571567,
       "tag": "0001_arc_wallet_linking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792336544471,
+      "tag": "0002_arc_wallet_signup_challenge",
+      "breakpoints": true
     }
   ]
 }

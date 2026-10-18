@@ -213,6 +213,7 @@ export type Database = {
       arc_auth_challenges: {
         Row: {
           address: string
+          allow_signup: boolean
           consumed_at: string | null
           created_at: string
           expires_at: string
@@ -223,6 +224,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          allow_signup?: boolean
           consumed_at?: string | null
           created_at?: string
           expires_at: string
@@ -233,6 +235,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          allow_signup?: boolean
           consumed_at?: string | null
           created_at?: string
           expires_at?: string

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const inputSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("challenge"), address: z.string().regex(/^0x[0-9a-fA-F]{40}$/), purpose: z.enum(["link", "login"]) }),
+  z.object({ action: z.literal("challenge"), address: z.string().regex(/^0x[0-9a-fA-F]{40}$/), purpose: z.enum(["link", "login"]), allowSignup: z.boolean().default(false) }),
   z.object({ action: z.literal("verify"), id: z.string().uuid(), signature: z.string().regex(/^0x[0-9a-fA-F]+$/).max(4096), purpose: z.enum(["link", "login"]) }),
 ]);
 
@@ -31,8 +31,8 @@ export const Route = createFileRoute("/api/public/arc-auth")({
         const now = new Date();
         const expires = new Date(now.getTime() + 5 * 60_000);
         const nonce = crypto.randomUUID().replaceAll("-", "");
-        const message = `${new URL(origin).host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${input.purpose === "link" ? "Link this Arc wallet to your existing OpenPay Pro account." : "Sign in to your existing OpenPay Pro account with your linked Arc wallet."}\n\nURI: ${origin}/arc\nVersion: 1\nChain ID: 5042\nNonce: ${nonce}\nIssued At: ${now.toISOString()}\nExpiration Time: ${expires.toISOString()}`;
-        const { data, error } = await supabaseAdmin.from("arc_auth_challenges").insert({ address, user_id: userId, purpose: input.purpose, message, expires_at: expires.toISOString() }).select("id, message").single();
+        const message = `${new URL(origin).host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${input.purpose === "link" ? "Link this Arc wallet to your existing OpenPay Pro account." : input.allowSignup ? "Create an OpenPay Pro wallet account, or sign in if this wallet is already linked. No transaction or funds approval." : "Sign in to your existing OpenPay Pro account with your linked Arc wallet."}\n\nURI: ${origin}/auth\nVersion: 1\nChain ID: 5042\nNonce: ${nonce}\nIssued At: ${now.toISOString()}\nExpiration Time: ${expires.toISOString()}`;
+        const { data, error } = await supabaseAdmin.from("arc_auth_challenges").insert({ address, user_id: userId, purpose: input.purpose, allow_signup: input.purpose === "login" && input.allowSignup, message, expires_at: expires.toISOString() }).select("id, message").single();
         if (error) throw error;
         return Response.json(data, { headers: { "Cache-Control": "no-store" } });
       }
@@ -56,10 +56,9 @@ export const Route = createFileRoute("/api/public/arc-auth")({
         }
         return Response.json({ linked: true }, { headers: { "Cache-Control": "no-store" } });
       }
-      const link = await supabaseAdmin.from("arc_wallet_links").select("user_id").eq("address", challenge.address).maybeSingle();
-      if (link.error) throw link.error;
-      if (!link.data) return Response.json({ error: "This wallet is not linked yet. Sign in to your existing account, open Arc Wallet, and link it first." }, { status: 403 });
-      const account = await supabaseAdmin.auth.admin.getUserById(link.data.user_id);
+      const { resolveArcAccount } = await import("@/lib/arc-account.server");
+      const accountId = await resolveArcAccount(supabaseAdmin, challenge.address, challenge.allow_signup);
+      const account = await supabaseAdmin.auth.admin.getUserById(accountId);
       const email = account.data.user?.email;
       if (account.error || !email) return Response.json({ error: "Linked account is unavailable." }, { status: 403 });
       const session = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });

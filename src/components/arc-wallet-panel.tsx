@@ -72,7 +72,7 @@ export default function ArcWalletPanel() {
         {signedIn && address && <Button variant="outline" disabled={busy || linked || !accessEnabled} onClick={() => void run(async () => { const verified = await verifyArcWallet("link", walletProvider ?? undefined); setAddress(verified); setLinked(true); toast.success("Wallet linked to your existing account"); })}><Link2 className="h-4 w-4" />{linked ? "Wallet linked" : "Link to my account"}</Button>}
         {!signedIn && <Button variant="outline" disabled={busy || !accessEnabled} onClick={() => requestConnect(async p => { await verifyArcWallet("login", p); window.location.assign("/dashboard"); })}>Sign in with linked wallet</Button>}
       </div>
-      {!signedIn && <p className="mt-4 text-sm text-muted-foreground">Existing account? <Link to="/authpi" search={{ next: "/arc" }} className="text-primary underline">Sign in to link your wallet</Link></p>}
+      {!signedIn && <p className="mt-4 text-sm text-muted-foreground">Existing account? <Link to="/auth" search={{ next: "/arc" }} className="text-primary underline">Sign in to link your wallet</Link> · <Link to="/auth" search={{ method: "arc", mode: "signup", next: "/arc" }} className="text-primary underline">Create account</Link></p>}
       {(flags.isError || (!flags.isPending && !accessEnabled)) && <p role="status" className="mt-4 text-sm text-destructive">Arc wallet access is currently unavailable.</p>}
     </section>
     {address && <section className="space-y-5">

@@ -13,8 +13,8 @@ For **exchanges listing OUSD** (deposit / withdraw / network metadata), see
 [`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) or
 [`/docs/exchange`](https://openpaypro.space/docs/exchange).
 
-**Partner API portal:** [https://openpy.space/partner-api](https://openpy.space/partner-api)  
-**Auth docs:** [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  
+**Partner API portal:** [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api)  
+**Auth docs:** [https://openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth)  
 **Base URL:** `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
 
 ## Authentication
@@ -95,7 +95,7 @@ Returns `{ id, amount, currency, status, checkout_url, expires_at }`. Charges ex
 Drop-in button after creating a charge:
 
 ```html
-<a href="https://openpy.space/paybutton/CHARGE_ID"
+<a href="https://openpaypi.space/paybutton/CHARGE_ID"
    style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
    padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
   Pay with OpenPay
@@ -137,7 +137,7 @@ Exact match required. OpenPay Pro always uses production:
 ### 2. Send the user to OpenPay
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id=YOUR_APP_ID
   &redirect_uri=https://yourapp.com/openpay/callback
   &scope=profile%20balance
@@ -183,7 +183,7 @@ curl -H "Authorization: Bearer opa_live_..." \
 Drop-in Connect button:
 
 ```html
-<a href="https://openpy.space/connect?client_id=YOUR_APP_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
+<a href="https://openpaypi.space/connect?client_id=YOUR_APP_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
    style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
    padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
   Connect with OpenPay
@@ -207,7 +207,7 @@ Drop-in Connect button:
 
 | Concern | Implementation |
 |---------|----------------|
-| Authorize URL | `OPENPAY_OAUTH_AUTHORIZE_URL` → `https://openpy.space/connect` |
+| Authorize URL | `OPENPAY_OAUTH_AUTHORIZE_URL` → `https://openpaypi.space/connect` |
 | Client ID | `OPENPAY_OAUTH_CLIENT_ID` |
 | Partner key | `OPENPAY_PARTNER_API_KEY` (`opk_live_…`) |
 | Callback | `/openpay/connect/callback` |

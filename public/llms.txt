@@ -15,8 +15,8 @@
 ## Bases
 
 - Partner Transfer API: `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
-- Partner portal (keys): https://openpy.space/partner-api
-- Connect: https://openpy.space/connect
+- Partner portal (keys): https://openpaypi.space/partner-api
+- Connect: https://openpaypi.space/connect
 - Pro inbound: `POST https://openpaypro.space/api/public/openpay/inbound`
 - Ledger: https://openpaypro.space/api/public/ledger
 - MCP: https://openpaypro.space/mcp

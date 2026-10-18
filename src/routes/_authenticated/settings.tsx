@@ -1315,7 +1315,7 @@ function SettingsPage() {
                 <h2 className="text-base font-semibold">Partner API</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   Create Pro Connect apps — client ID, secret, OAuth callback URLs, and Pro Pay
-                  charges (like openpy.space/partner-api).
+                  charges (like openpaypi.space/partner-api).
                 </p>
               </div>
             </div>

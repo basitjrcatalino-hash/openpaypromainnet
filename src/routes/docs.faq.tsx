@@ -62,7 +62,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "OpenPay link",
     q: "What does Connect OpenPay do?",
-    a: "It OAuth-links your openpy.space account so Pro can send/receive OpenPay balance and mint OpenNFTs on your behalf.",
+    a: "It OAuth-links your openpaypi.space account so Pro can send/receive OpenPay balance and mint OpenNFTs on your behalf.",
   },
   {
     category: "Fees",
@@ -77,7 +77,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "Developers",
     q: "How do third-party apps integrate?",
-    a: "Register a partner app at openpy.space/partner-api, implement Connect OAuth + charges, and poll GET /charges/:id. Full guide: /docs/openpay.",
+    a: "Register a partner app at openpaypi.space/partner-api, implement Connect OAuth + charges, and poll GET /charges/:id. Full guide: /docs/openpay.",
   },
   {
     category: "Developers",

@@ -242,7 +242,7 @@ export async function generateTokenInsights(
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
         "HTTP-Referer":
-          process.env.OPENROUTER_HTTP_REFERER?.trim() || "https://openpy.space",
+          process.env.OPENROUTER_HTTP_REFERER?.trim() || "https://openpaypi.space",
         "X-Title": process.env.OPENROUTER_APP_TITLE?.trim() || "OpenPay Pro",
       },
       body: JSON.stringify({

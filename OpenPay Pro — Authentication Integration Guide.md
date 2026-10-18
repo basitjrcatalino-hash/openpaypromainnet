@@ -63,12 +63,12 @@ SUPABASE_SERVICE_ROLE_KEY="eyJ..."
 
 ## 1. OpenPay (Connect with OpenPay)
 
-**What it does:** Standard Authorization Code OAuth against OpenPay (`openpy.space`). User approves profile/balance scopes; Pro exchanges the code server-side and provisions a Supabase user.
+**What it does:** Standard Authorization Code OAuth against OpenPay (`openpaypi.space`). User approves profile/balance scopes; Pro exchanges the code server-side and provisions a Supabase user.
 
 ### Env
 
 ```bash
-OPENPAY_OAUTH_AUTHORIZE_URL="https://openpy.space/connect"
+OPENPAY_OAUTH_AUTHORIZE_URL="https://openpaypi.space/connect"
 OPENPAY_OAUTH_CLIENT_ID="your-client-uuid"
 OPENPAY_OAUTH_PUBLIC_ORIGIN="https://your-pro-origin.example"
 # Partner API key used as client_secret on token exchange (server only)
@@ -78,7 +78,7 @@ OPENPAY_PARTNER_API_BASE="https://araojncyittkahvvpdrn.supabase.co/functions/v1/
 
 ### Portal setup
 
-1. Register an app at [openpy.space/partner-api](https://openpy.space/partner-api).
+1. Register an app at [openpaypi.space/partner-api](https://openpaypi.space/partner-api).
 2. Allowlist exact redirect URIs, e.g. `https://your-origin/auth/openpay/callback`.
 3. Keep `opk_live_…` on the server only.
 
@@ -105,7 +105,7 @@ await startOpenPaySignIn({ redirectTo: "/dashboard" });
 | `src/routes/api/public/openpay-auth.ts` | Issue authorize URL / exchange |
 | `src/routes/auth.openpay.callback.tsx`  | Browser callback               |
 
-Official OpenPay auth tutorial: [openpy.space/openpay-auth](https://openpy.space/openpay-auth).
+Official OpenPay auth tutorial: [openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth).
 
 ---
 

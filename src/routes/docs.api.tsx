@@ -114,7 +114,7 @@ GET /accounts/:identifier   # @username | OP… | email`}</DocsCode>
 GET  /charges/:id          # created | paid | canceled | expired
 GET  /charges?status=paid
 POST /charges/:id/cancel`}</DocsCode>
-        <DocsCode>{`<a href="https://openpy.space/paybutton/CHARGE_ID">
+        <DocsCode>{`<a href="https://openpaypi.space/paybutton/CHARGE_ID">
   Pay with OpenPay
 </a>`}</DocsCode>
       </DocsSection>

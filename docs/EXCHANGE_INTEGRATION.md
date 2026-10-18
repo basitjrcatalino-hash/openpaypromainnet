@@ -7,7 +7,7 @@ Integrate **OUSD** (OpenUSD) into your exchange, wallet, or fintech app the same
 | **Asset** | `OUSD` — OpenPay ledger dollar (~$1 USD) |
 | **Network id** | `openpay` (custodial open network ledger — not a public EVM/SPL contract) |
 | **Decimals** | `8` (ledger precision); display often `2` |
-| **Partner portal** | [https://openpy.space/partner-api](https://openpy.space/partner-api) |
+| **Partner portal** | [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api) |
 | **Partner Transfer API** | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
 | **OpenPay Pro (this app)** | `https://openpaypro.space` |
 | **Pro inbound credit** | `POST https://openpaypro.space/api/public/openpay/inbound` |
@@ -43,7 +43,7 @@ For OpenPay / OUSD map the same concepts:
 ```
 ┌─────────────┐     Partner Transfer API      ┌──────────────────┐
 │  Your       │  ───────────────────────────► │  OpenPay         │
-│  Exchange   │  deposit / withdraw / pay   │  (openpy.space)  │
+│  Exchange   │  deposit / withdraw / pay   │  (openpaypi.space)  │
 │  or App     │  ◄─────────────────────────── │  OUSD balances   │
 └─────────────┘                               └────────┬─────────┘
                                                        │ inbound
@@ -58,7 +58,7 @@ For OpenPay / OUSD map the same concepts:
 
 ## 2. Quick start checklist
 
-1. Register an app at [Partner API portal](https://openpy.space/partner-api) → copy `client_id` + `opk_live_…` (server-only).  
+1. Register an app at [Partner API portal](https://openpaypi.space/partner-api) → copy `client_id` + `opk_live_…` (server-only).  
 2. Fund the OpenPay account that owns the key (this is your “hot wallet”).  
 3. Implement **deposit**: user pays your OpenPay tag / charge → you credit their exchange account.  
 4. Implement **withdraw**: user requests OUSD out → your backend `POST /transfers` to their `@username` / `OP…` / Pro destination.  
@@ -153,7 +153,7 @@ curl -X POST "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-tran
   }'
 ```
 
-2. Redirect user to `checkout_url` (or `https://openpy.space/paybutton/{id}`).  
+2. Redirect user to `checkout_url` (or `https://openpaypi.space/paybutton/{id}`).  
 3. Poll `GET /charges/:id` until `paid`.  
 4. Credit `100 OUSD` on your books (idempotent on `reference` / charge `id`).
 
@@ -301,6 +301,6 @@ Details: [LEDGER_API.md](./LEDGER_API.md) · [/docs/openpay#ledger](/docs/openpa
 
 ## Support
 
-- Partner portal: [https://openpy.space/partner-api](https://openpy.space/partner-api)  
-- Auth docs: [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  
+- Partner portal: [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api)  
+- Auth docs: [https://openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth)  
 - Pro docs hub: [https://openpaypro.space/docs/openpay](https://openpaypro.space/docs/openpay)

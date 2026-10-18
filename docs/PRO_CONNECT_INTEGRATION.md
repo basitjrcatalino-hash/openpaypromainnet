@@ -21,7 +21,7 @@ Currency: **OUSD**. No charge webhooks — **poll** until `paid` | `canceled` | 
 | `oprc_…` | One-time authorization code |
 | `oprat_…` | User access token (Bearer) |
 
-Create apps in the Pro **Partner API** portal (`/partner-api`) — same idea as OpenPay’s `openpy.space/partner-api`. Enter app name, website, logo, and exact-match OAuth callback URIs. Never put secrets in `VITE_` env.
+Create apps in the Pro **Partner API** portal (`/partner-api`) — same idea as OpenPay’s `openpaypi.space/partner-api`. Enter app name, website, logo, and exact-match OAuth callback URIs. Never put secrets in `VITE_` env.
 
 ---
 

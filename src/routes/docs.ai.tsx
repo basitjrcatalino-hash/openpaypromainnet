@@ -152,7 +152,7 @@ Build a merchant checkout that:
 1) Creates an OpenPay charge from a server function using OPENPAY_PARTNER_API_KEY
 2) Redirects the buyer to checkout_url
 3) On return, polls GET /charges/:id until paid|canceled|expired
-Also add a "Connect with OpenPay" button using openpy.space/connect.`,
+Also add a "Connect with OpenPay" button using openpaypi.space/connect.`,
   },
   {
     tool: "Replit / Claude Projects",
@@ -272,7 +272,7 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
 
       <DocsSection id="prompts" eyebrow="02" title="Copy-paste prompts (OpenPay Partner)">
         <p className="mb-4 text-sm text-muted-foreground">
-          For <strong className="text-foreground">openpy.space</strong> Partner keys (
+          For <strong className="text-foreground">openpaypi.space</strong> Partner keys (
           <code className="text-foreground">opk_live_</code>). For Pro-native Auth + Pay, use the
           section below.
         </p>
@@ -313,8 +313,8 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
       </DocsSection>
 
       <DocsSection id="features" eyebrow="03" title="What partners can integrate">
-        <DocsCode>{`# OpenPay Partner (openpy.space)
-Auth / Connect     → openpy.space/connect → POST /oauth/token → opa_live_
+        <DocsCode>{`# OpenPay Partner (openpaypi.space)
+Auth / Connect     → openpaypi.space/connect → POST /oauth/token → opa_live_
 Payments           → POST /charges → checkout_url → poll GET /charges/:id
 Payouts            → POST /transfers + Idempotency-Key
 Account resolve    → GET /accounts/@user|OP…|email

@@ -170,7 +170,7 @@ export const openpayPro = {
     });
     // Canonical PayButton host (openpay.lovable.app/paybutton 404s)
     if (charge?.id) {
-      charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
+      charge.checkout_url = `https://openpaypi.space/paybutton/${encodeURIComponent(charge.id)}`;
     }
     return charge;
   },

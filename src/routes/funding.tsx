@@ -402,7 +402,7 @@ function FundingPage() {
                   Pro Pay
                 </a>
                 <a
-                  href="https://openpy.space/partner-api"
+                  href="https://openpaypi.space/partner-api"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:underline"

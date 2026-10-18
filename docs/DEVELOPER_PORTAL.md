@@ -24,7 +24,7 @@ Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 | FAQ | https://openpaypro.space/docs/faq |
 | Errors & retries | https://openpaypro.space/docs/errors |
 | Authentication | https://openpaypro.space/docs/auth |
-| Partner portal (keys) | https://openpy.space/partner-api |
+| Partner portal (keys) | https://openpaypi.space/partner-api |
 | Partner Transfer base | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
 | Pro inbound | `POST https://openpaypro.space/api/public/openpay/inbound` |
 | Ledger HTTP | `https://openpaypro.space/api/public/ledger` |

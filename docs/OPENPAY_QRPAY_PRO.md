@@ -1,6 +1,6 @@
 # OpenPay → OpenPay Pro QR Pay Integration
 
-**Paste this into the OpenPay (`openpy.space`) agent / codebase.**
+**Paste this into the OpenPay (`openpaypi.space`) agent / codebase.**
 
 Add **OpenPay Pro** as a first-class **QR Pay** payment method so merchants and users can:
 
@@ -9,7 +9,7 @@ Add **OpenPay Pro** as a first-class **QR Pay** payment method so merchants and 
 - Use Partner API (copy-paste ready) with env, polling, and inbound credit  
 
 Live Pro docs: https://openpaypro.space/docs/pro-pay  
-Partner keys: https://openpy.space/partner-api  
+Partner keys: https://openpaypi.space/partner-api  
 
 ---
 
@@ -44,7 +44,7 @@ OpenPay QR Pay (method: openpay_pro)
         │     optional: POST Pro inbound → credit @user / 0x
         │
         └─ B) Hosted pay QR (pro_xfer)
-              QR → https://openpy.space/pay/{PARTNER_TAG}?amount=&note=pro_xfer:…
+              QR → https://openpaypi.space/pay/{PARTNER_TAG}?amount=&note=pro_xfer:…
               on success → POST Pro inbound (idempotent)
 ```
 
@@ -60,10 +60,10 @@ Partner Transfer API:
 https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
 
 PayButton UI:
-https://openpy.space/paybutton/{CHARGE_ID}
+https://openpaypi.space/paybutton/{CHARGE_ID}
 
 Hosted pay:
-https://openpy.space/pay/{USERNAME}
+https://openpaypi.space/pay/{USERNAME}
 
 Pro inbound:
 POST https://openpaypro.space/api/public/openpay/inbound
@@ -92,7 +92,7 @@ Never ship `opk_live_…` to the browser.
 OPENPAY_PARTNER_API_KEY="opk_live_..."
 OPENPAY_PARTNER_API_BASE="https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api"
 OPENPAY_CLIENT_ID="your-client-uuid"          # if Connect used
-OPENPAY_REDIRECT_URI="https://openpy.space/..." # if Connect used
+OPENPAY_REDIRECT_URI="https://openpaypi.space/..." # if Connect used
 
 # Pro settlement
 OPENPAY_PRO_INBOUND_URL="https://openpaypro.space/api/public/openpay/inbound"
@@ -112,8 +112,8 @@ Per-merchant dashboard fields:
   "pro_wallet": "0x7bf2abcd0000000000000000000000000000851a",
   "amount_ousd": 25.00,
   "order_ref": "order_9001",
-  "success_url": "https://openpy.space/qrpay/thanks",
-  "cancel_url": "https://openpy.space/qrpay/cancel"
+  "success_url": "https://openpaypi.space/qrpay/thanks",
+  "cancel_url": "https://openpaypi.space/qrpay/cancel"
 }
 ```
 
@@ -126,7 +126,7 @@ Per-merchant dashboard fields:
 Server creates charge, then QR encodes the checkout URL:
 
 ```
-https://openpy.space/paybutton/{CHARGE_ID}
+https://openpaypi.space/paybutton/{CHARGE_ID}
 ```
 
 or the returned `checkout_url`.
@@ -134,12 +134,12 @@ or the returned `checkout_url`.
 ### 2) Hosted pay + Pro routing note
 
 ```
-https://openpy.space/pay/{PARTNER_TAG}
+https://openpaypi.space/pay/{PARTNER_TAG}
   ?amount=25.00
   &currency=OUSD
   &note=pro_xfer:@shop:r_order_9001
-  &success_url=https://openpy.space/qrpay/thanks?ref=order_9001
-  &cancel_url=https://openpy.space/qrpay/cancel?ref=order_9001
+  &success_url=https://openpaypi.space/qrpay/thanks?ref=order_9001
+  &cancel_url=https://openpaypi.space/qrpay/cancel?ref=order_9001
 ```
 
 By Pro wallet address:
@@ -196,8 +196,8 @@ Content-Type: application/json
   "currency": "OUSD",
   "description": "QR Pay order_9001",
   "reference": "order_9001",
-  "success_url": "https://openpy.space/qrpay/thanks?ref=order_9001",
-  "cancel_url": "https://openpy.space/qrpay/cancel?ref=order_9001"
+  "success_url": "https://openpaypi.space/qrpay/thanks?ref=order_9001",
+  "cancel_url": "https://openpaypi.space/qrpay/cancel?ref=order_9001"
 }
 ```
 
@@ -209,7 +209,7 @@ Response:
   "amount": 25,
   "currency": "OUSD",
   "status": "created",
-  "checkout_url": "https://openpy.space/…",
+  "checkout_url": "https://openpaypi.space/…",
   "expires_at": "…"
 }
 ```
@@ -354,7 +354,7 @@ export async function createProQrCharge({
   const charge = await res.json();
   return {
     charge_id: charge.id,
-    qr_payload: charge.checkout_url || `https://openpy.space/paybutton/${charge.id}`,
+    qr_payload: charge.checkout_url || `https://openpaypi.space/paybutton/${charge.id}`,
     status: charge.status,
     expires_at: charge.expires_at,
   };
@@ -384,7 +384,7 @@ export function buildProHostedPayQr({
   success_url,
   cancel_url,
 }) {
-  const u = new URL(`https://openpy.space/pay/${PARTNER_TAG}`);
+  const u = new URL(`https://openpaypi.space/pay/${PARTNER_TAG}`);
   u.searchParams.set("amount", String(amount));
   u.searchParams.set("currency", "OUSD");
   u.searchParams.set("note", proXferNote(to, reference));
@@ -451,8 +451,8 @@ curl -X POST "$OPENPAY_PARTNER_API_BASE/charges" \
     "currency": "OUSD",
     "description": "QR test",
     "reference": "qr_test_1",
-    "success_url": "https://openpy.space/thanks",
-    "cancel_url": "https://openpy.space/cancel"
+    "success_url": "https://openpaypi.space/thanks",
+    "cancel_url": "https://openpaypi.space/cancel"
   }'
 
 # 2) Encode returned checkout_url / paybutton URL as QR — pay it
@@ -480,7 +480,7 @@ curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
 If QR Pay should know the OpenPay user:
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id={CLIENT_ID}
   &redirect_uri={EXACT}
   &scope=profile%20balance

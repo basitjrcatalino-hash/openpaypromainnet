@@ -33,7 +33,7 @@ export type PartnerCategory = {
 export const ECOSYSTEM_MARKS: PartnerMark[] = [
   { name: "OpenUSD", logo: OUSD_LOGO_URL, blurb: "OpenPay’s $1 ledger dollar" },
   { name: "Pi Network", logo: PI_NETWORK_LOGO_URL, blurb: "Core Pro asset · top-up rail" },
-  { name: "OpenPay", logo: OPENPAY_AUTH_LOGO, href: "https://openpy.space" },
+  { name: "OpenPay", logo: OPENPAY_AUTH_LOGO, href: "https://openpaypi.space" },
   { name: "OpenPay AI", logo: OPENPAY_AI_MENU_ICON },
   { name: "Open network", logo: OPENPAY_NETWORK_BADGE_URL },
   { name: "TradingView", logo: si("tradingview", "2962FF") },
@@ -139,7 +139,7 @@ export const PARTNER_CATEGORIES: PartnerCategory[] = [
       {
         name: "OpenPay Balance",
         logo: OPENPAY_AUTH_LOGO,
-        href: "https://openpy.space",
+        href: "https://openpaypi.space",
         blurb: "Network balance → Pro OUSD",
       },
     ],
@@ -152,7 +152,7 @@ export const PARTNER_CATEGORIES: PartnerCategory[] = [
       {
         name: "OpenPay",
         logo: OPENPAY_AUTH_LOGO,
-        href: "https://openpy.space",
+        href: "https://openpaypi.space",
         blurb: "Connect with OpenPay",
       },
       {
@@ -236,16 +236,16 @@ export const PARTNER_CATEGORIES: PartnerCategory[] = [
     title: "OpenPay network",
     blurb: "First-party products on the same open ledger.",
     partners: [
-      { name: "OpenPay", logo: OPENPAY_AUTH_LOGO, href: "https://openpy.space" },
+      { name: "OpenPay", logo: OPENPAY_AUTH_LOGO, href: "https://openpaypi.space" },
       { name: "OpenUSD", logo: OUSD_LOGO_URL, href: "/openusd" },
       { name: "OpenLedger", logo: OPENPAY_NETWORK_BADGE_URL, href: "https://openpyledger.space" },
       {
         name: "OpenPay AI",
         logo: OPENPAY_AI_MENU_ICON,
-        href: "https://www.openpy.space/blog/meet-openpay-ai",
+        href: "https://www.openpaypi.space/blog/meet-openpay-ai",
       },
-      { name: "Partner API", logo: OPENPAY_AUTH_LOGO, href: "https://openpy.space/partner-api" },
-      { name: "OpenNFT", logo: OPENPAY_NETWORK_BADGE_URL, href: "https://openpy.space/web3/nft" },
+      { name: "Partner API", logo: OPENPAY_AUTH_LOGO, href: "https://openpaypi.space/partner-api" },
+      { name: "OpenNFT", logo: OPENPAY_NETWORK_BADGE_URL, href: "https://openpaypi.space/web3/nft" },
     ],
   },
 ];

@@ -366,8 +366,8 @@ curl -X POST "${PARTNER_API}/charges" \\
     "currency": "OUSD",
     "description": "QR Pay order_9001",
     "reference": "qr_order_9001",
-    "success_url": "https://openpy.space/qrpay/thanks?ref=qr_order_9001",
-    "cancel_url": "https://openpy.space/qrpay/cancel?ref=qr_order_9001"
+    "success_url": "https://openpaypi.space/qrpay/thanks?ref=qr_order_9001",
+    "cancel_url": "https://openpaypi.space/qrpay/cancel?ref=qr_order_9001"
   }'
 # Show checkout_url (or QR of that URL) to buyer
 # Poll until paid, then inbound:`}</DocsCode>
@@ -426,7 +426,7 @@ https://openpaypro.space/topup
 https://openpaypro.space/pay/@shop?amount=250&asset=OUSD&note=order_9001
 
 # Or OpenPay hosted pay tag + pro_xfer note (then inbound)
-https://openpy.space/pay/YOUR_PARTNER_TAG
+https://openpaypi.space/pay/YOUR_PARTNER_TAG
   ?amount=250&currency=OUSD
   &note=pro_xfer:@shop:r_order_9001
   &success_url=https://yourapp.com/thanks

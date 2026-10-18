@@ -574,7 +574,7 @@ export const WIKI_GUIDES: WikiGuide[] = [
         steps: [
           {
             title: "Create a partner app",
-            detail: "openpy.space/partner-api → copy opk_live_ (server only) and client_id.",
+            detail: "openpaypi.space/partner-api → copy opk_live_ (server only) and client_id.",
           },
           {
             title: "Fund the hot wallet",

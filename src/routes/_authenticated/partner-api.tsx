@@ -1238,7 +1238,7 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="Create Connect app"
-        description="Name your app and add exact OAuth callback URLs — same idea as openpy.space/partner-api."
+        description="Name your app and add exact OAuth callback URLs — same idea as openpaypi.space/partner-api."
         name={name}
         setName={setName}
         descriptionValue={description}

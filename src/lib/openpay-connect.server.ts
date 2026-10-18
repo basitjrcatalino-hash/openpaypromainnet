@@ -1,5 +1,5 @@
 // OpenPay OAuth 2.0 connect helpers (server-only).
-// Docs: GET https://openpy.space/connect → POST /oauth/token → GET /user/me
+// Docs: GET https://openpaypi.space/connect → POST /oauth/token → GET /user/me
 
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 
@@ -179,8 +179,8 @@ export function verifyConnectCode(code: string): ConnectAccountPayload {
 const DEFAULT_CLIENT_ID = "e9248f5d-3971-4cbc-9032-9b678c9b71ae";
 /** Partner app redirect URIs are registered for production only — never send localhost. */
 const PRODUCTION_ORIGIN = "https://openpaypro.space";
-/** Canonical Connect page — openpay.lovable.app/connect 404s; openpy.space/connect works. */
-const DEFAULT_AUTHORIZE_URL = "https://openpy.space/connect";
+/** Canonical Connect page — openpay.lovable.app/connect 404s; openpaypi.space/connect works. */
+const DEFAULT_AUTHORIZE_URL = "https://openpaypi.space/connect";
 
 function isUuid(v: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -220,7 +220,7 @@ function resolveAuthorizeUrl(): string {
     if (host === "openpay.lovable.app" || host.endsWith(".lovableproject.com")) {
       return DEFAULT_AUTHORIZE_URL;
     }
-    if (host === "openpy.space") {
+    if (host === "openpaypi.space") {
       u.protocol = "https:";
       u.pathname = "/connect";
       u.search = "";

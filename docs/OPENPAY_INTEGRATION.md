@@ -4,9 +4,9 @@ Use this guide to add **Connect with OpenPay** (OAuth 2.0) and **OpenPay Balance
 
 |                                   |                                                                                                                                                          |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OpenPay app**                   | [https://openpy.space](https://openpy.space)                                                                                                             |
-| **Partner API portal**            | [https://openpy.space/partner-api](https://openpy.space/partner-api)                                                                                     |
-| **Auth docs**                     | [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)                                                                                   |
+| **OpenPay app**                   | [https://openpaypi.space](https://openpaypi.space)                                                                                                             |
+| **Partner API portal**            | [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api)                                                                                     |
+| **Auth docs**                     | [https://openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth)                                                                                   |
 | **Partner API**                   | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`                                                                             |
 | **Live docs (this site)**         | [/docs/openpay](/docs/openpay)                                                                                                                           |
 | **Exchange / OUSD network**       | [/docs/exchange](/docs/exchange) · [EXCHANGE_INTEGRATION.md](./EXCHANGE_INTEGRATION.md) · [/api/public/docs/exchange](/api/public/docs/exchange)         |
@@ -35,7 +35,7 @@ OpenPay Pro (`/authpi`) supports **seven** authentication methods (OpenPay, Tele
 
 ## 1. Create a partner app
 
-1. Open the [Partner API portal](https://openpy.space/partner-api) → **Apps & keys** → Register app.
+1. Open the [Partner API portal](https://openpaypi.space/partner-api) → **Apps & keys** → Register app.
 2. Copy the `opk_live_…` API key immediately (shown once). Save the **client_id** (UUID).
 3. Enter only your domain (e.g. `www.yourapp.com`) and click **Auto-fill & save**, or register **exact** redirect URIs (no trailing slash), e.g.:
    - `https://yourapp.com/openpay/callback`
@@ -53,7 +53,7 @@ Standard **Authorization Code** flow. Scopes: `profile`, `balance`.
 ### 2.1 Send the user to OpenPay
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id=YOUR_CLIENT_ID
   &redirect_uri=https://yourapp.com/openpay/callback
   &scope=profile%20balance
@@ -64,7 +64,7 @@ Drop-in button:
 
 ```html
 <a
-  href="https://openpy.space/connect?client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
+  href="https://openpaypi.space/connect?client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
   style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
    padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;"
 >
@@ -145,7 +145,7 @@ curl -H "Authorization: Bearer opa_live_..." \
 ### Connect sequence
 
 ```
-Your app  →  openpy.space/connect  →  user signs in + Allow
+Your app  →  openpaypi.space/connect  →  user signs in + Allow
          ←  ?code=opc_…&state=…
 Your backend  →  POST /oauth/token  →  opa_live_…
 Your backend  →  GET /user/me | /user/balance
@@ -180,7 +180,7 @@ Returns `{ id, amount, currency, status, checkout_url, expires_at }` (expires in
 Redirect the buyer to `checkout_url`, or:
 
 ```html
-<a href="https://openpy.space/paybutton/CHARGE_ID">Pay with OpenPay</a>
+<a href="https://openpaypi.space/paybutton/CHARGE_ID">Pay with OpenPay</a>
 ```
 
 Poll status:
@@ -204,7 +204,7 @@ curl -X POST -H "Authorization: Bearer opk_live_YOUR_KEY" \
 When you want the buyer to pay your OpenPay tag (username) from their balance:
 
 ```
-https://openpy.space/pay/YOUR_USERNAME
+https://openpaypi.space/pay/YOUR_USERNAME
   ?amount=25.00
   &currency=OUSD
   &note=order_1234
@@ -268,7 +268,7 @@ const CLIENT_SECRET = process.env.OPENPAY_PARTNER_API_KEY; // opk_live_…
 const REDIRECT = "https://yourapp.com/openpay/callback";
 
 export function connectUrl(state) {
-  const u = new URL("https://openpy.space/connect");
+  const u = new URL("https://openpaypi.space/connect");
   u.searchParams.set("client_id", CLIENT_ID);
   u.searchParams.set("redirect_uri", REDIRECT);
   u.searchParams.set("scope", "profile balance");
@@ -343,8 +343,8 @@ export async function createCharge({ amount, reference, success_url, cancel_url 
 
 ## Related
 
-- Partner API portal: [https://openpy.space/partner-api](https://openpy.space/partner-api)
-- Auth tutorial: [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)
+- Partner API portal: [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api)
+- Auth tutorial: [https://openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth)
 - OpenPay → OpenPay Pro transfers: [`OPENPAY_TO_PRO.md`](./OPENPAY_TO_PRO.md)
 - OpenPay Send feature prompt: [`OPENPAY_SEND_TO_PRO_PROMPT.md`](./OPENPAY_SEND_TO_PRO_PROMPT.md)
 - Partner Transfer API detail: [`PARTNER_TRANSFER_API.md`](./PARTNER_TRANSFER_API.md)

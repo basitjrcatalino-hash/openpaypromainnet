@@ -41,7 +41,7 @@ In OpenPay Pro → **Receive** → **Create OpenPay receive link**.
 Example URL:
 
 ```
-https://openpy.space/pay/wainfoundation
+https://openpaypi.space/pay/wainfoundation
   ?amount=25.00
   &currency=OUSD
   &note=pro_xfer:@alice:r_k7x2

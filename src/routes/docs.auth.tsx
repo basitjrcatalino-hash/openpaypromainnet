@@ -97,7 +97,7 @@ function AuthDocsPage() {
         <p className="text-sm leading-relaxed text-muted-foreground">
           Third-party apps do not embed every wallet method — they use{" "}
           <strong className="text-foreground">Connect with OpenPay</strong> so users link an
-          openpy.space account.
+          openpaypi.space account.
         </p>
         <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li>
@@ -134,7 +134,7 @@ SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
 SUPABASE_PUBLISHABLE_KEY="eyJ..."
 SUPABASE_SERVICE_ROLE_KEY="eyJ..."   # server only — never VITE_
 
-OPENPAY_OAUTH_AUTHORIZE_URL="https://openpy.space/connect"
+OPENPAY_OAUTH_AUTHORIZE_URL="https://openpaypi.space/connect"
 OPENPAY_OAUTH_CLIENT_ID="your-client-uuid"
 OPENPAY_PARTNER_API_KEY="opk_live_..."`}</DocsCode>
         <p className="text-sm text-muted-foreground">

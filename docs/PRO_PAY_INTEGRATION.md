@@ -7,13 +7,13 @@ Raw markdown: [https://openpaypro.space/api/public/docs/pro-pay](https://openpay
 
 | Resource | URL |
 | --- | --- |
-| Partner keys portal | https://openpy.space/partner-api |
+| Partner keys portal | https://openpaypi.space/partner-api |
 | Partner Transfer API | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
 | Pro inbound credit | `POST https://openpaypro.space/api/public/openpay/inbound` |
 | Pro developer keys | https://openpaypro.space/developer |
 | Pro Top Up UI (buyer) | https://openpaypro.space/topup |
 | Pro pay link | https://openpaypro.space/pay/{@user\|0x…} |
-| Connect authorize | https://openpy.space/connect |
+| Connect authorize | https://openpaypi.space/connect |
 
 ---
 
@@ -74,7 +74,7 @@ Save in your dashboard:
 
 ## Step 1 — Partner app & env
 
-1. Open https://openpy.space/partner-api → register app.  
+1. Open https://openpaypi.space/partner-api → register app.  
 2. Copy `client_id` + `opk_live_…` (shown once).  
 3. Register exact OAuth redirect URIs if you use Connect.  
 4. Server env:
@@ -104,7 +104,7 @@ OPENPAY_PRO_DEVELOPER_KEY="opdk_..."
 ## Step 2 — Auth (Connect with OpenPay)
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id={CLIENT_ID}
   &redirect_uri={EXACT_REDIRECT}
   &scope=profile%20balance
@@ -156,7 +156,7 @@ curl -X POST "$OPENPAY_PARTNER_API_BASE/charges" \
 
 Returns `{ id, amount, currency, status, checkout_url, expires_at }` (TTL **~2 hours**).
 
-Redirect buyer to `checkout_url` (or `https://openpy.space/paybutton/{id}`).
+Redirect buyer to `checkout_url` (or `https://openpaypi.space/paybutton/{id}`).
 
 **Poll until paid** (no partner webhooks yet):
 

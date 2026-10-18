@@ -156,7 +156,7 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
         cancel_url: cancelUrl,
       });
       if (!charge?.id) throw new Error("OpenPay checkout unavailable");
-      charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
+      charge.checkout_url = `https://openpaypi.space/paybutton/${encodeURIComponent(charge.id)}`;
 
       const notifications: Record<string, unknown> = {
         ...((prefs?.notifications as Record<string, unknown>) ?? {}),
@@ -215,7 +215,7 @@ export const createOpenPayTopupCharge = createServerFn({ method: "POST" })
     }
 
     const pay_url =
-      `https://openpy.space/pay/${encodeURIComponent(partnerUsername)}` +
+      `https://openpaypi.space/pay/${encodeURIComponent(partnerUsername)}` +
       `?amount=${encodeURIComponent(data.amount.toFixed(2))}` +
       `&currency=OUSD` +
       `&note=${encodeURIComponent(reference)}` +
@@ -946,7 +946,7 @@ export const unlinkOpenPayAccount = createServerFn({ method: "POST" })
     return { linked: false as const };
   });
 
-/** Start OAuth 2.0 Connect with OpenPay — redirects to openpy.space/connect */
+/** Start OAuth 2.0 Connect with OpenPay — redirects to openpaypi.space/connect */
 export const startOpenPayConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -1232,7 +1232,7 @@ export const createOpenPayReceiveLink = createServerFn({ method: "POST" })
       params.set("amount", data.amount.toFixed(2));
     }
 
-    const pay_url = `https://openpy.space/pay/${encodeURIComponent(partnerUsername)}?${params.toString()}`;
+    const pay_url = `https://openpaypi.space/pay/${encodeURIComponent(partnerUsername)}?${params.toString()}`;
 
     // Store pending inbound for settle-on-return
     const { data: prefs } = await supabase

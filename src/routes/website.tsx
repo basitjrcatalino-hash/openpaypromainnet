@@ -81,7 +81,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Multi-chain deposit", href: "/wiki", desc: "ETH, Base, BNB, Polygon, Solana…" },
       {
         label: "OpenPay AI",
-        href: "https://www.openpy.space/blog/meet-openpay-ai",
+        href: "https://www.openpaypi.space/blog/meet-openpay-ai",
         desc: "Assistant & MCP agents",
       },
     ],
@@ -100,11 +100,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Explore",
     items: [
-      { label: "OpenPay", href: "https://openpy.space", desc: "The open money network" },
+      { label: "OpenPay", href: "https://openpaypi.space", desc: "The open money network" },
       { label: "OpenLedger", href: "https://openpyledger.space", desc: "Public ledger explorer" },
       {
         label: "OpenPay AI",
-        href: "https://www.openpy.space/blog/meet-openpay-ai",
+        href: "https://www.openpaypi.space/blog/meet-openpay-ai",
         desc: "Agents on open rails",
       },
     ],
@@ -114,7 +114,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "About", href: "/about", desc: "Why OpenPay Pro exists" },
       { label: "Funding", href: "/funding", desc: "Investors & partners" },
-      { label: "Whitepaper", href: "https://openpy.space/whitepaper", desc: "Network thesis" },
+      { label: "Whitepaper", href: "https://openpaypi.space/whitepaper", desc: "Network thesis" },
       { label: "Pitch Deck", href: "/pitch", desc: "Investor overview" },
     ],
   },
@@ -134,7 +134,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Public Ledger", href: "/docs/ledger", desc: "Append-only tx mirror" },
       { label: "Authentication", href: "/docs/auth", desc: "Seven Pro sign-in methods" },
       { label: "Agent Connect", href: "/docs/mcp", desc: "MCP for agents" },
-      { label: "Partner API keys", href: "https://openpy.space/partner-api", desc: "Apps & keys" },
+      { label: "Partner API keys", href: "https://openpaypi.space/partner-api", desc: "Apps & keys" },
     ],
   },
 ];
@@ -1125,15 +1125,15 @@ function HomePage() {
           </div>
           <ul className="mt-8 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { label: "Try OpenPay", href: "https://openpy.space" },
+              { label: "Try OpenPay", href: "https://openpaypi.space" },
               { label: "OpenLedger", href: "https://openpyledger.space" },
               { label: "OpenApp", href: "https://openappdev.space" },
-              { label: "Partner API", href: "https://openpy.space/partner-api" },
-              { label: "Whitepaper", href: "https://openpy.space/whitepaper" },
+              { label: "Partner API", href: "https://openpaypi.space/partner-api" },
+              { label: "Whitepaper", href: "https://openpaypi.space/whitepaper" },
               { label: "Pitch Deck", href: "/pitch" },
-              { label: "OpenNFT", href: "https://openpy.space/web3/nft" },
+              { label: "OpenNFT", href: "https://openpaypi.space/web3/nft" },
               { label: "Telegram Mini App", href: "https://t.me/openpayofficial" },
-              { label: "Meet OpenPay AI", href: "https://www.openpy.space/blog/meet-openpay-ai" },
+              { label: "Meet OpenPay AI", href: "https://www.openpaypi.space/blog/meet-openpay-ai" },
             ].map((item) => (
               <li key={item.href}>
                 <a
@@ -1221,15 +1221,15 @@ function HomePage() {
               { label: "Money rails", href: "/docs/money" },
               { label: "Partner Transfer API", href: "/docs/api" },
               { label: "FAQ", href: "/docs/faq" },
-              { label: "Partner API", href: "https://openpy.space/partner-api" },
+              { label: "Partner API", href: "https://openpaypi.space/partner-api" },
               { label: "OpenLedger", href: "https://openpyledger.space" },
-              { label: "Whitepaper", href: "https://openpy.space/whitepaper" },
+              { label: "Whitepaper", href: "https://openpaypi.space/whitepaper" },
             ]}
           />
           <FooterCol
             title="OpenPay"
             links={[
-              { label: "OpenPay", href: "https://openpy.space" },
+              { label: "OpenPay", href: "https://openpaypi.space" },
               { label: "OpenApp", href: "https://openappdev.space" },
               { label: "Pitch Deck", href: "/pitch" },
               { label: "Funding", href: "/funding" },

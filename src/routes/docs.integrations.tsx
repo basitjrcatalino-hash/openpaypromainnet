@@ -134,7 +134,7 @@ function IntegrationsDocsPage() {
       <DocsSection id="overview" eyebrow="0" title="What Pro Connect is">
         <p>
           <strong>OpenPay Pro Connect</strong> is the native integration layer for apps built on Pro
-          — separate from the OpenPay Partner Transfer API on <code>openpy.space</code>.
+          — separate from the OpenPay Partner Transfer API on <code>openpaypi.space</code>.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <DocsCard className="p-5!">

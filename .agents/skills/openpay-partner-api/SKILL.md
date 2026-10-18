@@ -12,7 +12,7 @@ description: >-
 
 ## When to use
 
-Implement or explain third-party integrations for **OpenPay** (`openpy.space`) and **OpenPay Pro** (`openpaypro.space`): auth, payments, payouts, top-up/inbound, ledger, MCP.
+Implement or explain third-party integrations for **OpenPay** (`openpaypi.space`) and **OpenPay Pro** (`openpaypro.space`): auth, payments, payouts, top-up/inbound, ledger, MCP.
 
 ## Always fetch first (preferred over memory)
 
@@ -37,7 +37,7 @@ Repo mirrors: `docs/AI_PARTNER_INTEGRATION.md`, `docs/openapi-partner.yaml`, `pu
 
 | Need | Do this |
 | --- | --- |
-| Connect login | `https://openpy.space/connect?client_id&redirect_uri&scope=profile%20balance&state` → `POST /oauth/token` |
+| Connect login | `https://openpaypi.space/connect?client_id&redirect_uri&scope=profile%20balance&state` → `POST /oauth/token` |
 | Checkout | `POST /charges` → redirect `checkout_url` → poll |
 | Payout | `GET /accounts/:id` → `POST /transfers` + `Idempotency-Key` |
 | Credit Pro wallet | note `pro_xfer:@user:ref` → `POST https://openpaypro.space/api/public/openpay/inbound` |
@@ -47,7 +47,7 @@ Repo mirrors: `docs/AI_PARTNER_INTEGRATION.md`, `docs/openapi-partner.yaml`, `pu
 
 ## Keys portal
 
-https://openpy.space/partner-api — create app, copy `client_id` + `opk_live_…`.
+https://openpaypi.space/partner-api — create app, copy `client_id` + `opk_live_…`.
 
 ## Implementation order for agents
 

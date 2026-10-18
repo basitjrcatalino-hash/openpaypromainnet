@@ -1,6 +1,6 @@
 # Prompt: Add “Send to OpenPay Pro” on OpenPay
 
-Paste this into the **OpenPay** (`openpy.space`) agent.
+Paste this into the **OpenPay** (`openpaypi.space`) agent.
 
 ---
 
@@ -84,7 +84,7 @@ Secrets (server only): `OPENPAY_PRO_INBOUND_URL`, partner `opk_live_…`.
 ## Hosted pay link (optional)
 
 ```
-https://openpy.space/pay/wainfoundation
+https://openpaypi.space/pay/wainfoundation
   ?amount=25.00&currency=OUSD
   &note=pro_xfer:0x7bf2…851a:r_xxx
   &success_url=https://openpaypro.space/receive?openpay_in=1&amount=25.00

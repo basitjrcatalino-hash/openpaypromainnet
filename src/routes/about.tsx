@@ -208,7 +208,7 @@ function AboutPage() {
             {[
               "OUSD ledger",
               "OpenPay Connect",
-              "Pi Network",
+              "OpenPay Arc",
               "OpenToken",
               "Ledger API",
               "MCP agents",

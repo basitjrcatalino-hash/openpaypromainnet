@@ -1297,7 +1297,7 @@ function TradePage() {
         title="Confirm close"
         description={
           closeTarget
-            ? `${closeTarget.market}OUSD · ${closeTarget.side.toUpperCase()} ${closeTarget.leverage}×`
+            ? `${closeTarget.market}/OUSD · ${closeTarget.side.toUpperCase()} ${closeTarget.leverage}×`
             : undefined
         }
         icon={
@@ -1380,7 +1380,7 @@ function TradePage() {
           confirmOrder === "spot"
             ? `${market} · ${spotSide === "buy" ? "Buy" : "Sell"} · ${orderType === "limit" ? "Limit" : "Market"}`
             : confirmOrder
-              ? `${market}OUSD · ${confirmOrder.toUpperCase()} ${orderPreview?.lev ?? 0}×`
+              ? `${market}/OUSD · ${confirmOrder.toUpperCase()} ${orderPreview?.lev ?? 0}×`
               : undefined
         }
         icon={

@@ -1,6 +1,6 @@
 # Errors & retries — OpenPay Pro
 
-Live page: [`/docs/errors`](https://openpaypi.space/docs/errors)
+Live page: [`/docs/errors`](https://openpaypro.space/docs/errors)
 
 ## Partner Transfer API
 

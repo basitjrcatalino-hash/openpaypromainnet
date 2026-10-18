@@ -48,10 +48,10 @@ export const Route = createFileRoute("/openusd")({
       { property: "og:title", content: "Meet OpenUSD (OUSD)" },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypi.space/openusd" },
+      { property: "og:url", content: "https://openpaypro.space/openusd" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/openusd" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/openusd" }],
   }),
   component: OusdPage,
 });

@@ -25,10 +25,10 @@ export const Route = createFileRoute("/about")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypi.space/about" },
+      { property: "og:url", content: "https://openpaypro.space/about" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/about" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/about" }],
   }),
   component: AboutPage,
 });

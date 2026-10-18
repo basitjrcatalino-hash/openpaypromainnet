@@ -12,13 +12,13 @@ description: >-
 
 ## When to use
 
-Implement or explain third-party integrations for **OpenPay** (`openpy.space`) and **OpenPay Pro** (`openpaypi.space`): auth, payments, payouts, top-up/inbound, ledger, MCP.
+Implement or explain third-party integrations for **OpenPay** (`openpy.space`) and **OpenPay Pro** (`openpaypro.space`): auth, payments, payouts, top-up/inbound, ledger, MCP.
 
 ## Always fetch first (preferred over memory)
 
-1. https://openpaypi.space/api/public/docs/ai-partner  
-2. https://openpaypi.space/api/public/docs/openapi  
-3. https://openpaypi.space/llms.txt  
+1. https://openpaypro.space/api/public/docs/ai-partner  
+2. https://openpaypro.space/api/public/docs/openapi  
+3. https://openpaypro.space/llms.txt  
 
 Repo mirrors: `docs/AI_PARTNER_INTEGRATION.md`, `docs/openapi-partner.yaml`, `public/llms.txt`.
 
@@ -40,10 +40,10 @@ Repo mirrors: `docs/AI_PARTNER_INTEGRATION.md`, `docs/openapi-partner.yaml`, `pu
 | Connect login | `https://openpy.space/connect?client_id&redirect_uri&scope=profile%20balance&state` → `POST /oauth/token` |
 | Checkout | `POST /charges` → redirect `checkout_url` → poll |
 | Payout | `GET /accounts/:id` → `POST /transfers` + `Idempotency-Key` |
-| Credit Pro wallet | note `pro_xfer:@user:ref` → `POST https://openpaypi.space/api/public/openpay/inbound` |
+| Credit Pro wallet | note `pro_xfer:@user:ref` → `POST https://openpaypro.space/api/public/openpay/inbound` |
 | Reconcile | Ledger `GET /api/public/ledger/entries` |
-| Agent read-only | MCP `https://openpaypi.space/mcp` (no money move) |
-| Top-up UX | Deep-link `https://openpaypi.space/topup` |
+| Agent read-only | MCP `https://openpaypro.space/mcp` (no money move) |
+| Top-up UX | Deep-link `https://openpaypro.space/topup` |
 
 ## Keys portal
 

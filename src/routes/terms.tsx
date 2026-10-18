@@ -15,9 +15,9 @@ export const Route = createFileRoute("/terms")({
         property: "og:description",
         content: "The terms governing use of the OpenPay Pro wallet, transfers, tokens, and NFTs.",
       },
-      { property: "og:url", content: "https://openpaypi.space/terms" },
+      { property: "og:url", content: "https://openpaypro.space/terms" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/terms" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/terms" }],
   }),
   component: TermsPage,
 });

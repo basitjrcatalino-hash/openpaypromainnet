@@ -36,7 +36,7 @@ const ENDPOINTS = [
 ];
 
 function ApiPage() {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://openpaypi.space";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
 
   return (
     <P2pHubLayout

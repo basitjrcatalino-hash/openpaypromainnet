@@ -43,9 +43,9 @@ export const Route = createFileRoute("/auth")({
         content: "Sign in or create an OpenPay Pro account with email and password.",
       },
       { property: "og:title", content: "Email sign in — OpenPay Pro Wallet" },
-      { property: "og:url", content: "https://openpaypi.space/auth" },
+      { property: "og:url", content: "https://openpaypro.space/auth" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/auth" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/auth" }],
   }),
   component: AuthLayout,
 });

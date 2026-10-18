@@ -11,7 +11,7 @@ import {
 } from "@/lib/wiki-guides";
 import { cn } from "@/lib/utils";
 
-const SITE = "https://openpaypi.space";
+const SITE = "https://openpaypro.space";
 
 export const Route = createFileRoute("/wiki_/$slug")({
   loader: ({ params }) => {

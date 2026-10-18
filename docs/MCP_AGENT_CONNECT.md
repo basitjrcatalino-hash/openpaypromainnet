@@ -1,13 +1,13 @@
 # Agent Connect · MCP — OpenPay Pro
 
-Live page: [`/docs/mcp`](https://openpaypi.space/docs/mcp)
+Live page: [`/docs/mcp`](https://openpaypro.space/docs/mcp)
 
 ## Endpoint
 
-- MCP: `https://openpaypi.space/mcp`
-- List tools: `https://openpaypi.space/.mcp/list-tools`
-- Invoke: `https://openpaypi.space/.mcp/invoke-tool/$tool`
-- OAuth metadata: `https://openpaypi.space/.well-known/oauth-protected-resource`
+- MCP: `https://openpaypro.space/mcp`
+- List tools: `https://openpaypro.space/.mcp/list-tools`
+- Invoke: `https://openpaypro.space/.mcp/invoke-tool/$tool`
+- OAuth metadata: `https://openpaypro.space/.well-known/oauth-protected-resource`
 
 ## Tools (read-only)
 

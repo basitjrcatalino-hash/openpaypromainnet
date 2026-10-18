@@ -21,7 +21,7 @@ type SendAsset = LedgerAssetCode;
 export const Route = createFileRoute("/pay/$to")({
   validateSearch: (search) => paySearchSchema.parse(search),
   beforeLoad: async ({ params, search }) => {
-    const raw = `https://openpaypi.space/pay/${encodeURIComponent(params.to)}${
+    const raw = `https://openpaypro.space/pay/${encodeURIComponent(params.to)}${
       search.asset || search.amount || search.token
         ? `?${new URLSearchParams({
             ...(search.asset ? { asset: search.asset } : {}),

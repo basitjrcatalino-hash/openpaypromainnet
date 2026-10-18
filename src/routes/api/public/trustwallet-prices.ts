@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/trustwallet-prices")({
           if (!trustWalletConfigured()) {
             return Response.json(
               { configured: false, tickers: [], error: "not_configured" },
-              { status: 503 },
+              { status: 200 },
             );
           }
           const body = (await request.json().catch(() => ({}))) as {
@@ -33,8 +33,8 @@ export const Route = createFileRoute("/api/public/trustwallet-prices")({
           );
           if (!res.ok) {
             return Response.json(
-              { configured: true, tickers: [], error: res.error },
-              { status: 502 },
+              { configured: true, tickers: [], error: res.error, degraded: true },
+              { status: 200, headers: { "Cache-Control": "no-store" } },
             );
           }
           return Response.json({ configured: true, tickers: res.tickers });

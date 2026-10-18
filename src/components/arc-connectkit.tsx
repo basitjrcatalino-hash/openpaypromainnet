@@ -81,7 +81,9 @@ function Bridge({ open, onOpenChange, onSelect }: Props) {
 
   useEffect(() => {
     handled.current = false;
-    setModalOpen.current(open);
+    // ConnectKit closes its modal in a mount effect; open after that initialization.
+    const frame = window.requestAnimationFrame(() => setModalOpen.current(open));
+    return () => window.cancelAnimationFrame(frame);
   }, [open]);
 
   useEffect(() => {

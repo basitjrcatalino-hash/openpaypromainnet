@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { isAuthMethodKey } from "@/lib/auth-methods";
 
 export const Route = createFileRoute("/authpi")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { method?: string; mode?: "signin" | "signup"; next?: string } => ({
     method: typeof s.method === "string" && isAuthMethodKey(s.method.toLowerCase()) ? s.method.toLowerCase() : undefined,
     mode: s.mode === "signup" || s.mode === "signin" ? s.mode : undefined,
     next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,

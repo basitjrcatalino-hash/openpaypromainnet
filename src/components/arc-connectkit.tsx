@@ -76,8 +76,13 @@ function Bridge({ open, onOpenChange, onSelect }: Props) {
   const { open: modalOpen, setOpen } = useModal();
   const wasOpen = useRef(false);
   const handled = useRef(false);
+  const setModalOpen = useRef(setOpen);
+  setModalOpen.current = setOpen;
 
-  useEffect(() => { if (open) { handled.current = false; setOpen(true); } }, [open, setOpen]);
+  useEffect(() => {
+    handled.current = false;
+    setModalOpen.current(open);
+  }, [open]);
 
   useEffect(() => {
     if (modalOpen) wasOpen.current = true;

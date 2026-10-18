@@ -85,6 +85,26 @@ function web3authEventsShimPlugin(): Plugin {
   };
 }
 
+const aaveAccountSsrShim = path.resolve(rootDir, "src/shims/aave-account.ssr.ts");
+
+/**
+ * `@aave/account` (ConnectKit dependency) runs post-robot timers at module load,
+ * which Workers forbid in global scope → every published page returns 500.
+ * Swap it for a stub in server environments only; browsers keep the real package.
+ */
+function aaveAccountSsrShimPlugin(): Plugin {
+  return {
+    name: "aave-account-ssr-shim",
+    enforce: "pre",
+    resolveId(id) {
+      if (id !== "@aave/account" && !id.startsWith("@aave/account/")) return null;
+      const envName = (this as unknown as { environment?: { name?: string } }).environment?.name;
+      if (envName === "client") return null;
+      return aaveAccountSsrShim;
+    },
+  };
+}
+
 export default defineConfig({
   // Pin Nitro to Vercel when building there (Lovable default is Cloudflare).
   nitro: onVercel ? { preset: "vercel" } : undefined,
@@ -94,7 +114,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [web3authEventsShimPlugin(), mcpPlugin()],
+    plugins: [aaveAccountSsrShimPlugin(), web3authEventsShimPlugin(), mcpPlugin()],
     define: {
       global: "globalThis",
     },

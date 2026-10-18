@@ -1,0 +1,1 @@
+ALTER TABLE public.arc_auth_challenges ADD COLUMN IF NOT EXISTS allow_signup boolean NOT NULL DEFAULT false;

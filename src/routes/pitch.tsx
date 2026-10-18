@@ -81,13 +81,13 @@ const DESC =
 const FEATURE_PILLARS = [
   {
     id: "money",
-    title: "Money · OpenUSD + Pi",
+    title: "Money · OpenUSD + OpenPay Arc",
     blurb: "Main tokens first — then majors and OpenTokens.",
     logos: [OUSD_LOGO_URL, PI_NETWORK_LOGO_URL],
     items: [
       "OpenUSD (OUSD) — primary $1 ledger dollar",
-      "Pi Network — core Pro asset and OUSD top-up rail",
-      "Unified wallet: OUSD, Pi, majors, OpenTokens, NFTs",
+      "OpenPay Arc — USDC on Arc, wallet connect and partner transfers",
+      "Unified wallet: OUSD, USDC on Arc, majors, OpenTokens, NFTs",
       "@username identity on the same ledger",
       "Display currencies (USD, EUR, PI, and more)",
     ],
@@ -127,7 +127,7 @@ const FEATURE_PILLARS = [
       "Receive QR & public /pay links",
       "MoonPay · Circle · Solana Pay · WalletConnect Pay",
       "Multi-chain: Ethereum, Base, BNB, Polygon, Solana…",
-      "Pi Network and OpenPay Balance top-ups → OUSD",
+      "OpenPay Balance and OpenPay Arc top-ups → OUSD",
     ],
   },
   {
@@ -138,7 +138,7 @@ const FEATURE_PILLARS = [
     items: [
       "12/24-word recovery phrase",
       "PIN & biometrics",
-      "Pi Verify KYC when required",
+      "Identity checks when required",
       "OpenPay OAuth for network features",
       "Not a closed bank silo",
     ],
@@ -234,7 +234,7 @@ const DEMO_EXPERIENCES = [
 
 const AUTH_METHODS = [
   { name: "OpenPay", logo: OPENPAY_AUTH_LOGO },
-  { name: "Pi Network", logo: PI_NETWORK_LOGO_URL },
+  { name: "Arc Wallet", logo: USDC_LOGO_URL },
   { name: "Phantom", logo: PHANTOM_WALLET_LOGO },
   { name: "Solana", logo: SOL_LOGO_URL },
   { name: "MetaMask", logo: "https://www.google.com/s2/favicons?domain=metamask.io&sz=128" },
@@ -247,11 +247,11 @@ const ROADMAP = [
     when: "Today",
     tone: "live" as const,
     items: [
-      "OpenPay Pro wallet — OUSD, Pi, majors, OpenTokens",
+      "OpenPay Pro wallet — OUSD, USDC on Arc, majors, OpenTokens",
       "OpenUSD settlement across send, swap, Spot & Perps",
-      "Multi-rail deposits (cards, crypto, Solana Pay, Circle, Pi)",
+      "Multi-rail deposits (cards, crypto, Solana Pay, Circle, OpenPay Arc)",
       "Self-custody, OpenLedger, Partner API, OpenPay AI + MCP",
-      "Auth: OpenPay, Pi, Phantom, Solana, MetaMask, WalletConnect, Telegram",
+      "Auth: OpenPay, Arc Wallet, Phantom, Solana, MetaMask, WalletConnect, Telegram",
     ],
   },
   {
@@ -262,7 +262,7 @@ const ROADMAP = [
       "Deeper liquidity across listed majors and OpenToken markets",
       "Expanded exchange & payment partner coverage",
       "Stronger merchant tools — QR, pay links, Connect charges",
-      "Growth in Pi-native and Solana-native distribution",
+      "Growth in Arc-native and Solana-native distribution",
       "Compliance tooling and regional readiness",
     ],
   },
@@ -305,12 +305,12 @@ const FUND_USE = [
   {
     pct: 20,
     title: "Growth & partnerships",
-    body: "User acquisition, Pi & wallet distribution, exchange/payment integrations, and merchant adoption.",
+    body: "User acquisition, OpenPay Arc & wallet distribution, exchange/payment integrations, and merchant adoption.",
   },
   {
     pct: 15,
     title: "Security & compliance",
-    body: "Self-custody hardening, audits, Pi Verify / KYC flows, and regional regulatory readiness.",
+    body: "Self-custody hardening, audits, identity / KYC flows, and regional regulatory readiness.",
   },
   {
     pct: 10,
@@ -326,7 +326,7 @@ const WHY_NOW = [
   },
   {
     title: "Distribution ready",
-    body: "Pi Network, Phantom, Solana, MetaMask, Telegram, and OpenPay — many doors into one Pro account.",
+    body: "OpenPay Arc, Phantom, Solana, MetaMask, Telegram, and OpenPay — many doors into one Pro account.",
   },
   {
     title: "Full stack, not a silo",
@@ -354,7 +354,7 @@ function pitchSpeechText() {
     "Meet OpenUSD — OpenPay's one-dollar ledger dollar for hold, send, spend, and settle.",
     `Live markets: ${stats.majors} majors, ${stats.spot} spot, ${stats.perp} perpetuals, ${stats.networks} networks.`,
     "The problem: closed bank apps and fragmented crypto wallets force users to hop rails.",
-    "The solution: one Pro home for OUSD, Pi, majors, and OpenTokens — with open ledger, Partner API, and agents.",
+    "The solution: one Pro home for OUSD, USDC on Arc, majors, and OpenTokens — with open ledger, Partner API, and agents.",
     "Experience Spot, Perpetuals, P2P, and OpenToken demos live in OpenPay Pro.",
     "Roadmap from live product to global open money network.",
     `The team is seeking ${formatUsdCompact(PITCH_RAISE.openPayProUsd)} for OpenPay Pro and ${formatUsdCompact(PITCH_RAISE.openPayNetworkUsd)} for OpenPay — ${formatUsdCompact(TOTAL_RAISE_USD)} total, payable in USD or Pi at the live π price.`,
@@ -577,8 +577,8 @@ function PitchPage() {
         </p>
         <p data-rise className="oppitch-rise oppitch-body mt-7 max-w-2xl text-muted-foreground">
           Hold, send, and settle in <span className="font-bold text-foreground">OpenUSD</span>.{" "}
-          <span className="font-bold text-foreground">Pi Network</span> is a core Pro asset and
-          top-up rail — then majors, OpenTokens, Spot, Perps, and P2P on one public ledger.
+          <span className="font-bold text-foreground">OpenPay Arc</span> powers USDC on Arc and
+          wallet connect — then majors, OpenTokens, Spot, Perps, and P2P on one public ledger.
         </p>
         <div data-rise className="oppitch-rise mt-7 max-w-2xl">
           <MainTokensHighlight tone="lavender" compact />
@@ -660,7 +660,7 @@ function PitchPage() {
               logo={OPENPAY_NETWORK_BADGE_URL}
               name="OpenPay Pro"
               href="/website"
-              body="The self-custody money app on that network — OUSD, Pi, majors, OpenTokens, trading, deposits, and OpenPay AI."
+              body="The self-custody money app on that network — OUSD, USDC on Arc, majors, OpenTokens, trading, deposits, and OpenPay AI."
             />
           </div>
         </Slide>
@@ -691,7 +691,7 @@ function PitchPage() {
 
         <Slide id="solution" num="04" title="The solution" kicker="One Pro home">
           <p className="max-w-2xl oppitch-body text-muted-foreground">
-            OpenPay Pro unifies network dollars, Pi, listed majors, and OpenTokens — with
+            OpenPay Pro unifies network dollars, USDC on Arc, listed majors, and OpenTokens — with
             self-custody keys, a public ledger, and builder rails that speak OpenUSD.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -718,7 +718,7 @@ function PitchPage() {
           </div>
         </Slide>
 
-        <Slide id="openusd" num="05" title="OpenUSD + Pi" kicker="Main tokens">
+        <Slide id="openusd" num="05" title="OpenUSD + OpenPay Arc" kicker="Main tokens">
           <MainTokensHighlight tone="lavender" className="mb-8" />
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
             <div className="flex-1">
@@ -743,7 +743,7 @@ function PitchPage() {
                 {[
                   "Settles OpenDEX swaps, Tokens buys, Spot & Perpetuals",
                   "Denominates Partner API and OpenLedger activity",
-                  "Funded via Pi Network, OpenPay Balance, cards, USDC, Solana Pay, Circle, multi-chain",
+                  "Funded via OpenPay Balance, OpenPay Arc, cards, USDC, Solana Pay, Circle, multi-chain",
                 ].map((line) => (
                   <li key={line} className="flex gap-2">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -762,14 +762,14 @@ function PitchPage() {
             <div className="oppitch-panel flex-1 p-6 sm:p-8">
               <div className="flex items-center gap-3">
                 <img
-                  src={PI_NETWORK_LOGO_URL}
-                  alt="Pi Network"
+                  src={USDC_LOGO_URL}
+                  alt="OpenPay Arc"
                   className="h-14 w-14 rounded-full object-contain shadow-sm"
                 />
                 <div>
-                  <h3 className="oppitch-card-title">Pi Network</h3>
+                  <h3 className="oppitch-card-title">OpenPay Arc</h3>
                   <p className="text-base font-semibold text-muted-foreground">
-                    Core Pro asset · top-up rail
+                    USDC on Arc · wallet connect
                   </p>
                 </div>
               </div>
@@ -783,18 +783,18 @@ function PitchPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="oppitch-card-title">Pi Network</p>
+                  <p className="oppitch-card-title">OpenPay Arc</p>
                   <p className="mt-2 oppitch-body text-muted-foreground">
-                    Hold Pi beside OUSD — pay with π at live price and credit OpenUSD instantly.
+                    Connect an Arc wallet beside OUSD — send and settle USDC on Arc.
                   </p>
                 </div>
               </div>
               <div className="mt-8 flex items-center gap-3">
-                <img src={PI_NETWORK_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
+                <img src={USDC_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
                 <span className="text-muted-foreground">+</span>
                 <img src={OUSD_LOGO_URL} alt="" className="h-9 w-9 rounded-full" />
                 <span className="ml-auto text-sm font-bold text-muted-foreground">
-                  Pi × OpenUSD
+                  Arc × OpenUSD
                 </span>
               </div>
             </div>
@@ -1218,7 +1218,7 @@ function PitchPage() {
                 t: "Product live",
                 b: "Wallet, markets, deposits, AI, and builder APIs shipping today.",
               },
-              { t: "Clear wedge", b: "OUSD + Pi + majors in one self-custody home." },
+              { t: "Clear wedge", b: "OUSD + USDC on Arc + majors in one self-custody home." },
               {
                 t: "Network upside",
                 b: "Partners, agents, and apps compound on open ledger rails.",
@@ -1454,7 +1454,7 @@ function DemoPreview({
         </div>
         <div className="space-y-2">
           {[
-            { m: "Merchant · Pi Pay", rate: "1.00 OUSD", lim: "50–2,000" },
+            { m: "Merchant · OpenPay", rate: "1.00 OUSD", lim: "50–2,000" },
             { m: "Merchant · Bank", rate: "0.998 OUSD", lim: "100–5,000" },
           ].map((ad) => (
             <div

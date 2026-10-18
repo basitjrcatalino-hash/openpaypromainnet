@@ -1,3 +1,4 @@
+import { PiLinkPrompt } from "@/components/pi-link-prompt";
 import {
   createFileRoute,
   Outlet,

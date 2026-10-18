@@ -123,7 +123,7 @@ export const Route = createFileRoute("/_authenticated")({
         ({ data, error } = await supabase.auth.getUser());
       }
     }
-    if (error || !data.user) throw redirect({ to: "/authpi" });
+    if (error || !data.user) throw redirect({ to: "/auth", search: { next: location.href } });
     if (!BAGS_CASH_ENABLED && location.pathname.startsWith("/bags")) {
       throw redirect({ to: "/dashboard" });
     }
@@ -1053,7 +1053,7 @@ function SidebarInner({
   async function signOut() {
     await supabase.auth.signOut();
     toast.success("Signed out");
-    router.navigate({ to: "/authpi", replace: true });
+    router.navigate({ to: "/auth", replace: true });
   }
 
   async function copyAddress() {

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/arc")({
 });
 function ArcPage() {
   return <main className="mx-auto min-h-dvh max-w-2xl px-5 py-10 text-foreground sm:py-16">
-    <Link to="/authpi" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />OpenPay Pro</Link>
+    <Link to="/auth" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />OpenPay Pro</Link>
     <header className="my-8"><p className="text-sm font-medium text-primary">Powered by Arc · OpenPay Arc · Circle App Kit</p><h1 className="mt-3 text-3xl font-semibold">Arc Wallet</h1></header>
     <ClientOnly fallback={<Loader2 className="h-6 w-6 animate-spin" />}><Suspense fallback={<Loader2 className="h-6 w-6 animate-spin" />}><ArcWalletPanel /></Suspense></ClientOnly>
   </main>;

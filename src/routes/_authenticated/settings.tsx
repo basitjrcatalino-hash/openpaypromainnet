@@ -1484,7 +1484,7 @@ function SettingsPage() {
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">Software License</span>
                 <span className="block text-xs text-muted-foreground">
-                  MRWAIN ORGANIZATION · Pi Network license
+                  MRWAIN ORGANIZATION · OpenPay license
                 </span>
               </span>
               <span className="text-muted-foreground">›</span>

@@ -196,8 +196,7 @@ function OusdPage() {
               <img src={OUSD_LOGO_URL} alt="" className="h-5 w-5 rounded-md object-cover" />
               OpenUSD · OUSD
               <span className="text-border">·</span>
-              <img src={PI_NETWORK_LOGO_URL} alt="" className="h-5 w-5 rounded-full object-cover" />
-              Pi Network
+              Powered by OpenPay &amp; OpenPay Arc
             </p>
             <h1
               data-rise
@@ -209,14 +208,14 @@ function OusdPage() {
               data-rise
               className="opcash-rise mt-5 text-xl font-semibold tracking-tight sm:text-2xl"
             >
-              OpenPay’s dollar for the open network — beside Pi as a core Pro asset.
+              OpenPay’s dollar for the open network — powered by OpenPay and OpenPay Arc.
             </p>
             <p
               data-rise
               className="opcash-rise mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              Hold, send, and settle in OUSD across OpenPay Pro. Top up with Pi Network at a live π
-              price — OpenUSD and Pi lead every wallet.
+              Hold, send, and settle in OUSD across OpenPay Pro. Top up with OpenPay or settle USDC
+              on Arc — OpenUSD leads every wallet.
             </p>
             <div data-rise className="opcash-rise mt-6">
               <MainTokensHighlight tone="light" compact />
@@ -261,15 +260,15 @@ function OusdPage() {
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
               <img
-                src={PI_NETWORK_LOGO_URL}
+                src={USDC_LOGO_URL}
                 alt=""
                 className="mx-auto h-12 w-12 rounded-full object-cover"
                 referrerPolicy="no-referrer"
               />
-              <p className="mt-4 text-lg font-bold">Pi Network · core asset</p>
+              <p className="mt-4 text-lg font-bold">OpenPay Arc · USDC rail</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Hold Pi beside OpenUSD in one Pro wallet — and top up OUSD from Pi at a live π
-                price.
+                Connect an Arc wallet beside OpenUSD in one Pro account — send and settle USDC on
+                Arc.
               </p>
             </div>
             <div className="rounded-[1.75rem] bg-white/75 px-6 py-8 shadow-[0_20px_60px_-40px_rgba(30,60,90,0.35)] backdrop-blur">
@@ -589,7 +588,7 @@ function OusdSwapShowcase() {
       </h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
         <span className="font-bold text-foreground">OpenUSD</span> and{" "}
-        <span className="font-bold text-foreground">Pi Network</span> are the main Pro tokens — then
+        <span className="font-bold text-foreground">OpenPay Arc</span> power OpenPay Pro — then
         majors, Spot, and Perpetuals settle against the same OUSD rail.
       </p>
 

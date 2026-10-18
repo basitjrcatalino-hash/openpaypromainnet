@@ -35,7 +35,7 @@ const TONE: Record<
 };
 
 /**
- * Persistent marketing highlight: OpenUSD + Pi Network as the main Pro tokens.
+ * Persistent marketing highlight: OpenUSD + OpenPay Arc as the main Pro tokens.
  */
 export function MainTokensHighlight({
   tone = "light",
@@ -61,7 +61,7 @@ export function MainTokensHighlight({
         </span>
         {!compact ? (
           <p className={cn("text-sm font-semibold", t.body)}>
-            OpenUSD and Pi Network lead every OpenPay Pro wallet.
+            OpenPay Pro · powered by OpenPay and OpenPay Arc.
           </p>
         ) : null}
       </div>
@@ -93,15 +93,18 @@ export function MainTokensHighlight({
           </span>
         </Link>
 
-        <div className={cn("flex items-center gap-3 rounded-2xl border p-3", t.card)}>
+        <Link
+          to="/arc"
+          className={cn("flex items-center gap-3 rounded-2xl border p-3 transition hover:brightness-105", t.card)}
+        >
           <img
-            src={PI_NETWORK_LOGO_URL}
+            src={USDC_LOGO_URL}
             alt=""
             className="h-12 w-12 shrink-0 rounded-full object-cover shadow-sm"
           />
           <div className="min-w-0 text-left">
-            <p className={cn("text-base font-extrabold tracking-tight", t.title)}>Pi Network</p>
-            <p className={cn("text-sm font-semibold", t.body)}>PI · Core Pro asset · top-up rail</p>
+            <p className={cn("text-base font-extrabold tracking-tight", t.title)}>OpenPay Arc</p>
+            <p className={cn("text-sm font-semibold", t.body)}>USDC on Arc · wallet connect</p>
           </div>
           <span
             className={cn(
@@ -109,9 +112,9 @@ export function MainTokensHighlight({
               t.chip,
             )}
           >
-            Core
+            Arc
           </span>
-        </div>
+        </Link>
       </div>
     </div>
   );

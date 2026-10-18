@@ -338,7 +338,7 @@ const FEATURE_SHOWCASE = [
 const FEATURE_BENTO = [
   {
     title: "OpenUSD home",
-    body: "OpenUSD + Pi Network lead your Pro balance — then majors and OpenTokens.",
+    body: "OpenUSD + OpenPay Arc lead your Pro balance — then majors and OpenTokens.",
     tag: "Main tokens",
     href: "/openusd",
     logos: [OUSD_LOGO_URL, PI_NETWORK_LOGO_URL],
@@ -781,7 +781,7 @@ function HomePage() {
               className="ophome-rise mt-5 max-w-xl text-[clamp(1.05rem,2.2vw,1.35rem)] font-medium leading-snug tracking-[-0.02em] text-white/80"
             >
               Your home for <span className="font-bold text-white">OpenUSD</span> and{" "}
-              <span className="font-bold text-white">Pi Network</span> — plus OpenTokens on the open
+              <span className="font-bold text-white">OpenPay Arc</span> — plus OpenTokens on the open
               network.
             </p>
             <div
@@ -1399,7 +1399,7 @@ function PartnersShowcase() {
               </h3>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 <span className="font-bold text-(--ink)">OpenUSD</span> and{" "}
-                <span className="font-bold text-(--ink)">Pi Network</span> lead every Pro wallet —
+                <span className="font-bold text-(--ink)">OpenPay Arc</span> lead every Pro wallet —
                 then majors for Tokens, Spot, and Perpetuals.
               </p>
             </div>

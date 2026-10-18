@@ -1147,7 +1147,7 @@ function TradePage() {
                     </div>
                     <div>
                       <p className="text-muted-foreground">Quote</p>
-                      <p className="mt-0.5 font-semibold">USDT</p>
+                      <p className="mt-0.5 font-semibold">OUSD</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Mark</p>
@@ -1297,7 +1297,7 @@ function TradePage() {
         title="Confirm close"
         description={
           closeTarget
-            ? `${closeTarget.market}USDT · ${closeTarget.side.toUpperCase()} ${closeTarget.leverage}×`
+            ? `${closeTarget.market}OUSD · ${closeTarget.side.toUpperCase()} ${closeTarget.leverage}×`
             : undefined
         }
         icon={
@@ -1380,7 +1380,7 @@ function TradePage() {
           confirmOrder === "spot"
             ? `${market} · ${spotSide === "buy" ? "Buy" : "Sell"} · ${orderType === "limit" ? "Limit" : "Market"}`
             : confirmOrder
-              ? `${market}USDT · ${confirmOrder.toUpperCase()} ${orderPreview?.lev ?? 0}×`
+              ? `${market}OUSD · ${confirmOrder.toUpperCase()} ${orderPreview?.lev ?? 0}×`
               : undefined
         }
         icon={

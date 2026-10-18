@@ -23,7 +23,7 @@ export function LeverageAdjustSheet({
   entryPrice,
   available,
   baseSymbol,
-  quoteSymbol = "USDT",
+  quoteSymbol = "OUSD",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;

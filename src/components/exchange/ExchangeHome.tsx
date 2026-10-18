@@ -259,7 +259,7 @@ function MarketRow({
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-sm font-bold">{row.symbol}</span>
-            <span className="text-xs text-muted-foreground">/USDT</span>
+            <span className="text-xs text-muted-foreground">/OUSD</span>
             {row.perp && (
               <span className="rounded bg-muted px-1 py-px text-[10px] font-bold text-muted-foreground">
                 {row.leverage}x

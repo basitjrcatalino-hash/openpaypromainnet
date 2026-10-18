@@ -18,6 +18,7 @@ import {
   OUSD_LOGO_URL,
   OPENPAY_NETWORK_BADGE_URL,
   PI_NETWORK_LOGO_URL,
+  USDC_LOGO_URL,
   SOL_LOGO_URL,
 } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO, OPENPAY_AI_MENU_ICON } from "@/lib/openpay-auth";
@@ -83,7 +84,7 @@ const FEATURE_PILLARS = [
     id: "money",
     title: "Money · OpenUSD + OpenPay Arc",
     blurb: "Main tokens first — then majors and OpenTokens.",
-    logos: [OUSD_LOGO_URL, PI_NETWORK_LOGO_URL],
+    logos: [OUSD_LOGO_URL, USDC_LOGO_URL],
     items: [
       "OpenUSD (OUSD) — primary $1 ledger dollar",
       "OpenPay Arc — USDC on Arc, wallet connect and partner transfers",

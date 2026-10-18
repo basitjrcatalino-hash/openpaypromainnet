@@ -25,7 +25,7 @@ function fav(domain: string) {
  * Primary sources follow the approved Simple Icons / PHLogos set; favicons / local SVGs as fallback.
  */
 export const P2P_PAYMENT_LOGO_CANDIDATES: Record<string, string[]> = {
-  openpay: [OUSD_LOGO_URL, "/ousd-logo.svg", "https://openpaypro.space/logo.png"],
+  openpay: [OUSD_LOGO_URL, "/ousd-logo.svg", "https://openpaypi.space/logo.png"],
   bank_transfer: ["/p2p-pay/bank-transfer.svg", si("sepa"), fav("swift.com")],
   cash_in_person: ["/p2p-pay/cash.svg", si("contactlesspayment")],
 

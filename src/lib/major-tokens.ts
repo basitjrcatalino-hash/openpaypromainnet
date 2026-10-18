@@ -2362,7 +2362,7 @@ export const MAJOR_TOKENS: Record<MajorTokenId, MajorTokenDef> = {
     network: "OpenPay",
     category: "OpenPay asset",
     logoUrl: OPRO_LOGO_URL,
-    website: "https://openpaypro.space",
+    website: "https://openpaypi.space",
     coingeckoId: "solana",
     createdLabel: "OpenPay Pro",
     createdAt: "2026-01-01T00:00:00.000Z",

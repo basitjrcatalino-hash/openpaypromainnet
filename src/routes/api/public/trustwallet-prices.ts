@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/trustwallet-prices")({
           if (!trustWalletConfigured()) {
             return Response.json(
               { configured: false, tickers: [], error: "not_configured" },
-              { status: 503 },
+              { status: 200 },
             );
           }
           const body = (await request.json().catch(() => ({}))) as {

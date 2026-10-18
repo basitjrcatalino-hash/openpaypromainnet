@@ -102,3 +102,32 @@ export async function bridgeToArc(amount: string, source: "Base" | "Ethereum" | 
   const result = await new AppKit().bridge({ from: { adapter, chain: source }, to: { adapter, chain: "Arc" }, amount });
   return result;
 }
+
+/** Read any ERC-20 balance on Arc Mainnet (e.g. OUSD published by OpenPay Arc). */
+export async function arcTokenBalance(address: `0x${string}`, token: `0x${string}`) {
+  const client = createPublicClient({ chain: arcMainnet, transport: http() });
+  if (await client.getChainId() !== arcMainnet.id) throw new Error("Arc RPC returned an unexpected network.");
+  const [raw, decimals] = await Promise.all([
+    client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [address] }),
+    client.readContract({ address: token, abi: erc20Abi, functionName: "decimals" }),
+  ]);
+  return formatUnits(raw, decimals);
+}
+
+/** Wallet-signed ERC-20 transfer on Arc Mainnet, simulated before signing. */
+export async function arcTokenTransfer(token: `0x${string}`, amount: string, recipient: string, preferred?: EIP1193Provider) {
+  validateArcPayment(amount, recipient);
+  await switchToArc(preferred);
+  const address = await connectArcWallet(preferred);
+  const publicClient = createPublicClient({ chain: arcMainnet, transport: http() });
+  if (await publicClient.getChainId() !== arcMainnet.id) throw new Error("Unexpected Arc network.");
+  const decimals = await publicClient.readContract({ address: token, abi: erc20Abi, functionName: "decimals" });
+  const value = parseUnits(amount, decimals);
+  const { request } = await publicClient.simulateContract({ account: address, address: token, abi: erc20Abi, functionName: "transfer", args: [getAddress(recipient), value] });
+  const wallet = createWalletClient({ chain: arcMainnet, transport: custom(arcProvider(preferred)) });
+  const txHash = await wallet.writeContract({ ...request, account: address });
+  try {
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, timeout: 60000 });
+    return { state: receipt.status === "success" ? "success" : "error", txHash };
+  } catch { return { state: "pending", txHash }; }
+}

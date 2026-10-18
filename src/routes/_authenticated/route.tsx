@@ -746,6 +746,9 @@ function AuthenticatedLayout() {
                   >
                     <PageTransition disabled={hideChrome}>
                       <MaintenanceGate>
+                        {!hideChrome ? (
+                          <PiLinkPrompt userId={user.id} piUsername={profile?.pi_username} />
+                        ) : null}
                         {isP2p ? (
                           <P2pShell>
                             <Outlet />

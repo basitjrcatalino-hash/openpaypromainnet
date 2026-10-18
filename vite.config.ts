@@ -164,8 +164,13 @@ export default defineConfig({
       },
     },
     ssr: {
-      // Workers cannot resolve external npm modules at runtime. Bundle every dependency.
-      noExternal: true,
+      // Bundle wallet/polyfill dependencies; Nitro bundles the final Worker output.
+      // Keep React's CommonJS entry out of Vite's development ESM module runner.
+      noExternal: [
+        "buffer", "events", "loglevel", "loglevel-package", "deepmerge",
+        "json-stable-stringify", "base64-js", "ieee754", "@moonpay/moonpay-react",
+        "@privy-io/react-auth", /^@web3auth\//, /^@phantom\//,
+      ],
 
       resolve: {
         conditions: ["browser", "module", "import", "default"],

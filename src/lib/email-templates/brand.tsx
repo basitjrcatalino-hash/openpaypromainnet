@@ -25,8 +25,8 @@ import logoAsset from '../../assets/openpay-pro-icon.png.asset.json'
 
 export const BRAND = {
   name: 'OpenPay Pro',
-  url: 'https://openpaypro.space',
-  logoUrl: `https://openpaypro.space${logoAsset.url}`,
+  url: 'https://openpaypi.space',
+  logoUrl: `https://openpaypi.space${logoAsset.url}`,
   accent: '#ab9ff2',
   accentSoft: '#c9beff',
   ink: '#0b0b0f',

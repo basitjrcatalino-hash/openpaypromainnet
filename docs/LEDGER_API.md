@@ -26,8 +26,8 @@ Admins can run **Sync all transactions** on `/ledger` (or RPC `backfill_ledger_e
 ## Base URL
 
 ```
-Production : https://openpaypro.space/api/public/ledger
-Preview    : https://openpaypro.space/api/public/ledger
+Production : https://openpaypi.space/api/public/ledger
+Preview    : https://openpaypi.space/api/public/ledger
 ```
 
 ## Authentication
@@ -155,7 +155,7 @@ entries.
 ## Example — OpenLedger sync (Node)
 
 ```ts
-const BASE = "https://openpaypro.space/api/public/ledger";
+const BASE = "https://openpaypi.space/api/public/ledger";
 const KEY  = process.env.OPENPAY_LEDGER_KEY!;
 
 let cursor: string | null = null;

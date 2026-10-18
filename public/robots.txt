@@ -8,4 +8,4 @@ Disallow: /lovable/
 Disallow: /admin
 Disallow: /.well-known/
 
-Sitemap: https://openpaypro.space/sitemap.xml
+Sitemap: https://openpaypi.space/sitemap.xml

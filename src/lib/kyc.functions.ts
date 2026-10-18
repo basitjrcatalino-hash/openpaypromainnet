@@ -71,7 +71,7 @@ function callbackUrlFromEnv() {
   const base = (
     process.env.APP_URL ||
     process.env.VITE_APP_URL ||
-    "https://openpaypro.space"
+    "https://openpaypi.space"
   ).replace(/\/+$/, "");
   return `${base}/api/public/openpay/kyc-webhook`;
 }

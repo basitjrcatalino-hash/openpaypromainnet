@@ -3,7 +3,7 @@ import type {} from "@tanstack/react-start";
 import { WIKI_GUIDES } from "@/lib/wiki-guides";
 import { BLOG_POSTS } from "@/lib/blog-posts";
 
-const BASE_URL = "https://openpaypro.space";
+const BASE_URL = "https://openpaypi.space";
 
 interface SitemapEntry {
   path: string;

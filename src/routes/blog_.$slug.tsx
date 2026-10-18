@@ -13,7 +13,7 @@ import {
 } from "@/lib/blog-posts";
 import { cn } from "@/lib/utils";
 
-const SITE = "https://openpaypro.space";
+const SITE = "https://openpaypi.space";
 
 export const Route = createFileRoute("/blog_/$slug")({
   loader: ({ params }) => {

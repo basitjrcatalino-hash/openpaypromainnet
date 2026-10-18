@@ -4,13 +4,13 @@
 -- Configure once after migrate (service role SQL editor):
 --   UPDATE public.tx_email_webhook_config
 --   SET secret = '<TX_WEBHOOK_SECRET from .env>',
---       url = 'https://openpaypro.space/api/webhooks/transactions',
+--       url = 'https://openpaypi.space/api/webhooks/transactions',
 --       enabled = true
 --   WHERE id = 1;
 
 CREATE TABLE IF NOT EXISTS public.tx_email_webhook_config (
   id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  url TEXT NOT NULL DEFAULT 'https://openpaypro.space/api/webhooks/transactions',
+  url TEXT NOT NULL DEFAULT 'https://openpaypi.space/api/webhooks/transactions',
   secret TEXT NOT NULL DEFAULT '',
   enabled BOOLEAN NOT NULL DEFAULT false,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -20,7 +20,7 @@ GRANT ALL ON public.tx_email_webhook_config TO service_role;
 ALTER TABLE public.tx_email_webhook_config ENABLE ROW LEVEL SECURITY;
 
 INSERT INTO public.tx_email_webhook_config (id, url, secret, enabled)
-VALUES (1, 'https://openpaypro.space/api/webhooks/transactions', '', false)
+VALUES (1, 'https://openpaypi.space/api/webhooks/transactions', '', false)
 ON CONFLICT (id) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.notify_tx_email_webhook()

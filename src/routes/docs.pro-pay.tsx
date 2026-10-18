@@ -420,10 +420,10 @@ curl -X POST "${PARTNER_API}/charges" \\
 
       <DocsSection id="deeplink" eyebrow="08" title="Deep-link Top Up + pay merchant">
         <DocsCode>{`# Buyer funds self with full Pro methods (Pi, Banxa, MoonPay, USDT…)
-https://openpaypro.space/topup
+https://openpaypi.space/topup
 
 # Then pay merchant
-https://openpaypro.space/pay/@shop?amount=250&asset=OUSD&note=order_9001
+https://openpaypi.space/pay/@shop?amount=250&asset=OUSD&note=order_9001
 
 # Or OpenPay hosted pay tag + pro_xfer note (then inbound)
 https://openpy.space/pay/YOUR_PARTNER_TAG

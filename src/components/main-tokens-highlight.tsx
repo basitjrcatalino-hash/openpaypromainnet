@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { OUSD_LOGO_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
 
 type Tone = "light" | "dark" | "lavender";

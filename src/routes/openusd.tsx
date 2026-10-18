@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ArrowRight, BookOpen, ChevronDown, ExternalLink, Newspaper } from "lucide-react";
 import { PageListenButton } from "@/components/page-listen-button";
 import { MainTokensHighlight } from "@/components/main-tokens-highlight";
-import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL } from "@/lib/token-logos";
+import { OUSD_LOGO_URL, OPENPAY_NETWORK_BADGE_URL, PI_NETWORK_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { OPENPAY_AUTH_LOGO } from "@/lib/openpay-auth";
 import {
   PARTNER_CATEGORIES,

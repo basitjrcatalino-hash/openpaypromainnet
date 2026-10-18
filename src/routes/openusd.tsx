@@ -64,7 +64,7 @@ const FEATURES = [
   },
   {
     title: "One place for your money",
-    body: "OUSD sits beside Pi, majors, and OpenTokens in a single Pro balance — top up, swap, deposit, and pay without hopping apps.",
+    body: "OUSD sits beside USDC on Arc, majors, and OpenTokens in a single Pro balance — top up, swap, deposit, and pay without hopping apps.",
     visual: "wallet",
   },
   {
@@ -83,7 +83,7 @@ const BULLETS = [
   {
     logo: MOONPAY_LOGO,
     title: "Move money fast",
-    body: "Top up from OpenPay Balance, Pi, cards, or crypto — then send without the usual rails friction.",
+    body: "Top up from OpenPay Balance, OpenPay Arc, cards, or crypto — then send without the usual rails friction.",
   },
   {
     logo: OPENPAY_AUTH_LOGO,
@@ -98,7 +98,7 @@ const BULLETS = [
 ] as const;
 
 const ECOSYSTEM = [
-  { label: "Try OpenPay (Pi Browser)", href: "https://openpy.space" },
+  { label: "Try OpenPay", href: "https://openpy.space" },
   { label: "OpenLedger", href: "https://openpyledger.space" },
   { label: "OpenApp", href: "https://openappdev.space" },
   { label: "Partners & integrations", href: "/website#partners" },
@@ -119,7 +119,7 @@ const FAQS = [
   },
   {
     q: "What can I do with OUSD?",
-    a: "Hold OUSD in OpenPay Pro, top up from OpenPay Balance / Pi / cards / crypto, send to people and merchants, swap into listed majors and OpenTokens, trade Spot and Perpetuals against dollar settlement, receive via QR, and build partner flows that settle in OUSD through OpenPay’s Partner API and OpenLedger.",
+    a: "Hold OUSD in OpenPay Pro, top up from OpenPay Balance / OpenPay Arc / cards / crypto, send to people and merchants, swap into listed majors and OpenTokens, trade Spot and Perpetuals against dollar settlement, receive via QR, and build partner flows that settle in OUSD through OpenPay’s Partner API and OpenLedger.",
   },
   {
     q: "Which tokens can I buy or swap with OUSD?",
@@ -512,7 +512,7 @@ function FeatureVisual({ kind }: { kind: "send" | "wallet" | "network" }) {
     kind === "send"
       ? { title: "Send OUSD", line: "To @alice · $42.00" }
       : kind === "wallet"
-        ? { title: "Home balance", line: "OUSD · Pi · OpenTokens" }
+        ? { title: "Home balance", line: "OUSD · Arc · OpenTokens" }
         : { title: "Open network", line: "API · Ledger · Agents" };
 
   return (

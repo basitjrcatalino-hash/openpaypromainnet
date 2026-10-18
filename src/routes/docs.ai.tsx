@@ -58,7 +58,7 @@ const FEEDS = [
   {
     label: "Pro Connect (integrations)",
     href: "/api/public/docs/integrations",
-    tip: "Auth + Pro Pay on openpaypi.space",
+    tip: "Auth + Pro Pay on openpaypro.space",
   },
 ] as const;
 
@@ -68,15 +68,15 @@ const PRO_CONNECT_PROMPTS = [
     body: `Integrate OpenPay Pro Connect (NOT openpy Partner opk_live_).
 
 Fetch first:
-1) https://openpaypi.space/api/public/docs/integrations
-2) https://openpaypi.space/api/public/pro/config
-3) https://openpaypi.space/docs/integrations
+1) https://openpaypro.space/api/public/docs/integrations
+2) https://openpaypro.space/api/public/pro/config
+3) https://openpaypro.space/docs/integrations
 
 Credentials from ${PRO_PARTNER_PORTAL} (server only):
 PRO_CLIENT_ID=opro_live_…
 PRO_CLIENT_SECRET=oprs_live_…
 PRO_REDIRECT_URI=https://your.app/callback
-PRO_API_BASE=https://openpaypi.space/api/public/pro
+PRO_API_BASE=https://openpaypro.space/api/public/pro
 
 Build:
 1) Auth — redirect to /pro/authorize → exchange code at /oauth/token → store oprat_
@@ -86,20 +86,20 @@ No charge webhooks. Exact redirect_uri. Never put secrets in VITE_.`,
   },
   {
     tool: "Lovable — Pro Connect",
-    body: `@https://openpaypi.space/api/public/docs/integrations
-@https://openpaypi.space/llms.txt
+    body: `@https://openpaypro.space/api/public/docs/integrations
+@https://openpaypro.space/llms.txt
 
 Build "Sign in with OpenPay Pro" + checkout:
 - Env: PRO_CLIENT_ID, PRO_CLIENT_SECRET, PRO_REDIRECT_URI, PRO_API_BASE
-- Authorize: https://openpaypi.space/pro/authorize
-- Charges: POST https://openpaypi.space/api/public/pro/charges
+- Authorize: https://openpaypro.space/pro/authorize
+- Charges: POST https://openpaypro.space/api/public/pro/charges
 - Poll until paid. Funds land in the merchant's Pro wallet.
 Get keys at ${PRO_PARTNER_PORTAL}`,
   },
   {
     tool: "Replit / ChatGPT — Pro Connect",
-    body: `Use OpenPay Pro Connect API base https://openpaypi.space/api/public/pro
-Read https://openpaypi.space/api/public/docs/integrations
+    body: `Use OpenPay Pro Connect API base https://openpaypro.space/api/public/pro
+Read https://openpaypro.space/api/public/docs/integrations
 Implement Auth (/pro/authorize → /oauth/token) and Pro Pay (/charges + poll).
 Secrets: PRO_CLIENT_ID (opro_live_), PRO_CLIENT_SECRET (oprs_live_), PRO_REDIRECT_URI
 Keys: ${PRO_PARTNER_PORTAL}`,
@@ -112,9 +112,9 @@ const PROMPTS = [
     body: `You are integrating OpenPay + OpenPay Pro as a third-party partner.
 
 Read these first (fetch the URLs):
-1) https://openpaypi.space/api/public/docs/ai-partner
-2) https://openpaypi.space/api/public/docs/openapi
-3) https://openpaypi.space/llms.txt
+1) https://openpaypro.space/api/public/docs/ai-partner
+2) https://openpaypro.space/api/public/docs/openapi
+3) https://openpaypro.space/llms.txt
 
 Then generate production-ready code for:
 - Connect OAuth (authorize → callback → POST /oauth/token → store opa_live_)
@@ -132,12 +132,12 @@ Partner API base:
 https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
 
 For wallet read tools in ChatGPT, also connect MCP:
-https://openpaypi.space/mcp`,
+https://openpaypro.space/mcp`,
   },
   {
     tool: "Cursor / Claude Code",
-    body: `Fetch https://openpaypi.space/api/public/docs/ai-partner and
-https://openpaypi.space/api/public/docs/openapi
+    body: `Fetch https://openpaypro.space/api/public/docs/ai-partner and
+https://openpaypro.space/api/public/docs/openapi
 Then implement OpenPay Partner integration in this repo:
 - Server-only opk_live_ key from env
 - Connect OAuth (authorize → callback → /oauth/token → store opa_live_)
@@ -147,19 +147,19 @@ Do not invent webhooks for charges. Do not expose the partner key to the client.
   },
   {
     tool: "Lovable",
-    body: `@https://openpaypi.space/llms-full.txt
+    body: `@https://openpaypro.space/llms-full.txt
 Build a merchant checkout that:
 1) Creates an OpenPay charge from a server function using OPENPAY_PARTNER_API_KEY
 2) Redirects the buyer to checkout_url
 3) On return, polls GET /charges/:id until paid|canceled|expired
-Also add a "Connect with OpenPay" button using openpy.space/connect.`,
+Also add a "Connect with OpenPay" button using openpaypi.space/connect.`,
   },
   {
     tool: "Replit / Claude Projects",
     body: `Use OpenPay Partner Transfer API base
 https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
 Implement auth (Connect), payments (charges), and payouts (transfers)
-per https://openpaypi.space/api/public/docs/ai-partner
+per https://openpaypro.space/api/public/docs/ai-partner
 Secrets: OPENPAY_CLIENT_ID, OPENPAY_PARTNER_API_KEY, OPENPAY_REDIRECT_URI`,
   },
 ] as const;
@@ -216,10 +216,10 @@ function AiPartnerDocsPage() {
           </div>
         </div>
         <DocsCode>{`# Paste this into ChatGPT / OpenAI
-https://openpaypi.space/api/public/docs/ai-partner
+https://openpaypro.space/api/public/docs/ai-partner
 
 # Or long-context dump
-https://openpaypi.space/llms-full.txt
+https://openpaypro.space/llms-full.txt
 
 # Then say:
 Implement OpenPay Connect OAuth + PayButton charges for my app.
@@ -272,7 +272,7 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
 
       <DocsSection id="prompts" eyebrow="02" title="Copy-paste prompts (OpenPay Partner)">
         <p className="mb-4 text-sm text-muted-foreground">
-          For <strong className="text-foreground">openpy.space</strong> Partner keys (
+          For <strong className="text-foreground">openpaypi.space</strong> Partner keys (
           <code className="text-foreground">opk_live_</code>). For Pro-native Auth + Pay, use the
           section below.
         </p>
@@ -292,7 +292,7 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
       <DocsSection id="pro-connect" eyebrow="02b" title="Pro Connect prompts (Auth + Pay on Pro)">
         <p className="mb-4 text-sm text-muted-foreground">
           Use these when integrating{" "}
-          <strong className="text-foreground">openpaypi.space</strong> — client IDs start with{" "}
+          <strong className="text-foreground">openpaypro.space</strong> — client IDs start with{" "}
           <code className="text-foreground">opro_live_</code>. Create an app at{" "}
           <a href={PRO_PARTNER_PORTAL} className="font-semibold text-primary hover:underline">
             Partner API
@@ -313,8 +313,8 @@ Use server-only opk_live_ keys. Poll charges. Currency OUSD.`}</DocsCode>
       </DocsSection>
 
       <DocsSection id="features" eyebrow="03" title="What partners can integrate">
-        <DocsCode>{`# OpenPay Partner (openpy.space)
-Auth / Connect     → openpy.space/connect → POST /oauth/token → opa_live_
+        <DocsCode>{`# OpenPay Partner (openpaypi.space)
+Auth / Connect     → openpaypi.space/connect → POST /oauth/token → opa_live_
 Payments           → POST /charges → checkout_url → poll GET /charges/:id
 Payouts            → POST /transfers + Idempotency-Key
 Account resolve    → GET /accounts/@user|OP…|email
@@ -324,7 +324,7 @@ Reconcile          → ${LEDGER_API_BASE}/entries
 Agents (read-only) → ${MCP_URL}
 Partner API base   → ${PARTNER_API}
 
-# OpenPay Pro Connect (openpaypi.space)
+# OpenPay Pro Connect (openpaypro.space)
 Pro Auth           → /pro/authorize → POST /api/public/pro/oauth/token → oprat_
 Pro Pay            → POST /api/public/pro/charges → checkout → poll
 Receive wallet     → paid OUSD credits app owner's Pro wallet

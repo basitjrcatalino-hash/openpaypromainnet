@@ -4,63 +4,63 @@
 
 ## AI-first partner pack (start here)
 
-- [AI Partner Integration Pack](https://openpaypi.space/docs/ai): Single guide for OpenAI, ChatGPT, Cursor, Lovable, Replit, Claude — auth, pay, top-up, inbound, ledger.
-- [Pro Pay · Merchant](https://openpaypi.space/docs/pro-pay): Partner checkout — charges, receive @username/wallet, inbound earnings, Top Up methods, env & copy-paste.
-- [Pro Connect · Auth & Pay](https://openpaypi.space/docs/integrations): Native Pro OAuth + OUSD charges (`opro_live_` / `oprat_`).
-- [Pro Partner API](https://openpaypi.space/partner-api): Create apps — client ID, secret, OAuth callbacks.
-- [Raw AI guide (markdown)](https://openpaypi.space/api/public/docs/ai-partner): Paste into any LLM / agent.
-- [Full dump](https://openpaypi.space/llms-full.txt): Consolidated partner + Pro docs for long-context agents.
-- [OpenAPI](https://openpaypi.space/api/public/docs/openapi): Machine-readable Partner Transfer + Pro inbound/ledger.
+- [AI Partner Integration Pack](https://openpaypro.space/docs/ai): Single guide for OpenAI, ChatGPT, Cursor, Lovable, Replit, Claude — auth, pay, top-up, inbound, ledger.
+- [Pro Pay · Merchant](https://openpaypro.space/docs/pro-pay): Partner checkout — charges, receive @username/wallet, inbound earnings, Top Up methods, env & copy-paste.
+- [Pro Connect · Auth & Pay](https://openpaypro.space/docs/integrations): Native Pro OAuth + OUSD charges (`opro_live_` / `oprat_`).
+- [Pro Partner API](https://openpaypro.space/partner-api): Create apps — client ID, secret, OAuth callbacks.
+- [Raw AI guide (markdown)](https://openpaypro.space/api/public/docs/ai-partner): Paste into any LLM / agent.
+- [Full dump](https://openpaypro.space/llms-full.txt): Consolidated partner + Pro docs for long-context agents.
+- [OpenAPI](https://openpaypro.space/api/public/docs/openapi): Machine-readable Partner Transfer + Pro inbound/ledger.
 
 ## Bases
 
 - Partner Transfer API: `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
-- Partner portal (keys): https://openpy.space/partner-api
-- Connect: https://openpy.space/connect
-- Pro inbound: `POST https://openpaypi.space/api/public/openpay/inbound`
-- Ledger: https://openpaypi.space/api/public/ledger
-- MCP: https://openpaypi.space/mcp
+- Partner portal (keys): https://openpaypi.space/partner-api
+- Connect: https://openpaypi.space/connect
+- Pro inbound: `POST https://openpaypro.space/api/public/openpay/inbound`
+- Ledger: https://openpaypro.space/api/public/ledger
+- MCP: https://openpaypro.space/mcp
 
 ## Developer portal
 
-- [Developer Portal](https://openpaypi.space/docs): Hub for every integration path.
-- [Quickstart](https://openpaypi.space/docs#quickstart): Ship Connect + payments in one afternoon.
-- [Connect & payments](https://openpaypi.space/docs/openpay): OAuth, PayButton, inbound, auth methods.
-- [Pro Connect · Auth & Pay](https://openpaypi.space/docs/integrations): Native Pro OAuth + OUSD charges.
-- [Exchange · OUSD](https://openpaypi.space/docs/exchange): Deposit, withdraw, swap, reconcile.
-- [Money rails](https://openpaypi.space/docs/money): Send, receive, deposit, withdraw, swap.
-- [Tokens & assets](https://openpaypi.space/docs/tokens): OUSD, majors, OpenToken, NFT.
-- [Partner Transfer API](https://openpaypi.space/docs/api): Transfers, charges, OAuth token.
-- [Public Ledger API](https://openpaypi.space/docs/ledger): Append-only transaction mirror.
-- [Agent Connect · MCP](https://openpaypi.space/docs/mcp): Tools for ChatGPT, Claude, agents.
-- [Authentication](https://openpaypi.space/docs/auth): Pro methods + Connect OAuth.
-- [Errors & retries](https://openpaypi.space/docs/errors): HTTP codes, polling, idempotency.
-- [FAQ](https://openpaypi.space/docs/faq): Wallets, fees, partner teaser.
-- [Raw markdown feeds](https://openpaypi.space/docs#raw): `/api/public/docs/*`
+- [Developer Portal](https://openpaypro.space/docs): Hub for every integration path.
+- [Quickstart](https://openpaypro.space/docs#quickstart): Ship Connect + payments in one afternoon.
+- [Connect & payments](https://openpaypro.space/docs/openpay): OAuth, PayButton, inbound, auth methods.
+- [Pro Connect · Auth & Pay](https://openpaypro.space/docs/integrations): Native Pro OAuth + OUSD charges.
+- [Exchange · OUSD](https://openpaypro.space/docs/exchange): Deposit, withdraw, swap, reconcile.
+- [Money rails](https://openpaypro.space/docs/money): Send, receive, deposit, withdraw, swap.
+- [Tokens & assets](https://openpaypro.space/docs/tokens): OUSD, majors, OpenToken, NFT.
+- [Partner Transfer API](https://openpaypro.space/docs/api): Transfers, charges, OAuth token.
+- [Public Ledger API](https://openpaypro.space/docs/ledger): Append-only transaction mirror.
+- [Agent Connect · MCP](https://openpaypro.space/docs/mcp): Tools for ChatGPT, Claude, agents.
+- [Authentication](https://openpaypro.space/docs/auth): Pro methods + Connect OAuth.
+- [Errors & retries](https://openpaypro.space/docs/errors): HTTP codes, polling, idempotency.
+- [FAQ](https://openpaypro.space/docs/faq): Wallets, fees, partner teaser.
+- [Raw markdown feeds](https://openpaypro.space/docs#raw): `/api/public/docs/*`
 
 ## Raw markdown feeds (CORS *)
 
-- https://openpaypi.space/api/public/docs/ai-partner
-- https://openpaypi.space/api/public/docs/pro-pay
-- https://openpaypi.space/api/public/docs/integrations
-- https://openpaypi.space/api/public/docs/openapi
-- https://openpaypi.space/api/public/docs/openpay
-- https://openpaypi.space/api/public/docs/openpay-auth
-- https://openpaypi.space/api/public/docs/partner-transfer
-- https://openpaypi.space/api/public/docs/openpay-to-pro
-- https://openpaypi.space/api/public/docs/ledger
-- https://openpaypi.space/api/public/docs/exchange
-- https://openpaypi.space/api/public/docs/tokens
-- https://openpaypi.space/api/public/docs/mcp
-- https://openpaypi.space/api/public/docs/errors
-- https://openpaypi.space/api/public/docs/portal
+- https://openpaypro.space/api/public/docs/ai-partner
+- https://openpaypro.space/api/public/docs/pro-pay
+- https://openpaypro.space/api/public/docs/integrations
+- https://openpaypro.space/api/public/docs/openapi
+- https://openpaypro.space/api/public/docs/openpay
+- https://openpaypro.space/api/public/docs/openpay-auth
+- https://openpaypro.space/api/public/docs/partner-transfer
+- https://openpaypro.space/api/public/docs/openpay-to-pro
+- https://openpaypro.space/api/public/docs/ledger
+- https://openpaypro.space/api/public/docs/exchange
+- https://openpaypro.space/api/public/docs/tokens
+- https://openpaypro.space/api/public/docs/mcp
+- https://openpaypro.space/api/public/docs/errors
+- https://openpaypro.space/api/public/docs/portal
 
 ## Product pages
 
-- [Sign in](https://openpaypi.space/authpi): OpenPay, Pi, Solana, Phantom, MetaMask, WalletConnect, Telegram.
-- [Top up](https://openpaypi.space/topup): Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance.
-- [Wiki](https://openpaypi.space/wiki): End-user tutorials.
+- [Sign in](https://openpaypro.space/authpi): OpenPay, Pi, Solana, Phantom, MetaMask, WalletConnect, Telegram.
+- [Top up](https://openpaypro.space/topup): Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance.
+- [Wiki](https://openpaypro.space/wiki): End-user tutorials.
 
 ## Optional
 
-- [Terms](https://openpaypi.space/terms) · [Privacy](https://openpaypi.space/privacy) · [Regulatory](https://openpaypi.space/regulatory)
+- [Terms](https://openpaypro.space/terms) · [Privacy](https://openpaypro.space/privacy) · [Regulatory](https://openpaypro.space/regulatory)

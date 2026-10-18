@@ -186,7 +186,7 @@ function AdminTopupPage() {
         <h2 className="text-lg font-semibold">OpenPay payment link</h2>
         <div className="space-y-2">
           <Label>Payment URL shown to users</Label>
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://openpy.space/qr-pay/qrp_..." />
+          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://openpaypi.space/qr-pay/qrp_..." />
         </div>
         <div className="space-y-2">
           <Label>Instructions (optional)</Label>

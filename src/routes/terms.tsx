@@ -15,9 +15,9 @@ export const Route = createFileRoute("/terms")({
         property: "og:description",
         content: "The terms governing use of the OpenPay Pro wallet, transfers, tokens, and NFTs.",
       },
-      { property: "og:url", content: "https://openpaypi.space/terms" },
+      { property: "og:url", content: "https://openpaypro.space/terms" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/terms" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/terms" }],
   }),
   component: TermsPage,
 });
@@ -41,7 +41,7 @@ Terms of Service for OpenPay Pro. Last updated July 28, 2026.
 
 8. Changes. We may update these Terms. Continued use after changes means you accept the updated Terms. Material changes may be noted by updating the date above.
 
-9. Contact. Questions about these Terms: support at openpy.space. Related OpenPay policies may also apply when you use OpenPay sign-in or payments.
+9. Contact. Questions about these Terms: support at openpaypi.space. Related OpenPay policies may also apply when you use OpenPay sign-in or payments.
 `.trim();
 
 const TOC = [
@@ -132,10 +132,10 @@ function TermsPage() {
         <p>
           Questions about these Terms:{" "}
           <a
-            href="mailto:support@openpy.space"
+            href="mailto:support@openpaypi.space"
             className="font-semibold text-[var(--foreground)] underline underline-offset-2"
           >
-            support@openpy.space
+            support@openpaypi.space
           </a>
           . Related OpenPay policies may also apply when you use OpenPay sign-in or payments. See
           also our{" "}

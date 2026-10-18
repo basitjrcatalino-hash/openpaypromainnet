@@ -30,7 +30,7 @@ function MoneyDocsPage() {
     >
       <Card className="rounded-2xl border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
         Mental model: <strong className="text-foreground">Partner Transfer API</strong> moves OUSD on
-        OpenPay (openpy.space). <strong className="text-foreground">OpenPay Pro</strong> is the money
+        OpenPay (openpaypi.space). <strong className="text-foreground">OpenPay Pro</strong> is the money
         app ledger (OUSD + majors + OpenTokens). Use{" "}
         <Link to="/docs/exchange" className="font-semibold text-primary hover:underline">
           Exchange docs

@@ -246,7 +246,7 @@ function PartnerApiPortalPage() {
   });
 
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://openpaypi.space";
+    typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
   const redirect0 = (selected?.redirect_uris ?? [])[0] || "https://your.app/callback";
 
   const authorizeSample = selected
@@ -1238,7 +1238,7 @@ Rules: OUSD, poll charges (no webhooks), never expose secret to browser.`
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="Create Connect app"
-        description="Name your app and add exact OAuth callback URLs — same idea as openpy.space/partner-api."
+        description="Name your app and add exact OAuth callback URLs — same idea as openpaypi.space/partner-api."
         name={name}
         setName={setName}
         descriptionValue={description}

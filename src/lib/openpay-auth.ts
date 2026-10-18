@@ -1,8 +1,8 @@
-/** Client helpers for Sign in with OpenPay (docs: https://openpy.space/openpay-auth). */
+/** Client helpers for Sign in with OpenPay (docs: https://openpaypi.space/openpay-auth). */
 
 export const OPENPAY_BRAND_BLUE = "#1652f0";
-export const OPENPAY_LOGO_WHITE = "https://openpy.space/openpay-o-white.svg";
-/** Official full-color auth logo (per https://openpy.space/openpay-auth). */
+export const OPENPAY_LOGO_WHITE = "https://openpaypi.space/openpay-o-white.svg";
+/** Official full-color auth logo (per https://openpaypi.space/openpay-auth). */
 import openPayIcon from "@/assets/openpay-pro-icon.png.asset.json";
 export const OPENPAY_AUTH_LOGO = openPayIcon.url;
 /** OpenPay AI assistant mascot (animated GIF). */
@@ -12,7 +12,7 @@ export const OPENPAY_AI_AVATAR =
 export const OPENPAY_AI_MENU_ICON =
   "https://i.ibb.co/CpdgyWt7/photo-2026-07-28-17-07-40-removebg-preview.png";
 /** Partner portal — key management (Apps & keys). */
-export const OPENPAY_PARTNER_PORTAL = "https://openpy.space/partner-api";
+export const OPENPAY_PARTNER_PORTAL = "https://openpaypi.space/partner-api";
 
 export async function startOpenPaySignIn(opts?: { redirectTo?: string }): Promise<void> {
   if (typeof window === "undefined") return;

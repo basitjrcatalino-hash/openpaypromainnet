@@ -48,10 +48,10 @@ export const Route = createFileRoute("/openusd")({
       { property: "og:title", content: "Meet OpenUSD (OUSD)" },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypi.space/openusd" },
+      { property: "og:url", content: "https://openpaypro.space/openusd" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/openusd" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/openusd" }],
   }),
   component: OusdPage,
 });
@@ -98,18 +98,18 @@ const BULLETS = [
 ] as const;
 
 const ECOSYSTEM = [
-  { label: "Try OpenPay", href: "https://openpy.space" },
+  { label: "Try OpenPay", href: "https://openpaypi.space" },
   { label: "OpenLedger", href: "https://openpyledger.space" },
   { label: "OpenApp", href: "https://openappdev.space" },
   { label: "Partners & integrations", href: "/website#partners" },
-  { label: "OpenPay Blogs", href: "https://www.openpy.space/blog" },
+  { label: "OpenPay Blogs", href: "https://www.openpaypi.space/blog" },
   { label: "Telegram Mini App", href: "https://t.me/openpayofficial" },
-  { label: "OpenPay Sign in", href: "https://openpy.space/signin" },
+  { label: "OpenPay Sign in", href: "https://openpaypi.space/signin" },
   { label: "Follow OpenPay", href: "https://droplinkpi.space/@openpay" },
-  { label: "Whitepaper", href: "https://openpy.space/whitepaper" },
-  { label: "Pitch Deck", href: "https://openpy.space/pitch-deck" },
-  { label: "OpenNFT Marketplace", href: "https://openpy.space/web3/nft" },
-  { label: "Partner API Docs", href: "https://openpy.space/partner-api" },
+  { label: "Whitepaper", href: "https://openpaypi.space/whitepaper" },
+  { label: "Pitch Deck", href: "https://openpaypi.space/pitch-deck" },
+  { label: "OpenNFT Marketplace", href: "https://openpaypi.space/web3/nft" },
+  { label: "Partner API Docs", href: "https://openpaypi.space/partner-api" },
 ] as const;
 
 const FAQS = [
@@ -173,7 +173,7 @@ function OusdPage() {
             Swap &amp; buy
           </a>
           <a
-            href="https://www.openpy.space/blog/meet-openpay-ai"
+            href="https://www.openpaypi.space/blog/meet-openpay-ai"
             target="_blank"
             rel="noreferrer"
             className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-white/80 px-3 py-1.5 text-muted-foreground backdrop-blur hover:text-foreground"
@@ -237,7 +237,7 @@ function OusdPage() {
                 className="border-border bg-white/80 backdrop-blur"
               />
               <a
-                href="https://openpy.space/partner-api"
+                href="https://openpaypi.space/partner-api"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-6 py-3 text-sm font-semibold backdrop-blur press"
@@ -371,7 +371,7 @@ function OusdPage() {
             New news
           </p>
           <a
-            href="https://www.openpy.space/blog/meet-openpay-ai"
+            href="https://www.openpaypi.space/blog/meet-openpay-ai"
             target="_blank"
             rel="noreferrer"
             className="group mt-6 flex flex-col gap-5 rounded-[1.75rem] bg-white/80 p-6 shadow-[0_24px_70px_-48px_rgba(30,60,90,0.45)] backdrop-blur transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-8"
@@ -455,7 +455,7 @@ function OusdPage() {
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
             </Link>
             <a
-              href="https://openpy.space"
+              href="https://openpaypi.space"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white/90 press"

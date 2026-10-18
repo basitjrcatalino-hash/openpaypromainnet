@@ -1,10 +1,10 @@
 # Tokens & assets — OpenPay Pro
 
-Live page: [`/docs/tokens`](https://openpaypi.space/docs/tokens)
+Live page: [`/docs/tokens`](https://openpaypro.space/docs/tokens)
 
 ## OUSD
 
-Ledger dollar on OpenPay Network (`network_id: openpay`). No public EVM/SPL contract. Decimals: 8 ledger / 2 display. Explorer: `https://openpaypi.space/ledger`.
+Ledger dollar on OpenPay Network (`network_id: openpay`). No public EVM/SPL contract. Decimals: 8 ledger / 2 display. Explorer: `https://openpaypro.space/ledger`.
 
 Partner deposit/withdraw: see [`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) and Partner Transfer API.
 

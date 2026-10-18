@@ -50,7 +50,7 @@ export const WIKI_GUIDES: WikiGuide[] = [
         heading: "Choose how you sign in",
         body: "Open /authpi. You can use OpenPay, email and password, Phantom, Solana, WalletConnect, MetaMask, Pi Network, Telegram, or Privy.",
         steps: [
-          { title: "Open the sign-in page", detail: "Go to openpaypi.space/authpi or tap Sign in from any public page." },
+          { title: "Open the sign-in page", detail: "Go to openpaypro.space/authpi or tap Sign in from any public page." },
           { title: "Pick a method", detail: "Tap a tile under Wallets or Social & network. Featured OpenPay sits at the top." },
           { title: "Complete the provider flow", detail: "Approve the wallet, OAuth, or enter email and password. You return to the dashboard when the session is ready." },
         ],
@@ -574,7 +574,7 @@ export const WIKI_GUIDES: WikiGuide[] = [
         steps: [
           {
             title: "Create a partner app",
-            detail: "openpy.space/partner-api → copy opk_live_ (server only) and client_id.",
+            detail: "openpaypi.space/partner-api → copy opk_live_ (server only) and client_id.",
           },
           {
             title: "Fund the hot wallet",

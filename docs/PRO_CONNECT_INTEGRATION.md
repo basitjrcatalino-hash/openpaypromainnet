@@ -1,12 +1,12 @@
 # OpenPay Pro Connect — Auth & Pay Integration
 
-Native third-party integrations on **OpenPay Pro** (`openpaypi.space`):
+Native third-party integrations on **OpenPay Pro** (`openpaypro.space`):
 
 1. **OpenPay Pro Auth** — OAuth 2.0 authorization-code sign-in (`/pro/authorize`)
 2. **OpenPay Pro Pay** — charges paid from the user’s OUSD balance (`/pro/checkout/{id}`)
 
-Live docs: https://openpaypi.space/docs/integrations  
-Discovery: `GET https://openpaypi.space/api/public/pro/config`
+Live docs: https://openpaypro.space/docs/integrations  
+Discovery: `GET https://openpaypro.space/api/public/pro/config`
 
 Currency: **OUSD**. No charge webhooks — **poll** until `paid` | `canceled` | `expired`.
 
@@ -21,7 +21,7 @@ Currency: **OUSD**. No charge webhooks — **poll** until `paid` | `canceled` | 
 | `oprc_…` | One-time authorization code |
 | `oprat_…` | User access token (Bearer) |
 
-Create apps in the Pro **Partner API** portal (`/partner-api`) — same idea as OpenPay’s `openpy.space/partner-api`. Enter app name, website, logo, and exact-match OAuth callback URIs. Never put secrets in `VITE_` env.
+Create apps in the Pro **Partner API** portal (`/partner-api`) — same idea as OpenPay’s `openpaypi.space/partner-api`. Enter app name, website, logo, and exact-match OAuth callback URIs. Never put secrets in `VITE_` env.
 
 ---
 
@@ -40,7 +40,7 @@ Returns authorization, token, userinfo, balance, and charges endpoints plus `sco
 ### Authorize
 
 ```
-https://openpaypi.space/pro/authorize
+https://openpaypro.space/pro/authorize
   ?client_id=opro_live_…
   &redirect_uri=https://your.app/callback
   &scope=profile%20balance
@@ -108,6 +108,6 @@ Payment credits the **app owner’s** Pro OUSD wallet and debits the payer (doub
 
 ## Related
 
-- [Pro Pay merchant (Partner API)](https://openpaypi.space/docs/pro-pay)
-- [OpenPay Partner Transfer](https://openpaypi.space/docs/api)
-- [Errors & retries](https://openpaypi.space/docs/errors)
+- [Pro Pay merchant (Partner API)](https://openpaypro.space/docs/pro-pay)
+- [OpenPay Partner Transfer](https://openpaypro.space/docs/api)
+- [Errors & retries](https://openpaypro.space/docs/errors)

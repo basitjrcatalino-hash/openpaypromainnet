@@ -79,9 +79,9 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
     const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
     const path = decodeURIComponent(url.pathname);
 
-    // https://openpaypi.space/pay/0x…?asset=OUSD
+    // https://openpaypro.space/pay/0x…?asset=OUSD
     // https://any-host/pay/0x… (preview / custom domains)
-    // https://openpy.space/pay/@alice?amount=10
+    // https://openpaypi.space/pay/@alice?amount=10
     const payMatch = path.match(/\/pay\/([^/?#]+)/i);
     if (payMatch?.[1]) {
       const handle = decodeURIComponent(payMatch[1]).replace(/^@+/, "");
@@ -133,7 +133,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
  * - Legacy `openpay:0x…?asset=…&token=…`
  * - `openpaypro:` / `ethereum:` schemes
  * - OpenPay `OP…` account, `@username`, email (Send flow)
- * - `https://openpy.space/pay/@user` pay links
+ * - `https://openpaypi.space/pay/@user` pay links
  */
 export function parsePaymentQr(text: string): ParsedPaymentQr {
   const raw = text
@@ -155,8 +155,8 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
   // HTTP(S) OpenPay / Pro pay links (all token assets via ?asset= / ?token=)
   if (
     /^https?:\/\//i.test(raw) ||
-    raw.includes("openpy.space") ||
     raw.includes("openpaypi.space") ||
+    raw.includes("openpaypro.space") ||
     raw.includes("openpay") ||
     raw.includes("/pay/") ||
     raw.includes("/send")

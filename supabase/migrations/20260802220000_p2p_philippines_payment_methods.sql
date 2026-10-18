@@ -34,7 +34,7 @@ update public.p2p_payment_methods set
 where code in ('gcash', 'maya', 'grabpay');
 
 update public.p2p_payment_methods set
-  logo_url = coalesce(logo_url, 'https://openpaypi.space/logo.png'),
+  logo_url = coalesce(logo_url, 'https://openpaypro.space/logo.png'),
   updated_at = now()
 where code = 'openpay';
 

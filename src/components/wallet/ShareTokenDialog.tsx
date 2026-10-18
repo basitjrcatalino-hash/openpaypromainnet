@@ -147,7 +147,7 @@ async function drawTokenCard(canvas: HTMLCanvasElement, d: ShareTokenData) {
 
   ctx.fillStyle = "rgba(255,255,255,0.4)";
   ctx.font = "600 28px Inter, system-ui, sans-serif";
-  ctx.fillText("Trade this token on openpaypi.space", 80, H - 120);
+  ctx.fillText("Trade this token on openpaypro.space", 80, H - 120);
 }
 
 export function ShareTokenDialog({
@@ -165,7 +165,7 @@ export function ShareTokenDialog({
   const pageUrl = useMemo(() => {
     if (data.url) return data.url;
     if (typeof window !== "undefined") return window.location.href;
-    return "https://openpaypi.space";
+    return "https://openpaypro.space";
   }, [data.url]);
 
   const text = useMemo(

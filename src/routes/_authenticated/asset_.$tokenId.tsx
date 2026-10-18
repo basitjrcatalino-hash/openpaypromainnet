@@ -235,7 +235,7 @@ function PhantomAssetDetail() {
         verified: true,
         description:
           "OUSD is OpenPay’s dollar-pegged stablecoin. 1 OUSD ≈ $1 USD and powers OpenToken trading, OpenDEX swaps, and wallet transfers.",
-        website: "https://openpy.space",
+        website: "https://openpaypi.space",
         network: "OpenPay",
         marketCap: null as number | null,
         totalSupply: null as number | null,

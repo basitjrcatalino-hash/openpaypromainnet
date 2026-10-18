@@ -141,20 +141,20 @@ export async function mintOpenNftPartner(body: OpenNftMintRequest): Promise<Open
   const itemId = String(parsed?.item_id || parsed?.id || "");
   const rawPermalink =
     String(parsed?.permalink || "") ||
-    (itemId ? `https://openpy.space/web3/nft/${itemId}` : "");
+    (itemId ? `https://openpaypi.space/web3/nft/${itemId}` : "");
   const permalink = rawPermalink
-    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpy.space")
-    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpy.space");
+    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpaypi.space")
+    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpaypi.space");
   if (!itemId) {
     throw new Error("OpenPay mint response missing item_id");
   }
 
   const rawStore =
     (parsed?.store_url as string) ||
-    "https://openpy.space/web3/nft/store/openpay-pro";
+    "https://openpaypi.space/web3/nft/store/openpay-pro";
   const store_url = rawStore
-    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpy.space")
-    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpy.space");
+    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpaypi.space")
+    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpaypi.space");
 
   return {
     success: Boolean(parsed?.success ?? true),

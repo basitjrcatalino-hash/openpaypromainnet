@@ -1,6 +1,6 @@
 # Prompt: Add “Send to OpenPay Pro” on OpenPay
 
-Paste this into the **OpenPay** (`openpy.space`) agent.
+Paste this into the **OpenPay** (`openpaypi.space`) agent.
 
 ---
 
@@ -50,7 +50,7 @@ Funds route to the partner tag (e.g. `@wainfoundation`) with that note; Pro cred
 ## Pro inbound API (after successful debit)
 
 ```bash
-POST https://openpaypi.space/api/public/openpay/inbound
+POST https://openpaypro.space/api/public/openpay/inbound
 Authorization: Bearer opk_live_PARTNER_KEY
 Content-Type: application/json
 ```
@@ -84,11 +84,11 @@ Secrets (server only): `OPENPAY_PRO_INBOUND_URL`, partner `opk_live_…`.
 ## Hosted pay link (optional)
 
 ```
-https://openpy.space/pay/wainfoundation
+https://openpaypi.space/pay/wainfoundation
   ?amount=25.00&currency=OUSD
   &note=pro_xfer:0x7bf2…851a:r_xxx
-  &success_url=https://openpaypi.space/receive?openpay_in=1&amount=25.00
-  &cancel_url=https://openpaypi.space/receive?openpay_cancel=1
+  &success_url=https://openpaypro.space/receive?openpay_in=1&amount=25.00
+  &cancel_url=https://openpaypro.space/receive?openpay_cancel=1
 ```
 
 `/pay` one-click already supports notes starting with `pro_xfer:` (balance check → debit → thank-you → redirect).
@@ -105,6 +105,6 @@ https://openpy.space/pay/wainfoundation
 
 ## Refs
 
-- Pro live docs: https://openpaypi.space/docs/openpay  
-- Inbound API info: GET https://openpaypi.space/api/public/openpay/inbound  
+- Pro live docs: https://openpaypro.space/docs/openpay  
+- Inbound API info: GET https://openpaypro.space/api/public/openpay/inbound  
 - Detail: `docs/OPENPAY_TO_PRO.md`

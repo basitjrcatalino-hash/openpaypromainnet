@@ -25,7 +25,7 @@ type TxLike = {
 function vapidConfigured() {
   const pub = process.env.VAPID_PUBLIC_KEY?.trim() || process.env.VITE_VAPID_PUBLIC_KEY?.trim();
   const priv = process.env.VAPID_PRIVATE_KEY?.trim();
-  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:support@openpy.space";
+  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:support@openpaypi.space";
   return pub && priv ? { pub, priv, subject } : null;
 }
 
@@ -33,7 +33,7 @@ function appBaseUrl() {
   return (
     process.env.APP_URL?.trim() ||
     process.env.VITE_APP_URL?.trim() ||
-    "https://openpaypi.space"
+    "https://openpaypro.space"
   ).replace(/\/$/, "");
 }
 
@@ -41,7 +41,7 @@ function mailFromAddress() {
   return (
     process.env.LOVABLE_FROM_EMAIL?.trim() ||
     process.env.RESEND_FROM_EMAIL?.trim() ||
-    "OpenPay Pro <noreply@openpy.space>"
+    "OpenPay Pro <noreply@openpaypi.space>"
   );
 }
 

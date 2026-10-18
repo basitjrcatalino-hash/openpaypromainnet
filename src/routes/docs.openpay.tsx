@@ -49,8 +49,8 @@ export const Route = createFileRoute("/docs/openpay")({
   component: OpenPayDocsPage,
 });
 
-const AUTH_DOCS = "https://openpy.space/openpay-auth";
-const PAY_HOST = "https://openpy.space";
+const AUTH_DOCS = "https://openpaypi.space/openpay-auth";
+const PAY_HOST = "https://openpaypi.space";
 
 const DOCS_SPEECH = `
 OpenPay Integration Docs. Connect auth, Pro sign-in methods, and payments.
@@ -61,7 +61,7 @@ send payouts with Partner transfers, and credit OpenPay Pro wallets with inbound
 For merchants, use Pro Pay checkout and QR Pay method openpay_pro so earnings land on a Pro username or wallet.
 Buyers who need Pi, Banxa, MoonPay, or wallet majors deep-link into Pro Top Up.
 
-Start at the Partner API portal on openpy.space. Create an app, keep your opk live key on the server,
+Start at the Partner API portal on openpaypi.space. Create an app, keep your opk live key on the server,
 register exact redirect URIs, then ship Sign in, charges, and transfers.
 
 No partner payment webhooks yet — poll GET charges by id until paid, canceled, or expired.
@@ -222,7 +222,7 @@ function OpenPayDocsPage() {
               Developer portal
             </p>
             <h2 className="mt-1 text-lg font-bold text-foreground">
-              Partner API · openpy.space
+              Partner API · openpaypi.space
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Create an app, copy Client ID + API key, set your domain for redirects, then ship Sign
@@ -240,12 +240,12 @@ function OpenPayDocsPage() {
               Public site
             </div>
             <a
-              href="https://openpy.space"
+              href="https://openpaypi.space"
               target="_blank"
               rel="noreferrer"
               className="mt-0.5 block break-all text-sm font-semibold text-foreground underline-offset-2 hover:underline"
             >
-              https://openpy.space
+              https://openpaypi.space
             </a>
           </div>
           <div className="rounded-2xl bg-muted px-3 py-2.5">
@@ -343,7 +343,7 @@ function OpenPayDocsPage() {
             </li>
           </ul>
           <Pill href={PARTNER_PORTAL} primary>
-            Create app on openpy.space
+            Create app on openpaypi.space
             <ExternalLink className="h-3.5 w-3.5" />
           </Pill>
         </DocsCard>
@@ -445,8 +445,8 @@ Receive:   @username and/or 0x…`}</DocsCode>
           </table>
         </div>
         <DocsCode>{`# Buyer funds with full Pro methods, then pays merchant
-https://openpaypi.space/topup
-https://openpaypi.space/pay/@shop?amount=250&asset=OUSD&note=order_9001`}</DocsCode>
+https://openpaypro.space/topup
+https://openpaypro.space/pay/@shop?amount=250&asset=OUSD&note=order_9001`}</DocsCode>
       </DocsSection>
 
       <DocsSection id="exchange" eyebrow="Exchanges" title="List OUSD on OpenPay Network">
@@ -984,12 +984,12 @@ Authorization: Bearer opk_live_YOUR_KEY
             Pro users mint collectibles on OpenPay OpenNFT via a connected OpenPay account (Settings
             → Connect OpenPay). Marketplace:{" "}
             <a
-              href="https://openpy.space/web3/nft"
+              href="https://openpaypi.space/web3/nft"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-foreground underline-offset-2 hover:underline"
             >
-              openpy.space/web3/nft
+              openpaypi.space/web3/nft
             </a>
             .
           </p>
@@ -1030,7 +1030,7 @@ Authorization: Bearer opk_live_YOUR_KEY
         </DocsCard>
         <ul className="space-y-2 text-sm">
           {[
-            "Partner app + secrets on server only (openpy.space/partner-api)",
+            "Partner app + secrets on server only (openpaypi.space/partner-api)",
             "Redirect URIs registered (exact match)",
             "Connect → token → store opa_live_ server-side",
             "Charges or /pay/@tag with success/cancel URLs",
@@ -1112,7 +1112,7 @@ Authorization: Bearer opk_live_YOUR_KEY
             rel="noreferrer"
             className="font-semibold text-foreground underline-offset-2 hover:underline"
           >
-            openpy.space/partner-api
+            openpaypi.space/partner-api
           </a>
           .
         </p>

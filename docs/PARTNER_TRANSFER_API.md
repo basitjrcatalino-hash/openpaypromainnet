@@ -4,17 +4,17 @@ Integration reference for OpenPay Pro (and other partner apps).
 
 For the full **Connect + Payments** guide for third-party apps, see
 [`OPENPAY_INTEGRATION.md`](./OPENPAY_INTEGRATION.md) or the live page
-[`/docs/openpay`](https://openpaypi.space/docs/openpay).
+[`/docs/openpay`](https://openpaypro.space/docs/openpay).
 
 **AI / agent pack (OpenAI · ChatGPT · Cursor · Claude):**  
-[`AI_PARTNER_INTEGRATION.md`](./AI_PARTNER_INTEGRATION.md) · live [`/docs/ai`](https://openpaypi.space/docs/ai) · raw [`/api/public/docs/ai-partner`](https://openpaypi.space/api/public/docs/ai-partner) · OpenAPI [`/api/public/docs/openapi`](https://openpaypi.space/api/public/docs/openapi)
+[`AI_PARTNER_INTEGRATION.md`](./AI_PARTNER_INTEGRATION.md) · live [`/docs/ai`](https://openpaypro.space/docs/ai) · raw [`/api/public/docs/ai-partner`](https://openpaypro.space/api/public/docs/ai-partner) · OpenAPI [`/api/public/docs/openapi`](https://openpaypro.space/api/public/docs/openapi)
 
 For **exchanges listing OUSD** (deposit / withdraw / network metadata), see
 [`EXCHANGE_INTEGRATION.md`](./EXCHANGE_INTEGRATION.md) or
-[`/docs/exchange`](https://openpaypi.space/docs/exchange).
+[`/docs/exchange`](https://openpaypro.space/docs/exchange).
 
-**Partner API portal:** [https://openpy.space/partner-api](https://openpy.space/partner-api)  
-**Auth docs:** [https://openpy.space/openpay-auth](https://openpy.space/openpay-auth)  
+**Partner API portal:** [https://openpaypi.space/partner-api](https://openpaypi.space/partner-api)  
+**Auth docs:** [https://openpaypi.space/openpay-auth](https://openpaypi.space/openpay-auth)  
 **Base URL:** `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api`
 
 ## Authentication
@@ -95,7 +95,7 @@ Returns `{ id, amount, currency, status, checkout_url, expires_at }`. Charges ex
 Drop-in button after creating a charge:
 
 ```html
-<a href="https://openpy.space/paybutton/CHARGE_ID"
+<a href="https://openpaypi.space/paybutton/CHARGE_ID"
    style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
    padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
   Pay with OpenPay
@@ -130,14 +130,14 @@ Standard Authorization Code flow. Users sign in on OpenPay and grant `profile` /
 
 Exact match required. OpenPay Pro always uses production:
 
-`https://openpaypi.space/openpay/connect/callback`
+`https://openpaypro.space/openpay/connect/callback`
 
 (Localhost / preview origins are rewritten to this URL — do not register localhost.)
 
 ### 2. Send the user to OpenPay
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id=YOUR_APP_ID
   &redirect_uri=https://yourapp.com/openpay/callback
   &scope=profile%20balance
@@ -183,7 +183,7 @@ curl -H "Authorization: Bearer opa_live_..." \
 Drop-in Connect button:
 
 ```html
-<a href="https://openpy.space/connect?client_id=YOUR_APP_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
+<a href="https://openpaypi.space/connect?client_id=YOUR_APP_ID&redirect_uri=https://yourapp.com/openpay/callback&scope=profile%20balance&state=xyz"
    style="display:inline-flex;align-items:center;gap:8px;background:#1652f0;color:#fff;
    padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;">
   Connect with OpenPay
@@ -207,7 +207,7 @@ Drop-in Connect button:
 
 | Concern | Implementation |
 |---------|----------------|
-| Authorize URL | `OPENPAY_OAUTH_AUTHORIZE_URL` → `https://openpy.space/connect` |
+| Authorize URL | `OPENPAY_OAUTH_AUTHORIZE_URL` → `https://openpaypi.space/connect` |
 | Client ID | `OPENPAY_OAUTH_CLIENT_ID` |
 | Partner key | `OPENPAY_PARTNER_API_KEY` (`opk_live_…`) |
 | Callback | `/openpay/connect/callback` |

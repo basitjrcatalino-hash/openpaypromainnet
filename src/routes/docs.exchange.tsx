@@ -110,7 +110,7 @@ function ExchangeDocsPage() {
           ["Asset", "OUSD (~$1 USD)"],
           ["Decimals", "8 ledger · 2 display"],
           ["Contract", "None (ledger API)"],
-          ["Partner portal", "openpy.space/partner-api"],
+          ["Partner portal", "openpaypi.space/partner-api"],
           ["Explorer", `${PRO_HOST}/ledger`],
         ].map(([k, v]) => (
           <div key={k} className="space-y-0.5">

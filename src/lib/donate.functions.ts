@@ -303,7 +303,7 @@ export const createOpenPayDonateCheckout = createServerFn({ method: "POST" })
         cancel_url: cancelUrl,
       });
       if (!charge?.id) throw new Error("OpenPay checkout unavailable");
-      charge.checkout_url = `https://openpy.space/paybutton/${encodeURIComponent(charge.id)}`;
+      charge.checkout_url = `https://openpaypi.space/paybutton/${encodeURIComponent(charge.id)}`;
 
       const notifications: Record<string, unknown> = {
         ...((prefs?.notifications as Record<string, unknown>) ?? {}),
@@ -343,7 +343,7 @@ export const createOpenPayDonateCheckout = createServerFn({ method: "POST" })
     }
 
     const pay_url =
-      `https://openpy.space/pay/@${encodeURIComponent(partnerUsername)}` +
+      `https://openpaypi.space/pay/@${encodeURIComponent(partnerUsername)}` +
       `?amount=${encodeURIComponent(String(data.amount))}` +
       `&currency=OUSD` +
       `&note=${encodeURIComponent(reference)}` +

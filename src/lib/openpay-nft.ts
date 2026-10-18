@@ -1,6 +1,6 @@
 /**
  * OpenPay OpenNFT Collectibles — public read-only API.
- * Docs: https://openpy.space/web3/nft/api/collectibles
+ * Docs: https://openpaypi.space/web3/nft/api/collectibles
  *
  * Prefer GET /collectibles/:username. Falls back to legacy GET /owners/:id
  * when collectibles is not deployed yet (404).
@@ -15,11 +15,11 @@ export const OPENPAY_NFT_API_BASE =
       ?.VITE_OPENPAY_NFT_API_BASE) ||
   "https://araojncyittkahvvpdrn.supabase.co/functions/v1/nft-public-api";
 
-export const OPENPAY_NFT_MARKET_URL = "https://openpy.space/web3/nft";
-export const OPENPAY_PRO_STORE_URL = "https://openpy.space/web3/nft/store/openpay-pro";
+export const OPENPAY_NFT_MARKET_URL = "https://openpaypi.space/web3/nft";
+export const OPENPAY_PRO_STORE_URL = "https://openpaypi.space/web3/nft/store/openpay-pro";
 
 /**
- * Force public NFT links onto openpy.space (API often returns openpay.lovable.app).
+ * Force public NFT links onto openpaypi.space (API often returns openpay.lovable.app).
  */
 export function toOpenPyNftUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== "string") return null;
@@ -35,15 +35,15 @@ export function toOpenPyNftUrl(url: string | null | undefined): string | null {
       host.endsWith(".lovableproject.com")
     ) {
       u.protocol = "https:";
-      u.hostname = "openpy.space";
-      return u.toString().replace(/\/$/, "") || "https://openpy.space/web3/nft";
+      u.hostname = "openpaypi.space";
+      return u.toString().replace(/\/$/, "") || "https://openpaypi.space/web3/nft";
     }
   } catch {
     /* relative or invalid — fall through */
   }
   return trimmed
-    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpy.space")
-    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpy.space");
+    .replace(/https?:\/\/openpay\.lovable\.app/gi, "https://openpaypi.space")
+    .replace(/https?:\/\/[a-z0-9-]+\.lovable\.app/gi, "https://openpaypi.space");
 }
 
 export function openNftItemUrl(itemId: string): string {
@@ -433,7 +433,7 @@ export async function fetchOpenNftActivity(
   return out;
 }
 
-export const OPENPAY_NFT_API_DOCS_URL = "https://openpy.space/web3/nft/api";
+export const OPENPAY_NFT_API_DOCS_URL = "https://openpaypi.space/web3/nft/api";
 
 function safeImage(url: unknown): string | null {
   if (typeof url !== "string" || !url) return null;

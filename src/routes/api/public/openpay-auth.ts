@@ -3,7 +3,7 @@ import { createHash } from "crypto";
 
 /**
  * Sign in with OpenPay (OAuth 2.0 Authorization Code).
- * Docs: https://openpy.space/openpay-auth
+ * Docs: https://openpaypi.space/openpay-auth
  *
  * GET  → { authorize_url, state, redirect_uri }
  * POST → { email, password, username, openpay_user_id } after code exchange

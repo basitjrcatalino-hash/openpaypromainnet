@@ -372,10 +372,10 @@ export const Route = createFileRoute("/pitch")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypi.space/pitch" },
+      { property: "og:url", content: "https://openpaypro.space/pitch" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/pitch" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/pitch" }],
   }),
   component: PitchPage,
 });
@@ -654,7 +654,7 @@ function PitchPage() {
             <ThesisCard
               logo={OPENPAY_AUTH_LOGO}
               name="OpenPay"
-              href="https://openpy.space"
+              href="https://openpaypi.space"
               body="The open money network: Balance, Partner API, Connect, OpenLedger, OpenNFT, and the network thesis."
             />
             <ThesisCard
@@ -1240,7 +1240,7 @@ function PitchPage() {
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
             </Link>
             <a
-              href="https://openpy.space/whitepaper"
+              href="https://openpaypi.space/whitepaper"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-base font-bold"
@@ -1277,7 +1277,7 @@ function PitchPage() {
             <img src={OPENPAY_AUTH_LOGO} alt="" className="h-8 w-8 rounded-lg" />
             <div>
               <p className="oppitch-card-title">OpenPay Pro</p>
-              <p className="text-xs text-muted-foreground">openpaypi.space/pitch</p>
+              <p className="text-xs text-muted-foreground">openpaypro.space/pitch</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-bold text-muted-foreground">
@@ -1294,7 +1294,7 @@ function PitchPage() {
               Blog
             </Link>
             <a
-              href="https://openpy.space"
+              href="https://openpaypi.space"
               target="_blank"
               rel="noreferrer"
               className="hover:text-foreground"

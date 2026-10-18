@@ -43,7 +43,7 @@ export const getDeveloperPortalProfile = createServerFn({ method: "GET" })
 
     const origin =
       (typeof process !== "undefined" && process.env.VITE_APP_URL) ||
-      "https://openpaypi.space";
+      "https://openpaypro.space";
 
     return {
       userId: context.userId,

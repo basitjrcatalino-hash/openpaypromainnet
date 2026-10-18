@@ -2,18 +2,18 @@
 
 **Audience:** third-party apps (including OpenPay) that want users to pay with **OpenPay Pro payment methods**, with earnings credited to a merchant **OpenPay Pro username** and/or **wallet address**.
 
-Live page: [https://openpaypi.space/docs/pro-pay](https://openpaypi.space/docs/pro-pay)  
-Raw markdown: [https://openpaypi.space/api/public/docs/pro-pay](https://openpaypi.space/api/public/docs/pro-pay)
+Live page: [https://openpaypro.space/docs/pro-pay](https://openpaypro.space/docs/pro-pay)  
+Raw markdown: [https://openpaypro.space/api/public/docs/pro-pay](https://openpaypro.space/api/public/docs/pro-pay)
 
 | Resource | URL |
 | --- | --- |
-| Partner keys portal | https://openpy.space/partner-api |
+| Partner keys portal | https://openpaypi.space/partner-api |
 | Partner Transfer API | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
-| Pro inbound credit | `POST https://openpaypi.space/api/public/openpay/inbound` |
-| Pro developer keys | https://openpaypi.space/developer |
-| Pro Top Up UI (buyer) | https://openpaypi.space/topup |
-| Pro pay link | https://openpaypi.space/pay/{@user\|0x…} |
-| Connect authorize | https://openpy.space/connect |
+| Pro inbound credit | `POST https://openpaypro.space/api/public/openpay/inbound` |
+| Pro developer keys | https://openpaypro.space/developer |
+| Pro Top Up UI (buyer) | https://openpaypro.space/topup |
+| Pro pay link | https://openpaypro.space/pay/{@user\|0x…} |
+| Connect authorize | https://openpaypi.space/connect |
 
 ---
 
@@ -41,8 +41,8 @@ Buyer                    Your app / OpenPay              Settlement
 3. Credit Pro       →    POST …/inbound             →    Pro @merchant / 0x
    (optional)            note: pro_xfer:@merchant:r_
 
-OR deep-link buyer → https://openpaypi.space/topup  (self-fund Pro wallet)
-                 → https://openpaypi.space/pay/@merchant?amount=…
+OR deep-link buyer → https://openpaypro.space/topup  (self-fund Pro wallet)
+                 → https://openpaypro.space/pay/@merchant?amount=…
 ```
 
 ---
@@ -56,7 +56,7 @@ Merchants set where earnings land:
 | OpenPay partner owner wallet | Partner portal app owner | Charge proceeds (`GET /balance`) |
 | Pro `@username` | Pro Settings / profile | Inbound `to: "@alice"` |
 | Pro `0x` wallet address | Pro wallet screen | Inbound `to: "0x…"` |
-| Pro developer key `opdk_…` | https://openpaypi.space/developer | Inbound scoped to **your** Pro wallet only |
+| Pro developer key `opdk_…` | https://openpaypro.space/developer | Inbound scoped to **your** Pro wallet only |
 
 Save in your dashboard:
 
@@ -74,7 +74,7 @@ Save in your dashboard:
 
 ## Step 1 — Partner app & env
 
-1. Open https://openpy.space/partner-api → register app.  
+1. Open https://openpaypi.space/partner-api → register app.  
 2. Copy `client_id` + `opk_live_…` (shown once).  
 3. Register exact OAuth redirect URIs if you use Connect.  
 4. Server env:
@@ -91,7 +91,7 @@ OPENPAY_REDIRECT_URI="https://yourapp.com/openpay/callback"
 # Merchant receive (your dashboard settings)
 MERCHANT_PRO_USERNAME="@shop"
 MERCHANT_PRO_WALLET="0x..."          # optional alternate
-PRO_INBOUND_URL="https://openpaypi.space/api/public/openpay/inbound"
+PRO_INBOUND_URL="https://openpaypro.space/api/public/openpay/inbound"
 
 # Optional: Pro developer key (inbound to your own Pro wallet only)
 OPENPAY_PRO_DEVELOPER_KEY="opdk_..."
@@ -104,7 +104,7 @@ OPENPAY_PRO_DEVELOPER_KEY="opdk_..."
 ## Step 2 — Auth (Connect with OpenPay)
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id={CLIENT_ID}
   &redirect_uri={EXACT_REDIRECT}
   &scope=profile%20balance
@@ -156,7 +156,7 @@ curl -X POST "$OPENPAY_PARTNER_API_BASE/charges" \
 
 Returns `{ id, amount, currency, status, checkout_url, expires_at }` (TTL **~2 hours**).
 
-Redirect buyer to `checkout_url` (or `https://openpy.space/paybutton/{id}`).
+Redirect buyer to `checkout_url` (or `https://openpaypi.space/paybutton/{id}`).
 
 **Poll until paid** (no partner webhooks yet):
 
@@ -173,7 +173,7 @@ Earnings land on the **partner-app owner’s OpenPay balance** → `GET /me` / `
 After charge is `paid` (or after OpenPay pay-link success), credit Pro:
 
 ```bash
-curl -X POST "https://openpaypi.space/api/public/openpay/inbound" \
+curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
   -H "Authorization: Bearer $OPENPAY_PARTNER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -194,13 +194,13 @@ curl -X POST "https://openpaypi.space/api/public/openpay/inbound" \
 When the buyer should use Pro’s Top Up screen (Pi, Banxa, MoonPay, wallet majors, …):
 
 ```
-https://openpaypi.space/topup
+https://openpaypro.space/topup
 ```
 
 Then pay the merchant:
 
 ```
-https://openpaypi.space/pay/@shop?amount=250&asset=OUSD&note=order_9001
+https://openpaypro.space/pay/@shop?amount=250&asset=OUSD&note=order_9001
 ```
 
 Or share a **Receive → Create OpenPay receive link** from Pro (embeds `pro_xfer:` automatically).
@@ -268,7 +268,7 @@ const API =
 const KEY = process.env.OPENPAY_PARTNER_API_KEY;
 const INBOUND =
   process.env.PRO_INBOUND_URL ||
-  "https://openpaypi.space/api/public/openpay/inbound";
+  "https://openpaypro.space/api/public/openpay/inbound";
 const MERCHANT = process.env.MERCHANT_PRO_USERNAME || "@shop";
 
 export async function createCheckout({ amount, reference, success_url, cancel_url }) {

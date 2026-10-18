@@ -6,29 +6,29 @@ Paste this file (or fetch the live URLs below) into your AI tool, then ask it to
 
 | Resource | URL |
 | --- | --- |
-| Live AI guide | https://openpaypi.space/docs/ai |
-| This markdown (raw) | https://openpaypi.space/api/public/docs/ai-partner |
-| `llms.txt` index | https://openpaypi.space/llms.txt |
-| Full AI dump | https://openpaypi.space/llms-full.txt |
-| OpenAPI | https://openpaypi.space/api/public/docs/openapi |
-| Partner keys portal | https://openpy.space/partner-api |
-| Developer Portal | https://openpaypi.space/docs |
+| Live AI guide | https://openpaypro.space/docs/ai |
+| This markdown (raw) | https://openpaypro.space/api/public/docs/ai-partner |
+| `llms.txt` index | https://openpaypro.space/llms.txt |
+| Full AI dump | https://openpaypro.space/llms-full.txt |
+| OpenAPI | https://openpaypro.space/api/public/docs/openapi |
+| Partner keys portal | https://openpaypi.space/partner-api |
+| Developer Portal | https://openpaypro.space/docs |
 
 ---
 
 ## Canonical bases (do not invent)
 
 ```
-OpenPay app:           https://openpy.space
-Partner portal:        https://openpy.space/partner-api
-Connect authorize:     https://openpy.space/connect
-PayButton UI:          https://openpy.space/paybutton/{CHARGE_ID}
-Hosted pay:            https://openpy.space/pay/{USERNAME}
+OpenPay app:           https://openpaypi.space
+Partner portal:        https://openpaypi.space/partner-api
+Connect authorize:     https://openpaypi.space/connect
+PayButton UI:          https://openpaypi.space/paybutton/{CHARGE_ID}
+Hosted pay:            https://openpaypi.space/pay/{USERNAME}
 Partner Transfer API:  https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
-OpenPay Pro:           https://openpaypi.space
-Pro inbound:           POST https://openpaypi.space/api/public/openpay/inbound
-Ledger API:            https://openpaypi.space/api/public/ledger
-MCP:                   https://openpaypi.space/mcp
+OpenPay Pro:           https://openpaypro.space
+Pro inbound:           POST https://openpaypro.space/api/public/openpay/inbound
+Ledger API:            https://openpaypro.space/api/public/ledger
+MCP:                   https://openpaypro.space/mcp
 ```
 
 Currency for Partner Transfer charges/transfers: **OUSD**.
@@ -60,12 +60,12 @@ Currency for Partner Transfer charges/transfers: **OUSD**.
 | --- | --- |
 | **Auth / Connect** | OAuth 2.0 Authorization Code → `opa_live_…` → `/user/me` |
 | **Checkout / Pay** | `POST /charges` → redirect `checkout_url` → poll until `paid` |
-| **Hosted pay link** | `https://openpy.space/pay/@tag?amount=&note=&success_url=&cancel_url=` |
+| **Hosted pay link** | `https://openpaypi.space/pay/@tag?amount=&note=&success_url=&cancel_url=` |
 | **Payout / withdraw** | Resolve account → `POST /transfers` with `Idempotency-Key` |
 | **Account resolve** | `GET /accounts/:id` (`@user` \| `OP…` \| email) — prefer `OP…` |
 | **OpenPay → Pro credit** | Pay with note `pro_xfer:@proUser:ref` → `POST …/inbound` |
 | **Pro → OpenPay send** | Pro app uses Partner `/transfers` |
-| **Top-up (product UX)** | Deep-link `https://openpaypi.space/topup` (Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance, scan-pay, wallet majors) |
+| **Top-up (product UX)** | Deep-link `https://openpaypro.space/topup` (Pi, MoonPay, Helio, Solana Pay, Banxa, Circle, OpenPay Balance, scan-pay, wallet majors) |
 | **Deposit / receive** | `/deposit`, `/receive`, `/pay/$to` deep links |
 | **Swap** | Deep-link `/swap` · reconcile Ledger `type=swap` |
 | **Reconcile** | Poll charges + Ledger `GET /entries` |
@@ -77,7 +77,7 @@ Pro end-user sign-in methods (product, not Partner Transfer): OpenPay, Telegram,
 
 ## 1. Setup (5 minutes)
 
-1. Open https://openpy.space/partner-api → register app.
+1. Open https://openpaypi.space/partner-api → register app.
 2. Save `client_id` (UUID) and `opk_live_…` (shown once) in **server** secrets.
 3. Register exact redirect URIs, e.g. `https://yourapp.com/openpay/callback`.
 4. Env:
@@ -96,7 +96,7 @@ OPENPAY_REDIRECT_URI="https://yourapp.com/openpay/callback"
 ### Authorize URL
 
 ```
-https://openpy.space/connect
+https://openpaypi.space/connect
   ?client_id={CLIENT_ID}
   &redirect_uri={EXACT_REDIRECT}
   &scope=profile%20balance
@@ -196,7 +196,7 @@ pro_xfer:uid_<supabase-uuid>:r_abc123
 ```
 
 ```http
-POST https://openpaypi.space/api/public/openpay/inbound
+POST https://openpaypro.space/api/public/openpay/inbound
 Authorization: Bearer opk_live_...
 Content-Type: application/json
 
@@ -216,7 +216,7 @@ Idempotent on `openpay_tx_id`. Accepts `opk_live_…`, Pro `opdk_…`, or ledger
 ## 6. Public Ledger (reconcile)
 
 ```http
-GET https://openpaypi.space/api/public/ledger/entries?limit=100&asset=OUSD&type=buy
+GET https://openpaypro.space/api/public/ledger/entries?limit=100&asset=OUSD&type=buy
 x-api-key: {LEDGER_KEY}
 ```
 
@@ -243,14 +243,14 @@ Partners usually deep-link users into Pro rather than re-implementing every rail
 | `scan_pay` | Multi-chain QR |
 | `wallet_usdt` / `wallet_usdc` / `wallet_sol` | Internal majors → OUSD |
 
-Deep links: `https://openpaypi.space/topup` · `/deposit` · `/receive` · `/pay/{to}` · `/swap`.
+Deep links: `https://openpaypro.space/topup` · `/deposit` · `/receive` · `/pay/{to}` · `/swap`.
 
 ---
 
 ## 8. MCP (AI agents — read-only)
 
 ```
-https://openpaypi.space/mcp
+https://openpaypro.space/mcp
 ```
 
 Tools: `get_profile`, `list_wallets`, `list_transactions`, `list_ledger_entries`.  
@@ -269,7 +269,7 @@ const CLIENT_ID = process.env.OPENPAY_CLIENT_ID;
 const REDIRECT = process.env.OPENPAY_REDIRECT_URI;
 
 export function connectUrl(state) {
-  const u = new URL("https://openpy.space/connect");
+  const u = new URL("https://openpaypi.space/connect");
   u.searchParams.set("client_id", CLIENT_ID);
   u.searchParams.set("redirect_uri", REDIRECT);
   u.searchParams.set("scope", "profile balance");
@@ -329,7 +329,7 @@ export async function transfer({ to, amount, note, idempotencyKey }) {
 }
 
 export async function creditProInbound(body) {
-  const res = await fetch("https://openpaypi.space/api/public/openpay/inbound", {
+  const res = await fetch("https://openpaypro.space/api/public/openpay/inbound", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${KEY}`,
@@ -352,9 +352,9 @@ export async function creditProInbound(body) {
 You are integrating OpenPay + OpenPay Pro as a third-party partner.
 
 Read these first (fetch the URLs):
-1) https://openpaypi.space/api/public/docs/ai-partner
-2) https://openpaypi.space/api/public/docs/openapi
-3) https://openpaypi.space/llms.txt
+1) https://openpaypro.space/api/public/docs/ai-partner
+2) https://openpaypro.space/api/public/docs/openapi
+3) https://openpaypro.space/llms.txt
 
 Then generate production-ready code for:
 - Connect OAuth (authorize → callback → POST /oauth/token → store opa_live_)
@@ -365,14 +365,14 @@ Then generate production-ready code for:
 Rules: server-only opk_live_ keys, currency OUSD, poll charges (no webhooks),
 exact-match OAuth redirect_uri.
 
-MCP (read-only wallet tools in ChatGPT): https://openpaypi.space/mcp
+MCP (read-only wallet tools in ChatGPT): https://openpaypro.space/mcp
 ```
 
 ### Cursor / Claude Code / Copilot
 
 ```
-Fetch https://openpaypi.space/api/public/docs/ai-partner and
-https://openpaypi.space/api/public/docs/openapi
+Fetch https://openpaypro.space/api/public/docs/ai-partner and
+https://openpaypro.space/api/public/docs/openapi
 Then implement OpenPay Partner integration in this repo:
 - Server-only opk_live_ key from env
 - Connect OAuth (authorize → callback → /oauth/token → store opa_live_)
@@ -384,12 +384,12 @@ Do not invent webhooks for charges. Do not expose the partner key to the client.
 ### Lovable
 
 ```
-@https://openpaypi.space/llms-full.txt
+@https://openpaypro.space/llms-full.txt
 Build a merchant checkout that:
 1) Creates an OpenPay charge from a server function using OPENPAY_PARTNER_API_KEY
 2) Redirects the buyer to checkout_url
 3) On return, polls GET /charges/:id until paid|canceled|expired
-Also add a "Connect with OpenPay" button using openpy.space/connect.
+Also add a "Connect with OpenPay" button using openpaypi.space/connect.
 ```
 
 ### Replit / Claude Projects
@@ -398,7 +398,7 @@ Also add a "Connect with OpenPay" button using openpy.space/connect.
 Use OpenPay Partner Transfer API base
 https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
 Implement auth (Connect), payments (charges), and payouts (transfers)
-per https://openpaypi.space/api/public/docs/ai-partner
+per https://openpaypro.space/api/public/docs/ai-partner
 Secrets: OPENPAY_CLIENT_ID, OPENPAY_PARTNER_API_KEY, OPENPAY_REDIRECT_URI
 ```
 

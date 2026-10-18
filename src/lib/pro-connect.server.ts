@@ -290,7 +290,7 @@ export function publicOrigin(request?: Request): string {
       /* ignore */
     }
   }
-  return "https://openpaypi.space";
+  return "https://openpaypro.space";
 }
 
 export function serializeCharge(charge: ProCharge, origin: string) {

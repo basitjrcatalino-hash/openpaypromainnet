@@ -15,9 +15,9 @@ export const Route = createFileRoute("/privacy")({
         property: "og:description",
         content: "How OpenPay Pro collects, uses, and protects your wallet and account data.",
       },
-      { property: "og:url", content: "https://openpaypi.space/privacy" },
+      { property: "og:url", content: "https://openpaypro.space/privacy" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypi.space/privacy" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.space/privacy" }],
   }),
   component: PrivacyPage,
 });
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/privacy")({
 const PRIVACY_SPEECH = `
 Privacy Policy for OpenPay Pro. Last updated July 28, 2026.
 
-1. Overview. This Privacy Policy explains how OpenPay Pro handles information when you use the wallet. Sign-in and some payment features are provided by OpenPay at openpy.space; their policies may also apply to that data.
+1. Overview. This Privacy Policy explains how OpenPay Pro handles information when you use the wallet. Sign-in and some payment features are provided by OpenPay at openpaypi.space; their policies may also apply to that data.
 
 2. Information we process. Account identifiers such as your OpenPay-linked user id, username, and session tokens after you sign in. Wallet and transaction data including balances, transfers, swaps, OpenToken activity, and related ledger records needed to run the product. Device and usage logs used to keep the App secure and reliable. Preferences such as theme and chart mode.
 
@@ -41,7 +41,7 @@ Privacy Policy for OpenPay Pro. Last updated July 28, 2026.
 
 8. Changes. We may update this Privacy Policy and will revise the date above when we do. Continued use of the App after an update means you acknowledge the revised policy.
 
-9. Contact. Privacy requests: support at openpy.space.
+9. Contact. Privacy requests: support at openpaypi.space.
 `.trim();
 
 const TOC = [
@@ -71,7 +71,7 @@ function PrivacyPage() {
       <LegalSection id="overview" heading="1. Overview">
         <p>
           This Privacy Policy explains how OpenPay Pro (“we”, “the App”) handles information when you
-          use the wallet. Sign-in and some payment features are provided by OpenPay (openpy.space);
+          use the wallet. Sign-in and some payment features are provided by OpenPay (openpaypi.space);
           their policies may also apply to that data.
         </p>
       </LegalSection>
@@ -158,10 +158,10 @@ function PrivacyPage() {
         <p>
           Privacy requests:{" "}
           <a
-            href="mailto:support@openpy.space"
+            href="mailto:support@openpaypi.space"
             className="font-semibold text-[var(--foreground)] underline underline-offset-2"
           >
-            support@openpy.space
+            support@openpaypi.space
           </a>
           . See also our{" "}
           <Link to="/terms" className="font-semibold underline underline-offset-2">

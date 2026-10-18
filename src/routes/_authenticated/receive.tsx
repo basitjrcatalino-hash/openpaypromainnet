@@ -1,3 +1,4 @@
+import { ArcWalletCard } from "@/components/arc-wallet-card";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -359,6 +360,7 @@ function ReceivePage() {
   return (
     <div className="ot-phantom ph-page space-y-5 pb-8">
       <PageHeader title="Receive" backTo="/dashboard" />
+      <ArcWalletCard />
 
       <div className="mx-auto grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl bg-muted/50 p-1">
         <button

@@ -1,3 +1,4 @@
+import { ArcWalletCard } from "@/components/arc-wallet-card";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -677,6 +678,7 @@ function SendPage() {
     <IosPageShell title={titles[step]} subtitle={subtitles[step]} onBack={goBack}>
       {step === "asset" && (
         <div className="space-y-4">
+          <ArcWalletCard />
           {/* iOS search field */}
           <div className="relative">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ios-secondary" />

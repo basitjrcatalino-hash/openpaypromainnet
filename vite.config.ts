@@ -114,7 +114,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [web3authEventsShimPlugin(), mcpPlugin()],
+    plugins: [aaveAccountSsrShimPlugin(), web3authEventsShimPlugin(), mcpPlugin()],
     define: {
       global: "globalThis",
     },

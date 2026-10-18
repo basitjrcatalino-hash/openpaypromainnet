@@ -1,3 +1,4 @@
+import { ArcWalletCard } from "@/components/arc-wallet-card";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -936,6 +937,7 @@ function TopUpPage() {
         backTo={step === "amount" ? "/dashboard" : undefined}
         onBack={step === "amount" ? undefined : handleHeaderBack}
       />
+      {step === "amount" && <ArcWalletCard />}
 
       {pendingPayLink && (
         <div className="mb-5 overflow-hidden rounded-2xl bg-card">

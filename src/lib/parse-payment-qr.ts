@@ -79,7 +79,7 @@ function parseHttpPayUrl(raw: string): ParsedPaymentQr | null {
     const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
     const path = decodeURIComponent(url.pathname);
 
-    // https://openpaypi.space/pay/0x…?asset=OUSD
+    // https://openpaypro.space/pay/0x…?asset=OUSD
     // https://any-host/pay/0x… (preview / custom domains)
     // https://openpy.space/pay/@alice?amount=10
     const payMatch = path.match(/\/pay\/([^/?#]+)/i);
@@ -156,7 +156,7 @@ export function parsePaymentQr(text: string): ParsedPaymentQr {
   if (
     /^https?:\/\//i.test(raw) ||
     raw.includes("openpy.space") ||
-    raw.includes("openpaypi.space") ||
+    raw.includes("openpaypro.space") ||
     raw.includes("openpay") ||
     raw.includes("/pay/") ||
     raw.includes("/send")

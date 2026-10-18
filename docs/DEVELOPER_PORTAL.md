@@ -2,33 +2,33 @@
 
 Complete integration map for **exchanges**, **merchants**, **wallet apps**, and **AI agents**.
 
-Live portal: [https://openpaypi.space/docs](https://openpaypi.space/docs)
+Live portal: [https://openpaypro.space/docs](https://openpaypro.space/docs)
 
 | Surface | URL |
 | --- | --- |
-| Developer Portal | https://openpaypi.space/docs |
-| **AI Partner Pack** (OpenAI / ChatGPT / Cursor / Claude) | https://openpaypi.space/docs/ai |
-| **Pro Pay · Merchant checkout** | https://openpaypi.space/docs/pro-pay |
-| AI guide (raw markdown) | https://openpaypi.space/api/public/docs/ai-partner |
-| Pro Pay (raw markdown) | https://openpaypi.space/api/public/docs/pro-pay |
-| OpenAPI | https://openpaypi.space/api/public/docs/openapi |
-| `llms.txt` | https://openpaypi.space/llms.txt |
-| `llms-full.txt` | https://openpaypi.space/llms-full.txt |
-| Connect & payments | https://openpaypi.space/docs/openpay |
-| Exchange · OUSD | https://openpaypi.space/docs/exchange |
-| Money rails | https://openpaypi.space/docs/money |
-| Tokens | https://openpaypi.space/docs/tokens |
-| Partner Transfer API | https://openpaypi.space/docs/api |
-| Public Ledger API | https://openpaypi.space/docs/ledger |
-| Agent Connect · MCP | https://openpaypi.space/docs/mcp |
-| FAQ | https://openpaypi.space/docs/faq |
-| Errors & retries | https://openpaypi.space/docs/errors |
-| Authentication | https://openpaypi.space/docs/auth |
+| Developer Portal | https://openpaypro.space/docs |
+| **AI Partner Pack** (OpenAI / ChatGPT / Cursor / Claude) | https://openpaypro.space/docs/ai |
+| **Pro Pay · Merchant checkout** | https://openpaypro.space/docs/pro-pay |
+| AI guide (raw markdown) | https://openpaypro.space/api/public/docs/ai-partner |
+| Pro Pay (raw markdown) | https://openpaypro.space/api/public/docs/pro-pay |
+| OpenAPI | https://openpaypro.space/api/public/docs/openapi |
+| `llms.txt` | https://openpaypro.space/llms.txt |
+| `llms-full.txt` | https://openpaypro.space/llms-full.txt |
+| Connect & payments | https://openpaypro.space/docs/openpay |
+| Exchange · OUSD | https://openpaypro.space/docs/exchange |
+| Money rails | https://openpaypro.space/docs/money |
+| Tokens | https://openpaypro.space/docs/tokens |
+| Partner Transfer API | https://openpaypro.space/docs/api |
+| Public Ledger API | https://openpaypro.space/docs/ledger |
+| Agent Connect · MCP | https://openpaypro.space/docs/mcp |
+| FAQ | https://openpaypro.space/docs/faq |
+| Errors & retries | https://openpaypro.space/docs/errors |
+| Authentication | https://openpaypro.space/docs/auth |
 | Partner portal (keys) | https://openpy.space/partner-api |
 | Partner Transfer base | `https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api` |
-| Pro inbound | `POST https://openpaypi.space/api/public/openpay/inbound` |
-| Ledger HTTP | `https://openpaypi.space/api/public/ledger` |
-| MCP | `https://openpaypi.space/mcp` |
+| Pro inbound | `POST https://openpaypro.space/api/public/openpay/inbound` |
+| Ledger HTTP | `https://openpaypro.space/api/public/ledger` |
+| MCP | `https://openpaypro.space/mcp` |
 
 ---
 
@@ -62,8 +62,8 @@ Live portal: [https://openpaypi.space/docs](https://openpaypi.space/docs)
 
 ## AI agents (OpenAI · ChatGPT · Cursor · Lovable · Replit · Claude)
 
-1. Paste https://openpaypi.space/api/public/docs/ai-partner into the agent.  
-2. Or `@https://openpaypi.space/llms-full.txt` in Lovable.  
+1. Paste https://openpaypro.space/api/public/docs/ai-partner into the agent.  
+2. Or `@https://openpaypro.space/llms-full.txt` in Lovable.  
 3. Repo skill: `.agents/skills/openpay-partner-api/SKILL.md`
 
 ## Raw markdown feeds

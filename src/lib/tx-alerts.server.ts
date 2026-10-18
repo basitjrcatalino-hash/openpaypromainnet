@@ -33,7 +33,7 @@ function appBaseUrl() {
   return (
     process.env.APP_URL?.trim() ||
     process.env.VITE_APP_URL?.trim() ||
-    "https://openpaypi.space"
+    "https://openpaypro.space"
   ).replace(/\/$/, "");
 }
 

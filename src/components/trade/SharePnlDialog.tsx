@@ -126,7 +126,7 @@ async function drawCard(canvas: HTMLCanvasElement, d: SharePnl) {
 
   ctx.fillStyle = "rgba(255,255,255,0.4)";
   ctx.font = "600 28px Inter, system-ui, sans-serif";
-  ctx.fillText("Trade spot & futures on openpaypi.space", 80, H - 120);
+  ctx.fillText("Trade spot & futures on openpaypro.space", 80, H - 120);
 }
 
 export function SharePnlPage({ data, onBack }: { data: SharePnl; onBack: () => void }) {

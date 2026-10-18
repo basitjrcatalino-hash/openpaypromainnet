@@ -9,11 +9,11 @@ info:
     No charge webhooks — poll GET /charges/{id}. Currency: OUSD.
   contact:
     name: OpenPay Pro Docs
-    url: https://openpaypi.space/docs/ai
+    url: https://openpaypro.space/docs/ai
 servers:
   - url: https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api
     description: OpenPay Partner Transfer API
-  - url: https://openpaypi.space
+  - url: https://openpaypro.space
     description: OpenPay Pro
 tags:
   - name: PartnerAccount
@@ -196,7 +196,7 @@ paths:
   /api/public/openpay/inbound:
     post:
       servers:
-        - url: https://openpaypi.space
+        - url: https://openpaypro.space
       tags: [ProInbound]
       summary: Credit an OpenPay Pro wallet after OpenPay payment
       security: [{ PartnerKey: [] }, { ProDeveloperKey: [] }]
@@ -212,7 +212,7 @@ paths:
   /api/public/ledger/entries:
     get:
       servers:
-        - url: https://openpaypi.space
+        - url: https://openpaypro.space
       tags: [ProLedger]
       summary: List ledger entries
       security: [{ LedgerKey: [] }]
@@ -243,7 +243,7 @@ paths:
   /api/public/ledger/entries/{id}:
     get:
       servers:
-        - url: https://openpaypi.space
+        - url: https://openpaypro.space
       tags: [ProLedger]
       summary: Single ledger entry
       security: [{ LedgerKey: [] }]
@@ -258,7 +258,7 @@ paths:
   /api/public/ledger/stats:
     get:
       servers:
-        - url: https://openpaypi.space
+        - url: https://openpaypro.space
       tags: [ProLedger]
       summary: Ledger stats
       security: [{ LedgerKey: [] }]

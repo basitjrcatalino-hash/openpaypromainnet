@@ -8,7 +8,7 @@ Add **OpenPay Pro** as a first-class **QR Pay** payment method so merchants and 
 - Settle earnings to an **OpenPay Pro `@username`** or **`0x` wallet address**  
 - Use Partner API (copy-paste ready) with env, polling, and inbound credit  
 
-Live Pro docs: https://openpaypi.space/docs/pro-pay  
+Live Pro docs: https://openpaypro.space/docs/pro-pay  
 Partner keys: https://openpy.space/partner-api  
 
 ---
@@ -66,13 +66,13 @@ Hosted pay:
 https://openpy.space/pay/{USERNAME}
 
 Pro inbound:
-POST https://openpaypi.space/api/public/openpay/inbound
+POST https://openpaypro.space/api/public/openpay/inbound
 
 Pro pay deep-link (optional after top-up):
-https://openpaypi.space/pay/{@user|0x}?amount=&asset=OUSD
+https://openpaypro.space/pay/{@user|0x}?amount=&asset=OUSD
 
 Pro Top Up (full rails: Pi, Banxa, MoonPay…):
-https://openpaypi.space/topup
+https://openpaypro.space/topup
 ```
 
 Auth header (server only):
@@ -95,7 +95,7 @@ OPENPAY_CLIENT_ID="your-client-uuid"          # if Connect used
 OPENPAY_REDIRECT_URI="https://openpy.space/..." # if Connect used
 
 # Pro settlement
-OPENPAY_PRO_INBOUND_URL="https://openpaypi.space/api/public/openpay/inbound"
+OPENPAY_PRO_INBOUND_URL="https://openpaypro.space/api/public/openpay/inbound"
 
 # Default merchant receive (can be per-merchant in DB)
 OPENPAY_PRO_DEFAULT_USERNAME="@shop"
@@ -151,13 +151,13 @@ By Pro wallet address:
 ### 3) Pro native pay link QR (buyer already has Pro balance)
 
 ```
-https://openpaypi.space/pay/@shop?amount=25&asset=OUSD&note=order_9001
+https://openpaypro.space/pay/@shop?amount=25&asset=OUSD&note=order_9001
 ```
 
 or
 
 ```
-https://openpaypi.space/pay/0x7bf2…851a?amount=25&asset=OUSD
+https://openpaypro.space/pay/0x7bf2…851a?amount=25&asset=OUSD
 ```
 
 ### 4) Optional HTTPS pay URI (camera-friendly)
@@ -239,7 +239,7 @@ Authorization: Bearer opk_live_…
 After OpenPay debit succeeds (charge `paid` or hosted `/pay` success):
 
 ```http
-POST https://openpaypi.space/api/public/openpay/inbound
+POST https://openpaypro.space/api/public/openpay/inbound
 Authorization: Bearer opk_live_…
 Content-Type: application/json
 ```
@@ -318,7 +318,7 @@ const API =
 const KEY = process.env.OPENPAY_PARTNER_API_KEY; // opk_live_…
 const INBOUND =
   process.env.OPENPAY_PRO_INBOUND_URL ||
-  "https://openpaypi.space/api/public/openpay/inbound";
+  "https://openpaypro.space/api/public/openpay/inbound";
 const PARTNER_TAG = process.env.OPENPAY_PRO_PARTNER_TAG || "wainfoundation";
 
 function proXferNote(to, ref) {
@@ -462,7 +462,7 @@ curl -H "Authorization: Bearer $OPENPAY_PARTNER_API_KEY" \
   "$OPENPAY_PARTNER_API_BASE/charges/CHARGE_ID"
 
 # 4) Credit Pro
-curl -X POST "https://openpaypi.space/api/public/openpay/inbound" \
+curl -X POST "https://openpaypro.space/api/public/openpay/inbound" \
   -H "Authorization: Bearer $OPENPAY_PARTNER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -501,7 +501,7 @@ POST {PARTNER_API}/oauth/token
 If buyer has no OpenPay/Pro balance, deep-link:
 
 ```
-https://openpaypi.space/topup
+https://openpaypro.space/topup
 ```
 
 Methods available on Pro (product UI — not partner embed APIs):
@@ -522,7 +522,7 @@ Methods available on Pro (product UI — not partner embed APIs):
 Then pay merchant:
 
 ```
-https://openpaypi.space/pay/@shop?amount=25&asset=OUSD
+https://openpaypro.space/pay/@shop?amount=25&asset=OUSD
 ```
 
 ---
@@ -577,9 +577,9 @@ Rules:
 
 ## Related Pro docs
 
-- Merchant guide: https://openpaypi.space/docs/pro-pay  
-- Raw MD: https://openpaypi.space/api/public/docs/pro-pay  
-- Connect & payments: https://openpaypi.space/docs/openpay  
-- Partner Transfer API: https://openpaypi.space/docs/api  
-- Inbound: https://openpaypi.space/api/public/docs/openpay-to-pro  
-- AI pack: https://openpaypi.space/docs/ai  
+- Merchant guide: https://openpaypro.space/docs/pro-pay  
+- Raw MD: https://openpaypro.space/api/public/docs/pro-pay  
+- Connect & payments: https://openpaypro.space/docs/openpay  
+- Partner Transfer API: https://openpaypro.space/docs/api  
+- Inbound: https://openpaypro.space/api/public/docs/openpay-to-pro  
+- AI pack: https://openpaypro.space/docs/ai  

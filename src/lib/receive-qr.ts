@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 
-const SITE = "https://openpaypi.space";
+const SITE = "https://openpaypro.space";
 
 function appOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) {

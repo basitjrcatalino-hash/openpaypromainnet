@@ -185,13 +185,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "Organization",
               name: "OpenPay Pro",
-              url: "https://openpaypi.space",
-              logo: "https://openpaypi.space/ousd-logo.svg",
+              url: "https://openpaypro.space",
+              logo: "https://openpaypro.space/ousd-logo.svg",
             },
             {
               "@type": "WebSite",
               name: "OpenPay Pro Wallet",
-              url: "https://openpaypi.space",
+              url: "https://openpaypro.space",
             },
           ],
         }),

@@ -87,7 +87,7 @@ export function PositionManageSheet({
       <SheetContent side="bottom" className="max-h-[88dvh] overflow-y-auto rounded-t-3xl">
         <SheetHeader>
           <SheetTitle className="text-base">
-            {position.market}USDT · {position.side.toUpperCase()} {position.leverage}×
+            {position.market}OUSD · {position.side.toUpperCase()} {position.leverage}×
           </SheetTitle>
         </SheetHeader>
 

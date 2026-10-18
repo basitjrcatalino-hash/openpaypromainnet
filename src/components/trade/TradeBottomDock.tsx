@@ -450,7 +450,7 @@ export function TradeBottomDock({
                           >
                             {o.side}
                           </span>
-                          {o.market}/USDT · Limit
+                          {o.market}/OUSD · Limit
                         </p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {formatNumber(o.amount, 6)} @ {formatNumber(o.price, 2)} ·{" "}

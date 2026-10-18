@@ -27,7 +27,7 @@ export function tvSymbolForMode(market: PerpMarket, mode: TradeMode): string {
 }
 
 export function pairLabel(market: PerpMarket, mode: TradeMode): string {
-  return mode === "futures" ? `${market}USDT` : `${market}/USDT`;
+  return mode === "futures" ? `${market}OUSD` : `${market}/OUSD`;
 }
 
 function num(v: unknown): number {

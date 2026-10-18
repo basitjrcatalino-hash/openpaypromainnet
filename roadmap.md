@@ -1,4 +1,6 @@
 # Arc transition
+- [x] Remove runtime npm externals and isolate alternate wallet sign-in panels from server startup; verify preview page loading.
+- [ ] Confirm the startup correction on the published site; blocked until the latest version is published.
 - [x] Move sign-in to /auth with an /authpi redirect and reuse the Arc wallet picker for verified wallet signup/sign-in; page and picker verified, account safeguards tested.
 - [x] Integrate OpenPay Arc partner API securely with mainnet network discovery, live USDC/savings reads, and linked-wallet unsigned transfer preparation.
 - [x] Add real-network Arc App Kit wallet connection, balance, send, and bridge entry point.

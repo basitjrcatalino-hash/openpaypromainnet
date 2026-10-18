@@ -164,21 +164,12 @@ export default defineConfig({
       },
     },
     ssr: {
-      // Do not externalize buffer — use the browser shim so SSR never ships a broken CJS binding.
-      external: ["base64-js", "ieee754", "@moonpay/moonpay-react"],
+      // Bundle wallet/polyfill dependencies; Nitro bundles the final Worker output.
+      // Keep React's CommonJS entry out of Vite's development ESM module runner.
       noExternal: [
-        "buffer",
-        "events",
-        "loglevel",
-        "loglevel-package",
-        "deepmerge",
-        "json-stable-stringify",
-        // Browser-only wallet SDKs: must be bundled (and unenv-polyfilled) for the
-        // worker SSR build. Left external they emit raw `node:process` imports that
-        // workerd cannot resolve → every route 500s.
-        "@privy-io/react-auth",
-        /^@web3auth\//,
-        /^@phantom\//,
+        "buffer", "events", "loglevel", "loglevel-package", "deepmerge",
+        "json-stable-stringify", "base64-js", "ieee754", "@moonpay/moonpay-react",
+        "@privy-io/react-auth", /^@web3auth\//, /^@phantom\//,
       ],
 
       resolve: {

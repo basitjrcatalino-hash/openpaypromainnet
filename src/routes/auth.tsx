@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { ClientOnly, createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ChevronRight, Loader2, ShieldCheck, Mail, Wallet, Send } from "lucide-react";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
@@ -10,9 +10,10 @@ import { isPiBrowser } from "@/lib/piSdk";
 import { useQuery } from "@tanstack/react-query";
 import { AUTH_METHOD_CATALOG, fetchAuthMethodFlags, isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
 import { EmailAuthPanel } from "@/components/email-auth-panel";
-import { AuthProviderPanel } from "@/components/auth-provider-panels";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import type { EIP1193Provider } from "viem";
+
+const AuthProviderPanel = lazy(() => import("@/components/auth-provider-panels").then(module => ({ default: module.AuthProviderPanel })));
 
 const POST_AUTH_KEY = "post_auth_redirect";
 
@@ -214,7 +215,7 @@ function AuthPage() {
           <Button variant="ghost" disabled={busy} onClick={() => setSelected(null)}><ArrowLeft className="h-4 w-4" /> All sign-in options</Button>
           <h2 className="text-center text-lg font-semibold">{AUTH_METHOD_CATALOG.find(m => m.method_key === active)?.label}</h2>
           {active === "email" && <EmailAuthPanel busy={busy} setBusy={setBusy} initialMode={search.mode === "signup" ? "signup" : "signin"} />}
-          {(active === "phantom" || active === "metamask") && <AuthProviderPanel method={active} busy={busy} setBusy={setBusy} />}
+          {(active === "phantom" || active === "metamask") && <ClientOnly><Suspense fallback={<Loader2 aria-label="Loading wallet sign-in" className="mx-auto h-5 w-5 animate-spin" />}><AuthProviderPanel method={active} busy={busy} setBusy={setBusy} /></Suspense></ClientOnly>}
           {active === "privy" && <p role="status" className="text-center text-sm text-muted-foreground">Privy sign-in is temporarily unavailable. Please choose another sign-in method.</p>}
           {active === "pi" && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith("pi")}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Pi Network"}</Button>}
           {(active === "arc" || active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}

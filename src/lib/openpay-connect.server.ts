@@ -178,7 +178,7 @@ export function verifyConnectCode(code: string): ConnectAccountPayload {
 
 const DEFAULT_CLIENT_ID = "e9248f5d-3971-4cbc-9032-9b678c9b71ae";
 /** Partner app redirect URIs are registered for production only — never send localhost. */
-const PRODUCTION_ORIGIN = "https://openpaypro.space";
+const PRODUCTION_ORIGIN = "https://openpaypi.space";
 /** Canonical Connect page — openpay.lovable.app/connect 404s; openpy.space/connect works. */
 const DEFAULT_AUTHORIZE_URL = "https://openpy.space/connect";
 
@@ -248,7 +248,7 @@ export function resolvePartnerRedirectOrigin(requested?: string): string {
   )
     .trim()
     .replace(/\/$/, "");
-  // Prefer canonical openpaypro.space over stale Lovable preview origins in secrets.
+  // Prefer canonical openpaypi.space over stale Lovable preview origins in secrets.
   if (configured) {
     try {
       const host = new URL(configured).hostname.toLowerCase();

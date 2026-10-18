@@ -32,9 +32,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "OpenPay Pro Wallet MAIN"
-const SENDER_DOMAIN = "notify.openpaypro.space"
-const ROOT_DOMAIN = "openpaypro.space"
-const FROM_DOMAIN = "notify.openpaypro.space"
+const SENDER_DOMAIN = "notify.openpaypi.space"
+const ROOT_DOMAIN = "openpaypi.space"
+const FROM_DOMAIN = "notify.openpaypi.space"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'

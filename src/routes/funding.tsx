@@ -86,10 +86,10 @@ export const Route = createFileRoute("/funding")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypro.space/funding" },
+      { property: "og:url", content: "https://openpaypi.space/funding" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/funding" }],
+    links: [{ rel: "canonical", href: "https://openpaypi.space/funding" }],
   }),
   component: FundingPage,
 });

@@ -74,9 +74,9 @@ export const Route = createFileRoute("/authpi")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://openpaypro.space/authpi" },
+      { property: "og:url", content: "https://openpaypi.space/authpi" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/authpi" }],
+    links: [{ rel: "canonical", href: "https://openpaypi.space/authpi" }],
   }),
   component: AuthPiPage,
 });

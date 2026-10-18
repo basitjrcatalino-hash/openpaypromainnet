@@ -219,7 +219,7 @@ function DeveloperPortalPage() {
     );
   }
 
-  const inboundUrl = profile?.inboundUrl ?? "https://openpaypro.space/api/public/openpay/inbound";
+  const inboundUrl = profile?.inboundUrl ?? "https://openpaypi.space/api/public/openpay/inbound";
   const curlSample = `curl -X POST "${inboundUrl}" \\
   -H "Authorization: Bearer opdk_YOUR_KEY" \\
   -H "Content-Type: application/json" \\

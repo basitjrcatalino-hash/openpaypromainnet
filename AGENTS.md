@@ -16,4 +16,5 @@
 - Provision Arc wallet accounts only after consuming a verified server-stored signup challenge, reusing existing wallet links and profile triggers without writing balances; this prevents duplicate identities and free credit.
 - The public sign-in list reads the shared auth-method flags and refuses to display methods when that read fails, so admin maintenance switches are not bypassed by network errors.
 - Arc integration uses App Kit only in dynamically imported browser actions; wallet signatures use one-time server-stored challenges and link existing account IDs, never convert Pi or ledger balances into on-chain USDC.
+- Use the shared Arc chain definition in the wallet picker, challenges and signing; the selected provider must confirm its network and account before signing so SIWE chain mismatches cannot bypass wallet checks.
 - OpenPay Arc partner calls stay in server helpers behind authenticated functions; transfers require a linked wallet, verified mainnet USDC calldata and browser-side simulation/signing so partner credentials never grant custody or ledger credit.

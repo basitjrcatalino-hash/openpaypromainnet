@@ -1,4 +1,5 @@
 # Arc transition
+- [ ] Fix Arc sign-in signature chain mismatch and enforce Mainnet across wallet connection, signing, sends and bridge destinations.
 - [x] Remove runtime npm externals and isolate alternate wallet sign-in panels from server startup; verify preview page loading.
 - [ ] Confirm the startup correction on the published site (server-side stub for the wallet picker add-on verified in a local live build); blocked until the latest version is published.
 - [x] Move sign-in to /auth with an /authpi redirect and reuse the Arc wallet picker for verified wallet signup/sign-in; page and picker verified, account safeguards tested.

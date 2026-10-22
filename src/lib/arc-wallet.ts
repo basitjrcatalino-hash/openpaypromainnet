@@ -1,5 +1,6 @@
 import { createPublicClient, custom, createWalletClient, formatUnits, getAddress, type EIP1193Provider, http, erc20Abi, parseUnits } from "viem";
 import { arcMainnet, validateArcPayment } from "./arc-network";
+import { ensureArcMainnet, signArcAuthMessage } from "./arc-signing";
 import { verifyArcPreparedTransfer, type ArcPreparedTransfer } from "./openpay-arc";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,15 +20,7 @@ export async function connectArcWallet(preferred?: EIP1193Provider) {
 }
 
 export async function switchToArc(preferred?: EIP1193Provider) {
-  const provider = arcProvider(preferred);
-  try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x13b2" }] }); }
-  catch (error) {
-    if ((error as { code?: number }).code !== 4902) throw error;
-    await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x13b2", chainName: "Arc Mainnet", nativeCurrency: arcMainnet.nativeCurrency, rpcUrls: arcMainnet.rpcUrls.default.http, blockExplorerUrls: [arcMainnet.blockExplorers.default.url] }] });
-    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x13b2" }] });
-  }
-  const id = await provider.request({ method: "eth_chainId" });
-  if (id !== "0x13b2") throw new Error("Switch your wallet to Arc Mainnet before continuing.");
+  await ensureArcMainnet(arcProvider(preferred));
 }
 
 export async function arcBalance(address: `0x${string}`) {
@@ -38,7 +31,9 @@ export async function arcBalance(address: `0x${string}`) {
 }
 
 export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP1193Provider, allowSignup = false) {
-  const address = await connectArcWallet(preferred);
+  const provider = arcProvider(preferred);
+  const address = await connectArcWallet(provider);
+  await ensureArcMainnet(provider);
   const { data } = await supabase.auth.getSession();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (data.session) headers.Authorization = `Bearer ${data.session.access_token}`;
@@ -49,8 +44,7 @@ export async function verifyArcWallet(purpose: "link" | "login", preferred?: EIP
     return result;
   };
   const challenge = await call({ action: "challenge", address, purpose, allowSignup });
-  const wallet = createWalletClient({ transport: custom(arcProvider(preferred)) });
-  const signature = await wallet.signMessage({ account: address, message: challenge.message });
+  const signature = await signArcAuthMessage(provider, address, challenge.message);
   const result = await call({ action: "verify", id: challenge.id, signature, purpose });
   if (purpose === "login") {
     const { error } = await supabase.auth.verifyOtp({ token_hash: result.tokenHash, type: "magiclink" });

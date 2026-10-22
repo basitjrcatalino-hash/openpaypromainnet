@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { EIP1193Provider } from "viem";
 import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
-import { arc, mainnet, base, arbitrum } from "viem/chains";
+import { mainnet, base, arbitrum } from "viem/chains";
+import { arcMainnet } from "@/lib/arc-network";
 import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, useModal } from "connectkit";
@@ -18,7 +19,7 @@ function getConfig() {
   if (cfg) return cfg;
   const origin = window.location.origin;
   cfg = createConfig({
-    chains: [arc, mainnet, base, arbitrum],
+    chains: [arcMainnet, mainnet, base, arbitrum],
     connectors: [
       injected({ shimDisconnect: true }),
       ...(WC_PROJECT_ID
@@ -31,7 +32,7 @@ function getConfig() {
       coinbaseWallet({ appName: "OpenPay Pro", appLogoUrl: `${origin}/favicon.png` }),
     ],
     transports: {
-      [arc.id]: http("https://rpc.mainnet.arc.io"),
+      [arcMainnet.id]: http(),
       [mainnet.id]: http(),
       [base.id]: http(),
       [arbitrum.id]: http(),
@@ -110,7 +111,7 @@ export default function ArcConnectKit(props: Props) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider theme="auto" mode="light" customTheme={theme} options={{ initialChainId: arc.id }}>
+        <ConnectKitProvider theme="auto" mode="light" customTheme={theme} options={{ initialChainId: arcMainnet.id }}>
           <Bridge {...props} />
         </ConnectKitProvider>
       </QueryClientProvider>

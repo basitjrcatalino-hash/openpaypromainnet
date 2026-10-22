@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { ARC_CHAIN_ID } from "@/lib/arc-network";
 
 const inputSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("challenge"), address: z.string().regex(/^0x[0-9a-fA-F]{40}$/), purpose: z.enum(["link", "login"]), allowSignup: z.boolean().default(false) }),
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/api/public/arc-auth")({
         const now = new Date();
         const expires = new Date(now.getTime() + 5 * 60_000);
         const nonce = crypto.randomUUID().replaceAll("-", "");
-        const message = `${new URL(origin).host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${input.purpose === "link" ? "Link this Arc wallet to your existing OpenPay Pro account." : input.allowSignup ? "Create an OpenPay Pro wallet account, or sign in if this wallet is already linked. No transaction or funds approval." : "Sign in to your existing OpenPay Pro account with your linked Arc wallet."}\n\nURI: ${origin}/auth\nVersion: 1\nChain ID: 5042\nNonce: ${nonce}\nIssued At: ${now.toISOString()}\nExpiration Time: ${expires.toISOString()}`;
+        const message = `${new URL(origin).host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${input.purpose === "link" ? "Link this Arc wallet to your existing OpenPay Pro account." : input.allowSignup ? "Create an OpenPay Pro wallet account, or sign in if this wallet is already linked. No transaction or funds approval." : "Sign in to your existing OpenPay Pro account with your linked Arc wallet."}\n\nURI: ${origin}/auth\nVersion: 1\nChain ID: ${ARC_CHAIN_ID}\nNonce: ${nonce}\nIssued At: ${now.toISOString()}\nExpiration Time: ${expires.toISOString()}`;
         const { data, error } = await supabaseAdmin.from("arc_auth_challenges").insert({ address, user_id: userId, purpose: input.purpose, allow_signup: input.purpose === "login" && input.allowSignup, message, expires_at: expires.toISOString() }).select("id, message").single();
         if (error) throw error;
         return Response.json(data, { headers: { "Cache-Control": "no-store" } });

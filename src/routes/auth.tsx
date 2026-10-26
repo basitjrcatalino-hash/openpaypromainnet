@@ -203,7 +203,6 @@ function AuthPage() {
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Secure wallet access</span>
           <h1 className="mt-4 text-3xl font-semibold">OpenPay Pro</h1>
           <p className="mt-2 text-sm text-muted-foreground">{search.mode === "signup" ? "Create your account" : "Sign in to your account"}</p>
-          <p className="mt-3 text-sm font-medium text-primary">Powered by OpenPay · OpenPay Arc</p>
           {enabled("arc") && !flags.isError && <Button variant="link" disabled={busy} onClick={() => void continueWith("arc")} className="mt-2"><Wallet className="h-4 w-4" />{busy ? "Awaiting wallet approval…" : "Connect wallet"}</Button>}
           <div className="mt-4 flex justify-center gap-2" role="group" aria-label="Account access">
             <Button variant={search.mode !== "signup" ? "secondary" : "ghost"} asChild><Link to="/auth" search={{ ...search, mode: "signin" }}>Sign in</Link></Button>

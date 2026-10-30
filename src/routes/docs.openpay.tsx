@@ -445,8 +445,8 @@ Receive:   @username and/or 0x…`}</DocsCode>
           </table>
         </div>
         <DocsCode>{`# Buyer funds with full Pro methods, then pays merchant
-https://openpaypro.space/topup
-https://openpaypro.space/pay/@shop?amount=250&asset=OUSD&note=order_9001`}</DocsCode>
+https://openpaypro.online/topup
+https://openpaypro.online/pay/@shop?amount=250&asset=OUSD&note=order_9001`}</DocsCode>
       </DocsSection>
 
       <DocsSection id="exchange" eyebrow="Exchanges" title="List OUSD on OpenPay Network">

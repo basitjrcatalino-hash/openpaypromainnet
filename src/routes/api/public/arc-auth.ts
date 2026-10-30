@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/arc-auth")({
   server: { handlers: { POST: async ({ request }) => {
     try {
       const origin = request.headers.get("origin");
-      const allowed = new Set([new URL(request.url).origin, "https://openpaypro.space", "https://www.openpaypro.space", "https://openpaypromainnet.lovable.app"]);
+      const allowed = new Set([new URL(request.url).origin, "https://openpaypro.online", "https://www.openpaypro.online", "https://openpaypromainnet.lovable.app"]);
       if (!origin || !allowed.has(origin)) return Response.json({ error: "Invalid request origin." }, { status: 403 });
       const input = inputSchema.parse(await request.json());
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

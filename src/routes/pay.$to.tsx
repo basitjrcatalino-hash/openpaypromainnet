@@ -28,7 +28,7 @@ export const Route = createFileRoute("/pay/$to")({
     ],
   }),
   beforeLoad: async ({ params, search }) => {
-    const raw = `https://openpaypro.space/pay/${encodeURIComponent(params.to)}${
+    const raw = `https://openpaypro.online/pay/${encodeURIComponent(params.to)}${
       search.asset || search.amount || search.token
         ? `?${new URLSearchParams({
             ...(search.asset ? { asset: search.asset } : {}),

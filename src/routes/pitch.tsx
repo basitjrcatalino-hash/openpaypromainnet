@@ -372,10 +372,10 @@ export const Route = createFileRoute("/pitch")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypro.space/pitch" },
+      { property: "og:url", content: "https://openpaypro.online/pitch" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/pitch" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.online/pitch" }],
   }),
   component: PitchPage,
 });
@@ -1277,7 +1277,7 @@ function PitchPage() {
             <img src={OPENPAY_AUTH_LOGO} alt="" className="h-8 w-8 rounded-lg" />
             <div>
               <p className="oppitch-card-title">OpenPay Pro</p>
-              <p className="text-xs text-muted-foreground">openpaypro.space/pitch</p>
+              <p className="text-xs text-muted-foreground">openpaypro.online/pitch</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-bold text-muted-foreground">

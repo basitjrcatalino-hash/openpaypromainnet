@@ -78,9 +78,9 @@ export const Route = createFileRoute("/auth")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://openpaypro.space/auth" },
+      { property: "og:url", content: "https://openpaypro.online/auth" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/auth" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.online/auth" }],
   }),
   component: AuthLayout,
 });

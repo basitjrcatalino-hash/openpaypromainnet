@@ -1,7 +1,8 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronRight, Loader2, ShieldCheck, Mail, Wallet, Send } from "lucide-react";
+import { ArrowLeft, ChevronRight, Loader2, ShieldCheck, Mail, Wallet, Send, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -194,9 +195,19 @@ function AuthPage() {
   const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key));
   const active = selected && enabled(selected) ? selected : null;
   const logos: Partial<Record<AuthMethodKey, string>> = { phantom: "/auth-phantom.png", solana: "/auth-solana.png", metamask: "/auth-metamask.png", pi: PI_NETWORK_AUTH_LOGO, telegram: "/auth-telegram.svg" };
+  const { theme, toggle } = useTheme();
 
   return (
-    <div className="dark flex min-h-dvh items-center justify-center bg-background px-4 py-10 text-foreground">
+    <div className="relative flex min-h-dvh items-center justify-center bg-background px-4 py-10 text-foreground">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={toggle}
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        className="absolute right-4 top-4 rounded-full"
+      >
+        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </Button>
       <ArcConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onSelect={provider => void handleWalletSelect(provider)} />
       <div className="w-full max-w-md">
         <header className="mb-8 text-center">

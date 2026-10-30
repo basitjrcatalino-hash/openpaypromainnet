@@ -18,10 +18,13 @@ let cfg: ReturnType<typeof createConfig> | null = null;
 function getConfig() {
   if (cfg) return cfg;
   const origin = window.location.origin;
+  // A "Browser" wallet only exists when one is injected (desktop extension or a
+  // wallet's in-app browser). On iOS/Android webviews it would spin forever.
+  const hasInjected = Boolean((window as unknown as { ethereum?: unknown }).ethereum);
   cfg = createConfig({
     chains: [arcMainnet, mainnet, base, arbitrum],
     connectors: [
-      injected({ shimDisconnect: true }),
+      ...(hasInjected ? [injected({ shimDisconnect: true })] : []),
       ...(WC_PROJECT_ID
         ? [walletConnect({
             projectId: WC_PROJECT_ID,

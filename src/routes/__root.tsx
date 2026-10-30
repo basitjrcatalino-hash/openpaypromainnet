@@ -134,35 +134,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#000000" },
       { name: "google-site-verification", content: "EA61xEdUw8jdmGPL1g8fqZRwuWqPEGZ6-awF82kSBbw" },
       { title: "OpenPay Pro Wallet — Secure Web3 Gateway for OUSD & NFTs" },
-      {
-        name: "description",
-        content:
-          "OpenPay Pro Wallet is a Web3 wallet for the OpenPay ecosystem: hold OUSD and Pi, swap tokens, mint NFTs, and pay with full control of your keys.",
-      },
       { property: "og:site_name", content: "OpenPay Pro Wallet" },
-      { property: "og:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
-      { name: "twitter:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
-      {
-        property: "og:description",
-        content:
-          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
-      },
-      {
-        name: "twitter:description",
-        content:
-          "Hold OUSD and Pi, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem.",
-      },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d9cde8a5-4047-4067-b26c-a3e35f846b50/id-preview-c50b7170--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1785229551414.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d9cde8a5-4047-4067-b26c-a3e35f846b50/id-preview-c50b7170--40ad0ae1-ff1c-4197-a965-091db4920f62.lovable.app-1785229551414.png",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
     links: [
@@ -185,13 +157,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "Organization",
               name: "OpenPay Pro",
-              url: "https://openpaypro.space",
-              logo: "https://openpaypro.space/ousd-logo.svg",
+              url: "https://openpaypro.online",
+              logo: "https://openpaypro.online/ousd-logo.svg",
             },
             {
               "@type": "WebSite",
               name: "OpenPay Pro Wallet",
-              url: "https://openpaypro.space",
+              url: "https://openpaypro.online",
             },
           ],
         }),

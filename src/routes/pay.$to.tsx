@@ -20,6 +20,13 @@ type SendAsset = LedgerAssetCode;
  */
 export const Route = createFileRoute("/pay/$to")({
   validateSearch: (search) => paySearchSchema.parse(search),
+  head: () => ({
+    meta: [
+      { title: "Pay with OpenPay Pro" },
+      { name: "description", content: "Open this OpenPay Pro payment link to send crypto to the recipient." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   beforeLoad: async ({ params, search }) => {
     const raw = `https://openpaypro.space/pay/${encodeURIComponent(params.to)}${
       search.asset || search.amount || search.token

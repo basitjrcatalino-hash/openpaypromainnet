@@ -13,10 +13,10 @@ export const Route = createFileRoute("/blog")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://openpaypro.space/blog" },
+      { property: "og:url", content: "https://openpaypro.online/blog" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/blog" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.online/blog" }],
   }),
   component: BlogIndex,
 });

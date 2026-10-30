@@ -246,7 +246,7 @@ function PartnerApiPortalPage() {
   });
 
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://openpaypro.space";
+    typeof window !== "undefined" ? window.location.origin : "https://openpaypro.online";
   const redirect0 = (selected?.redirect_uris ?? [])[0] || "https://your.app/callback";
 
   const authorizeSample = selected

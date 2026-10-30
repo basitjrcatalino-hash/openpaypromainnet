@@ -6,14 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
  * Guests without a session are sent to sign-in.
  */
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "OpenPay Pro — Wallet access" },
-    { name: "description", content: "Access your OpenPay Pro wallet, account, and connected services." },
-    { property: "og:title", content: "OpenPay Pro — Wallet access" },
-    { property: "og:description", content: "Secure access to your OpenPay Pro account." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "OpenPay Pro Wallet — Secure Web3 Gateway for OUSD & NFTs" },
+      { name: "description", content: "OpenPay Pro Wallet is a Web3 wallet for the OpenPay ecosystem: hold OUSD, swap tokens, mint NFTs, and pay with full control of your keys." },
+      { property: "og:title", content: "OpenPay Pro Wallet — Secure Web3 Gateway" },
+      { property: "og:description", content: "Hold OUSD, swap tokens, mint NFTs, and pay securely — the self-custody wallet for the OpenPay ecosystem." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://openpaypro.online/" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://openpaypro.online/" }],
+  }),
   beforeLoad: async () => {
     if (typeof window === "undefined") {
       throw redirect({ to: "/dashboard" });

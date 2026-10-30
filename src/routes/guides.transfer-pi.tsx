@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, ShieldCheck, Wallet } from "lucide-react";
 const TITLE = "How to Transfer Pi Network to Your Pi Wallet — OpenPay Pro";
 const DESCRIPTION =
   "Step-by-step guide to transferring Pi Network coins to a Pi wallet, plus which wallets support Pi and how to manage Pi and OUSD in OpenPay Pro.";
-const URL = "https://openpaypro.space/guides/transfer-pi";
+const URL = "https://openpaypro.online/guides/transfer-pi";
 
 const STEPS = [
   {

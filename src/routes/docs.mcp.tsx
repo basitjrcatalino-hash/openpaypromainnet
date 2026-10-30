@@ -165,7 +165,7 @@ Content-Type: application/json
           </li>
           <li>
             <strong className="text-foreground">CORS / host</strong> — use production host{" "}
-            <code className="text-foreground">openpaypro.space</code>; trust forwarded host is
+            <code className="text-foreground">openpaypro.online</code>; trust forwarded host is
             enabled for MCP handlers.
           </li>
         </ul>

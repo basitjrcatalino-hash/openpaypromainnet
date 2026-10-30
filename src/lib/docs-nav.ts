@@ -136,15 +136,15 @@ export const DOCS_NAV: DocsNavGroup[] = [
   },
 ];
 
-export const DOCS_BASE = "https://openpaypro.space";
+export const DOCS_BASE = "https://openpaypro.online";
 export const PARTNER_API =
   "https://araojncyittkahvvpdrn.supabase.co/functions/v1/partner-transfer-api";
 export const PARTNER_PORTAL = "https://openpaypi.space/partner-api";
 /** OpenPay Pro Connect credentials portal (native Pro apps). */
-export const PRO_PARTNER_PORTAL = "https://openpaypro.space/partner-api";
+export const PRO_PARTNER_PORTAL = "https://openpaypro.online/partner-api";
 export const CONNECT_URL = "https://openpaypi.space/connect";
-export const LEDGER_API_BASE = "https://openpaypro.space/api/public/ledger";
-export const INBOUND_API = "https://openpaypro.space/api/public/openpay/inbound";
-export const MCP_URL = "https://openpaypro.space/mcp";
-export const OPENAPI_URL = "https://openpaypro.space/api/public/docs/openapi";
-export const AI_DOCS_URL = "https://openpaypro.space/docs/ai";
+export const LEDGER_API_BASE = "https://openpaypro.online/api/public/ledger";
+export const INBOUND_API = "https://openpaypro.online/api/public/openpay/inbound";
+export const MCP_URL = "https://openpaypro.online/mcp";
+export const OPENAPI_URL = "https://openpaypro.online/api/public/docs/openapi";
+export const AI_DOCS_URL = "https://openpaypro.online/docs/ai";

@@ -16,9 +16,9 @@ export const Route = createFileRoute("/legal")({
         content:
           "Software License governing use and derivative works for OpenPay and OpenPay Arc applications. Copyright © 2025 MRWAIN ORGANIZATION.",
       },
-      { property: "og:url", content: "https://openpaypro.space/legal" },
+      { property: "og:url", content: "https://openpaypro.online/legal" },
     ],
-    links: [{ rel: "canonical", href: "https://openpaypro.space/legal" }],
+    links: [{ rel: "canonical", href: "https://openpaypro.online/legal" }],
   }),
   component: LegalLicensePage,
 });

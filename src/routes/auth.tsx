@@ -138,6 +138,7 @@ function AuthPage() {
     };
   }, [flags.data]);
 
+  const { theme, toggle } = useTheme();
   if (!mounted) return null;
 
   async function onContinue() {
@@ -195,7 +196,6 @@ function AuthPage() {
   const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key));
   const active = selected && enabled(selected) ? selected : null;
   const logos: Partial<Record<AuthMethodKey, string>> = { phantom: "/auth-phantom.png", solana: "/auth-solana.png", metamask: "/auth-metamask.png", pi: PI_NETWORK_AUTH_LOGO, telegram: "/auth-telegram.svg" };
-  const { theme, toggle } = useTheme();
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center bg-background px-4 py-10 text-foreground">

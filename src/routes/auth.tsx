@@ -1,7 +1,7 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronRight, Loader2, ShieldCheck, Mail, Wallet, Send, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck, Mail, Wallet, Send, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { PI_NETWORK_AUTH_LOGO, ensureTopLevelAuthWindow } from "@/lib/phantom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { AUTH_METHOD_CATALOG, fetchAuthMethodFlags, isAuthMethodKey, type AuthMe
 import { EmailAuthPanel } from "@/components/email-auth-panel";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import type { EIP1193Provider } from "viem";
+import openpayIcon from "@/assets/openpay-pro-icon.png.asset.json";
 
 const AuthProviderPanel = lazy(() => import("@/components/auth-provider-panels").then(module => ({ default: module.AuthProviderPanel })));
 
@@ -193,50 +194,54 @@ function AuthPage() {
     } finally { setBusy(false); }
   }
 
-  const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key));
+  const methods = AUTH_METHOD_CATALOG.filter(m => enabled(m.method_key)).sort((a, b) => Number(b.method_key === "arc") - Number(a.method_key === "arc"));
   const active = selected && enabled(selected) ? selected : null;
   const logos: Partial<Record<AuthMethodKey, string>> = { phantom: "/auth-phantom.png", solana: "/auth-solana.png", metamask: "/auth-metamask.png", pi: PI_NETWORK_AUTH_LOGO, telegram: "/auth-telegram.svg" };
+  const isSignup = search.mode === "signup";
+  const methodIcon = (key: AuthMethodKey, cls: string) => logos[key] ? <img src={logos[key]} alt="" className={`${cls} rounded-full object-contain`} /> : key === "email" ? <Mail className={cls} /> : key === "telegram" ? <Send className={cls} /> : <Wallet className={cls} />;
+  const continueLabel = (key: AuthMethodKey, label: string) => key === "arc" ? (isSignup ? "Create account with wallet" : "Connect wallet") : key === "pi" ? "Continue with Pi" : `Continue with ${label}`;
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center bg-background px-4 py-10 text-foreground">
-      <Button
-        variant="outline"
-        size="icon"
+    <div className="auth-gradient relative flex min-h-dvh items-center justify-center overflow-hidden px-5 py-12 text-auth-foreground">
+      <button
+        type="button"
         onClick={toggle}
         aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        className="absolute right-4 top-4 rounded-full"
+        className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-auth-border bg-auth-surface text-auth-foreground backdrop-blur transition-colors hover:bg-auth-surface-hover"
       >
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
+      </button>
       <ArcConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onSelect={provider => void handleWalletSelect(provider)} />
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
         <header className="mb-8 text-center">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShieldCheck className="h-4 w-4" /> Secure wallet access</span>
-          <h1 className="mt-4 text-3xl font-semibold">OpenPay Pro</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{search.mode === "signup" ? "Create your account" : "Sign in to your account"}</p>
-          {enabled("arc") && !flags.isError && <Button variant="link" disabled={busy} onClick={() => void continueWith("arc")} className="mt-2"><Wallet className="h-4 w-4" />{busy ? "Awaiting wallet approval…" : "Connect wallet"}</Button>}
-          <div className="mt-4 flex justify-center gap-2" role="group" aria-label="Account access">
-            <Button variant={search.mode !== "signup" ? "secondary" : "ghost"} asChild><Link to="/auth" search={{ ...search, mode: "signin" }}>Sign in</Link></Button>
-            <Button variant={search.mode === "signup" ? "secondary" : "ghost"} asChild><Link to="/auth" search={{ ...search, mode: "signup" }}>Create account</Link></Button>
+          <img src={openpayIcon.url} alt="OpenPay Pro" className="mx-auto h-14 w-14 rounded-2xl object-cover shadow-lg" />
+          <h1 className="mt-6 text-5xl font-extrabold tracking-tight sm:text-6xl">OpenPay Pro</h1>
+          <p className="mt-3 text-lg font-medium text-auth-muted">{isSignup ? "Create your account" : "Sign in to your account"}</p>
+          <div className="mx-auto mt-6 inline-flex rounded-full border border-auth-border bg-auth-surface p-1 backdrop-blur" role="group" aria-label="Account access">
+            <Link to="/auth" search={{ ...search, mode: "signin" }} className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${!isSignup ? "bg-auth-button text-auth-button-foreground" : "text-auth-muted hover:text-auth-foreground"}`}>Sign in</Link>
+            <Link to="/auth" search={{ ...search, mode: "signup" }} className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${isSignup ? "bg-auth-button text-auth-button-foreground" : "text-auth-muted hover:text-auth-foreground"}`}>Create account</Link>
           </div>
-          {search.mode === "signup" && <p className="mt-4 text-xs text-muted-foreground">Already have an account? Sign in first to link your wallet and keep your balances. Wallet-only accounts use wallet recovery, not email.</p>}
+          {isSignup && <p className="mt-4 text-xs leading-relaxed text-auth-muted">Already have an account? Sign in first to link your wallet and keep your balances. Wallet-only accounts use wallet recovery, not email.</p>}
         </header>
-        {flags.isPending ? <div className="grid h-32 place-items-center"><Loader2 aria-label="Loading sign-in methods" className="h-6 w-6 animate-spin" /></div> : flags.isError ? <div className="space-y-4 text-center"><p className="text-sm text-destructive">Sign-in options could not be loaded.</p><Button variant="outline" onClick={() => void flags.refetch()}>Try again</Button></div> : active ? <div className="space-y-5">
-          <Button variant="ghost" disabled={busy} onClick={() => setSelected(null)}><ArrowLeft className="h-4 w-4" /> All sign-in options</Button>
+        {flags.isPending ? <div className="grid h-32 place-items-center"><Loader2 aria-label="Loading sign-in methods" className="h-6 w-6 animate-spin" /></div> : flags.isError ? <div className="space-y-4 text-center"><p className="text-sm font-medium">Sign-in options could not be loaded.</p><button type="button" onClick={() => void flags.refetch()} className="h-12 rounded-xl border border-auth-border bg-auth-surface px-6 text-sm font-semibold hover:bg-auth-surface-hover">Try again</button></div> : active ? <div className="space-y-5 rounded-2xl border border-auth-border bg-auth-surface p-5 backdrop-blur">
+          <button type="button" disabled={busy} onClick={() => setSelected(null)} className="inline-flex items-center gap-2 text-sm font-medium text-auth-muted hover:text-auth-foreground"><ArrowLeft className="h-4 w-4" /> All sign-in options</button>
           <h2 className="text-center text-lg font-semibold">{AUTH_METHOD_CATALOG.find(m => m.method_key === active)?.label}</h2>
-          {active === "email" && <EmailAuthPanel busy={busy} setBusy={setBusy} initialMode={search.mode === "signup" ? "signup" : "signin"} />}
-          {(active === "phantom" || active === "metamask") && <ClientOnly><Suspense fallback={<Loader2 aria-label="Loading wallet sign-in" className="mx-auto h-5 w-5 animate-spin" />}><AuthProviderPanel method={active} busy={busy} setBusy={setBusy} /></Suspense></ClientOnly>}
-          {active === "privy" && <p role="status" className="text-center text-sm text-muted-foreground">Privy sign-in is temporarily unavailable. Please choose another sign-in method.</p>}
-          {active === "pi" && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith("pi")}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Pi Network"}</Button>}
-          {(active === "arc" || active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}
-        </div> : <div className="space-y-2">
-          {methods.map(method => <Button key={method.method_key} variant="outline" disabled={busy} onClick={() => void continueWith(method.method_key)} className="h-auto min-h-16 w-full justify-start gap-4 rounded-lg border-border bg-card px-4 py-3 text-left hover:bg-muted">
-            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">{logos[method.method_key] ? <img src={logos[method.method_key]} alt="" className="h-8 w-8 object-contain" /> : method.method_key === "email" ? <Mail className="h-5 w-5" /> : method.method_key === "telegram" ? <Send className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}</span>
-            <span className="min-w-0 flex-1 whitespace-normal"><span className="block text-sm font-semibold">{method.label}</span><span className="mt-0.5 block text-xs font-normal text-muted-foreground">{method.description}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Button>)}
-          {!methods.length && <p role="status" className="py-6 text-center text-sm text-muted-foreground">Sign-in is temporarily unavailable.</p>}
+          <div className="rounded-xl bg-card p-4 text-card-foreground">
+            {active === "email" && <EmailAuthPanel busy={busy} setBusy={setBusy} initialMode={isSignup ? "signup" : "signin"} />}
+            {(active === "phantom" || active === "metamask") && <ClientOnly><Suspense fallback={<Loader2 aria-label="Loading wallet sign-in" className="mx-auto h-5 w-5 animate-spin" />}><AuthProviderPanel method={active} busy={busy} setBusy={setBusy} /></Suspense></ClientOnly>}
+            {active === "privy" && <p role="status" className="text-center text-sm text-muted-foreground">Privy sign-in is temporarily unavailable. Please choose another sign-in method.</p>}
+            {active === "pi" && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith("pi")}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Pi Network"}</Button>}
+            {(active === "arc" || active === "openpay" || active === "solana" || active === "walletconnect" || active === "telegram") && <Button className="h-12 w-full" disabled={busy} onClick={() => void continueWith(active)}>Continue</Button>}
+          </div>
+        </div> : <div className="space-y-3">
+          {methods.map((method, i) => <button key={method.method_key} type="button" disabled={busy} onClick={() => void continueWith(method.method_key)} className={`flex h-14 w-full items-center justify-center gap-3 rounded-xl px-5 text-base font-semibold shadow-lg transition-all active:scale-[0.98] disabled:opacity-60 ${i === 0 ? "bg-auth-button text-auth-button-foreground hover:opacity-95" : "border border-auth-border bg-auth-surface text-auth-foreground backdrop-blur hover:bg-auth-surface-hover"}`}>
+            {busy && i === 0 ? <Loader2 className="h-5 w-5 animate-spin" /> : methodIcon(method.method_key, "h-5 w-5")}
+            <span>{busy && i === 0 && method.method_key === "arc" ? "Awaiting wallet approval…" : continueLabel(method.method_key, method.label)}</span>
+          </button>)}
+          {!methods.length && <p role="status" className="py-6 text-center text-sm text-auth-muted">Sign-in is temporarily unavailable.</p>}
         </div>}
-        <p className="mt-7 text-center text-xs leading-relaxed text-muted-foreground">By continuing you agree to OpenPay’s <Link to="/terms" className="text-foreground hover:underline">Terms</Link>, <Link to="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>, <Link to="/regulatory" className="text-foreground hover:underline">Regulatory Status</Link>, and <Link to="/legal" className="text-foreground hover:underline">Software License</Link>.</p>
+        <p className="mt-7 text-center text-xs leading-relaxed text-auth-muted">By continuing, you agree to our <Link to="/terms" className="font-semibold text-auth-foreground hover:underline">Terms</Link>, <Link to="/privacy" className="font-semibold text-auth-foreground hover:underline">Privacy Policy</Link>, <Link to="/regulatory" className="font-semibold text-auth-foreground hover:underline">Regulatory Status</Link> and <Link to="/legal" className="font-semibold text-auth-foreground hover:underline">Software License</Link>.</p>
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-auth-muted"><ShieldCheck className="h-3.5 w-3.5" /> Secure wallet access</p>
       </div>
     </div>
   );

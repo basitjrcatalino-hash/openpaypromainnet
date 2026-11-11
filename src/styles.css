@@ -2301,3 +2301,48 @@ html.solana-pay-open body > div[style*="z-index:50"] {
   background: #ffad0a;
   border: 2px solid var(--background);
 }
+
+/* Sign-in screen — full-bleed OpenPay Pro violet gradient (OpenPay-style layout) */
+:root {
+  --auth-bg:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(196, 184, 255, 0.55), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 35% 60%, rgba(171, 159, 242, 0.28), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 95% 95%, rgba(43, 31, 110, 0.55), transparent 70%),
+    linear-gradient(135deg, #8b7ae8 0%, #6a55e0 45%, #4a36b8 100%);
+  --auth-foreground: #ffffff;
+  --auth-muted: rgba(255, 255, 255, 0.78);
+  --auth-button: #ffffff;
+  --auth-button-foreground: #3d2e8f;
+  --auth-surface: rgba(255, 255, 255, 0.14);
+  --auth-surface-hover: rgba(255, 255, 255, 0.22);
+  --auth-border: rgba(255, 255, 255, 0.28);
+}
+
+.dark {
+  --auth-bg:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(139, 122, 232, 0.45), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 35% 60%, rgba(91, 75, 183, 0.3), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 95% 95%, rgba(5, 3, 15, 0.8), transparent 70%),
+    linear-gradient(135deg, #3b2c8c 0%, #241a5e 45%, #0d0820 100%);
+  --auth-foreground: #ffffff;
+  --auth-muted: rgba(232, 228, 255, 0.72);
+  --auth-button: #ab9ff2;
+  --auth-button-foreground: #140d2e;
+  --auth-surface: rgba(255, 255, 255, 0.08);
+  --auth-surface-hover: rgba(255, 255, 255, 0.14);
+  --auth-border: rgba(255, 255, 255, 0.16);
+}
+
+@theme inline {
+  --color-auth-foreground: var(--auth-foreground);
+  --color-auth-muted: var(--auth-muted);
+  --color-auth-button: var(--auth-button);
+  --color-auth-button-foreground: var(--auth-button-foreground);
+  --color-auth-surface: var(--auth-surface);
+  --color-auth-surface-hover: var(--auth-surface-hover);
+  --color-auth-border: var(--auth-border);
+}
+
+@utility auth-gradient {
+  background: var(--auth-bg);
+}

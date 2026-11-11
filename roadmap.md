@@ -11,4 +11,5 @@
 - [ ] Retire remaining Pi-specific flows and update remaining product surfaces after replacement wallet access and live transfers pass verification; blocked by the migration verification gate above. Do not strand existing users or relabel Pi holdings as USDC.
 # Sign-in
 - [x] Restyle /auth in the OpenPay layout with OpenPay Pro violet colours (light/dark).
-- [ ] Fix users stuck on /auth after logging out or reopening the app; returning users must sign in again cleanly.
+- [x] Fix users stuck on /auth after logging out or reopening the app; no auto sign-in after logout, expired logins cleared, Pi sign-in times out instead of spinning.
+- [ ] Decide whether community chat/comments stay readable by all signed-in users (3 security warnings); waiting on user answer.

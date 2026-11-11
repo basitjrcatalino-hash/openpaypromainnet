@@ -70,7 +70,11 @@ async function ensureInit(): Promise<void> {
     const { isPiSandbox } = await import("@/lib/piSdk");
     // Match A2U / Pi Browser sandbox setting so auth tokens validate against /v2/me.
     await Promise.resolve(window.Pi.init({ version: "2.0", sandbox: isPiSandbox() }));
-  })();
+  })().catch((err) => {
+    // Allow a fresh retry instead of caching a failed start forever.
+    initPromise = null;
+    throw err;
+  });
   return initPromise;
 }
 
@@ -95,12 +99,17 @@ async function completeIncomplete(payment: PiPayment) {
 }
 
 export async function signInWithPi(): Promise<{ username: string }> {
-  await ensureInit();
+  const { withTimeout } = await import("@/lib/auth-session");
+  await withTimeout(ensureInit(), 15_000, "Pi Network is not responding. Please try again.");
   if (!window.Pi) throw new Error("Pi SDK unavailable");
 
-  const auth = await window.Pi.authenticate(SCOPES, (payment) => {
-    void completeIncomplete(payment);
-  });
+  const auth = await withTimeout(
+    window.Pi.authenticate(SCOPES, (payment) => {
+      void completeIncomplete(payment);
+    }),
+    60_000,
+    "Pi sign-in timed out. Please tap Continue with Pi again.",
+  );
 
   const res = await fetch("/api/public/pi-auth", {
     method: "POST",

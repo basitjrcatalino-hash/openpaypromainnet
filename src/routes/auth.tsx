@@ -13,6 +13,7 @@ import { AUTH_METHOD_CATALOG, fetchAuthMethodFlags, isAuthMethodKey, type AuthMe
 import { EmailAuthPanel } from "@/components/email-auth-panel";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import type { EIP1193Provider } from "viem";
+import { wasSignedOut } from "@/lib/auth-session";
 import openpayIcon from "@/assets/openpay-pro-icon.png.asset.json";
 
 const AuthProviderPanel = lazy(() => import("@/components/auth-provider-panels").then(module => ({ default: module.AuthProviderPanel })));
@@ -115,14 +116,25 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data } = await supabase.auth.getUser();
+      let { data, error } = await supabase.auth.getUser();
+      // An expired token on a returning visit: refresh once, otherwise clear the
+      // stale local session so the sign-in buttons work instead of looping.
+      if (error || !data.user) {
+        const { data: sess } = await supabase.auth.getSession();
+        if (sess.session) {
+          const refreshed = await supabase.auth.refreshSession();
+          if (refreshed.data.user) ({ data, error } = await supabase.auth.getUser());
+          else await supabase.auth.signOut({ scope: "local" });
+        }
+      }
       if (cancelled) return;
       if (data.user) {
         goPostAuth();
         return;
       }
-      // Auto-trigger Pi authentication on load inside the Pi Browser.
-      if (autoRan.current || !isPiBrowser() || !enabled("pi")) return;
+      // Auto-trigger Pi authentication inside the Pi Browser, but never right
+      // after the person signed out — they must choose to sign in again.
+      if (autoRan.current || !isPiBrowser() || !enabled("pi") || wasSignedOut()) return;
       autoRan.current = true;
       setBusy(true);
       try {

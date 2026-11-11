@@ -9,3 +9,7 @@
 - [x] Add Arc wallet sign-in with admin visibility controls and preserved legacy account access.
 - [ ] Verify wallet linking/sign-in and transfers with a real wallet approval; blocked by unavailable wallet signer. OpenPay Arc live reads and unsigned transfer data are verified; actual submission still requires wallet approval.
 - [ ] Retire remaining Pi-specific flows and update remaining product surfaces after replacement wallet access and live transfers pass verification; blocked by the migration verification gate above. Do not strand existing users or relabel Pi holdings as USDC.
+# Sign-in
+- [x] Restyle /auth in the OpenPay layout with OpenPay Pro violet colours (light/dark).
+- [x] Fix users stuck on /auth after logging out or reopening the app; no auto sign-in after logout, expired logins cleared, Pi sign-in times out instead of spinning.
+- [ ] Decide whether community chat/comments stay readable by all signed-in users (3 security warnings); waiting on user answer.

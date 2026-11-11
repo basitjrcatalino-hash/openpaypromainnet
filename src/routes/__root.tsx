@@ -20,6 +20,7 @@ import { SplashScreen } from "@/components/splash-screen";
 import { RouteProgress } from "@/components/wallet/RouteProgress";
 import { PageTransition } from "@/components/wallet/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
+import { clearSignedOut, markSignedOut } from "@/lib/auth-session";
 import {
   getSupabasePublishableKey,
   getSupabaseUrl,
@@ -221,6 +222,8 @@ function RootComponent() {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_OUT") markSignedOut();
+      if (event === "SIGNED_IN") clearSignedOut();
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });

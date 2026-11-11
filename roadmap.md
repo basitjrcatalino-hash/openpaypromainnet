@@ -12,4 +12,5 @@
 # Sign-in
 - [x] Restyle /auth in the OpenPay layout with OpenPay Pro violet colours (light/dark).
 - [x] Fix users stuck on /auth after logging out or reopening the app; no auto sign-in after logout, expired logins cleared, Pi sign-in times out instead of spinning.
+- [x] Show the sign-in logo as a background-free mark and hide the Sign in / Create account switch; verified light/dark on desktop and phone.
 - [ ] Decide whether community chat/comments stay readable by all signed-in users (3 security warnings); waiting on user answer.

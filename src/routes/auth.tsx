@@ -14,7 +14,7 @@ import { EmailAuthPanel } from "@/components/email-auth-panel";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import type { EIP1193Provider } from "viem";
 import { wasSignedOut } from "@/lib/auth-session";
-import openpayIcon from "@/assets/openpay-pro-icon.png.asset.json";
+import openpayIcon from "@/assets/openpay-pro-icon-mark.png.asset.json";
 
 const AuthProviderPanel = lazy(() => import("@/components/auth-provider-panels").then(module => ({ default: module.AuthProviderPanel })));
 
@@ -226,13 +226,9 @@ function AuthPage() {
       <ArcConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onSelect={provider => void handleWalletSelect(provider)} />
       <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
         <header className="mb-8 text-center">
-          <img src={openpayIcon.url} alt="OpenPay Pro" className="mx-auto h-14 w-14 rounded-2xl object-cover shadow-lg" />
-          <h1 className="mt-6 text-5xl font-extrabold tracking-tight sm:text-6xl">OpenPay Pro</h1>
+          <img src={openpayIcon.url} alt="OpenPay Pro" className="mx-auto h-24 w-24 object-contain drop-shadow-xl" />
+          <h1 className="mt-5 text-5xl font-extrabold tracking-tight sm:text-6xl">OpenPay Pro</h1>
           <p className="mt-3 text-lg font-medium text-auth-muted">{isSignup ? "Create your account" : "Sign in to your account"}</p>
-          <div className="mx-auto mt-6 inline-flex rounded-full border border-auth-border bg-auth-surface p-1 backdrop-blur" role="group" aria-label="Account access">
-            <Link to="/auth" search={{ ...search, mode: "signin" }} className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${!isSignup ? "bg-auth-button text-auth-button-foreground" : "text-auth-muted hover:text-auth-foreground"}`}>Sign in</Link>
-            <Link to="/auth" search={{ ...search, mode: "signup" }} className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${isSignup ? "bg-auth-button text-auth-button-foreground" : "text-auth-muted hover:text-auth-foreground"}`}>Create account</Link>
-          </div>
           {isSignup && <p className="mt-4 text-xs leading-relaxed text-auth-muted">Already have an account? Sign in first to link your wallet and keep your balances. Wallet-only accounts use wallet recovery, not email.</p>}
         </header>
         {flags.isPending ? <div className="grid h-32 place-items-center"><Loader2 aria-label="Loading sign-in methods" className="h-6 w-6 animate-spin" /></div> : flags.isError ? <div className="space-y-4 text-center"><p className="text-sm font-medium">Sign-in options could not be loaded.</p><button type="button" onClick={() => void flags.refetch()} className="h-12 rounded-xl border border-auth-border bg-auth-surface px-6 text-sm font-semibold hover:bg-auth-surface-hover">Try again</button></div> : active ? <div className="space-y-5 rounded-2xl border border-auth-border bg-auth-surface p-5 backdrop-blur">

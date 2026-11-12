@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -42,7 +42,6 @@ function assetLogo(asset: string) {
 
 function AirdropPage() {
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const listFn = useServerFn(listLiveAirdrops);
   const claimsFn = useServerFn(getAirdropClaimStatus);
   const claimFn = useServerFn(claimAirdrop);
@@ -84,17 +83,6 @@ function AirdropPage() {
     },
     onError: (e: Error) => {
       const msg = e.message || "Claim failed";
-      if (/kyc/i.test(msg)) {
-        toast.error(msg, {
-          action: {
-            label: "Verify identity",
-            onClick: () => {
-              void navigate({ to: "/kyc" });
-            },
-          },
-        });
-        return;
-      }
       toast.error(msg);
     },
     onSettled: () => setBusyId(null),

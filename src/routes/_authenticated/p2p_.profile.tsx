@@ -58,7 +58,7 @@ const MENU = [
     to: "/p2p/merchant",
     icon: BadgeCheck,
     label: "Merchant program",
-    desc: "KYC · 100 OUSD · bonuses",
+    desc: "100 OUSD · bonuses",
   },
   {
     to: "/p2p/guide",

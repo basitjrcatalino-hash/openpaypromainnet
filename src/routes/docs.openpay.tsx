@@ -972,7 +972,7 @@ Authorization: Bearer opk_live_YOUR_KEY
 
 # Fulfill only when status === "paid"`}</DocsCode>
           <p>
-            Internal webhooks (MoonPay, KYC, Circle) power Pro itself and are{" "}
+            Internal webhooks (MoonPay, Circle) power Pro itself and are{" "}
             <strong className="text-foreground">not</strong> exposed to third-party apps.
           </p>
         </DocsCard>

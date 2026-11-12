@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/p2p_/merchant")({
       {
         name: "description",
         content:
-          "Become a P2P merchant with KYC, merchant details, and 100 OUSD in P2P. Earn Verified badge and order bonuses.",
+          "Become a P2P merchant with your merchant details and 100 OUSD in P2P. Earn Verified badge and order bonuses.",
       },
       { property: "og:title", content: "Merchant program — OpenPay Pro P2P" },
       { property: "og:type", content: "website" },
@@ -144,7 +144,7 @@ function MerchantPage() {
   return (
     <P2pHubLayout
       title="Merchant program"
-      dek="Become a merchant with KYC, your details, and 100 OUSD in P2P. Admin approves before you create ads. Stay active 30 days for Verified — hit order milestones for OUSD bonuses."
+      dek="Become a merchant with your details and 100 OUSD in P2P. Admin approves before you create ads. Stay active 30 days for Verified — hit order milestones for OUSD bonuses."
       crumb="Profile"
       eyebrow="Apply · Verified · Bonuses"
       hero={{ from: "#fde68a", to: "#c4b5fd", glyph: "★" }}

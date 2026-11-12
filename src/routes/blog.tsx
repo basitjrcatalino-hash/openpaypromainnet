@@ -3,7 +3,7 @@ import { BLOG_POSTS, formatBlogDate } from "@/lib/blog-posts";
 
 const TITLE = "OpenPay Pro Blog — Guides to Every Wallet Feature";
 const DESC =
-  "Deep guides to OpenPay Pro: top ups, transfers, multi-chain deposits, the merchant gateway, KYC, tokens, security, and developer APIs.";
+  "Deep guides to OpenPay Pro: top ups, transfers, multi-chain deposits, the merchant gateway, tokens, security, and developer APIs.";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({

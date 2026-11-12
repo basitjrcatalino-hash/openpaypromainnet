@@ -256,10 +256,6 @@ const FEATURE_SHOWCASE = [
       { name: "PIN protection", desc: "Gate sensitive actions with an optional PIN." },
       { name: "Biometrics", desc: "Fingerprint / Face ID where the device supports it." },
       {
-        name: "Pi Verify KYC",
-        desc: "Identity verification via Pi Verify when higher access requires it.",
-      },
-      {
         name: "OpenPay OAuth link",
         desc: "Connect OpenPay for balance top-ups, NFTs, and partner features.",
       },
@@ -273,7 +269,7 @@ const FEATURE_SHOWCASE = [
     items: [
       {
         name: "OpenPay AI assistant",
-        desc: "Ask how-to questions about top-ups, sends, OpenToken, ledger, KYC.",
+        desc: "Ask how-to questions about top-ups, sends, OpenToken and the ledger.",
       },
       {
         name: "Spoken answers",

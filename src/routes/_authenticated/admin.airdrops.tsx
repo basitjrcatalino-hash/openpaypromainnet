@@ -67,7 +67,6 @@ function AdminAirdropsPage() {
   const [claimCode, setClaimCode] = useState("");
   const [budget, setBudget] = useState("");
   const [maxClaims, setMaxClaims] = useState("");
-  const [requireKyc, setRequireKyc] = useState(false);
   const [requirementsText, setRequirementsText] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -96,7 +95,7 @@ function AdminAirdropsPage() {
           status: goLive ? "live" : "draft",
           total_budget: budget.trim() ? Number(budget) : null,
           max_claims: maxClaims.trim() ? Number(maxClaims) : null,
-          require_kyc: requireKyc,
+          require_kyc: false,
           requirements,
           starts_at: startsAt ? new Date(startsAt).toISOString() : null,
           ends_at: endsAt ? new Date(endsAt).toISOString() : null,
@@ -194,7 +193,7 @@ function AdminAirdropsPage() {
       </div>
 
       <Card className="rounded-3xl border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-        Claimants must have an <strong>OpenPay Pro wallet</strong>. Optional KYC and
+        Claimants must have an <strong>OpenPay Pro wallet</strong>. Optional
         challenge checklist text can be set per campaign. Credits land as ledger{" "}
         <code className="rounded bg-black/20 px-1">reward</code> transactions.
       </Card>
@@ -365,8 +364,8 @@ function AdminAirdropsPage() {
               placeholder={"Have an OpenPay Pro wallet\nFollow @openpay on X\nComplete 1 trade"}
             />
             <p className="text-[11px] text-muted-foreground">
-              Shown as a checklist. Auto-verification of tasks comes later — wallet (+ optional
-              KYC) is enforced now.
+              Shown as a checklist. Auto-verification of tasks comes later — the wallet
+              requirement is enforced now.
             </p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
@@ -379,15 +378,6 @@ function AdminAirdropsPage() {
               className="rounded-xl"
               placeholder="Admin-only notes"
             />
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2.5 sm:col-span-2">
-            <div>
-              <p className="text-sm font-semibold">Require KYC</p>
-              <p className="text-[11px] text-muted-foreground">
-                Claimant profile must be KYC verified
-              </p>
-            </div>
-            <Switch checked={requireKyc} onCheckedChange={setRequireKyc} />
           </div>
           <div className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2.5 sm:col-span-2">
             <div>
@@ -533,11 +523,7 @@ function CampaignAdminCard({
           </Button>
         ) : null}
       </div>
-      {c.require_kyc ? (
-        <p className="text-[11px] text-muted-foreground">KYC required · Pro wallet required</p>
-      ) : (
-        <p className="text-[11px] text-muted-foreground">Pro wallet required</p>
-      )}
+      <p className="text-[11px] text-muted-foreground">Pro wallet required</p>
     </Card>
   );
 }

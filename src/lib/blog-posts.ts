@@ -341,7 +341,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 4,
     hero: { from: "#c4b5fd", to: "#f3f0ff", glyph: "AI" },
     intro: [
-      "Most wallet support is a search box over a help centre. OpenPay AI is a conversation with something that already understands top ups, transfers, KYC, deposits, and the merchant gateway.",
+      "Most wallet support is a search box over a help centre. OpenPay AI is a conversation with something that already understands top ups, transfers, deposits, and the merchant gateway.",
     ],
     sections: [
       {
@@ -367,9 +367,9 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
   },
   {
-    slug: "pi-network-sign-in-and-kyc",
-    title: "Pi Sign-In and Pi Verify KYC",
-    dek: "How Pi identity flows into OpenPay Pro, and what happens during a KYC session from creation to verified.",
+    slug: "pi-network-sign-in",
+    title: "Pi Sign-In",
+    dek: "How Pi identity flows into OpenPay Pro — no KYC or extra identity checks needed.",
     author: A,
     date: "2026-06-20",
     level: "Intermediate",
@@ -377,7 +377,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 6,
     hero: { from: "#fda4af", to: "#ffe9ec", glyph: "π" },
     intro: [
-      "Pi Network users do not need a separate identity in OpenPay Pro. Signing in with Pi carries the Pi username through to the wallet, and Pi Verify handles the compliance step.",
+      "Pi Network users do not need a separate identity in OpenPay Pro. Signing in with Pi carries the Pi username through to the wallet. OpenPay Pro does not ask for KYC or ID documents.",
     ],
     sections: [
       {
@@ -387,25 +387,6 @@ export const BLOG_POSTS: BlogPost[] = [
           {
             type: "p",
             text: "The wallet uses the Pi sign-in flow with a registered redirect URI. Once the callback completes, the session is established and the Pi username becomes your handle inside the app.",
-          },
-        ],
-      },
-      {
-        id: "kyc",
-        heading: "The KYC session lifecycle",
-        blocks: [
-          {
-            type: "steps",
-            items: [
-              "Start verification from the KYC screen — a session is created",
-              "Complete document and liveness checks with the verification provider",
-              "The provider posts the result back to a signed webhook",
-              "Your status updates to verified, with a timestamp stored on your profile",
-            ],
-          },
-          {
-            type: "p",
-            text: "Statuses are honest: pending stays pending until the provider says otherwise, and a rejection explains that you can retry rather than silently failing.",
           },
         ],
       },

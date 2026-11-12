@@ -152,7 +152,6 @@ import { Route as ApiPublicBanxaWebhookRouteImport } from './routes/api/public/b
 import { Route as ApiPublicDepositMonitorRouteImport } from './routes/api/public/deposit-monitor'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicHelioDepositWebhookRouteImport } from './routes/api/public/helio-deposit-webhook'
-import { Route as ApiPublicKycWebhookRouteImport } from './routes/api/public/kyc-webhook'
 import { Route as ApiPublicMoonpaySignRouteImport } from './routes/api/public/moonpay-sign'
 import { Route as ApiPublicMoonpayWebhookRouteImport } from './routes/api/public/moonpay-webhook'
 import { Route as ApiPublicOnrampWebhookRouteImport } from './routes/api/public/onramp-webhook'
@@ -205,7 +204,6 @@ import { Route as ApiPublicLedgerEntriesRouteImport } from './routes/api/public/
 import { Route as ApiPublicLedgerStatsRouteImport } from './routes/api/public/ledger/stats'
 import { Route as ApiPublicOpenpayBalancesRouteImport } from './routes/api/public/openpay/balances'
 import { Route as ApiPublicOpenpayInboundRouteImport } from './routes/api/public/openpay/inbound'
-import { Route as ApiPublicOpenpayKycWebhookRouteImport } from './routes/api/public/openpay/kyc-webhook'
 import { Route as ApiPublicOpenpayPortfolioRouteImport } from './routes/api/public/openpay/portfolio'
 import { Route as ApiPublicPiPaymentsApproveRouteImport } from './routes/api/public/pi-payments/approve'
 import { Route as ApiPublicPiPaymentsCompleteRouteImport } from './routes/api/public/pi-payments/complete'
@@ -976,11 +974,6 @@ const ApiPublicHelioDepositWebhookRoute =
     path: '/api/public/helio-deposit-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicKycWebhookRoute = ApiPublicKycWebhookRouteImport.update({
-  id: '/api/public/kyc-webhook',
-  path: '/api/public/kyc-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicMoonpaySignRoute = ApiPublicMoonpaySignRouteImport.update({
   id: '/api/public/moonpay-sign',
   path: '/api/public/moonpay-sign',
@@ -1259,12 +1252,6 @@ const ApiPublicOpenpayInboundRoute = ApiPublicOpenpayInboundRouteImport.update({
   path: '/api/public/openpay/inbound',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicOpenpayKycWebhookRoute =
-  ApiPublicOpenpayKycWebhookRouteImport.update({
-    id: '/api/public/openpay/kyc-webhook',
-    path: '/api/public/openpay/kyc-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicOpenpayPortfolioRoute =
   ApiPublicOpenpayPortfolioRouteImport.update({
     id: '/api/public/openpay/portfolio',
@@ -1520,7 +1507,6 @@ export interface FileRoutesByFullPath {
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
-  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
@@ -1573,7 +1559,6 @@ export interface FileRoutesByFullPath {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/balances': typeof ApiPublicOpenpayBalancesRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
-  '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
   '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -1738,7 +1723,6 @@ export interface FileRoutesByTo {
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
-  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
@@ -1791,7 +1775,6 @@ export interface FileRoutesByTo {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/balances': typeof ApiPublicOpenpayBalancesRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
-  '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
   '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -1958,7 +1941,6 @@ export interface FileRoutesById {
   '/api/public/deposit-monitor': typeof ApiPublicDepositMonitorRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/helio-deposit-webhook': typeof ApiPublicHelioDepositWebhookRoute
-  '/api/public/kyc-webhook': typeof ApiPublicKycWebhookRoute
   '/api/public/moonpay-sign': typeof ApiPublicMoonpaySignRoute
   '/api/public/moonpay-webhook': typeof ApiPublicMoonpayWebhookRoute
   '/api/public/onramp-webhook': typeof ApiPublicOnrampWebhookRoute
@@ -2011,7 +1993,6 @@ export interface FileRoutesById {
   '/api/public/ledger/stats': typeof ApiPublicLedgerStatsRoute
   '/api/public/openpay/balances': typeof ApiPublicOpenpayBalancesRoute
   '/api/public/openpay/inbound': typeof ApiPublicOpenpayInboundRoute
-  '/api/public/openpay/kyc-webhook': typeof ApiPublicOpenpayKycWebhookRoute
   '/api/public/openpay/portfolio': typeof ApiPublicOpenpayPortfolioRoute
   '/api/public/pi-payments/approve': typeof ApiPublicPiPaymentsApproveRoute
   '/api/public/pi-payments/complete': typeof ApiPublicPiPaymentsCompleteRoute
@@ -2178,7 +2159,6 @@ export interface FileRouteTypes {
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
-    | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
     | '/api/public/onramp-webhook'
@@ -2231,7 +2211,6 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/balances'
     | '/api/public/openpay/inbound'
-    | '/api/public/openpay/kyc-webhook'
     | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -2396,7 +2375,6 @@ export interface FileRouteTypes {
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
-    | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
     | '/api/public/onramp-webhook'
@@ -2449,7 +2427,6 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/balances'
     | '/api/public/openpay/inbound'
-    | '/api/public/openpay/kyc-webhook'
     | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -2615,7 +2592,6 @@ export interface FileRouteTypes {
     | '/api/public/deposit-monitor'
     | '/api/public/health'
     | '/api/public/helio-deposit-webhook'
-    | '/api/public/kyc-webhook'
     | '/api/public/moonpay-sign'
     | '/api/public/moonpay-webhook'
     | '/api/public/onramp-webhook'
@@ -2668,7 +2644,6 @@ export interface FileRouteTypes {
     | '/api/public/ledger/stats'
     | '/api/public/openpay/balances'
     | '/api/public/openpay/inbound'
-    | '/api/public/openpay/kyc-webhook'
     | '/api/public/openpay/portfolio'
     | '/api/public/pi-payments/approve'
     | '/api/public/pi-payments/complete'
@@ -2734,7 +2709,6 @@ export interface RootRouteChildren {
   ApiPublicDepositMonitorRoute: typeof ApiPublicDepositMonitorRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicHelioDepositWebhookRoute: typeof ApiPublicHelioDepositWebhookRoute
-  ApiPublicKycWebhookRoute: typeof ApiPublicKycWebhookRoute
   ApiPublicMoonpaySignRoute: typeof ApiPublicMoonpaySignRoute
   ApiPublicMoonpayWebhookRoute: typeof ApiPublicMoonpayWebhookRoute
   ApiPublicOnrampWebhookRoute: typeof ApiPublicOnrampWebhookRoute
@@ -2777,7 +2751,6 @@ export interface RootRouteChildren {
   ApiPublicLedgerStatsRoute: typeof ApiPublicLedgerStatsRoute
   ApiPublicOpenpayBalancesRoute: typeof ApiPublicOpenpayBalancesRoute
   ApiPublicOpenpayInboundRoute: typeof ApiPublicOpenpayInboundRoute
-  ApiPublicOpenpayKycWebhookRoute: typeof ApiPublicOpenpayKycWebhookRoute
   ApiPublicOpenpayPortfolioRoute: typeof ApiPublicOpenpayPortfolioRoute
   ApiPublicPiPaymentsApproveRoute: typeof ApiPublicPiPaymentsApproveRoute
   ApiPublicPiPaymentsCompleteRoute: typeof ApiPublicPiPaymentsCompleteRoute
@@ -3800,13 +3773,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHelioDepositWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/kyc-webhook': {
-      id: '/api/public/kyc-webhook'
-      path: '/api/public/kyc-webhook'
-      fullPath: '/api/public/kyc-webhook'
-      preLoaderRoute: typeof ApiPublicKycWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/moonpay-sign': {
       id: '/api/public/moonpay-sign'
       path: '/api/public/moonpay-sign'
@@ -4169,13 +4135,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/openpay/inbound'
       fullPath: '/api/public/openpay/inbound'
       preLoaderRoute: typeof ApiPublicOpenpayInboundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/openpay/kyc-webhook': {
-      id: '/api/public/openpay/kyc-webhook'
-      path: '/api/public/openpay/kyc-webhook'
-      fullPath: '/api/public/openpay/kyc-webhook'
-      preLoaderRoute: typeof ApiPublicOpenpayKycWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/openpay/portfolio': {
@@ -4671,7 +4630,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDepositMonitorRoute: ApiPublicDepositMonitorRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicHelioDepositWebhookRoute: ApiPublicHelioDepositWebhookRoute,
-  ApiPublicKycWebhookRoute: ApiPublicKycWebhookRoute,
   ApiPublicMoonpaySignRoute: ApiPublicMoonpaySignRoute,
   ApiPublicMoonpayWebhookRoute: ApiPublicMoonpayWebhookRoute,
   ApiPublicOnrampWebhookRoute: ApiPublicOnrampWebhookRoute,
@@ -4714,7 +4672,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLedgerStatsRoute: ApiPublicLedgerStatsRoute,
   ApiPublicOpenpayBalancesRoute: ApiPublicOpenpayBalancesRoute,
   ApiPublicOpenpayInboundRoute: ApiPublicOpenpayInboundRoute,
-  ApiPublicOpenpayKycWebhookRoute: ApiPublicOpenpayKycWebhookRoute,
   ApiPublicOpenpayPortfolioRoute: ApiPublicOpenpayPortfolioRoute,
   ApiPublicPiPaymentsApproveRoute: ApiPublicPiPaymentsApproveRoute,
   ApiPublicPiPaymentsCompleteRoute: ApiPublicPiPaymentsCompleteRoute,

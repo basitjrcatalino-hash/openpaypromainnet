@@ -201,7 +201,7 @@ export function OnrampDepositPanel({
             Environment:{" "}
             <span className="font-semibold text-foreground">{envLabel}</span>
             {" · "}
-            You’ll complete KYC and payment on Onramp, then return here.
+            You’ll pay on Onramp (Onramp may run its own ID check), then return here.
           </p>
           <Button
             type="button"

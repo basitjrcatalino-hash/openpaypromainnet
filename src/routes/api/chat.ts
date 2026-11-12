@@ -20,7 +20,7 @@ OpenPay Pro Wallet (this app)
 - OpenToken: pump.fun-style token launchpad — create tokens, bonding curve trading, live token chat, portfolio, trending and terminal views.
 - NFTs: mint and browse OpenNFT collectibles.
 - Ledger: every transaction is written to a public ledger. Entries are browsable in-app and on OpenLedger at openpyledger.space/pro, and exposed through the public Ledger API.
-- KYC: Pi Network identity verification through PiVerify, with status tracked on the profile.
+- OpenPay Pro does not require KYC or identity verification.
 - Auth: Pi Network sign-in, Telegram, Solana / Phantom, MetaMask, WalletConnect, Web3Auth, email.
 - Security: PIN code, biometric (WebAuthn) login, recovery phrase, per-user row-level security on all data.
 - Settings: username, profile image, display currency, theme, notifications, connected integrations.

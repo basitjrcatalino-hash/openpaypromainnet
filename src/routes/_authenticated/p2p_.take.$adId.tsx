@@ -373,7 +373,6 @@ function TakeOrderPage() {
             <ul className="list-disc space-y-1.5 pl-4 text-[12px] leading-relaxed text-muted-foreground">
               <li>Orders cannot be canceled after the counterparty confirms payment.</li>
               <li>Verify payment receipt carefully before releasing crypto.</li>
-              <li>KYC mismatches may lead to refund or cancellation under trading rules.</li>
             </ul>
           )}
           <p className="text-[11px] text-muted-foreground">

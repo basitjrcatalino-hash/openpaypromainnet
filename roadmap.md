@@ -14,4 +14,4 @@
 - [x] Fix users stuck on /auth after logging out or reopening the app; no auto sign-in after logout, expired logins cleared, Pi sign-in times out instead of spinning.
 - [x] Show the sign-in logo as a background-free mark and hide the Sign in / Create account switch; verified light/dark on desktop and phone.
 - [ ] Decide whether community chat/comments stay readable by all signed-in users (3 security warnings); waiting on user answer.
-- [ ] Remove all KYC from OpenPay Pro (menu, pages, prompts, admin, gates).
+- [x] Remove all KYC from OpenPay Pro (page, prompts, admin, P2P merchant gate, help text); /kyc now opens the dashboard.

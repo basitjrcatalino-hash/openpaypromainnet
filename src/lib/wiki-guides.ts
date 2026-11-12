@@ -499,16 +499,16 @@ export const WIKI_GUIDES: WikiGuide[] = [
     ],
   },
   {
-    slug: "pi-and-kyc",
-    title: "Pi Network sign-in and KYC",
-    dek: "Sign in with Pi and complete Pi Verify identity when required.",
+    slug: "pi-sign-in",
+    title: "Pi Network sign-in",
+    dek: "Sign in with Pi — no KYC or ID documents needed.",
     category: "Security",
     level: "Intermediate",
     minutes: 5,
     hero: { from: "#7038A1", to: "#e9d5ff", glyph: "π" },
-    tryPath: "/kyc",
+    tryPath: "/auth",
     intro:
-      "Pi sign-in brings your Pi username into OpenPay Pro. KYC via Pi Verify unlocks higher limits where required.",
+      "Pi sign-in brings your Pi username into OpenPay Pro. There is no KYC step.",
     sections: [
       {
         id: "signin-pi",
@@ -516,14 +516,6 @@ export const WIKI_GUIDES: WikiGuide[] = [
         steps: [
           { title: "Prefer Pi Browser when possible", detail: "Native SDK auth is smoothest inside Pi Browser." },
           { title: "Or use Pi OAuth on the web", detail: "Complete redirect and return to the dashboard." },
-        ],
-      },
-      {
-        id: "kyc",
-        heading: "Start KYC",
-        steps: [
-          { title: "Open KYC", detail: "From Settings or the KYC route." },
-          { title: "Complete OpenPay KYC", detail: "Submit your ID and selfie on /kyc. OpenPay reviews the application and updates your status." },
         ],
       },
     ],

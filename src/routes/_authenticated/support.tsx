@@ -4,12 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUp,
-  BadgeCheck,
   ChevronLeft,
   ImagePlus,
   Loader2,
   LifeBuoy,
-  ShieldAlert,
   X,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -55,7 +53,6 @@ const CATEGORIES = [
   { id: "payment", label: "Payment / Top Up" },
   { id: "p2p", label: "P2P" },
   { id: "trade", label: "Trade" },
-  { id: "kyc", label: "KYC" },
   { id: "security", label: "Security" },
   { id: "bug", label: "Bug report" },
 ] as const;
@@ -64,7 +61,7 @@ const QUICK = [
   "My deposit hasn't arrived yet",
   "How do I top up with a voucher?",
   "My P2P order is stuck in escrow",
-  "I need help with KYC verification",
+  "How do I connect my wallet?",
 ];
 
 type Msg = {
@@ -206,7 +203,7 @@ function SupportPage() {
           <h2 className="mt-4 text-lg font-bold">How can we help?</h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
             OpenPay AI answers instantly, 24/7. A human agent takes over whenever the issue needs
-            one. Your username, OpenPay account, wallet address and KYC status are attached
+            one. Your username, OpenPay account, and wallet address are attached
             automatically.
           </p>
 
@@ -268,15 +265,6 @@ function SupportPage() {
             {ticket?.status ? ` · ${ticket.status}` : ""}
           </p>
         </div>
-        {ticket?.kyc_status === "verified" ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-500">
-            <BadgeCheck className="h-3.5 w-3.5" /> KYC
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-            <ShieldAlert className="h-3.5 w-3.5" /> No KYC
-          </span>
-        )}
       </header>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 py-5">

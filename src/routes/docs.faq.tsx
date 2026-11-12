@@ -82,7 +82,7 @@ const FAQS: { q: string; a: string; category: string }[] = [
   {
     category: "Developers",
     q: "Is there a payment webhook for partners?",
-    a: "Not yet. Poll charge status after the user returns from checkout. Internal MoonPay/KYC/Circle webhooks are Pro-only.",
+    a: "Not yet. Poll charge status after the user returns from checkout. Internal MoonPay/Circle webhooks are Pro-only.",
   },
 ];
 

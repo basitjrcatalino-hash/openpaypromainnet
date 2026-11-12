@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/ai")({
       {
         name: "description",
         content:
-          "Chat with OpenPay AI, the OpenPay Pro assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger, KYC and connecting AI agents over MCP.",
+          "Chat with OpenPay AI, the OpenPay Pro assistant. Ask about wallets, top ups, sending OUSD, OpenToken, the ledger and connecting AI agents over MCP.",
       },
       { property: "og:title", content: "OpenPay AI Assistant — OpenPay Pro Wallet" },
       {

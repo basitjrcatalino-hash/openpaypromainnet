@@ -101,7 +101,7 @@ function AdsHubPage() {
         <div className="mx-4 mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 md:mx-6">
           <p className="text-sm font-bold text-amber-500">Merchant approval required</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Apply as a merchant (KYC + 100 OUSD in P2P) and wait for admin approval before listing
+            Apply as a merchant (100 OUSD in P2P) and wait for admin approval before listing
             ads.
           </p>
           <Button

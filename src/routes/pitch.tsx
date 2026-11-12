@@ -311,7 +311,7 @@ const FUND_USE = [
   {
     pct: 15,
     title: "Security & compliance",
-    body: "Self-custody hardening, audits, identity / KYC flows, and regional regulatory readiness.",
+    body: "Self-custody hardening, audits, and regional regulatory readiness.",
   },
   {
     pct: 10,

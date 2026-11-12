@@ -74,7 +74,7 @@ ${DOCS_BASE}/.well-known/oauth-protected-resource`}</DocsCode>
               <code>get_profile</code>
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Signed-in profile: display name, username, KYC status, account details. No input
+              Signed-in profile: display name, username, account details. No input
               params.
             </p>
           </div>

@@ -8,8 +8,8 @@ const URL = "https://openpaypro.online/guides/transfer-pi";
 
 const STEPS = [
   {
-    name: "Complete Pi KYC and mainnet migration",
-    text: "Pi can only move on Mainnet after your KYC is approved and your balance has migrated from the Pi app to the Mainnet blockchain. Check Mainnet Checklist in the Pi app first.",
+    name: "Complete your Pi mainnet migration",
+    text: "Pi can only move on Mainnet after your balance has migrated from the Pi app to the Mainnet blockchain. Check the Mainnet Checklist in the Pi app first.",
   },
   {
     name: "Open or connect a Pi-compatible wallet",
@@ -100,7 +100,7 @@ function TransferPiGuide() {
             </li>
             <li className="flex gap-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              Pi Sign-In, KYC status, biometric unlock, and PIN protection.
+              Pi Sign-In, biometric unlock, and PIN protection.
             </li>
           </ul>
         </section>

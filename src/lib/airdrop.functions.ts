@@ -234,7 +234,7 @@ export const createAirdropCampaign = createServerFn({ method: "POST" })
       total_budget: data.total_budget != null ? round8(data.total_budget) : null,
       max_claims: data.max_claims ?? null,
       require_wallet: true,
-      require_kyc: !!data.require_kyc,
+      require_kyc: false,
       requirements,
       cover_url: data.cover_url?.trim() || null,
       badge: data.badge?.trim() || null,
@@ -289,7 +289,6 @@ export const updateAirdropCampaign = createServerFn({ method: "POST" })
         rest.total_budget != null ? round8(rest.total_budget) : null;
     }
     if (rest.max_claims !== undefined) patch.max_claims = rest.max_claims ?? null;
-    if (rest.require_kyc !== undefined) patch.require_kyc = !!rest.require_kyc;
     if (rest.requirements !== undefined) {
       patch.requirements = rest.requirements.map((r, i) => ({
         id: r.id?.trim() || `req-${i + 1}`,

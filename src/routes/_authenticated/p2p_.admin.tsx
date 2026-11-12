@@ -255,7 +255,7 @@ function P2PAdminPage() {
           </h2>
         </div>
         <p className="mb-4 text-xs text-muted-foreground">
-          Approve merchants before they can list ads. Requirements: KYC verified, merchant details,
+          Approve merchants before they can list ads. Requirements: merchant details
           and ≥100 OUSD in P2P. Mark Featured to pin them at the top of the marketplace.
         </p>
         {appsQ.isLoading ? (
@@ -281,7 +281,7 @@ function P2PAdminPage() {
                       "No merchant details"}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    KYC {String(snap.kyc_status ?? "—")} · P2P OUSD {String(snap.p2p_ousd ?? "—")} ·
+                    P2P OUSD {String(snap.p2p_ousd ?? "—")} ·
                     Trades {String(snap.completed_count ?? 0)}
                   </p>
                   {app.applicant_note ? (

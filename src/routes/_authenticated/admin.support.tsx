@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { BadgeCheck, Bot, Copy, Loader2, Search, Send, ShieldAlert } from "lucide-react";
+import { Bot, Copy, Loader2, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/admin/support")({
       {
         name: "description",
         content:
-          "Admin support console for OpenPay Pro: review every customer support chat, verify identity and KYC, and reply live.",
+          "Admin support console for OpenPay Pro: review every customer support chat, check customer details and reply live.",
       },
       { property: "og:title", content: "Support Console — OpenPay Pro Admin" },
       { property: "og:description", content: "Review and answer OpenPay Pro support chats." },
@@ -209,11 +209,6 @@ function AdminSupportPage() {
                   <span className="truncate text-sm font-semibold">
                     {t.display_name || t.username || "Customer"}
                   </span>
-                  {t.kyc_status === "verified" ? (
-                    <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" />
-                  ) : (
-                    <ShieldAlert className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
                   {t.ai_enabled ? <Bot className="h-4 w-4 shrink-0 text-primary" /> : null}
                 </div>
                 <p className="truncate text-xs text-muted-foreground">
@@ -249,15 +244,6 @@ function AdminSupportPage() {
                   <h2 className="text-base font-bold">
                     {active.display_name || active.username || "Customer"}
                   </h2>
-                  {active.kyc_status === "verified" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-500">
-                      <BadgeCheck className="h-3.5 w-3.5" /> KYC verified
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                      <ShieldAlert className="h-3.5 w-3.5" /> {active.kyc_status || "not_started"}
-                    </span>
-                  )}
                 </div>
                 <dl className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
                   <IdentityRow label="Username" value={active.username ? `@${active.username}` : "—"} />

@@ -124,7 +124,7 @@ const PROVIDER: Record<
   onramp: {
     name: "Onramp.money",
     blurb:
-      "You’ll complete KYC and pay via Onramp.money using local bank rails (UPI, IMPS, SEPA, bank transfer). The stablecoin settles to OpenPay Pro and OUSD credits once the order completes.",
+      "You’ll pay via Onramp.money (Onramp may run its own ID check) using local bank rails (UPI, IMPS, SEPA, bank transfer). The stablecoin settles to OpenPay Pro and OUSD credits once the order completes.",
     fees: "Onramp.money charges its own on-ramp fee and FX spread. OpenPay Pro may deduct a platform top-up fee from the OUSD credited.",
     thirdParty: "Onramp.money",
   },

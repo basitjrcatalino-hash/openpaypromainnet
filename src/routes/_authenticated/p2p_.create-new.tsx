@@ -174,7 +174,7 @@ function CreateAdPage() {
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
           <p className="text-sm font-bold text-amber-500">Merchant approval required</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Complete KYC, fund ≥100 OUSD in P2P, apply as merchant, then wait for admin approval.
+            Fund ≥100 OUSD in P2P, apply as merchant, then wait for admin approval.
           </p>
           <Button
             asChild

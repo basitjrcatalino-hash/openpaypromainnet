@@ -19,7 +19,7 @@
       {
         "name": "get_profile",
         "title": "Get my profile",
-        "description": "Get the signed-in user's OpenPay Pro profile: display name, username, KYC status and account details.",
+        "description": "Get the signed-in user's OpenPay Pro profile: display name, username and account details.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

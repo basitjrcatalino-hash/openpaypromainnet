@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { copyText as copyToClipboardRobust } from "@/lib/clipboard";
 
 import { supabase } from "@/integrations/supabase/client";
+import { countTokenComments } from "@/lib/community-feed.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -212,11 +213,7 @@ function OpenTokenDetail() {
   const { data: commentCount } = useQuery({
     queryKey: ["ot-comment-count", tokenId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from("ot_comments")
-        .select("id", { count: "exact", head: true })
-        .eq("token_id", tokenId);
-      return count ?? 0;
+      return countTokenComments({ data: { tokenId } });
     },
   });
 

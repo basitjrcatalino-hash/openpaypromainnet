@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { P2P_PAYMENT_METHOD_CATALOG } from "@/lib/p2p-payment-methods";
+import { getP2PPaymentMethodRows } from "@/lib/public-config.functions";
 
 export type P2PAd = Tables<"p2p_ads">;
 export type P2POrder = Tables<"p2p_orders">;
@@ -133,11 +134,7 @@ export function fmtAmount(v: number | string | null | undefined, digits = 2): st
 /* ------------------------------- queries -------------------------------- */
 
 export async function fetchPaymentMethods(): Promise<P2PPaymentMethod[]> {
-  const { data, error } = await supabase
-    .from("p2p_payment_methods")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
+  const data = await getP2PPaymentMethodRows();
 
   const byCode = new Map<string, P2PPaymentMethod>();
   const now = new Date().toISOString();

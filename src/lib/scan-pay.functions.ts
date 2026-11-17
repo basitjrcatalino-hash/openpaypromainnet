@@ -37,7 +37,7 @@ export const submitScanPayTopup = createServerFn({ method: "POST" })
     const { userId } = context;
 
     // Respect admin maintenance toggle for scan_pay rail
-    const { data: methodRow } = await context.supabase
+    const { data: methodRow } = await (await adminClient())
       .from("topup_methods")
       .select("enabled")
       .eq("method_key", "scan_pay")

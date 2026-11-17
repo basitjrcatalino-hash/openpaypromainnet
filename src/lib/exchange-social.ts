@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { listOrbitFeed } from "@/lib/community-feed.functions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = () => supabase as any;
@@ -22,13 +23,8 @@ export function useOrbitFeed(userId: string | undefined) {
   const query = useQuery({
     queryKey: ["orbit-feed", userId ?? "anon"],
     queryFn: async (): Promise<OrbitPost[]> => {
-      const { data: posts, error } = await db()
-        .from("exchange_posts")
-        .select("id, user_id, body, symbol, created_at")
-        .order("created_at", { ascending: false })
-        .limit(60);
-      if (error) throw error;
-      const rows = (posts ?? []) as Array<{
+      const feed = await listOrbitFeed();
+      const rows = feed.posts as Array<{
         id: string;
         user_id: string;
         body: string;
@@ -37,15 +33,14 @@ export function useOrbitFeed(userId: string | undefined) {
       }>;
       if (!rows.length) return [];
 
-      const ids = rows.map((r) => r.id);
       const authorIds = Array.from(new Set(rows.map((r) => r.user_id)));
 
-      const [{ data: likes }, { data: profiles }] = await Promise.all([
-        db().from("exchange_post_likes").select("post_id, user_id").in("post_id", ids),
-        db().from("profiles").select("id, display_name, username, avatar_url").in("id", authorIds),
-      ]);
+      const { data: profiles } = await db()
+        .from("profiles")
+        .select("id, display_name, username, avatar_url")
+        .in("id", authorIds);
 
-      const likeRows = (likes ?? []) as Array<{ post_id: string; user_id: string }>;
+      const likeRows = feed.likes;
       const profileRows = (profiles ?? []) as Array<{
         id: string;
         display_name: string | null;

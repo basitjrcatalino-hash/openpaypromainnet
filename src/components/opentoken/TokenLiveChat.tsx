@@ -6,6 +6,7 @@ import { ImageIcon, Loader2, Search, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { listTokenChatMessages } from "@/lib/community-feed.functions";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatPct } from "@/lib/wallet-utils";
@@ -258,14 +259,10 @@ export function TokenLiveChat({
         };
       }
 
-      const { data: rows, error: qErr } = await supabase
-        .from("ot_token_chat_messages")
-        .select("id, body, kind, media_url, created_at, user_id")
-        .eq("token_id", tokenId)
-        .order("created_at", { ascending: true })
-        .limit(150);
-
-      if (qErr) {
+      let rows: Awaited<ReturnType<typeof listTokenChatMessages>> = [];
+      try {
+        rows = await listTokenChatMessages({ data: { tokenId } });
+      } catch (qErr) {
         return { rows: [], error: errMessage(qErr) || "Could not load chat" };
       }
 
@@ -280,6 +277,8 @@ export function TokenLiveChat({
         error: null,
       };
     },
+    // Others' messages arrive by polling: direct live updates only cover your own rows.
+    refetchInterval: useAssetTable ? false : 5_000,
   });
 
   const { data: trades = [] } = useQuery({

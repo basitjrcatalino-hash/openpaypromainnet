@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { signInWithPi } from "@/lib/pi-network";
 import { isPiBrowser } from "@/lib/piSdk";
 import { useQuery } from "@tanstack/react-query";
-import { AUTH_METHOD_CATALOG, fetchAuthMethodFlags, isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
+import { AUTH_METHOD_CATALOG, isAuthMethodKey, type AuthMethodKey } from "@/lib/auth-methods";
+import { getPublicAuthMethodFlags } from "@/lib/public-config.functions";
 import { EmailAuthPanel } from "@/components/email-auth-panel";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import type { EIP1193Provider } from "viem";
@@ -100,7 +101,7 @@ function AuthPage() {
   const autoRan = useRef(false);
   const search = Route.useSearch();
   const [selected, setSelected] = useState<AuthMethodKey | null>(null);
-  const flags = useQuery({ queryKey: ["auth-methods"], queryFn: () => fetchAuthMethodFlags(supabase), refetchInterval: 15_000, refetchOnWindowFocus: true });
+  const flags = useQuery({ queryKey: ["auth-methods"], queryFn: () => getPublicAuthMethodFlags(), refetchInterval: 15_000, refetchOnWindowFocus: true });
   const enabled = (method: AuthMethodKey) => flags.data?.[method]?.enabled === true;
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { listTokenComments } from "@/lib/community-feed.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { timeAgo } from "@/lib/wallet-utils";
@@ -16,13 +17,7 @@ export function CommentThread({ tokenId, userId }: { tokenId: string; userId: st
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["ot-comments", tokenId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ot_comments")
-        .select("id, body, created_at, user_id")
-        .eq("token_id", tokenId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
+      const data = await listTokenComments({ data: { tokenId } });
       const ids = [...new Set((data ?? []).map((c) => c.user_id))];
       const profiles: Record<string, any> = {};
       if (ids.length) {

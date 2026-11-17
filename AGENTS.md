@@ -18,3 +18,5 @@
 - Arc integration uses App Kit only in dynamically imported browser actions; wallet signatures use one-time server-stored challenges and link existing account IDs, never convert Pi or ledger balances into on-chain USDC.
 - Use the shared Arc chain definition in the wallet picker, challenges and signing; the selected provider must confirm its network and account before signing so SIWE chain mismatches cannot bypass wallet checks.
 - OpenPay Arc partner calls stay in server helpers behind authenticated functions; transfers require a linked wallet, verified mainnet USDC calldata and browser-side simulation/signing so partner credentials never grant custody or ledger credit.
+- Community rooms (chats, token comments, Orbit feed) and platform config tables (feature, sign-in, scanner, top-up, P2P payment switches) are author/admin-only in the database; members read them through server functions with fixed columns and row limits, and chats poll because live updates only carry the reader's own rows.
+- Uploaded media is read through signed links created at upload; storage reads stay owner-only.

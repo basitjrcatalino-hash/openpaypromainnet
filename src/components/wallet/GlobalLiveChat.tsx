@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Search, Smile, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { listGlobalChatMessages } from "@/lib/community-feed.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -182,20 +183,15 @@ export function GlobalLiveChat({
         };
       }
 
-      const { data: rows, error: qErr } = await supabase
-        .from("global_chat_messages")
-        .select("id, body, kind, media_url, created_at, user_id")
-        .order("created_at", { ascending: true })
-        .limit(200);
-
-      if (qErr) {
+      try {
+        const rows = await listGlobalChatMessages();
+        return { rows: await attachProfiles(rows), error: null };
+      } catch (qErr) {
         return { rows: [], error: errMessage(qErr) || "Could not load chat" };
       }
-      return {
-        rows: await attachProfiles(rows ?? []),
-        error: null,
-      };
     },
+    // Others' messages arrive by polling: direct live updates only cover your own rows.
+    refetchInterval: isTokenRoom ? false : 5_000,
   });
 
   const messages = useMemo(() => data?.rows ?? [], [data?.rows]);

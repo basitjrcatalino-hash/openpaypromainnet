@@ -39,6 +39,7 @@ export const claimFirstAdmin = createServerFn({ method: "POST" })
 export const getTopupSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertAdmin(context);
     const { data, error } = await context.supabase
       .from("topup_settings")
       .select("*")
@@ -230,10 +231,12 @@ export const redeemVoucher = createServerFn({ method: "POST" })
 
 export const listTopupMethods = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+  .handler(async () => {
+    // Methods table is admin-only; members get the public fields through trusted server code.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("topup_methods")
-      .select("*")
+      .select("id, method_key, label, description, enabled, sort_order, created_at, updated_at")
       .order("sort_order", { ascending: true });
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -300,8 +303,9 @@ export const ensureTopupMethods = createServerFn({ method: "POST" })
 
 export const getPublicTopupInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase
+  .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
       .from("topup_settings")
       .select("openpay_payment_url, instructions, fee_bps, fee_wallet_address")
       .eq("id", 1)

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getScanTargetRows } from "@/lib/public-config.functions";
 
 /** Payload families the OpenPay Pro scanner can read. Each one is admin-toggleable. */
 export type ScanTargetKey =
@@ -54,12 +54,7 @@ export function defaultScanTargetFlags(): Record<ScanTargetKey, boolean> {
 }
 
 export async function fetchScanTargets(): Promise<ScanTarget[]> {
-  const { data, error } = await (supabase as any)
-    .from("scanner_targets")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as ScanTarget[];
+  return (await getScanTargetRows()) as unknown as ScanTarget[];
 }
 
 export function useScanTargets() {

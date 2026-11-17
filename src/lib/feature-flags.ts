@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getPublicFeatureFlags } from "@/lib/public-config.functions";
 
 export type FeatureFlag = {
   id: string;
@@ -15,12 +15,7 @@ export type FeatureFlag = {
 export const FEATURE_FLAGS_QUERY_KEY = ["feature-flags"] as const;
 
 export async function fetchFeatureFlags(): Promise<FeatureFlag[]> {
-  const { data, error } = await supabase
-    .from("feature_flags")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as FeatureFlag[];
+  return (await getPublicFeatureFlags()) as FeatureFlag[];
 }
 
 export function useFeatureFlags() {

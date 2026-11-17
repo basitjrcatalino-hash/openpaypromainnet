@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { arcBalance, arcPayment, arcTokenBalance, arcTokenTransfer, bridgeToArc, connectArcWallet, verifyArcWallet, submitOpenPayArcTransfer } from "@/lib/arc-wallet";
 import { ArcConnectDialog } from "@/components/arc-connect-dialog";
 import { getOpenPayArcSnapshot, prepareOpenPayArcPayment } from "@/lib/openpay-arc.functions";
-import { fetchAuthMethodFlags } from "@/lib/auth-methods";
+import { getPublicAuthMethodFlags } from "@/lib/public-config.functions";
 import { parsePaymentQr } from "@/lib/parse-payment-qr";
 import { OUSD_LOGO_URL, USDC_LOGO_URL } from "@/lib/token-logos";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ export default function ArcWalletPanel() {
   const prepareFn = useServerFn(prepareOpenPayArcPayment);
   const [source, setSource] = useState<"Base" | "Ethereum" | "Arbitrum">("Base");
   const [receipt, setReceipt] = useState<{ state: string; amount: string; token: string; network: string; transactions: { hash: string; url?: string }[] } | null>(null);
-  const flags = useQuery({ queryKey: ["auth-methods"], queryFn: () => fetchAuthMethodFlags(supabase), refetchInterval: 15_000 });
+  const flags = useQuery({ queryKey: ["auth-methods"], queryFn: () => getPublicAuthMethodFlags(), refetchInterval: 15_000 });
   const balance = useQuery({ queryKey: ["arc-balance", address], queryFn: () => address ? arcBalance(address) : Promise.resolve("0"), enabled: !!address, refetchInterval: 30_000 });
   const partner = useQuery({ queryKey: ["openpay-arc", address, signedIn], queryFn: () => { if (!address) throw new Error("Connect a wallet first."); return snapshotFn({ data: { address } }); }, enabled: !!address && signedIn && flags.data?.arc.enabled === true, refetchInterval: 30_000, retry: false });
   const ousdAddress = (partner.data?.network.ousd ?? null) as `0x${string}` | null;

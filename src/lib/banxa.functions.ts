@@ -67,7 +67,8 @@ export const createBanxaTopupOrder = createServerFn({ method: "POST" })
     if (!wallet) throw new Error("Wallet not found");
 
     // Respect admin maintenance toggle
-    const { data: methodRow } = await supabase
+    const { supabaseAdmin: methodsDb } = await import("@/integrations/supabase/client.server");
+    const { data: methodRow } = await methodsDb
       .from("topup_methods")
       .select("enabled")
       .eq("method_key", methodKey)
